@@ -113,7 +113,7 @@ fetchSets = (callback) ->
 fetchImg = (urlTemplate, card, localPath, t) ->
   setTimeout ->
     console.log("Downloading image for " + card)
-    url = urlTemplate + code
+    url = urlTemplate + card
     request(url).pipe(fs.createWriteStream(localPath))
   , t
 
