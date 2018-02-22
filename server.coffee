@@ -530,7 +530,7 @@ sendLobby = () ->
 setInterval(sendLobby, 1000)
 
 # Express config
-app.use favicon(__dirname + "/resources/public/img/jinteki.ico")
+app.use favicon(__dirname + "/resources/public/img/cardnum.ico")
 app.set 'port', 1042
 app.set 'ipaddr', "0.0.0.0"
 app.use methodOverride() # provide PUT DELETE
@@ -665,7 +665,7 @@ app.post '/forgot', (req, res) ->
         }
       }
       mailOptions = {
-        from: 'support@jinteki.net',
+        from: 'support@cardnum.net',
         to: user.email,
         subject: 'Jinteki Password Reset',
         text: 'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
@@ -725,7 +725,7 @@ app.post '/reset/:token', (req, res) ->
       }
       mailOptions = {
         to: user.email,
-        from: 'passwordreset@jinteki.net',
+        from: 'passwordreset@cardnum.net',
         subject: 'Your password has been changed',
         text: 'Hello,\n\n' +
           'This is a confirmation that the password for your account ' + user.email + ' has just been changed.\n'

@@ -16,7 +16,7 @@
      [:p "This website is created and run by avid MECCG players from around the world. The goal is to provide a great way to create and test MECCG decks online."]
 
      [:h3 "Contact"]
-     [:p "Twitter: " [:a {:href "http://twitter.com/rezwits" :target "_blank"} "@mtgred"]]
+     [:p "Twitter: " [:a {:href "http://twitter.com/rezwits" :target "_blank"} "@rezwits"]]
      [:p "Email: " [:a {:href "mailto:rezwits@gmail.com"} "rezwits@gmail.com"]]
 
      [:h3 "Development"]

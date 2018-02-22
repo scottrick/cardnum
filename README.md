@@ -4,9 +4,9 @@ Play Middle-earth:CCG in the browser.
 
 ## Live server
 
-http://www.jinteki.net
+http://www.cardnum.net
 
-[Gameplay videos](https://www.youtube.com/results?search_query=jinteki.net)
+[Gameplay videos](https://www.youtube.com/results?search_query=cardnum.net)
 
 ![screenshot](http://i.imgur.com/xkxOMHc.jpg)
 
@@ -82,4 +82,4 @@ For more information refer to the [development guide](https://github.com/mtgred/
 
 ## License
 
-Jinteki.net is released under the [MIT License](http://www.opensource.org/licenses/MIT).
+Cardnum.net is released under the [MIT License](http://www.opensource.org/licenses/MIT).
