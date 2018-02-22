@@ -1,11 +1,11 @@
-(ns netrunner.cardbrowser
+(ns meccg.cardbrowser
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [om.core :as om :include-macros true]
             [sablono.core :as sab :include-macros true]
             [cljs.core.async :refer [chan put! >! sub pub] :as async]
-            [netrunner.appstate :refer [app-state]]
-            [netrunner.account :refer [alt-art-name]]
-            [netrunner.ajax :refer [GET]]))
+            [meccg.appstate :refer [app-state]]
+            [meccg.account :refer [alt-art-name]]
+            [meccg.ajax :refer [GET]]))
 
 (def cards-channel (chan))
 (def pub-chan (chan))

@@ -1,4 +1,4 @@
-(ns netrunner.help
+(ns meccg.help
   (:require [om.core :as om :include-macros true]
             [sablono.core :as sab :include-macros true]
             [clojure.string :refer [split]]))
@@ -77,7 +77,7 @@
             {:id "documentation"
              :title "Is there more documentation on how to use Jinteki.net?"
              :content [:p "Read the "
-                       [:a {:href "https://github.com/mtgred/netrunner/wiki/Jinteki.net-Guide" :target "_blank"}
+                       [:a {:href "https://github.com/mtgred/meccg/wiki/Jinteki.net-Guide" :target "_blank"}
                         "Jinteki.net Guide"] " on the GitHub wiki."]}
             )}
     {:id "beginners"
@@ -85,12 +85,12 @@
      :sub (list
             {:id "learnrules"
              :title "Where can I find the game's rules explanation?"
-             :content (list [:p "The first step is reading " [:a {:href "https://www.fantasyflightgames.com/ffg_content/android-netrunner/support/android-netrunner-core-rules.pdf" :target "_blank"} "the official rulebook"]
+             :content (list [:p "The first step is reading " [:a {:href "https://www.fantasyflightgames.com/ffg_content/android-meccg/support/android-meccg-core-rules.pdf" :target "_blank"} "the official rulebook"]
                              ". If you prefer video form, FFG has prepared " [:a {:href "https://www.youtube.com/watch?v=VAslVfZ9p-Y" :target "_blank"} "a video tutorial"]
                              ", too."]
                             [:p "Once familiar with the basics, the finer points of rules/card interactions can be found in "
                              "the official FAQ on "
-                             [:a {:href "https://www.fantasyflightgames.com/en/products/android-netrunner-the-card-game/"} "the FFG page"] ". "
+                             [:a {:href "https://www.fantasyflightgames.com/en/products/android-meccg-the-card-game/"} "the FFG page"] ". "
                              "There is also " [:a {:href "http://ancur.wikia.com/wiki/Project_ANCUR_Wiki"} "Project ANCUR"] ", which is a collection "
                              "of rulings (also unofficial) regarding various cards and game situations."])}
             {:id "firstgame"
@@ -100,19 +100,19 @@
                        "happy to play with a beginner should join after a while."]}
             {:id "finddecks"
              :title "Where can I find some good starting decks?"
-             :content (list [:p [:a {:href "https://netrunnerdb.com/"} "NetrunnerDB"] " is a good resource for finding decks of all kinds. "
+             :content (list [:p [:a {:href "https://meccgdb.com/"} "MECCGDB"] " is a good resource for finding decks of all kinds. "
                        "For finding decks consisting of core set only try setting some filters in "
-                       [:a {:href "http://netrunnerdb.com/en/decklists/search#allowed_packs"} "the decklist search"] "."]
+                       [:a {:href "http://meccgdb.com/en/decklists/search#allowed_packs"} "the decklist search"] "."]
                             [:p "Once you find a deck you like, export it in Jinteki.net's format (or plain text format if the "
                              "site doesn't offer the former), copy and paste it into the deckbuilder."])}
             {:id "communities"
-             :title "Where can I find other Netrunner players to talk to?"
-             :content [:p "Apart from the chatrooms here on Jinteki.net, here are a few links to online Netrunner communities:"
+             :title "Where can I find other MECCG players to talk to?"
+             :content [:p "Apart from the chatrooms here on Jinteki.net, here are a few links to online MECCG communities:"
                        [:ul
                         [:li [:a {:href "http://forum.stimhack.com/"} "Stimhack forums"]]
-                        [:li [:a {:href "http://reddit.com/r/netrunner/"} "/r/netrunner subreddit"]]
+                        [:li [:a {:href "http://reddit.com/r/meccg/"} "/r/meccg subreddit"]]
                         [:li "multiple Facebook groups, such as "
-                         [:a {:href "https://www.facebook.com/groups/netrunnergeeks/"} "Netrunner Geeks"]]]]}
+                         [:a {:href "https://www.facebook.com/groups/meccggeeks/"} "MECCG Geeks"]]]]}
             )}
     {:id "site"
      :title "Website"
@@ -197,7 +197,7 @@
                          "You may only include up to one card (up to its maximum number of copies) from the restricted category. "
                          "You may not include cards from the removed category. "
                          "For more information about the MWL read Tournament Rules from "
-                         [:a {:href "https://www.fantasyflightgames.com/en/products/android-netrunner-the-card-game/"} "the official FFG page"] "."]
+                         [:a {:href "https://www.fantasyflightgames.com/en/products/android-meccg-the-card-game/"} "the official FFG page"] "."]
                         [:p "Decks that are valid and fit within tournament restrictions are marked " [:span.legal "Tournament legal" ] ". "
                          "Decks that fit within the printed influence limit, but not within the tournament restrictions, "
                          "are marked " [:span.casual "Casual play only"] ". Decks that do not fit basic deckbuilding rules are marked " [:span.invalid "Invalid"] "."]
@@ -238,23 +238,23 @@
      :sub (list
             {:id "reportingbugs"
              :title "How can I report a bug?"
-             :content [:p "The best place to report bugs is the " [:a {:href "https://github.com/mtgred/netrunner/issues" :target "_blank"} "GitHub issue tracker"]
+             :content [:p "The best place to report bugs is the " [:a {:href "https://github.com/mtgred/meccg/issues" :target "_blank"} "GitHub issue tracker"]
                        ". Before reporting, it is best to make a quick search to see if it's already been reported. "
                        "If the bug concerns a card, look it up in "
                        [:a {:href "https://docs.google.com/spreadsheets/d/1ICv19cNjSaW9C-DoEEGH3iFt09PBTob4CAutGex0gnE/pubhtml" :target "_blank"} "Card implementation status"]
                        " - the card in question may be unimplemented yet."]}
             {:id "features"
              :title "How can I suggest a feature?"
-             :content [:p "Same as bugs - feature requests should go on the " [:a {:href "https://github.com/mtgred/netrunner/issues" :target "_blank"} "GitHub issue tracker"]
+             :content [:p "Same as bugs - feature requests should go on the " [:a {:href "https://github.com/mtgred/meccg/issues" :target "_blank"} "GitHub issue tracker"]
                        ". Again, it's best to make a quick search first to avoid duplicating existing issues."]}
             {:id "donations"
              :title "How can I make a donation?"
              :content [:p "Donation info can be found on the " [:a {:href "/about"} "About"] " page."]}
             {:id "devs"
              :title "How can I help with the coding/webdesign?"
-             :content (list [:p "Visit the project page on " [:a {:href "https://github.com/mtgred/netrunner/" :target "_blank"} "GitHub"] " and fork "
+             :content (list [:p "Visit the project page on " [:a {:href "https://github.com/mtgred/meccg/" :target "_blank"} "GitHub"] " and fork "
                              "the repository. Implement the changes you were planning on doing and create a PR (Pull Request). If you are in "
-                             "need of some ideas, check out " [:a {:href "https://github.com/mtgred/netrunner/labels/easy" :target "_blank"} "issues marked 'easy' on GitHub"] "."]
+                             "need of some ideas, check out " [:a {:href "https://github.com/mtgred/meccg/labels/easy" :target "_blank"} "issues marked 'easy' on GitHub"] "."]
                             [:p "After two of your PRs have been merged into the master branch, send an e-mail to "
                              [:a {:href "mailto:mtgred@gmail.com"} "mtgred@gmail.com"] " stating who you are on GitHub and ask for access "
                              "to Jinteki.net Slack, so you can get in better contact with the dev team."])}

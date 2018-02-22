@@ -30,8 +30,8 @@ zmq = require('zmq')
 config = require('./config')
 
 # MongoDB connection
-appName = 'netrunner'
-mongoUrl = process.env['MONGO_URL'] || "mongodb://127.0.0.1:27017/netrunner"
+appName = 'meccg'
+mongoUrl = process.env['MONGO_URL'] || "mongodb://127.0.0.1:27017/meccg"
 db = mongoskin.db(mongoUrl)
 
 # Game lobby
@@ -73,7 +73,7 @@ removePlayer = (socket) ->
       refreshLobby("delete", socket.gameid)
       # Send a message to players telling browser to pull updated stats
       for id in stats.sockets
-        stats.to(id).emit("netrunner", {channel: 'stats', msg: 'updatestats'})
+        stats.to(id).emit("meccg", {channel: 'stats', msg: 'updatestats'})
     else
       refreshLobby("update", socket.gameid)
     socket.leave(socket.gameid)
@@ -94,7 +94,7 @@ rejoinGame = (socket, gameid, user, options) ->
     game.endingPlayers = game.players.slice(0)
     socket.join(gameid)
     socket.gameid = gameid
-    socket.emit("netrunner", {type: "game", gameid: gameid})
+    socket.emit("meccg", {type: "game", gameid: gameid})
     refreshLobby("update", gameid)
     requester.send(JSON.stringify({action: "finaluser-del", gameid: socket.gameid}))
 
@@ -105,7 +105,7 @@ joinGame = (socket, gameid, options) ->
     game.players.push({user: socket.request.user, id: socket.id, side: side, options: options})
     socket.join(gameid)
     socket.gameid = gameid
-    socket.emit("netrunner", {type: "game", gameid: gameid})
+    socket.emit("meccg", {type: "game", gameid: gameid})
     refreshLobby("update", gameid)
 
 getUsername = (socket) ->
@@ -221,15 +221,15 @@ sendGameResponse = (game, response) ->
     if player.side is "Corp"
       # The response will either have a diff or a state. we don't actually send both,
       # whichever is null will not be sent over the socket.
-      lobby.to(player.id).emit("netrunner", {type: response.action,\
+      lobby.to(player.id).emit("meccg", {type: response.action,\
                                              diff: response.corpdiff, \
                                              state: response.corpstate})
     else if player.side is "Runner"
-      lobby.to(player.id).emit("netrunner", {type: response.action, \
+      lobby.to(player.id).emit("meccg", {type: response.action, \
                                              diff: response.runnerdiff, \
                                              state: response.runnerstate})
   for spect in game.spectators
-    lobby.to(spect.id).emit("netrunner", {type: response.action,\
+    lobby.to(spect.id).emit("meccg", {type: response.action,\
                                           diff: response.spectdiff, \
                                           state: response.spectstate})
 
@@ -277,20 +277,20 @@ io.use (socket, next) ->
     next()
 
 stats = io.of('/stats').on 'connection', (socket) ->
-  socket.on 'netrunner', (msg) ->
-    stats.emit('netrunner', msg)
+  socket.on 'meccg', (msg) ->
+    stats.emit('meccg', msg)
 
 chat = io.of('/chat').on 'connection', (socket) ->
-  socket.on 'netrunner', (msg) ->
+  socket.on 'meccg', (msg) ->
     if socket.request.user
       msg.date = new Date()
       msg.username = socket.request.user.username
       msg.emailhash = socket.request.user.emailhash
-      chat.emit('netrunner', msg)
+      chat.emit('meccg', msg)
       db.collection('messages').insert msg, (err, result) ->
 
 lobby = io.of('/lobby').on 'connection', (socket) ->
-  socket.emit("netrunner", {type: "games", games: games})
+  socket.emit("meccg", {type: "games", games: games})
 
   socket.on 'disconnect', () ->
     gid = socket.gameid
@@ -300,7 +300,7 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
         requester.send(JSON.stringify({action: "notification", gameid: gid, text: "#{getUsername(socket)} disconnected."}))
       removePlayer(socket)
 
-  socket.on 'netrunner', (msg, fn) ->
+  socket.on 'meccg', (msg, fn) ->
     switch msg.action
       when "create"
         gameid = uuid.v1()
@@ -318,14 +318,14 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
         games[gameid] = game
         socket.join(gameid)
         socket.gameid = gameid
-        socket.emit("netrunner", {type: "game", gameid: gameid})
+        socket.emit("meccg", {type: "game", gameid: gameid})
         refreshLobby("create", gameid)
 
       when "leave-lobby"
         gid = socket.gameid
         removePlayer(socket)
         if socket.request.user
-          socket.broadcast.to(gid).emit('netrunner', {type: "say", user: "__system__", text: "#{getUsername(socket)} left the game."})
+          socket.broadcast.to(gid).emit('meccg', {type: "say", user: "__system__", text: "#{getUsername(socket)} left the game."})
 
       when "leave-game"
         gid = socket.gameid
@@ -356,7 +356,7 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
         if not game.password or game.password.length is 0 or (msg.password and crypto.createHash('md5').update(msg.password).digest('hex') is game.password)
           fn("join ok")
           joinGame(socket, msg.gameid, msg.options)
-          socket.broadcast.to(msg.gameid).emit 'netrunner',
+          socket.broadcast.to(msg.gameid).emit 'meccg',
             type: "say"
             user: "__system__"
             notification: "ting"
@@ -389,12 +389,12 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
             game.spectators.push({user: socket.request.user, id: socket.id})
             socket.join(msg.gameid)
             socket.gameid = msg.gameid
-            socket.emit("netrunner", {type: "game", gameid: msg.gameid, started: game.started})
+            socket.emit("meccg", {type: "game", gameid: msg.gameid, started: game.started})
             refreshLobby("update", msg.gameid)
             if game.started
               requester.send(JSON.stringify({action: "notification", gameid: msg.gameid, text: "#{getUsername(socket)} joined the game as a spectator."}))
             else
-              socket.broadcast.to(msg.gameid).emit 'netrunner',
+              socket.broadcast.to(msg.gameid).emit 'meccg',
                 type: "say"
                 user: "__system__"
                 text: "#{getUsername(socket)} joined the game as a spectator."
@@ -423,7 +423,7 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
           if game.started
             requester.send(JSON.stringify({action: "notification", gameid: msg.gameid, text: text}))
           else
-            socket.broadcast.to(msg.gameid).emit 'netrunner',
+            socket.broadcast.to(msg.gameid).emit 'meccg',
               type: "say"
               user: "__system__"
               text: text
@@ -440,7 +440,7 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
           fn("not allowed")
           return
 
-        lobby.to(msg.gameid).emit("netrunner", {type: "say", user: socket.request.user, text: msg.text})
+        lobby.to(msg.gameid).emit("meccg", {type: "say", user: socket.request.user, text: msg.text})
 
       when "swap"
         for player in games[socket.gameid].players
@@ -448,7 +448,7 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
           player.deck = null
         updateMsg = {"update" : {}}
         updateMsg["update"][socket.gameid] = games[socket.gameid]
-        lobby.to(msg.gameid).emit('netrunner', {type: "games", gamesdiff: updateMsg})
+        lobby.to(msg.gameid).emit('meccg', {type: "games", gamesdiff: updateMsg})
         refreshLobby("update", msg.gameid)
 
       when "deck"
@@ -460,16 +460,16 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
               break
           updateMsg = {"update" : {}}
           updateMsg["update"][socket.gameid] = games[socket.gameid]
-          lobby.to(msg.gameid).emit('netrunner', {type: "games", gamesdiff: updateMsg})
+          lobby.to(msg.gameid).emit('meccg', {type: "games", gamesdiff: updateMsg})
 
       when "start"
         if !requester_connected
-          lobby.to(msg.gameid).emit 'netrunner',
+          lobby.to(msg.gameid).emit 'meccg',
             type: "say"
             user: "__system__"
             notification: "ting"
             text: "Unable to connect to game server, please try again."
-          lobby.to(msg.gameid).emit 'netrunner',
+          lobby.to(msg.gameid).emit 'meccg',
             type: "lobby-notification"
             text: "Unable to start game. Please try again."
             severity: "error"
@@ -521,7 +521,7 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
 
 sendLobby = () ->
   if lobby and lobbyUpdate
-    lobby.emit('netrunner', {type: "games", gamesdiff: lobbyUpdates})
+    lobby.emit('meccg', {type: "games", gamesdiff: lobbyUpdates})
     lobbyUpdate = false
     lobbyUpdates["create"] = {}
     lobbyUpdates["update"] = {}

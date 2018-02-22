@@ -1,20 +1,20 @@
-(ns netrunner.gamelobby
+(ns meccg.gamelobby
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [om.core :as om :include-macros true]
             [sablono.core :as sab :include-macros true]
             [cljs.core.async :refer [chan put! <!] :as async]
             [clojure.string :refer [join]]
-            [netrunner.ajax :refer [GET]]
-            [netrunner.appstate :refer [app-state]]
-            [netrunner.auth :refer [authenticated avatar] :as auth]
-            [netrunner.gameboard :refer [init-game game-state toast launch-game]]
-            [netrunner.cardbrowser :refer [image-url] :as cb]
-            [netrunner.stats :refer [notnum->zero]]
-            [netrunner.deckbuilder :refer [deck-status-span deck-status-label process-decks load-decks num->percent]]))
+            [meccg.ajax :refer [GET]]
+            [meccg.appstate :refer [app-state]]
+            [meccg.auth :refer [authenticated avatar] :as auth]
+            [meccg.gameboard :refer [init-game game-state toast launch-game]]
+            [meccg.cardbrowser :refer [image-url] :as cb]
+            [meccg.stats :refer [notnum->zero]]
+            [meccg.deckbuilder :refer [deck-status-span deck-status-label process-decks load-decks num->percent]]))
 
 (def socket-channel (chan))
 (def socket (.connect js/io (str js/iourl "/lobby")))
-(.on socket "netrunner" #(put! socket-channel (js->clj % :keywordize-keys true)))
+(.on socket "meccg" #(put! socket-channel (js->clj % :keywordize-keys true)))
 
 
 (defn sort-games-list [games]
@@ -57,7 +57,7 @@
   ([msg] (send msg nil))
   ([msg fn]
    (try (js/ga "send" "event" "lobby" msg) (catch js/Error e))
-   (.emit socket "netrunner" (clj->js msg) fn)))
+   (.emit socket "meccg" (clj->js msg) fn)))
 
 (defn new-game [cursor owner]
   (authenticated

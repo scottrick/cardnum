@@ -1,6 +1,6 @@
-[![Build status](https://circleci.com/gh/mtgred/netrunner/tree/master.svg?style=shield)](https://circleci.com/gh/mtgred/netrunner)
+[![Build status](https://circleci.com/gh/mtgred/meccg/tree/master.svg?style=shield)](https://circleci.com/gh/mtgred/meccg)
 
-Play Android: Netrunner in the browser.
+Play Middle-earth:CCG in the browser.
 
 ## Live server
 
@@ -55,7 +55,7 @@ $ lein uberjar
 Launch game server:
 
 ```
-$ java -jar target/netrunner-standalone.jar
+$ java -jar target/meccg-standalone.jar
 ```
 
 Launch the Node server:
@@ -78,7 +78,7 @@ $ lein test test.cards.agendas
 ```
 
 
-For more information refer to the [development guide](https://github.com/mtgred/netrunner/wiki/Getting-Started-with-Development).
+For more information refer to the [development guide](https://github.com/mtgred/meccg/wiki/Getting-Started-with-Development).
 
 ## License
 
