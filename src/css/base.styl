@@ -979,15 +979,21 @@ nav ul
 
         button
           width: 135px
+          margin: 2px 2px
+          margin-right: 5px
 
       .card-preview
         position: absolute
+        height: 443px
+        width: 310px
         left: auto
         z-index: 10
         right: 5px
         top: 0
 
       .edit .card-preview
+        height: 443px
+        width: 310px
         right: -100%
         transform: translateX(100%)
         margin-right: -17px
@@ -1018,6 +1024,11 @@ nav ul
       .cards
         columns(2, 5px)
 
+        h3
+          font-size: 16px
+          margin: 8px 0 0
+          line-height: 10px
+
       .line
         position: relative
         overflow: visible
@@ -1035,10 +1046,36 @@ nav ul
 
     .deckedit
       display-flex()
-      flex-direction(column)
+      flex-direction(row)
+      flex-wrap(wrap)
 
-      .deckname, .identity
-        width: 100%
+      h3.lftlabel
+        width: 49%
+        float: left
+
+      h3.rgtlabel
+        width: 49%
+        float: right
+
+      h3.column1
+        float: left
+        width: 33%
+
+      h3.column2
+        float: left
+        width: 33%
+
+      h3.column3
+        float: left
+        width: 33%
+
+      .deckname
+        width: 49%
+        float: left
+
+      .identity
+        width: 49%
+        float: right
 
       .card-search
         position: relative
@@ -1081,9 +1118,18 @@ nav ul
         margin: 0 0 5px 0
 
       textarea
-        margin: 0 15px
+        margin: -3px -1px
+        margin-right: 3px
         line-height: 18px
         flex(1)
+
+      .txttop
+        width: 32%
+        height: 44%
+
+      .txtbot
+        width: 32%
+        height: 20%
 
 .deck-status.shift-tooltip
     padding-right: 12px
