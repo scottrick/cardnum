@@ -9,10 +9,10 @@
 (defn- dissoc-card
   "Dissoc relevant keys in card"
   [card keep-counter]
-  (let [c (dissoc card :current-strength :abilities :subroutines :runner-abilities :rezzed :special :new
+  (let [c (dissoc card :current-strength :abilities :subroutines :hazPlayer-abilities :rezzed :special :new
                   :added-virus-counter :subtype-target :sifr-used :sifr-target)
         c (if keep-counter c (dissoc c :counter :rec-counter :advance-counter :extra-advance-counter))]
-    (if (and (= (:side c) "Runner") (not= (last (:zone c)) :facedown))
+    (if (and (= (:side c) "HazPlayer") (not= (last (:zone c)) :facedown))
       (dissoc c :installed :facedown :counter :rec-counter :pump :server-target) c)))
 
 (defn- trigger-leave-effect
@@ -20,8 +20,8 @@
   [state side {:keys [disabled installed rezzed facedown zone host] :as card}]
   (when-let [leave-effect (:leave-play (card-def card))]
     (when (and (not disabled)
-               (not (and (= (:side card) "Runner") host (not installed) (not facedown)))
-               (or (and (= (:side card) "Runner") installed (not facedown))
+               (not (and (= (:side card) "HazPlayer") host (not installed) (not facedown)))
+               (or (and (= (:side card) "HazPlayer") installed (not facedown))
                    rezzed
                    (and host (not facedown))
                    (= (first zone) :current)
@@ -46,7 +46,7 @@
    (trigger-leave-effect state side card)
    (handle-prevent-effect state card)
    (when (and (:memoryunits card) (:installed card) (not (:facedown card)))
-     (gain state :runner :memory (:memoryunits card)))
+     (gain state :hazPlayer :memory (:memoryunits card)))
    (when (and (find-cid (:cid card) (all-installed state side))
               (not (:disabled card))
               (or (:rezzed card) (:installed card)))
@@ -68,7 +68,7 @@
 (defn- runner-ability-init
   "Gets abilities associated with the card"
   [cdef]
-  (for [ab (:runner-abilities cdef)]
+  (for [ab (:hazPlayer-abilities cdef)]
     (assoc (select-keys ab [:cost]) :label (make-label ab))))
 
 (defn- subroutines-init
@@ -90,7 +90,7 @@
          subroutines (subroutines-init cdef)
          c (merge card
                   (when init-data (:data cdef))
-                  {:abilities abilities :subroutines subroutines :runner-abilities run-abs})
+                  {:abilities abilities :subroutines subroutines :hazPlayer-abilities run-abs})
          c (if (number? recurring) (assoc c :rec-counter recurring) c)
          c (if (string? (:strength c)) (assoc c :strength 0) c)]
      (when recurring
@@ -98,7 +98,7 @@
                  (effect (set-prop card :rec-counter recurring))
                  recurring)]
          (register-events state side
-                          {(if (= side :corp) :corp-phase-12 :runner-phase-12)
+                          {(if (= side :resPlayer) :resPlayer-phase-12 :hazPlayer-phase-12)
                            {:effect r}} c)))
      (when-let [prevent (:prevent cdef)]
        (doseq [[ptype pvec] prevent]
@@ -170,9 +170,9 @@
              (not (:host card)))
       (resolve-ability state side eid {:prompt (str "The " (:title prev-card) " in " server " will now be trashed.")
                                        :choices ["OK"]
-                                       :effect (req (system-msg state :corp (str "trashes " (card-str state prev-card)))
+                                       :effect (req (system-msg state :resPlayer (str "trashes " (card-str state prev-card)))
                                                     (when (get-card state prev-card) ; make sure they didn't trash the card themselves
-                                                    (trash state :corp prev-card {:keep-server-alive true})))}
+                                                    (trash state :resPlayer prev-card {:keep-server-alive true})))}
                        nil nil)
       (effect-completed state side eid))))
 
@@ -195,8 +195,8 @@
   [state card]
   (let [hosts (filter #(when-let [can-host (:can-host (card-def %))]
                         (and (rezzed? %)
-                             (can-host state :corp (make-eid state) % [card])))
-                      (all-installed state :corp))]
+                             (can-host state :resPlayer (make-eid state) % [card])))
+                      (all-installed state :resPlayer))]
     (concat hosts (server-list state card))))
 
 (defn corp-install
@@ -221,7 +221,7 @@
            slot (if host-card
                   (:zone host-card)
                   (conj (server->zone state server) (if (ice? card) :ices :content)))
-           dest-zone (get-in @state (cons :corp slot))]
+           dest-zone (get-in @state (cons :resPlayer slot))]
        ;; trigger :pre-corp-install before computing install costs so that
        ;; event handlers may adjust the cost.
        (trigger-event state side :pre-corp-install card {:server server :dest-zone dest-zone})
@@ -232,7 +232,7 @@
              all-cost (concat extra-cost [:credit ice-cost])
              end-cost (if no-install-cost 0 (install-cost state side card all-cost))
              install-state (or install-state (:install-state cdef))]
-         (when (and (corp-can-install? state side card dest-zone) (not (install-locked? state :corp)))
+         (when (and (corp-can-install? state side card dest-zone) (not (install-locked? state :resPlayer)))
            (if-let [cost-str (pay state side card end-cost action)]
              (do (let [c (-> card
                              (assoc :advanceable (:advanceable cdef) :new true)
@@ -246,7 +246,7 @@
                    (let [moved-card (if host-card
                                       (host state side host-card (assoc c :installed true))
                                       (move state side c slot))]
-                     (trigger-event state side :corp-install moved-card)
+                     (trigger-event state side :resPlayer-install moved-card)
                      (when (is-type? c "Agenda")
                        (update-advancement-cost state side moved-card))
 
@@ -299,7 +299,7 @@
       facedown true
       ;; Console check
       (and (has-subtype? card "Console")
-           (some #(has-subtype? % "Console") (all-installed state :runner)))
+           (some #(has-subtype? % "Console") (all-installed state :hazPlayer)))
       :console
       ;; Installing not locked
       (install-locked? state side) :lock-install
@@ -368,7 +368,7 @@
   ([state side card params] (runner-install state side (make-eid state) card params))
   ([state side eid card {:keys [host-card facedown] :as params}]
    (if (and (empty? (get-in @state [side :locked (-> card :zone first)]))
-            (not (seq (get-in @state [:runner :lock-install]))))
+            (not (seq (get-in @state [:hazPlayer :lock-install]))))
      (if-let [hosting (and (not host-card) (not facedown) (:hosting (card-def card)))]
        (continue-ability state side
                          {:choices hosting
@@ -391,14 +391,14 @@
                                                                  :init-data true}))]
                    (runner-install-message state side (:title card) cost-str params)
                    (play-sfx state side "install-runner")
-                   (when (and (is-type? card "Program") (neg? (get-in @state [:runner :memory])))
-                     (toast state :runner "You have run out of memory units!"))
+                   (when (and (is-type? card "Program") (neg? (get-in @state [:hazPlayer :memory])))
+                     (toast state :hazPlayer "You have run out of memory units!"))
                    (handle-virus-counter-flag state side installed-card)
                    (when (is-type? card "Resource")
-                     (swap! state assoc-in [:runner :register :installed-resource] true))
+                     (swap! state assoc-in [:hazPlayer :register :installed-resource] true))
                    (when (has-subtype? c "Icebreaker")
                      (update-breaker-strength state side c))
-                   (trigger-event-simult state side eid :runner-install
+                   (trigger-event-simult state side eid :hazPlayer-install
                                          {:card-ability (card-as-handler installed-card)}
                                          installed-card))
                  (effect-completed state side eid))

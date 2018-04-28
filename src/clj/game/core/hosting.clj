@@ -52,7 +52,7 @@
    (when (not= cid (:cid card))
      (when installed
        (unregister-events state side target))
-     (doseq [s [:runner :corp]]
+     (doseq [s [:hazPlayer :resPlayer]]
        (if host
          (when-let [host-card (some #(when (= (:cid host) (:cid %)) %)
                                     (get-in @state (cons s (vec (map to-keyword (:zone host))))))]
@@ -75,8 +75,8 @@
        ;; events should be registered for: runner cards that are installed; corp cards that are Operations, or are installed and rezzed
        (when (or (is-type? target "Operation")
                  (and (is-type? target "Event") (not facedown))
-                 (and installed (card-is? target :side :runner))
-                 (and installed (card-is? target :side :corp) (:rezzed target)))
+                 (and installed (card-is? target :side :hazPlayer))
+                 (and installed (card-is? target :side :resPlayer) (:rezzed target)))
          (when-let [events (:events tdef)]
            (register-events state side events c))
          (when (or (:recurring tdef) (:prevent tdef))

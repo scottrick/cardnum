@@ -2,18 +2,18 @@
 
 (defmacro effect [& expr]
   `(fn ~['state 'side 'eid 'card 'targets]
-     ~(let [actions (map #(if (#{:runner :corp} (second %))
+     ~(let [actions (map #(if (#{:hazPlayer :resPlayer} (second %))
                             (concat [(first %) 'state (second %)] (drop 2 %))
                             (concat [(first %) 'state 'side] (rest %)))
                          expr)]
-        `(let ~['runner '(:runner @state)
-                'corp '(:corp @state)
-                'corp-reg '(get-in @state [:corp :register])
-                'corp-reg-last '(get-in @state [:corp :register-last-turn])
-                'runner-reg '(get-in @state [:runner :register])
-                'runner-reg-last '(get-in @state [:runner :register-last-turn])
+        `(let ~['runner '(:hazPlayer @state)
+                'corp '(:resPlayer @state)
+                'corp-reg '(get-in @state [:resPlayer :register])
+                'corp-reg-last '(get-in @state [:resPlayer :register-last-turn])
+                'runner-reg '(get-in @state [:hazPlayer :register])
+                'runner-reg-last '(get-in @state [:hazPlayer :register-last-turn])
                 'run-server '(when (:run @state)
-                               (get-in @state (concat [:corp :servers] (:server (:run @state)))))
+                               (get-in @state (concat [:resPlayer :servers] (:server (:run @state)))))
                 'run-ices '(:ices run-server)
                 'current-ice '(when-let [run-pos (:position (:run @state))]
                                 (when (and (pos? run-pos) (<= run-pos (count (:ices run-server))))
@@ -23,26 +23,26 @@
 
 (defmacro req [& expr]
   `(fn ~['state 'side 'eid 'card 'targets]
-     (let ~['runner '(:runner @state)
-            'corp '(:corp @state)
+     (let ~['runner '(:hazPlayer @state)
+            'corp '(:resPlayer @state)
             'run '(:run @state)
             'run-server '(when (:run @state)
-                           (get-in @state (concat [:corp :servers] (:server (:run @state)))))
+                           (get-in @state (concat [:resPlayer :servers] (:server (:run @state)))))
             'run-ices '(:ices run-server)
             'current-ice '(when-let [run-pos (:position (:run @state))]
                             (when (and (pos? run-pos) (<= run-pos (count (:ices run-server))))
                               (nth (:ices run-server) (dec run-pos))))
-            'corp-reg '(get-in @state [:corp :register])
-            'corp-reg-last '(get-in @state [:corp :register-last-turn])
-            'runner-reg '(get-in @state [:runner :register])
-            'runner-reg-last '(get-in @state [:runner :register-last-turn])
+            'corp-reg '(get-in @state [:resPlayer :register])
+            'corp-reg-last '(get-in @state [:resPlayer :register-last-turn])
+            'runner-reg '(get-in @state [:hazPlayer :register])
+            'runner-reg-last '(get-in @state [:hazPlayer :register-last-turn])
             'target '(first targets)
             'installed '(#{:rig :servers} (first (:zone (get-nested-host card))))
             'remotes '(get-remote-names @state)
             'servers '(zones->sorted-names (get-zones @state))
             'unprotected '(let [server (second (:zone (if (:host card)
                                                         (get-card state (:host card)) card)))]
-                            (empty? (get-in @state [:corp :servers server :ices])))
+                            (empty? (get-in @state [:resPlayer :servers server :ices])))
             'runnable-servers '(zones->sorted-names (get-runnable-zones @state))
             'hq-runnable '(not (:hq (get-in runner [:register :cannot-run-on-server])))
             'rd-runnable '(not (:rd (get-in runner [:register :cannot-run-on-server])))
@@ -57,15 +57,15 @@
 
 (defmacro msg [& expr]
   `(fn ~['state 'side 'eid 'card 'targets]
-     (let ~['runner '(:runner @state)
-            'corp '(:corp @state)
-            'corp-reg '(get-in @state [:corp :register])
-            'corp-reg-last '(get-in @state [:corp :register-last-turn])
-            'runner-reg '(get-in @state [:runner :register])
-            'runner-reg-last '(get-in @state [:runner :register-last-turn])
+     (let ~['runner '(:hazPlayer @state)
+            'corp '(:resPlayer @state)
+            'corp-reg '(get-in @state [:resPlayer :register])
+            'corp-reg-last '(get-in @state [:resPlayer :register-last-turn])
+            'runner-reg '(get-in @state [:hazPlayer :register])
+            'runner-reg-last '(get-in @state [:hazPlayer :register-last-turn])
             'run '(:run @state)
             'run-server '(when (:run @state)
-                           (get-in @state (concat [:corp :servers] (:server (:run @state)))))
+                           (get-in @state (concat [:resPlayer :servers] (:server (:run @state)))))
             'run-ices '(:ices run-server)
             'current-ice '(when-let [run-pos (:position (:run @state))]
                             (when (and (pos? run-pos) (<= run-pos (count (:ices run-server))))

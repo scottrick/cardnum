@@ -51,16 +51,16 @@
 (defn cloud-icebreaker [cdef]
   (assoc cdef :effect (req (add-watch state (keyword (str "cloud" (:cid card)))
                         (fn [k ref old new]
-                          (when (and (< (get-in old [:runner :link]) 2)
-                                     (> (get-in new [:runner :link]) 1))
-                            (gain state :runner :memory (:memoryunits card)))
-                          (when (and (> (get-in old [:runner :link]) 1)
-                                     (< (get-in new [:runner :link]) 2))
-                            (lose state :runner :memory (:memoryunits card))))))
+                          (when (and (< (get-in old [:hazPlayer :link]) 2)
+                                     (> (get-in new [:hazPlayer :link]) 1))
+                            (gain state :hazPlayer :memory (:memoryunits card)))
+                          (when (and (> (get-in old [:hazPlayer :link]) 1)
+                                     (< (get-in new [:hazPlayer :link]) 2))
+                            (lose state :hazPlayer :memory (:memoryunits card))))))
               :leave-play (req (remove-watch state (keyword (str "cloud" (:cid card))))
-                               (when (> (get-in @state [:runner :link]) 1)
-                                 (lose state :runner :memory (:memoryunits card))))
-              :install-cost-bonus (req (when (> (get-in @state [:runner :link]) 1)
+                               (when (> (get-in @state [:hazPlayer :link]) 1)
+                                 (lose state :hazPlayer :memory (:memoryunits card))))
+              :install-cost-bonus (req (when (> (get-in @state [:hazPlayer :link]) 1)
                                          [:memory (* -1 (:memoryunits card))]))))
 
 (defn- strength-pump
@@ -106,9 +106,9 @@
                       :events (let [cloud {:silent (req true)
                                            :req (req (has-subtype? target "Icebreaker"))
                                            :effect (effect (update-breaker-strength card))}]
-                                {:runner-install cloud :trash cloud :card-moved cloud})
+                                {:hazPlayer-install cloud :trash cloud :card-moved cloud})
                       :strength-bonus (req (count (filter #(has-subtype? % "Icebreaker")
-                                                          (all-installed state :runner))))}))
+                                                          (all-installed state :hazPlayer))))}))
 
 (defn- global-sec-breaker
   "GlobalSec breakers for Sunny"
@@ -131,13 +131,13 @@
                                                 (let [hosted (host state side (get-card state hostcard) target)]
                                                   (card-init state side hosted {:resolve-effect false
                                                                                 :init-data true}))
-                                                (let [devavec (get-in @state [:runner :rig :program])
+                                                (let [devavec (get-in @state [:hazPlayer :rig :program])
                                                       devaindex (first (keep-indexed #(when (= (:cid %2) (:cid card)) %1) devavec))
                                                       newdeva (assoc target :zone (:zone card) :installed true)
                                                       newvec (apply conj (subvec devavec 0 devaindex) newdeva (subvec devavec devaindex))]
-                                                  (lose state :runner :memory (:memoryunits card))
-                                                  (swap! state assoc-in [:runner :rig :program] newvec)
-                                                  (swap! state update-in [:runner :hand] (fn [coll] (remove-once #(not= (:cid %) (:cid target)) coll)))
+                                                  (lose state :hazPlayer :memory (:memoryunits card))
+                                                  (swap! state assoc-in [:hazPlayer :rig :program] newvec)
+                                                  (swap! state update-in [:hazPlayer :hand] (fn [coll] (remove-once #(not= (:cid %) (:cid target)) coll)))
                                                   (card-init state side newdeva {:resolve-effect false
                                                                                  :init-data true})))
                                               (move state side card :hand))}]}))
@@ -149,12 +149,12 @@
                                        (rezzed? current-ice)
                                        (has-subtype? current-ice type)
                                        (not (install-locked? state side))
-                                       (not (some #(= title (:title %)) (all-installed state :runner)))
+                                       (not (some #(= title (:title %)) (all-installed state :hazPlayer)))
                                        (not (get-in @state [:run :register :conspiracy (:cid current-ice)]))))
-                        :optional {:player :runner
+                        :optional {:player :hazPlayer
                                    :prompt (str "Install " title "?")
                                    :yes-ability {:effect (effect (unregister-events card)
-                                                                 (runner-install :runner card))}
+                                                                 (runner-install :hazPlayer card))}
                                    :no-ability {:effect (req  ;; Add a register to note that the player was already asked about installing,
                                                               ;; to prevent multiple copies from prompting multiple times.
                                                               (swap! state assoc-in [:run :register :conspiracy (:cid current-ice)] true))}}}
@@ -197,7 +197,7 @@
                  :msg "break 1 Sentry or Barrier subroutine"}]
     :effect (req (add-watch state (keyword (str "adept" (:cid card)))
                             (fn [k ref old new]
-                              (when (not= (get-in old [:runner :memory]) (get-in new [:runner :memory]))
+                              (when (not= (get-in old [:hazPlayer :memory]) (get-in new [:hazPlayer :memory]))
                                 (update-breaker-strength ref side card))))
                  (update-breaker-strength state side card))
     :leave-play (req (remove-watch state (keyword (str "adept" (:cid card)))))
@@ -227,7 +227,7 @@
                                                  (rezzed? current-ice)))
                                   :msg (msg "add " (:title current-ice) " to HQ after breaking all its subroutines")
                                   :effect (req (let [c current-ice]
-                                                 (move state :corp c :hand nil)
+                                                 (move state :resPlayer c :hand nil)
                                                  (continue state side nil)))}]})
 
    "Atman"
@@ -280,7 +280,7 @@
                                                                     (filter #(not= :manual-state (:ability-type %))
                                                                             (:abilities (card-def c)))))
                                                (:hosted card))]
-                          (update! state :runner (assoc card :abilities (concat new-abis [host-click host-free])))))]
+                          (update! state :hazPlayer (assoc card :abilities (concat new-abis [host-click host-free])))))]
    {:abilities [host-click host-free]
     :hosted-gained gain-abis
     :hosted-lost gain-abis})
@@ -297,7 +297,7 @@
                                             (has-subtype? target "Barrier")
                                             (rezzed? target)))
                              :delayed-completion true
-                             :effect (effect (continue-ability :runner
+                             :effect (effect (continue-ability :hazPlayer
                                                {:prompt "How many subroutines are on the encountered Barrier?"
                                                 :choices {:number (req 10)}
                                                 :delayed-completion true
@@ -351,7 +351,7 @@
     :choices ["Barrier" "Code Gate" "Sentry"]
     :msg (msg "choose " target)
     :effect (effect (update! (assoc card :subtype-target target)))
-    :events {:runner-turn-ends {:msg "add itself to Grip" :effect (effect (move card :hand))}}
+    :events {:hazPlayer-turn-ends {:msg "add itself to Grip" :effect (effect (move card :hand))}}
     :abilities [{:cost [:credit 1] :msg (msg "break 1 " (:subtype-target card) " subroutine")}]}
 
    "Corroder"
@@ -410,14 +410,14 @@
                                  (strength-pump 1 1)]})
 
    "Darwin"
-   {:flags {:runner-phase-12 (req true)}
+   {:flags {:hazPlayer-phase-12 (req true)}
     :events {:purge {:effect (effect (update-breaker-strength card))}}
     :abilities [(break-sub 2 1 "ICE")
                 {:label "Place 1 virus counter (start of turn)"
                  :once :per-turn
                  :cost [:credit 1]
                  :msg "place 1 virus counter"
-                 :req (req (:runner-phase-12 @state))
+                 :req (req (:hazPlayer-phase-12 @state))
                  :effect (effect (add-counter card :virus 1)
                                  (update-breaker-strength card))}]
     :strength-bonus (req (or (get-virus-counters state side card) 0))}
@@ -449,7 +449,7 @@
    "Endless Hunger"
    {:abilities [{:label "Trash 1 installed card to break 1 \"End the run.\" subroutine"
                  :prompt "Select a card to trash for Endless Hunger"
-                 :choices {:req #(and (= (:side %) "Runner") (:installed %))}
+                 :choices {:req #(and (= (:side %) "HazPlayer") (:installed %))}
                  :msg (msg "trash " (:title target)
                            " and break 1 \"[Subroutine] End the run.\" subroutine")
                  :effect (effect (trash target {:unpreventable true}))}]}
@@ -517,13 +517,13 @@
 
    "God of War"
    (auto-icebreaker ["All"]
-                    {:flags {:runner-phase-12 (req true)}
+                    {:flags {:hazPlayer-phase-12 (req true)}
                      :abilities [(strength-pump 2 1)
                                  {:counter-cost [:virus 1]
                                   :msg "break 1 subroutine"}
                                  {:label "Take 1 tag to place 2 virus counters (start of turn)"
                                   :once :per-turn
-                                  :effect (req (when-completed (tag-runner state :runner 1)
+                                  :effect (req (when-completed (tag-runner state :hazPlayer 1)
                                                                (if (not (get-in @state [:tag :tag-prevent]))
                                                                  (do (add-counter state side card :virus 2)
                                                                      (system-msg state side
@@ -628,11 +628,11 @@
 
    "Mammon"
    (auto-icebreaker ["All"]
-                    {:flags {:runner-phase-12 (req (> (:credit runner) 0))}
+                    {:flags {:hazPlayer-phase-12 (req (> (:credit runner) 0))}
                      :abilities [{:label "X [Credits]: Place X power counters"
                                   :prompt "How many power counters to place on Mammon?" :once :per-turn
                                   :choices {:number (req (:credit runner))}
-                                  :req (req (:runner-phase-12 @state))
+                                  :req (req (:hazPlayer-phase-12 @state))
                                   :effect (effect (lose :credit target)
                                                   (add-counter card :power target))
                                   :msg (msg "place " target " power counters on it")}
@@ -640,7 +640,7 @@
                                   :label "Hosted power counter: Break ICE subroutine"
                                   :msg "break 1 ICE subroutine"}
                                  (strength-pump 2 2)]
-                     :events {:runner-turn-ends {:effect (effect (update! (assoc-in card [:counter :power] 0)))}}})
+                     :events {:hazPlayer-turn-ends {:effect (effect (update! (assoc-in card [:counter :power] 0)))}}})
 
    "Mass-Driver"
    (auto-icebreaker ["Code Gate"]
@@ -653,8 +653,8 @@
     :events (let [maven {:silent (req true)
                          :req (req (is-type? target "Program"))
                          :effect (effect (update-breaker-strength card))}]
-              {:runner-install maven :trash maven :card-moved maven})
-    :strength-bonus (req (count (filter #(is-type? % "Program") (all-installed state :runner))))}
+              {:hazPlayer-install maven :trash maven :card-moved maven})
+    :strength-bonus (req (count (filter #(is-type? % "Program") (all-installed state :hazPlayer))))}
 
    "Morning Star"
    {:abilities [(break-sub 1 0 "Barrier")]}
@@ -684,8 +684,8 @@
                                                           (not= (get-in old [:run])
                                                                 (get-in new [:run]))
                                                           ; server configuration changed (redirected or newly installed ICE)
-                                                          (not= (get-in old [:corp :servers server :ices])
-                                                                (get-in new [:corp :servers server :ices])))
+                                                          (not= (get-in old [:resPlayer :servers server :ices])
+                                                                (get-in new [:resPlayer :servers server :ices])))
                                                     (update-breaker-strength ref side card))))))
                      :strength-bonus (req (if-let [numice (count run-ices)] numice 0))
                      :leave-play (req (remove-watch state (keyword (str "nanotk" (:cid card)))))
@@ -769,8 +769,8 @@
                                                                   :msg (msg (if (pos? target)
                                                                               (str "trash " (:title (first (:deck runner))) " from their Stack and trash " target " cards from R&D")
                                                                               (str "trash " (:title (first (:deck runner))) " from their Stack and nothing from R&D")))
-                                                                  :effect (effect (mill :runner 1)
-                                                                                  (mill :corp target))}}}}})
+                                                                  :effect (effect (mill :hazPlayer 1)
+                                                                                  (mill :resPlayer target))}}}}})
 
    "Pipeline"
    (auto-icebreaker ["Sentry"]
@@ -806,7 +806,7 @@
                  :msg "break 1 Code Gate or Barrier subroutine"}]
     :effect (req (add-watch state (keyword (str "sage" (:cid card)))
                             (fn [k ref old new]
-                              (when (not= (get-in old [:runner :memory]) (get-in new [:runner :memory]))
+                              (when (not= (get-in old [:hazPlayer :memory]) (get-in new [:hazPlayer :memory]))
                                 (update-breaker-strength ref side card))))
                  (update-breaker-strength state side card))
     :leave-play (req (remove-watch state (keyword (str "sage" (:cid card)))))
@@ -830,7 +830,7 @@
                               :msg "break 2 Code Gate subroutines"}]
     :effect (req (add-watch state (keyword (str "savant" (:cid card)))
                             (fn [k ref old new]
-                              (when (not= (get-in old [:runner :memory]) (get-in new [:runner :memory]))
+                              (when (not= (get-in old [:hazPlayer :memory]) (get-in new [:hazPlayer :memory]))
                                 (update-breaker-strength ref side card))))
                  (update-breaker-strength state side card))
     :leave-play (req (remove-watch state (keyword (str "savant" (:cid card)))))

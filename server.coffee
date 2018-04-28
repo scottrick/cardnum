@@ -40,7 +40,7 @@ lobbyUpdate = false
 lobbyUpdates = {"create" : {}, "update" : {}, "delete" : {}}
 
 swapSide = (side) ->
-  if side is "Corp" then "Runner" else "Corp"
+  if side is "ResPlayer" then "HazPlayer" else "ResPlayer"
 
 refreshLobby = (type, gameid) ->
   lobbyUpdate = true
@@ -87,7 +87,7 @@ removePlayer = (socket) ->
 rejoinGame = (socket, gameid, user, options) ->
   game = games[gameid]
   if game and game.started and game.players.length < 2
-    side = if game.players.length is 1 then swapSide(game.players[0].side) else "Corp"
+    side = if game.players.length is 1 then swapSide(game.players[0].side) else "ResPlayer"
     user.id = socket.id
     game.players.push(user)
     # Replace the game end player list with the new list
@@ -101,7 +101,7 @@ rejoinGame = (socket, gameid, user, options) ->
 joinGame = (socket, gameid, options) ->
   game = games[gameid]
   if game and game.players.length < 2
-    side = if game.players.length is 1 then swapSide(game.players[0].side) else "Corp"
+    side = if game.players.length is 1 then swapSide(game.players[0].side) else "ResPlayer"
     game.players.push({user: socket.request.user, id: socket.id, side: side, options: options})
     socket.join(gameid)
     socket.gameid = gameid
@@ -218,13 +218,13 @@ sendGameResponse = (game, response) ->
 
   for player in game.players
     socket = io.sockets.connected[player.id]
-    if player.side is "Corp"
+    if player.side is "ResPlayer"
       # The response will either have a diff or a state. we don't actually send both,
       # whichever is null will not be sent over the socket.
       lobby.to(player.id).emit("meccg", {type: response.action,\
                                              diff: response.corpdiff, \
                                              state: response.corpstate})
-    else if player.side is "Runner"
+    else if player.side is "HazPlayer"
       lobby.to(player.id).emit("meccg", {type: response.action, \
                                              diff: response.runnerdiff, \
                                              state: response.runnerstate})
@@ -477,8 +477,8 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
           game = games[socket.gameid]
           if game
             if game.players.length is 2
-              corp = if game.players[0].side is "Corp" then game.players[0] else game.players[1]
-              runner = if game.players[0].side is "Runner" then game.players[0] else game.players[1]
+              corp = if game.players[0].side is "ResPlayer" then game.players[0] else game.players[1]
+              runner = if game.players[0].side is "HazPlayer" then game.players[0] else game.players[1]
               g = {
                 gameid: socket.gameid
                 startDate: (new Date()).toISOString()

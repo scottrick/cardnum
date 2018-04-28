@@ -443,7 +443,7 @@
        (<= (influence-count deck) (id-inf-limit identity))
        (every? #(and (allowed? (:card %) identity)
                      (legal-num-copies? identity %)) cards)
-       (or (= (:side identity) "Runner")
+       (or (= (:side identity) "HazPlayer")
            (let [min (min-agenda-points deck)]
              (<= min (agenda-points deck) (inc min))))))
 

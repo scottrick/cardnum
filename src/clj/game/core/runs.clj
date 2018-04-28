@@ -13,48 +13,48 @@
   ([state side eid server] (run state side eid server nil nil))
   ([state side server run-effect card] (run state side (make-eid state) server run-effect card))
   ([state side eid server run-effect card]
-   (when (can-run? state :runner)
+   (when (can-run? state :hazPlayer)
      (let [s [(if (keyword? server) server (last (server->zone state server)))]
-           ices (get-in @state (concat [:corp :servers] s [:ices]))
+           ices (get-in @state (concat [:resPlayer :servers] s [:ices]))
            n (count ices)]
        ;; s is a keyword for the server, like :hq or :remote1
        (swap! state assoc :per-run nil
               :run {:server s :position n :access-bonus 0
                     :run-effect (assoc run-effect :card card)
                     :eid eid})
-       (gain-run-credits state side (+ (get-in @state [:corp :bad-publicity]) (get-in @state [:corp :has-bad-pub])))
-       (swap! state update-in [:runner :register :made-run] #(conj % (first s)))
-       (update-all-ice state :corp)
-       (trigger-event-sync state :runner (make-eid state) :run s)
-       (when (>= n 2) (trigger-event state :runner :run-big s n))))))
+       (gain-run-credits state side (+ (get-in @state [:resPlayer :bad-publicity]) (get-in @state [:resPlayer :has-bad-pub])))
+       (swap! state update-in [:hazPlayer :register :made-run] #(conj % (first s)))
+       (update-all-ice state :resPlayer)
+       (trigger-event-sync state :hazPlayer (make-eid state) :run s)
+       (when (>= n 2) (trigger-event state :hazPlayer :run-big s n))))))
 
 (defn gain-run-credits
   "Add temporary credits that will disappear when the run is over."
   [state side n]
-  (swap! state update-in [:runner :run-credit] + n)
-  (gain state :runner :credit n))
+  (swap! state update-in [:hazPlayer :run-credit] + n)
+  (gain state :hazPlayer :credit n))
 
 ;;; Stealing agendas
 (defn steal
   "Moves a card to the runner's :scored area, triggering events from the completion of the steal."
   ([state side card] (steal state side (make-eid state) card))
   ([state side eid card]
-   (let [c (move state :runner (dissoc card :advance-counter :new) :scored {:force true})
-         points (get-agenda-points state :runner c)]
+   (let [c (move state :hazPlayer (dissoc card :advance-counter :new) :scored {:force true})
+         points (get-agenda-points state :hazPlayer c)]
      (when-completed
        (trigger-event-simult
-         state :runner :agenda-stolen
-         {:first-ability {:effect (req (system-msg state :runner (str "steals " (:title c) " and gains "
+         state :hazPlayer :agenda-stolen
+         {:first-ability {:effect (req (system-msg state :hazPlayer (str "steals " (:title c) " and gains "
                                                                       (quantify points "agenda point")))
-                                       (swap! state update-in [:runner :register :stole-agenda]
+                                       (swap! state update-in [:hazPlayer :register :stole-agenda]
                                               #(+ (or % 0) (:agendapoints c)))
-                                       (gain-agenda-point state :runner points)
+                                       (gain-agenda-point state :hazPlayer points)
                                        (play-sfx state side "agenda-steal")
                                        (when (:run @state)
                                          (swap! state assoc-in [:run :did-steal] true))
                                        (when (card-flag? c :has-events-when-stolen true)
                                          (register-events state side (:events (card-def c)) c))
-                                       (when-let [current (first (get-in @state [:corp :current]))]
+                                       (when-let [current (first (get-in @state [:resPlayer :current]))]
                                          (say state side {:user "__system__" :text (str (:title current) " is trashed.")})
                                          (trash state side current)))}
           :card-ability (ability-as-handler c (:stolen (card-def c)))}
@@ -74,8 +74,8 @@
   ([state side eid card]
    (let [cdef (card-def card)]
      (when-completed (resolve-steal-events state side card)
-                     (if (or (not (:steal-req cdef)) ((:steal-req cdef) state :runner (make-eid state) card nil))
-                       (steal state :runner eid card)
+                     (if (or (not (:steal-req cdef)) ((:steal-req cdef) state :hazPlayer (make-eid state) card nil))
+                       (steal state :hazPlayer eid card)
                        (effect-completed state side eid nil))))))
 
 (defn steal-cost-bonus
@@ -116,15 +116,15 @@
       ;; The card has a trash cost (Asset, Upgrade)
       (let [card (assoc c :seen true)
             name (:title card)
-            trash-msg (str trash-cost " [Credits] to trash " name " from " (name-zone :corp (:zone card)))]
-        (if (and (get-in @state [:runner :register :force-trash])
-                 (can-pay? state :runner name :credit trash-cost))
+            trash-msg (str trash-cost " [Credits] to trash " name " from " (name-zone :resPlayer (:zone card)))]
+        (if (and (get-in @state [:hazPlayer :register :force-trash])
+                 (can-pay? state :hazPlayer name :credit trash-cost))
           ;; If the runner is forced to trash this card (Neutralize All Threats)
-          (continue-ability state :runner
+          (continue-ability state :hazPlayer
                             {:cost [:credit trash-cost]
                              :delayed-completion true
                              :effect (req (trash state side eid card nil)
-                                          (swap! state assoc-in [:runner :register :trashed-card] true)
+                                          (swap! state assoc-in [:hazPlayer :register :trashed-card] true)
                                           (system-msg state side (str "is forced to pay " trash-msg)))}
                             card nil)
           ;; Otherwise, show the option to pay to trash the card.
@@ -132,8 +132,8 @@
                          ;; Don't show the option if Edward Kim's auto-trash flag is true.
                          (card-flag? card :can-trash-operation true))
             ;; If card has already been trashed this access don't show option to pay to trash (eg. Ed Kim)
-            (when-not (find-cid (:cid card) (get-in @state [:corp :discard]))
-              (continue-ability state :runner
+            (when-not (find-cid (:cid card) (get-in @state [:resPlayer :discard]))
+              (continue-ability state :hazPlayer
                                 {:optional
                                  {:prompt (str "Pay " trash-cost " [Credits] to trash " name "?")
                                   :no-ability {:effect (req
@@ -146,13 +146,13 @@
                                                 :effect (req (trash state side eid card nil)
                                                              (when (:run @state)
                                                                (swap! state assoc-in [:run :did-trash] true))
-                                                             (swap! state assoc-in [:runner :register :trashed-card] true)
+                                                             (swap! state assoc-in [:hazPlayer :register :trashed-card] true)
                                                              (system-msg state side (str "pays " trash-msg)))}}}
                                 card nil)))))
       ;; The card does not have a trash cost
-      (do (prompt! state :runner c (str "You accessed " (:title c)) ["OK"] {:eid eid})
+      (do (prompt! state :hazPlayer c (str "You accessed " (:title c)) ["OK"] {:eid eid})
           ;; TODO: Trigger :no-trash after hit "OK" on access
-          (when-not (find-cid (:cid c) (get-in @state [:corp :discard]))
+          (when-not (find-cid (:cid c) (get-in @state [:resPlayer :discard]))
             ;; Do not trigger :no-trash if card (operation) has already been trashed
             (trigger-event state side :no-trash c))))
     (effect-completed state side eid)))
@@ -165,7 +165,7 @@
    :choices (conj (vec choices) "Don't steal")
    :effect (req
              (if (= target "Don't steal")
-               (continue-ability state :runner
+               (continue-ability state :hazPlayer
                                  {:delayed-completion true
                                   :effect (effect (system-msg (str "decides not to pay to steal " (:title card)))
                                                   (trigger-event :no-steal card)
@@ -181,7 +181,7 @@
                                                    " to steal " (:title card)))
                        (if (< (count chosen) n)
                          (continue-ability state side
-                                              (steal-pay-choice state :runner (remove-once #(not= target %)
+                                              (steal-pay-choice state :hazPlayer (remove-once #(not= target %)
                                                                                      choices) chosen n card) card nil)
                          (resolve-steal state side eid card)))
                    (resolve-steal-events state side eid card)))))})
@@ -192,7 +192,7 @@
   (if-not (can-steal? state side c)
     ;; The runner cannot steal this agenda.
     (when-completed (resolve-steal-events state side c)
-                    (do (prompt! state :runner c (str "You accessed but cannot steal " (:title c)) ["OK"] {})
+                    (do (prompt! state :hazPlayer c (str "You accessed but cannot steal " (:title c)) ["OK"] {})
                         (trigger-event state side :no-steal c)
                         (effect-completed state side eid c)))
     ;; The runner can potentially steal this agenda.
@@ -205,7 +205,7 @@
         ;; Ask if the runner will pay a single additional cost to steal.
         (= 1 (count choices))
         (optional-ability
-          state :runner eid c (str "Pay " (costs-to-symbol cost) " to steal " name "?")
+          state :hazPlayer eid c (str "Pay " (costs-to-symbol cost) " to steal " name "?")
           {:yes-ability
                        {:delayed-completion true
                         :effect (req (if (can-pay? state side name cost)
@@ -221,14 +221,14 @@
 
         ;; For multiple additional costs give the runner the choice of order to pay
         (> (count choices) 1)
-        (continue-ability state side (steal-pay-choice state :runner choices '() n c) c nil)
+        (continue-ability state side (steal-pay-choice state :hazPlayer choices '() n c) c nil)
 
         ;; Otherwise, show the "You access" prompt with the single option to Steal.
         :else
-        (continue-ability state :runner
+        (continue-ability state :hazPlayer
                           {:delayed-completion true
                            :prompt (str "You access " name) :choices ["Steal"]
-                           :effect (req (resolve-steal state :runner eid c))} c nil)))))
+                           :effect (req (resolve-steal state :hazPlayer eid c))} c nil)))))
 
 (defn msg-handle-access
   ([state side cards]
@@ -271,7 +271,7 @@
                                    (if (and access-effect
                                             (can-trigger? state side access-effect c nil))
                                      ;; deal with access effects first. This is where Film Critic can be used to prevent these
-                                     (continue-ability state :runner
+                                     (continue-ability state :hazPlayer
                                                        {:delayed-completion true
                                                         :prompt (str "You must access " name)
                                                         :choices ["Access"]
@@ -292,7 +292,7 @@
 
                              :else
                              ;; The runner cannot afford the cost to access the card
-                             (prompt! state :runner nil "You can't pay the cost to access this card" ["OK"] {})))
+                             (prompt! state :hazPlayer nil "You can't pay the cost to access this card" ["OK"] {})))
                          (trigger-event state side :post-access-card c))))))
 
 (defn max-access
@@ -308,7 +308,7 @@
 
 (defn access-count [state side kw]
   (let [run (:run @state)
-        accesses (+ (get-in @state [:runner kw]) (:access-bonus run 0))]
+        accesses (+ (get-in @state [:hazPlayer kw]) (:access-bonus run 0))]
     (if-let [max-access (:max-access run)]
       (min max-access accesses) accesses)))
 
@@ -331,8 +331,8 @@
 (defmethod choose-access :remote [cards server]
   {:delayed-completion true
    :effect (req (if (and (>= 1 (count cards))
-                         (not (any-flag-fn? state :runner :slow-remote-access true
-                                            (concat (all-active state :runner) (all-active state :corp)))))
+                         (not (any-flag-fn? state :hazPlayer :slow-remote-access true
+                                            (concat (all-active state :hazPlayer) (all-active state :resPlayer)))))
                   (handle-access state side eid cards)
                   (continue-ability state side (access-helper-remote cards) card nil)))})
 
@@ -348,7 +348,7 @@
   already-accessed: a set of cards already accessed from this zone or its root."
 
   (let [get-root-content (fn [state]
-                           (filter #(not (contains? already-accessed %)) (get-in @state [:corp :servers zone :content])))
+                           (filter #(not (contains? already-accessed %)) (get-in @state [:resPlayer :servers zone :content])))
         server-name (central->name zone)
         unrezzed-upgrade (str "Unrezzed upgrade in " server-name)
         card-from (str "Card from " label)]
@@ -429,7 +429,7 @@
                                                      state :rd "deck" from-rd
                                                      ;; access the first card in deck that has not been accessed.
                                                      (fn [already-accessed] (first (drop-while already-accessed
-                                                                                               (-> @state :corp :deck))))
+                                                                                               (-> @state :resPlayer :deck))))
                                                      (fn [_] "an unseen card from R&D")
                                                      #{})
                                         card nil)))
@@ -438,16 +438,16 @@
 (defmethod choose-access :hq [cards server]
   {:delayed-completion true
    :effect (req (if (pos? (count cards))
-                  (if (and (= 1 (count cards)) (not (any-flag-fn? state :runner :slow-hq-access true)))
+                  (if (and (= 1 (count cards)) (not (any-flag-fn? state :hazPlayer :slow-hq-access true)))
                     (handle-access state side eid cards)
                     (let [from-hq (min (access-count state side :hq-access)
-                                       (-> @state :corp :hand count))
+                                       (-> @state :resPlayer :hand count))
                           ; Handle root only access - no cards to access in hand
                           from-hq (if (some #(= '[:hand] (:zone %)) cards) from-hq 0)]
                       (continue-ability state side (access-helper-hq-or-rd
                                                      state :hq "hand" from-hq
                                                      (fn [already-accessed] (some #(when-not (already-accessed %) %)
-                                                                                  (shuffle (-> @state :corp :hand))))
+                                                                                  (shuffle (-> @state :resPlayer :hand))))
                                                      (fn [card] (:title card))
                                                      #{})
                                         card nil)))
@@ -458,7 +458,7 @@
   "This is a helper for cards to invoke HQ access without knowing how to use the full access method. See Dedicated Neural Net."
   (access-helper-hq-or-rd state :hq "hand" from-hq
                           (fn [already-accessed] (some #(when-not (already-accessed %) %)
-                                                       (shuffle (-> @state :corp :hand))))
+                                                       (shuffle (-> @state :resPlayer :hand))))
                           (fn [card] (:title card))
                           already-accessed))
 
@@ -470,23 +470,23 @@
              ;; must also be :seen
              (and (:seen %)
                   (or (is-type? % "Agenda")
-                      (should-trigger? state :corp % nil (:access cdef)))))
-          (get-in @state [:corp :discard])))
+                      (should-trigger? state :resPlayer % nil (:access cdef)))))
+          (get-in @state [:resPlayer :discard])))
 
 (defn- get-archives-inactive [state]
   ;; get faceup cards with no access interaction
   (filter #(let [cdef (card-def %)]
              (and (:seen %)
                   (not (or (is-type? % "Agenda")
-                           (should-trigger? state :corp % nil (:access cdef))))))
-          (get-in @state [:corp :discard])))
+                           (should-trigger? state :resPlayer % nil (:access cdef))))))
+          (get-in @state [:resPlayer :discard])))
 
 (defn access-helper-archives [state amount already-accessed]
-  (let [root-content (fn [already-accessed] (filter (complement already-accessed) (-> @state :corp :servers :archives :content)))
+  (let [root-content (fn [already-accessed] (filter (complement already-accessed) (-> @state :resPlayer :servers :archives :content)))
         faceup-accessible (fn [already-accessed] (filter (complement already-accessed) (get-archives-accessible state)))
         facedown-cards (fn [already-accessed] (filter #(and (not (:seen %))
                                                             (not (already-accessed %)))
-                                                      (-> @state :corp :discard)))
+                                                      (-> @state :resPlayer :discard)))
 
         next-access (fn [state side eid already-accessed card]
                       (continue-ability state side (access-helper-archives state (dec amount) already-accessed)
@@ -558,8 +558,8 @@
 
 (defmethod choose-access :archives [cards server]
   {:delayed-completion true
-   :effect (req (let [cards (concat (get-archives-accessible state) (-> @state :corp :servers :archives :content))
-                      archives-count (+ (count (-> @state :corp :discard)) (count (-> @state :corp :servers :archives :content)))]
+   :effect (req (let [cards (concat (get-archives-accessible state) (-> @state :resPlayer :servers :archives :content))
+                      archives-count (+ (count (-> @state :resPlayer :discard)) (count (-> @state :resPlayer :servers :archives :content)))]
                   (if (not-empty cards)
                     (if (= 1 archives-count)
                       (handle-access state side eid cards)
@@ -578,19 +578,19 @@
   (fn [state side server] (get-server-type (first server))))
 
 (defmethod cards-to-access :hq [state side server]
-  (concat (take (access-count state side :hq-access) (shuffle (get-in @state [:corp :hand])))
-          (get-in @state [:corp :servers :hq :content])))
+  (concat (take (access-count state side :hq-access) (shuffle (get-in @state [:resPlayer :hand])))
+          (get-in @state [:resPlayer :servers :hq :content])))
 
 (defmethod cards-to-access :rd [state side server]
-  (concat (take (access-count state side :rd-access) (get-in @state [:corp :deck]))
-          (get-in @state [:corp :servers :rd :content])))
+  (concat (take (access-count state side :rd-access) (get-in @state [:resPlayer :deck]))
+          (get-in @state [:resPlayer :servers :rd :content])))
 
 (defmethod cards-to-access :archives [state side server]
-  (swap! state update-in [:corp :discard] #(map (fn [c] (assoc c :seen true)) %))
-  (concat (get-in @state [:corp :discard]) (get-in @state [:corp :servers :archives :content])))
+  (swap! state update-in [:resPlayer :discard] #(map (fn [c] (assoc c :seen true)) %))
+  (concat (get-in @state [:resPlayer :discard]) (get-in @state [:resPlayer :servers :archives :content])))
 
 (defmethod cards-to-access :remote [state side server]
-  (let [contents (get-in @state [:corp :servers (first server) :content])]
+  (let [contents (get-in @state [:resPlayer :servers (first server) :content])]
     (filter (partial can-access-loud state side) (concat contents (get-all-hosted contents)))))
 
 (defn do-access
@@ -625,7 +625,7 @@
 (defn register-successful-run
   ([state side server] (register-successful-run state side (make-eid state) server))
   ([state side eid server]
-   (swap! state update-in [:runner :register :successful-run] #(conj % (first server)))
+   (swap! state update-in [:hazPlayer :register :successful-run] #(conj % (first server)))
    (swap! state assoc-in [:run :successful] true)
    (when-completed (trigger-event-simult state side :pre-successful-run nil (first server))
                    (when-completed (trigger-event-simult state side :successful-run nil (first (get-in @state [:run :server])))
@@ -662,17 +662,17 @@
 (defn successful-run
   "Run when a run has passed all ice and the runner decides to access. The corp may still get to act in 4.3."
   [state side args]
-  (if (get-in @state [:run :corp-phase-43])
+  (if (get-in @state [:run :resPlayer-phase-43])
     ;; if corp requests phase 4.3, then we do NOT fire :successful-run yet, which does not happen until 4.4
     (do (swap! state dissoc :no-action)
-        (system-msg state :corp "wants to act before the run is successful")
-        (show-wait-prompt state :runner "Corp's actions")
-        (show-prompt state :corp nil "Rez and take actions before Successful Run" ["Done"]
+        (system-msg state :resPlayer "wants to act before the run is successful")
+        (show-wait-prompt state :hazPlayer "Corp's actions")
+        (show-prompt state :resPlayer nil "Rez and take actions before Successful Run" ["Done"]
                      (fn [args-corp]
-                       (clear-wait-prompt state :runner)
+                       (clear-wait-prompt state :hazPlayer)
                        (if-not (:ended (:run @state))
-                        (show-prompt state :runner nil "The run is now successful" ["Continue"]
-                                     (fn [args-runner] (successful-run-trigger state :runner)))
+                        (show-prompt state :hazPlayer nil "The run is now successful" ["Continue"]
+                                     (fn [args-runner] (successful-run-trigger state :hazPlayer)))
                         (handle-end-run state side)))
                      {:priority -1}))
     (successful-run-trigger state side)))
@@ -680,7 +680,7 @@
 (defn corp-phase-43
   "The corp indicates they want to take action after runner hits Successful Run, before access."
   [state side args]
-  (swap! state assoc-in [:run :corp-phase-43] true)
+  (swap! state assoc-in [:run :resPlayer-phase-43] true)
   (swap! state assoc-in [:run :no-action] true)
   (system-msg state side "has no further action")
   (trigger-event state side :no-action))
@@ -691,7 +691,7 @@
   ([state side eid]
    (let [run (:run @state)
          server (first (get-in @state [:run :server]))]
-     (swap! state update-in [:runner :register :unsuccessful-run] #(conj % server))
+     (swap! state update-in [:hazPlayer :register :unsuccessful-run] #(conj % server))
      (swap! state assoc-in [:run :unsuccessful] true)
      (handle-end-run state side)
      (trigger-event-sync state side eid :unsuccessful-run run))))
@@ -715,15 +715,15 @@
   (when-completed (trigger-event-sync state side :pre-jack-out)
                   (let [prevent (get-in @state [:prevent :jack-out])]
                     (if (pos? (count prevent))
-                      (do (system-msg state :corp "has the option to prevent the Runner from jacking out")
-                          (show-wait-prompt state :runner "Corp to prevent the jack out" {:priority 10})
-                          (show-prompt state :corp nil
+                      (do (system-msg state :resPlayer "has the option to prevent the Runner from jacking out")
+                          (show-wait-prompt state :hazPlayer "Corp to prevent the jack out" {:priority 10})
+                          (show-prompt state :resPlayer nil
                                        (str "Prevent the Runner from jacking out?") ["Done"]
                                        (fn [_]
-                                         (clear-wait-prompt state :runner)
+                                         (clear-wait-prompt state :hazPlayer)
                                          (if-let [_ (get-in @state [:jack-out :jack-out-prevent])]
                                            (effect-completed state side (make-result eid false))
-                                           (do (system-msg state :corp "will not prevent the Runner from jacking out")
+                                           (do (system-msg state :resPlayer "will not prevent the Runner from jacking out")
                                                (resolve-jack-out state side eid))))
                                        {:priority 10}))
                       (do (resolve-jack-out state side eid)
@@ -754,15 +754,15 @@
         eid (:eid run)]
     (swap! state assoc-in [:run :ending] true)
     (trigger-event state side :run-ends (first server))
-    (doseq [p (filter #(has-subtype? % "Icebreaker") (all-installed state :runner))]
+    (doseq [p (filter #(has-subtype? % "Icebreaker") (all-installed state :hazPlayer))]
       (update! state side (update-in (get-card state p) [:pump] dissoc :all-run))
       (update! state side (update-in (get-card state p) [:pump] dissoc :encounter ))
       (update-breaker-strength state side p))
     (let [run-effect (get-in @state [:run :run-effect])]
       (when-let [end-run-effect (:end-run run-effect)]
         (resolve-ability state side end-run-effect (:card run-effect) [(first server)])))
-    (swap! state update-in [:runner :credit] - (get-in @state [:runner :run-credit]))
-    (swap! state assoc-in [:runner :run-credit] 0)
+    (swap! state update-in [:hazPlayer :credit] - (get-in @state [:hazPlayer :run-credit]))
+    (swap! state assoc-in [:hazPlayer :run-credit] 0)
     (swap! state assoc :run nil)
     (update-all-ice state side)
     (swap! state dissoc :access)
@@ -772,7 +772,7 @@
 (defn handle-end-run
   "Initiate run resolution."
   [state side]
-  (if-not (and (empty? (get-in @state [:runner :prompt])) (empty? (get-in @state [:corp :prompt])))
+  (if-not (and (empty? (get-in @state [:hazPlayer :prompt])) (empty? (get-in @state [:resPlayer :prompt])))
     (swap! state assoc-in [:run :ended] true)
     (run-cleanup state side)))
 
@@ -784,9 +784,9 @@
     (swap! state update-in [side :prompt] rest)
     (effect-completed state side eid nil)
     (when-let [run (:run @state)]
-      (when (and (:ended run) (empty? (get-in @state [:runner :prompt])) )
-        (handle-end-run state :runner)))))
+      (when (and (:ended run) (empty? (get-in @state [:hazPlayer :prompt])) )
+        (handle-end-run state :hazPlayer)))))
 
 (defn get-run-ices
   [state]
-  (get-in @state (concat [:corp :servers] (:server (:run @state)) [:ices])))
+  (get-in @state (concat [:resPlayer :servers] (:server (:run @state)) [:ices])))

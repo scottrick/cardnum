@@ -15,7 +15,7 @@
     (case (:type card)
       ("Event" "Operation") (play-instant state side card {:extra-cost [:click 1]})
       ("Hardware" "Resource" "Program") (runner-install state side (make-eid state) card {:extra-cost [:click 1]})
-      ("ICE" "Upgrade" "Asset" "Agenda") (corp-install state side card server {:extra-cost [:click 1] :action :corp-click-install}))
+      ("ICE" "Upgrade" "Asset" "Agenda") (corp-install state side card server {:extra-cost [:click 1] :action :resPlayer-click-install}))
     (trigger-event state side :play card)))
 
 (defn shuffle-deck
@@ -32,19 +32,19 @@
   "Click to draw."
   [state side args]
   (when (and (not (get-in @state [side :register :cannot-draw]))
-             (pay state side nil :click 1 {:action :corp-click-draw}))
+             (pay state side nil :click 1 {:action :resPlayer-click-draw}))
     (system-msg state side "spends [Click] to draw a card")
-    (trigger-event state side (if (= side :corp) :corp-click-draw :runner-click-draw) (->> @state side :deck (take 1)))
+    (trigger-event state side (if (= side :resPlayer) :resPlayer-click-draw :hazPlayer-click-draw) (->> @state side :deck (take 1)))
     (draw state side)
     (play-sfx state side "click-card")))
 
 (defn click-credit
   "Click to gain 1 credit."
   [state side args]
-  (when (pay state side nil :click 1 {:action :corp-click-credit})
+  (when (pay state side nil :click 1 {:action :resPlayer-click-credit})
     (system-msg state side "spends [Click] to gain 1 [Credits]")
     (gain state side :credit 1)
-    (trigger-event state side (if (= side :corp) :corp-click-credit :runner-click-credit))
+    (trigger-event state side (if (= side :resPlayer) :resPlayer-click-credit :hazPlayer-click-credit))
     (play-sfx state side "click-credit")))
 
 (defn change
@@ -72,17 +72,17 @@
                      (str " in " src) ; this string matches the message when a card is trashed via (trash)
                      (str " from their " src)))
         label (if (and (not= last-zone :play-area)
-                       (not (and (= (:side c) "Runner")
+                       (not (and (= (:side c) "HazPlayer")
                                  (= last-zone :hand)
                                  (= server "Grip")))
-                       (or (and (= (:side c) "Runner")
+                       (or (and (= (:side c) "HazPlayer")
                                 (not (:facedown c)))
                            (rezzed? c)
                            (:seen c)
                            (= last-zone :deck)))
                 (:title c)
                 "a card")
-        s (if (#{"HQ" "R&D" "Archives"} server) :corp :runner)]
+        s (if (#{"HQ" "R&D" "Archives"} server) :resPlayer :hazPlayer)]
     ;; allow moving from play-area always, otherwise only when same side, and to valid zone
     (when (and (not= src server)
                (same-side? s (:side card))
@@ -103,7 +103,7 @@
 
 (defn concede [state side args]
   (system-msg state side "concedes")
-  (win state (if (= side :corp) :runner :corp) "Concede"))
+  (win state (if (= side :resPlayer) :hazPlayer :resPlayer) "Concede"))
 
 (defn- finish-prompt [state side prompt card]
   (when-let [end-effect (:end-effect prompt)]
@@ -111,10 +111,10 @@
   ;; remove the prompt from the queue
   (swap! state update-in [side :prompt] (fn [pr] (filter #(not= % prompt) pr)))
   ;; This is a dirty hack to end the run when the last access prompt is resolved.
-  (when (empty? (get-in @state [:runner :prompt]))
+  (when (empty? (get-in @state [:hazPlayer :prompt]))
     (when-let [run (:run @state)]
       (when (:ended run)
-        (handle-end-run state :runner)))
+        (handle-end-run state :hazPlayer)))
     (swap! state dissoc :access)))
 
 (defn resolve-prompt
@@ -209,7 +209,7 @@
         strdif (when current-ice (max 0 (- (or (:current-strength current-ice) (:strength current-ice))
                                            (or (:current-strength card) (:strength card)))))
         pumpnum (when strdif (int (Math/ceil (/ strdif (:pump pumpabi)))))]
-    (when (and pumpnum pumpcst (>= (get-in @state [:runner :credit]) (* pumpnum pumpcst)))
+    (when (and pumpnum pumpcst (>= (get-in @state [:hazPlayer :credit]) (* pumpnum pumpcst)))
       (dotimes [n pumpnum] (resolve-ability state side (dissoc pumpabi :msg) (get-card state card) nil))
       (system-msg state side (str "spends " (* pumpnum pumpcst) " [Credits] to increase the strength of "
                                   (:title card) " to " (:current-strength (get-card state card)))))))
@@ -235,10 +235,10 @@
   ((dynamic-abilities (:dynamic args)) state (keyword side) args))
 
 (defn play-runner-ability
-  "Triggers a corp card's runner-ability using its zero-based index into the card's card-def :runner-abilities vector."
+  "Triggers a corp card's runner-ability using its zero-based index into the card's card-def :hazPlayer-abilities vector."
   [state side {:keys [card ability targets] :as args}]
   (let [cdef (card-def card)
-        ab (get-in cdef [:runner-abilities ability])]
+        ab (get-in cdef [:hazPlayer-abilities ability])]
     (do-play-ability state side card ab targets)))
 
 (defn play-subroutine
@@ -257,13 +257,13 @@
 (defn trash-resource
   "Click to trash a resource."
   [state side args]
-  (let [trash-cost (max 0 (- 2 (or (get-in @state [:corp :trash-cost-bonus]) 0)))]
-    (when-let [cost-str (pay state side nil :click 1 :credit trash-cost {:action :corp-trash-resource})]
+  (let [trash-cost (max 0 (- 2 (or (get-in @state [:resPlayer :trash-cost-bonus]) 0)))]
+    (when-let [cost-str (pay state side nil :click 1 :credit trash-cost {:action :resPlayer-trash-resource})]
       (resolve-ability state side
                        {:prompt  "Choose a resource to trash"
                         :choices {:req (fn [card]
-                                         (if (and (seq (filter (fn [c] (untrashable-while-resources? c)) (all-installed state :runner)))
-                                                  (> (count (filter #(is-type? % "Resource") (all-installed state :runner))) 1))
+                                         (if (and (seq (filter (fn [c] (untrashable-while-resources? c)) (all-installed state :hazPlayer)))
+                                                  (> (count (filter #(is-type? % "Resource") (all-installed state :hazPlayer))) 1))
                                            (and (is-type? card "Resource") (not (untrashable-while-resources? card)))
                                            (is-type? card "Resource")))}
                         :cancel-effect (effect (gain :credit trash-cost :click 1))
@@ -274,7 +274,7 @@
 (defn do-purge
   "Purge viruses."
   [state side args]
-  (when-let [cost (pay state side nil :click 3 {:action :corp-click-purge})]
+  (when-let [cost (pay state side nil :click 3 {:action :resPlayer-click-purge})]
     (purge state side)
     (let [spent (build-spend-msg cost "purge")
           message (str spent "all virus counters")]
@@ -335,8 +335,8 @@
 
                                                    ignore-cost
                                                    " at no cost")))
-                     (when (and (not no-warning) (:corp-phase-12 @state))
-                       (toast state :corp "You are not allowed to rez cards between Start of Turn and Mandatory Draw.
+                     (when (and (not no-warning) (:resPlayer-phase-12 @state))
+                       (toast state :resPlayer "You are not allowed to rez cards between Start of Turn and Mandatory Draw.
                         Please rez prior to clicking Start Turn in the future." "warning"
                               {:time-out 0 :close-button true}))
                      (if (ice? card)
@@ -353,7 +353,7 @@
   [state side card]
   (let [card (get-card state card)]
     (system-msg state side (str "derezzes " (:title card)))
-    (update! state :corp (deactivate state :corp card true))
+    (update! state :resPlayer (deactivate state :resPlayer card true))
     (let [cdef (card-def card)]
       (when-let [derez-effect (:derez-effect cdef)]
         (resolve-ability state side derez-effect (get-card state card) nil))
@@ -369,7 +369,7 @@
    (let [card (get-card state card)]
      (when (can-advance? state side card)
        (when-let [cost (pay state side card :click (if-not no-cost 1 0)
-                            :credit (if-not no-cost 1 0) {:action :corp-advance})]
+                            :credit (if-not no-cost 1 0) {:action :resPlayer-advance})]
          (let [spent   (build-spend-msg cost "advance")
                card    (card-str state card)
                message (str spent card)]
@@ -383,31 +383,31 @@
   [state side args]
   (let [card (or (:card args) args)]
     (when (and (can-score? state side card)
-               (empty? (filter #(= (:cid card) (:cid %)) (get-in @state [:corp :register :cannot-score])))
+               (empty? (filter #(= (:cid card) (:cid %)) (get-in @state [:resPlayer :register :cannot-score])))
                (>= (:advance-counter card 0) (or (:current-cost card) (:advancementcost card))))
 
       ;; do not card-init necessarily. if card-def has :effect, wrap a fake event
-      (let [moved-card (move state :corp card :scored)
-            c (card-init state :corp moved-card {:resolve-effect false
+      (let [moved-card (move state :resPlayer card :scored)
+            c (card-init state :resPlayer moved-card {:resolve-effect false
                                                  :init-data true})
-            points (get-agenda-points state :corp c)]
+            points (get-agenda-points state :resPlayer c)]
         (trigger-event-simult
-          state :corp (make-eid state) :agenda-scored
-          {:first-ability {:effect (req (when-let [current (first (get-in @state [:runner :current]))]
+          state :resPlayer (make-eid state) :agenda-scored
+          {:first-ability {:effect (req (when-let [current (first (get-in @state [:hazPlayer :current]))]
                                           (say state side {:user "__system__" :text (str (:title current) " is trashed.")})
                                           ; This is to handle Employee Strike with damage IDs #2688
                                           (when (:disable-id (card-def current))
-                                            (swap! state assoc-in [:corp :disable-id] true))
+                                            (swap! state assoc-in [:resPlayer :disable-id] true))
                                           (trash state side current)))}
            :card-ability (card-as-handler c)
            :after-active-player {:effect (req (let [c (get-card state c)
-                                                    points (or (get-agenda-points state :corp c) points)]
-                                                (set-prop state :corp (get-card state moved-card) :advance-counter 0)
-                                                (system-msg state :corp (str "scores " (:title c) " and gains "
+                                                    points (or (get-agenda-points state :resPlayer c) points)]
+                                                (set-prop state :resPlayer (get-card state moved-card) :advance-counter 0)
+                                                (system-msg state :resPlayer (str "scores " (:title c) " and gains "
                                                                              (quantify points "agenda point")))
-                                                (swap! state update-in [:corp :register :scored-agenda] #(+ (or % 0) points))
-                                                (swap! state dissoc-in [:corp :disable-id])
-                                                (gain-agenda-point state :corp points)
+                                                (swap! state update-in [:resPlayer :register :scored-agenda] #(+ (or % 0) points))
+                                                (swap! state dissoc-in [:resPlayer :disable-id])
+                                                (gain-agenda-point state :resPlayer points)
                                                 (play-sfx state side "agenda-score")))}}
           c)))))
 
@@ -433,18 +433,18 @@
         click-cost-bonus (get-in @state [:bonus :click-run-cost])]
     (when (and (can-run? state side)
                (can-run-server? state server)
-               (can-pay? state :runner "a run" :click 1 cost-bonus click-cost-bonus))
-      (swap! state assoc-in [:runner :register :made-click-run] true)
+               (can-pay? state :hazPlayer "a run" :click 1 cost-bonus click-cost-bonus))
+      (swap! state assoc-in [:hazPlayer :register :made-click-run] true)
       (run state side server)
-      (when-let [cost-str (pay state :runner nil :click 1 cost-bonus click-cost-bonus)]
-        (system-msg state :runner
+      (when-let [cost-str (pay state :hazPlayer nil :click 1 cost-bonus click-cost-bonus)]
+        (system-msg state :hazPlayer
                     (str (build-spend-msg cost-str "make a run on") server))
         (play-sfx state side "click-run")))))
 
 (defn remove-tag
   "Click to remove a tag."
   [state side args]
-  (let [remove-cost (max 0 (- 2 (or (get-in @state [:runner :tag-remove-bonus]) 0)))]
+  (let [remove-cost (max 0 (- 2 (or (get-in @state [:hazPlayer :tag-remove-bonus]) 0)))]
     (when-let [cost-str (pay state side nil :click 1 :credit remove-cost)]
       (lose state side :tag 1)
       (system-msg state side (build-spend-msg cost-str "remove 1 tag"))
@@ -462,7 +462,7 @@
                      (get-card state (nth run-ice (- pos 2))))]
       (when-completed (trigger-event-sync state side :pass-ice cur-ice)
                       (do (update-ice-in-server
-                            state side (get-in @state (concat [:corp :servers] (get-in @state [:run :server]))))
+                            state side (get-in @state (concat [:resPlayer :servers] (get-in @state [:run :server]))))
                           (swap! state update-in [:run :position] dec)
                           (swap! state assoc-in [:run :no-action] false)
                           (system-msg state side "continues the run")
@@ -470,7 +470,7 @@
                             (update-ice-strength state side cur-ice))
                           (when next-ice
                             (trigger-event-sync state side (make-eid state) :approach-ice next-ice))
-                          (doseq [p (filter #(has-subtype? % "Icebreaker") (all-installed state :runner))]
+                          (doseq [p (filter #(has-subtype? % "Icebreaker") (all-installed state :hazPlayer))]
                             (update! state side (update-in (get-card state p) [:pump] dissoc :encounter))
                             (update-breaker-strength state side p)))))))
 

@@ -3,17 +3,17 @@
 (declare set-prop get-nested-host get-nested-zone)
 
 (defn get-zones [state]
-  (keys (get-in state [:corp :servers])))
+  (keys (get-in state [:resPlayer :servers])))
 
 (defn get-remote-zones [state]
   (filter is-remote? (get-zones state)))
 
 (defn get-runnable-zones [state]
-  (let [restricted-zones (keys (get-in state [:runner :register :cannot-run-on-server]))]
+  (let [restricted-zones (keys (get-in state [:hazPlayer :register :cannot-run-on-server]))]
     (remove (set restricted-zones) (get-zones state))))
 
 (defn get-remotes [state]
-  (select-keys (get-in state [:corp :servers]) (get-remote-zones state)))
+  (select-keys (get-in state [:resPlayer :servers]) (get-remote-zones state)))
 
 (defn get-remote-names [state]
   (zones->sorted-names (get-remote-zones state)))
@@ -65,39 +65,39 @@
   "Returns a vector of all installed cards for the given side, including those hosted on other cards,
   but not including 'inactive hosting' like Personal Workshop."
   [state side]
-  (if (= side :runner)
-    (let [top-level-cards (flatten (for [t [:program :hardware :resource]] (get-in @state [:runner :rig t])))
-          hosted-on-ice (->> (:corp @state) :servers seq flatten (mapcat :ices) (mapcat :hosted))]
-      (loop [unchecked (concat top-level-cards (filter #(= (:side %) "Runner") hosted-on-ice)) installed ()]
+  (if (= side :hazPlayer)
+    (let [top-level-cards (flatten (for [t [:program :hardware :resource]] (get-in @state [:hazPlayer :rig t])))
+          hosted-on-ice (->> (:resPlayer @state) :servers seq flatten (mapcat :ices) (mapcat :hosted))]
+      (loop [unchecked (concat top-level-cards (filter #(= (:side %) "HazPlayer") hosted-on-ice)) installed ()]
         (if (empty? unchecked)
           (filter :installed installed)
           (let [[card & remaining] unchecked]
             (recur (filter identity (into remaining (:hosted card))) (into installed [card]))))))
-    (let [servers (->> (:corp @state) :servers seq flatten)
+    (let [servers (->> (:resPlayer @state) :servers seq flatten)
           content (mapcat :content servers)
           ice (mapcat :ices servers)
           top-level-cards (concat ice content)]
       (loop [unchecked top-level-cards installed ()]
         (if (empty? unchecked)
-          (filter #(= (:side %) "Corp") installed)
+          (filter #(= (:side %) "ResPlayer") installed)
           (let [[card & remaining] unchecked]
             (recur (filter identity (into remaining (:hosted card))) (into installed [card]))))))))
 
 (defn get-all-installed
   "Returns a list of all installed cards"
   [state]
-  (concat (all-installed state :corp) (all-installed state :runner)))
+  (concat (all-installed state :resPlayer) (all-installed state :hazPlayer)))
 
 (defn all-active
   "Returns a vector of all active cards for the given side. Active cards are either installed, the identity,
   currents, or the corp's scored area."
   [state side]
-  (if (= side :runner)
-    (cons (get-in @state [:runner :identity]) (concat (get-in @state [:runner :current]) (all-installed state side)))
-    (cons (get-in @state [:corp :identity]) (filter #(not (:disabled %))
+  (if (= side :hazPlayer)
+    (cons (get-in @state [:hazPlayer :identity]) (concat (get-in @state [:hazPlayer :current]) (all-installed state side)))
+    (cons (get-in @state [:resPlayer :identity]) (filter #(not (:disabled %))
                                                     (concat (all-installed state side)
-                                                            (get-in @state [:corp :current])
-                                                            (get-in @state [:corp :scored]))))))
+                                                            (get-in @state [:resPlayer :current])
+                                                            (get-in @state [:resPlayer :scored]))))))
 
 (defn installed-byname
   "Returns a truthy card map if a card matching title is installed"
@@ -120,36 +120,36 @@
 (defn swap-agendas
   "Swaps the two specified agendas, first one scored (on corp side), second one stolen (on runner side)"
   [state side scored stolen]
-  (let [corp-ap-stolen (get-agenda-points state :corp stolen)
-        corp-ap-scored (get-agenda-points state :corp scored)
-        runner-ap-stolen (get-agenda-points state :runner stolen)
-        runner-ap-scored (get-agenda-points state :runner scored)
+  (let [corp-ap-stolen (get-agenda-points state :resPlayer stolen)
+        corp-ap-scored (get-agenda-points state :resPlayer scored)
+        runner-ap-stolen (get-agenda-points state :hazPlayer stolen)
+        runner-ap-scored (get-agenda-points state :hazPlayer scored)
         corp-ap-change (- corp-ap-stolen corp-ap-scored)
         runner-ap-change (- runner-ap-scored runner-ap-stolen)]
     ;; Remove end of turn events for swapped out agenda
-    (swap! state update-in [:corp :register :end-turn]
+    (swap! state update-in [:resPlayer :register :end-turn]
            (fn [events] (filter #(not (= (:cid scored) (get-in % [:card :cid]))) events)))
     ;; Move agendas
-    (swap! state update-in [:corp :scored]
+    (swap! state update-in [:resPlayer :scored]
            (fn [coll] (conj (remove-once #(not= (:cid %) (:cid scored)) coll) stolen)))
-    (swap! state update-in [:runner :scored]
+    (swap! state update-in [:hazPlayer :scored]
            (fn [coll] (conj (remove-once #(not= (:cid %) (:cid stolen)) coll)
                             (if-not (card-flag? scored :has-abilities-when-stolen true)
                               (dissoc scored :abilities :events) scored))))
     ;; Update agenda points
-    (gain-agenda-point state :runner runner-ap-change)
-    (gain-agenda-point state :corp corp-ap-change)
+    (gain-agenda-point state :hazPlayer runner-ap-change)
+    (gain-agenda-point state :resPlayer corp-ap-change)
     ;; Set up abilities and events
-    (let [new-scored (find-cid (:cid stolen) (get-in @state [:corp :scored]))]
+    (let [new-scored (find-cid (:cid stolen) (get-in @state [:resPlayer :scored]))]
       (let [abilities (:abilities (card-def new-scored))
             new-scored (merge new-scored {:abilities abilities})]
-        (update! state :corp new-scored)
+        (update! state :resPlayer new-scored)
         (when-let [events (:events (card-def new-scored))]
           (unregister-events state side new-scored)
           (register-events state side events new-scored))
         (resolve-ability state side (:swapped (card-def new-scored)) new-scored nil)))
-    (let [new-stolen (find-cid (:cid scored) (get-in @state [:runner :scored]))]
-      (deactivate state :corp new-stolen))))
+    (let [new-stolen (find-cid (:cid scored) (get-in @state [:hazPlayer :scored]))]
+      (deactivate state :resPlayer new-stolen))))
 
 ;;; Functions for icons associated with special cards - e.g. Femme Fatale
 (defn add-icon

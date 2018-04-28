@@ -4,8 +4,8 @@
 
 (defmacro do-game [s & body]
   `(let [~'state ~s
-         ~'get-corp (fn [] (:corp @~'state))
-         ~'get-runner (fn [] (:runner @~'state))
+         ~'get-corp (fn [] (:resPlayer @~'state))
+         ~'get-runner (fn [] (:hazPlayer @~'state))
          ~'refresh (fn [~'card] (core/get-card ~'state ~'card))
          ~'prompt-choice (fn [~'side ~'choice]
                            (is (first (get-in @~'state [~'side :prompt])) "There is a prompt")
@@ -52,7 +52,7 @@
 
 ;; Enables you to do this: 
 ;; (is (changes-credits (get-runner) -5
-;;   (play-from-hand state :runner "Magnum Opus")))
+;;   (play-from-hand state :hazPlayer "Magnum Opus")))
 (defmethod clojure.test/assert-expr 'changes-credits [msg form]
   (let [side (nth form 1)
         change-amt (nth form 2)

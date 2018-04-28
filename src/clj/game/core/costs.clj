@@ -11,8 +11,8 @@
                                        ;; Memory, agenda points or hand size mod may be negative
                                        #(- % value)
                                        #(max 0 (- % value))))
-  (when (and (= attr :credit) (= side :runner) (get-in @state [:runner :run-credit]))
-    (swap! state update-in [:runner :run-credit] #(max 0 (- % value))))
+  (when (and (= attr :credit) (= side :hazPlayer) (get-in @state [:hazPlayer :run-credit]))
+    (swap! state update-in [:hazPlayer :run-credit] #(max 0 (- % value))))
   (when-let [cost-name (cost-names value attr)]
     cost-name))
 
@@ -24,12 +24,12 @@
     (when-not (or (some #(= type %) [:memory :net-damage])
                   (and (= type :forfeit) (>= (- (count (get-in @state [side :scored])) amount) 0))
                   (and (= type :mill) (>= (- (count (get-in @state [side :deck])) amount) 0))
-                  (and (= type :tag) (>= (- (get-in @state [:runner :tag]) amount) 0))
-                  (and (= type :ice) (>= (- (count (filter (every-pred rezzed? ice?) (all-installed state :corp))) amount) 0))
-                  (and (= type :hardware) (>= (- (count (get-in @state [:runner :rig :hardware])) amount) 0))
-                  (and (= type :program) (>= (- (count (get-in @state [:runner :rig :program])) amount) 0))
+                  (and (= type :tag) (>= (- (get-in @state [:hazPlayer :tag]) amount) 0))
+                  (and (= type :ice) (>= (- (count (filter (every-pred rezzed? ice?) (all-installed state :resPlayer))) amount) 0))
+                  (and (= type :hardware) (>= (- (count (get-in @state [:hazPlayer :rig :hardware])) amount) 0))
+                  (and (= type :program) (>= (- (count (get-in @state [:hazPlayer :rig :program])) amount) 0))
                   (and (= type :connection) (>= (- (count (filter #(has-subtype? % "Connection")
-                                                                  (all-installed state :runner))) amount) 0))
+                                                                  (all-installed state :hazPlayer))) amount) 0))
                   (>= (- (or (get-in @state [side type]) -1 ) amount) 0))
       "Unable to pay")))
 
@@ -76,23 +76,23 @@
   [state side card action costs cost]
   (case (first cost)
     :click (do (trigger-event state side
-                              (if (= side :corp) :corp-spent-click :runner-spent-click)
+                              (if (= side :resPlayer) :resPlayer-spent-click :hazPlayer-spent-click)
                               (first (keep :action action)) (:click (into {} costs)))
                (swap! state assoc-in [side :register :spent-click] true)
                (deduce state side cost))
     :forfeit (pay-forfeit state side card (second cost))
-    :hardware (pay-trash state side card :hardware (second cost) (get-in @state [:runner :rig :hardware]))
-    :program (pay-trash state side card :program (second cost) (get-in @state [:runner :rig :program]))
+    :hardware (pay-trash state side card :hardware (second cost) (get-in @state [:hazPlayer :rig :hardware]))
+    :program (pay-trash state side card :program (second cost) (get-in @state [:hazPlayer :rig :program]))
 
     ;; Connection
     :connection (pay-trash state side card :connection (second cost) (filter (fn [c] (has-subtype? c "Connection"))
-                                                                          (all-installed state :runner)))
+                                                                          (all-installed state :hazPlayer)))
 
     ;; Rezzed ICE
-    :ice (pay-trash state :corp card :ice (second cost) (filter (every-pred rezzed? ice?) (all-installed state :corp))
+    :ice (pay-trash state :resPlayer card :ice (second cost) (filter (every-pred rezzed? ice?) (all-installed state :resPlayer))
                     {:cause :ability-cost :keep-server-alive true})
 
-    :tag (deduce state :runner cost)
+    :tag (deduce state :hazPlayer cost)
     :net-damage (damage state side :net (second cost) {:unpreventable true})
     :mill (mill state side (second cost))
 
@@ -101,7 +101,7 @@
 
 (defn pay
   "Deducts each cost from the player.
-  args format as follows with each being optional ([:click 1 :credit 0] [:forfeit] {:action :corp-click-credit})
+  args format as follows with each being optional ([:click 1 :credit 0] [:forfeit] {:action :resPlayer-click-credit})
   The map with :action was added for Jeeves so we can log what each click was used on"
   [state side card & args]
   (let [raw-costs (not-empty (remove map? args))
@@ -119,7 +119,7 @@
 
 (defn lose [state side & args]
   (doseq [r (partition 2 args)]
-    (trigger-event state side (if (= side :corp) :corp-loss :runner-loss) r)
+    (trigger-event state side (if (= side :resPlayer) :resPlayer-loss :hazPlayer-loss) r)
     (if (= (last r) :all)
       (swap! state assoc-in [side (first r)] 0)
       (deduce state side r))))

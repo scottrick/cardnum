@@ -39,7 +39,7 @@
                 (not (and (has-subtype? card "Current")
                           (get-in @state [side :register :cannot-play-current])))
                 (not (and (has-subtype? card "Run")
-                          (not (can-run? state :runner))))
+                          (not (can-run? state :hazPlayer))))
                 (not (and (has-subtype? card "Priority")
                           (get-in @state [side :register :spent-click])))) ; if priority, have not spent a click
          (if-let [cost-str (pay state side card (if ignore-cost 0 total-cost) {:action :play-instant})]
@@ -51,7 +51,7 @@
                                          (when ignore-cost " at no cost")))
              (play-sfx state side "play-instant")
              (if (has-subtype? c "Current")
-               (do (doseq [s [:corp :runner]]
+               (do (doseq [s [:resPlayer :hazPlayer]]
                      (when-let [current (first (get-in @state [s :current]))] ; trash old current
                        (say state side {:user "__system__" :text (str (:title current) " is trashed.")})
                        (trash state side current)))
@@ -64,8 +64,8 @@
                      (move state side c :discard))
                    (when (has-subtype? card "Terminal")
                      (lose state side :click (-> @state side :click))
-                     (swap! state assoc-in [:corp :register :terminal] true))))
-             (trigger-event state side (if (= side :corp) :play-operation :play-event) c))
+                     (swap! state assoc-in [:resPlayer :register :terminal] true))))
+             (trigger-event state side (if (= side :resPlayer) :play-operation :play-event) c))
            ;; could not pay the card's price; mark the effect as being over.
            (effect-completed state side eid card))
          ;; card's req was not satisfied; mark the effect as being over.
@@ -95,7 +95,7 @@
   ([state side n args] (draw state side (make-eid state) n args))
   ([state side eid n {:keys [suppress-event] :as args}]
    (swap! state update-in [side :register] dissoc :most-recent-drawn) ;clear the most recent draw in case draw prevented
-   (trigger-event state side (if (= side :corp) :pre-corp-draw :pre-runner-draw) n)
+   (trigger-event state side (if (= side :resPlayer) :pre-corp-draw :pre-runner-draw) n)
    (let [active-player (get-in @state [:active-player])
          n (-> n (+ (or (get-in @state [:bonus :draw]) 0)))
          draws-wanted n
@@ -103,7 +103,7 @@
                                   (min n (remaining-draws state side))
                                   n)
          deck-count (count (get-in @state [side :deck]))]
-     (when (and (= side :corp) (> draws-after-prevent deck-count))
+     (when (and (= side :resPlayer) (> draws-after-prevent deck-count))
        (win-decked state))
      (when-not (and (= side active-player) (get-in @state [side :register :cannot-draw]))
        (let [drawn (zone :hand (take draws-after-prevent (get-in @state [side :deck])))]
@@ -114,8 +114,8 @@
          (swap! state update-in [:bonus] dissoc :draw)
          (if (and (not suppress-event) (pos? deck-count))
            (when-completed
-             (trigger-event-sync state side (if (= side :corp) :corp-draw :runner-draw) draws-after-prevent)
-             (trigger-event-sync state side eid (if (= side :corp) :post-corp-draw :post-runner-draw) draws-after-prevent))
+             (trigger-event-sync state side (if (= side :resPlayer) :resPlayer-draw :hazPlayer-draw) draws-after-prevent)
+             (trigger-event-sync state side eid (if (= side :resPlayer) :post-corp-draw :post-runner-draw) draws-after-prevent))
            (effect-completed state side eid))
          (when (= 0 (remaining-draws state side))
            (prevent-draw state side))))
@@ -128,8 +128,8 @@
 ;;; Damage
 (defn flatline [state]
   (when-not (:winner state)
-    (system-msg state :runner "is flatlined")
-    (win state :corp "Flatline")))
+    (system-msg state :hazPlayer "is flatlined")
+    (win state :resPlayer "Flatline")))
 
 (defn damage-count
   "Calculates the amount of damage to do, taking into account prevention and boosting effects."
@@ -179,7 +179,7 @@
   [state]
   (let [active-player (get-in @state [:active-player])]
     (when (and (corp-can-choose-damage? state) (runner-can-choose-damage? state))
-      (if (= active-player :corp)
+      (if (= active-player :resPlayer)
         (swap! state update-in [:damage] dissoc :damage-choose-runner)
         (swap! state update-in [:damage] dissoc :damage-choose-corp)))))
 
@@ -194,13 +194,13 @@
                                     (runner-can-choose-damage? state))
                         (let [n (if-let [defer (get-defer-damage state side type args)] defer n)]
                           (when (pos? n)
-                            (let [hand (get-in @state [:runner :hand])
+                            (let [hand (get-in @state [:hazPlayer :hand])
                                   cards-trashed (take n (shuffle hand))]
                               (when (= type :brain)
-                                (swap! state update-in [:runner :brain-damage] #(+ % n))
-                                (swap! state update-in [:runner :hand-size-modification] #(- % n)))
+                                (swap! state update-in [:hazPlayer :brain-damage] #(+ % n))
+                                (swap! state update-in [:hazPlayer :hand-size-modification] #(- % n)))
                               (when-let [trashed-msg (join ", " (map :title cards-trashed))]
-                                (system-msg state :runner (str "trashes " trashed-msg " due to damage")))
+                                (system-msg state :hazPlayer (str "trashes " trashed-msg " due to damage")))
                               (if (< (count hand) n)
                                 (do (flatline state)
                                     (trash-cards state side (make-eid state) cards-trashed
@@ -225,20 +225,20 @@
      (let [prevent (get-in @state [:prevent :damage type])]
        (if (and (not unpreventable) prevent (pos? (count prevent)))
          ;; runner can prevent the damage.
-         (do (system-msg state :runner "has the option to avoid damage")
-             (show-wait-prompt state :corp "Runner to prevent damage" {:priority 10})
+         (do (system-msg state :hazPlayer "has the option to avoid damage")
+             (show-wait-prompt state :resPlayer "Runner to prevent damage" {:priority 10})
              (show-prompt
-               state :runner nil (str "Prevent any of the " n " " (name type) " damage?") ["Done"]
+               state :hazPlayer nil (str "Prevent any of the " n " " (name type) " damage?") ["Done"]
                (fn [_]
                  (let [prevent (get-in @state [:damage :damage-prevent type])]
                    (when prevent
                      (trigger-event state side :prevented-damage type prevent))
-                   (system-msg state :runner
+                   (system-msg state :hazPlayer
                                (if prevent
                                  (str "prevents " (if (= prevent Integer/MAX_VALUE) "all" prevent)
                                       " " (name type) " damage")
                                  "will not prevent damage"))
-                   (clear-wait-prompt state :corp)
+                   (clear-wait-prompt state :resPlayer)
                    (resolve-damage state side eid type (max 0 (- n (or prevent 0))) args)))
                {:priority 10}))
          (resolve-damage state side eid type n args))))))
@@ -255,18 +255,18 @@
 
 (defn tag-prevent [state side n]
   (swap! state update-in [:tag :tag-prevent] (fnil #(+ % n) 0))
-  (trigger-event state side (if (= side :corp) :corp-prevent :runner-prevent) `(:tag ~n)))
+  (trigger-event state side (if (= side :resPlayer) :resPlayer-prevent :hazPlayer-prevent) `(:tag ~n)))
 
 (defn tag-remove-bonus
   "Applies a cost increase of n to removing tags with the click action. (SYNC.)"
   [state side n]
-  (swap! state update-in [:runner :tag-remove-bonus] (fnil #(+ % n) 0)))
+  (swap! state update-in [:hazPlayer :tag-remove-bonus] (fnil #(+ % n) 0)))
 
 (defn resolve-tag [state side eid n args]
   (if (pos? n)
-    (do (gain state :runner :tag n)
-        (toast state :runner (str "Took " (quantify n "tag") "!") "info")
-        (trigger-event-sync state side eid :runner-gain-tag n))
+    (do (gain state :hazPlayer :tag n)
+        (toast state :hazPlayer (str "Took " (quantify n "tag") "!") "info")
+        (trigger-event-sync state side eid :hazPlayer-gain-tag n))
     (effect-completed state side eid)))
 
 (defn tag-runner
@@ -279,18 +279,18 @@
    (let [n (tag-count state side n args)]
      (let [prevent (get-in @state [:prevent :tag :all])]
        (if (and (pos? n) (not unpreventable) (pos? (count prevent)))
-         (do (system-msg state :runner "has the option to avoid tags")
-             (show-wait-prompt state :corp "Runner to prevent tags" {:priority 10})
+         (do (system-msg state :hazPlayer "has the option to avoid tags")
+             (show-wait-prompt state :resPlayer "Runner to prevent tags" {:priority 10})
              (show-prompt
-               state :runner nil (str "Avoid any of the " n " tags?") ["Done"]
+               state :hazPlayer nil (str "Avoid any of the " n " tags?") ["Done"]
                (fn [_]
                  (let [prevent (get-in @state [:tag :tag-prevent])]
-                   (system-msg state :runner
+                   (system-msg state :hazPlayer
                                (if prevent
                                  (str "avoids " (if (= prevent Integer/MAX_VALUE) "all" prevent)
                                       (if (< 1 prevent) " tags" " tag"))
                                  "will not avoid tags"))
-                   (clear-wait-prompt state :corp)
+                   (clear-wait-prompt state :resPlayer)
                    (resolve-tag state side eid (max 0 (- n (or prevent 0))) args)))
                {:priority 10}))
          (resolve-tag state side eid n args))))))
@@ -300,7 +300,7 @@
 (defn trash-resource-bonus
   "Applies a cost increase of n to trashing a resource with the click action. (SYNC.)"
   [state side n]
-  (swap! state update-in [:corp :trash-cost-bonus] (fnil #(+ % n) 0)))
+  (swap! state update-in [:resPlayer :trash-cost-bonus] (fnil #(+ % n) 0)))
 
 (defn trash-prevent [state side type n]
   (swap! state update-in [:trash :trash-prevent type] (fnil #(+ % n) 0)))
@@ -313,7 +313,7 @@
         card-prompts (filter #(= (get-in % [:card :title]) (get moved-card :title)) (get-in @state [side :prompt]))]
 
     (when-let [trash-effect (:trash-effect cdef)]
-      (when (and (not disabled) (or (and (= (:side card) "Runner")
+      (when (and (not disabled) (or (and (= (:side card) "HazPlayer")
                                          (:installed card))
                                     (and (:rezzed card) (not host-trashed))
                                     (and (:when-inactive trash-effect) (not host-trashed))))
@@ -341,9 +341,9 @@
        (do (enforce-msg state card "cannot be trashed while installed")
            (effect-completed state side eid))
 
-       (and (= side :corp)
+       (and (= side :resPlayer)
             (untrashable-while-resources? card)
-            (> (count (filter #(is-type? % "Resource") (all-installed state :runner))) 1))
+            (> (count (filter #(is-type? % "Resource") (all-installed state :hazPlayer))) 1))
        (do (enforce-msg state card "cannot be trashed while there are other resources installed")
            (effect-completed state side eid))
 
@@ -355,17 +355,17 @@
          (let [prevent (get-in @state [:prevent :trash ktype])]
            ;; Check for prevention effects
            (if (and (not unpreventable) (not= cause :ability-cost) (pos? (count prevent)))
-             (do (system-msg state :runner "has the option to prevent trash effects")
-                 (show-wait-prompt state :corp "Runner to prevent trash effects" {:priority 10})
-                 (show-prompt state :runner nil
+             (do (system-msg state :hazPlayer "has the option to prevent trash effects")
+                 (show-wait-prompt state :resPlayer "Runner to prevent trash effects" {:priority 10})
+                 (show-prompt state :hazPlayer nil
                               (str "Prevent the trashing of " (:title card) "?") ["Done"]
                               (fn [_]
-                                (clear-wait-prompt state :corp)
+                                (clear-wait-prompt state :resPlayer)
                                 (if-let [_ (get-in @state [:trash :trash-prevent ktype])]
-                                  (do (system-msg state :runner (str "prevents the trashing of " (:title card)))
+                                  (do (system-msg state :hazPlayer (str "prevents the trashing of " (:title card)))
                                       (swap! state update-in [:trash :trash-prevent] dissoc ktype)
                                       (effect-completed state side eid))
-                                  (do (system-msg state :runner (str "will not prevent the trashing of " (:title card)))
+                                  (do (system-msg state :hazPlayer (str "will not prevent the trashing of " (:title card)))
                                       (apply resolve-trash state side eid card args targets))))
                               {:priority 10}))
              ;; No prevention effects; resolve the trash.
@@ -385,7 +385,7 @@
 (defn- resolve-trash-no-cost
   [state side card]
   (trash state side (assoc card :seen true))
-  (swap! state assoc-in [:runner :register :trashed-card] true)
+  (swap! state assoc-in [:hazPlayer :register :trashed-card] true)
   (close-access-prompt state side))
 
 (defn trash-no-cost
@@ -410,9 +410,9 @@
   (let [base-points (:agendapoints card)
         runner-fn (:agendapoints-runner (card-def card))
         corp-fn (:agendapoints-corp (card-def card))]
-    (if (and (= side :runner) (not (nil? runner-fn)))
+    (if (and (= side :hazPlayer) (not (nil? runner-fn)))
       (runner-fn state side (make-eid state) card nil)
-      (if (and (= side :corp) (not  (nil? corp-fn)))
+      (if (and (= side :resPlayer) (not  (nil? corp-fn)))
         (corp-fn state side (make-eid state) card nil)
         base-points))))
 
@@ -439,7 +439,7 @@
   (update! state side (assoc agenda :current-cost (advancement-cost state side agenda))))
 
 (defn update-all-advancement-costs [state side]
-  (doseq [ag (->> (mapcat :content (flatten (seq (get-in @state [:corp :servers]))))
+  (doseq [ag (->> (mapcat :content (flatten (seq (get-in @state [:resPlayer :servers]))))
                   (filter #(is-type? % "Agenda")))]
     (update-advancement-cost state side ag)))
 
@@ -479,12 +479,12 @@
   "Purges viruses."
   [state side]
   (trigger-event state side :pre-purge)
-  (let [rig-cards (all-installed state :runner)
-        hosted-on-ice (->> (get-in @state [:corp :servers]) seq flatten (mapcat :ices) (mapcat :hosted))]
+  (let [rig-cards (all-installed state :hazPlayer)
+        hosted-on-ice (->> (get-in @state [:resPlayer :servers]) seq flatten (mapcat :ices) (mapcat :hosted))]
     (doseq [card (concat rig-cards hosted-on-ice)]
       (when (or (has-subtype? card "Virus")
                 (contains? (:counter card) :virus))
-        (add-counter state :runner card :virus (- (get-in card [:counter :virus] 0)))))
+        (add-counter state :hazPlayer card :virus (- (get-in card [:counter :virus] 0)))))
     (update-all-ice state side))
   (trigger-event state side :purge))
 
@@ -518,15 +518,15 @@
    (when-completed (trigger-event-sync state side :pre-expose target)
                    (let [prevent (get-in @state [:prevent :expose :all])]
                      (if (and (not unpreventable) (pos? (count prevent)))
-                       (do (system-msg state :corp "has the option to prevent a card from being exposed")
-                           (show-wait-prompt state :runner "Corp to prevent the expose" {:priority 10})
-                           (show-prompt state :corp nil
+                       (do (system-msg state :resPlayer "has the option to prevent a card from being exposed")
+                           (show-wait-prompt state :hazPlayer "Corp to prevent the expose" {:priority 10})
+                           (show-prompt state :resPlayer nil
                                         (str "Prevent " (:title target) " from being exposed?") ["Done"]
                                         (fn [_]
-                                          (clear-wait-prompt state :runner)
+                                          (clear-wait-prompt state :hazPlayer)
                                           (if-let [_ (get-in @state [:expose :expose-prevent])]
                                             (effect-completed state side (make-result eid false)) ;; ??
-                                            (do (system-msg state :corp "will not prevent a card from being exposed")
+                                            (do (system-msg state :resPlayer "will not prevent a card from being exposed")
                                                 (resolve-expose state side eid target args))))
                                         {:priority 10}))
                        (if-not (get-in @state [:expose :expose-prevent])
@@ -547,10 +547,10 @@
   "Clears the current win condition.  Requires both sides to have issued the command"
   [state side]
   (swap! state assoc-in [side :clear-win] true)
-  (when (and (-> @state :runner :clear-win) (-> @state :corp :clear-win))
+  (when (and (-> @state :hazPlayer :clear-win) (-> @state :resPlayer :clear-win))
     (system-msg state side "cleared the win condition")
-    (swap! state dissoc-in [:runner :clear-win])
-    (swap! state dissoc-in [:corp :clear-win])
+    (swap! state dissoc-in [:hazPlayer :clear-win])
+    (swap! state dissoc-in [:resPlayer :clear-win])
     (swap! state dissoc :winner :loser :winning-user :losing-user :reason :winning-deck-id :losing-deck-id :end-time)))
 
 (defn win
@@ -571,8 +571,8 @@
 (defn win-decked
   "Records a win via decking the corp."
   [state]
-  (system-msg state :corp "is decked")
-  (win state :runner "Decked"))
+  (system-msg state :resPlayer "is decked")
+  (win state :hazPlayer "Decked"))
 
 (defn init-trace-bonus
   "Applies a bonus base strength of n to the next trace attempt."

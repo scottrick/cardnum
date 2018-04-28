@@ -28,8 +28,8 @@
 (defn is-tagged?
   "Returns true if the runner is tagged."
   [state]
-  (or (pos? (get-in state [:runner :tag]))
-      (pos? (get-in state [:runner :tagged]))))
+  (or (pos? (get-in state [:hazPlayer :tag]))
+      (pos? (get-in state [:hazPlayer :tagged]))))
 
 ;;; Generic flag functions
 (defn- register-flag!
@@ -150,7 +150,7 @@
   The causing card is also specified"
   [state card & servers]
   (doseq [server servers]
-    (swap! state assoc-in [:runner :register :cannot-run-on-server server (:cid card)] true)))
+    (swap! state assoc-in [:hazPlayer :register :cannot-run-on-server server (:cid card)] true)))
 
 (defn enable-run-on-server
   "Removes specified server from list of server for the associated card.
@@ -158,35 +158,35 @@
   on."
   [state card & servers]
   (doseq [server servers]
-    (let [card-map (get-in @state [:runner :register :cannot-run-on-server server])
+    (let [card-map (get-in @state [:hazPlayer :register :cannot-run-on-server server])
           reduced-card-map (dissoc card-map (:cid card))]
       (if (empty? reduced-card-map)
         ;; removes server if no cards block it, otherwise updates the map
-        (swap! state update-in [:runner :register :cannot-run-on-server] dissoc server)
-        (swap! state assoc-in [:runner :register :cannot-run-on-server server]
+        (swap! state update-in [:hazPlayer :register :cannot-run-on-server] dissoc server)
+        (swap! state assoc-in [:hazPlayer :register :cannot-run-on-server server]
                reduced-card-map)))))
 
 (defn can-run-server?
   "Returns true if the specified server can be run on. Specified server must be string form."
   [state server]
   (not-any? #{server}
-            (map zone->name (keys (get-in @state [:runner :register :cannot-run-on-server])))))
+            (map zone->name (keys (get-in @state [:hazPlayer :register :cannot-run-on-server])))))
 
 
 ;;; Functions for preventing specific game actions.
 ;;; TODO: look into migrating these to turn-flags and run-flags.
 (defn prevent-draw [state side]
-  (swap! state assoc-in [:runner :register :cannot-draw] true))
+  (swap! state assoc-in [:hazPlayer :register :cannot-draw] true))
 
 (defn prevent-jack-out [state side]
   (swap! state assoc-in [:run :cannot-jack-out] true))
 
 ;; This function appears unused as well
 (defn prevent-steal [state side]
-  (swap! state assoc-in [:runner :register :cannot-steal] true))
+  (swap! state assoc-in [:hazPlayer :register :cannot-steal] true))
 
 (defn prevent-current [state side]
-  (swap! state assoc-in [:runner :register :cannot-play-current] true))
+  (swap! state assoc-in [:hazPlayer :register :cannot-play-current] true))
 
 (defn lock-zone [state side cid tside tzone]
   (swap! state update-in [tside :locked tzone] #(conj % cid)))
@@ -239,12 +239,12 @@
 (defn in-corp-scored?
   "Checks if the specified card is in the Corp score area."
   [state side card]
-  (is-scored? state :corp card))
+  (is-scored? state :resPlayer card))
 
 (defn in-runner-scored?
   "Checks if the specified card is in the Runner score area."
   [state side card]
-  (is-scored? state :runner card))
+  (is-scored? state :hazPlayer card))
 
 (defn is-type?
   "Checks if the card is of the specified type, where the type is a string."
@@ -288,10 +288,10 @@
   [{:keys [zone] :as card}]
   (or (is-type? card "Identity")
       (= zone [:current])
-      (and (card-is? card :side :corp)
+      (and (card-is? card :side :resPlayer)
            (installed? card)
            (rezzed? card))
-      (and (card-is? card :side :runner)
+      (and (card-is? card :side :hazPlayer)
            (installed? card)
            (not (facedown? card)))))
 
@@ -309,7 +309,7 @@
 (defn- can-rez-reason
   "Checks if the corp can rez the card.
   Returns true if so, otherwise the reason:
-  :side card is not on :corp side
+  :side card is not on :resPlayer side
   :run-flag run flag prevents rez
   :turn-flag turn flag prevents rez
   :unique fails unique check
@@ -324,7 +324,7 @@
       (not (run-flag? state side card :can-rez)) :run-flag
       (not (turn-flag? state side card :can-rez)) :turn-flag
       ;; Uniqueness check
-      (and uniqueness (some #(and (:rezzed %) (= (:code card) (:code %))) (all-installed state :corp))) :unique
+      (and uniqueness (some #(and (:rezzed %) (= (:code card) (:code %))) (all-installed state :resPlayer))) :unique
       ;; Rez req check
       (and req (not (req state side (make-eid state) card nil))) :req
       ;; No problems - return true
@@ -405,20 +405,20 @@
            (installed? card))))
 
 (defn card-is-public? [state side {:keys [zone] :as card}]
-  (if (= side :runner)
+  (if (= side :hazPlayer)
     ;; public runner cards: in hand and :openhand is true;
     ;; or installed/hosted and not facedown;
     ;; or scored or current or in heap
-    (or (card-is? card :side :corp)
-        (and (:openhand (:runner @state)) (in-hand? card))
+    (or (card-is? card :side :resPlayer)
+        (and (:openhand (:hazPlayer @state)) (in-hand? card))
         (and (or (installed? card) (:host card)) (not (facedown? card)))
         (#{:scored :discard :current} (last zone)))
     ;; public corp cards: in hand and :openhand;
     ;; or installed and rezzed;
     ;; or in :discard and :seen
     ;; or scored or current
-    (or (card-is? card :side :runner)
-        (and (:openhand (:corp @state)) (in-hand? card))
+    (or (card-is? card :side :hazPlayer)
+        (and (:openhand (:resPlayer @state)) (in-hand? card))
         (and (or (installed? card) (:host card))
              (or (is-type? card "Operation") (rezzed? card)))
         (and (in-discard? card) (:seen card))

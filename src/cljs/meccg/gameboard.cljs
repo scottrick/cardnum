@@ -65,10 +65,10 @@
 
 (defn launch-game [game]
   (let [user (:user @app-state)
-        side (if (= (get-in game [:runner :user :_id]) (:_id user))
-               :runner
-               (if (= (get-in game [:corp :user :_id]) (:_id user))
-                 :corp
+        side (if (= (get-in game [:hazPlayer :user :_id]) (:_id user))
+               :hazPlayer
+               (if (= (get-in game [:resPlayer :user :_id]) (:_id user))
+                 :resPlayer
                  :spectator))]
     (swap! app-state assoc :side side)
     (init-game game side))
@@ -128,7 +128,7 @@
   (.emit socket "meccg" (clj->js msg)))
 
 (defn not-spectator? [game-state app-state]
-  (#{(get-in @game-state [:corp :user]) (get-in @game-state [:runner :user])} (:user @app-state)))
+  (#{(get-in @game-state [:resPlayer :user]) (get-in @game-state [:hazPlayer :user])} (:user @app-state)))
 
 (defn send-command
   ([command] (send-command command nil))
@@ -215,7 +215,7 @@
 (defn handle-abilities [{:keys [abilities facedown side type] :as card} owner]
   (let [actions (action-list card)
         c (+ (count actions) (count abilities))]
-    (when-not (and (= side "Runner") facedown)
+    (when-not (and (= side "HazPlayer") facedown)
       (cond
         ;; Open panel
         (or (> c 1)
@@ -241,7 +241,7 @@
              (= side (keyword (.toLowerCase (:side card)))))
         (handle-abilities card owner)
         ;; Runner side
-        (= side :runner)
+        (= side :hazPlayer)
         (case (first zone)
           "hand" (if (:host card)
                    (when (:installed card)
@@ -253,13 +253,13 @@
                         (-> (om/get-node owner "runner-abilities") js/$ .toggle))
           nil)
         ;; Corp side
-        (= side :corp)
+        (= side :resPlayer)
         (case (first zone)
           "hand" (case type
                    ("Upgrade" "ICE") (if root
                                        (send-command "play" {:card card :server root})
                                        (-> (om/get-node owner "servers") js/$ .toggle))
-                   ("Agenda" "Asset") (if (< (count (get-in @game-state [:corp :servers])) 4)
+                   ("Agenda" "Asset") (if (< (count (get-in @game-state [:resPlayer :servers])) 4)
                                         (send-command "play" {:card card :server "New remote"})
                                         (-> (om/get-node owner "servers") js/$ .toggle))
                    (send-command "play" {:card card}))
@@ -267,8 +267,8 @@
           nil)))))
 
 (defn in-play? [card]
-  (let [dest (when (= (:side card) "Runner")
-               (get-in @game-state [:runner :rig (keyword (.toLowerCase (:type card)))]))]
+  (let [dest (when (= (:side card) "HazPlayer")
+               (get-in @game-state [:hazPlayer :rig (keyword (.toLowerCase (:type card)))]))]
     (some #(= (:title %) (:title card)) dest)))
 
 (defn has?
@@ -465,7 +465,7 @@
 (defn handle-drop [e server]
   (-> e .-target js/$ (.removeClass "dragover"))
   (let [card (-> e .-dataTransfer (.getData "card") ((.-parse js/JSON)) (js->clj :keywordize-keys true))
-        side (if (#{"HQ" "R&D" "Archives"} server) "Corp" "Runner")]
+        side (if (#{"HQ" "R&D" "Archives"} server) "ResPlayer" "HazPlayer")]
     (send-command "move" {:card card :server server})))
 
 (defn abs [n] (max n (- n)))
@@ -618,10 +618,10 @@
 (defn face-down?
   "Returns true if the installed card should be drawn face down."
   [{:keys [side type facedown rezzed host] :as card}]
-  (if (= side "Corp")
+  (if (= side "ResPlayer")
     (and (not= type "Operation")
          (not rezzed)
-         (not= (:side host) "Runner"))
+         (not= (:side host) "HazPlayer"))
     facedown))
 
 (defn card-zoom [card owner]
@@ -835,7 +835,7 @@
    (sab/html
     (let [side (get-in player [:identity :side])
           size (count (:hand player))
-          name (if (= side "Corp") "HQ" "Grip")]
+          name (if (= side "ResPlayer") "HQ" "Grip")]
       [:div.hand-container
        [:div.hand-controls
         [:div.panel.blue-shade.hand
@@ -869,8 +869,8 @@
 (defn deck-view [{:keys [identity deck] :as cursor} owner]
   (om/component
    (sab/html
-    (let [is-runner (= "Runner" (:side identity))
-          side (if is-runner :runner :corp)
+    (let [is-runner (= "HazPlayer" (:side identity))
+          side (if is-runner :hazPlayer :resPlayer)
           name (if is-runner "Stack" "R&D")
           ref (if is-runner "stack" "rd")
           menu-ref (str ref "-menu")
@@ -897,31 +897,31 @@
 
 (defmulti discard-view #(get-in % [:identity :side]))
 
-(defmethod discard-view "Runner" [{:keys [discard] :as cursor} owner]
+(defmethod discard-view "HazPlayer" [{:keys [discard] :as cursor} owner]
   (om/component
    (sab/html
     [:div.blue-shade.discard
-     (drop-area :runner "Heap" {:on-click #(-> (om/get-node owner "popup") js/$ .fadeToggle)})
+     (drop-area :hazPlayer "Heap" {:on-click #(-> (om/get-node owner "popup") js/$ .fadeToggle)})
      (when-not (empty? discard)
        (om/build card-view (last discard)))
      (om/build label discard {:opts {:name "Heap"}})
-     [:div.panel.blue-shade.popup {:ref "popup" :class (if (= (:side @game-state) :runner) "me" "opponent")}
+     [:div.panel.blue-shade.popup {:ref "popup" :class (if (= (:side @game-state) :hazPlayer) "me" "opponent")}
       [:div
        [:a {:on-click #(close-popup % owner "popup" nil false false)} "Close"]]
       (om/build-all card-view discard {:key :cid})]])))
 
-(defmethod discard-view "Corp" [{:keys [discard servers] :as cursor} owner]
+(defmethod discard-view "ResPlayer" [{:keys [discard servers] :as cursor} owner]
   (om/component
    (sab/html
     (let [faceup? #(or (:seen %) (:rezzed %))
           draw-card #(if (faceup? %)
                        (om/build card-view %)
-                       (if (or (= (:side @game-state) :corp)
+                       (if (or (= (:side @game-state) :resPlayer)
                                (spectator-view-hidden?))
                          [:div.unseen (om/build card-view %)]
                          (facedown-card "corp")))]
       [:div.blue-shade.discard
-       (drop-area :corp "Archives" {:on-click #(-> (om/get-node owner "popup") js/$ .fadeToggle)})
+       (drop-area :resPlayer "Archives" {:on-click #(-> (om/get-node owner "popup") js/$ .fadeToggle)})
 
        (when-not (empty? discard) (draw-card (last discard)))
 
@@ -931,7 +931,7 @@
                                                           ;; use non-breaking space to keep counts on same line.
                                                           (str face-up "↑ " (- total face-up) "↓")))}})
 
-       [:div.panel.blue-shade.popup {:ref "popup" :class (if (= (:side @game-state) :runner) "opponent" "me")}
+       [:div.panel.blue-shade.popup {:ref "popup" :class (if (= (:side @game-state) :hazPlayer) "opponent" "me")}
         [:div
          [:a {:on-click #(close-popup % owner "popup" nil false false)} "Close"]
          [:label (let [total (count discard)
@@ -994,12 +994,12 @@
 
 (defmulti stats-view #(get-in % [:identity :side]))
 
-(defmethod stats-view "Runner" [{:keys [user click credit run-credit memory link tag
+(defmethod stats-view "HazPlayer" [{:keys [user click credit run-credit memory link tag
                                         brain-damage agenda-point tagged hand-size-base
                                         hand-size-modification active]} owner]
   (om/component
    (sab/html
-    (let [me? (= (:side @game-state) :runner)]
+    (let [me? (= (:side @game-state) :hazPlayer)]
       [:div.panel.blue-shade.stats {:class (when active "active-player")}
        [:h4.ellipsis (om/build avatar user {:opts {:size 22}}) (:username user)]
        [:div (str click " Click" (if (not= click 1) "s" "")) (when me? (controls :click))]
@@ -1017,11 +1017,11 @@
        [:div (str (+ hand-size-base hand-size-modification) " Max hand size")
         (when me? (controls :hand-size-modification))]]))))
 
-(defmethod stats-view "Corp" [{:keys [user click credit agenda-point bad-publicity has-bad-pub
+(defmethod stats-view "ResPlayer" [{:keys [user click credit agenda-point bad-publicity has-bad-pub
                                       hand-size-base hand-size-modification active]} owner]
   (om/component
    (sab/html
-    (let [me? (= (:side @game-state) :corp)]
+    (let [me? (= (:side @game-state) :resPlayer)]
       [:div.panel.blue-shade.stats {:class (when active "active-player")}
        [:h4.ellipsis (om/build avatar user {:opts {:size 22}}) (:username user)]
        [:div (str click " Click" (if (not= click 1) "s" "")) (when me? (controls :click))]
@@ -1072,13 +1072,13 @@
 
 (defmulti board-view #(get-in % [:player :identity :side]))
 
-(defmethod board-view "Corp" [{:keys [player run]}]
+(defmethod board-view "ResPlayer" [{:keys [player run]}]
   (om/component
    (sab/html
     (let [servers (:servers player)
           s (:server run)
           server-type (first s)]
-      [:div.corp-board {:class (if (= (:side @game-state) :runner) "opponent" "me")}
+      [:div.corp-board {:class (if (= (:side @game-state) :hazPlayer) "opponent" "me")}
        (for [server (reverse (get-remotes servers))
              :let [num (remote->num (first server))]]
          (om/build server-view {:server (second server)
@@ -1094,10 +1094,10 @@
                               :central-view (om/build discard-view player)
                               :run (when (= server-type "archives") run)})]))))
 
-(defmethod board-view "Runner" [{:keys [player run]}]
+(defmethod board-view "HazPlayer" [{:keys [player run]}]
   (om/component
    (sab/html
-    (let [is-me (= (:side @game-state) :runner)
+    (let [is-me (= (:side @game-state) :hazPlayer)
           centrals (sab/html
                     [:div.runner-centrals
                      (om/build discard-view player)
@@ -1211,7 +1211,7 @@
                    server (if-let [n (second s)]
                             (get-in corp [:servers kw n])
                             (get-in corp [:servers kw]))]
-               (if (= side :runner)
+               (if (= side :hazPlayer)
                  [:div.panel.blue-shade
                   (when-not (:no-action run) [:h4 "Waiting for Corp's actions"])
                   (if (zero? (:position run))
@@ -1234,8 +1234,8 @@
               (when (and (= (keyword active-player) side)
                          (or runner-phase-12 corp-phase-12))
                 [:button {:on-click #(send-command "end-phase-12")}
-                 (if (= side :corp) "Mandatory Draw" "Take Clicks")])
-              (when (= side :runner)
+                 (if (= side :resPlayer) "Mandatory Draw" "Take Clicks")])
+              (when (= side :hazPlayer)
                 [:div
                  (cond-button "Remove Tag"
                               (and (pos? (:click me))
@@ -1252,9 +1252,9 @@
                                                 (-> (om/get-node owner "servers") js/$ .fadeOut))}
                            label])
                         (zones->sorted-names (runnable-servers corp runner)))]]])
-              (when (= side :corp)
+              (when (= side :resPlayer)
                 (cond-button "Purge" (>= (:click me) 3) #(send-command "purge")))
-              (when (= side :corp)
+              (when (= side :resPlayer)
                 (cond-button "Trash Resource" (and (pos? (:click me))
                                                    (>= (:credit me) (- 2 (or (:trash-cost-bonus me) 0)))
                                                    (or (pos? (:tagged opponent))
@@ -1327,8 +1327,8 @@
     (render-state [this state]
       (sab/html
        (when side
-         (let [me       (assoc ((if (= side :runner) :runner :corp) cursor) :active (and (pos? turn) (= (keyword active-player) side)))
-               opponent (assoc ((if (= side :runner) :corp :runner) cursor) :active (and (pos? turn) (not= (keyword active-player) side)))]
+         (let [me       (assoc ((if (= side :hazPlayer) :hazPlayer :resPlayer) cursor) :active (and (pos? turn) (= (keyword active-player) side)))
+               opponent (assoc ((if (= side :hazPlayer) :resPlayer :hazPlayer) cursor) :active (and (pos? turn) (not= (keyword active-player) side)))]
            [:div.gameboard
             (when (and (:winner @game-state) (not (:win-shown @app-state)))
               [:div.win.centered.blue-shade
@@ -1387,7 +1387,7 @@
                 (om/build rfg-view {:cards (:current opponent) :name "Current" :popup false})
                 (om/build rfg-view {:cards (:current me) :name "Current" :popup false})]
                (when-not (= side :spectator)
-                 (om/build button-pane {:side side :active-player active-player :run run :end-turn end-turn :runner-phase-12 runner-phase-12 :corp-phase-12 corp-phase-12 :corp corp :runner runner :me me :opponent opponent}))]]
+                 (om/build button-pane {:side side :active-player active-player :run run :end-turn end-turn :hazPlayer-phase-12 runner-phase-12 :resPlayer-phase-12 corp-phase-12 :resPlayer corp :hazPlayer runner :me me :opponent opponent}))]]
 
              [:div.me
               (om/build hand-view {:player me :remotes (get-remotes (:servers corp))

@@ -127,8 +127,8 @@
   "Returns true if player has spent at least one click"
   [side state]
   (case side
-    :runner (contains? (into {} (get @state :turn-events)) :runner-spent-click)
-    :corp   (contains? (into {} (get @state :turn-events)) :corp-spent-click)))
+    :hazPlayer (contains? (into {} (get @state :turn-events)) :hazPlayer-spent-click)
+    :resPlayer   (contains? (into {} (get @state :turn-events)) :resPlayer-spent-click)))
 
 (defn used-this-turn?
   "Returns true if a card has been used this turn"
@@ -173,17 +173,17 @@
      (str "spends " cost-str " to " verb " "))))
 
 (defn other-side [side]
-  (cond (= side :corp) :runner
-        (= side :runner) :corp))
+  (cond (= side :resPlayer) :hazPlayer
+        (= side :hazPlayer) :resPlayer))
 
 (defn side-str
   "Converts kw into str. If str is passed same str is returned."
   [side]
   (cond
-    (= side :corp) "Corp"
-    (= side "Corp") "Corp"
-    (= side :runner) "Runner"
-    (= side "Runner") "Runner"))
+    (= side :resPlayer) "ResPlayer"
+    (= side "ResPlayer") "ResPlayer"
+    (= side :hazPlayer) "HazPlayer"
+    (= side "HazPlayer") "HazPlayer"))
 
 (defn same-side?
   "Checks if two supplied sides are the same side. Accepts both keyword and str."

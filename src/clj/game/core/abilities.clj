@@ -451,11 +451,11 @@
   ([state side eid card psi]
    (swap! state assoc :psi {})
    (register-once state psi card)
-   (system-msg state :corp (str "uses " (:title card) " to start a psi game"))
-   (doseq [s [:corp :runner]]
+   (system-msg state :resPlayer (str "uses " (:title card) " to start a psi game"))
+   (doseq [s [:resPlayer :hazPlayer]]
      (let [all-amounts (range (min 3 (inc (get-in @state [s :credit]))))
-           valid-amounts (remove #(or (any-flag-fn? state :corp :psi-prevent-spend %)
-                                      (any-flag-fn? state :runner :psi-prevent-spend %))
+           valid-amounts (remove #(or (any-flag-fn? state :resPlayer :psi-prevent-spend %)
+                                      (any-flag-fn? state :hazPlayer :psi-prevent-spend %))
                                  all-amounts)]
 
        (show-prompt-with-dice state s card (str "Choose an amount to spend for " (:title card))
@@ -468,7 +468,7 @@
   resolution ability."
   [state side eid card psi bet]
   (swap! state assoc-in [:psi side] bet)
-  (let [opponent (if (= side :corp) :runner :corp)]
+  (let [opponent (if (= side :resPlayer) :hazPlayer :resPlayer)]
     (if-let [opponent-bet (get-in @state [:psi opponent])]
       (do (clear-wait-prompt state opponent)
           (deduce state opponent [:credit opponent-bet])
@@ -490,20 +490,20 @@
 (defn- init-trace
   "Shows a trace prompt to the runner, after the corp has already spent credits to boost."
   [state side card {:keys [base eid] :as ability} boost]
-  (clear-wait-prompt state :runner)
-  (show-wait-prompt state :corp "Runner to boost Link strength" {:priority 2})
+  (clear-wait-prompt state :hazPlayer)
+  (show-wait-prompt state :resPlayer "Runner to boost Link strength" {:priority 2})
   (trigger-event state side :pre-init-trace card)
   (let [bonus (get-in @state [:bonus :trace] 0)
         base (if (fn? base) (base state side (make-eid state) card nil) base)
         total (+ base boost bonus)
-        link (get-in @state [:runner :link] 0)]
-    (system-msg state :corp (str "uses " (:title card)
+        link (get-in @state [:hazPlayer :link] 0)]
+    (system-msg state :resPlayer (str "uses " (:title card)
                                  " to initiate a trace with strength " total
                                  " (" base
                                  (when (pos? bonus) (str " + " bonus " bonus"))
                                  " + " boost " [Credits]) (" (make-label ability) ")"))
     (swap! state update-in [:bonus] dissoc :trace)
-    (show-trace-prompt state :runner card "Boost link strength?"
+    (show-trace-prompt state :hazPlayer card "Boost link strength?"
                        #(resolve-trace state side eid %) {:priority 2 :base link})
     (swap! state assoc :trace {:strength total :ability ability :card card})
     (trigger-event state side :trace nil)))
@@ -511,29 +511,29 @@
 (defn resolve-trace
   "Compares trace strength and link strength and triggers the appropriate effects."
   [state side eid boost]
-  (clear-wait-prompt state :corp)
-  (let [link (get-in @state [:runner :link] 0)
+  (clear-wait-prompt state :resPlayer)
+  (let [link (get-in @state [:hazPlayer :link] 0)
         runner-trace (+ link boost)
         {:keys [strength ability card]} (:trace @state)]
-    (system-msg state :runner (str " spends " boost " [Credits] to increase link strength to " runner-trace))
+    (system-msg state :hazPlayer (str " spends " boost " [Credits] to increase link strength to " runner-trace))
     (let [successful (> strength runner-trace)
           which-ability (assoc (if successful ability (:unsuccessful ability)) :eid (make-eid state))]
-      (when-completed (trigger-event-sync state :corp (if successful :successful-trace :unsuccessful-trace) {:runner-spent boost})
-                      (when-completed (resolve-ability state :corp (:eid which-ability) which-ability
+      (when-completed (trigger-event-sync state :resPlayer (if successful :successful-trace :unsuccessful-trace) {:hazPlayer-spent boost})
+                      (when-completed (resolve-ability state :resPlayer (:eid which-ability) which-ability
                                                                    card [strength runner-trace])
                                       (do (when-let [kicker (:kicker ability)]
                                             (when (>= strength (:min kicker))
-                                              (resolve-ability state :corp kicker card [strength runner-trace])))
+                                              (resolve-ability state :resPlayer kicker card [strength runner-trace])))
                                           (effect-completed state side eid nil)))))))
 
 (defn corp-trace-prompt
   "Starts the trace process by showing the boost prompt to the corp."
   [state card {:keys [base] :as trace}]
-  (let [base-trace (if (fn? base) (base state :corp (make-eid state) card nil) base)
+  (let [base-trace (if (fn? base) (base state :resPlayer (make-eid state) card nil) base)
         bonus (or (get-in @state [:bonus :trace]) 0)]
-    (show-wait-prompt state :runner (str "Corp to initiate a trace from " (:title card)) {:priority 2})
-    (show-trace-prompt state :corp card "Boost trace strength?"
-                       #(init-trace state :corp card trace %) {:priority 2 :base base-trace :bonus bonus})))
+    (show-wait-prompt state :hazPlayer (str "Corp to initiate a trace from " (:title card)) {:priority 2})
+    (show-trace-prompt state :resPlayer card "Boost trace strength?"
+                       #(init-trace state :resPlayer card trace %) {:priority 2 :base base-trace :bonus bonus})))
 
 (defn rfg-and-shuffle-rd-effect
   ([state side card n] (rfg-and-shuffle-rd-effect state side (make-eid state) card n))
@@ -542,7 +542,7 @@
    (continue-ability state side
                     {:show-discard  true
                      :choices       {:max n
-                                     :req #(and (= (:side %) "Corp")
+                                     :req #(and (= (:side %) "ResPlayer")
                                                 (= (:zone %) [:discard]))}
                      :msg           (msg "shuffle "
                                          (let [seen (filter :seen targets)
