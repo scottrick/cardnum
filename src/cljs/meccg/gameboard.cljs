@@ -30,7 +30,7 @@
         version-path (if (and has-art show-art)
                        (get art-options (keyword art) (:code card))
                        (:code card))]
-    (str "/img/cards/" version-path ".png")))
+    (str "/img/cards/" version-path ".jpg")))
 
 (defn toastr-options
   "Function that generates the correct toastr options for specified settings"
@@ -70,7 +70,7 @@
                (if (= (get-in game [:resPlayer :user :_id]) (:_id user))
                  :resPlayer
                  :spectator))]
-    (swap! app-state assoc :side side)
+    (swap! app-state assoc :side "ResPlayer")
     (init-game game side))
   (set! (.-onbeforeunload js/window) #(clj->js "Leaving this page will disconnect you from the game."))
   (-> "#gamelobby" js/$ .fadeOut)
