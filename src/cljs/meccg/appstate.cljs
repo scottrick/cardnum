@@ -3,7 +3,7 @@
 (def app-state
   (atom {:active-page "/"
          :user (js->clj js/user :keywordize-keys true)
-         :options (merge {:background "lobby-bg"
+         :options (merge {:background "lobby2-bg"
                           :show-alt-art true
                           :deckstats "always"
                           :gamestats "always"

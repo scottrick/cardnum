@@ -1,5 +1,5 @@
 (in-ns 'game.core)
-(declare any-flag-fn? corp-trace-prompt optional-ability
+(declare any-flag-fn? minion-trace-prompt optional-ability
          check-optional check-psi check-trace complete-ability
          do-choices do-ability
          psi-game resolve-ability-eid resolve-psi resolve-trace show-select)
@@ -167,7 +167,7 @@
   [state side {:keys [eid] :as ability} card targets]
   (when-let [trace (:trace ability)]
     (if (can-trigger? state side ability card targets)
-      (corp-trace-prompt state card (assoc trace :eid (:eid ability)))
+      (minion-trace-prompt state card (assoc trace :eid (:eid ability)))
       (effect-completed state side eid card))))
 
 (defn- do-choices
@@ -451,11 +451,11 @@
   ([state side eid card psi]
    (swap! state assoc :psi {})
    (register-once state psi card)
-   (system-msg state :resPlayer (str "uses " (:title card) " to start a psi game"))
-   (doseq [s [:resPlayer :hazPlayer]]
+   (system-msg state :minion (str "uses " (:title card) " to start a psi game"))
+   (doseq [s [:minion :hero]]
      (let [all-amounts (range (min 3 (inc (get-in @state [s :credit]))))
-           valid-amounts (remove #(or (any-flag-fn? state :resPlayer :psi-prevent-spend %)
-                                      (any-flag-fn? state :hazPlayer :psi-prevent-spend %))
+           valid-amounts (remove #(or (any-flag-fn? state :minion :psi-prevent-spend %)
+                                      (any-flag-fn? state :hero :psi-prevent-spend %))
                                  all-amounts)]
 
        (show-prompt-with-dice state s card (str "Choose an amount to spend for " (:title card))
@@ -468,7 +468,7 @@
   resolution ability."
   [state side eid card psi bet]
   (swap! state assoc-in [:psi side] bet)
-  (let [opponent (if (= side :resPlayer) :hazPlayer :resPlayer)]
+  (let [opponent (if (= side :minion) :hero :minion)]
     (if-let [opponent-bet (get-in @state [:psi opponent])]
       (do (clear-wait-prompt state opponent)
           (deduce state opponent [:credit opponent-bet])
@@ -488,22 +488,22 @@
 
 ;;; Traces
 (defn- init-trace
-  "Shows a trace prompt to the runner, after the corp has already spent credits to boost."
+  "Shows a trace prompt to the hero, after the minion has already spent credits to boost."
   [state side card {:keys [base eid] :as ability} boost]
-  (clear-wait-prompt state :hazPlayer)
-  (show-wait-prompt state :resPlayer "Runner to boost Link strength" {:priority 2})
+  (clear-wait-prompt state :hero)
+  (show-wait-prompt state :minion "Runner to boost Link strength" {:priority 2})
   (trigger-event state side :pre-init-trace card)
   (let [bonus (get-in @state [:bonus :trace] 0)
         base (if (fn? base) (base state side (make-eid state) card nil) base)
         total (+ base boost bonus)
-        link (get-in @state [:hazPlayer :link] 0)]
-    (system-msg state :resPlayer (str "uses " (:title card)
+        link (get-in @state [:hero :link] 0)]
+    (system-msg state :minion (str "uses " (:title card)
                                  " to initiate a trace with strength " total
                                  " (" base
                                  (when (pos? bonus) (str " + " bonus " bonus"))
                                  " + " boost " [Credits]) (" (make-label ability) ")"))
     (swap! state update-in [:bonus] dissoc :trace)
-    (show-trace-prompt state :hazPlayer card "Boost link strength?"
+    (show-trace-prompt state :hero card "Boost link strength?"
                        #(resolve-trace state side eid %) {:priority 2 :base link})
     (swap! state assoc :trace {:strength total :ability ability :card card})
     (trigger-event state side :trace nil)))
@@ -511,29 +511,29 @@
 (defn resolve-trace
   "Compares trace strength and link strength and triggers the appropriate effects."
   [state side eid boost]
-  (clear-wait-prompt state :resPlayer)
-  (let [link (get-in @state [:hazPlayer :link] 0)
-        runner-trace (+ link boost)
+  (clear-wait-prompt state :minion)
+  (let [link (get-in @state [:hero :link] 0)
+        hero-trace (+ link boost)
         {:keys [strength ability card]} (:trace @state)]
-    (system-msg state :hazPlayer (str " spends " boost " [Credits] to increase link strength to " runner-trace))
-    (let [successful (> strength runner-trace)
+    (system-msg state :hero (str " spends " boost " [Credits] to increase link strength to " hero-trace))
+    (let [successful (> strength hero-trace)
           which-ability (assoc (if successful ability (:unsuccessful ability)) :eid (make-eid state))]
-      (when-completed (trigger-event-sync state :resPlayer (if successful :successful-trace :unsuccessful-trace) {:hazPlayer-spent boost})
-                      (when-completed (resolve-ability state :resPlayer (:eid which-ability) which-ability
-                                                                   card [strength runner-trace])
+      (when-completed (trigger-event-sync state :minion (if successful :successful-trace :unsuccessful-trace) {:hero-spent boost})
+                      (when-completed (resolve-ability state :minion (:eid which-ability) which-ability
+                                                                   card [strength hero-trace])
                                       (do (when-let [kicker (:kicker ability)]
                                             (when (>= strength (:min kicker))
-                                              (resolve-ability state :resPlayer kicker card [strength runner-trace])))
+                                              (resolve-ability state :minion kicker card [strength hero-trace])))
                                           (effect-completed state side eid nil)))))))
 
-(defn corp-trace-prompt
-  "Starts the trace process by showing the boost prompt to the corp."
+(defn minion-trace-prompt
+  "Starts the trace process by showing the boost prompt to the minion."
   [state card {:keys [base] :as trace}]
-  (let [base-trace (if (fn? base) (base state :resPlayer (make-eid state) card nil) base)
+  (let [base-trace (if (fn? base) (base state :minion (make-eid state) card nil) base)
         bonus (or (get-in @state [:bonus :trace]) 0)]
-    (show-wait-prompt state :hazPlayer (str "Corp to initiate a trace from " (:title card)) {:priority 2})
-    (show-trace-prompt state :resPlayer card "Boost trace strength?"
-                       #(init-trace state :resPlayer card trace %) {:priority 2 :base base-trace :bonus bonus})))
+    (show-wait-prompt state :hero (str "Corp to initiate a trace from " (:title card)) {:priority 2})
+    (show-trace-prompt state :minion card "Boost trace strength?"
+                       #(init-trace state :minion card trace %) {:priority 2 :base base-trace :bonus bonus})))
 
 (defn rfg-and-shuffle-rd-effect
   ([state side card n] (rfg-and-shuffle-rd-effect state side (make-eid state) card n))
@@ -542,7 +542,7 @@
    (continue-ability state side
                     {:show-discard  true
                      :choices       {:max n
-                                     :req #(and (= (:side %) "ResPlayer")
+                                     :req #(and (= (:side %) "Minion")
                                                 (= (:zone %) [:discard]))}
                      :msg           (msg "shuffle "
                                          (let [seen (filter :seen targets)

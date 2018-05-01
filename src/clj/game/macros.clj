@@ -2,18 +2,18 @@
 
 (defmacro effect [& expr]
   `(fn ~['state 'side 'eid 'card 'targets]
-     ~(let [actions (map #(if (#{:hazPlayer :resPlayer} (second %))
+     ~(let [actions (map #(if (#{:hero :minion} (second %))
                             (concat [(first %) 'state (second %)] (drop 2 %))
                             (concat [(first %) 'state 'side] (rest %)))
                          expr)]
-        `(let ~['runner '(:hazPlayer @state)
-                'corp '(:resPlayer @state)
-                'corp-reg '(get-in @state [:resPlayer :register])
-                'corp-reg-last '(get-in @state [:resPlayer :register-last-turn])
-                'runner-reg '(get-in @state [:hazPlayer :register])
-                'runner-reg-last '(get-in @state [:hazPlayer :register-last-turn])
+        `(let ~['hero '(:hero @state)
+                'minion '(:minion @state)
+                'minion-reg '(get-in @state [:minion :register])
+                'minion-reg-last '(get-in @state [:minion :register-last-turn])
+                'hero-reg '(get-in @state [:hero :register])
+                'hero-reg-last '(get-in @state [:hero :register-last-turn])
                 'run-server '(when (:run @state)
-                               (get-in @state (concat [:resPlayer :servers] (:server (:run @state)))))
+                               (get-in @state (concat [:minion :servers] (:server (:run @state)))))
                 'run-ices '(:ices run-server)
                 'current-ice '(when-let [run-pos (:position (:run @state))]
                                 (when (and (pos? run-pos) (<= run-pos (count (:ices run-server))))
@@ -23,32 +23,32 @@
 
 (defmacro req [& expr]
   `(fn ~['state 'side 'eid 'card 'targets]
-     (let ~['runner '(:hazPlayer @state)
-            'corp '(:resPlayer @state)
+     (let ~['hero '(:hero @state)
+            'minion '(:minion @state)
             'run '(:run @state)
             'run-server '(when (:run @state)
-                           (get-in @state (concat [:resPlayer :servers] (:server (:run @state)))))
+                           (get-in @state (concat [:minion :servers] (:server (:run @state)))))
             'run-ices '(:ices run-server)
             'current-ice '(when-let [run-pos (:position (:run @state))]
                             (when (and (pos? run-pos) (<= run-pos (count (:ices run-server))))
                               (nth (:ices run-server) (dec run-pos))))
-            'corp-reg '(get-in @state [:resPlayer :register])
-            'corp-reg-last '(get-in @state [:resPlayer :register-last-turn])
-            'runner-reg '(get-in @state [:hazPlayer :register])
-            'runner-reg-last '(get-in @state [:hazPlayer :register-last-turn])
+            'minion-reg '(get-in @state [:minion :register])
+            'minion-reg-last '(get-in @state [:minion :register-last-turn])
+            'hero-reg '(get-in @state [:hero :register])
+            'hero-reg-last '(get-in @state [:hero :register-last-turn])
             'target '(first targets)
             'installed '(#{:rig :servers} (first (:zone (get-nested-host card))))
             'remotes '(get-remote-names @state)
             'servers '(zones->sorted-names (get-zones @state))
             'unprotected '(let [server (second (:zone (if (:host card)
                                                         (get-card state (:host card)) card)))]
-                            (empty? (get-in @state [:resPlayer :servers server :ices])))
+                            (empty? (get-in @state [:minion :servers server :ices])))
             'runnable-servers '(zones->sorted-names (get-runnable-zones @state))
-            'hq-runnable '(not (:hq (get-in runner [:register :cannot-run-on-server])))
-            'rd-runnable '(not (:rd (get-in runner [:register :cannot-run-on-server])))
-            'archives-runnable '(not (:archives (get-in runner [:register :cannot-run-on-server])))
-            'tagged '(or (> (:tagged runner) 0) (> (:tag runner) 0))
-            'has-bad-pub '(or (> (:bad-publicity corp) 0) (> (:has-bad-pub corp) 0))
+            'hq-runnable '(not (:hq (get-in hero [:register :cannot-run-on-server])))
+            'rd-runnable '(not (:rd (get-in hero [:register :cannot-run-on-server])))
+            'archives-runnable '(not (:archives (get-in hero [:register :cannot-run-on-server])))
+            'tagged '(or (> (:tagged hero) 0) (> (:tag hero) 0))
+            'has-bad-pub '(or (> (:bad-publicity minion) 0) (> (:has-bad-pub minion) 0))
             'this-server '(let [s (-> card :zone rest butlast)
                                 r (:server run)]
                             (and (= (first r) (first s))
@@ -57,21 +57,21 @@
 
 (defmacro msg [& expr]
   `(fn ~['state 'side 'eid 'card 'targets]
-     (let ~['runner '(:hazPlayer @state)
-            'corp '(:resPlayer @state)
-            'corp-reg '(get-in @state [:resPlayer :register])
-            'corp-reg-last '(get-in @state [:resPlayer :register-last-turn])
-            'runner-reg '(get-in @state [:hazPlayer :register])
-            'runner-reg-last '(get-in @state [:hazPlayer :register-last-turn])
+     (let ~['hero '(:hero @state)
+            'minion '(:minion @state)
+            'minion-reg '(get-in @state [:minion :register])
+            'minion-reg-last '(get-in @state [:minion :register-last-turn])
+            'hero-reg '(get-in @state [:hero :register])
+            'hero-reg-last '(get-in @state [:hero :register-last-turn])
             'run '(:run @state)
             'run-server '(when (:run @state)
-                           (get-in @state (concat [:resPlayer :servers] (:server (:run @state)))))
+                           (get-in @state (concat [:minion :servers] (:server (:run @state)))))
             'run-ices '(:ices run-server)
             'current-ice '(when-let [run-pos (:position (:run @state))]
                             (when (and (pos? run-pos) (<= run-pos (count (:ices run-server))))
                               (nth (:ices run-server) (dec run-pos))))
             'target '(first targets)
-            'tagged '(or (> (:tagged runner) 0) (> (:tag runner) 0))]
+            'tagged '(or (> (:tagged hero) 0) (> (:tag hero) 0))]
        (str ~@expr))))
 
 (defmacro when-completed

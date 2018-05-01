@@ -41,7 +41,7 @@
    "derez" #(core/derez %1 %2 (:card %3))
    "run" core/click-run
    "no-action" core/no-action
-   "corp-phase-43" core/corp-phase-43
+   "minion-phase-43" core/minion-phase-43
    "continue" core/continue
    "access" core/successful-run
    "jack-out" core/jack-out
@@ -51,7 +51,7 @@
    "select" core/select
    "shuffle" core/shuffle-deck
    "ability" core/play-ability
-   "runner-ability" core/play-runner-ability
+   "hero-ability" core/play-hero-ability
    "subroutine" core/play-subroutine
    "trash-resource" core/trash-resource
    "dynamic-ability" core/play-dynamic-ability
@@ -74,7 +74,7 @@
 (defn not-spectator?
   "Returns true if the specified user in the specified state is not a spectator"
   [state user]
-  (and state (#{(get-in @state [:resPlayer :user]) (get-in @state [:hazPlayer :user])} user)))
+  (and state (#{(get-in @state [:minion :user]) (get-in @state [:hero :user])} user)))
 
 (defn handle-do
   "Ensures the user is allowed to do command they are trying to do"
@@ -92,23 +92,23 @@
                 :else card))
             cards)))
 
-(defn- make-private-runner [state]
-  (-> (:hazPlayer @state)
-      (update-in [:hand] #(private-card-vector state :hazPlayer %))
-      (update-in [:discard] #(private-card-vector state :hazPlayer %))
-      (update-in [:deck] #(private-card-vector state :hazPlayer %))
-      (update-in [:rig :facedown] #(private-card-vector state :hazPlayer %))
-      (update-in [:rig :resource] #(private-card-vector state :hazPlayer %))))
+(defn- make-private-hero [state]
+  (-> (:hero @state)
+      (update-in [:hand] #(private-card-vector state :hero %))
+      (update-in [:discard] #(private-card-vector state :hero %))
+      (update-in [:deck] #(private-card-vector state :hero %))
+      (update-in [:rig :facedown] #(private-card-vector state :hero %))
+      (update-in [:rig :resource] #(private-card-vector state :hero %))))
 
-(defn- make-private-corp [state]
+(defn- make-private-minion [state]
   (let [zones (concat [[:hand]] [[:discard]] [[:deck]]
-                      (for [server (keys (:servers (:resPlayer @state)))] [:servers server :ices])
-                      (for [server (keys (:servers (:resPlayer @state)))] [:servers server :content]))]
-    (loop [s (:resPlayer @state)
+                      (for [server (keys (:servers (:minion @state)))] [:servers server :ices])
+                      (for [server (keys (:servers (:minion @state)))] [:servers server :content]))]
+    (loop [s (:minion @state)
            z zones]
       (if (empty? z)
         s
-        (recur (update-in s (first z) #(private-card-vector state :resPlayer %)) (next z))))))
+        (recur (update-in s (first z) #(private-card-vector state :minion %)) (next z))))))
 
 (defn- make-private-deck [state side deck]
   (if (:view-deck (side @state))
@@ -118,18 +118,18 @@
 (defn- private-states [state]
   "Generates privatized states for the Corp, Runner and any spectators from the base state.
   If `:spectatorhands` is on, all information is passed on to spectators as well."
-  ;; corp, runner, spectator
-  (let [corp-private (make-private-corp state)
-        runner-private (make-private-runner state)
-        corp-deck (update-in (:resPlayer @state) [:deck] #(make-private-deck state :resPlayer %))
-        runner-deck (update-in (:hazPlayer @state) [:deck] #(make-private-deck state :hazPlayer %))]
-    [(assoc @state :hazPlayer runner-private
-                   :resPlayer corp-deck)
-     (assoc @state :resPlayer corp-private
-                   :hazPlayer runner-deck)
+  ;; minion, hero, spectator
+  (let [minion-private (make-private-minion state)
+        hero-private (make-private-hero state)
+        minion-deck (update-in (:minion @state) [:deck] #(make-private-deck state :minion %))
+        hero-deck (update-in (:hero @state) [:deck] #(make-private-deck state :hero %))]
+    [(assoc @state :hero hero-private
+                   :minion minion-deck)
+     (assoc @state :minion minion-private
+                   :hero hero-deck)
      (if (get-in @state [:options :spectatorhands])
-       (assoc @state :resPlayer corp-deck :hazPlayer runner-deck)
-       (assoc @state :resPlayer corp-private :hazPlayer runner-private))]))
+       (assoc @state :minion minion-deck :hero hero-deck)
+       (assoc @state :minion minion-private :hero hero-private))]))
 
 (defn- reset-all-cards
   [cards]
@@ -161,8 +161,8 @@
              (when state
                ;; when rejoining, there is probably a new socket ID that needs to be set into the user.
                (let [side (cond
-                            (= (:_id user) (get-in @state [:resPlayer :user :_id])) :resPlayer
-                            (= (:_id user) (get-in @state [:hazPlayer :user :_id])) :hazPlayer
+                            (= (:_id user) (get-in @state [:minion :user :_id])) :minion
+                            (= (:_id user) (get-in @state [:hero :user :_id])) :hero
                             :else nil)]
                  (swap! state assoc-in [side :user] user)
                  (swap! state update-in [:log] #(conj % {:user "__system__" :text text})))))
@@ -192,33 +192,33 @@
         (let [{:keys [gameid action command args] :as msg} (convert (.recv socket))]
           (if (= action "alert")
             (do (doseq [state (vals @game-states)]
-                  (doseq [side [:hazPlayer :resPlayer]]
+                  (doseq [side [:hero :minion]]
                     (toast state side command "warning" {:time-out 0 :close-button true})))
                 (.send socket (generate-string "ok")))
             (let [state (@game-states (:gameid msg))
                   old-state (when state (@old-states (:gameid msg)))
-                  [old-corp old-runner old-spect] (when old-state (private-states (atom old-state)))]
+                  [old-minion old-hero old-spect] (when old-state (private-states (atom old-state)))]
               (if (handle-command msg state)
                 (if (= action "initialize")
                   (.send socket (generate-string "ok"))
                   (if-let [new-state (@game-states gameid)]
-                    (let [[new-corp new-runner new-spect] (private-states new-state)]
+                    (let [[new-minion new-hero new-spect] (private-states new-state)]
                       (do
                         (swap! old-states assoc (:gameid msg) @new-state)
                         (if (#{"start" "reconnect" "notification" "rejoin"} action)
                           ;; send the whole state, not a diff
                           (.send socket (generate-string {:action      action
-                                                          :hazPlayerstate (strip new-runner)
-                                                          :resPlayerstate   (strip new-corp)
+                                                          :herostate (strip new-hero)
+                                                          :minionstate   (strip new-minion)
                                                           :spectstate  (strip new-spect)
                                                           :gameid      gameid}))
                           ;; send a diff
-                          (let [runner-diff (differ/diff (strip old-runner) (strip new-runner))
-                                corp-diff (differ/diff (strip old-corp) (strip new-corp))
+                          (let [hero-diff (differ/diff (strip old-hero) (strip new-hero))
+                                minion-diff (differ/diff (strip old-minion) (strip new-minion))
                                 spect-diff (differ/diff (strip old-spect) (strip new-spect))]
                             (.send socket (generate-string {:action     action
-                                                            :hazPlayerdiff runner-diff
-                                                            :resPlayerdiff   corp-diff
+                                                            :herodiff hero-diff
+                                                            :miniondiff   minion-diff
                                                             :spectdiff  spect-diff
                                                             :gameid     gameid}))))))
                     (.send socket (generate-string {:action action :state old-state :gameid gameid}))))

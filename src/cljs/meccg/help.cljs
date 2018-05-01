@@ -31,7 +31,7 @@
                         [:p "Breaking ICE during a run and subroutines firing is currently not automated. Runner signals using their "
                          "icebreakers by clicking them and using their abilities. When some subroutines are left unbroken and fire, "
                          "Corp clicks the piece of ICE with subroutines firing and uses them."]
-                        [:p "It's considered common courtesy to wait as Corp for the runner to say \"fire\" before firing the "
+                        [:p "It's considered common courtesy to wait as Corp for the hero to say \"fire\" before firing the "
                          "subroutines, since Runner may have ways of breaking/avoiding the effects that are not immediately obvious "
                          "and the effects of a fired subroutine may be hard to undo."])}
             {:id "closemenu"

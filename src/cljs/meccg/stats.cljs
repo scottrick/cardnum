@@ -70,13 +70,13 @@
           [:div
            [:h3 "Corp Stats"]
            (om/build stat-view {:stats stats
-                                :start-key :games-started-corp :complete-key :games-completed-corp
-                                :win-key :wins-corp :lose-key :loses-corp})]
+                                :start-key :games-started-minion :complete-key :games-completed-minion
+                                :win-key :wins-minion :lose-key :loses-minion})]
           [:div
            [:h3 "Runner Stats"]
            (om/build stat-view {:stats stats
-                                :start-key :games-started-runner :complete-key :games-completed-runner
-                                :win-key :wins-runner :lose-key :loses-runner})]]
+                                :start-key :games-started-hero :complete-key :games-completed-hero
+                                :win-key :wins-hero :lose-key :loses-hero})]]
          [:p
           [:button {:on-click #(clear-user-stats)} "Clear Stats"]]]))))
 

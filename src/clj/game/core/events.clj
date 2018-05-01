@@ -145,7 +145,7 @@
   event: the event keyword to trigger handlers for
   first-ability: an ability map (fed to resolve-ability) that should be resolved after the list of handlers is determined
                  but before any of them is actually fired. Typically used for core rules that happen in the same window
-                 as triggering handlers, such as trashing a corp Current when an agenda is stolen. Necessary for
+                 as triggering handlers, such as trashing a minion Current when an agenda is stolen. Necessary for
                  interaction with New Angeles Sol and Employee Strike
   card-ability:  a card's ability that triggers at the same time as the event trigger, but is coded as a card ability
                  and not an event handler. (For example, :stolen on agendas happens in the same window as :agenda-stolen
@@ -230,12 +230,12 @@
 (defn first-successful-run-on-server?
   "Returns true if the active run is the first succesful run on the given server"
   [state server]
-  (empty? (filter #(= [server] %) (turn-events state :hazPlayer :successful-run))))
+  (empty? (filter #(= [server] %) (turn-events state :hero :successful-run))))
 
 (defn get-turn-damage
   "Returns the value of damage take this turn"
   [state side]
-  (apply + (map #(nth % 2) (turn-events state :hazPlayer :damage))))
+  (apply + (map #(nth % 2) (turn-events state :hero :damage))))
 
 (defn get-installed-trashed
   "Returns list of cards trashed this turn owned by side that were installed"

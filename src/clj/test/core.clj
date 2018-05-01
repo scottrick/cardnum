@@ -4,7 +4,7 @@
             [game.macros :refer [effect req msg]]
             [clojure.string :refer [split-lines split join]]
             [game.core :as core :refer [all-cards]]
-            [test.utils :refer [load-card load-cards qty default-corp default-runner
+            [test.utils :refer [load-card load-cards qty default-minion default-hero
                                 make-deck]]
             [test.macros :refer [do-game]]
             [clojure.test :refer :all]))
@@ -17,34 +17,34 @@
   ([state side n]
     (let  [remaining-clicks (get-in @state [side :click])
            n (or n remaining-clicks)
-           other (if (= side :resPlayer) :hazPlayer :resPlayer)]
+           other (if (= side :minion) :hero :minion)]
       (dotimes [i n] (core/click-credit state side nil))
       (if (= (get-in @state [side :click]) 0)
         (do (core/end-turn state side nil)
             (core/start-turn state other nil))))))
 
 (defn new-game
-  "Init a new game using given corp and runner. Keep starting hands (no mulligan) and start Corp's turn."
-  ([corp runner] (new-game corp runner nil))
-  ([corp runner {:keys [mulligan start-as dont-start-turn dont-start-game] :as args}]
+  "Init a new game using given minion and hero. Keep starting hands (no mulligan) and start Corp's turn."
+  ([minion hero] (new-game minion hero nil))
+  ([minion hero {:keys [mulligan start-as dont-start-turn dont-start-game] :as args}]
     (let [states (core/init-game
                    {:gameid 1
-                    :players [{:side "ResPlayer"
-                               :deck {:identity (@all-cards (:identity corp))
-                                      :cards (:deck corp)}}
-                              {:side "HazPlayer"
-                               :deck {:identity (@all-cards (:identity runner))
-                                      :cards (:deck runner)}}]})
+                    :players [{:side "Minion"
+                               :deck {:identity (@all-cards (:identity minion))
+                                      :cards (:deck minion)}}
+                              {:side "Hero"
+                               :deck {:identity (@all-cards (:identity hero))
+                                      :cards (:deck hero)}}]})
           state (second (last states))]
       (when-not dont-start-game
-        (if (#{:both :resPlayer} mulligan)
-          (core/resolve-prompt state :resPlayer {:choice "Mulligan"})
-          (core/resolve-prompt state :resPlayer {:choice "Keep"}))
-        (if (#{:both :hazPlayer} mulligan)
-          (core/resolve-prompt state :hazPlayer {:choice "Mulligan"})
-          (core/resolve-prompt state :hazPlayer {:choice "Keep"}))
-        (when-not dont-start-turn (core/start-turn state :resPlayer nil))
-        (when (= start-as :hazPlayer) (take-credits state :resPlayer)))
+        (if (#{:both :minion} mulligan)
+          (core/resolve-prompt state :minion {:choice "Mulligan"})
+          (core/resolve-prompt state :minion {:choice "Keep"}))
+        (if (#{:both :hero} mulligan)
+          (core/resolve-prompt state :hero {:choice "Mulligan"})
+          (core/resolve-prompt state :hero {:choice "Keep"}))
+        (when-not dont-start-turn (core/start-turn state :minion nil))
+        (when (= start-as :hero) (take-credits state :minion)))
       state)))
 
 (defn load-all-cards []
@@ -75,31 +75,31 @@
 (defn get-ice
   "Get installed ice protecting server by position."
   [state server pos]
-  (get-in @state [:resPlayer :servers server :ices pos]))
+  (get-in @state [:minion :servers server :ices pos]))
 
 (defn get-content
   "Get card in a server by position. If no pos, get all cards in the server."
   ([state server]
-   (get-in @state [:resPlayer :servers server :content]))
+   (get-in @state [:minion :servers server :content]))
   ([state server pos]
-   (get-in @state [:resPlayer :servers server :content pos])))
+   (get-in @state [:minion :servers server :content pos])))
 
 (defn get-program
   "Get non-hosted program by position."
-  ([state] (get-in @state [:hazPlayer :rig :program]))
+  ([state] (get-in @state [:hero :rig :program]))
   ([state pos]
-   (get-in @state [:hazPlayer :rig :program pos])))
+   (get-in @state [:hero :rig :program pos])))
 
 (defn get-hardware
   "Get hardware by position."
-  ([state] (get-in @state [:hazPlayer :rig :hardware]))
+  ([state] (get-in @state [:hero :rig :hardware]))
   ([state pos]
-   (get-in @state [:hazPlayer :rig :hardware pos])))
+   (get-in @state [:hero :rig :hardware pos])))
 
 (defn get-resource
   "Get non-hosted resource by position."
   [state pos]
-  (get-in @state [:hazPlayer :rig :resource pos]))
+  (get-in @state [:hero :rig :resource pos]))
 
 (defn get-scored
   "Get a card from the score area. Can find by name or index.
@@ -132,41 +132,41 @@
   "Play a run event with a replace-access effect on an unprotected server.
   Advances the run timings to the point where replace-access occurs."
   [state card server]
-  (core/play state :hazPlayer {:card card})
+  (core/play state :hero {:card card})
   (is (= [server] (get-in @state [:run :server])) "Correct server is run")
   (is (get-in @state [:run :run-effect]) "There is a run-effect")
-  (core/no-action state :resPlayer nil)
-  (core/successful-run state :hazPlayer nil)
-  (is (get-in @state [:hazPlayer :prompt]) "A prompt is shown")
+  (core/no-action state :minion nil)
+  (core/successful-run state :hero nil)
+  (is (get-in @state [:hero :prompt]) "A prompt is shown")
   (is (get-in @state [:run :successful]) "Run is marked successful"))
 
 (defn run-on
   "Start run on specified server."
   [state server]
-  (core/click-run state :hazPlayer {:server server}))
+  (core/click-run state :hero {:server server}))
 
 (defn run-continue
-  "No action from corp and continue for runner to proceed in current run."
+  "No action from minion and continue for hero to proceed in current run."
   [state]
-  (core/no-action state :resPlayer nil)
-  (core/continue state :hazPlayer nil))
+  (core/no-action state :minion nil)
+  (core/continue state :hero nil))
 
 (defn run-phase-43
   "Ask for triggered abilities phase 4.3"
   [state]
-  (core/corp-phase-43 state :resPlayer nil)
-  (core/successful-run state :hazPlayer nil))
+  (core/minion-phase-43 state :minion nil)
+  (core/successful-run state :hero nil))
 
 (defn run-successful
-  "No action from corp and successful run for runner."
+  "No action from minion and successful run for hero."
   [state]
-  (core/no-action state :resPlayer nil)
-  (core/successful-run state :hazPlayer nil))
+  (core/no-action state :minion nil)
+  (core/successful-run state :hero nil))
 
 (defn run-jack-out
   "Jacks out in run."
   [state]
-  (core/jack-out state :hazPlayer nil))
+  (core/jack-out state :hero nil))
 
 (defn run-empty-server
   "Make a successful run on specified server, assumes no ice in place."
@@ -181,19 +181,19 @@
   ([state _ card]
    (let [title (:title card)
          advancementcost (:advancementcost card)]
-    (core/gain state :resPlayer :click advancementcost :credit advancementcost)
+    (core/gain state :minion :click advancementcost :credit advancementcost)
     (dotimes [n advancementcost]
-      (core/advance state :resPlayer {:card (core/get-card state card)}))
+      (core/advance state :minion {:card (core/get-card state card)}))
     (is (= advancementcost (get-in (core/get-card state card) [:advance-counter])))
-    (core/score state :resPlayer {:card (core/get-card state card)})
-    (is (find-card title (get-in @state [:resPlayer :scored]))))))
+    (core/score state :minion {:card (core/get-card state card)})
+    (is (find-card title (get-in @state [:minion :scored]))))))
 
 (defn advance
   "Advance the given card."
   ([state card] (advance state card 1))
   ([state card n]
    (dotimes [_ n]
-     (core/advance state :resPlayer {:card (core/get-card state card)}))))
+     (core/advance state :minion {:card (core/get-card state card)}))))
 
 (defn last-log-contains?
   [state content]
@@ -213,9 +213,9 @@
   (core/trash state side (find-card title (get-in @state [side :hand]))))
 
 (defn trash-resource
-  "Trash specified card from rig of the runner"
+  "Trash specified card from rig of the hero"
   [state title]
-  (core/trash state :hazPlayer (find-card title (get-in @state [:hazPlayer :rig :resource]))))
+  (core/trash state :hero (find-card title (get-in @state [:hero :rig :resource]))))
 
 (defn starting-hand
   "Moves all cards in the player's hand to their draw pile, then moves the specified card names
@@ -227,8 +227,8 @@
     (core/move state side (find-card ctitle (get-in @state [side :deck])) :hand)))
 
 (defn accessing
-  "Checks to see if the runner has a prompt accessing the given card title"
+  "Checks to see if the hero has a prompt accessing the given card title"
   [state title]
-  (= title (-> @state :hazPlayer :prompt first :card :title)))
+  (= title (-> @state :hero :prompt first :card :title)))
 
 (load "core-game")

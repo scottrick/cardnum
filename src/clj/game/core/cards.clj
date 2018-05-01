@@ -19,10 +19,10 @@
 (defn get-scoring-owner
   "Returns the owner of the scoring area the card is in"
   [state {:keys [cid] :as card}]
-   (if (find-cid cid (get-in @state [:resPlayer :scored]))
-      :resPlayer
-      (if (find-cid cid (get-in @state [:hazPlayer :scored]))
-        :hazPlayer
+   (if (find-cid cid (get-in @state [:minion :scored]))
+      :minion
+      (if (find-cid cid (get-in @state [:hero :scored]))
+        :hero
         nil)))
 
 (defn get-card
@@ -37,7 +37,7 @@
         (some #(when (= cid (:cid %)) %)
               (let [zones (map to-keyword zone)]
                 (if (= (first zones) :scored)
-                  (into (get-in @state [:resPlayer :scored]) (get-in @state [:hazPlayer :scored]))
+                  (into (get-in @state [:minion :scored]) (get-in @state [:hero :scored]))
                   (get-in @state (cons (to-keyword side) zones))))))
       card)))
 
@@ -64,8 +64,8 @@
          target-zone (if (vector? to) (first to) to)
          same-zone? (= src-zone target-zone)]
      (when (and card (or host
-                         (some #(when (= cid (:cid %)) %) (get-in @state (cons :hazPlayer (vec zone))))
-                         (some #(when (= cid (:cid %)) %) (get-in @state (cons :resPlayer (vec zone)))))
+                         (some #(when (= cid (:cid %)) %) (get-in @state (cons :hero (vec zone))))
+                         (some #(when (= cid (:cid %)) %) (get-in @state (cons :minion (vec zone)))))
                 (or (empty? (get-in @state [side :locked (-> card :zone first)]))
                     force))
        (trigger-event state side :pre-card-moved card src-zone target-zone)
@@ -90,7 +90,7 @@
              hosted (seq (flatten (map
                       (if same-zone? update-hosted trash-hosted)
                       (:hosted card))))
-             c (if (and (= side :resPlayer) (= (first dest) :discard) (rezzed? card))
+             c (if (and (= side :minion) (= (first dest) :discard) (rezzed? card))
                  (assoc card :seen true) card)
              c (if (and (or installed host (#{:servers :scored :current} (first zone)))
                         (#{:hand :deck :discard :rfg} (first dest))
@@ -100,18 +100,18 @@
              moved-card (assoc c :zone dest :host nil :hosted hosted :previous-zone (:zone c))
              moved-card (if (and (:facedown moved-card) (:installed moved-card))
                           (deactivate state side moved-card) moved-card)
-             moved-card (if (and (= side :resPlayer) (#{:hand :deck} (first dest)))
+             moved-card (if (and (= side :minion) (#{:hand :deck} (first dest)))
                           (dissoc moved-card :seen) moved-card)
              moved-card (if (and (= (first (:zone moved-card)) :scored) (card-flag? moved-card :has-abilities-when-stolen true))
                           (merge moved-card {:abilities (:abilities (card-def moved-card))}) moved-card)]
          (if front
            (swap! state update-in (cons side dest) #(cons moved-card (vec %)))
            (swap! state update-in (cons side dest) #(conj (vec %) moved-card)))
-         (doseq [s [:hazPlayer :resPlayer]]
+         (doseq [s [:hero :minion]]
            (if host
              (remove-from-host state side card)
              (swap! state update-in (cons s (vec zone)) (fn [coll] (remove-once #(not= (:cid %) cid) coll)))))
-         (let [z (vec (cons :resPlayer (butlast zone)))]
+         (let [z (vec (cons :minion (butlast zone)))]
            (when (and (not keep-server-alive)
                       (is-remote? z)
                       (empty? (get-in @state (conj z :content)))
@@ -194,14 +194,14 @@
 (defn get-virus-counters
   "Calculate the number of virus countes on the given card, taking Hivemind into account."
   [state side card]
-  (let [hiveminds (filter #(= (:title %) "Hivemind") (all-installed state :hazPlayer))]
+  (let [hiveminds (filter #(= (:title %) "Hivemind") (all-installed state :hero))]
     (reduce + (map #(get-in % [:counter :virus] 0) (cons card hiveminds)))))
 
 (defn card->server
   "Returns the server map that this card is installed in or protecting."
   [state card]
   (let [z (:zone card)]
-    (get-in @state [:resPlayer :servers (second z)])))
+    (get-in @state [:minion :servers (second z)])))
 
 (defn disable-identity
   "Disables the side's identity"

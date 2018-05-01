@@ -28,12 +28,12 @@
     (gain state side :link baselink)))
 
 (defn- init-hands [state]
-  (draw state :resPlayer 5 {:suppress-event true})
-  (draw state :hazPlayer 5 {:suppress-event true})
-  (when (and (-> @state :resPlayer :identity :title)
-             (-> @state :hazPlayer :identity :title))
-    (show-wait-prompt state :hazPlayer "Corp to keep hand or mulligan"))
-  (doseq [side [:resPlayer :hazPlayer]]
+  (draw state :minion 8 {:suppress-event true})
+  (draw state :hero 8 {:suppress-event true})
+  (when (and (-> @state :minion :identity :title)
+             (-> @state :hero :identity :title))
+    (show-wait-prompt state :hero "Corp to keep hand or mulligan"))
+  (doseq [side [:minion :hero]]
     (when (-> @state side :identity :title)
       (show-prompt state side nil "Keep hand?"
                    ["Keep" "Mulligan"]
@@ -44,55 +44,55 @@
 (defn init-game
   "Initializes a new game with the given players vector."
   [{:keys [players gameid spectatorhands room] :as game}]
-  (let [corp (some #(when (= (:side %) "ResPlayer") %) players)
-        runner (some #(when (= (:side %) "HazPlayer") %) players)
-        corp-deck (create-deck (:deck corp) (:user corp))
-        runner-deck (create-deck (:deck runner) (:user runner))
-        corp-deck-id (get-in corp [:deck :_id])
-        runner-deck-id (get-in runner [:deck :_id])
-        corp-options (get-in corp [:options])
-        runner-options (get-in runner [:options])
-        corp-identity (assoc (or (get-in corp [:deck :identity]) {:side "ResPlayer" :type "Identity"}) :cid (make-cid))
-        corp-identity (assoc corp-identity :implementation (card-implemented corp-identity))
-        runner-identity (assoc (or (get-in runner [:deck :identity]) {:side "HazPlayer" :type "Identity"}) :cid (make-cid))
-        runner-identity (assoc runner-identity :implementation (card-implemented runner-identity))
+  (let [minion (some #(when (= (:side %) "Minion") %) players)
+        hero (some #(when (= (:side %) "Hero") %) players)
+        minion-deck (create-deck (:deck minion) (:user minion))
+        hero-deck (create-deck (:deck hero) (:user hero))
+        minion-deck-id (get-in minion [:deck :_id])
+        hero-deck-id (get-in hero [:deck :_id])
+        minion-options (get-in minion [:options])
+        hero-options (get-in hero [:options])
+        minion-identity (assoc (or (get-in minion [:deck :identity]) {:side "Minion" :type "Identity"}) :cid (make-cid))
+        minion-identity (assoc minion-identity :implementation (card-implemented minion-identity))
+        hero-identity (assoc (or (get-in hero [:deck :identity]) {:side "Hero" :type "Identity"}) :cid (make-cid))
+        hero-identity (assoc hero-identity :implementation (card-implemented hero-identity))
         state (atom
-                {:gameid gameid :log [] :active-player :hazPlayer :end-turn true
+                {:gameid gameid :log [] :active-player :hero :end-turn true
                  :room room
                  :rid 0 :turn 0 :eid 0
                  :sfx [] :sfx-current-id 0
                  :options {:spectatorhands spectatorhands}
-                 :resPlayer {:user (:user corp) :identity corp-identity
-                        :options corp-options
-                        :deck (zone :deck corp-deck)
-                        :deck-id corp-deck-id
+                 :minion {:user (:user minion) :identity minion-identity
+                        :options minion-options
+                        :deck (zone :deck minion-deck)
+                        :deck-id minion-deck-id
                         :hand []
                         :discard [] :scored [] :rfg [] :play-area []
                         :servers {:hq {} :rd{} :archives {}}
                         :click 0 :credit 5 :bad-publicity 0 :has-bad-pub 0
                         :toast []
-                        :hand-size-base 5 :hand-size-modification 0
+                        :hand-size-base 8 :hand-size-modification 0
                         :agenda-point 0
                         :click-per-turn 3 :agenda-point-req 7 :keep false}
-                 :hazPlayer {:user (:user runner) :identity runner-identity
-                          :options runner-options
-                          :deck (zone :deck runner-deck)
-                          :deck-id runner-deck-id
+                 :hero {:user (:user hero) :identity hero-identity
+                          :options hero-options
+                          :deck (zone :deck hero-deck)
+                          :deck-id hero-deck-id
                           :hand []
                           :discard [] :scored [] :rfg [] :play-area []
                           :rig {:program [] :resource [] :hardware []}
                           :toast []
                           :click 0 :credit 5 :run-credit 0 :memory 4 :link 0 :tag 0
-                          :hand-size-base 5 :hand-size-modification 0
+                          :hand-size-base 8 :hand-size-modification 0
                           :agenda-point 0
                           :hq-access 1 :rd-access 1 :tagged 0
                           :brain-damage 0 :click-per-turn 4 :agenda-point-req 7 :keep false}})]
-    (init-identity state :resPlayer corp-identity)
-    (init-identity state :hazPlayer runner-identity)
+    (init-identity state :minion minion-identity)
+    (init-identity state :hero hero-identity)
     (swap! game-states assoc gameid state)
-    (let [side :resPlayer]
+    (let [side :minion]
       (when-completed (trigger-event-sync state side :pre-start-game)
-                      (let [side :hazPlayer]
+                      (let [side :hero]
                         (when-completed (trigger-event-sync state side :pre-start-game)
                                         (init-hands state)))))
     @game-states))
@@ -108,7 +108,7 @@
   ([card cid]
   (-> card
       (assoc :cid cid :implementation (card-implemented card))
-      (dissoc :setname :text :_id :influence :number :influencelimit :factioncost))))
+      (dissoc :text :_id :influence :number :influencelimit :factioncost))))
 
 (defn reset-card
   "Resets a card back to its original state overlaid with any play-state data"
@@ -144,19 +144,24 @@
   "Mulligan starting hand."
   [state side args]
   (shuffle-into-deck state side :hand)
-  (draw state side 5 {:suppress-event true})
+  (draw state side 8 {:suppress-event true}) ;; was true
   (let [card (get-in @state [side :identity])]
     (when-let [cdef (card-def card)]
       (when-let [mul (:mulligan cdef)]
         (mul state side (make-eid state) card nil))))
-  (swap! state assoc-in [side :keep] true)
+;;  (swap! state assoc-in [side :keep] true) ;; was true
   (system-msg state side "takes a mulligan")
-  (trigger-event state side :pre-first-turn)
-  (when (and (= side :resPlayer) (-> @state :hazPlayer :identity :title))
-    (clear-wait-prompt state :hazPlayer)
-    (show-wait-prompt state :resPlayer "Runner to keep hand or mulligan"))
-  (when (and (= side :hazPlayer)  (-> @state :resPlayer :identity :title))
-    (clear-wait-prompt state :resPlayer)))
+  (show-prompt state side nil "Keep hand?"
+               ["Keep" "Mulligan"]
+               #(if (= % "Keep")
+                  (keep-hand state side nil)
+                  (mulligan state side nil))))
+  ;;(trigger-event state side :pre-first-turn)
+  ;;(when (and (= side :minion) (-> @state :hero :identity :title))
+    ;;(clear-wait-prompt state :hero)
+    ;;(show-wait-prompt state :minion "Runner to keep hand or mulligan"))
+  ;;(when (and (= side :hero)  (-> @state :minion :identity :title))
+    ;;(clear-wait-prompt state :minion)))
 
 (defn keep-hand
   "Choose not to mulligan."
@@ -164,11 +169,11 @@
   (swap! state assoc-in [side :keep] true)
   (system-msg state side "keeps their hand")
   (trigger-event state side :pre-first-turn)
-  (when (and (= side :resPlayer) (-> @state :hazPlayer :identity :title))
-    (clear-wait-prompt state :hazPlayer)
-    (show-wait-prompt state :resPlayer "Runner to keep hand or mulligan"))
-  (when (and (= side :hazPlayer)  (-> @state :resPlayer :identity :title))
-    (clear-wait-prompt state :resPlayer)))
+  (when (and (= side :minion) (-> @state :hero :identity :title))
+    (clear-wait-prompt state :hero)
+    (show-wait-prompt state :minion "Runner to keep hand or mulligan"))
+  (when (and (= side :hero)  (-> @state :minion :identity :title))
+    (clear-wait-prompt state :minion)))
 
 (defn end-phase-12
   "End phase 1.2 and trigger appropriate events for the player."
@@ -176,10 +181,11 @@
   (turn-message state side true)
   (let [extra-clicks (or (get-in @state [side :extra-click-temp]) 0)]
     (gain state side :click (get-in @state [side :click-per-turn]))
-    (when-completed (trigger-event-sync state side (if (= side :resPlayer) :resPlayer-turn-begins :hazPlayer-turn-begins))
-                    (do (when (= side :resPlayer)
-                          (draw state side)
-                          (trigger-event state side :resPlayer-mandatory-draw))
+    (when-completed (trigger-event-sync state side (if (= side :minion) :minion-turn-begins :hero-turn-begins))
+                    (do (when (= side :minion)
+                          ;;(draw state side)
+                          ;;(trigger-event state side :minion-mandatory-draw)
+                          )
 
                         (cond
 
@@ -190,14 +196,14 @@
                           (gain state side :click extra-clicks))
 
                         (swap! state dissoc-in [side :extra-click-temp])
-                        (swap! state dissoc (if (= side :resPlayer) :resPlayer-phase-12 :hazPlayer-phase-12))
-                        (when (= side :resPlayer)
+                        (swap! state dissoc (if (= side :minion) :minion-phase-12 :hero-phase-12))
+                        (when (= side :minion)
                           (update-all-advancement-costs state side))))))
 
 (defn start-turn
   "Start turn."
   [state side args]
-  (when (= side :resPlayer)
+  (when (= side :minion)
     (swap! state update-in [:turn] inc))
 
   (doseq [c (filter #(:new %) (all-installed state side))]
@@ -206,7 +212,7 @@
   (swap! state assoc :active-player side :per-turn nil :end-turn false)
   (swap! state assoc-in [side :register] nil)
 
-  (let [phase (if (= side :resPlayer) :resPlayer-phase-12 :hazPlayer-phase-12)
+  (let [phase (if (= side :minion) :minion-phase-12 :hero-phase-12)
         start-cards (filter #(card-flag-fn? state side % phase true)
                             (all-active state side))]
     (swap! state assoc phase true)
@@ -214,7 +220,7 @@
     (if (not-empty start-cards)
       (toast state side
                  (str "You may use " (clojure.string/join ", " (map :title start-cards))
-                      (if (= side :resPlayer)
+                      (if (= side :minion)
                         " between the start of your turn and your mandatory draw."
                         " before taking your first click."))
                  "info")
@@ -224,26 +230,26 @@
   (let [max-hand-size (max (hand-size state side) 0)]
     (when (<= (count (get-in @state [side :hand])) max-hand-size)
       (turn-message state side false)
-      (if (= side :hazPlayer)
+      (if (= side :hero)
         (do (when (neg? (hand-size state side))
               (flatline state))
-            (trigger-event state side :hazPlayer-turn-ends))
-        (trigger-event state side :resPlayer-turn-ends))
+            (trigger-event state side :hero-turn-ends))
+        (trigger-event state side :minion-turn-ends))
       (doseq [a (get-in @state [side :register :end-turn])]
         (resolve-ability state side (:ability a) (:card a) (:targets a)))
       (swap! state assoc-in [side :register-last-turn] (-> @state side :register))
-      (let [rig-cards (apply concat (vals (get-in @state [:hazPlayer :rig])))
+      (let [rig-cards (apply concat (vals (get-in @state [:hero :rig])))
             hosted-cards (filter :installed (mapcat :hosted rig-cards))
-            hosted-on-ice (->> (get-in @state [:resPlayer :servers]) seq flatten (mapcat :ices) (mapcat :hosted))]
+            hosted-on-ice (->> (get-in @state [:minion :servers]) seq flatten (mapcat :ices) (mapcat :hosted))]
         (doseq [card (concat rig-cards hosted-cards hosted-on-ice)]
           ;; Clear the added-virus-counter flag for each virus in play.
-          ;; We do this even on the corp's turn to prevent shenanigans with something like Gorman Drip and Surge
+          ;; We do this even on the minion's turn to prevent shenanigans with something like Gorman Drip and Surge
           (when (has-subtype? card "Virus")
-            (set-prop state :hazPlayer card :added-virus-counter false))))
+            (set-prop state :hero card :added-virus-counter false))))
       (swap! state assoc :end-turn true)
       (swap! state update-in [side :register] dissoc :cannot-draw)
       (swap! state update-in [side :register] dissoc :drawn-this-turn)
-      (doseq [c (filter #(= :this-turn (:rezzed %)) (all-installed state :resPlayer))]
+      (doseq [c (filter #(= :this-turn (:rezzed %)) (all-installed state :minion))]
         (update! state side (assoc c :rezzed true)))
       (clear-turn-register! state)
       (swap! state dissoc :turn-events)

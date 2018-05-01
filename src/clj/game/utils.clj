@@ -73,7 +73,7 @@
   (str (Character/toUpperCase (first string)) (subs string 1)))
 
 (defn costs-to-symbol
-  "Used during steal to print runner prompt for payment"
+  "Used during steal to print hero prompt for payment"
   [costs]
   (join ", " (map #(let [key (first %) value (last %)]
                      (case key
@@ -127,8 +127,8 @@
   "Returns true if player has spent at least one click"
   [side state]
   (case side
-    :hazPlayer (contains? (into {} (get @state :turn-events)) :hazPlayer-spent-click)
-    :resPlayer   (contains? (into {} (get @state :turn-events)) :resPlayer-spent-click)))
+    :hero (contains? (into {} (get @state :turn-events)) :hero-spent-click)
+    :minion   (contains? (into {} (get @state :turn-events)) :minion-spent-click)))
 
 (defn used-this-turn?
   "Returns true if a card has been used this turn"
@@ -173,17 +173,17 @@
      (str "spends " cost-str " to " verb " "))))
 
 (defn other-side [side]
-  (cond (= side :resPlayer) :hazPlayer
-        (= side :hazPlayer) :resPlayer))
+  (cond (= side :minion) :hero
+        (= side :hero) :minion))
 
 (defn side-str
   "Converts kw into str. If str is passed same str is returned."
   [side]
   (cond
-    (= side :resPlayer) "ResPlayer"
-    (= side "ResPlayer") "ResPlayer"
-    (= side :hazPlayer) "HazPlayer"
-    (= side "HazPlayer") "HazPlayer"))
+    (= side :minion) "Minion"
+    (= side "Minion") "Minion"
+    (= side :hero) "Hero"
+    (= side "Hero") "Hero"))
 
 (defn same-side?
   "Checks if two supplied sides are the same side. Accepts both keyword and str."
@@ -255,7 +255,7 @@
     nil))
 
 (defn type->rig-zone
-  "Converts a runner's card type to a vector zone, e.g. 'Program' -> [:rig :program]"
+  "Converts a hero's card type to a vector zone, e.g. 'Program' -> [:rig :program]"
   [type]
   (vec [:rig (-> type .toLowerCase keyword)]))
 

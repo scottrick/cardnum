@@ -13,9 +13,9 @@
                                             :choices {:req #(and (not (ice? %))
                                                                  (not (rezzed? %))
                                                                  (not (:advance-counter %)))}
-                                            :effect (req (move state :resPlayer target :deck)
-                                                         (shuffle! state :resPlayer :deck)
-                                                         (swap! state update-in [:hazPlayer :prompt] rest)
+                                            :effect (req (move state :minion target :deck)
+                                                         (shuffle! state :minion :deck)
+                                                         (swap! state update-in [:hero :prompt] rest)
                                                          (handle-end-run state side)) ; remove the replace-access prompt
                                             :msg "shuffle a card into R&D"}} card))}]}
 
@@ -52,10 +52,10 @@
 
    "Bug"
    {:implementation "Can only pay to see last card drawn after multiple draws"
-    :req (req (some #{:hq} (:successful-run runner-reg)))
-    :events {:resPlayer-draw {:optional
-                         {:prompt (msg "Pay 2 [Credits] to reveal card just drawn?") :player :hazPlayer
-                          :yes-ability {:msg (msg "reveal the card just drawn: " (:title (last (:hand corp))))
+    :req (req (some #{:hq} (:successful-run hero-reg)))
+    :events {:minion-draw {:optional
+                         {:prompt (msg "Pay 2 [Credits] to reveal card just drawn?") :player :hero
+                          :yes-ability {:msg (msg "reveal the card just drawn: " (:title (last (:hand minion))))
                                         :cost [:credit 2]}}}}}
 
    "Cache"
@@ -81,17 +81,17 @@
 
    "Clot"
    {:effect (req (let [agendas (map first (filter #(is-type? (first %) "Agenda")
-                                                  (turn-events state :resPlayer :resPlayer-install)))]
-                   (swap! state assoc-in [:resPlayer :register :cannot-score] agendas)))
-    :events {:purge {:effect (req (swap! state update-in [:resPlayer :register] dissoc :cannot-score)
+                                                  (turn-events state :minion :minion-install)))]
+                   (swap! state assoc-in [:minion :register :cannot-score] agendas)))
+    :events {:purge {:effect (req (swap! state update-in [:minion :register] dissoc :cannot-score)
                                   (trash state side card))}
-             :resPlayer-install {:req (req (is-type? target "Agenda"))
-                            :effect (req (swap! state update-in [:resPlayer :register :cannot-score] #(cons target %)))}}
-    :leave-play (req (swap! state update-in [:resPlayer :register] dissoc :cannot-score))}
+             :minion-install {:req (req (is-type? target "Agenda"))
+                            :effect (req (swap! state update-in [:minion :register :cannot-score] #(cons target %)))}}
+    :leave-play (req (swap! state update-in [:minion :register] dissoc :cannot-score))}
 
    "Collective Consciousness"
    {:events {:rez {:req (req (ice? target)) :msg "draw 1 card"
-                   :effect (effect (draw :hazPlayer))}}}
+                   :effect (effect (draw :hero))}}}
 
    "Copycat"
    {:abilities [{:req (req (and (:run @state)
@@ -123,7 +123,7 @@
               :choices (cons "None" cards)
               :delayed-completion true
               :effect (req (if (or (= target "None") (not (is-type? target "Program")))
-                             (do (clear-wait-prompt state :resPlayer)
+                             (do (clear-wait-prompt state :minion)
                                  (shuffle! state side :deck)
                                  (system-msg state side (str "shuffles their Stack"))
                                  (effect-completed state side eid card))
@@ -132,10 +132,10 @@
                                  (continue-ability state side (custsec-host (remove-once #(not= % target) cards))
                                                    card nil))))})]
      {:delayed-completion true
-      :interactive (req (some #(card-flag? % :hazPlayer-install-draw true) (all-active state :hazPlayer)))
-      :msg (msg "reveal the top 5 cards of their Stack: " (join ", " (map :title (take 5 (:deck runner)))))
-      :effect (req (show-wait-prompt state :resPlayer "Runner to host programs on Customized Secretary")
-                   (let [from (take 5 (:deck runner))]
+      :interactive (req (some #(card-flag? % :hero-install-draw true) (all-active state :hero)))
+      :msg (msg "reveal the top 5 cards of their Stack: " (join ", " (map :title (take 5 (:deck hero)))))
+      :effect (req (show-wait-prompt state :minion "Runner to host programs on Customized Secretary")
+                   (let [from (take 5 (:deck hero))]
                      (continue-ability state side (custsec-host from) card nil)))
       :abilities [{:cost [:click 1]
                    :prompt "Choose a program hosted on Customized Secretary to install"
@@ -143,7 +143,7 @@
                                                       (:hosted card))))
                    :msg (msg "install " (:title target))
                    :effect (req (when (can-pay? state side nil :credit (:cost target))
-                                  (runner-install state side target)))}]})
+                                  (hero-install state side target)))}]})
 
    "D4v1d"
    {:implementation "Does not check that ICE strength is 5 or greater"
@@ -164,7 +164,7 @@
                                           :req (req (not (install-locked? state side)))
                                           :msg (msg "install " (:title target) " at no cost")
                                           :effect (effect (trash card {:cause :ability-cost})
-                                                          (runner-install target {:no-cost true}))}
+                                                          (hero-install target {:no-cost true}))}
                                          card nil)))}]}
 
    "Datasucker"
@@ -187,10 +187,10 @@
    {:events {:successful-run {:silent (req true)
                               :effect (effect (add-counter card :virus 1))
                               :req (req (= target :rd))}
-             :hazPlayer-turn-begins
+             :hero-turn-begins
                              {:req (req (>= (get-virus-counters state side card) 3)) :msg "look at the top card of R&D"
                               :effect (effect (prompt! card (str "The top card of R&D is "
-                                                                 (:title (first (:deck corp)))) ["OK"] {}))}}}
+                                                                 (:title (first (:deck minion)))) ["OK"] {}))}}}
 
    "Dhegdheer"
    {:abilities [{:label "Install a program on Dhegdheer"
@@ -199,13 +199,13 @@
                                    {:cost [:click 1]
                                     :prompt "Choose a program in your Grip to install on Dhegdheer"
                                     :choices {:req #(and (is-type? % "Program")
-                                                         (runner-can-install? state side % false)
+                                                         (hero-can-install? state side % false)
                                                          (in-hand? %))}
                                     :msg (msg "host " (:title target) (when (-> target :cost pos?) ", lowering its cost by 1 [Credit]"))
                                     :effect (effect (gain :memory (:memoryunits target))
                                                     (when (-> target :cost pos?)
                                                       (install-cost-bonus state side [:credit -1]))
-                                                    (runner-install target {:host-card card})
+                                                    (hero-install target {:host-card card})
                                                     (update! (assoc (get-card state card) :dheg-prog (:cid target))))}
                                   card nil))}
                 {:label "Host an installed program on Dhegdheer"
@@ -228,7 +228,7 @@
     :choices (req servers)
     :effect (effect (update! (assoc card :server-target target)))
     :events {:purge {:effect (effect (trash card))}
-             :pre-corp-install {:req (req (let [c target
+             :pre-minion-install {:req (req (let [c target
                                                 serv (:server (second targets))]
                                             (and (= serv (:server-target card))
                                                  (not (and (is-central? serv)
@@ -241,7 +241,7 @@
                  :msg (msg "add " (:title target) " to their Grip")
                  :choices (req (cancellable (filter #(and (is-type? % "Program")
                                                           (has-subtype? % "Virus"))
-                                                    (:deck runner)) :sorted))
+                                                    (:deck hero)) :sorted))
                  :cost [:click 1 :credit 1]
                  :effect (effect (trigger-event :searched-stack nil)
                                  (shuffle! :deck)
@@ -251,12 +251,12 @@
                                    {:cost [:click 1]
                                     :prompt "Choose a non-Icebreaker program in your Grip to install on Djinn"
                                     :choices {:req #(and (is-type? % "Program")
-                                                         (runner-can-install? state side % false)
+                                                         (hero-can-install? state side % false)
                                                          (not (has-subtype? % "Icebreaker"))
                                                          (in-hand? %))}
                                     :msg (msg "install and host " (:title target))
                                     :effect (effect (gain :memory (:memoryunits target))
-                                                    (runner-install target {:host-card card})
+                                                    (hero-install target {:host-card card})
                                                     (update! (assoc (get-card state card)
                                                                     :hosted-programs
                                                                     (cons (:cid target) (:hosted-programs card)))))}
@@ -290,22 +290,22 @@
                            (when (get-in card [:special :installing])
                              (update! state side (assoc (:host (get-card state card)) :subtype (combine-subtypes false(-> card :host :subtype) "Barrier" "Code Gate" "Sentry")))
                              (update! state side (update-in card [:special] dissoc :installing))
-                             (trigger-event state side :hazPlayer-install card))
+                             (trigger-event state side :hero-install card))
                            (continue state side nil))}}}
 
    "Equivocation"
    (let [force-draw (fn [title]
                       {:optional {:prompt (str "Force the Corp to draw " title "?")
                                   :yes-ability {:delayed-completion true
-                                                :effect (req (show-wait-prompt state :hazPlayer "Corp to draw")
-                                                             (when-completed (draw state :resPlayer 1 nil)
-                                                                             (do (system-msg state :resPlayer (str "is forced to draw " title))
-                                                                                 (clear-wait-prompt state :hazPlayer)
+                                                :effect (req (show-wait-prompt state :hero "Corp to draw")
+                                                             (when-completed (draw state :minion 1 nil)
+                                                                             (do (system-msg state :minion (str "is forced to draw " title))
+                                                                                 (clear-wait-prompt state :hero)
                                                                                  (effect-completed state side eid))))}}})
          reveal {:optional {:prompt "Reveal the top card of R&D?"
                             :yes-ability {:delayed-completion true
-                                          :effect (req (let [topcard (-> corp :deck first :title)]
-                                                         (system-msg state :hazPlayer (str "reveals " topcard
+                                          :effect (req (let [topcard (-> minion :deck first :title)]
+                                                         (system-msg state :hero (str "reveals " topcard
                                                                                         " from the top of R&D"))
                                                          (continue-ability state side (force-draw topcard) card nil)))}}}]
      {:events {:successful-run {:req (req (= target :rd))
@@ -324,7 +324,7 @@
                  :effect (effect (run :hq {:req (req (= target :hq))
                                            :replace-access
                                            {:msg (msg "reveal cards in HQ: "
-                                                      (join ", " (map :title (:hand corp))))}} card))}]}
+                                                      (join ", " (map :title (:hand minion))))}} card))}]}
 
    "False Echo"
    {:abilities [{:req (req (and run
@@ -332,19 +332,19 @@
                                 (not (rezzed? current-ice))))
                  :msg "make the Corp rez the passed ICE or add it to HQ"
                  :effect (req (let [s (:server run)
-                                    ice (nth (get-in @state (vec (concat [:resPlayer :servers] s [:ices]))) (:position run))
+                                    ice (nth (get-in @state (vec (concat [:minion :servers] s [:ices]))) (:position run))
                                     icename (:title ice)
                                     icecost (rez-cost state side ice)]
                                 (continue-ability
                                   state side
-                                  {:prompt (msg "Rez " icename " or add it to HQ?") :player :resPlayer
-                                   :choices (req (if (< (:credit corp) icecost)
+                                  {:prompt (msg "Rez " icename " or add it to HQ?") :player :minion
+                                   :choices (req (if (< (:credit minion) icecost)
                                                      ["Add to HQ"]
                                                      ["Rez" "Add to HQ"]))
                                    :effect (req (if (= target "Rez")
                                                   (rez state side ice)
-                                                  (do (move state :resPlayer ice :hand nil)
-                                                      (system-msg state :resPlayer (str "chooses to add the passed ICE to HQ"))))
+                                                  (do (move state :minion ice :hand nil)
+                                                      (system-msg state :minion (str "chooses to add the passed ICE to HQ"))))
                                                 (trash state side card))}
                                  card nil)))}]}
 
@@ -352,43 +352,43 @@
    {:abilities [{:cost [:click 1] :effect (effect (gain :credit (get-virus-counters state side card))
                                                   (trash card {:cause :ability-cost}))
                  :msg (msg "gain " (get-virus-counters state side card) " [Credits]")}]
-    :events {:resPlayer-click-credit {:effect (effect (add-counter :hazPlayer card :virus 1))}
-             :resPlayer-click-draw {:effect (effect (add-counter :hazPlayer card :virus 1))}}}
+    :events {:minion-click-credit {:effect (effect (add-counter :hero card :virus 1))}
+             :minion-click-draw {:effect (effect (add-counter :hero card :virus 1))}}}
 
    "Grappling Hook"
    {:abilities [{:msg "break all but 1 subroutine" :effect (effect (trash card {:cause :ability-cost}))}]}
 
    "Gravedigger"
-   {:events (let [e {:req (req (and (installed? target) (= (:side target) "ResPlayer")))
-                               :effect (effect (add-counter :hazPlayer card :virus 1))}]
-              {:hazPlayer-trash e :resPlayer-trash e})
+   {:events (let [e {:req (req (and (installed? target) (= (:side target) "Minion")))
+                               :effect (effect (add-counter :hero card :virus 1))}]
+              {:hero-trash e :minion-trash e})
     :abilities [{:counter-cost [:virus 1]
                  :cost [:click 1]
                  :msg "force the Corp to trash the top card of R&D"
-                 :effect (effect (mill :resPlayer))}]}
+                 :effect (effect (mill :minion))}]}
 
    "Harbinger"
    {:trash-effect
      {:req (req (not (some #{:facedown :hand} (:previous-zone card))))
-      :effect (req (let [lock (get-in @state [:hazPlayer :locked :discard])]
-                     (swap! state assoc-in [:hazPlayer :locked] nil)
-                     (runner-install state :hazPlayer card {:facedown true})
-                     (swap! state assoc-in [:hazPlayer :locked] lock)))}}
+      :effect (req (let [lock (get-in @state [:hero :locked :discard])]
+                     (swap! state assoc-in [:hero :locked] nil)
+                     (hero-install state :hero card {:facedown true})
+                     (swap! state assoc-in [:hero :locked] lock)))}}
 
    "Hemorrhage"
    {:events {:successful-run {:silent (req true)
                               :effect (effect (add-counter card :virus 1))}}
     :abilities [{:counter-cost [:virus 2]
                  :cost [:click 1]
-                 :req (req (> (count (:hand corp)) 0))
+                 :req (req (> (count (:hand minion)) 0))
                  :msg "force the Corp to trash 1 card from HQ"
-                 :effect (req (show-wait-prompt state :hazPlayer "Corp to trash a card from HQ")
+                 :effect (req (show-wait-prompt state :hero "Corp to trash a card from HQ")
                               (resolve-ability
-                                state :resPlayer
+                                state :minion
                                 {:prompt "Choose a card to trash"
-                                 :choices (req (filter #(= (:side %) "ResPlayer") (:hand corp)))
+                                 :choices (req (filter #(= (:side %) "Minion") (:hand minion)))
                                  :effect (effect (trash target)
-                                                 (clear-wait-prompt :hazPlayer))}
+                                                 (clear-wait-prompt :hero))}
                                card nil))}]}
 
    "Hivemind"
@@ -399,8 +399,8 @@
                  :choices {:req #(has-subtype? % "Virus")}
                  :effect (req (let [abilities (:abilities (card-def target))
                                     virus target]
-                                (add-counter state :hazPlayer virus :virus 1)
-                                (add-counter state :hazPlayer card :virus -1)
+                                (add-counter state :hero virus :virus 1)
+                                (add-counter state :hero card :virus -1)
                                 (if (= (count abilities) 1)
                                   (do (swap! state update-in [side :prompt] rest) ; remove the Hivemind prompt so Imp works
                                       (resolve-ability state side (first abilities) (get-card state virus) nil))
@@ -417,9 +417,9 @@
                  :msg (msg "trigger an ability on " (:title target))}]}
 
    "Hyperdriver"
-   {:flags {:hazPlayer-phase-12 (req true)}
+   {:flags {:hero-phase-12 (req true)}
     :abilities [{:label "Remove Hyperdriver from the game to gain [Click] [Click] [Click]"
-                 :req (req (:hazPlayer-phase-12 @state))
+                 :req (req (:hero-phase-12 @state))
                  :effect (effect (move card :rfg) (gain :click 3))
                  :msg "gain [Click] [Click] [Click]"}]}
 
@@ -432,7 +432,7 @@
                  :effect (effect (trash-no-cost))}]}
 
    "Incubator"
-   {:events {:hazPlayer-turn-begins {:effect (effect (add-counter card :virus 1))}}
+   {:events {:hero-turn-begins {:effect (effect (add-counter card :virus 1))}}
     :abilities [{:cost [:click 1]
                  :msg (msg "move " (get-in card [:counter :virus] 0) " virus counter to " (:title target))
                  :choices {:req #(and (installed? %)
@@ -441,8 +441,8 @@
                                  (add-counter target :virus (get-in card [:counter :virus] 0)))}]}
 
    "Ixodidae"
-   {:events {:resPlayer-loss {:req (req (= (first target) :credit)) :msg "gain 1 [Credits]"
-                         :effect (effect (gain :hazPlayer :credit 1))}
+   {:events {:minion-loss {:req (req (= (first target) :credit)) :msg "gain 1 [Credits]"
+                         :effect (effect (gain :hero :credit 1))}
              :purge {:effect (effect (trash card))}}}
 
    "Keyhole"
@@ -455,14 +455,14 @@
                                     {:prompt "Choose a card to trash"
                                      :not-distinct true
                                      :msg (msg "trash " (:title target))
-                                     :choices (req (take 3 (:deck corp)))
+                                     :choices (req (take 3 (:deck minion)))
                                      :mandatory true
                                      :effect (effect (trash (assoc target :seen true))
-                                                     (shuffle! :resPlayer :deck))}} card))}]}
+                                                     (shuffle! :minion :deck))}} card))}]}
 
    "Lamprey"
    {:events {:successful-run {:req (req (= target :hq)) :msg "force the Corp to lose 1 [Credits]"
-                              :effect (effect (lose :resPlayer :credit 1))}
+                              :effect (effect (lose :minion :credit 1))}
              :purge {:effect (effect (trash card))}}}
 
    "Leprechaun"
@@ -472,11 +472,11 @@
                                    {:cost [:click 1]
                                     :prompt "Choose a program in your Grip to install on Leprechaun"
                                     :choices {:req #(and (is-type? % "Program")
-                                                         (runner-can-install? state side % false)
+                                                         (hero-can-install? state side % false)
                                                          (in-hand? %))}
                                     :msg (msg "host " (:title target))
                                     :effect (effect (gain :memory (:memoryunits target))
-                                                    (runner-install target {:host-card card})
+                                                    (hero-install target {:host-card card})
                                                     (update! (assoc (get-card state card)
                                                                     :hosted-programs
                                                                     (cons (:cid target) (:hosted-programs card)))))}
@@ -525,7 +525,7 @@
    "Misdirection"
    {:abilities [{:cost [:click 2]
                  :prompt "How many [Credits] to spend to remove that number of tags?"
-                 :choices {:number (req (min (:credit runner) (:tag runner)))}
+                 :choices {:number (req (min (:credit hero) (:tag hero)))}
                  :msg (msg "spend " target " [Credits] and remove " target " tags")
                  :effect (effect (lose :credit target)
                                  (lose :tag target))}]}
@@ -556,10 +556,10 @@
    "Origami"
    {:effect (effect (gain :hand-size-modification
                           (dec (* 2 (count (filter #(= (:title %) "Origami")
-                                                   (all-installed state :hazPlayer)))))))
+                                                   (all-installed state :hero)))))))
     :leave-play (effect (lose :hand-size-modification
                               (dec (* 2 (count (filter #(= (:title %) "Origami")
-                                                       (all-installed state :hazPlayer)))))))}
+                                                       (all-installed state :hero)))))))}
 
    "Paintbrush"
    {:abilities [{:cost [:click 1]
@@ -567,7 +567,7 @@
                  :effect (req (let [ice target
                                     stypes (:subtype ice)]
                            (resolve-ability
-                              state :hazPlayer
+                              state :hero
                               {:prompt (msg "Choose a subtype")
                                :choices ["Sentry" "Code Gate" "Barrier"]
                                :msg (msg "spend [Click] and make " (card-str state ice) " gain " (.toLowerCase target)
@@ -592,7 +592,7 @@
                    (update-ice-strength state side h)
                    (when-let [card (get-card state card)]
                      (update! state side (update-in card [:special] dissoc :installing)))))
-    :events {:hazPlayer-turn-begins
+    :events {:hero-turn-begins
              {:effect (req (add-counter state side card :virus 1))}
              :counter-added
              {:req (req (or (= (:title target) "Hivemind") (= (:cid target) (:cid card))))
@@ -607,7 +607,7 @@
               :effect (req (unregister-events state side card)
                            (when (get-in card [:special :installing])
                              (update! state side (update-in card [:special] dissoc :installing))
-                             (trigger-event state side :hazPlayer-install card))
+                             (trigger-event state side :hero-install card))
                            (trash state side target)
                            (continue state side nil))
               :msg (msg "trash " (:title target))}}}
@@ -643,7 +643,7 @@
                                                         (not= (:cid %) this-pawn)
                                                         (#{[:hand] [:discard]} (:zone %)))}
                                    :msg (msg "install " (:title target))
-                                   :effect (effect (runner-install target {:no-cost true}))} card nil)
+                                   :effect (effect (hero-install target {:no-cost true}))} card nil)
                                 (trash state side card)))}]}
 
    "Plague"
@@ -655,7 +655,7 @@
              {:req (req (= (zone->name (get-in @state [:run :server]))
                            (get-in (get-card state card) [:special :server-target])))
               :msg "gain 2 virus counters"
-              :effect (effect (add-counter :hazPlayer card :virus 2))}}}
+              :effect (effect (add-counter :hero card :virus 2))}}}
 
    "Pheromones"
    {:recurring (req (when (< (get card :rec-counter 0) (get-in card [:counter :virus] 0))
@@ -676,7 +676,7 @@
                                                          (in-hand? %))}
                                     :msg (msg "host " (:title target))
                                     :effect (effect (gain :memory (:memoryunits target))
-                                                    (runner-install target {:host-card card})
+                                                    (hero-install target {:host-card card})
                                                     (update! (assoc (get-card state card)
                                                                     :hosted-programs
                                                                     (cons (:cid target) (:hosted-programs card)))))}
@@ -702,9 +702,9 @@
                                           (lose :memory (:memoryunits target)))}}}
 
    "Reaver"
-   {:events {:hazPlayer-trash {:req (req (and (first-installed-trash? state side)
+   {:events {:hero-trash {:req (req (and (first-installed-trash? state side)
                                            (installed? target)))
-                            :effect (effect (draw :hazPlayer 1))
+                            :effect (effect (draw :hero 1))
                             :msg "draw 1 card"}}}
 
    "RNG Key"
@@ -718,10 +718,10 @@
                                                                   {:prompt "Choose RNG Key award"
                                                                    :choices ["Gain 3 [Credits]" "Draw 2 cards"]
                                                                    :effect (req (if (= target "Draw 2 cards")
-                                                                                  (do (draw state :hazPlayer 2)
-                                                                                      (system-msg state :hazPlayer "uses RNG Key to draw 2 cards"))
-                                                                                  (do (gain state :hazPlayer :credit 3)
-                                                                                      (system-msg state :hazPlayer "uses RNG Key to gain 3 [Credits]"))))}
+                                                                                  (do (draw state :hero 2)
+                                                                                      (system-msg state :hero "uses RNG Key to draw 2 cards"))
+                                                                                  (do (gain state :hero :credit 3)
+                                                                                      (system-msg state :hero "uses RNG Key to gain 3 [Credits]"))))}
                                                                   card nil)
                                                 (effect-completed state side eid))
                                               (effect-completed state side eid)))}
@@ -772,7 +772,7 @@
                  :prompt "Choose a program to install from your grip"
                  :choices {:req #(and (is-type? % "Program")
                                       (in-hand? %))}
-                 :effect (effect (runner-install target))}]}
+                 :effect (effect (hero-install target))}]}
 
    "Scheherazade"
    {:abilities [{:label "Install and host a program from Grip"
@@ -780,10 +780,10 @@
                                    {:cost [:click 1]
                                     :prompt "Choose a program to install on Scheherazade from your grip"
                                     :choices {:req #(and (is-type? % "Program")
-                                                         (runner-can-install? state side % false)
+                                                         (hero-can-install? state side % false)
                                                          (in-hand? %))}
                                     :msg (msg "host " (:title target) " and gain 1 [Credits]")
-                                    :effect (effect (runner-install target {:host-card card}) (gain :credit 1))}
+                                    :effect (effect (hero-install target {:host-card card}) (gain :credit 1))}
                                   card nil))}
                 {:label "Host an installed program"
                  :prompt "Choose a program to host on Scheherazade" :priority 2
@@ -804,13 +804,13 @@
                                                  :priority true
                                                  :choices (req (cancellable
                                                                  (conj (vec (sort-by :title (filter #(is-type? % "Program")
-                                                                                                    (:deck runner))))
+                                                                                                    (:deck hero))))
                                                                        "No install")))
                                                  :cost [:credit 2]
                                                  :effect (req (trigger-event state side :searched-stack nil)
                                                               (shuffle! state side :deck)
                                                               (when (not= target "No install")
-                                                                (runner-install state side target)))} card nil)))}]}
+                                                                (hero-install state side target)))} card nil)))}]}
 
    "Sneakdoor Beta"
    {:abilities [{:cost [:click 1]
@@ -824,7 +824,7 @@
                                                   ; remove the :req from the run-effect, so that other cards that replace
                                                   ; access don't use Sneakdoor's req. (Security Testing, Ash 2X).
                                                   (swap! state dissoc-in [:run :run-effect :req])
-                                                  (trigger-event state :resPlayer :no-action)
+                                                  (trigger-event state :minion :no-action)
                                                   (system-msg state side
                                                               (str "uses Sneakdoor Beta to make a successful run on HQ")))}}
                                    card))}]}
@@ -851,9 +851,9 @@
               :msg "swap a piece of Barrier ICE"
               :effect (req (let [tgtndx (ice-index state target)
                                  cidx (ice-index state cice)]
-                             (swap! state update-in (cons :resPlayer (:zone cice))
+                             (swap! state update-in (cons :minion (:zone cice))
                                     #(assoc % tgtndx cice))
-                             (swap! state update-in (cons :resPlayer (:zone cice))
+                             (swap! state update-in (cons :minion (:zone cice))
                                     #(assoc % cidx target))
                              (swap! state update-in [:run] #(assoc % :position (inc tgtndx)))
                              (update-all-ice state side)
@@ -884,14 +884,14 @@
 
    "Tapwrm"
    (let [ability {:label "Gain [Credits] (start of turn)"
-                  :msg (msg "gain " (quot (:credit corp) 5) " [Credits]")
+                  :msg (msg "gain " (quot (:credit minion) 5) " [Credits]")
                   :once :per-turn
-                  :req (req (:hazPlayer-phase-12 @state))
-                  :effect (effect (gain :credit (quot (:credit corp) 5)))}]
-     {:req (req (some #{:hq :rd :archives} (:successful-run runner-reg)))
+                  :req (req (:hero-phase-12 @state))
+                  :effect (effect (gain :credit (quot (:credit minion) 5)))}]
+     {:req (req (some #{:hq :rd :archives} (:successful-run hero-reg)))
       :flags {:drip-economy true}
       :abilities [ability]
-      :events {:hazPlayer-turn-begins ability
+      :events {:hero-turn-begins ability
                :purge {:effect (effect (trash card))}}})
 
    "Tracker"
@@ -903,11 +903,11 @@
                    :req (req (some #(= (:server-target card) %) runnable-servers))
                    :msg (msg "make a run on " (:server-target card) ". Prevent the first subroutine that would resolve from resolving")
                    :effect (effect (run (:server-target card) nil card))}]
-      :events {:hazPlayer-turn-begins ability
-               :hazPlayer-turn-ends {:effect (effect (update! (dissoc card :server-target)))}}})
+      :events {:hero-turn-begins ability
+               :hero-turn-ends {:effect (effect (update! (dissoc card :server-target)))}}})
 
    "Trope"
-   {:events {:hazPlayer-turn-begins {:effect (effect (add-counter card :power 1))}}
+   {:events {:hero-turn-begins {:effect (effect (add-counter card :power 1))}}
     :abilities [{:cost [:click 1]
                  :label "[Click], remove Trope from the game: Reshuffle cards from Heap back into Stack"
                  :effect (effect
@@ -915,9 +915,9 @@
                           (gain :memory 1)
                           (resolve-ability
                            {:show-discard true
-                            :choices {:max (min (get-in card [:counter :power] 0) (count (:discard runner)))
+                            :choices {:max (min (get-in card [:counter :power] 0) (count (:discard hero)))
                                       :all true
-                                      :req #(and (= (:side %) "HazPlayer")
+                                      :req #(and (= (:side %) "Hero")
                                                  (in-discard? %))}
                             :msg (msg "shuffle " (join ", " (map :title targets))
                                       " into their Stack")
@@ -952,8 +952,8 @@
               :effect (req (when-completed (expose state side target)
                              (do (if (and async-result
                                           (has-subtype? target chosen-subtype))
-                                   (do (move state :resPlayer target :hand)
-                                       (system-msg state :hazPlayer
+                                   (do (move state :minion target :hand)
+                                       (system-msg state :hero
                                                    (str "add " (:title target) " to HQ"))))
                                  (effect-completed state side eid))))})]
      {:events {:successful-run
@@ -962,7 +962,7 @@
                :req (req (and (= target :hq)
                               (first-successful-run-on-server? state :hq)
                               (some #(and (ice? %) (not (rezzed? %)))
-                                    (all-installed state :resPlayer))))
+                                    (all-installed state :minion))))
                :effect (effect (continue-ability
                                 {:prompt "Use Wari?"
                                  :choices ["Yes" "No"]

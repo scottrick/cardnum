@@ -227,7 +227,9 @@
           characters (lookup-deck (:side identity) (:characters deck))
           pool (lookup-deck (:side identity) (:pool deck))
           fwsb (lookup-deck (:side identity) (:fwsb deck))
-          cards (lookup-deck (:side identity) (:cards deck))]
+          joined (into (:resources deck) (:hazards deck))
+          combed (into (:characters deck) joined)
+          cards (lookup-deck (:side identity) combed)]
       (assoc deck :resources resources :hazards hazards :sideboard sideboard
                   :characters characters :pool pool :fwsb fwsb :cards cards
                   :identity identity))))
@@ -292,8 +294,8 @@
       "")))
 
 (defn resources->str [owner]
-  (let [cards (om/get-state owner [:deck :resources])
-        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" cards)]
+  (let [resources (om/get-state owner [:deck :resources])
+        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" resources)]
     (om/set-state! owner :resource-edit str)))
 
 (defn hazards->str [owner]
@@ -443,7 +445,7 @@
        (<= (influence-count deck) (id-inf-limit identity))
        (every? #(and (allowed? (:card %) identity)
                      (legal-num-copies? identity %)) cards)
-       (or (= (:side identity) "HazPlayer")
+       (or (= (:side identity) "Hero")
            (let [min (min-agenda-points deck)]
              (<= min (agenda-points deck) (inc min))))))
 
@@ -577,7 +579,6 @@
     (characters->str owner)
     (pool->str owner)
     (fwsb->str owner)
-    (cards->str owner)
     (-> owner (om/get-node "viewport") js/$ (.addClass "edit"))
     (try (js/ga "send" "event" "deckbuilder" "edit") (catch js/Error e))
     (go (<! (timeout 500))
@@ -666,7 +667,6 @@
   (characters->str owner)
   (pool->str owner)
   (fwsb->str owner)
-  (cards->str owner)
   (-> owner (om/get-node "viewport") js/$ (.addClass "delete"))
   (try (js/ga "send" "event" "deckbuilder" "delete") (catch js/Error e)))
 

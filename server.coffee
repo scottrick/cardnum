@@ -190,11 +190,11 @@ inc_game_start = (user, side, room) ->
     deckID = user['deck-id']
     inc_deck(deckID, "stats.games-started") if deckID
 
-inc_corp_game_start = (user, room) ->
-  inc_game_start(user, "corp", room)
+inc_minion_game_start = (user, room) ->
+  inc_game_start(user, "minion", room)
 
-inc_runner_game_start = (user, room) ->
-  inc_game_start(user, "runner", room)
+inc_hero_game_start = (user, room) ->
+  inc_game_start(user, "hero", room)
 
 # ZeroMQ
 clojure_hostname = process.env['CLOJURE_HOST'] || "127.0.0.1"
@@ -214,7 +214,7 @@ requester.monitor(500, 0)
 requester.connect("tcp://#{clojure_hostname}:1043")
 
 sendGameResponse = (game, response) ->
-  diffs = response.runnerdiff
+  diffs = response.herodiff
 
   for player in game.players
     socket = io.sockets.connected[player.id]
@@ -222,12 +222,12 @@ sendGameResponse = (game, response) ->
       # The response will either have a diff or a state. we don't actually send both,
       # whichever is null will not be sent over the socket.
       lobby.to(player.id).emit("meccg", {type: response.action,\
-                                             diff: response.corpdiff, \
-                                             state: response.corpstate})
+                                             diff: response.miniondiff, \
+                                             state: response.minionstate})
     else if player.side is "Hero"
       lobby.to(player.id).emit("meccg", {type: response.action, \
-                                             diff: response.runnerdiff, \
-                                             state: response.runnerstate})
+                                             diff: response.herodiff, \
+                                             state: response.herostate})
   for spect in game.spectators
     lobby.to(spect.id).emit("meccg", {type: response.action,\
                                           diff: response.spectdiff, \
@@ -246,10 +246,10 @@ requester.on 'message', (data) ->
       db.collection('gamestats').update {gameid: response.gameid}, {$set: g}, (err) ->
         throw err if err
 
-      if response.state.corp.user and response.state.runner.user # have two users in the game
+      if response.state.minion.user and response.state.hero.user # have two users in the game
         room = response.state.room
-        inc_corp_game_start(response.state.corp, room)
-        inc_runner_game_start(response.state.runner, room)
+        inc_minion_game_start(response.state.minion, room)
+        inc_hero_game_start(response.state.hero, room)
         if response.state.winner # and someone won
           inc_game_win(response.state[response.state.winner], room)
           inc_game_loss(response.state[response.state.loser], room)
@@ -475,17 +475,17 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
           game = games[socket.gameid]
           if game
             if game.players.length is 2
-              corp = if game.players[0].side is "Minion" then game.players[0] else game.players[1]
-              runner = if game.players[0].side is "Hero" then game.players[0] else game.players[1]
+              minion = if game.players[0].side is "Minion" then game.players[0] else game.players[1]
+              hero = if game.players[0].side is "Hero" then game.players[0] else game.players[1]
               g = {
                 gameid: socket.gameid
                 startDate: (new Date()).toISOString()
                 title: game.title
                 room: game.room
-                corp: corp.user.username
-                runner: runner.user.username
-                corpIdentity: if corp.deck then corp.deck.identity.title else null
-                runnerIdentity: if runner.deck then runner.deck.identity.title else null
+                minion: minion.user.username
+                hero: hero.user.username
+                minionIdentity: if minion.deck then minion.deck.identity.title else null
+                heroIdentity: if hero.deck then hero.deck.identity.title else null
               }
               db.collection('gamestats').insert g, (err, data) ->
                 console.log(err) if err

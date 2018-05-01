@@ -36,7 +36,7 @@
 (defn update-all-ice
   "Updates all installed ice."
   [state side]
-  (doseq [server (get-in @state [:resPlayer :servers])]
+  (doseq [server (get-in @state [:minion :servers])]
     (update-ice-in-server state side (second server))))
 
 
@@ -84,4 +84,4 @@
   "Get the zero-based index of the given ice in its server's list of ice, where index 0
   is the innermost ice."
   [state ice]
-  (first (keep-indexed #(when (= (:cid %2) (:cid ice)) %1) (get-in @state (cons :resPlayer (:zone ice))))))
+  (first (keep-indexed #(when (= (:cid %2) (:cid ice)) %1) (get-in @state (cons :minion (:zone ice))))))
