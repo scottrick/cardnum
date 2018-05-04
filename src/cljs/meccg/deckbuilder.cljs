@@ -993,7 +993,7 @@
           (not decks-loaded) [:h4 "Loading deck collection..."]
           (empty? decks) [:h4 "No decks"]
           :else [:div
-                 (for [deck (sort-by :date > decks)]
+                 (for [deck (sort-by #(get-in % [:identity :side]) > (sort-by #(get-in % [:identity :title]) < decks))]
                    [:div.deckline {:class (when (= active-deck deck) "active")
                                    :on-click #(put! select-channel deck)}
                     [:img {:src (image-url (:identity deck))}]
