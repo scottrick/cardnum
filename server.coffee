@@ -40,7 +40,7 @@ lobbyUpdate = false
 lobbyUpdates = {"create" : {}, "update" : {}, "delete" : {}}
 
 swapSide = (side) ->
-  if side is "Minion" then "Hero" else "Minion"
+  if side is "Contestant" then "Hero" else "Contestant"
 
 refreshLobby = (type, gameid) ->
   lobbyUpdate = true
@@ -87,7 +87,7 @@ removePlayer = (socket) ->
 rejoinGame = (socket, gameid, user, options) ->
   game = games[gameid]
   if game and game.started and game.players.length < 2
-    side = if game.players.length is 1 then swapSide(game.players[0].side) else "Minion"
+    side = if game.players.length is 1 then swapSide(game.players[0].side) else "Contestant"
     user.id = socket.id
     game.players.push(user)
     # Replace the game end player list with the new list
@@ -98,11 +98,11 @@ rejoinGame = (socket, gameid, user, options) ->
     refreshLobby("update", gameid)
     requester.send(JSON.stringify({action: "finaluser-del", gameid: socket.gameid}))
 
-joinGame = (socket, gameid, options) ->
+joinGame = (socket, gameid, options, alignment) ->
   game = games[gameid]
   if game and game.players.length < 2
-    side = if game.players.length is 1 then swapSide(game.players[0].side) else "Minion"
-    game.players.push({user: socket.request.user, id: socket.id, side: side, options: options})
+    side = if game.players.length is 1 then swapSide(game.players[0].side) else "Contestant"
+    game.players.push({user: socket.request.user, id: socket.id, side: side, alignment: alignment, options: options})
     socket.join(gameid)
     socket.gameid = gameid
     socket.emit("meccg", {type: "game", gameid: gameid})
@@ -190,8 +190,8 @@ inc_game_start = (user, side, room) ->
     deckID = user['deck-id']
     inc_deck(deckID, "stats.games-started") if deckID
 
-inc_minion_game_start = (user, room) ->
-  inc_game_start(user, "minion", room)
+inc_contestant_game_start = (user, room) ->
+  inc_game_start(user, "contestant", room)
 
 inc_hero_game_start = (user, room) ->
   inc_game_start(user, "hero", room)
@@ -218,12 +218,12 @@ sendGameResponse = (game, response) ->
 
   for player in game.players
     socket = io.sockets.connected[player.id]
-    if player.side is "Minion"
+    if player.side is "Contestant"
       # The response will either have a diff or a state. we don't actually send both,
       # whichever is null will not be sent over the socket.
       lobby.to(player.id).emit("meccg", {type: response.action,\
-                                             diff: response.miniondiff, \
-                                             state: response.minionstate})
+                                             diff: response.contestantdiff, \
+                                             state: response.contestantstate})
     else if player.side is "Hero"
       lobby.to(player.id).emit("meccg", {type: response.action, \
                                              diff: response.herodiff, \
@@ -246,9 +246,9 @@ requester.on 'message', (data) ->
       db.collection('gamestats').update {gameid: response.gameid}, {$set: g}, (err) ->
         throw err if err
 
-      if response.state.minion.user and response.state.hero.user # have two users in the game
+      if response.state.contestant.user and response.state.hero.user # have two users in the game
         room = response.state.room
-        inc_minion_game_start(response.state.minion, room)
+        inc_contestant_game_start(response.state.contestant, room)
         inc_hero_game_start(response.state.hero, room)
         if response.state.winner # and someone won
           inc_game_win(response.state[response.state.winner], room)
@@ -311,7 +311,7 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
           mutespectators: false
           password: if msg.password then crypto.createHash('md5').update(msg.password).digest('hex') else ""
           room: msg.room
-          players: [{user: socket.request.user, id: socket.id, side: msg.side, options: msg.options}]
+          players: [{user: socket.request.user, id: socket.id, side: msg.side, alignment: msg.alignment, options: msg.options}]
           spectators: []
         games[gameid] = game
         socket.join(gameid)
@@ -353,7 +353,8 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
 
         if not game.password or game.password.length is 0 or (msg.password and crypto.createHash('md5').update(msg.password).digest('hex') is game.password)
           fn("join ok")
-          joinGame(socket, msg.gameid, msg.options)
+          if msg.alignment == null then msg.alignment = "Hero"
+          joinGame(socket, msg.gameid, msg.options, msg.alignment)
           socket.broadcast.to(msg.gameid).emit 'meccg',
             type: "say"
             user: "__system__"
@@ -429,7 +430,7 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
       when "reconnect"
         game = games[msg.gameid]
         if game and game.started
-          joinGame(socket, msg.gameid, null)
+          joinGame(socket, msg.gameid, null, msg.alignment)
           requester.send(JSON.stringify({action: "notification", gameid: socket.gameid, text: "#{getUsername(socket)} reconnected."}))
 
       when "say"
@@ -475,16 +476,16 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
           game = games[socket.gameid]
           if game
             if game.players.length is 2
-              minion = if game.players[0].side is "Minion" then game.players[0] else game.players[1]
+              contestant = if game.players[0].side is "Contestant" then game.players[0] else game.players[1]
               hero = if game.players[0].side is "Hero" then game.players[0] else game.players[1]
               g = {
                 gameid: socket.gameid
                 startDate: (new Date()).toISOString()
                 title: game.title
                 room: game.room
-                minion: minion.user.username
+                contestant: contestant.user.username
                 hero: hero.user.username
-                minionIdentity: if minion.deck then minion.deck.identity.title else null
+                contestantIdentity: if contestant.deck then contestant.deck.identity.title else null
                 heroIdentity: if hero.deck then hero.deck.identity.title else null
               }
               db.collection('gamestats').insert g, (err, data) ->

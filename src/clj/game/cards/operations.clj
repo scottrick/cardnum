@@ -2,7 +2,7 @@
 
 (def cards-operations
   {"24/7 News Cycle"
-   {:req (req (pos? (count (:scored minion))))
+   {:req (req (pos? (count (:scored contestant))))
     :delayed-completion true
     :additional-cost [:forfeit]
     :effect (req (continue-ability
@@ -10,7 +10,7 @@
                    {:prompt "Select an agenda in your score area to trigger its \"when scored\" ability"
                     :choices {:req #(and (is-type? % "Agenda")
                                          (when-scored? %)
-                                         (is-scored? state :minion %))}
+                                         (is-scored? state :contestant %))}
                     :msg (msg "trigger the \"when scored\" ability of " (:title target))
                     :delayed-completion true
                     ;dissoc :end-turn for Breaking News
@@ -20,23 +20,23 @@
    "Accelerated Diagnostics"
    (letfn [(ad [i n adcard]
              {:prompt "Select an operation to play"
-              :choices {:req #(and (= (:side %) "Minion")
+              :choices {:req #(and (= (:side %) "Contestant")
                                    (is-type? % "Operation")
                                    (= (:zone %) [:play-area]))}
               :msg (msg "play " (:title target))
               :delayed-completion true
               :effect (req (when-completed (play-instant state side target {:no-additional-cost true})
-                                           (if (and (not (get-in @state [:minion :register :terminal])) (< i n))
+                                           (if (and (not (get-in @state [:contestant :register :terminal])) (< i n))
                                              (continue-ability state side (ad (inc i) n adcard) adcard nil)
                                              (effect-completed state side eid))))})]
      {:delayed-completion true
       :implementation "Corp has to manually cards back to R&D to correctly play a draw operation"
       :effect (req (let [n (count (filter #(is-type? % "Operation")
-                                          (take 3 (:deck minion))))]
+                                          (take 3 (:deck contestant))))]
                      (continue-ability state side
                                        {:msg "look at the top 3 cards of R&D"
                                         :delayed-completion true
-                                        :effect (req (doseq [c (take 3 (:deck minion))]
+                                        :effect (req (doseq [c (take 3 (:deck contestant))]
                                                        (move state side c :play-area))
                                                      (continue-ability state side (ad 1 n card) card nil))}
                                        card nil)))})
@@ -45,12 +45,12 @@
    (let [abhelp (fn ab [n total]
                   {:prompt "Select an Advertisement to install and rez" :show-discard true
                    :delayed-completion true
-                   :choices {:req #(and (= (:side %) "Minion")
+                   :choices {:req #(and (= (:side %) "Contestant")
                                         (has-subtype? % "Advertisement")
                                         (or (in-hand? %)
                                             (= (:zone %) [:discard])))}
                    :effect (req (when-completed
-                                  (minion-install state side target nil {:install-state :rezzed})
+                                  (contestant-install state side target nil {:install-state :rezzed})
                                   (if (< n total)
                                     (continue-ability state side (ab (inc n) total) card nil)
                                     (effect-completed state side eid))))})]
@@ -61,8 +61,8 @@
       :effect (effect (continue-ability (abhelp 1 target) card nil))})
 
    "Aggressive Negotiation"
-   {:req (req (:scored-agenda minion-reg)) :prompt "Choose a card"
-    :choices (req (cancellable (:deck minion) :sorted))
+   {:req (req (:scored-agenda contestant-reg)) :prompt "Choose a card"
+    :choices (req (cancellable (:deck contestant) :sorted))
     :effect (final-effect (move target :hand) (shuffle! :deck))
     :msg "search R&D for a card and add it to HQ"}
 
@@ -70,16 +70,16 @@
    {:delayed-completion false
     :prompt "Choose a server" :choices ["Archives" "R&D" "HQ"]
     :effect (req (let [serv target]
-                   (show-wait-prompt state :minion (str "Runner to decide on running " target))
+                   (show-wait-prompt state :contestant (str "Runner to decide on running " target))
                    (continue-ability
                      state side
                      {:optional
                       {:prompt (msg "Make a run on " serv "?") :player :hero
                        :yes-ability {:msg (msg "let the Runner make a run on " serv)
-                                     :effect (effect (clear-wait-prompt :minion)
+                                     :effect (effect (clear-wait-prompt :contestant)
                                                      (game.core/run eid serv nil card))}
-                       :no-ability {:effect (effect (clear-wait-prompt :minion)
-                                                    (as-agenda :minion (some #(when (= (:cid card) (:cid %)) %) (:discard minion)) 1))
+                       :no-ability {:effect (effect (clear-wait-prompt :contestant)
+                                                    (as-agenda :contestant (some #(when (= (:cid card) (:cid %)) %) (:discard contestant)) 1))
                                     :msg "add it to their score area as an agenda worth 1 agenda point"}}}
                     card nil)))}
 
@@ -93,7 +93,7 @@
                      {:prompt "Select a card from Archives to add to HQ"
                       :show-discard true
                       :choices {:req #(and (not= (:cid %) cid)
-                                           (= (:side %) "Minion")
+                                           (= (:side %) "Contestant")
                                            (= (:zone %) [:discard]))}
                       :effect (final-effect (move target :hand)
                                             (system-msg (str "adds " (if (:seen target) (:title target) "an unseen card") " to HQ")))}
@@ -115,19 +115,19 @@
                               :choices {:req can-be-advanced?}
                               :cancel-effect (req (effect-completed state side eid))
                               :msg (msg "place an advancement token on " (card-str state target))
-                              :effect (req (add-prop state :minion target :advance-counter 1 {:placed true})
+                              :effect (req (add-prop state :contestant target :advance-counter 1 {:placed true})
                                            (if (< n 2)
                                              (continue-ability state side (au (inc n)) card nil)
                                              (effect-completed state side eid card)))})]
    {:delayed-completion true
-    :req (req (let [h (:hand minion)
-                    p (:play-area minion)]
+    :req (req (let [h (:hand contestant)
+                    p (:play-area contestant)]
                 ;; this is needed to pass the req check for can-play? and again when card is actually played
                 (if (some #(= (:cid %) (:cid card)) p)
                   (>= (count h) 2)
                   (>= (count h) 3))))
     :effect (req (system-msg state side "trashes all cards in HQ due to Audacity")
-                 (doseq [c (:hand minion)]
+                 (doseq [c (:hand contestant)]
                    (trash state side c {:unpreventable true}))
                  (continue-ability state side (audacity 1) card nil))})
 
@@ -172,23 +172,23 @@
     :choices ["Resource" "Hardware" "Program"]
     :effect (req (let [t target
                        num (count (filter #(is-type? % t) (all-installed state :hero)))]
-                   (show-wait-prompt state :minion "Runner to choose cards to trash")
+                   (show-wait-prompt state :contestant "Runner to choose cards to trash")
                    (when-completed
                      (resolve-ability state :hero
                        {:prompt (msg "Choose any number of cards of type " t " to trash")
                         :choices {:max num :req #(and (installed? %) (is-type? % t))}
-                        :cancel-effect (final-effect (clear-wait-prompt :minion))
+                        :cancel-effect (final-effect (clear-wait-prompt :contestant))
                         :effect (req (doseq [c targets]
                                        (trash state :hero c {:unpreventable true}))
                                      (gain state :hero :credit (count targets))
                                      (system-msg state :hero (str "trashes " (join ", " (map :title (sort-by :title targets)))
                                                                     " and gains " (count targets) " [Credits]"))
-                                     (clear-wait-prompt state :minion))}
+                                     (clear-wait-prompt state :contestant))}
                       card nil)
                      (do (let [n (* 2 (count (filter #(is-type? % t) (all-installed state :hero))))]
                            (when (pos? n)
-                             (gain state :minion :credit n)
-                             (system-msg state :minion (str "uses Biased Reporting to gain " n " [Credits]")))
+                             (gain state :contestant :credit n)
+                             (system-msg state :contestant (str "uses Biased Reporting to gain " n " [Credits]")))
                            (effect-completed state side eid))))))}
 
    "Big Brother"
@@ -229,10 +229,10 @@
                    (continue-ability
                      state side {:prompt (str "Choose a server to install " (:title agenda))
                                  :choices (server-list state agenda)
-                                 :effect (req (minion-install state side agenda target {:install-state :face-up})
+                                 :effect (req (contestant-install state side agenda target {:install-state :face-up})
                                               ; find where the agenda ended up and host on it
                                               (let [agenda (some #(when (= (:cid %) (:cid agenda)) %)
-                                                                 (all-installed state :minion))]
+                                                                 (all-installed state :contestant))]
                                                 ; the operation ends up in :discard when it is played; to host it,
                                                 ; we need (host) to look for it in discard.
                                                 (host state side agenda (assoc card :zone [:discard]
@@ -245,7 +245,7 @@
 
    "Celebrity Gift"
    {:choices {:max 5
-              :req #(and (= (:side %) "Minion")
+              :req #(and (= (:side %) "Contestant")
                          (in-hand? %))}
     :msg (msg "reveal " (join ", " (map :title (sort-by :title targets))) " and gain " (* 2 (count targets)) " [Credits]")
     :effect (final-effect (gain :credit (* 2 (count targets))))}
@@ -266,7 +266,7 @@
 
    "\"Clones are not People\""
    {:events {:agenda-scored {:msg "add it to their score area as an agenda worth 1 agenda point"
-                             :effect (effect (as-agenda :minion card 1))}}}
+                             :effect (effect (as-agenda :contestant card 1))}}}
 
    "Closed Accounts"
    {:req (req tagged)
@@ -282,8 +282,8 @@
    {:prompt  "Choose an Operation from R&D to play"
     :choices (req (cancellable
              (filter #(and (is-type? % "Operation")
-                           (<= (:cost %) (:credit minion)))
-                      (:deck minion))
+                           (<= (:cost %) (:credit contestant)))
+                      (:deck contestant))
              :sorted))
     :effect  (effect (shuffle! :deck)
                      (system-msg "shuffles their deck")
@@ -300,14 +300,14 @@
 
    "Dedication Ceremony"
    {:prompt "Select a faceup card"
-    :choices {:req #(or (and (card-is? % :side :minion)
+    :choices {:req #(or (and (card-is? % :side :contestant)
                              (:rezzed %))
                         (and (card-is? % :side :hero)
                              (or (installed? %)
                                  (:host %))
                              (not (facedown? %))))}
     :msg (msg "place 3 advancement tokens on " (card-str state target))
-    :effect (req (add-prop state :minion target :advance-counter 3 {:placed true})
+    :effect (req (add-prop state :contestant target :advance-counter 3 {:placed true})
                  (effect-completed state side eid card)
                  (let [tgtcid (:cid target)]
                    (register-turn-flag! state side
@@ -315,7 +315,7 @@
                      (fn [state side card]
                        (if (and (= (:cid card) tgtcid)
                                 (>= (:advance-counter card) (or (:current-cost card) (:advancementcost card))))
-                         ((constantly false) (toast state :minion "Cannot score due to Dedication Ceremony." "warning"))
+                         ((constantly false) (toast state :contestant "Cannot score due to Dedication Ceremony." "warning"))
                          true)))))}
 
    "Defective Brainchips"
@@ -324,11 +324,11 @@
 
    "Distract the Masses"
    (let [shuffle-two {:delayed-completion true
-                      :effect (effect (rfg-and-shuffle-rd-effect (find-cid (:cid card) (:discard minion)) 2))}
+                      :effect (effect (rfg-and-shuffle-rd-effect (find-cid (:cid card) (:discard contestant)) 2))}
          trash-from-hq {:delayed-completion true
                         :prompt "Select up to 2 cards in HQ to trash"
                         :choices {:max 2
-                                  :req #(and (= (:side %) "Minion")
+                                  :req #(and (= (:side %) "Contestant")
                                              (in-hand? %))}
                         :msg (msg "trash " (quantify (count targets) "card") " from HQ")
                         :effect (req (when-completed
@@ -361,12 +361,12 @@
     :effect (effect (lose :hero :credit 4))}
 
    "Election Day"
-   {:req (req (->> (get-in @state [:minion :hand])
+   {:req (req (->> (get-in @state [:contestant :hand])
                    (filter #(not (= (:cid %) (:cid card))))
                    (count)
                    (pos?)))
     :msg (msg "trash all cards in HQ and draw 5 cards")
-    :effect (effect (trash-cards (get-in @state [:minion :hand]))
+    :effect (effect (trash-cards (get-in @state [:contestant :hand]))
                     (draw 5))}
 
    "Enforced Curfew"
@@ -389,13 +389,13 @@
 
    "Enhanced Login Protocol"
    (letfn [(elp-activated [state]
-             (get-in @state [:minion :register :elp-activated] false))
+             (get-in @state [:contestant :register :elp-activated] false))
            (add-effect [state side]
-             (swap! state assoc-in [:minion :register :elp-activated] true)
+             (swap! state assoc-in [:contestant :register :elp-activated] true)
              (click-run-cost-bonus state side [:click 1]))
            (remove-effect [state side]
              (click-run-cost-bonus state side [:click -1])
-             (swap! state update-in [:minion :register] dissoc :elp-activated))]
+             (swap! state update-in [:contestant :register] dissoc :elp-activated))]
      {:effect (req (when (and (= :hero (:active-player @state))
                               (not (:made-click-run hero-reg)))
                      (add-effect state side)
@@ -414,7 +414,7 @@
    "Exchange of Information"
    {:req (req (and tagged
                    (seq (:scored hero))
-                   (seq (:scored minion))))
+                   (seq (:scored contestant))))
     :delayed-completion true
     :effect (req
               (continue-ability
@@ -427,7 +427,7 @@
                              (continue-ability
                                state side
                                {:prompt (msg "Select a scored agenda to swap for " (:title stolen))
-                                :choices {:req #(in-minion-scored? state side %)}
+                                :choices {:req #(in-contestant-scored? state side %)}
                                 :effect (req (let [scored target]
                                                (swap-agendas state side scored stolen)
                                                (system-msg state side (str "uses Exchange of Information to swap "
@@ -438,7 +438,7 @@
 
    "Fast Track"
    {:prompt "Choose an Agenda"
-    :choices (req (cancellable (filter #(is-type? % "Agenda") (:deck minion)) :sorted))
+    :choices (req (cancellable (filter #(is-type? % "Agenda") (:deck contestant)) :sorted))
     :effect (effect (system-msg (str "adds " (:title target) " to HQ and shuffle R&D"))
                     (shuffle! :deck)
                     (move target :hand) )}
@@ -448,7 +448,7 @@
     :req (req (and (>= (:credit hero) 6) (seq (filter #(is-type? % "Resource") (all-installed state :hero)))))
     :effect (req (let [rcount (count (filter #(is-type? % "Resource") (all-installed state :hero)))]
                    (if (pos? rcount)
-                     (do (show-wait-prompt state :minion "Runner to trash a resource to prevent Financial Collapse")
+                     (do (show-wait-prompt state :contestant "Runner to trash a resource to prevent Financial Collapse")
                          (continue-ability
                            state side
                            {:prompt (msg "Trash a resource to prevent Financial Collapse?")
@@ -463,9 +463,9 @@
                                                                     (system-msg state :hero
                                                                                 (str "trashes " (:title target)
                                                                                      " to prevent Financial Collapse"))
-                                                                    (clear-wait-prompt state :minion))}
+                                                                    (clear-wait-prompt state :contestant))}
                                                       {:effect (effect (lose :hero :credit (* rcount 2))
-                                                                       (clear-wait-prompt :minion))
+                                                                       (clear-wait-prompt :contestant))
                                                        :msg (msg "make the Runner lose " (* rcount 2) " [Credits]")})
                                                    card nil))} card nil))
                      (continue-ability
@@ -496,13 +496,13 @@
                               :priority -1
                               :delayed-completion true
                               :show-discard true
-                              :choices {:req #(and (= (:side %) "Minion")
+                              :choices {:req #(and (= (:side %) "Contestant")
                                                    (not (is-type? % "Operation"))
                                                    (in-discard? %))}
                               :effect (req (when-completed
-                                             (minion-install state side target nil nil)
+                                             (contestant-install state side target nil nil)
                                              (do (system-msg state side (str "uses Friends in High Places to "
-                                                                             (minion-install-msg target)))
+                                                                             (contestant-install-msg target)))
                                                  (if (< n 2)
                                                    (continue-ability state side (fhp (inc n)) card nil)
                                                    (effect-completed state side eid card)))))})]
@@ -513,7 +513,7 @@
    {:delayed-completion true
     :effect (effect (mill 2)
                     (system-msg "trashes the top 2 cards of R&D")
-                    (rfg-and-shuffle-rd-effect eid (first (:play-area minion)) 4))}
+                    (rfg-and-shuffle-rd-effect eid (first (:play-area contestant)) 4))}
 
    "Green Level Clearance"
    {:msg "gain 3 [Credits] and draw 1 card"
@@ -533,7 +533,7 @@
               :choices ["Done" "Start over"]
               :delayed-completion true
               :effect (req (if (= target "Done")
-                             (do (doseq [c (reverse chosen)] (move state :minion c :deck {:front true}))
+                             (do (doseq [c (reverse chosen)] (move state :contestant c :deck {:front true}))
                                  (clear-wait-prompt state :hero)
                                  (effect-completed state side eid card))
                              (continue-ability state side (hr-choice original '() 3 original)
@@ -552,8 +552,8 @@
       :msg "trash the top card of R&D, draw 3 cards, and add 3 cards in HQ to the top of R&D"
       :effect (req (draw state side 3)
                    (show-wait-prompt state :hero "Corp to add 3 cards in HQ to the top of R&D")
-                   (let [from (get-in @state [:minion :hand])]
-                     (continue-ability state :minion (hr-choice from '() 3 from) card nil)))})
+                   (let [from (get-in @state [:contestant :hand])]
+                     (continue-ability state :contestant (hr-choice from '() 3 from) card nil)))})
 
    "Hatchet Job"
    {:trace {:base 5
@@ -575,13 +575,13 @@
             :effect (effect (move :hero target :deck {:front true})
                             (system-msg (str "adds " (:title target) " to the top of the Stack")))
             :unsuccessful {:msg "take 1 bad publicity"
-                           :effect (effect (gain :minion :bad-publicity 1))}}}
+                           :effect (effect (gain :contestant :bad-publicity 1))}}}
 
    "Hellion Beta Test"
    {:req (req (:trashed-card hero-reg-last))
     :trace {:base 2
             :label "Trash 2 installed non-program cards"
-            :choices {:max (req (min 2 (count (filter #(not (is-type? % "Program")) (concat (all-installed state :minion)
+            :choices {:max (req (min 2 (count (filter #(not (is-type? % "Program")) (concat (all-installed state :contestant)
                                                                                             (all-installed state :hero))))))
                       :all true
                       :req #(and (installed? %)
@@ -590,14 +590,14 @@
             :effect (req (doseq [c targets]
                            (trash state side c)))
             :unsuccessful {:msg "take 1 bad publicity"
-                           :effect (effect (gain :minion :bad-publicity 1))}}}
+                           :effect (effect (gain :contestant :bad-publicity 1))}}}
 
    "Heritage Committee"
    {:delayed-completion true
     :effect (effect (draw 3)
                     (continue-ability
                       {:prompt "Select a card in HQ to put on top of R&D"
-                       :choices {:req #(and (= (:side %) "Minion")
+                       :choices {:req #(and (= (:side %) "Contestant")
                                             (in-hand? %))}
                        :msg "draw 3 cards and add 1 card from HQ to the top of R&D"
                        :effect (effect (move target :deck {:front true}))}
@@ -624,10 +624,10 @@
     :show-discard true
     :not-distinct true
     :choices {:req #(and (not (is-type? % "Operation"))
-                         (= (:side %) "Minion")
+                         (= (:side %) "Contestant")
                          (#{[:hand] [:discard]} (:zone %)))}
-    :effect (final-effect (minion-install target nil {:no-install-cost true}))
-    :msg (msg (minion-install-msg target))}
+    :effect (final-effect (contestant-install target nil {:no-install-cost true}))
+    :msg (msg (contestant-install-msg target))}
 
    "Invasion of Privacy"
    (letfn [(iop [x]
@@ -645,12 +645,12 @@
                              (effect-completed state side eid card)))})]
      {:trace {:base 2 :msg "reveal the Runner's Grip and trash up to X resources or events"
               :effect (req (let [x (- target (second targets))]
-                             (system-msg state :minion
+                             (system-msg state :contestant
                                          (str "reveals the Runner's Grip ( "
                                               (join ", " (map :title (sort-by :title (:hand hero))))
                                               " ) and can trash up to " x " resources or events"))
                              (continue-ability state side (iop (dec x)) card nil)))
-              :unsuccessful {:msg "take 1 bad publicity" :effect (effect (gain :minion :bad-publicity 1))}}})
+              :unsuccessful {:msg "take 1 bad publicity" :effect (effect (gain :contestant :bad-publicity 1))}}})
 
    "IPO"
    {:msg "gain 13 [Credits]" :effect (effect (gain :credit 13))}
@@ -664,20 +664,20 @@
    {:delayed-completion true
     :msg "gain 4 [Credits]"
     :effect (effect (gain :credit 4)
-                    (continue-ability {:player :minion
+                    (continue-ability {:player :contestant
                                        :prompt "Select a card to install"
-                                       :choices {:req #(and (= (:side %) "Minion")
+                                       :choices {:req #(and (= (:side %) "Contestant")
                                                             (not (is-type? % "Operation"))
                                                             (in-hand? %))}
                                        :delayed-completion true
-                                       :msg (msg (minion-install-msg target))
-                                       :effect (effect (minion-install eid target nil nil))}
+                                       :msg (msg (contestant-install-msg target))
+                                       :effect (effect (contestant-install eid target nil nil))}
                                       card nil))}
 
    "Liquidation"
    {:delayed-completion true
     :effect (req (let [n (count (filter #(and (rezzed? %)
-                                              (not (is-type? % "Agenda"))) (all-installed state :minion)))]
+                                              (not (is-type? % "Agenda"))) (all-installed state :contestant)))]
                    (continue-ability state side
                      {:prompt "Select any number of rezzed cards to trash"
                       :choices {:max n
@@ -699,16 +699,16 @@
 
    "Localized Product Line"
    {:prompt "Choose a card"
-    :choices (req (cancellable (:deck minion) :sorted))
+    :choices (req (cancellable (:deck contestant) :sorted))
     :delayed-completion true
     :effect (req (let [c (:title target)
-                       cs (filter #(= (:title %) c) (:deck minion))]
+                       cs (filter #(= (:title %) c) (:deck contestant))]
                    (continue-ability
                     state side
                     {:prompt "How many copies?"
                      :choices {:number (req (count cs))}
                      :msg (msg "add " (quantify target "cop" "y" "ies") " of " c " to HQ")
-                     :effect (req (shuffle! state :minion :deck)
+                     :effect (req (shuffle! state :contestant :deck)
                                   (doseq [c (take target cs)]
                                     (move state side c :hand)))}
                     card nil)))}
@@ -722,9 +722,9 @@
 
    "Mass Commercialization"
    {:msg (msg "gain " (* 2 (count (filter #(pos? (+ (:advance-counter % 0) (:extra-advance-counter % 0)))
-                                          (concat (all-installed state :hero) (all-installed state :minion))))) " [Credits]")
+                                          (concat (all-installed state :hero) (all-installed state :contestant))))) " [Credits]")
     :effect (effect (gain :credit (* 2 (count (filter #(pos? (+ (:advance-counter % 0) (:extra-advance-counter % 0)))
-                                                      (concat (all-installed state :hero) (all-installed state :minion)))))))}
+                                                      (concat (all-installed state :hero) (all-installed state :contestant)))))))}
 
    "MCA Informant"
    {:implementation "Runner must deduct 1 click and 2 credits, then trash host manually"
@@ -735,7 +735,7 @@
     :effect (req (host state side (get-card state target) (assoc card :zone [:discard] :seen true))
                  (swap! state update-in [:hero :tag] inc))
     :leave-play (req (swap! state update-in [:hero :tag] dec)
-                     (system-msg state :minion "trashes MCA Informant"))}
+                     (system-msg state :contestant "trashes MCA Informant"))}
 
    "Medical Research Fundraiser"
    {:msg "gain 8 [Credits]. The Runner gains 3 [Credits]"
@@ -753,47 +753,47 @@
    "Mushin No Shin"
    {:prompt "Select a card to install from HQ"
     :choices {:req #(and (#{"Asset" "Agenda" "Upgrade"} (:type %))
-                         (= (:side %) "Minion")
+                         (= (:side %) "Contestant")
                          (in-hand? %))}
-    :effect (req (minion-install state side (assoc target :advance-counter 3) "New remote")
+    :effect (req (contestant-install state side (assoc target :advance-counter 3) "New remote")
                  (effect-completed state side eid card)
                  (let [tgtcid (:cid target)]
                    (register-turn-flag! state side
                      card :can-rez
                      (fn [state side card]
                        (if (= (:cid card) tgtcid)
-                         ((constantly false) (toast state :minion "Cannot rez due to Mushin No Shin." "warning"))
+                         ((constantly false) (toast state :contestant "Cannot rez due to Mushin No Shin." "warning"))
                          true)))
                    (register-turn-flag! state side
                      card :can-score
                      (fn [state side card]
                        (if (and (= (:cid card) tgtcid)
                                 (>= (:advance-counter card) (or (:current-cost card) (:advancementcost card))))
-                         ((constantly false) (toast state :minion "Cannot score due to Mushin No Shin." "warning"))
+                         ((constantly false) (toast state :contestant "Cannot score due to Mushin No Shin." "warning"))
                          true)))))}
 
    "Mutate"
    {:additional-cost [:ice 1]
     :effect (effect (register-events (:events (card-def card)) (assoc card :zone '(:discard))))
 
-    :events {:minion-trash {:effect (req (let [i (ice-index state target)
-                       [reveal r] (split-with (complement ice?) (get-in @state [:minion :deck]))
+    :events {:contestant-trash {:effect (req (let [i (ice-index state target)
+                       [reveal r] (split-with (complement ice?) (get-in @state [:contestant :deck]))
                        titles (->> (conj (vec reveal) (first r)) (filter identity) (map :title))]
                                            (system-msg state side (str "uses Mutate to trash " (:title target)))
                                            (when (seq titles)
                                              (system-msg state side (str "reveals " (clojure.string/join ", " titles) " from R&D")))
                                            (if-let [ice (first r)]
                                              (let [newice (assoc ice :zone (:zone target) :rezzed true)
-                                                   ices (get-in @state (cons :minion (:zone target)))
+                                                   ices (get-in @state (cons :contestant (:zone target)))
                                                    newices (apply conj (subvec ices 0 i) newice (subvec ices i))]
-                                               (swap! state assoc-in (cons :minion (:zone target)) newices)
-                                               (swap! state update-in [:minion :deck] (fn [coll] (remove-once #(not= (:cid %) (:cid newice)) coll)))
-                                               (trigger-event state side :minion-install newice)
+                                               (swap! state assoc-in (cons :contestant (:zone target)) newices)
+                                               (swap! state update-in [:contestant :deck] (fn [coll] (remove-once #(not= (:cid %) (:cid newice)) coll)))
+                                               (trigger-event state side :contestant-install newice)
                                                (card-init state side newice {:resolve-effect false})
                                                (system-msg state side (str "uses Mutate to install and rez " (:title newice) " from R&D at no cost"))
                                                (trigger-event state side :rez newice))
                                              (system-msg state side (str "does not find any ICE to install from R&D")))
-                                           (shuffle! state :minion :deck)
+                                           (shuffle! state :contestant :deck)
                                            (effect-completed state side eid card)
                                            (unregister-events state side card)))}}}
 
@@ -805,19 +805,19 @@
    "O₂ Shortage"
    {:delayed-completion true
     :effect (req (if (empty? (:hand hero))
-                   (do (gain state :minion :click 2)
+                   (do (gain state :contestant :click 2)
                        (system-msg state side (str "uses O₂ Shortage to gain [Click][Click]"))
                        (effect-completed state side eid))
-                   (do (show-wait-prompt state :minion "Runner to decide whether or not to trash a card from their Grip")
+                   (do (show-wait-prompt state :contestant "Runner to decide whether or not to trash a card from their Grip")
                        (continue-ability state side
                          {:optional
                           {:prompt "Trash 1 random card from your Grip?"
                            :player :hero
                            :yes-ability {:effect (effect (trash-cards :hero (take 1 (shuffle (:hand hero))))
-                                                         (clear-wait-prompt :minion))}
+                                                         (clear-wait-prompt :contestant))}
                            :no-ability {:msg "gain [Click][Click]"
-                                        :effect (effect (gain :minion :click 2)
-                                                        (clear-wait-prompt :minion))}}}
+                                        :effect (effect (gain :contestant :click 2)
+                                                        (clear-wait-prompt :contestant))}}}
                         card nil))))}
 
    "Observe and Destroy"
@@ -848,17 +848,17 @@
                                 :effect (effect (ice-strength-bonus 2 target))}}}
 
    "Paywall Implementation"
-   {:events {:successful-run {:msg "gain 1 [Credits]" :effect (effect (gain :minion :credit 1))}}}
+   {:events {:successful-run {:msg "gain 1 [Credits]" :effect (effect (gain :contestant :credit 1))}}}
 
    "Peak Efficiency"
    {:msg (msg "gain " (reduce (fn [c server]
                                 (+ c (count (filter (fn [ice] (:rezzed ice)) (:ices server)))))
-                              0 (flatten (seq (:servers minion))))
+                              0 (flatten (seq (:servers contestant))))
               " [Credits]")
     :effect (effect (gain :credit
                           (reduce (fn [c server]
                                     (+ c (count (filter (fn [ice] (:rezzed ice)) (:ices server)))))
-                                  0 (flatten (seq (:servers minion))))))}
+                                  0 (flatten (seq (:servers contestant))))))}
 
    "Power Grid Overload"
    {:req (req (:made-run hero-reg-last))
@@ -872,7 +872,7 @@
                                               :msg (msg "trash " (:title target))
                                               :effect (effect (trash target))}
                                              card nil))
-                         (system-msg state :minion (str "trashes 1 piece of hardware with install cost less than or equal to " (- target (second targets)))))}}
+                         (system-msg state :contestant (str "trashes 1 piece of hardware with install cost less than or equal to " (- target (second targets)))))}}
 
    "Power Shutdown"
    {:req (req (:made-run hero-reg-last))
@@ -880,7 +880,7 @@
     :choices {:number (req (apply max (map :cost (filter #(or (= "Program" (:type %)) (= "Hardware" (:type %))) (all-installed state :hero)))))}
     :msg (msg "trash " target " cards from the top of R&D")
     :delayed-completion true
-    :effect (req (mill state :minion target)
+    :effect (req (mill state :contestant target)
                  (let [n target]
                    (continue-ability state :hero
                                      {:prompt "Select a Program or piece of Hardware to trash"
@@ -894,9 +894,9 @@
    {:delayed-completion true
     :msg "rearrange the top 5 cards of R&D"
     :effect (req (show-wait-prompt state :hero "Corp to rearrange the top cards of R&D")
-                 (let [from (take 5 (:deck minion))]
+                 (let [from (take 5 (:deck contestant))]
                    (if (pos? (count from))
-                     (continue-ability state side (reorder-choice :minion :hero from '()
+                     (continue-ability state side (reorder-choice :contestant :hero from '()
                                                                   (count from) from) card nil)
                      (do (clear-wait-prompt state :hero)
                          (effect-completed state side eid card)))))}
@@ -905,17 +905,17 @@
    {:events {:pre-steal-cost {:effect (effect (steal-cost-bonus [:credit 2]))}}}
 
    "Preemptive Action"
-   {:effect (effect (rfg-and-shuffle-rd-effect (first (:play-area minion)) 3))}
+   {:effect (effect (rfg-and-shuffle-rd-effect (first (:play-area contestant)) 3))}
 
    "Priority Construction"
    (letfn [(install-card [chosen]
             {:prompt "Select a remote server"
              :choices (req (conj (vec (get-remote-names @state)) "New remote"))
              :delayed-completion true
-             :effect (effect (minion-install (assoc (move state side chosen :play-area) :advance-counter 3) target {:no-install-cost true}))})]
+             :effect (effect (contestant-install (assoc (move state side chosen :play-area) :advance-counter 3) target {:no-install-cost true}))})]
      {:delayed-completion true
       :prompt "Choose a piece of ICE in HQ to install"
-      :choices {:req #(and (in-hand? %) (= (:side %) "Minion") (ice? %))}
+      :choices {:req #(and (in-hand? %) (= (:side %) "Contestant") (ice? %))}
       :msg "install an ICE from HQ and place 3 advancements on it"
       :cancel-effect (req (effect-completed state side eid))
       :effect (effect (continue-ability (install-card target) card nil))})
@@ -928,7 +928,7 @@
                    (trigger-event state side :pre-trash c)
                    (let [tcost (trash-cost state side c)]
                      (trash state side c)
-                     (gain state :minion :credit tcost)
+                     (gain state :contestant :credit tcost)
                      (resolve-ability state side
                        {:msg (msg "trash " (card-str state c) " and gain " tcost " [Credits]")}
                       card nil)
@@ -963,11 +963,11 @@
               :choices (req (conj (vec (get-remote-names @state)) "New remote"))
               :delayed-completion true
               :effect (effect (clear-wait-prompt :hero)
-                              (minion-install (move state side chosen :play-area) target))})]
+                              (contestant-install (move state side chosen :play-area) target))})]
      {:msg "look at the top 5 cards of R&D"
       :delayed-completion true
       :effect (req (show-wait-prompt state :hero "Corp to look at the top cards of R&D")
-                   (let [from (take 5 (:deck minion))]
+                   (let [from (take 5 (:deck contestant))]
                      (continue-ability state side (choose-card from) card nil)))})
 
    "Punitive Counterstrike"
@@ -979,12 +979,12 @@
    "Reclamation Order"
    {:prompt "Select a card from Archives"
     :show-discard true
-    :choices {:req #(and (= (:side %) "Minion")
+    :choices {:req #(and (= (:side %) "Contestant")
                          (not= (:title %) "Reclamation Order")
                          (= (:zone %) [:discard]))}
     :msg (msg "name " (:title target))
     :effect (req (let [title (:title target)
-                       cards (filter #(= title (:title %)) (:discard minion))
+                       cards (filter #(= title (:title %)) (:discard contestant))
                        n (count cards)]
                    (continue-ability state side
                                      {:prompt (str "Choose how many copies of "
@@ -1010,7 +1010,7 @@
                   (if (pos? left)
                     {:prompt (str "Choose a Sysop (" (inc (- total left)) "/" total ")")
                      :choices (req (cancellable (filter #(and (has-subtype? % "Sysop")
-                                                              (not (some #{(:title %)} selected))) (:deck minion)) :sorted))
+                                                              (not (some #{(:title %)} selected))) (:deck contestant)) :sorted))
                      :msg (msg "put " (:title target) " into HQ")
                      :delayed-completion true
                      :effect (req (move state side target :hand)
@@ -1018,7 +1018,7 @@
                                     state side
                                     (rt total (dec left) (cons (:title target) selected))
                                     card nil))}
-                    {:effect (effect (shuffle! :minion :deck))
+                    {:effect (effect (shuffle! :contestant :deck))
                      :msg (msg "shuffle R&D")}))]
    {:prompt "How many Sysops?"
     :delayed-completion true
@@ -1028,7 +1028,7 @@
 
    "Red Planet Couriers"
    {:delayed-completion true
-    :req (req (some #(can-be-advanced? %) (all-installed state :minion)))
+    :req (req (some #(can-be-advanced? %) (all-installed state :contestant)))
     :prompt "Select an installed card that can be advanced"
     :choices {:req can-be-advanced?}
     :effect (req (let [installed (get-all-installed state)
@@ -1046,16 +1046,16 @@
    (letfn [(replant [n]
              {:prompt "Select a card to install with Replanting"
               :delayed-completion true
-              :choices {:req #(and (= (:side %) "Minion")
+              :choices {:req #(and (= (:side %) "Contestant")
                                    (not (is-type? % "Operation"))
                                    (in-hand? %))}
-              :effect (req (when-completed (minion-install state side target nil {:no-install-cost true})
+              :effect (req (when-completed (contestant-install state side target nil {:no-install-cost true})
                                            (if (< n 2)
                                              (continue-ability state side (replant (inc n)) card nil)
                                              (effect-completed state side eid card))))})]
      {:delayed-completion true
       :prompt "Select an installed card to add to HQ"
-      :choices {:req #(and (= (:side %) "Minion")
+      :choices {:req #(and (= (:side %) "Contestant")
                            (installed? %))}
       :msg (msg "add " (card-str state target) " to HQ, then install 2 cards ignoring all costs")
       :effect (req (move state side target :hand)
@@ -1067,14 +1067,14 @@
                                        :priority -1
                                        :delayed-completion true
                                        :show-discard true
-                                       :choices {:req #(and (= (:side %) "Minion")
+                                       :choices {:req #(and (= (:side %) "Contestant")
                                                             (not (is-type? % "Operation"))
                                                             (in-discard? %))}
                                        :effect (req (when-completed
-                                                      (minion-install state side target nil {:install-state :rezzed})
+                                                      (contestant-install state side target nil {:install-state :rezzed})
                                                       (do (system-msg state side (str "uses Restore to "
-                                                                                      (minion-install-msg target)))
-                                                          (let [leftover (filter #(= (:title target) (:title %)) (-> @state :minion :discard))]
+                                                                                      (contestant-install-msg target)))
+                                                          (let [leftover (filter #(= (:title target) (:title %)) (-> @state :contestant :discard))]
                                                             (when (seq leftover)
                                                               (doseq [c leftover]
                                                                 (move state side c :rfg))
@@ -1096,11 +1096,11 @@
 
    "Reuse"
    {:delayed-completion true
-    :effect (req (let [n (count (:hand minion))]
+    :effect (req (let [n (count (:hand contestant))]
                    (continue-ability state side
                      {:prompt (msg "Select up to " n " cards in HQ to trash with Reuse")
                       :choices {:max n
-                                :req #(and (= (:side %) "Minion")
+                                :req #(and (= (:side %) "Contestant")
                                            (in-hand? %))}
                       :msg (msg (let [m (count targets)]
                                   (str "trash " (quantify m "card")
@@ -1110,7 +1110,7 @@
 
    "Rework"
    {:prompt "Select a card from HQ to shuffle into R&D"
-    :choices {:req #(and (= (:side %) "Minion")
+    :choices {:req #(and (= (:side %) "Contestant")
                          (in-hand? %))}
     :msg "shuffle a card from HQ into R&D"
     :effect (final-effect (move target :deck) (shuffle! :deck))}
@@ -1119,7 +1119,7 @@
    {:msg "increase the play cost of operations and events by 1 [Credits]"
     :events {:play-event {:once :per-turn
                           :msg "gain 1 [Credits]"
-                          :effect (effect (gain :minion :credit 1))}
+                          :effect (effect (gain :contestant :credit 1))}
              :pre-play-instant {:effect (effect (play-cost-bonus [:credit 1]))}}}
 
    "Rover Algorithm"
@@ -1133,12 +1133,12 @@
                                 :effect (effect (ice-strength-bonus (get-in card [:counter :power] 0) target))}}}
 
    "Sacrifice"
-   {:req (req (pos? (:bad-publicity minion)))
+   {:req (req (pos? (:bad-publicity contestant)))
     :delayed-completion true
     :additional-cost [:forfeit]
     :effect (effect (register-events (:events (card-def card))
                                      (assoc card :zone '(:discard))))
-    :events {:minion-forfeit-agenda {:effect (req (let [bplost (min (:agendapoints (last (:rfg minion))) (:bad-publicity minion))]
+    :events {:contestant-forfeit-agenda {:effect (req (let [bplost (min (:agendapoints (last (:rfg contestant))) (:bad-publicity contestant))]
                                                   (if (not (neg? bplost)) (do (lose state side :bad-publicity bplost)
                                                                               (gain state side :credit bplost)
                                                                               (system-msg state side (str "uses Sacrifice to lose " bplost " bad publicity and gain " bplost " [Credits]")))
@@ -1188,13 +1188,13 @@
 
    "Service Outage"
    (letfn [(so-activated [state]
-             (get-in @state [:minion :register :so-activated] false))
+             (get-in @state [:contestant :register :so-activated] false))
            (add-effect [state side]
-             (swap! state assoc-in [:minion :register :so-activated] true)
+             (swap! state assoc-in [:contestant :register :so-activated] true)
              (run-cost-bonus state side [:credit 1]))
            (remove-effect [state side]
              (run-cost-bonus state side [:credit -1])
-             (swap! state update-in [:minion :register] dissoc :so-activated))]
+             (swap! state update-in [:contestant :register] dissoc :so-activated))]
      {:msg "add a cost of 1 [Credit] for the Runner to make the first run each turn"
       :effect (req (when (and (= :hero (:active-player @state))
                               (empty? (:made-run hero-reg)))
@@ -1211,18 +1211,18 @@
    "Shipment from Kaguya"
    {:choices {:max 2 :req can-be-advanced?}
     :msg (msg "place 1 advancement token on " (count targets) " cards")
-    :effect (req (doseq [t targets] (add-prop state :minion t :advance-counter 1 {:placed true}))
+    :effect (req (doseq [t targets] (add-prop state :contestant t :advance-counter 1 {:placed true}))
                  (effect-completed state side eid card))}
 
    "Shipment from MirrorMorph"
    (let [shelper (fn sh [n] {:prompt "Select a card to install with Shipment from MirrorMorph"
                              :priority -1
                              :delayed-completion true
-                             :choices {:req #(and (= (:side %) "Minion")
+                             :choices {:req #(and (= (:side %) "Contestant")
                                                   (not (is-type? % "Operation"))
                                                   (in-hand? %))}
                              :effect (req (when-completed
-                                            (minion-install state side target nil nil)
+                                            (contestant-install state side target nil nil)
                                             (if (< n 3)
                                               (continue-ability state side (sh (inc n)) card nil)
                                               (effect-completed state side eid card))))})]
@@ -1238,13 +1238,13 @@
                      state side
                      {:choices {:req can-be-advanced?}
                       :msg (msg "place " c " advancement tokens on " (card-str state target))
-                      :effect (effect (add-prop :minion target :advance-counter c {:placed true}))}
+                      :effect (effect (add-prop :contestant target :advance-counter c {:placed true}))}
                      card nil)))}
 
    "Shipment from Tennin"
    {:delayed-completion true
     :req (req (not (:successful-run hero-reg-last)))
-    :choices {:req #(and (installed? %) (= (:side %) "Minion"))}
+    :choices {:req #(and (installed? %) (= (:side %) "Contestant"))}
     :msg (msg "place 2 advancement tokens on " (card-str state target))
     :effect (effect (add-prop target :advance-counter 2 {:placed true}))}
 
@@ -1253,7 +1253,7 @@
               :max (req (min (:tag hero)
                              (reduce (fn [c server]
                                        (+ c (count (filter #(not (:rezzed %)) (:ices server)))))
-                                     0 (flatten (seq (:servers minion))))))}
+                                     0 (flatten (seq (:servers contestant))))))}
     :req (req tagged)
     :effect (req (doseq [t targets] (rez state side t {:ignore-cost :all-costs}))
                  (effect-completed state side eid card))}
@@ -1283,8 +1283,8 @@
 
    "Special Report"
    {:prompt "Select any number of cards in HQ to shuffle into R&D"
-    :choices {:max (req (count (:hand minion)))
-              :req #(and (= (:side %) "Minion")
+    :choices {:max (req (count (:hand contestant)))
+              :req #(and (= (:side %) "Contestant")
                          (in-hand? %))}
     :msg (msg "shuffle " (count targets) " cards in HQ into R&D and draw " (count targets) " cards")
     :effect (req (doseq [c targets]
@@ -1307,13 +1307,13 @@
    "Subcontract"
    (letfn [(sc [i sccard]
              {:prompt "Select an operation in HQ to play"
-              :choices {:req #(and (= (:side %) "Minion")
+              :choices {:req #(and (= (:side %) "Contestant")
                                    (is-type? % "Operation")
                                    (in-hand? %))}
               :delayed-completion true
               :msg (msg "play " (:title target))
               :effect (req (when-completed (play-instant state side target)
-                                           (if (and (not (get-in @state [:minion :register :terminal])) (< i 2))
+                                           (if (and (not (get-in @state [:contestant :register :terminal])) (< i 2))
                                                (continue-ability state side (sc (inc i) sccard) sccard nil)
                                                (effect-completed state side eid))))})]
      {:req (req tagged)
@@ -1322,7 +1322,7 @@
 
    "Subliminal Messaging"
    (letfn [(subliminal []
-             {:minion-phase-12
+             {:contestant-phase-12
               {:effect
                (req (if (not (:made-run hero-reg-last))
                       (do (resolve-ability state side
@@ -1341,20 +1341,20 @@
       :effect (effect (gain :credit 1)
                       (resolve-ability {:once :per-turn :once-key :subliminal-messaging
                                         :msg "gain [Click]"
-                                        :effect (effect (gain :minion :click 1))} card nil))
+                                        :effect (effect (gain :contestant :click 1))} card nil))
       :move-zone (req (if (= [:discard] (:zone card))
                         (register-events state side (subliminal) (assoc card :zone '(:discard)))
                         (unregister-events state side card)))
-      :events {:minion-phase-12 nil}})
+      :events {:contestant-phase-12 nil}})
 
    "Success"
    {:additional-cost [:forfeit]
     :effect (req (resolve-ability state side
                                   {:choices {:req can-be-advanced?}
                                    :msg (msg "advance " (card-str state target) " "
-                                             (advancement-cost state side (last (:rfg minion))) " times")
-                                   :effect (req (dotimes [_ (advancement-cost state side (last (:rfg minion)))]
-                                                  (advance state :minion target :no-cost)))} card nil))}
+                                             (advancement-cost state side (last (:rfg contestant))) " times")
+                                   :effect (req (dotimes [_ (advancement-cost state side (last (:rfg contestant)))]
+                                                  (advance state :contestant target :no-cost)))} card nil))}
 
    "Successful Demonstration"
    {:req (req (:unsuccessful-run hero-reg-last))
@@ -1385,7 +1385,7 @@
 
    "Targeted Marketing"
    (let [gaincr {:req (req (= (:title target) (:marketing-target card)))
-                 :effect (effect (gain :minion :credit 10))
+                 :effect (effect (gain :contestant :credit 10))
                  :msg (msg "gain 10 [Credits] from " (:marketing-target card))}]
      {:prompt "Name a Runner card"
       :choices {:card-title (req (and (card-is? target :side "Hero")
@@ -1404,11 +1404,11 @@
         :delayed-completion true
         :effect (effect
                  (continue-ability
-                   (if-not (zero? (:bad-publicity minion)) ;; If minion's bad-pub is 0
+                   (if-not (zero? (:bad-publicity contestant)) ;; If contestant's bad-pub is 0
                      {:optional {:player :hero
-                                 :prompt "Remove 1 bad publicity from the minion to prevent all resources from being trashed?"
-                                 :yes-ability {:effect (effect (lose :minion :bad-publicity 1))
-                                               :player :minion
+                                 :prompt "Remove 1 bad publicity from the contestant to prevent all resources from being trashed?"
+                                 :yes-ability {:effect (effect (lose :contestant :bad-publicity 1))
+                                               :player :contestant
                                                :msg (msg "lose 1 bad publicity, preventing all resources from being trashed")}
                                  :no-ability trash-all-resources}}
                     trash-all-resources)
@@ -1426,8 +1426,8 @@
                                       :choices [(str "Move " (:title chosen))
                                                 "2 tags"]
                                       :delayed-completion true
-                                      :effect (req (clear-wait-prompt state :minion)
-                                                   (move state :minion (last (:discard minion)) :rfg)
+                                      :effect (req (clear-wait-prompt state :contestant)
+                                                   (move state :contestant (last (:discard contestant)) :rfg)
                                                    (if (.startsWith target "Move")
                                                      (do (system-msg state side (str "chooses to move " (:title chosen) " to the Stack"))
                                                        (move state :hero chosen :deck {:front true})
@@ -1482,8 +1482,8 @@
                                        {:prompt  "Move to where?"
                                         :choices {:req #(and (not= (:cid fr) (:cid %))
                                                              (can-be-advanced? %))}
-                                        :effect  (effect (add-prop :minion target :advance-counter c {:placed true})
-                                                         (add-prop :minion fr :advance-counter (- c) {:placed true})
+                                        :effect  (effect (add-prop :contestant target :advance-counter c {:placed true})
+                                                         (add-prop :contestant fr :advance-counter (- c) {:placed true})
                                                          (system-msg (str "moves " c " advancement tokens from "
                                                                           (card-str state fr) " to " (card-str state target))))}
                                        tol nil)))}
@@ -1495,10 +1495,10 @@
                  (draw state side 4)
                  (continue-ability state side
                    {:prompt "Choose a card in HQ to install"
-                    :choices {:req #(and (in-hand? %) (= (:side %) "Minion") (not (is-type? % "Operation")))}
+                    :choices {:req #(and (in-hand? %) (= (:side %) "Contestant") (not (is-type? % "Operation")))}
                     :msg "gain 10 [Credits], draw 4 cards, and install 1 card from HQ"
                     :cancel-effect (req (effect-completed state side eid))
-                    :effect (effect (minion-install target nil))}
+                    :effect (effect (contestant-install target nil))}
                   card nil))}
 
    "Violet Level Clearance"
@@ -1507,7 +1507,7 @@
 
    "Voter Intimidation"
    {:req (req (seq (:scored hero)))
-    :psi {:not-equal {:player :minion
+    :psi {:not-equal {:player :contestant
                       :prompt "Select a resource to trash"
                       :choices {:req #(and (installed? %)
                                            (is-type? % "Resource"))}
@@ -1528,8 +1528,8 @@
                                       :choices [(str "Trash " (:title chosen))
                                                 "4 meat damage"]
                                       :delayed-completion true
-                                      :effect (req (clear-wait-prompt state :minion)
-                                                   (move state side (last (:discard minion)) :rfg)
+                                      :effect (req (clear-wait-prompt state :contestant)
+                                                   (move state side (last (:discard contestant)) :rfg)
                                                    (if (.startsWith target "Trash")
                                                      (do (system-msg state side (str "chooses to trash " (:title chosen)))
                                                          (trash state side eid chosen nil))

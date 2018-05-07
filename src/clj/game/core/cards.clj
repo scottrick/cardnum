@@ -19,8 +19,8 @@
 (defn get-scoring-owner
   "Returns the owner of the scoring area the card is in"
   [state {:keys [cid] :as card}]
-   (if (find-cid cid (get-in @state [:minion :scored]))
-      :minion
+   (if (find-cid cid (get-in @state [:contestant :scored]))
+      :contestant
       (if (find-cid cid (get-in @state [:hero :scored]))
         :hero
         nil)))
@@ -37,7 +37,7 @@
         (some #(when (= cid (:cid %)) %)
               (let [zones (map to-keyword zone)]
                 (if (= (first zones) :scored)
-                  (into (get-in @state [:minion :scored]) (get-in @state [:hero :scored]))
+                  (into (get-in @state [:contestant :scored]) (get-in @state [:hero :scored]))
                   (get-in @state (cons (to-keyword side) zones))))))
       card)))
 
@@ -65,7 +65,7 @@
          same-zone? (= src-zone target-zone)]
      (when (and card (or host
                          (some #(when (= cid (:cid %)) %) (get-in @state (cons :hero (vec zone))))
-                         (some #(when (= cid (:cid %)) %) (get-in @state (cons :minion (vec zone)))))
+                         (some #(when (= cid (:cid %)) %) (get-in @state (cons :contestant (vec zone)))))
                 (or (empty? (get-in @state [side :locked (-> card :zone first)]))
                     force))
        (trigger-event state side :pre-card-moved card src-zone target-zone)
@@ -90,7 +90,7 @@
              hosted (seq (flatten (map
                       (if same-zone? update-hosted trash-hosted)
                       (:hosted card))))
-             c (if (and (= side :minion) (= (first dest) :discard) (rezzed? card))
+             c (if (and (= side :contestant) (= (first dest) :discard) (rezzed? card))
                  (assoc card :seen true) card)
              c (if (and (or installed host (#{:servers :scored :current} (first zone)))
                         (#{:hand :deck :discard :rfg} (first dest))
@@ -100,18 +100,18 @@
              moved-card (assoc c :zone dest :host nil :hosted hosted :previous-zone (:zone c))
              moved-card (if (and (:facedown moved-card) (:installed moved-card))
                           (deactivate state side moved-card) moved-card)
-             moved-card (if (and (= side :minion) (#{:hand :deck} (first dest)))
+             moved-card (if (and (= side :contestant) (#{:hand :deck} (first dest)))
                           (dissoc moved-card :seen) moved-card)
              moved-card (if (and (= (first (:zone moved-card)) :scored) (card-flag? moved-card :has-abilities-when-stolen true))
                           (merge moved-card {:abilities (:abilities (card-def moved-card))}) moved-card)]
          (if front
            (swap! state update-in (cons side dest) #(cons moved-card (vec %)))
            (swap! state update-in (cons side dest) #(conj (vec %) moved-card)))
-         (doseq [s [:hero :minion]]
+         (doseq [s [:hero :contestant]]
            (if host
              (remove-from-host state side card)
              (swap! state update-in (cons s (vec zone)) (fn [coll] (remove-once #(not= (:cid %) cid) coll)))))
-         (let [z (vec (cons :minion (butlast zone)))]
+         (let [z (vec (cons :contestant (butlast zone)))]
            (when (and (not keep-server-alive)
                       (is-remote? z)
                       (empty? (get-in @state (conj z :content)))
@@ -201,7 +201,7 @@
   "Returns the server map that this card is installed in or protecting."
   [state card]
   (let [z (:zone card)]
-    (get-in @state [:minion :servers (second z)])))
+    (get-in @state [:contestant :servers (second z)])))
 
 (defn disable-identity
   "Disables the side's identity"

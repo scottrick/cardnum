@@ -98,7 +98,7 @@
                  (effect (set-prop card :rec-counter recurring))
                  recurring)]
          (register-events state side
-                          {(if (= side :minion) :minion-phase-12 :hero-phase-12)
+                          {(if (= side :contestant) :contestant-phase-12 :hero-phase-12)
                            {:effect r}} c)))
      (when-let [prevent (:prevent cdef)]
        (doseq [[ptype pvec] prevent]
@@ -115,8 +115,8 @@
      (get-card state c))))
 
 
-;;; Intalling a minion card
-(defn- minion-can-install-reason
+;;; Intalling a contestant card
+(defn- contestant-can-install-reason
   "Checks if the specified card can be installed.
    Returns true if there are no problems
    Returns :region if Region check fails
@@ -137,10 +137,10 @@
     ;; no restrictions
     :default true))
 
-(defn- minion-can-install?
-  "Checks `minion-can-install-reason` if not true, toasts reason and returns false"
+(defn- contestant-can-install?
+  "Checks `contestant-can-install-reason` if not true, toasts reason and returns false"
   [state side card dest-zone]
-  (let [reason (minion-can-install-reason state side card dest-zone)
+  (let [reason (contestant-can-install-reason state side card dest-zone)
         reason-toast #(do (toast state side % "warning") false)
         title (:title card)]
     (case reason
@@ -156,13 +156,13 @@
       :ice
       (reason-toast (str "Unable to install " title ": can only install 1 piece of ICE per turn")))))
 
-(defn minion-installable-type?
+(defn contestant-installable-type?
   "Is the card of an acceptable type to be installed in a server"
   [card]
   (some? (#{"Asset" "Agenda" "ICE" "Upgrade"} (:type card))))
 
-(defn- minion-install-asset-agenda
-  "Forces the minion to trash an existing asset or agenda if a second was just installed."
+(defn- contestant-install-asset-agenda
+  "Forces the contestant to trash an existing asset or agenda if a second was just installed."
   [state side eid card dest-zone server]
   (let [prev-card (some #(when (#{"Asset" "Agenda"} (:type %)) %) dest-zone)]
     (if (and (#{"Asset" "Agenda"} (:type card))
@@ -170,13 +170,13 @@
              (not (:host card)))
       (resolve-ability state side eid {:prompt (str "The " (:title prev-card) " in " server " will now be trashed.")
                                        :choices ["OK"]
-                                       :effect (req (system-msg state :minion (str "trashes " (card-str state prev-card)))
+                                       :effect (req (system-msg state :contestant (str "trashes " (card-str state prev-card)))
                                                     (when (get-card state prev-card) ; make sure they didn't trash the card themselves
-                                                    (trash state :minion prev-card {:keep-server-alive true})))}
+                                                    (trash state :contestant prev-card {:keep-server-alive true})))}
                        nil nil)
       (effect-completed state side eid))))
 
-(defn- minion-install-message
+(defn- contestant-install-message
   "Prints the correct install message."
   [state side card server install-state cost-str]
   (let [card-name (if (or (= :rezzed-no-cost install-state)
@@ -190,41 +190,41 @@
     (system-msg state side (str (build-spend-msg cost-str "install") card-name
                                 (if (ice? card) " protecting " " in ") server-name))))
 
-(defn minion-install-list
+(defn contestant-install-list
   "Returns a list of targets for where a given card can be installed."
   [state card]
   (let [hosts (filter #(when-let [can-host (:can-host (card-def %))]
                         (and (rezzed? %)
-                             (can-host state :minion (make-eid state) % [card])))
-                      (all-installed state :minion))]
+                             (can-host state :contestant (make-eid state) % [card])))
+                      (all-installed state :contestant))]
     (concat hosts (server-list state card))))
 
-(defn minion-install
-  ([state side card server] (minion-install state side (make-eid state) card server nil))
-  ([state side card server args] (minion-install state side (make-eid state) card server args))
+(defn contestant-install
+  ([state side card server] (contestant-install state side (make-eid state) card server nil))
+  ([state side card server args] (contestant-install state side (make-eid state) card server args))
   ([state side eid card server {:keys [extra-cost no-install-cost install-state host-card action] :as args}]
    (cond
      ;; No server selected; show prompt to select an install site (Interns, Lateral Growth, etc.)
      (not server)
      (continue-ability state side
                        {:prompt (str "Choose a location to install " (:title card))
-                        :choices (minion-install-list state card)
+                        :choices (contestant-install-list state card)
                         :delayed-completion true
-                        :effect (effect (minion-install eid card target args))}
+                        :effect (effect (contestant-install eid card target args))}
                        card nil)
      ;; A card was selected as the server; recurse, with the :host-card parameter set.
      (and (map? server) (not host-card))
-     (minion-install state side eid card server (assoc args :host-card server))
+     (contestant-install state side eid card server (assoc args :host-card server))
      ;; A server was selected
      :else
      (let [cdef (card-def card)
            slot (if host-card
                   (:zone host-card)
                   (conj (server->zone state server) (if (ice? card) :ices :content)))
-           dest-zone (get-in @state (cons :minion slot))]
-       ;; trigger :pre-minion-install before computing install costs so that
+           dest-zone (get-in @state (cons :contestant slot))]
+       ;; trigger :pre-contestant-install before computing install costs so that
        ;; event handlers may adjust the cost.
-       (trigger-event state side :pre-minion-install card {:server server :dest-zone dest-zone})
+       (trigger-event state side :pre-contestant-install card {:server server :dest-zone dest-zone})
        (let [ice-cost (if (and (ice? card)
                                (not no-install-cost)
                                (not (ignore-install-cost? state side)))
@@ -232,7 +232,7 @@
              all-cost (concat extra-cost [:credit ice-cost])
              end-cost (if no-install-cost 0 (install-cost state side card all-cost))
              install-state (or install-state (:install-state cdef))]
-         (when (and (minion-can-install? state side card dest-zone) (not (install-locked? state :minion)))
+         (when (and (contestant-can-install? state side card dest-zone) (not (install-locked? state :contestant)))
            (if-let [cost-str (pay state side card end-cost action)]
              (do (let [c (-> card
                              (assoc :advanceable (:advanceable cdef) :new true)
@@ -240,18 +240,18 @@
                    (when (= server "New remote")
                      (trigger-event state side :server-created card))
                    (when (not host-card)
-                     (minion-install-message state side c server install-state cost-str))
-                   (play-sfx state side "install-minion")
+                     (contestant-install-message state side c server install-state cost-str))
+                   (play-sfx state side "install-contestant")
 
                    (let [moved-card (if host-card
                                       (host state side host-card (assoc c :installed true))
                                       (move state side c slot))]
-                     (trigger-event state side :minion-install moved-card)
+                     (trigger-event state side :contestant-install moved-card)
                      (when (is-type? c "Agenda")
                        (update-advancement-cost state side moved-card))
 
                      ;; Check to see if a second agenda/asset was installed.
-                     (when-completed (minion-install-asset-agenda state side moved-card dest-zone server)
+                     (when-completed (contestant-install-asset-agenda state side moved-card dest-zone server)
                                      (do (cond
                                            ;; Ignore all costs. Pass eid to rez.
                                            (= install-state :rezzed-no-cost)

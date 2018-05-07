@@ -145,7 +145,7 @@
   event: the event keyword to trigger handlers for
   first-ability: an ability map (fed to resolve-ability) that should be resolved after the list of handlers is determined
                  but before any of them is actually fired. Typically used for core rules that happen in the same window
-                 as triggering handlers, such as trashing a minion Current when an agenda is stolen. Necessary for
+                 as triggering handlers, such as trashing a contestant Current when an agenda is stolen. Necessary for
                  interaction with New Angeles Sol and Employee Strike
   card-ability:  a card's ability that triggers at the same time as the event trigger, but is coded as a card ability
                  and not an event handler. (For example, :stolen on agendas happens in the same window as :agenda-stolen

@@ -15,16 +15,16 @@
   ([state side eid server run-effect card]
    (when (can-run? state :hero)
      (let [s [(if (keyword? server) server (last (server->zone state server)))]
-           ices (get-in @state (concat [:minion :servers] s [:ices]))
+           ices (get-in @state (concat [:contestant :servers] s [:ices]))
            n (count ices)]
        ;; s is a keyword for the server, like :hq or :remote1
        (swap! state assoc :per-run nil
               :run {:server s :position n :access-bonus 0
                     :run-effect (assoc run-effect :card card)
                     :eid eid})
-       (gain-run-credits state side (+ (get-in @state [:minion :bad-publicity]) (get-in @state [:minion :has-bad-pub])))
+       (gain-run-credits state side (+ (get-in @state [:contestant :bad-publicity]) (get-in @state [:contestant :has-bad-pub])))
        (swap! state update-in [:hero :register :made-run] #(conj % (first s)))
-       (update-all-ice state :minion)
+       (update-all-ice state :contestant)
        (trigger-event-sync state :hero (make-eid state) :run s)
        (when (>= n 2) (trigger-event state :hero :run-big s n))))))
 
@@ -54,7 +54,7 @@
                                          (swap! state assoc-in [:run :did-steal] true))
                                        (when (card-flag? c :has-events-when-stolen true)
                                          (register-events state side (:events (card-def c)) c))
-                                       (when-let [current (first (get-in @state [:minion :current]))]
+                                       (when-let [current (first (get-in @state [:contestant :current]))]
                                          (say state side {:user "__system__" :text (str (:title current) " is trashed.")})
                                          (trash state side current)))}
           :card-ability (ability-as-handler c (:stolen (card-def c)))}
@@ -116,7 +116,7 @@
       ;; The card has a trash cost (Asset, Upgrade)
       (let [card (assoc c :seen true)
             name (:title card)
-            trash-msg (str trash-cost " [Credits] to trash " name " from " (name-zone :minion (:zone card)))]
+            trash-msg (str trash-cost " [Credits] to trash " name " from " (name-zone :contestant (:zone card)))]
         (if (and (get-in @state [:hero :register :force-trash])
                  (can-pay? state :hero name :credit trash-cost))
           ;; If the hero is forced to trash this card (Neutralize All Threats)
@@ -132,7 +132,7 @@
                          ;; Don't show the option if Edward Kim's auto-trash flag is true.
                          (card-flag? card :can-trash-operation true))
             ;; If card has already been trashed this access don't show option to pay to trash (eg. Ed Kim)
-            (when-not (find-cid (:cid card) (get-in @state [:minion :discard]))
+            (when-not (find-cid (:cid card) (get-in @state [:contestant :discard]))
               (continue-ability state :hero
                                 {:optional
                                  {:prompt (str "Pay " trash-cost " [Credits] to trash " name "?")
@@ -152,7 +152,7 @@
       ;; The card does not have a trash cost
       (do (prompt! state :hero c (str "You accessed " (:title c)) ["OK"] {:eid eid})
           ;; TODO: Trigger :no-trash after hit "OK" on access
-          (when-not (find-cid (:cid c) (get-in @state [:minion :discard]))
+          (when-not (find-cid (:cid c) (get-in @state [:contestant :discard]))
             ;; Do not trigger :no-trash if card (operation) has already been trashed
             (trigger-event state side :no-trash c))))
     (effect-completed state side eid)))
@@ -332,7 +332,7 @@
   {:delayed-completion true
    :effect (req (if (and (>= 1 (count cards))
                          (not (any-flag-fn? state :hero :slow-remote-access true
-                                            (concat (all-active state :hero) (all-active state :minion)))))
+                                            (concat (all-active state :hero) (all-active state :contestant)))))
                   (handle-access state side eid cards)
                   (continue-ability state side (access-helper-remote cards) card nil)))})
 
@@ -348,7 +348,7 @@
   already-accessed: a set of cards already accessed from this zone or its root."
 
   (let [get-root-content (fn [state]
-                           (filter #(not (contains? already-accessed %)) (get-in @state [:minion :servers zone :content])))
+                           (filter #(not (contains? already-accessed %)) (get-in @state [:contestant :servers zone :content])))
         server-name (central->name zone)
         unrezzed-upgrade (str "Unrezzed upgrade in " server-name)
         card-from (str "Card from " label)]
@@ -429,7 +429,7 @@
                                                      state :rd "deck" from-rd
                                                      ;; access the first card in deck that has not been accessed.
                                                      (fn [already-accessed] (first (drop-while already-accessed
-                                                                                               (-> @state :minion :deck))))
+                                                                                               (-> @state :contestant :deck))))
                                                      (fn [_] "an unseen card from R&D")
                                                      #{})
                                         card nil)))
@@ -441,13 +441,13 @@
                   (if (and (= 1 (count cards)) (not (any-flag-fn? state :hero :slow-hq-access true)))
                     (handle-access state side eid cards)
                     (let [from-hq (min (access-count state side :hq-access)
-                                       (-> @state :minion :hand count))
+                                       (-> @state :contestant :hand count))
                           ; Handle root only access - no cards to access in hand
                           from-hq (if (some #(= '[:hand] (:zone %)) cards) from-hq 0)]
                       (continue-ability state side (access-helper-hq-or-rd
                                                      state :hq "hand" from-hq
                                                      (fn [already-accessed] (some #(when-not (already-accessed %) %)
-                                                                                  (shuffle (-> @state :minion :hand))))
+                                                                                  (shuffle (-> @state :contestant :hand))))
                                                      (fn [card] (:title card))
                                                      #{})
                                         card nil)))
@@ -458,7 +458,7 @@
   "This is a helper for cards to invoke HQ access without knowing how to use the full access method. See Dedicated Neural Net."
   (access-helper-hq-or-rd state :hq "hand" from-hq
                           (fn [already-accessed] (some #(when-not (already-accessed %) %)
-                                                       (shuffle (-> @state :minion :hand))))
+                                                       (shuffle (-> @state :contestant :hand))))
                           (fn [card] (:title card))
                           already-accessed))
 
@@ -470,23 +470,23 @@
              ;; must also be :seen
              (and (:seen %)
                   (or (is-type? % "Agenda")
-                      (should-trigger? state :minion % nil (:access cdef)))))
-          (get-in @state [:minion :discard])))
+                      (should-trigger? state :contestant % nil (:access cdef)))))
+          (get-in @state [:contestant :discard])))
 
 (defn- get-archives-inactive [state]
   ;; get faceup cards with no access interaction
   (filter #(let [cdef (card-def %)]
              (and (:seen %)
                   (not (or (is-type? % "Agenda")
-                           (should-trigger? state :minion % nil (:access cdef))))))
-          (get-in @state [:minion :discard])))
+                           (should-trigger? state :contestant % nil (:access cdef))))))
+          (get-in @state [:contestant :discard])))
 
 (defn access-helper-archives [state amount already-accessed]
-  (let [root-content (fn [already-accessed] (filter (complement already-accessed) (-> @state :minion :servers :archives :content)))
+  (let [root-content (fn [already-accessed] (filter (complement already-accessed) (-> @state :contestant :servers :archives :content)))
         faceup-accessible (fn [already-accessed] (filter (complement already-accessed) (get-archives-accessible state)))
         facedown-cards (fn [already-accessed] (filter #(and (not (:seen %))
                                                             (not (already-accessed %)))
-                                                      (-> @state :minion :discard)))
+                                                      (-> @state :contestant :discard)))
 
         next-access (fn [state side eid already-accessed card]
                       (continue-ability state side (access-helper-archives state (dec amount) already-accessed)
@@ -558,8 +558,8 @@
 
 (defmethod choose-access :archives [cards server]
   {:delayed-completion true
-   :effect (req (let [cards (concat (get-archives-accessible state) (-> @state :minion :servers :archives :content))
-                      archives-count (+ (count (-> @state :minion :discard)) (count (-> @state :minion :servers :archives :content)))]
+   :effect (req (let [cards (concat (get-archives-accessible state) (-> @state :contestant :servers :archives :content))
+                      archives-count (+ (count (-> @state :contestant :discard)) (count (-> @state :contestant :servers :archives :content)))]
                   (if (not-empty cards)
                     (if (= 1 archives-count)
                       (handle-access state side eid cards)
@@ -578,19 +578,19 @@
   (fn [state side server] (get-server-type (first server))))
 
 (defmethod cards-to-access :hq [state side server]
-  (concat (take (access-count state side :hq-access) (shuffle (get-in @state [:minion :hand])))
-          (get-in @state [:minion :servers :hq :content])))
+  (concat (take (access-count state side :hq-access) (shuffle (get-in @state [:contestant :hand])))
+          (get-in @state [:contestant :servers :hq :content])))
 
 (defmethod cards-to-access :rd [state side server]
-  (concat (take (access-count state side :rd-access) (get-in @state [:minion :deck]))
-          (get-in @state [:minion :servers :rd :content])))
+  (concat (take (access-count state side :rd-access) (get-in @state [:contestant :deck]))
+          (get-in @state [:contestant :servers :rd :content])))
 
 (defmethod cards-to-access :archives [state side server]
-  (swap! state update-in [:minion :discard] #(map (fn [c] (assoc c :seen true)) %))
-  (concat (get-in @state [:minion :discard]) (get-in @state [:minion :servers :archives :content])))
+  (swap! state update-in [:contestant :discard] #(map (fn [c] (assoc c :seen true)) %))
+  (concat (get-in @state [:contestant :discard]) (get-in @state [:contestant :servers :archives :content])))
 
 (defmethod cards-to-access :remote [state side server]
-  (let [contents (get-in @state [:minion :servers (first server) :content])]
+  (let [contents (get-in @state [:contestant :servers (first server) :content])]
     (filter (partial can-access-loud state side) (concat contents (get-all-hosted contents)))))
 
 (defn do-access
@@ -660,15 +660,15 @@
                                       (handle-end-run state side))))))
 
 (defn successful-run
-  "Run when a run has passed all ice and the hero decides to access. The minion may still get to act in 4.3."
+  "Run when a run has passed all ice and the hero decides to access. The contestant may still get to act in 4.3."
   [state side args]
-  (if (get-in @state [:run :minion-phase-43])
-    ;; if minion requests phase 4.3, then we do NOT fire :successful-run yet, which does not happen until 4.4
+  (if (get-in @state [:run :contestant-phase-43])
+    ;; if contestant requests phase 4.3, then we do NOT fire :successful-run yet, which does not happen until 4.4
     (do (swap! state dissoc :no-action)
-        (system-msg state :minion "wants to act before the run is successful")
+        (system-msg state :contestant "wants to act before the run is successful")
         (show-wait-prompt state :hero "Corp's actions")
-        (show-prompt state :minion nil "Rez and take actions before Successful Run" ["Done"]
-                     (fn [args-minion]
+        (show-prompt state :contestant nil "Rez and take actions before Successful Run" ["Done"]
+                     (fn [args-contestant]
                        (clear-wait-prompt state :hero)
                        (if-not (:ended (:run @state))
                         (show-prompt state :hero nil "The run is now successful" ["Continue"]
@@ -677,10 +677,10 @@
                      {:priority -1}))
     (successful-run-trigger state side)))
 
-(defn minion-phase-43
-  "The minion indicates they want to take action after hero hits Successful Run, before access."
+(defn contestant-phase-43
+  "The contestant indicates they want to take action after hero hits Successful Run, before access."
   [state side args]
-  (swap! state assoc-in [:run :minion-phase-43] true)
+  (swap! state assoc-in [:run :contestant-phase-43] true)
   (swap! state assoc-in [:run :no-action] true)
   (system-msg state side "has no further action")
   (trigger-event state side :no-action))
@@ -715,15 +715,15 @@
   (when-completed (trigger-event-sync state side :pre-jack-out)
                   (let [prevent (get-in @state [:prevent :jack-out])]
                     (if (pos? (count prevent))
-                      (do (system-msg state :minion "has the option to prevent the Runner from jacking out")
+                      (do (system-msg state :contestant "has the option to prevent the Runner from jacking out")
                           (show-wait-prompt state :hero "Corp to prevent the jack out" {:priority 10})
-                          (show-prompt state :minion nil
+                          (show-prompt state :contestant nil
                                        (str "Prevent the Runner from jacking out?") ["Done"]
                                        (fn [_]
                                          (clear-wait-prompt state :hero)
                                          (if-let [_ (get-in @state [:jack-out :jack-out-prevent])]
                                            (effect-completed state side (make-result eid false))
-                                           (do (system-msg state :minion "will not prevent the Runner from jacking out")
+                                           (do (system-msg state :contestant "will not prevent the Runner from jacking out")
                                                (resolve-jack-out state side eid))))
                                        {:priority 10}))
                       (do (resolve-jack-out state side eid)
@@ -772,7 +772,7 @@
 (defn handle-end-run
   "Initiate run resolution."
   [state side]
-  (if-not (and (empty? (get-in @state [:hero :prompt])) (empty? (get-in @state [:minion :prompt])))
+  (if-not (and (empty? (get-in @state [:hero :prompt])) (empty? (get-in @state [:contestant :prompt])))
     (swap! state assoc-in [:run :ended] true)
     (run-cleanup state side)))
 
@@ -789,4 +789,4 @@
 
 (defn get-run-ices
   [state]
-  (get-in @state (concat [:minion :servers] (:server (:run @state)) [:ices])))
+  (get-in @state (concat [:contestant :servers] (:server (:run @state)) [:ices])))

@@ -70,8 +70,8 @@
           [:div
            [:h3 "Corp Stats"]
            (om/build stat-view {:stats stats
-                                :start-key :games-started-minion :complete-key :games-completed-minion
-                                :win-key :wins-minion :lose-key :loses-minion})]
+                                :start-key :games-started-contestant :complete-key :games-completed-contestant
+                                :win-key :wins-contestant :lose-key :loses-contestant})]
           [:div
            [:h3 "Runner Stats"]
            (om/build stat-view {:stats stats

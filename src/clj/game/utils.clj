@@ -128,7 +128,7 @@
   [side state]
   (case side
     :hero (contains? (into {} (get @state :turn-events)) :hero-spent-click)
-    :minion   (contains? (into {} (get @state :turn-events)) :minion-spent-click)))
+    :contestant   (contains? (into {} (get @state :turn-events)) :contestant-spent-click)))
 
 (defn used-this-turn?
   "Returns true if a card has been used this turn"
@@ -173,15 +173,15 @@
      (str "spends " cost-str " to " verb " "))))
 
 (defn other-side [side]
-  (cond (= side :minion) :hero
-        (= side :hero) :minion))
+  (cond (= side :contestant) :hero
+        (= side :hero) :contestant))
 
 (defn side-str
   "Converts kw into str. If str is passed same str is returned."
   [side]
   (cond
-    (= side :minion) "Minion"
-    (= side "Minion") "Minion"
+    (= side :contestant) "Contestant"
+    (= side "Contestant") "Contestant"
     (= side :hero) "Hero"
     (= side "Hero") "Hero"))
 

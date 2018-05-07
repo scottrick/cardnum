@@ -4,7 +4,7 @@
             [game.macros :refer [effect req msg]]
             [clojure.string :refer [split-lines split join]]
             [game.core :as core :refer [all-cards]]
-            [test.utils :refer [load-card load-cards qty default-minion default-hero
+            [test.utils :refer [load-card load-cards qty default-contestant default-hero
                                 make-deck]]
             [test.macros :refer [do-game]]
             [clojure.test :refer :all]))
@@ -17,34 +17,34 @@
   ([state side n]
     (let  [remaining-clicks (get-in @state [side :click])
            n (or n remaining-clicks)
-           other (if (= side :minion) :hero :minion)]
+           other (if (= side :contestant) :hero :contestant)]
       (dotimes [i n] (core/click-credit state side nil))
       (if (= (get-in @state [side :click]) 0)
         (do (core/end-turn state side nil)
             (core/start-turn state other nil))))))
 
 (defn new-game
-  "Init a new game using given minion and hero. Keep starting hands (no mulligan) and start Corp's turn."
-  ([minion hero] (new-game minion hero nil))
-  ([minion hero {:keys [mulligan start-as dont-start-turn dont-start-game] :as args}]
+  "Init a new game using given contestant and hero. Keep starting hands (no mulligan) and start Corp's turn."
+  ([contestant hero] (new-game contestant hero nil))
+  ([contestant hero {:keys [mulligan start-as dont-start-turn dont-start-game] :as args}]
     (let [states (core/init-game
                    {:gameid 1
-                    :players [{:side "Minion"
-                               :deck {:identity (@all-cards (:identity minion))
-                                      :cards (:deck minion)}}
+                    :players [{:side "Contestant"
+                               :deck {:identity (@all-cards (:identity contestant))
+                                      :cards (:deck contestant)}}
                               {:side "Hero"
                                :deck {:identity (@all-cards (:identity hero))
                                       :cards (:deck hero)}}]})
           state (second (last states))]
       (when-not dont-start-game
-        (if (#{:both :minion} mulligan)
-          (core/resolve-prompt state :minion {:choice "Mulligan"})
-          (core/resolve-prompt state :minion {:choice "Keep"}))
+        (if (#{:both :contestant} mulligan)
+          (core/resolve-prompt state :contestant {:choice "Mulligan"})
+          (core/resolve-prompt state :contestant {:choice "Keep"}))
         (if (#{:both :hero} mulligan)
           (core/resolve-prompt state :hero {:choice "Mulligan"})
           (core/resolve-prompt state :hero {:choice "Keep"}))
-        (when-not dont-start-turn (core/start-turn state :minion nil))
-        (when (= start-as :hero) (take-credits state :minion)))
+        (when-not dont-start-turn (core/start-turn state :contestant nil))
+        (when (= start-as :hero) (take-credits state :contestant)))
       state)))
 
 (defn load-all-cards []
@@ -75,14 +75,14 @@
 (defn get-ice
   "Get installed ice protecting server by position."
   [state server pos]
-  (get-in @state [:minion :servers server :ices pos]))
+  (get-in @state [:contestant :servers server :ices pos]))
 
 (defn get-content
   "Get card in a server by position. If no pos, get all cards in the server."
   ([state server]
-   (get-in @state [:minion :servers server :content]))
+   (get-in @state [:contestant :servers server :content]))
   ([state server pos]
-   (get-in @state [:minion :servers server :content pos])))
+   (get-in @state [:contestant :servers server :content pos])))
 
 (defn get-program
   "Get non-hosted program by position."
@@ -135,7 +135,7 @@
   (core/play state :hero {:card card})
   (is (= [server] (get-in @state [:run :server])) "Correct server is run")
   (is (get-in @state [:run :run-effect]) "There is a run-effect")
-  (core/no-action state :minion nil)
+  (core/no-action state :contestant nil)
   (core/successful-run state :hero nil)
   (is (get-in @state [:hero :prompt]) "A prompt is shown")
   (is (get-in @state [:run :successful]) "Run is marked successful"))
@@ -146,21 +146,21 @@
   (core/click-run state :hero {:server server}))
 
 (defn run-continue
-  "No action from minion and continue for hero to proceed in current run."
+  "No action from contestant and continue for hero to proceed in current run."
   [state]
-  (core/no-action state :minion nil)
+  (core/no-action state :contestant nil)
   (core/continue state :hero nil))
 
 (defn run-phase-43
   "Ask for triggered abilities phase 4.3"
   [state]
-  (core/minion-phase-43 state :minion nil)
+  (core/contestant-phase-43 state :contestant nil)
   (core/successful-run state :hero nil))
 
 (defn run-successful
-  "No action from minion and successful run for hero."
+  "No action from contestant and successful run for hero."
   [state]
-  (core/no-action state :minion nil)
+  (core/no-action state :contestant nil)
   (core/successful-run state :hero nil))
 
 (defn run-jack-out
@@ -181,19 +181,19 @@
   ([state _ card]
    (let [title (:title card)
          advancementcost (:advancementcost card)]
-    (core/gain state :minion :click advancementcost :credit advancementcost)
+    (core/gain state :contestant :click advancementcost :credit advancementcost)
     (dotimes [n advancementcost]
-      (core/advance state :minion {:card (core/get-card state card)}))
+      (core/advance state :contestant {:card (core/get-card state card)}))
     (is (= advancementcost (get-in (core/get-card state card) [:advance-counter])))
-    (core/score state :minion {:card (core/get-card state card)})
-    (is (find-card title (get-in @state [:minion :scored]))))))
+    (core/score state :contestant {:card (core/get-card state card)})
+    (is (find-card title (get-in @state [:contestant :scored]))))))
 
 (defn advance
   "Advance the given card."
   ([state card] (advance state card 1))
   ([state card n]
    (dotimes [_ n]
-     (core/advance state :minion {:card (core/get-card state card)}))))
+     (core/advance state :contestant {:card (core/get-card state card)}))))
 
 (defn last-log-contains?
   [state content]

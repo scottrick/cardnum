@@ -28,12 +28,12 @@
     (gain state side :link baselink)))
 
 (defn- init-hands [state]
-  (draw state :minion 8 {:suppress-event true})
+  (draw state :contestant 8 {:suppress-event true})
   (draw state :hero 8 {:suppress-event true})
-  (when (and (-> @state :minion :identity :title)
+  (when (and (-> @state :contestant :identity :title)
              (-> @state :hero :identity :title))
     (show-wait-prompt state :hero "Corp to keep hand or mulligan"))
-  (doseq [side [:minion :hero]]
+  (doseq [side [:contestant :hero]]
     (when (-> @state side :identity :title)
       (show-prompt state side nil "Keep hand?"
                    ["Keep" "Mulligan"]
@@ -44,16 +44,16 @@
 (defn init-game
   "Initializes a new game with the given players vector."
   [{:keys [players gameid spectatorhands room] :as game}]
-  (let [minion (some #(when (= (:side %) "Minion") %) players)
+  (let [contestant (some #(when (= (:side %) "Contestant") %) players)
         hero (some #(when (= (:side %) "Hero") %) players)
-        minion-deck (create-deck (:deck minion) (:user minion))
+        contestant-deck (create-deck (:deck contestant) (:user contestant))
         hero-deck (create-deck (:deck hero) (:user hero))
-        minion-deck-id (get-in minion [:deck :_id])
+        contestant-deck-id (get-in contestant [:deck :_id])
         hero-deck-id (get-in hero [:deck :_id])
-        minion-options (get-in minion [:options])
+        contestant-options (get-in contestant [:options])
         hero-options (get-in hero [:options])
-        minion-identity (assoc (or (get-in minion [:deck :identity]) {:side "Minion" :type "Identity"}) :cid (make-cid))
-        minion-identity (assoc minion-identity :implementation (card-implemented minion-identity))
+        contestant-identity (assoc (or (get-in contestant [:deck :identity]) {:side "Contestant" :type "Identity"}) :cid (make-cid))
+        contestant-identity (assoc contestant-identity :implementation (card-implemented contestant-identity))
         hero-identity (assoc (or (get-in hero [:deck :identity]) {:side "Hero" :type "Identity"}) :cid (make-cid))
         hero-identity (assoc hero-identity :implementation (card-implemented hero-identity))
         state (atom
@@ -62,10 +62,10 @@
                  :rid 0 :turn 0 :eid 0
                  :sfx [] :sfx-current-id 0
                  :options {:spectatorhands spectatorhands}
-                 :minion {:user (:user minion) :identity minion-identity
-                        :options minion-options
-                        :deck (zone :deck minion-deck)
-                        :deck-id minion-deck-id
+                 :contestant {:user (:user contestant) :identity contestant-identity
+                        :options contestant-options
+                        :deck (zone :deck contestant-deck)
+                        :deck-id contestant-deck-id
                         :hand []
                         :discard [] :scored [] :rfg [] :play-area []
                         :servers {:hq {} :rd{} :archives {}}
@@ -87,10 +87,10 @@
                           :agenda-point 0
                           :hq-access 1 :rd-access 1 :tagged 0
                           :brain-damage 0 :click-per-turn 4 :agenda-point-req 7 :keep false}})]
-    (init-identity state :minion minion-identity)
+    (init-identity state :contestant contestant-identity)
     (init-identity state :hero hero-identity)
     (swap! game-states assoc gameid state)
-    (let [side :minion]
+    (let [side :contestant]
       (when-completed (trigger-event-sync state side :pre-start-game)
                       (let [side :hero]
                         (when-completed (trigger-event-sync state side :pre-start-game)
@@ -157,11 +157,11 @@
                   (keep-hand state side nil)
                   (mulligan state side nil))))
   ;;(trigger-event state side :pre-first-turn)
-  ;;(when (and (= side :minion) (-> @state :hero :identity :title))
+  ;;(when (and (= side :contestant) (-> @state :hero :identity :title))
     ;;(clear-wait-prompt state :hero)
-    ;;(show-wait-prompt state :minion "Runner to keep hand or mulligan"))
-  ;;(when (and (= side :hero)  (-> @state :minion :identity :title))
-    ;;(clear-wait-prompt state :minion)))
+    ;;(show-wait-prompt state :contestant "Runner to keep hand or mulligan"))
+  ;;(when (and (= side :hero)  (-> @state :contestant :identity :title))
+    ;;(clear-wait-prompt state :contestant)))
 
 (defn keep-hand
   "Choose not to mulligan."
@@ -169,11 +169,11 @@
   (swap! state assoc-in [side :keep] true)
   (system-msg state side "keeps their hand")
   (trigger-event state side :pre-first-turn)
-  (when (and (= side :minion) (-> @state :hero :identity :title))
+  (when (and (= side :contestant) (-> @state :hero :identity :title))
     (clear-wait-prompt state :hero)
-    (show-wait-prompt state :minion "Runner to keep hand or mulligan"))
-  (when (and (= side :hero)  (-> @state :minion :identity :title))
-    (clear-wait-prompt state :minion)))
+    (show-wait-prompt state :contestant "Runner to keep hand or mulligan"))
+  (when (and (= side :hero)  (-> @state :contestant :identity :title))
+    (clear-wait-prompt state :contestant)))
 
 (defn end-phase-12
   "End phase 1.2 and trigger appropriate events for the player."
@@ -181,10 +181,10 @@
   (turn-message state side true)
   (let [extra-clicks (or (get-in @state [side :extra-click-temp]) 0)]
     (gain state side :click (get-in @state [side :click-per-turn]))
-    (when-completed (trigger-event-sync state side (if (= side :minion) :minion-turn-begins :hero-turn-begins))
-                    (do (when (= side :minion)
+    (when-completed (trigger-event-sync state side (if (= side :contestant) :contestant-turn-begins :hero-turn-begins))
+                    (do (when (= side :contestant)
                           ;;(draw state side)
-                          ;;(trigger-event state side :minion-mandatory-draw)
+                          ;;(trigger-event state side :contestant-mandatory-draw)
                           )
 
                         (cond
@@ -196,14 +196,14 @@
                           (gain state side :click extra-clicks))
 
                         (swap! state dissoc-in [side :extra-click-temp])
-                        (swap! state dissoc (if (= side :minion) :minion-phase-12 :hero-phase-12))
-                        (when (= side :minion)
+                        (swap! state dissoc (if (= side :contestant) :contestant-phase-12 :hero-phase-12))
+                        (when (= side :contestant)
                           (update-all-advancement-costs state side))))))
 
 (defn start-turn
   "Start turn."
   [state side args]
-  (when (= side :minion)
+  (when (= side :contestant)
     (swap! state update-in [:turn] inc))
 
   (doseq [c (filter #(:new %) (all-installed state side))]
@@ -212,7 +212,7 @@
   (swap! state assoc :active-player side :per-turn nil :end-turn false)
   (swap! state assoc-in [side :register] nil)
 
-  (let [phase (if (= side :minion) :minion-phase-12 :hero-phase-12)
+  (let [phase (if (= side :contestant) :contestant-phase-12 :hero-phase-12)
         start-cards (filter #(card-flag-fn? state side % phase true)
                             (all-active state side))]
     (swap! state assoc phase true)
@@ -220,7 +220,7 @@
     (if (not-empty start-cards)
       (toast state side
                  (str "You may use " (clojure.string/join ", " (map :title start-cards))
-                      (if (= side :minion)
+                      (if (= side :contestant)
                         " between the start of your turn and your mandatory draw."
                         " before taking your first click."))
                  "info")
@@ -234,22 +234,22 @@
         (do (when (neg? (hand-size state side))
               (flatline state))
             (trigger-event state side :hero-turn-ends))
-        (trigger-event state side :minion-turn-ends))
+        (trigger-event state side :contestant-turn-ends))
       (doseq [a (get-in @state [side :register :end-turn])]
         (resolve-ability state side (:ability a) (:card a) (:targets a)))
       (swap! state assoc-in [side :register-last-turn] (-> @state side :register))
       (let [rig-cards (apply concat (vals (get-in @state [:hero :rig])))
             hosted-cards (filter :installed (mapcat :hosted rig-cards))
-            hosted-on-ice (->> (get-in @state [:minion :servers]) seq flatten (mapcat :ices) (mapcat :hosted))]
+            hosted-on-ice (->> (get-in @state [:contestant :servers]) seq flatten (mapcat :ices) (mapcat :hosted))]
         (doseq [card (concat rig-cards hosted-cards hosted-on-ice)]
           ;; Clear the added-virus-counter flag for each virus in play.
-          ;; We do this even on the minion's turn to prevent shenanigans with something like Gorman Drip and Surge
+          ;; We do this even on the contestant's turn to prevent shenanigans with something like Gorman Drip and Surge
           (when (has-subtype? card "Virus")
             (set-prop state :hero card :added-virus-counter false))))
       (swap! state assoc :end-turn true)
       (swap! state update-in [side :register] dissoc :cannot-draw)
       (swap! state update-in [side :register] dissoc :drawn-this-turn)
-      (doseq [c (filter #(= :this-turn (:rezzed %)) (all-installed state :minion))]
+      (doseq [c (filter #(= :this-turn (:rezzed %)) (all-installed state :contestant))]
         (update! state side (assoc c :rezzed true)))
       (clear-turn-register! state)
       (swap! state dissoc :turn-events)

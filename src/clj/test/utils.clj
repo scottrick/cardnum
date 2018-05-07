@@ -31,8 +31,8 @@
   {:identity identity
    :deck (map #(if (string? %) (qty % 1) %) deck)})
 
-(defn default-minion
-  ([] (default-minion [(qty "Hedge Fund" 3)]))
+(defn default-contestant
+  ([] (default-contestant [(qty "Hedge Fund" 3)]))
   ([deck] (make-deck "Custom Biotics: Engineered for Success" deck)))
 
 (defn default-hero

@@ -30,18 +30,18 @@
                                            (= (:side %) "Hero"))}
                       :effect (effect (trash target {:cause :subroutine}))})
 
-(def minion-rez-toast
+(def contestant-rez-toast
   "Effect to be placed with `:hero-turn-ends` to remind players of 'when turn begins'
   triggers"
-  {:effect (req (toast state :minion "Reminder: You have unrezzed cards with \"when turn begins\" abilities." "info"))})
+  {:effect (req (toast state :contestant "Reminder: You have unrezzed cards with \"when turn begins\" abilities." "info"))})
 
 (declare reorder-final) ; forward reference since reorder-choice and reorder-final are mutually recursive
 
 (defn reorder-choice
   "Generates a recursive prompt structure for cards that do reordering (Indexing, Making an Entrance, etc.)
 
-  reorder-side is the side to be reordered, i.e. :minion for Indexing and Precognition.
-  wait-side is the side that has a wait prompt while ordering is in progress, i.e. :minion for Indexing and Spy Camera.
+  reorder-side is the side to be reordered, i.e. :contestant for Indexing and Precognition.
+  wait-side is the side that has a wait prompt while ordering is in progress, i.e. :contestant for Indexing and Spy Camera.
 
   This is part 1 - the player keeps choosing cards until there are no more available choices. A wait prompt should
   exist before calling this function. See Indexing and Making an Entrance for examples on how to call this function."
@@ -51,7 +51,7 @@
   ([reorder-side wait-side remaining chosen n original dest]
   {:prompt (str "Select a card to move next "
                 (if (= dest "bottom") "under " "onto ")
-                (if (= reorder-side :minion) "R&D" "your Stack"))
+                (if (= reorder-side :contestant) "R&D" "your Stack"))
    :choices remaining
    :delayed-completion true
    :effect (req (let [chosen (cons target chosen)]
@@ -67,9 +67,9 @@
   ([reorder-side wait-side chosen original] (reorder-final reorder-side wait-side chosen original nil))
   ([reorder-side wait-side chosen original dest]
    {:prompt (if (= dest "bottom")
-              (str "The bottom cards of " (if (= reorder-side :minion) "R&D" "your Stack")
+              (str "The bottom cards of " (if (= reorder-side :contestant) "R&D" "your Stack")
                    " will be " (join  ", " (map :title (reverse chosen))) ".")
-              (str "The top cards of " (if (= reorder-side :minion) "R&D" "your Stack")
+              (str "The top cards of " (if (= reorder-side :contestant) "R&D" "your Stack")
                    " will be " (join  ", " (map :title chosen)) "."))
    :choices ["Done" "Start over"]
    :delayed-completion true
@@ -97,8 +97,8 @@
         b-index (ice-index state b)
         a-new (assoc a :zone (:zone b))
         b-new (assoc b :zone (:zone a))]
-    (swap! state update-in (cons :minion (:zone a)) #(assoc % a-index b-new))
-    (swap! state update-in (cons :minion (:zone b)) #(assoc % b-index a-new))
+    (swap! state update-in (cons :contestant (:zone a)) #(assoc % a-index b-new))
+    (swap! state update-in (cons :contestant (:zone b)) #(assoc % b-index a-new))
     (doseq [newcard [a-new b-new]]
       (doseq [h (:hosted newcard)]
         (let [newh (-> h
@@ -113,17 +113,17 @@
 (defn card-index
   "Get the zero-based index of the given card in its server's list of content. Same as ice-index"
   [state card]
-  (first (keep-indexed #(when (= (:cid %2) (:cid card)) %1) (get-in @state (cons :minion (:zone card))))))
+  (first (keep-indexed #(when (= (:cid %2) (:cid card)) %1) (get-in @state (cons :contestant (:zone card))))))
 
 (defn swap-installed
-  "Swaps two installed minion cards - like swap ICE except no strength update"
+  "Swaps two installed contestant cards - like swap ICE except no strength update"
   [state side a b]
   (let [a-index (card-index state a)
         b-index (card-index state b)
         a-new (assoc a :zone (:zone b))
         b-new (assoc b :zone (:zone a))]
-    (swap! state update-in (cons :minion (:zone a)) #(assoc % a-index b-new))
-    (swap! state update-in (cons :minion (:zone b)) #(assoc % b-index a-new))
+    (swap! state update-in (cons :contestant (:zone a)) #(assoc % a-index b-new))
+    (swap! state update-in (cons :contestant (:zone b)) #(assoc % b-index a-new))
     (doseq [newcard [a-new b-new]]
       (doseq [h (:hosted newcard)]
         (let [newh (-> h

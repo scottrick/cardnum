@@ -227,7 +227,7 @@
                                                  (rezzed? current-ice)))
                                   :msg (msg "add " (:title current-ice) " to HQ after breaking all its subroutines")
                                   :effect (req (let [c current-ice]
-                                                 (move state :minion c :hand nil)
+                                                 (move state :contestant c :hand nil)
                                                  (continue state side nil)))}]})
 
    "Atman"
@@ -684,8 +684,8 @@
                                                           (not= (get-in old [:run])
                                                                 (get-in new [:run]))
                                                           ; server configuration changed (redirected or newly installed ICE)
-                                                          (not= (get-in old [:minion :servers server :ices])
-                                                                (get-in new [:minion :servers server :ices])))
+                                                          (not= (get-in old [:contestant :servers server :ices])
+                                                                (get-in new [:contestant :servers server :ices])))
                                                     (update-breaker-strength ref side card))))))
                      :strength-bonus (req (if-let [numice (count run-ices)] numice 0))
                      :leave-play (req (remove-watch state (keyword (str "nanotk" (:cid card)))))
@@ -770,7 +770,7 @@
                                                                               (str "trash " (:title (first (:deck hero))) " from their Stack and trash " target " cards from R&D")
                                                                               (str "trash " (:title (first (:deck hero))) " from their Stack and nothing from R&D")))
                                                                   :effect (effect (mill :hero 1)
-                                                                                  (mill :minion target))}}}}})
+                                                                                  (mill :contestant target))}}}}})
 
    "Pipeline"
    (auto-icebreaker ["Sentry"]

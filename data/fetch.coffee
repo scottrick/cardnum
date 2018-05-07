@@ -32,7 +32,7 @@ mapSets = {}
 cardFields = {
   "Set" : rename("setname"),
   "Primary" : rename("type"),
-  "Alignment" : rename("side"),
+  "Alignment" : rename("alignment"),
   "MEID" : same,
   "Artist" : same,
   "Rarity" : same,
@@ -81,7 +81,8 @@ cardFields = {
   "fullCode" : same,
   "alignCode" : same,
   "setCode" : same,
-  "normalizedtitle" : same
+  "normalizedtitle" : same,
+  "side" : same
 }
 
 baseurl = "http://192.168.1.180:8080/rez/"
@@ -125,6 +126,7 @@ fetchCards = (callback) ->
       imgDir = path.join(__dirname, "..", "resources", "public", "img", "cards")
       i = 0
       for card in cards
+        card.side = "Contestant"
         imgPath = path.join(imgDir, "#{card.setname}", "#{card.ImageName}")
         if !fs.existsSync(imgPath)
           fetchImg((baseurl + card.setname + "/"), card.ImageName, imgPath, i++ * 200)

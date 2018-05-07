@@ -266,7 +266,7 @@
     "Primary" (juxt #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:setname %))
                     #((into {} (map-indexed (fn [i e] [e i]) primary-order)) (:primary %)))
     "Alignment" (juxt #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:setname %))
-                      #((into {} (map-indexed (fn [i e] [e i]) (concat general-alignments ["Neutral"]))) (:side %)))))
+                      #((into {} (map-indexed (fn [i e] [e i]) (concat general-alignments ["Neutral"]))) (:alignment %)))))
 
 (defn selected-set-name [state]
   (-> (:set-filter state)
@@ -280,7 +280,7 @@
       (om/update-state! owner :page inc))))
 
 (defn handle-search [e owner]
-  (doseq [filter [:set-filter :secondary-filter :sort-filter :side-filter]]
+  (doseq [filter [:set-filter :secondary-filter :sort-filter :alignment-filter]]
     (om/set-state! owner filter "All"))
   (om/set-state! owner :search-query (.. e -target -value)))
 
@@ -292,7 +292,7 @@
        :sort-field "Set"
        :set-filter "All"
        :primary-filter "All"
-       :side-filter "All"
+       :alignment-filter "All"
        :secondary-filter "All"
        :page 1
        :filter-ch (chan)
@@ -338,7 +338,7 @@
                                                   (sort-by (juxt :position)
                                                            sets))]
                           ["Primary" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
-                          ["Alignment" :side-filter (alignments (:primary-filter state))]
+                          ["Alignment" :alignment-filter (alignments (:primary-filter state))]
                           ["Secondary" :secondary-filter (secondaries (:primary-filter state))]]]
               [:div
                [:h4 (first filter)]
@@ -361,7 +361,7 @@
                                         (filter #(list-sets (:position %)) (:cards cursor))))]
                           (->> cards
                                (filter-cards (:primary-filter state) :type)
-                               (filter-cards (:side-filter state) :side)
+                               (filter-cards (:alignment-filter state) :alignment)
                                (filter-cards (:secondary-filter state) :Secondary)
                                (filter-title (:search-query state))
                                (sort-by (sort-field (:sort-field state)))

@@ -4,7 +4,7 @@
 
 (defmacro do-game [s & body]
   `(let [~'state ~s
-         ~'get-minion (fn [] (:minion @~'state))
+         ~'get-contestant (fn [] (:contestant @~'state))
          ~'get-hero (fn [] (:hero @~'state))
          ~'refresh (fn [~'card] (core/get-card ~'state ~'card))
          ~'prompt-choice (fn [~'side ~'choice]

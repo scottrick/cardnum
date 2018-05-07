@@ -236,10 +236,10 @@
   [card]
   (or (= (:zone card) [:rig :facedown]) (:facedown card)))
 
-(defn in-minion-scored?
+(defn in-contestant-scored?
   "Checks if the specified card is in the Corp score area."
   [state side card]
-  (is-scored? state :minion card))
+  (is-scored? state :contestant card))
 
 (defn in-hero-scored?
   "Checks if the specified card is in the Runner score area."
@@ -288,7 +288,7 @@
   [{:keys [zone] :as card}]
   (or (is-type? card "Identity")
       (= zone [:current])
-      (and (card-is? card :side :minion)
+      (and (card-is? card :side :contestant)
            (installed? card)
            (rezzed? card))
       (and (card-is? card :side :hero)
@@ -307,9 +307,9 @@
   (seq (get-in @state [side :lock-install])))
 
 (defn- can-rez-reason
-  "Checks if the minion can rez the card.
+  "Checks if the contestant can rez the card.
   Returns true if so, otherwise the reason:
-  :side card is not on :minion side
+  :side card is not on :contestant side
   :run-flag run flag prevents rez
   :turn-flag turn flag prevents rez
   :unique fails unique check
@@ -324,7 +324,7 @@
       (not (run-flag? state side card :can-rez)) :run-flag
       (not (turn-flag? state side card :can-rez)) :turn-flag
       ;; Uniqueness check
-      (and uniqueness (some #(and (:rezzed %) (= (:code card) (:code %))) (all-installed state :minion))) :unique
+      (and uniqueness (some #(and (:rezzed %) (= (:code card) (:code %))) (all-installed state :contestant))) :unique
       ;; Rez req check
       (and req (not (req state side (make-eid state) card nil))) :req
       ;; No problems - return true
@@ -382,12 +382,12 @@
           false))))
 
 (defn can-advance?
-  "Checks if the minion can advance cards"
+  "Checks if the contestant can advance cards"
   [state side card]
   (check-flag-types? state side card :can-advance [:current-turn :persistent]))
 
 (defn can-score?
-  "Checks if the minion can score cards"
+  "Checks if the contestant can score cards"
   [state side card]
   (check-flag-types? state side card :can-score [:current-turn :persistent]))
 
@@ -409,16 +409,16 @@
     ;; public hero cards: in hand and :openhand is true;
     ;; or installed/hosted and not facedown;
     ;; or scored or current or in heap
-    (or (card-is? card :side :minion)
+    (or (card-is? card :side :contestant)
         (and (:openhand (:hero @state)) (in-hand? card))
         (and (or (installed? card) (:host card)) (not (facedown? card)))
         (#{:scored :discard :current} (last zone)))
-    ;; public minion cards: in hand and :openhand;
+    ;; public contestant cards: in hand and :openhand;
     ;; or installed and rezzed;
     ;; or in :discard and :seen
     ;; or scored or current
     (or (card-is? card :side :hero)
-        (and (:openhand (:minion @state)) (in-hand? card))
+        (and (:openhand (:contestant @state)) (in-hand? card))
         (and (or (installed? card) (:host card))
              (or (is-type? card "Operation") (rezzed? card)))
         (and (in-discard? card) (:seen card))

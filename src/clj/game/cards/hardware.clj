@@ -6,7 +6,7 @@
                                             counters (reduce + (map #(get-virus-counters state :hero %) virus))]
                                         (update! state side (assoc-in (get-card state card) [:special :numpurged] counters))))}
              :purge {:delayed-completion true
-                     :effect (effect (show-wait-prompt  :minion "Runner to decide if they will use Acacia")
+                     :effect (effect (show-wait-prompt  :contestant "Runner to decide if they will use Acacia")
                                   (continue-ability {:optional
                                                      {:player :hero
                                                       :prompt "Use Acacia?"
@@ -14,9 +14,9 @@
                                                                                    (gain state side :credit counters)
                                                                                    (system-msg state side (str "trashes Acacia and gains " counters "[Credit]"))
                                                                                    (trash state side card {:unpreventable true})
-                                                                                   (clear-wait-prompt state :minion)
+                                                                                   (clear-wait-prompt state :contestant)
                                                                                    (effect-completed state side eid)))}
-                                                      :no-ability {:effect (effect (clear-wait-prompt :minion)
+                                                      :no-ability {:effect (effect (clear-wait-prompt :contestant)
                                                                                    (effect-completed eid))}}} card nil))}}}
 
    "Adjusted Matrix"
@@ -43,8 +43,8 @@
       :interactive (req true)
       :req (req (and (= target :archives)
                      (not= (:max-access run) 0)
-                     (not-empty (:discard minion))))
-      :effect (req (swap! state update-in [:minion :discard] #(map (fn [c] (assoc c :seen true)) %))
+                     (not-empty (:discard contestant))))
+      :effect (req (swap! state update-in [:contestant :discard] #(map (fn [c] (assoc c :seen true)) %))
                    (continue-ability state side
                      {:optional
                       {:delayed-completion true
@@ -53,9 +53,9 @@
                        {:delayed-completion true
                         :effect (effect (continue-ability
                                           {:prompt "Choose a card in Archives to remove from the game instead of accessing"
-                                           :choices (req (:discard minion))
+                                           :choices (req (:discard contestant))
                                            :msg (msg "remove " (:title target) " from the game")
-                                           :effect (effect (move :minion target :rfg))} card nil))}
+                                           :effect (effect (move :contestant target :rfg))} card nil))}
                        :no-ability {:effect (req (effect-completed state side eid))}}} card nil))}}}
 
    "Astrolabe"
@@ -90,14 +90,14 @@
                                    (continue-ability state side
                                      {:optional
                                       {:prompt (msg "Pay additional cost to rez " cname "?")
-                                       :player :minion
-                                       :yes-ability {:effect (effect (rez :minion c)
+                                       :player :contestant
+                                       :yes-ability {:effect (effect (rez :contestant c)
                                                                      (clear-wait-prompt :hero))}
-                                       :no-ability {:effect (effect (system-msg :minion (str "declines to pay additional costs"
+                                       :no-ability {:effect (effect (system-msg :contestant (str "declines to pay additional costs"
                                                                                        " and is not forced to rez " cname))
                                                                     (clear-wait-prompt :hero))}}}
                                     card nil))
-                               (do (rez state :minion target)
+                               (do (rez state :contestant target)
                                    (effect-completed state side eid)))))}}}
 
    "Bookmark"
@@ -213,9 +213,9 @@
     :trash-effect {:effect (effect (register-events {:pre-rez {:req (req (= (:cid target) (:cid (:cortez-target card))))
                                                                :effect (effect (rez-cost-bonus 2))}
                                                      :hero-turn-ends {:effect (effect (unregister-events card))}
-                                                     :minion-turn-ends {:effect (effect (unregister-events card))}}
+                                                     :contestant-turn-ends {:effect (effect (unregister-events card))}}
                                                     (get-card state card)))}
-    :events {:pre-rez nil :hero-turn-ends nil :minion-turn-ends nil}}
+    :events {:pre-rez nil :hero-turn-ends nil :contestant-turn-ends nil}}
 
    "Cyberdelia"
    {:implementation "Credit gain is manually triggered."
@@ -324,7 +324,7 @@
                              :msg (msg "make a run on " target)
                              :makes-run true
                              :effect (effect (update! (dissoc card :dopp-active))
-                                             (clear-wait-prompt :minion)
+                                             (clear-wait-prompt :contestant)
                                              (run eid target))}}}}}
 
    "Dorm Computer"
@@ -371,7 +371,7 @@
                                                             (fn [state side card]
                                                               (if (ice? card)
                                                                 ((constantly false)
-                                                                 (toast state :minion "Cannot rez ICE the rest of this run due to EMP Device"))
+                                                                 (toast state :contestant "Cannot rez ICE the rest of this run due to EMP Device"))
                                                                 true))))}
                                     :run-ends {:effect (effect (unregister-events card))}} (assoc card :zone '(:discard)))
                                  (trash card {:cause :ability-cost}))}]
@@ -435,7 +435,7 @@
                                 (doseq [c cards]
                                 (update-breaker-strength state side
                                                          (find-cid (:cid c) (all-installed state :hero))))))}]
-       {:hero-turn-ends llds :minion-turn-ends llds
+       {:hero-turn-ends llds :contestant-turn-ends llds
         :hero-install {:silent (req true)
                          :req (req (has-subtype? target "Icebreaker"))
                          :effect (effect (update! (update-in card [:llds-target] #(conj % target)))
@@ -457,22 +457,22 @@
 
    "Māui"
    {:in-play [:memory 2]
-    :recurring (effect (set-prop card :rec-counter (count (:ices (get-in @state [:minion :servers :hq])))))
-    :effect (effect (set-prop card :rec-counter (count (:ices (get-in @state [:minion :servers :hq])))))}
+    :recurring (effect (set-prop card :rec-counter (count (:ices (get-in @state [:contestant :servers :hq])))))
+    :effect (effect (set-prop card :rec-counter (count (:ices (get-in @state [:contestant :servers :hq])))))}
 
    "Maw"
    (let [ability {:label "Trash a card from HQ"
                   :req (req (and (first-event? state side :no-trash)
                                  (first-event? state side :no-steal)
-                                 (pos? (count (:hand minion)))
+                                 (pos? (count (:hand contestant)))
                                  (not= (first (:zone target)) :discard)))
                   :once :per-turn
                   :msg "force the Corp to trash a random card from HQ"
-                  :effect (req (let [card-to-trash (first (shuffle (:hand minion)))
+                  :effect (req (let [card-to-trash (first (shuffle (:hand contestant)))
                                      card-seen? (= (:cid target) (:cid card-to-trash))
                                      card-to-trash (if card-seen? (assoc card-to-trash :seen true)
                                                                   card-to-trash)]
-                                 (trash state :minion card-to-trash)))}]
+                                 (trash state :contestant card-to-trash)))}]
      {:in-play [:memory 2]
       :abilities [ability]
       :events {:no-trash ability
@@ -489,7 +489,7 @@
                  :effect (req (let [c (:card (first (get-in @state [:hero :prompt])))]
                                 (when (is-type? c "Agenda") ; trashing before the :access events actually fire; fire them manually
                                   (resolve-steal-events state side c))
-                                (move state :minion c :deck)
+                                (move state :contestant c :deck)
                                 (when-completed (tag-hero state :hero (make-eid state) 1)
                                                 (close-access-prompt state side))))}
                 {:once :per-turn
@@ -500,7 +500,7 @@
                                     :choices {:req #(some (fn [c] (= (:cid %) (:cid c)))
                                                           (map first (turn-events state side :access)))}
                                     :msg (msg "move " (:title target) " to the bottom of R&D")
-                                    :effect (req (move state :minion target :deck)
+                                    :effect (req (move state :contestant target :deck)
                                                  (tag-hero state :hero eid 1)
                                                  (swap! state update-in [side :prompt] rest)
                                                  (when-let [run (:run @state)]
@@ -655,7 +655,7 @@
               {:prompt "Draw 1 card to force the Corp to draw 1 card?"
                :yes-ability {:msg "draw 1 card and force the Corp to draw 1 card"
                              :effect (effect (draw :hero 1)
-                                             (draw :minion 1))}
+                                             (draw :contestant 1))}
                :no-ability {:effect (req (system-msg state side (str "does not use Polyhistor"))
                                          (effect-completed state side eid))}}}]
      {:in-play [:link 1 :memory 1]
@@ -681,7 +681,7 @@
     :events (let [e {:req (req (= (last (:zone target)) :program))
                      :effect (effect (trash card)
                                      (system-msg (str "trashes Q-Coherence Chip")))}]
-              {:hero-trash e :minion-trash e})}
+              {:hero-trash e :contestant-trash e})}
 
    "Qianju PT"
    {:flags {:hero-phase-12 (req true)}
@@ -690,7 +690,7 @@
                  :req (req (:hero-phase-12 @state))
                  :effect (effect (update! (assoc card :qianju-active true)))
                  :msg "lose [Click] and avoid the first tag received until their next turn"}]
-    :events {:minion-turn-ends {:effect (effect (update! (dissoc card :qianju-active)))}
+    :events {:contestant-turn-ends {:effect (effect (update! (dissoc card :qianju-active)))}
              :hero-turn-begins {:req (req (:qianju-active card))
                                   :effect (effect (lose :click 1))}
              :pre-tag {:req (req (:qianju-active card))
@@ -753,14 +753,14 @@
                      (swap! state assoc-in [:run :run-effect :replace-access]
                        {:effect (effect (resolve-ability
                                           {:prompt "Choose one faceup card to add to the top of R&D"
-                                           :choices (req (filter #(:seen %) (:discard minion)))
+                                           :choices (req (filter #(:seen %) (:discard contestant)))
                                            :msg (msg "add " (:title target) " to the top of R&D")
-                                           :effect (req (move state :minion target :deck {:front true}))}
+                                           :effect (req (move state :contestant target :deck {:front true}))}
                                          rr nil))})))}}}
 
    "Reflection"
    {:in-play [:memory 1 :link 1]
-    :events {:jack-out {:msg (msg "force the Corp to reveal " (:title (first (shuffle (:hand minion)))) " from HQ")}}}
+    :events {:jack-out {:msg (msg "force the Corp to reveal " (:title (first (shuffle (:hand contestant)))) " from HQ")}}}
 
    "Replicator"
    {:events {:hero-install
@@ -797,7 +797,7 @@
     :leave-play (req (remove-watch state (:respirocytes-watch-id card)))
     :events {:hero-turn-begins {:req (req (empty? (get-in @state [:hero :hand])))
                                   :effect (effect (resolve-ability ability card nil))}
-             :minion-turn-begins {:req (req (empty? (get-in @state [:hero :hand])))
+             :contestant-turn-begins {:req (req (empty? (get-in @state [:hero :hand])))
                                 :effect (effect (resolve-ability ability card nil))}}})
 
    "Rubicon Switch"
@@ -908,18 +908,18 @@
                  :delayed-completion true
                  :label "Look at the top X cards of your Stack"
                  :msg "look at the top X cards of their Stack and rearrange them"
-                 :effect (req (show-wait-prompt state :minion "Runner to rearrange the top cards of their stack")
+                 :effect (req (show-wait-prompt state :contestant "Runner to rearrange the top cards of their stack")
                               (let [n (count (filter #(= (:title %) (:title card))
                                                      (all-installed state :hero)))
                                     from (take n (:deck hero))]
                                 (if (pos? (count from))
-                                  (continue-ability state side (reorder-choice :hero :minion from '()
+                                  (continue-ability state side (reorder-choice :hero :contestant from '()
                                                                                (count from) from) card nil)
-                                  (do (clear-wait-prompt state :minion)
+                                  (do (clear-wait-prompt state :contestant)
                                       (effect-completed state side eid card)))))}
                 {:label "[Trash]: Look at the top card of R&D"
                  :msg "trash it and look at the top card of R&D"
-                 :effect (effect (prompt! card (str "The top card of R&D is " (:title (first (:deck minion)))) ["OK"] {})
+                 :effect (effect (prompt! card (str "The top card of R&D is " (:title (first (:deck contestant)))) ["OK"] {})
                                  (trash card {:cause :ability-cost}))}]}
 
    "The Gauntlet"
@@ -933,7 +933,7 @@
                                                 {:prompt "How many ICE protecting HQ did you break all subroutines on?"
                                                  ;; Makes number of ice on server (HQ) the upper limit.
                                                  ;; This should work since trashed ice do not count according to UFAQ
-                                                 :choices {:number (req (count (get-in @state [:minion :servers :hq :ices])))}
+                                                 :choices {:number (req (count (get-in @state [:contestant :servers :hq :ices])))}
                                                  :effect (effect (access-bonus target))}
                                                 card nil))}}}
 
@@ -963,14 +963,14 @@
                      (when (= dtype :brain)
                        (swap! state update-in [:hero :brain-damage] #(+ % dmg))
                        (swap! state update-in [:hero :hand-size-modification] #(- % dmg)))
-                     (show-wait-prompt state :minion "Runner to use Titanium Ribs to choose cards to be trashed")
+                     (show-wait-prompt state :contestant "Runner to use Titanium Ribs to choose cards to be trashed")
                      (when-completed (resolve-ability state side
                                        {:delayed-completion true
                                         :prompt (msg "Select " dmg " cards to trash for the " (name dtype) " damage")
                                         :player :hero
                                         :choices {:max dmg :all true :req #(and (in-hand? %) (= (:side %) "Hero"))}
                                         :msg (msg "trash " (join ", " (map :title targets)))
-                                        :effect (req (clear-wait-prompt state :minion)
+                                        :effect (req (clear-wait-prompt state :contestant)
                                                      (doseq [c targets]
                                                        (trash state side c {:cause dtype :unpreventable true}))
                                                      (trigger-event state side :damage-chosen)
@@ -993,19 +993,19 @@
               :prompt "Which card from the top of R&D would you like to access? (Card 1 is on top.)"
               :choices (take n ["1" "2" "3" "4" "5"])
               :effect (effect (system-msg (str "accesses the card at position " (Integer/parseInt target) " of R&D"))
-                              (handle-access eid [(nth (:deck minion) (dec (Integer/parseInt target)))] "an unseen card"))})]
+                              (handle-access eid [(nth (:deck contestant) (dec (Integer/parseInt target)))] "an unseen card"))})]
      {:events {:successful-run
                {:req (req (= target :rd))
                 :interactive (req true)
                 :optional {:prompt "Use Top Hat to choose one of the top 5 cards in R&D to access?"
                            :yes-ability {:effect (req (swap! state assoc-in [:run :run-effect :replace-access]
-                                                             (ability (count (:deck minion)))))}}}}})
+                                                             (ability (count (:deck contestant)))))}}}}})
 
    "Turntable"
    {:in-play [:memory 1]
     :events {:agenda-stolen
              {:interactive (req true)
-              :req (req (not (empty? (:scored minion))))
+              :req (req (not (empty? (:scored contestant))))
               :delayed-completion true
               :effect (req
                         (let [stolen target]
@@ -1019,7 +1019,7 @@
                                          (continue-ability
                                            state side
                                            {:prompt (str "Select a scored Corp agenda to swap with " (:title stolen))
-                                            :choices {:req #(in-minion-scored? state side %)}
+                                            :choices {:req #(in-contestant-scored? state side %)}
                                             :effect (req (let [scored target]
                                                            (swap-agendas state side scored stolen)
                                                            (system-msg state side (str "uses Turntable to swap "
@@ -1058,7 +1058,7 @@
       :msg (msg "trash " (:title target)) :effect (effect (trash target))}]}
 
    "Vigil"
-   (let [ability {:req (req (and (:hero-phase-12 @state) (= (count (:hand minion)) (hand-size state :minion))))
+   (let [ability {:req (req (and (:hero-phase-12 @state) (= (count (:hand contestant)) (hand-size state :contestant))))
                   :msg "draw 1 card"
                   :label "Draw 1 card (start of turn)"
                   :once :per-turn

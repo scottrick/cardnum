@@ -9,8 +9,8 @@
 (deftest atman-install-0
   ;; Atman - Installing with 0 power counters
   (do-game
-    (new-game (default-minion) (default-hero [(qty "Atman" 1)]))
-    (take-credits state :minion)
+    (new-game (default-contestant) (default-hero [(qty "Atman" 1)]))
+    (take-credits state :contestant)
     (play-from-hand state :hero "Atman")
     (prompt-choice :hero 0)
     (is (= 3 (:memory (get-hero))))
@@ -21,9 +21,9 @@
 (deftest atman-install-2
   ;; Atman - Installing with 2 power counters
   (do-game
-    (new-game (default-minion)
+    (new-game (default-contestant)
               (default-hero [(qty "Atman" 1)]))
-    (take-credits state :minion)
+    (take-credits state :contestant)
     (play-from-hand state :hero "Atman")
     (prompt-choice :hero 2)
     (is (= 3 (:memory (get-hero))))
@@ -34,9 +34,9 @@
 (deftest baba-yaga
   (do-game
     (new-game
-      (default-minion)
+      (default-contestant)
       (default-hero [(qty "Baba Yaga" 1) (qty "Faerie" 1) (qty "Yog.0" 1)(qty "Sharpshooter" 1)]))
-    (take-credits state :minion)
+    (take-credits state :contestant)
     (core/gain state :hero :credit 10)
     (play-from-hand state :hero "Baba Yaga")
     (play-from-hand state :hero "Sharpshooter")
@@ -57,30 +57,30 @@
       (is (= 4 (:credit (get-hero))) "-5 from Baba, -1 from Sharpshooter played into Rig, -5 from Yog"))))
 
 (deftest chameleon-clonechip
-  ;; Chameleon - Install on minion turn, only returns to hand at end of hero's turn
+  ;; Chameleon - Install on contestant turn, only returns to hand at end of hero's turn
   (do-game
-    (new-game (default-minion) (default-hero [(qty "Chameleon" 1) (qty "Clone Chip" 1)]))
-    (take-credits state :minion)
+    (new-game (default-contestant) (default-hero [(qty "Chameleon" 1) (qty "Clone Chip" 1)]))
+    (take-credits state :contestant)
     (play-from-hand state :hero "Clone Chip")
     (core/move state :hero (find-card "Chameleon" (:hand (get-hero))) :discard)
     (take-credits state :hero)
     (is (= 0 (count (:hand (get-hero)))))
-    ;; Install Chameleon on minion turn
-    (take-credits state :minion 1)
+    ;; Install Chameleon on contestant turn
+    (take-credits state :contestant 1)
     (let [chip (get-in @state [:hero :rig :hardware 0])]
       (card-ability state :hero chip 0)
       (prompt-select :hero (find-card "Chameleon" (:discard (get-hero))))
       (prompt-choice :hero "Sentry"))
-    (take-credits state :minion)
-    (is (= 0 (count (:hand (get-hero)))) "Chameleon not returned to hand at end of minion turn")
+    (take-credits state :contestant)
+    (is (= 0 (count (:hand (get-hero)))) "Chameleon not returned to hand at end of contestant turn")
     (take-credits state :hero)
     (is (= 1 (count (:hand (get-hero)))) "Chameleon returned to hand at end of hero's turn")))
 
 (deftest chameleon-scheherazade
   ;; Chameleon - Returns to hand after hosting. #977
   (do-game
-    (new-game (default-minion) (default-hero [(qty "Chameleon" 2) (qty "Scheherazade" 1)]))
-    (take-credits state :minion)
+    (new-game (default-contestant) (default-hero [(qty "Chameleon" 2) (qty "Scheherazade" 1)]))
+    (take-credits state :contestant)
     (play-from-hand state :hero "Chameleon")
     (prompt-choice :hero "Barrier")
     (is (= 3 (:credit (get-hero))) "-2 from playing Chameleon")
@@ -103,9 +103,9 @@
 (deftest cerberus
   ;; Cerberus - boost 1 for 1 cred. Break for 1 counter
   (do-game
-   (new-game (default-minion)
+   (new-game (default-contestant)
              (default-hero [(qty "Cerberus \"Rex\" H2" 1)]))
-   (take-credits state :minion)
+   (take-credits state :contestant)
    (play-from-hand state :hero "Cerberus \"Rex\" H2")
    (is (= 2 (:credit (get-hero))) "2 credits left after install")
    (let [rex (get-in @state [:hero :rig :program 0])]
@@ -122,10 +122,10 @@
 (deftest crypsis
   ;; Crypsis - Loses a virus counter after encountering ice it broke
   (do-game
-    (new-game (default-minion [(qty "Ice Wall" 1)])
+    (new-game (default-contestant [(qty "Ice Wall" 1)])
               (default-hero [(qty "Crypsis" 2)]))
-    (play-from-hand state :minion "Ice Wall" "Archives")
-    (take-credits state :minion)
+    (play-from-hand state :contestant "Ice Wall" "Archives")
+    (take-credits state :contestant)
     (core/gain state :hero :credit 100)
     (play-from-hand state :hero "Crypsis")
     (let [crypsis (get-in @state [:hero :rig :program 0])]
@@ -134,7 +134,7 @@
           "Crypsis has 1 virus counter")
 
       (run-on state "Archives")
-      (core/rez state :minion (get-ice state :archives 0))
+      (core/rez state :contestant (get-ice state :archives 0))
       (card-ability state :hero (refresh crypsis) 0) ; Match strength
       (card-ability state :hero (refresh crypsis) 1) ; Break
       (is (= 1 (get-in (refresh crypsis) [:counter :virus]))
@@ -156,7 +156,7 @@
           "Crypsis was trashed"))
 
     (take-credits state :hero)
-    (take-credits state :minion)
+    (take-credits state :contestant)
 
     (play-from-hand state :hero "Crypsis")
     (let [crypsis (get-in @state [:hero :rig :program 0])]
@@ -173,16 +173,16 @@
   ;; Multiple Hostile Infrastructure vs. Deus X
   (do-game
     (new-game
-      (default-minion [(qty "Hostile Infrastructure" 3)])
+      (default-contestant [(qty "Hostile Infrastructure" 3)])
       (default-hero [(qty "Deus X" 3) (qty "Sure Gamble" 2)]))
-    (play-from-hand state :minion "Hostile Infrastructure" "New remote")
-    (play-from-hand state :minion "Hostile Infrastructure" "New remote")
-    (play-from-hand state :minion "Hostile Infrastructure" "New remote")
-    (core/gain state :minion :credit 10)
-    (core/rez state :minion (get-content state :remote1 0))
-    (core/rez state :minion (get-content state :remote2 0))
-    (core/rez state :minion (get-content state :remote3 0))
-    (take-credits state :minion)
+    (play-from-hand state :contestant "Hostile Infrastructure" "New remote")
+    (play-from-hand state :contestant "Hostile Infrastructure" "New remote")
+    (play-from-hand state :contestant "Hostile Infrastructure" "New remote")
+    (core/gain state :contestant :credit 10)
+    (core/rez state :contestant (get-content state :remote1 0))
+    (core/rez state :contestant (get-content state :remote2 0))
+    (core/rez state :contestant (get-content state :remote3 0))
+    (take-credits state :contestant)
     (core/gain state :hero :credit 10)
     (play-from-hand state :hero "Deus X")
     (run-empty-server state "Server 1")
@@ -198,8 +198,8 @@
     (new-game
       (make-deck "Jinteki: Personal Evolution" [(qty "Fetal AI" 6)])
       (default-hero [(qty "Deus X" 3) (qty "Sure Gamble" 2)]))
-    (play-from-hand state :minion "Fetal AI" "New remote")
-    (take-credits state :minion)
+    (play-from-hand state :contestant "Fetal AI" "New remote")
+    (take-credits state :contestant)
     (core/gain state :hero :credit 10)
     (play-from-hand state :hero "Deus X")
     (run-empty-server state "Server 1")
@@ -215,14 +215,14 @@
   ;; Faerie - trash after encounter is over, not before.
   (do-game
     (new-game
-      (default-minion [(qty "Caduceus" 1)])
+      (default-contestant [(qty "Caduceus" 1)])
       (default-hero [(qty "Faerie" 1)]))
-    (play-from-hand state :minion "Caduceus" "Archives")
-    (take-credits state :minion)
+    (play-from-hand state :contestant "Caduceus" "Archives")
+    (take-credits state :contestant)
     (play-from-hand state :hero "Faerie")
     (let [fae (get-program state 0)]
       (run-on state :archives)
-      (core/rez state :minion (get-ice state :archives 0))
+      (core/rez state :contestant (get-ice state :archives 0))
       (card-ability state :hero fae 0)
       (is (refresh fae) "Faerie not trashed until encounter over")
       (run-continue state)
@@ -231,9 +231,9 @@
 (deftest faust-pump
   ;; Faust - Pump by discarding
   (do-game
-    (new-game (default-minion)
+    (new-game (default-contestant)
               (default-hero [(qty "Faust" 1) (qty "Sure Gamble" 3)]))
-    (take-credits state :minion)
+    (take-credits state :contestant)
     (play-from-hand state :hero "Faust")
     (let [faust (get-in @state [:hero :rig :program 0])]
       (card-ability state :hero faust 1)
@@ -244,14 +244,14 @@
 (deftest faust-pump
   ;; Faust - Pump does not trigger trash prevention. #760
   (do-game
-    (new-game (default-minion)
+    (new-game (default-contestant)
               (default-hero [(qty "Faust" 1)
                                (qty "Sacrificial Construct" 1)
                                (qty "Fall Guy" 1)
                                (qty "Astrolabe" 1)
                                (qty "Gordian Blade" 1 )
                                (qty "Armitage Codebusting" 1)]))
-    (take-credits state :minion)
+    (take-credits state :contestant)
     (core/draw state :hero 1)
     (play-from-hand state :hero "Faust")
     (play-from-hand state :hero "Fall Guy")
@@ -271,10 +271,10 @@
 (deftest femme-counter
   ;; Femme Fatale counter test
   (do-game
-   (new-game (default-minion [(qty "Ice Wall" 1)])
+   (new-game (default-contestant [(qty "Ice Wall" 1)])
              (default-hero [(qty "Femme Fatale" 2)]))
-   (play-from-hand state :minion "Ice Wall" "HQ")
-   (take-credits state :minion)
+   (play-from-hand state :contestant "Ice Wall" "HQ")
+   (take-credits state :contestant)
    (core/gain state :hero :credit 18)
    (let [iw (get-ice state :hq 0)]
     (play-from-hand state :hero "Femme Fatale")
@@ -285,26 +285,26 @@
     (play-from-hand state :hero "Femme Fatale")
     (prompt-select :hero iw)
     (is (:icon (refresh iw)) "Ice Wall has an icon")
-    (core/trash state :minion iw)
+    (core/trash state :contestant iw)
     (is (not (:icon (refresh iw))) "Ice Wall does not have an icon after itself trashed"))))
 
 (deftest nanotk-install-ice-during-run
   ;; Na'Not'K - Strength adjusts accordingly when ice installed during run
   (do-game
-    (new-game (default-minion [(qty "Architect" 1) (qty "Eli 1.0" 1)])
+    (new-game (default-contestant [(qty "Architect" 1) (qty "Eli 1.0" 1)])
               (default-hero [(qty "Na'Not'K" 1)]))
-    (play-from-hand state :minion "Architect" "HQ")
-    (take-credits state :minion)
+    (play-from-hand state :contestant "Architect" "HQ")
+    (take-credits state :contestant)
     (play-from-hand state :hero "Na'Not'K")
     (let [nanotk (get-program state 0)
           architect (get-ice state :hq 0)]
       (is (= 1 (:current-strength (refresh nanotk))) "Default strength")
       (run-on state "HQ")
-      (core/rez state :minion architect)
+      (core/rez state :contestant architect)
       (is (= 2 (:current-strength (refresh nanotk))) "1 ice on HQ")
-      (card-subroutine state :minion (refresh architect) 1)
-      (prompt-select :minion (find-card "Eli 1.0" (:hand (get-minion))))
-      (prompt-choice :minion "HQ")
+      (card-subroutine state :contestant (refresh architect) 1)
+      (prompt-select :contestant (find-card "Eli 1.0" (:hand (get-contestant))))
+      (prompt-choice :contestant "HQ")
       (is (= 3 (:current-strength (refresh nanotk))) "2 ice on HQ")
       (run-jack-out state)
       (is (= 1 (:current-strength (refresh nanotk))) "Back to default strength"))))
@@ -312,20 +312,20 @@
 (deftest nanotk-redirect
   ;; Na'Not'K - Strength adjusts accordingly when run redirected to another server
   (do-game
-    (new-game (default-minion [(qty "Susanoo-no-Mikoto" 1) (qty "Crick" 1) (qty "Cortex Lock" 1)])
+    (new-game (default-contestant [(qty "Susanoo-no-Mikoto" 1) (qty "Crick" 1) (qty "Cortex Lock" 1)])
               (default-hero [(qty "Na'Not'K" 1)]))
-    (play-from-hand state :minion "Cortex Lock" "HQ")
-    (play-from-hand state :minion "Susanoo-no-Mikoto" "HQ")
-    (play-from-hand state :minion "Crick" "Archives")
-    (take-credits state :minion)
+    (play-from-hand state :contestant "Cortex Lock" "HQ")
+    (play-from-hand state :contestant "Susanoo-no-Mikoto" "HQ")
+    (play-from-hand state :contestant "Crick" "Archives")
+    (take-credits state :contestant)
     (play-from-hand state :hero "Na'Not'K")
     (let [nanotk (get-program state 0)
           susanoo (get-ice state :hq 1)]
       (is (= 1 (:current-strength (refresh nanotk))) "Default strength")
       (run-on state "HQ")
-      (core/rez state :minion susanoo)
+      (core/rez state :contestant susanoo)
       (is (= 3 (:current-strength (refresh nanotk))) "2 ice on HQ")
-      (card-subroutine state :minion (refresh susanoo) 0)
+      (card-subroutine state :contestant (refresh susanoo) 0)
       (is (= 2 (:current-strength (refresh nanotk))) "1 ice on Archives")
       (run-jack-out state)
       (is (= 1 (:current-strength (refresh nanotk))) "Back to default strength"))))
@@ -333,9 +333,9 @@
 (deftest overmind-counters
   ;; Overmind - Start with counters equal to unused MU
   (do-game
-    (new-game (default-minion)
+    (new-game (default-contestant)
               (default-hero [(qty "Overmind" 1) (qty "Akamatsu Mem Chip" 2)]))
-    (take-credits state :minion)
+    (take-credits state :contestant)
     (take-credits state :hero 1)
     (play-from-hand state :hero "Akamatsu Mem Chip")
     (play-from-hand state :hero "Akamatsu Mem Chip")
@@ -348,13 +348,13 @@
 (deftest paperclip
   ;; Paperclip - prompt to install on encounter, but not if another is installed
   (do-game
-    (new-game (default-minion [(qty "Vanilla" 1)])
+    (new-game (default-contestant [(qty "Vanilla" 1)])
               (default-hero [(qty "Paperclip" 2)]))
-    (play-from-hand state :minion "Vanilla" "Archives")
-    (take-credits state :minion)
+    (play-from-hand state :contestant "Vanilla" "Archives")
+    (take-credits state :contestant)
     (trash-from-hand state :hero "Paperclip")
     (run-on state "Archives")
-    (core/rez state :minion (get-ice state :archives 0))
+    (core/rez state :contestant (get-ice state :archives 0))
     (prompt-choice :hero "Yes") ; install paperclip
     (run-continue state)
     (run-successful state)
@@ -366,21 +366,21 @@
 (deftest paperclip-multiple
   ;; Paperclip - do not show a second install prompt if user said No to first, when multiple are in heap
   (do-game
-    (new-game (default-minion [(qty "Vanilla" 2)])
+    (new-game (default-contestant [(qty "Vanilla" 2)])
               (default-hero [(qty "Paperclip" 3)]))
-    (play-from-hand state :minion "Vanilla" "Archives")
-    (play-from-hand state :minion "Vanilla" "Archives")
-    (take-credits state :minion)
+    (play-from-hand state :contestant "Vanilla" "Archives")
+    (play-from-hand state :contestant "Vanilla" "Archives")
+    (take-credits state :contestant)
     (trash-from-hand state :hero "Paperclip")
     (trash-from-hand state :hero "Paperclip")
     (trash-from-hand state :hero "Paperclip")
     (run-on state "Archives")
-    (core/rez state :minion (get-ice state :archives 1))
+    (core/rez state :contestant (get-ice state :archives 1))
     (prompt-choice :hero "No")
     (is (empty? (:prompt (get-hero))) "No additional prompts to rez other copies of Paperclip")
     (run-continue state)
     ;; we should get the prompt on a second ice even after denying the first.
-    (core/rez state :minion (get-ice state :archives 0))
+    (core/rez state :contestant (get-ice state :archives 0))
     (prompt-choice :hero "No")
     (is (empty? (:prompt (get-hero))) "No additional prompts to rez other copies of Paperclip")
     (core/jack-out state :hero)
@@ -393,11 +393,11 @@
   ;; Shiv - Gain 1 strength for each installed breaker; no MU cost when 2+ link
   (do-game
     (new-game
-      (default-minion)
+      (default-contestant)
       (make-deck "Nasir Meidan: Cyber Explorer" [(qty "Shiv" 1) (qty "Inti" 2)
                                                  (qty "Access to Globalsec" 1)]))
     (is (= 1 (:link (get-hero))) "1 link")
-    (take-credits state :minion)
+    (take-credits state :contestant)
     (play-from-hand state :hero "Shiv")
     (let [shiv (get-program state 0)]
       (is (= 1 (:current-strength (refresh shiv))) "1 installed breaker; 1 strength")
@@ -413,20 +413,20 @@
 (deftest snowball
   ;; Snowball - Strength boost until end of run when used to break a subroutine
   (do-game
-   (new-game (default-minion [(qty "Spiderweb" 1) (qty "Fire Wall" 1) (qty "Hedge Fund" 1)])
+   (new-game (default-contestant [(qty "Spiderweb" 1) (qty "Fire Wall" 1) (qty "Hedge Fund" 1)])
              (default-hero [(qty "Snowball" 1)]))
-   (play-from-hand state :minion "Hedge Fund")
-   (play-from-hand state :minion "Fire Wall" "HQ")
-   (play-from-hand state :minion "Spiderweb" "HQ")
-   (take-credits state :minion)
+   (play-from-hand state :contestant "Hedge Fund")
+   (play-from-hand state :contestant "Fire Wall" "HQ")
+   (play-from-hand state :contestant "Spiderweb" "HQ")
+   (take-credits state :contestant)
    (core/gain state :hero :credit 10)
    (play-from-hand state :hero "Snowball")
    (let [sp (get-ice state :hq 1)
          fw (get-ice state :hq 0)
          snow (get-program state 0)]
      (run-on state "HQ")
-     (core/rez state :minion sp)
-     (core/rez state :minion fw)
+     (core/rez state :contestant sp)
+     (core/rez state :contestant fw)
      (card-ability state :hero snow 1) ; match strength
      (is (= 2 (:current-strength (refresh snow))))
      (card-ability state :hero snow 0) ; strength matched, break a sub
@@ -447,9 +447,9 @@
 (deftest study-guide
   ;; Study Guide - 2c to add a power counter; +1 strength per counter
   (do-game
-   (new-game (default-minion)
+   (new-game (default-contestant)
              (default-hero [(qty "Study Guide" 1) (qty "Sure Gamble" 1)]))
-   (take-credits state :minion)
+   (take-credits state :contestant)
    (play-from-hand state :hero "Sure Gamble")
    (play-from-hand state :hero "Study Guide")
    (let [sg (get-program state 0)]
@@ -465,15 +465,15 @@
 (deftest wyrm
   ;; Wyrm reduces strength of ice
   (do-game
-   (new-game (default-minion [(qty "Ice Wall" 1)])
+   (new-game (default-contestant [(qty "Ice Wall" 1)])
              (default-hero [(qty "Wyrm" 1)]))
-   (play-from-hand state :minion "Ice Wall" "HQ")
-   (take-credits state :minion)
+   (play-from-hand state :contestant "Ice Wall" "HQ")
+   (take-credits state :contestant)
    (play-from-hand state :hero "Wyrm")
    (run-on state "HQ")
    (let [ice-wall (get-ice state :hq 0)
          wyrm (get-in @state [:hero :rig :program 0])]
-     (core/rez state :minion ice-wall)
+     (core/rez state :contestant ice-wall)
      (card-ability state :hero wyrm 1)
      (is (= 0 (:current-strength (refresh ice-wall))) "Strength of Ice Wall reduced to 0")
      (card-ability state :hero wyrm 1)
@@ -482,9 +482,9 @@
 (deftest yusuf
   ;; Yusuf gains virus counters on successful runs and can spend virus counters from any installed card
   (do-game
-    (new-game (default-minion)
+    (new-game (default-contestant)
               (default-hero [(qty "Yusuf" 1) (qty "Cache" 1)]))
-    (take-credits state :minion)
+    (take-credits state :contestant)
     (play-from-hand state :hero "Yusuf")
     (play-from-hand state :hero "Cache")
     (let [yusuf (get-program state 0)

@@ -25,7 +25,7 @@
                   (and (= type :forfeit) (>= (- (count (get-in @state [side :scored])) amount) 0))
                   (and (= type :mill) (>= (- (count (get-in @state [side :deck])) amount) 0))
                   (and (= type :tag) (>= (- (get-in @state [:hero :tag]) amount) 0))
-                  (and (= type :ice) (>= (- (count (filter (every-pred rezzed? ice?) (all-installed state :minion))) amount) 0))
+                  (and (= type :ice) (>= (- (count (filter (every-pred rezzed? ice?) (all-installed state :contestant))) amount) 0))
                   (and (= type :hardware) (>= (- (count (get-in @state [:hero :rig :hardware])) amount) 0))
                   (and (= type :program) (>= (- (count (get-in @state [:hero :rig :program])) amount) 0))
                   (and (= type :connection) (>= (- (count (filter #(has-subtype? % "Connection")
@@ -76,7 +76,7 @@
   [state side card action costs cost]
   (case (first cost)
     :click (do (trigger-event state side
-                              (if (= side :minion) :minion-spent-click :hero-spent-click)
+                              (if (= side :contestant) :contestant-spent-click :hero-spent-click)
                               (first (keep :action action)) (:click (into {} costs)))
                (swap! state assoc-in [side :register :spent-click] true)
                (deduce state side cost))
@@ -89,7 +89,7 @@
                                                                           (all-installed state :hero)))
 
     ;; Rezzed ICE
-    :ice (pay-trash state :minion card :ice (second cost) (filter (every-pred rezzed? ice?) (all-installed state :minion))
+    :ice (pay-trash state :contestant card :ice (second cost) (filter (every-pred rezzed? ice?) (all-installed state :contestant))
                     {:cause :ability-cost :keep-server-alive true})
 
     :tag (deduce state :hero cost)
@@ -101,7 +101,7 @@
 
 (defn pay
   "Deducts each cost from the player.
-  args format as follows with each being optional ([:click 1 :credit 0] [:forfeit] {:action :minion-click-credit})
+  args format as follows with each being optional ([:click 1 :credit 0] [:forfeit] {:action :contestant-click-credit})
   The map with :action was added for Jeeves so we can log what each click was used on"
   [state side card & args]
   (let [raw-costs (not-empty (remove map? args))
@@ -119,7 +119,7 @@
 
 (defn lose [state side & args]
   (doseq [r (partition 2 args)]
-    (trigger-event state side (if (= side :minion) :minion-loss :hero-loss) r)
+    (trigger-event state side (if (= side :contestant) :contestant-loss :hero-loss) r)
     (if (= (last r) :all)
       (swap! state assoc-in [side (first r)] 0)
       (deduce state side r))))

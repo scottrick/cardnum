@@ -24,7 +24,7 @@
       :install-cost-bonus (req (when (can-install-shard? state run) [:credit -15 :click -1]))
       :effect (req (when (can-install-shard? state run)
                      (when-completed (register-successful-run state side (:server run))
-                                     (do (clear-wait-prompt state :minion)
+                                     (do (clear-wait-prompt state :contestant)
                                          (swap! state update-in [:hero :prompt] rest)
                                          (handle-end-run state side)))))})))
 
@@ -43,13 +43,13 @@
 
    "Activist Support"
    {:events
-    {:minion-turn-begins {:req (req (= 0 (:tag hero)))
+    {:contestant-turn-begins {:req (req (= 0 (:tag hero)))
                         :msg "take 1 tag"
                         :delayed-completion true
                         :effect (effect (tag-hero :hero eid 1))}
      :hero-turn-begins {:req (req (not has-bad-pub))
                           :msg "give the Corp 1 bad publicity"
-                          :effect (effect (gain :minion :bad-publicity 1))}}}
+                          :effect (effect (gain :contestant :bad-publicity 1))}}}
 
    "Adjusted Chronotype"
    {:events {:hero-loss {:req (req (and (some #{:click} target)
@@ -77,8 +77,8 @@
    "Akshara Sareen"
    {:in-play [:click 1 :click-per-turn 1]
     :msg "give each player 1 additional [Click] to spend during their turn"
-    :effect (effect (gain :minion :click-per-turn 1))
-    :leave-play (effect (lose :minion :click-per-turn 1))}
+    :effect (effect (gain :contestant :click-per-turn 1))
+    :leave-play (effect (lose :contestant :click-per-turn 1))}
 
    "Algo Trading"
    {:flags {:hero-phase-12 (req (> (:credit hero) 0))}
@@ -161,7 +161,7 @@
    {:events {:successful-run {:req (req (and (= target :hq)
                                              (first-successful-run-on-server? state :hq)))
                               :msg "force the Corp to trash the top card of R&D"
-                              :effect (effect (mill :minion))}}}
+                              :effect (effect (mill :contestant))}}}
 
    "Bank Job"
    {:data {:counter {:credit 8}}
@@ -223,7 +223,7 @@
    (let [ability {:once :per-turn
                   :label "Gain 1 [Credits], draw 1 card, or gain [Click] (start of turn)"
                   :req (req (:hero-phase-12 @state))
-                  :effect (req (let [c (:credit minion)
+                  :effect (req (let [c (:credit contestant)
                                      b (:title card)]
                                  (cond
                                    ;; gain 1 credit
@@ -355,9 +355,9 @@
                                                   (system-msg :hero (str "places 1 power counter on Clan Vengeance")))}}
     :abilities [{:label "[Trash]: Trash 1 random card from HQ for each power counter"
                  :req (req (pos? (get-in card [:counter :power] 0)))
-                 :msg (msg "trash " (min (get-in card [:counter :power] 0) (count (:hand minion))) " cards from HQ")
-                 :effect (effect (trash-cards (take (min (get-in card [:counter :power] 0) (count (:hand minion)))
-                                              (shuffle (:hand minion))))
+                 :msg (msg "trash " (min (get-in card [:counter :power] 0) (count (:hand contestant))) " cards from HQ")
+                 :effect (effect (trash-cards (take (min (get-in card [:counter :power] 0) (count (:hand contestant)))
+                                              (shuffle (:hand contestant))))
                                  (trash card {:cause :ability-cost}))}]}
 
    "Compromised Employee"
@@ -367,32 +367,32 @@
                    :effect (effect (gain :hero :credit 1))}}}
 
    "Corporate Defector"
-   {:events {:minion-click-draw {:msg (msg "reveal " (-> target first :title))}}}
+   {:events {:contestant-click-draw {:msg (msg "reveal " (-> target first :title))}}}
 
    "Councilman"
    {:implementation "Does not restrict Runner to Asset / Upgrade just rezzed"
     :events {:rez {:req (req (and (#{"Asset" "Upgrade"} (:type target))
-                                  (can-pay? state :hero nil [:credit (rez-cost state :minion target)])))
+                                  (can-pay? state :hero nil [:credit (rez-cost state :contestant target)])))
                    :effect (req (toast state :hero (str "Click Councilman to derez " (card-str state target {:visible true})
                                                           " that was just rezzed") "info")
-                                (toast state :minion (str "Runner has the opportunity to derez with Councilman.") "error"))}}
+                                (toast state :contestant (str "Runner has the opportunity to derez with Councilman.") "error"))}}
     :abilities [{:prompt "Select an asset or upgrade that was just rezzed"
                  :choices {:req #(and (rezzed? %)
                                       (or (is-type? % "Asset") (is-type? % "Upgrade")))}
                  :effect (req (let [c target
-                                    creds (rez-cost state :minion c)]
+                                    creds (rez-cost state :contestant c)]
                                 (when (can-pay? state side nil [:credit creds])
                                   (resolve-ability
                                     state :hero
                                     {:msg (msg "pay " creds " [Credit] and derez " (:title c) ". Councilman is trashed")
                                      :effect (req (lose state :hero :credit creds)
-                                                  (derez state :minion c)
+                                                  (derez state :contestant c)
                                                   (register-turn-flag!
                                                     state side card :can-rez
                                                     (fn [state side card]
                                                       (if (= (:cid card) (:cid c))
                                                         ((constantly false)
-                                                         (toast state :minion "Cannot rez the rest of this turn due to Councilman"))
+                                                         (toast state :contestant "Cannot rez the rest of this turn due to Councilman"))
                                                         true)))
                                                   (trash state side card {:unpreventable true}))}
                                    card nil))))}]}
@@ -480,19 +480,19 @@
 
    "Data Leak Reversal"
    {:req (req (some #{:hq :rd :archives} (:successful-run hero-reg)))
-    :abilities [{:req (req tagged) :cost [:click 1] :effect (effect (mill :minion))
+    :abilities [{:req (req tagged) :cost [:click 1] :effect (effect (mill :contestant))
                  :msg "force the Corp to trash the top card of R&D"}]}
 
    "DDoS"
-   {:abilities [{:msg "prevent the minion from rezzing the outermost piece of ice during a run on any server this turn"
+   {:abilities [{:msg "prevent the contestant from rezzing the outermost piece of ice during a run on any server this turn"
                  :effect (effect
                            (register-turn-flag!
                              card :can-rez
                              (fn [state side card]
                                (if (and (ice? card)
-                                        (= (count (get-in @state (concat [:minion :servers] (:server (:run @state)) [:ices])))
+                                        (= (count (get-in @state (concat [:contestant :servers] (:server (:run @state)) [:ices])))
                                            (inc (ice-index state card))))
-                                 ((constantly false) (toast state :minion "Cannot rez any outermost ICE due to DDoS." "warning"))
+                                 ((constantly false) (toast state :contestant "Cannot rez any outermost ICE due to DDoS." "warning"))
                                  true)))
                            (trash card {:cause :ability-cost}))}]}
 
@@ -545,7 +545,7 @@
                  :req (req (:hero-phase-12 @state))
                  :once :per-turn
                  :effect (effect (lose :credit 1))}]
-    :events {:minion-turn-begins {:msg (msg "draw " (if (= (count (get-in @state [:hero :deck])) 0)
+    :events {:contestant-turn-begins {:msg (msg "draw " (if (= (count (get-in @state [:hero :deck])) 0)
                                                    "0 cards (hero's stack is empty)"
                                                    "1 card"))
                                 :effect (effect (draw :hero 1))}
@@ -589,7 +589,7 @@
     :abilities [ability]})
 
    "Eden Shard"
-   (shard-constructor :rd "force the Corp to draw 2 cards" (req (draw state :minion 2)))
+   (shard-constructor :rd "force the Corp to draw 2 cards" (req (draw state :contestant 2)))
 
    "Emptied Mind"
    (let [ability {:req (req (= 0 (count (:hand hero))))
@@ -602,7 +602,7 @@
 
    "Enhanced Vision"
    {:events {:successful-run {:silent (req true)
-                              :msg (msg "force the Corp to reveal " (:title (first (shuffle (:hand minion)))))
+                              :msg (msg "force the Corp to reveal " (:title (first (shuffle (:hand contestant)))))
                               :req (req (genetics-trigger? state side :successful-run))}}}
 
    "Fall Guy"
@@ -619,7 +619,7 @@
 
    "Fester"
    {:events {:purge {:msg "force the Corp to lose 2 [Credits] if able"
-                     :effect (effect (pay :minion card :credit 2))}}}
+                     :effect (effect (pay :contestant card :credit 2))}}}
 
    "Film Critic"
    (letfn [(get-agenda [card] (first (filter #(= "Agenda" (:type %)) (:hosted card))))]
@@ -653,13 +653,13 @@
                                :prompt "Use Find the Truth to look at the top card of R&D?"
                                :yes-ability {:msg "look at the top card of R&D"
                                              :effect (req (prompt! state :hero card (str "The top card of R&D is "
-                                                                                           (:title (first (:deck minion)))) ["OK"] {})
+                                                                                           (:title (first (:deck contestant)))) ["OK"] {})
                                                           (effect-completed state side eid))}
                                :no-ability {:effect (req (effect-completed state side eid))}}}}}
 
    "First Responders"
    {:abilities [{:cost [:credit 2]
-                 :req (req (some #(= (:side %) "Minion") (map second (turn-events state :hero :damage))))
+                 :req (req (some #(= (:side %) "Contestant") (map second (turn-events state :hero :damage))))
                  :msg "draw 1 card"
                  :effect (effect (draw))}]}
 
@@ -679,7 +679,7 @@
                                    ; access-helper-hq uses a set to keep track of which cards have already
                                    ; been accessed. by adding HQ root's contents to this set, we make the hero
                                    ; unable to access those cards, as Gang Sign intends.
-                                   (set (get-in @state [:minion :servers :hq :content])))
+                                   (set (get-in @state [:contestant :servers :hq :content])))
                                  card nil))))}}}
 
    "Gene Conditioning Shoppe"
@@ -703,7 +703,7 @@
     :abilities [{:msg "lose [Click] and look at the top card of R&D"
                  :once :per-turn
                  :effect (effect (prompt! card (str "The top card of R&D is "
-                                                    (:title (first (:deck minion)))) ["OK"] {}))}]
+                                                    (:title (first (:deck contestant)))) ["OK"] {}))}]
     :events {:hero-turn-begins {:req (req (get-in @state [:per-turn (:cid card)]))
                                   :effect (effect (lose :click 1))}}}
 
@@ -736,12 +736,12 @@
    "Hades Shard"
    (shard-constructor :archives "access all cards in Archives" {:delayed-completion true}
                       (req (trash state side card {:cause :ability-cost})
-                           (swap! state update-in [:minion :discard] #(map (fn [c] (assoc c :seen true)) %))
+                           (swap! state update-in [:contestant :discard] #(map (fn [c] (assoc c :seen true)) %))
                            (when (:run @state)
-                             (swap! state update-in [:run :cards-accessed] (fnil #(+ % (count (:discard minion))) 0)))
+                             (swap! state update-in [:run :cards-accessed] (fnil #(+ % (count (:discard contestant))) 0)))
                            (when-completed (trigger-event-sync state side :pre-access :archives)
                                            (resolve-ability state :hero
-                                                            (choose-access (get-in @state [:minion :discard])
+                                                            (choose-access (get-in @state [:contestant :discard])
                                                                            '(:archives)) card nil))))
 
    "Hard at Work"
@@ -753,8 +753,8 @@
     :abilities [ability]})
 
    "Human First"
-   {:events {:agenda-scored {:msg (msg "gain " (get-agenda-points state :minion target) " [Credits]")
-                             :effect (effect (gain :hero :credit (get-agenda-points state :minion target)))}
+   {:events {:agenda-scored {:msg (msg "gain " (get-agenda-points state :contestant target) " [Credits]")
+                             :effect (effect (gain :hero :credit (get-agenda-points state :contestant target)))}
              :agenda-stolen {:msg (msg "gain " (get-agenda-points state :hero target) " [Credits]")
                              :effect (effect (gain :credit (get-agenda-points state :hero target)))}}}
 
@@ -788,7 +788,7 @@
    "Investigative Journalism"
    {:req (req has-bad-pub)
     :abilities [{:cost [:click 4] :msg "give the Corp 1 bad publicity"
-                 :effect (effect (gain :minion :bad-publicity 1) (trash card {:cause :ability-cost}))}]}
+                 :effect (effect (gain :contestant :bad-publicity 1) (trash card {:cause :ability-cost}))}]}
 
    "Jak Sinclair"
    (let [ability {:label "Make a run (start of turn)"
@@ -868,7 +868,7 @@
    {:abilities [{:label "[Trash]: Break the first subroutine on the encountered piece of ice"
                  :req (req (and (:run @state) (rezzed? current-ice)))
                  :effect (effect (trash card {:cause :ability-cost})
-                                 (system-msg :minion
+                                 (system-msg :contestant
                                              (str "trashes Kongamato to break the first subroutine on "
                                                   (:title current-ice))))}]}
 
@@ -892,8 +892,8 @@
                                                       (all-installed state :hero)))))}
 
     ;; KNOWN ISSUE: :effect is not fired when Assimilator turns cards over.
-    :effect (effect (lose :minion :hand-size-modification 1))
-    :leave-play (effect (gain :minion :hand-size-modification 1))
+    :effect (effect (lose :contestant :hand-size-modification 1))
+    :leave-play (effect (gain :contestant :hand-size-modification 1))
     :abilities [(assoc-in ability [:req] (req (:hero-phase-12 @state)))]
     :events {:hero-turn-begins ability}})
 
@@ -907,14 +907,14 @@
                              (move state side target :hand))
                            (if (not-empty cards)
                              (let [tobottom (remove #(= % target) cards)]
-                               (continue-ability state side (reorder-choice :hero :minion tobottom '()
+                               (continue-ability state side (reorder-choice :hero :contestant tobottom '()
                                                                             (count tobottom) tobottom "bottom") card nil))
-                             (do (clear-wait-prompt state :minion)
+                             (do (clear-wait-prompt state :contestant)
                                  (effect-completed state side eid card))))})]
    {:abilities [{:cost [:click 1]
                  :msg (msg "draw 4 cards: " (join ", " (map :title (take 4 (:deck hero)))))
                  :delayed-completion true
-                 :effect (req (show-wait-prompt state :minion "Runner to choose card to keep")
+                 :effect (req (show-wait-prompt state :contestant "Runner to choose card to keep")
                               (let [from (take 4 (:deck hero))]
                                 (continue-ability state side (lab-keep from) card nil)))}]})
 
@@ -930,17 +930,17 @@
    "Liberated Chela"
    {:abilities [{:cost [:click 5 :forfeit]
                  :msg "add it to their score area"
-                 :effect (req (if (not (empty? (:scored minion)))
+                 :effect (req (if (not (empty? (:scored contestant)))
                                 (do (show-wait-prompt state :hero "Corp to decide whether or not to prevent Liberated Chela")
                                     (resolve-ability
                                       state side
                                       {:prompt (msg "Forfeit an agenda to prevent Liberated Chela from being added to Runner's score area?")
-                                       :choices ["Yes" "No"] :player :minion
+                                       :choices ["Yes" "No"] :player :contestant
                                        :effect (final-effect (resolve-ability
                                                                (if (= target "Yes")
-                                                                 {:player :minion
+                                                                 {:player :contestant
                                                                   :prompt "Select an agenda to forfeit"
-                                                                  :choices {:req #(in-minion-scored? state side %)}
+                                                                  :choices {:req #(in-contestant-scored? state side %)}
                                                                   :effect (effect (forfeit target)
                                                                                   (move :hero card :rfg)
                                                                                   (clear-wait-prompt :hero))}
@@ -1007,15 +1007,15 @@
 
    "Muertos Gang Member"
    {:effect (req (resolve-ability
-                   state :minion
+                   state :contestant
                    {:prompt "Select a card to derez"
-                    :choices {:req #(and (= (:side %) "Minion")
+                    :choices {:req #(and (= (:side %) "Contestant")
                                          (not (is-type? % "Agenda"))
                                          (:rezzed %))}
                     :effect (req (derez state side target))}
                   card nil))
     :leave-play (req (resolve-ability
-                       state :minion
+                       state :contestant
                        {:prompt "Select a card to rez, ignoring the rez cost"
                         :choices {:req #(not (:rezzed %))}
                         :effect (req (rez state side target {:ignore-cost :rez-cost})
@@ -1034,30 +1034,30 @@
                              (has-subtype? target "Stealth")))
               :once :per-run
               :delayed-completion true
-              :effect (effect (show-wait-prompt :minion "Runner to use Net Mercur")
+              :effect (effect (show-wait-prompt :contestant "Runner to use Net Mercur")
                               (continue-ability
                                 {:prompt "Place 1 [Credits] on Net Mercur or draw 1 card?"
                                  :player :hero
                                  :choices ["Place 1 [Credits]" "Draw 1 card"]
                                  :effect (req (if (= target "Draw 1 card")
                                                 (do (draw state side)
-                                                    (clear-wait-prompt state :minion)
+                                                    (clear-wait-prompt state :contestant)
                                                     (system-msg state :hero (str "uses Net Mercur to draw 1 card")))
                                                 (do (add-counter state :hero card :credit 1)
-                                                    (clear-wait-prompt state :minion)
+                                                    (clear-wait-prompt state :contestant)
                                                     (system-msg state :hero (str "places 1 [Credits] on Net Mercur")))))}
                                card nil))}}}
 
    "Network Exchange"
    {:msg "increase the install cost of non-innermost ICE by 1"
-    :events {:pre-minion-install {:req (req (is-type? target "ICE"))
+    :events {:pre-contestant-install {:req (req (is-type? target "ICE"))
                                 :effect (req (when (pos? (count (:dest-zone (second targets))))
-                                               (install-cost-bonus state :minion [:credit 1])))}}}
+                                               (install-cost-bonus state :contestant [:credit 1])))}}}
 
    "Neutralize All Threats"
    {:in-play [:hq-access 1]
     :events {:pre-access {:req (req (and (= target :archives)
-                                         (seq (filter #(:trash %) (:discard minion)))))
+                                         (seq (filter #(:trash %) (:discard contestant)))))
                           :effect (req (swap! state assoc-in [:per-turn (:cid card)] true))}
              :access {:effect (req (swap! state assoc-in [:hero :register :force-trash] false))}
              :pre-trash {:req (req (let [cards (map first (turn-events state side :pre-trash))]
@@ -1096,7 +1096,7 @@
    {:abilities [{:cost [:credit 1]
                  :req (req (some #(= :meat %) (map first (turn-events state :hero :damage))))
                  :msg "force the Corp to trash 2 random cards from HQ"
-                 :effect (effect (trash-cards :minion (take 2 (shuffle (:hand minion))))
+                 :effect (effect (trash-cards :contestant (take 2 (shuffle (:hand contestant))))
                                  (trash card {:cause :ability-cost}))}]}
 
    "Oracle May"
@@ -1122,7 +1122,7 @@
     :events {:hero-turn-begins {:req (req (= (:credit hero) 0)) :msg "gain 1 [Credits]"
                                   :effect (req (gain state :hero :credit 1)
                                                (swap! state assoc-in [:per-turn (:cid card)] true))}
-             :minion-turn-begins {:req (req (= (:credit hero) 0)) :msg "gain 1 [Credits]"
+             :contestant-turn-begins {:req (req (= (:credit hero) 0)) :msg "gain 1 [Credits]"
                                 :effect (req (gain state :hero :credit 1)
                                              (swap! state assoc-in [:per-turn (:cid card)] true))}
              :hero-install {:silent (req (pos? (:credit hero)))
@@ -1263,7 +1263,7 @@
    "Raymond Flint"
    {:effect (req (add-watch state :raymond-flint
                             (fn [k ref old new]
-                              (when (< (get-in old [:minion :bad-publicity]) (get-in new [:minion :bad-publicity]))
+                              (when (< (get-in old [:contestant :bad-publicity]) (get-in new [:contestant :bad-publicity]))
                                 (when-completed
                                   ; manually trigger the pre-access event to alert Nerve Agent.
                                   (trigger-event-sync ref side :pre-access :hq)
@@ -1273,7 +1273,7 @@
                                       (access-helper-hq
                                         state from-hq
                                         ; see note in Gang Sign
-                                        (set (get-in @state [:minion :servers :hq :content])))
+                                        (set (get-in @state [:contestant :servers :hq :content])))
                                       card nil)))))))
     :leave-play (req (remove-watch state :raymond-flint))
     :abilities [{:msg "expose 1 card"
@@ -1284,12 +1284,12 @@
    "Rolodex"
    {:delayed-completion true
     :msg "look at the top 5 cards of their Stack"
-    :effect (req (show-wait-prompt state :minion "Runner to rearrange the top cards of their Stack")
+    :effect (req (show-wait-prompt state :contestant "Runner to rearrange the top cards of their Stack")
                  (let [from (take 5 (:deck hero))]
                    (if (pos? (count from))
-                     (continue-ability state side (reorder-choice :hero :minion from '()
+                     (continue-ability state side (reorder-choice :hero :contestant from '()
                                                                   (count from) from) card nil)
-                     (do (clear-wait-prompt state :minion)
+                     (do (clear-wait-prompt state :contestant)
                          (effect-completed state side eid card)))))
     :trash-effect {:effect (effect (system-msg :hero (str "trashes "
                                                (join ", " (map :title (take 3 (:deck hero))))
@@ -1348,15 +1348,15 @@
 
    "Salvaged Vanadis Armory"
    {:events {:damage
-             {:effect (req (show-wait-prompt state :minion "Runner to use Salvaged Vanadis Armory")
+             {:effect (req (show-wait-prompt state :contestant "Runner to use Salvaged Vanadis Armory")
                            (resolve-ability state :hero
                                             {:optional
                                              {:prompt "Use Salvaged Vanadis Armory?"
                                               :yes-ability {:msg (msg "force the Corp to trash the top " (get-turn-damage state :hero) " cards of R&D and trash itself")
-                                                            :effect (effect (mill :minion (get-turn-damage state :hero))
-                                                                            (clear-wait-prompt :minion)
+                                                            :effect (effect (mill :contestant (get-turn-damage state :hero))
+                                                                            (clear-wait-prompt :contestant)
                                                                             (trash card {:unpreventable true}))}
-                                              :no-ability {:effect (effect (clear-wait-prompt :minion))}}}
+                                              :no-ability {:effect (effect (clear-wait-prompt :contestant))}}}
                                             card nil))}}}
 
    "Salsette Slums"
@@ -1372,7 +1372,7 @@
              {:req (req (and (:slums-active card)
                              (-> target card-def :flags :must-trash not)
                              (:trash target)
-                             (= (:side target) "Minion")))
+                             (= (:side target) "Contestant")))
               :effect (req (toast state :hero (str "Click Salsette Slums to remove " (:title target)
                                                      " from the game") "info" {:prevent-duplicates true}))}}
     :abilities [{:label "Remove the currently accessed card from the game instead of trashing it"
@@ -1388,7 +1388,7 @@
                              (str "pay " (trash-cost state side c) " [Credits] and remove " (:title c) " from the game")))
                  :effect (req (let [c (:card (first (get-in @state [:hero :prompt])))]
                                 (deactivate state side c)
-                                (move state :minion c :rfg)
+                                (move state :contestant c :rfg)
                                 (pay state :hero card :credit (trash-cost state side c))
                                 (trigger-event state side :no-trash c)
                                 (update! state side (dissoc card :slums-active))
@@ -1406,7 +1406,7 @@
                                     :msg (msg "remove " (:title target) " from the game")
                                     :effect (req (deactivate state side target)
                                                  (trigger-event state side :no-trash target)
-                                                 (move state :minion target :rfg)
+                                                 (move state :contestant target :rfg)
                                                  (update! state side (dissoc card :slums-active)))}
                                    card nil))}]}
 
@@ -1447,7 +1447,7 @@
 
    "Spoilers"
    {:events {:agenda-scored {:interactive (req true)
-                             :msg "trash the top card of R&D" :effect (effect (mill :minion))}}}
+                             :msg "trash the top card of R&D" :effect (effect (mill :contestant))}}}
 
    "Starlight Crusade Funding"
    {:msg "ignore additional costs on Double events"
@@ -1500,12 +1500,12 @@
    "Tallie Perrault"
    {:abilities [{:label "Draw 1 card for each Corp bad publicity"
                  :effect (effect (trash card {:cause :ability-cost})
-                                 (draw (+ (:bad-publicity minion) (:has-bad-pub minion))))
-                 :msg (msg "draw " (:bad-publicity minion) " cards")}]
+                                 (draw (+ (:bad-publicity contestant) (:has-bad-pub contestant))))
+                 :msg (msg "draw " (:bad-publicity contestant) " cards")}]
     :events {:play-operation
              {:req (req (or (has-subtype? target "Black Ops")
                             (has-subtype? target "Gray Ops")))
-              :effect (req (show-wait-prompt state :minion "Runner to use Tallie Perrault")
+              :effect (req (show-wait-prompt state :contestant "Runner to use Tallie Perrault")
                            (resolve-ability
                              state :hero
                              {:optional
@@ -1513,10 +1513,10 @@
                                :player :hero
                                :yes-ability {:msg "give the Corp 1 bad publicity and take 1 tag"
                                              :delayed-completion true
-                                             :effect (effect (gain :minion :bad-publicity 1)
+                                             :effect (effect (gain :contestant :bad-publicity 1)
                                                              (tag-hero :hero eid 1)
-                                                             (clear-wait-prompt :minion))}
-                               :no-ability {:effect (effect (clear-wait-prompt :minion))}}}
+                                                             (clear-wait-prompt :contestant))}
+                               :no-ability {:effect (effect (clear-wait-prompt :contestant))}}}
                             card nil))}}}
 
    "Tech Trader"
@@ -1569,23 +1569,23 @@
                              :msg "force the Corp to initiate a trace"
                              :label "Trace 1 - If unsuccessful, take 1 bad publicity"
                              :trace {:base 1
-                                     :unsuccessful {:effect (effect (gain :minion :bad-publicity 1)
-                                                                    (system-msg :minion (str "takes 1 bad publicity")))}}}}}
+                                     :unsuccessful {:effect (effect (gain :contestant :bad-publicity 1)
+                                                                    (system-msg :contestant (str "takes 1 bad publicity")))}}}}}
 
    "The Black File"
    {:msg "prevent the Corp from winning the game unless they are flatlined"
-    :effect (req (swap! state assoc-in [:minion :cannot-win-on-points] true))
+    :effect (req (swap! state assoc-in [:contestant :cannot-win-on-points] true))
     :events {:hero-turn-begins
              {:effect (req (if (>= (get-in card [:counter :power] 0) 2)
                              (do (move state side (dissoc card :counter) :rfg)
-                                 (swap! state update-in [:minion] dissoc :cannot-win-on-points)
+                                 (swap! state update-in [:contestant] dissoc :cannot-win-on-points)
                                  (system-msg state side "removes The Black File from the game")
-                                 (gain-agenda-point state :minion 0))
+                                 (gain-agenda-point state :contestant 0))
                              (add-counter state side card :power 1)))}}
-    :trash-effect {:effect (req (swap! state update-in [:minion] dissoc :cannot-win-on-points)
-                                (gain-agenda-point state :minion 0))}
-    :leave-play (req (swap! state update-in [:minion] dissoc :cannot-win-on-points)
-                     (gain-agenda-point state :minion 0))}
+    :trash-effect {:effect (req (swap! state update-in [:contestant] dissoc :cannot-win-on-points)
+                                (gain-agenda-point state :contestant 0))}
+    :leave-play (req (swap! state update-in [:contestant] dissoc :cannot-win-on-points)
+                     (gain-agenda-point state :contestant 0))}
 
    "The Helpful AI"
    {:in-play [:link 1]
@@ -1595,13 +1595,13 @@
                  :effect (effect (update! (assoc card :hai-target target))
                                  (trash (get-card state card) {:cause :ability-cost})
                                  (update-breaker-strength target))}]
-    :events {:hero-turn-ends nil :minion-turn-ends nil :pre-breaker-strength nil}
+    :events {:hero-turn-ends nil :contestant-turn-ends nil :pre-breaker-strength nil}
     :trash-effect {:effect
                    (effect (register-events
                              (let [hai {:effect (effect (unregister-events card)
                                                         (update! (dissoc card :hai-target))
                                                         (update-breaker-strength (:hai-target card)))}]
-                               {:hero-turn-ends hai :minion-turn-ends hai
+                               {:hero-turn-ends hai :contestant-turn-ends hai
                                 :pre-breaker-strength {:req (req (= (:cid target)(:cid (:hai-target card))))
                                                        :effect (effect (breaker-strength-bonus 2))}}) card))}}
 
@@ -1709,7 +1709,7 @@
 
    "Utopia Shard"
    (shard-constructor :hq "force the Corp to discard 2 cards from HQ at random"
-                      (effect (trash-cards :minion (take 2 (shuffle (:hand minion))))))
+                      (effect (trash-cards :contestant (take 2 (shuffle (:hand contestant))))))
 
    "Virus Breeding Ground"
    {:events {:hero-turn-begins {:effect (effect (add-counter card :virus 1))}}
@@ -1734,17 +1734,17 @@
     :leave-play (effect (trash-resource-bonus 2))}
 
    "Woman in the Red Dress"
-   (let [ability {:msg (msg "reveal " (:title (first (:deck minion))) " on the top of R&D")
+   (let [ability {:msg (msg "reveal " (:title (first (:deck contestant))) " on the top of R&D")
                   :label "Reveal the top card of R&D (start of turn)"
                   :once :per-turn
                   :req (req (:hero-phase-12 @state))
                   :effect (effect (show-wait-prompt :hero "Corp to decide whether or not to draw with Woman in the Red Dress")
                                   (resolve-ability
                                     {:optional
-                                     {:player :minion
-                                      :prompt (msg "Draw " (:title (first (:deck minion))) "?")
+                                     {:player :contestant
+                                      :prompt (msg "Draw " (:title (first (:deck contestant))) "?")
                                       :yes-ability {:effect (effect (clear-wait-prompt :hero)
-                                                                    (system-msg (str "draws " (:title (first (:deck minion)))))
+                                                                    (system-msg (str "draws " (:title (first (:deck contestant)))))
                                                                     (draw))}
                                       :no-ability {:effect (effect (clear-wait-prompt :hero)
                                                                    (system-msg "doesn't draw with Woman in the Red Dress"))}}}
