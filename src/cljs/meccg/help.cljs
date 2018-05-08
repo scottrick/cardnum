@@ -28,11 +28,11 @@
             {:id "breakice"
              :title "How do I break ICE and fire ICE subroutines?"
              :content (list
-                        [:p "Breaking ICE during a run and subroutines firing is currently not automated. Runner signals using their "
+                        [:p "Breaking ICE during a run and subroutines firing is currently not automated. Challenger signals using their "
                          "icebreakers by clicking them and using their abilities. When some subroutines are left unbroken and fire, "
-                         "Corp clicks the piece of ICE with subroutines firing and uses them."]
-                        [:p "It's considered common courtesy to wait as Corp for the hero to say \"fire\" before firing the "
-                         "subroutines, since Runner may have ways of breaking/avoiding the effects that are not immediately obvious "
+                         "Contestant clicks the piece of ICE with subroutines firing and uses them."]
+                        [:p "It's considered common courtesy to wait as Contestant for the challenger to say \"fire\" before firing the "
+                         "subroutines, since Challenger may have ways of breaking/avoiding the effects that are not immediately obvious "
                          "and the effects of a fired subroutine may be hard to undo."])}
             {:id "closemenu"
              :title "How do I close a card's menu?"
@@ -56,24 +56,24 @@
                         [:li [:code "/discard #n"] " - Discard card number n from your hand"]
                         [:li [:code "/discard-random"] " - Discard a random card from your hand"]
                         [:li [:code "/draw n"] " - Draw n cards"]
-                        [:li [:code "/end-run"] " - End the run (Corp only)"]
+                        [:li [:code "/end-run"] " - End the run (Contestant only)"]
                         [:li [:code "/handsize n"] " - Set your handsize to n"]
-                        [:li [:code "/jack-out"] " - Jack out (Runner only)"]
+                        [:li [:code "/jack-out"] " - Jack out (Challenger only)"]
                         [:li [:code "/link n"] " - Set your link to n"]
                         [:li [:code "/memory n"] " - Set your memory to n"]
                         [:li [:code "/move-bottom"] " - Pick a card in your hand to put on the bottom of your deck"]
                         [:li [:code "/move-hand"] " - Pick a card from your play-area to put into your hand"]
-                        [:li [:code "/psi"] " - Start a Psi game (Corp only)"]
-                        [:li [:code "/rez"] " - Select a card to rez, ignoring all costs (Corp only)"]
-                        [:li [:code "/rez-all"] " - Rez all cards, ignoring all costs and flip cards in archives faceup (Corp only). For revealing your servers at the end of a game."]
+                        [:li [:code "/psi"] " - Start a Psi game (Contestant only)"]
+                        [:li [:code "/rez"] " - Select a card to rez, ignoring all costs (Contestant only)"]
+                        [:li [:code "/rez-all"] " - Rez all cards, ignoring all costs and flip cards in archives faceup (Contestant only). For revealing your servers at the end of a game."]
                         [:li [:code "/rfg"] " - Select a card to remove from the game"]
-                        [:li [:code "/facedown"] " - Select a card to install facedown in your rig (Runner only)"]
+                        [:li [:code "/facedown"] " - Select a card to install facedown in your rig (Challenger only)"]
                         [:li [:code "/roll n"] " - Roll an n-sided die"]
                         [:li [:code "/tag n"] " - Set your tags to n"]
-                        [:li [:code "/take-brain n"] " - Take n brain damage (Runner only)"]
-                        [:li [:code "/take-meat n"] " - Take n meat damage (Runner only)"]
-                        [:li [:code "/take-net n"] " - Take n net damage (Runner only)"]
-                        [:li [:code "/trace n"] " - Start a trace with base strength n (Corp only)"]]]}
+                        [:li [:code "/take-brain n"] " - Take n brain damage (Challenger only)"]
+                        [:li [:code "/take-meat n"] " - Take n meat damage (Challenger only)"]
+                        [:li [:code "/take-net n"] " - Take n net damage (Challenger only)"]
+                        [:li [:code "/trace n"] " - Start a trace with base strength n (Contestant only)"]]]}
             {:id "documentation"
              :title "Is there more documentation on how to use Cardnum.net?"
              :content [:p "Read the "

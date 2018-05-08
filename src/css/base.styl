@@ -324,16 +324,16 @@ span.small
   vertical-align: middle
 
   &.adam
-    background-image: url('/img/factions/hero-adam.png')
+    background-image: url('/img/factions/challenger-adam.png')
 
   &.anarch
-    background-image: url('/img/factions/hero-anarch.png')
+    background-image: url('/img/factions/challenger-anarch.png')
 
   &.apex
-    background-image: url('/img/factions/hero-apex.png')
+    background-image: url('/img/factions/challenger-apex.png')
 
   &.criminal
-    background-image: url('/img/factions/hero-criminal.png')
+    background-image: url('/img/factions/challenger-criminal.png')
 
   &.hb
     background-image: url('/img/factions/contestant-hb.png')
@@ -345,10 +345,10 @@ span.small
     background-image: url('/img/factions/contestant-nbn.png')
 
   &.shaper
-    background-image: url('/img/factions/hero-shaper.png')
+    background-image: url('/img/factions/challenger-shaper.png')
 
   &.sunny
-    background-image: url('/img/factions/hero-sunny.png')
+    background-image: url('/img/factions/challenger-sunny.png')
 
   &.weyland
     background-image: url('/img/factions/contestant-weyland.png')
@@ -540,7 +540,7 @@ nav ul
 .influence.neutral
   color: white
 
-// Corps
+// Contestants
 .influence.haas-bioroid
   color: blueviolet
 
@@ -553,7 +553,7 @@ nav ul
 .influence.weyland-consortium
   color: darkgreen
 
-// Runners
+// Challengers
 .influence.adam
   color: olive
 
@@ -1473,12 +1473,12 @@ nav ul
     &.sentry
       background-color: criminal-blue
 
-  .abilities, .servers-menu, .menu, .hero-abilities, .popup
+  .abilities, .servers-menu, .menu, .challenger-abilities, .popup
     left: 0
     bottom: 100%
     margin: 6px -1px
 
-  .abilities, .servers-menu, .menu, .hero-abilities
+  .abilities, .servers-menu, .menu, .challenger-abilities
     display: none
     position: absolute
     z-index: 30
@@ -1686,7 +1686,7 @@ nav ul
     .card-wrapper
       margin: 3px 6px
 
-    .hero-board
+    .challenger-board
       flex(1)
       display-flex()
       flex-direction(column)
@@ -1697,7 +1697,7 @@ nav ul
         &:first-child
           margin-top: auto
 
-      .hero-centrals
+      .challenger-centrals
         padding: 5px 0
         display-flex()
 
@@ -1705,7 +1705,7 @@ nav ul
           margin-left: 16px
           margin-right: 16px
 
-    .hero-board.opponent
+    .challenger-board.opponent
       opacity: 0.99
       > div:first-child
         margin-top: 0
@@ -1797,7 +1797,7 @@ nav ul
               .counters
                 transform(rotate(-90deg))
 
-              .abilities, .hero-abilities
+              .abilities, .challenger-abilities
                 top: auto
                 bottom: 100%
                 left: 0
@@ -1817,7 +1817,7 @@ nav ul
           .counter
             transform(rotate(90deg))
 
-          .abilities, .hero-abilities
+          .abilities, .challenger-abilities
             left: 100%
             margin: -1px 6px
 
@@ -1827,7 +1827,7 @@ nav ul
             transform(rotate(90deg) translateY(-100%))
             transform-origin(0 0)
 
-          .hero-abilities
+          .challenger-abilities
             bottom: 0
             transform(rotate(-90deg) translateY(100%))
             transform-origin(0 100%)
@@ -1863,7 +1863,7 @@ nav ul
           .counters
             transform(rotate(90deg))
 
-          .abilities, .hero-abilities
+          .abilities, .challenger-abilities
             top: 100%
             bottom: auto
 

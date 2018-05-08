@@ -9,7 +9,7 @@
   (filter is-remote? (get-zones state)))
 
 (defn get-runnable-zones [state]
-  (let [restricted-zones (keys (get-in state [:hero :register :cannot-run-on-server]))]
+  (let [restricted-zones (keys (get-in state [:challenger :register :cannot-run-on-server]))]
     (remove (set restricted-zones) (get-zones state))))
 
 (defn get-remotes [state]
@@ -65,10 +65,10 @@
   "Returns a vector of all installed cards for the given side, including those hosted on other cards,
   but not including 'inactive hosting' like Personal Workshop."
   [state side]
-  (if (= side :hero)
-    (let [top-level-cards (flatten (for [t [:program :hardware :resource]] (get-in @state [:hero :rig t])))
+  (if (= side :challenger)
+    (let [top-level-cards (flatten (for [t [:program :hardware :resource]] (get-in @state [:challenger :rig t])))
           hosted-on-ice (->> (:contestant @state) :servers seq flatten (mapcat :ices) (mapcat :hosted))]
-      (loop [unchecked (concat top-level-cards (filter #(= (:side %) "Hero") hosted-on-ice)) installed ()]
+      (loop [unchecked (concat top-level-cards (filter #(= (:side %) "Challenger") hosted-on-ice)) installed ()]
         (if (empty? unchecked)
           (filter :installed installed)
           (let [[card & remaining] unchecked]
@@ -86,14 +86,14 @@
 (defn get-all-installed
   "Returns a list of all installed cards"
   [state]
-  (concat (all-installed state :contestant) (all-installed state :hero)))
+  (concat (all-installed state :contestant) (all-installed state :challenger)))
 
 (defn all-active
   "Returns a vector of all active cards for the given side. Active cards are either installed, the identity,
   currents, or the contestant's scored area."
   [state side]
-  (if (= side :hero)
-    (cons (get-in @state [:hero :identity]) (concat (get-in @state [:hero :current]) (all-installed state side)))
+  (if (= side :challenger)
+    (cons (get-in @state [:challenger :identity]) (concat (get-in @state [:challenger :current]) (all-installed state side)))
     (cons (get-in @state [:contestant :identity]) (filter #(not (:disabled %))
                                                     (concat (all-installed state side)
                                                             (get-in @state [:contestant :current])
@@ -118,26 +118,26 @@
     (+ base mod)))
 
 (defn swap-agendas
-  "Swaps the two specified agendas, first one scored (on contestant side), second one stolen (on hero side)"
+  "Swaps the two specified agendas, first one scored (on contestant side), second one stolen (on challenger side)"
   [state side scored stolen]
   (let [contestant-ap-stolen (get-agenda-points state :contestant stolen)
         contestant-ap-scored (get-agenda-points state :contestant scored)
-        hero-ap-stolen (get-agenda-points state :hero stolen)
-        hero-ap-scored (get-agenda-points state :hero scored)
+        challenger-ap-stolen (get-agenda-points state :challenger stolen)
+        challenger-ap-scored (get-agenda-points state :challenger scored)
         contestant-ap-change (- contestant-ap-stolen contestant-ap-scored)
-        hero-ap-change (- hero-ap-scored hero-ap-stolen)]
+        challenger-ap-change (- challenger-ap-scored challenger-ap-stolen)]
     ;; Remove end of turn events for swapped out agenda
     (swap! state update-in [:contestant :register :end-turn]
            (fn [events] (filter #(not (= (:cid scored) (get-in % [:card :cid]))) events)))
     ;; Move agendas
     (swap! state update-in [:contestant :scored]
            (fn [coll] (conj (remove-once #(not= (:cid %) (:cid scored)) coll) stolen)))
-    (swap! state update-in [:hero :scored]
+    (swap! state update-in [:challenger :scored]
            (fn [coll] (conj (remove-once #(not= (:cid %) (:cid stolen)) coll)
                             (if-not (card-flag? scored :has-abilities-when-stolen true)
                               (dissoc scored :abilities :events) scored))))
     ;; Update agenda points
-    (gain-agenda-point state :hero hero-ap-change)
+    (gain-agenda-point state :challenger challenger-ap-change)
     (gain-agenda-point state :contestant contestant-ap-change)
     ;; Set up abilities and events
     (let [new-scored (find-cid (:cid stolen) (get-in @state [:contestant :scored]))]
@@ -148,7 +148,7 @@
           (unregister-events state side new-scored)
           (register-events state side events new-scored))
         (resolve-ability state side (:swapped (card-def new-scored)) new-scored nil)))
-    (let [new-stolen (find-cid (:cid scored) (get-in @state [:hero :scored]))]
+    (let [new-stolen (find-cid (:cid scored) (get-in @state [:challenger :scored]))]
       (deactivate state :contestant new-stolen))))
 
 ;;; Functions for icons associated with special cards - e.g. Femme Fatale

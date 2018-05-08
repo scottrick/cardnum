@@ -35,6 +35,6 @@
   ([] (default-contestant [(qty "Hedge Fund" 3)]))
   ([deck] (make-deck "Custom Biotics: Engineered for Success" deck)))
 
-(defn default-hero
-  ([] (default-hero [(qty "Sure Gamble" 3)]))
+(defn default-challenger
+  ([] (default-challenger [(qty "Sure Gamble" 3)]))
   ([deck] (make-deck "The Professor: Keeper of Knowledge" deck)))

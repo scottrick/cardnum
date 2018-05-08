@@ -4,15 +4,15 @@
 
 ;;;; Helper functions specific for ICE
 
-;;; Runner abilites for breaking subs
-(defn hero-break
+;;; Challenger abilites for breaking subs
+(defn challenger-break
   "Ability to break a subroutine by spending a resource (Bioroids, Negotiator, Turing etc)"
   [cost subs]
   (let [cost-str (build-cost-str [cost])
         subs-str (quantify subs "subroutine")]
     {:cost cost
      :label (str "break " subs-str)
-     :effect (req (system-msg state :hero (str "spends " cost-str " to break " subs-str " on " (:title card))))}))
+     :effect (req (system-msg state :challenger (str "spends " cost-str " to break " subs-str " on " (:title card))))}))
 
 ;;; General subroutines
 (def end-the-run
@@ -23,18 +23,18 @@
 
 (def end-the-run-if-tagged
   "ETR subroutine if tagged"
-  {:label "End the run if the Runner is tagged"
+  {:label "End the run if the Challenger is tagged"
    :req (req tagged)
    :msg "end the run"
    :effect (effect (end-run))})
 
 (def give-tag
-  "Basic give hero 1 tag subroutine
+  "Basic give challenger 1 tag subroutine
    Mostly used with tag-trace"
-  {:label "Give the Runner 1 tag"
-   :msg "give the Runner 1 tag"
+  {:label "Give the Challenger 1 tag"
+   :msg "give the Challenger 1 tag"
    :delayed-completion true
-   :effect (effect (tag-hero :hero eid 1))})
+   :effect (effect (tag-challenger :challenger eid 1))})
 
 (def add-power-counter
   "Adds 1 power counter to the card."
@@ -121,7 +121,7 @@
 
 ;;; For Grail ICE
 (defn grail-in-hand
-  "Req that specified card is a Grail card in the Corp's hand."
+  "Req that specified card is a Grail card in the Contestant's hand."
   [card]
   (and (= (:side card) "Contestant")
        (in-hand? card)
@@ -202,22 +202,22 @@
 ;;;; Card definitions
 (def cards-ice
   {"Aiki"
-   {:subroutines [(do-psi {:label "Runner draws 2 cards"
-                           :msg "make the Runner draw 2 cards"
-                           :effect (effect (draw :hero 2))})
+   {:subroutines [(do-psi {:label "Challenger draws 2 cards"
+                           :msg "make the Challenger draw 2 cards"
+                           :effect (effect (draw :challenger 2))})
                   (do-net-damage 1)]}
 
    "Aimor"
    {:subroutines [{:label "Trash the top 3 cards of the Stack. Trash Aimor."
-                   :effect (req (when (not-empty (:deck hero))
+                   :effect (req (when (not-empty (:deck challenger))
                                   (system-msg state :contestant
                                               (str "uses Aimor to trash "
-                                                   (join ", " (map :title (take 3 (:deck hero))))
-                                                   " from the Runner's Stack"))
-                                  (mill state :hero 3))
+                                                   (join ", " (map :title (take 3 (:deck challenger))))
+                                                   " from the Challenger's Stack"))
+                                  (mill state :challenger 3))
                                 (when current-ice
                                   (no-action state :contestant nil)
-                                  (continue state :hero nil))
+                                  (continue state :challenger nil))
                                 (trash state side card)
                                 (system-msg state side (str "trashes Aimor")))}]}
 
@@ -225,37 +225,37 @@
    {:access
     {:delayed-completion true
      :req (req (not= (first (:zone card)) :discard))
-     :effect (effect (show-wait-prompt :hero "Corp to decide to trigger Archangel")
+     :effect (effect (show-wait-prompt :challenger "Contestant to decide to trigger Archangel")
                      (continue-ability
                        {:optional
-                        {:prompt "Pay 3 [Credits] to force Runner to encounter Archangel?"
+                        {:prompt "Pay 3 [Credits] to force Challenger to encounter Archangel?"
                          :yes-ability {:cost [:credit 3]
                                        :delayed-completion true
-                                       :effect (effect (system-msg :contestant "pays 3 [Credits] to force the Runner to encounter Archangel")
-                                                       (clear-wait-prompt :hero)
+                                       :effect (effect (system-msg :contestant "pays 3 [Credits] to force the Challenger to encounter Archangel")
+                                                       (clear-wait-prompt :challenger)
                                                        (continue-ability
-                                                         :hero {:optional
-                                                                  {:player :hero
+                                                         :challenger {:optional
+                                                                  {:player :challenger
                                                                    :prompt "You are encountering Archangel. Allow its subroutine to fire?"
                                                                    :priority 1
                                                                    :yes-ability {:delayed-completion true
                                                                                  :effect (effect (play-subroutine eid {:card card :subroutine 0}))}
                                                                    :no-ability {:effect (effect (effect-completed eid))}}}
                                                          card nil))}
-                         :no-ability {:effect (effect (system-msg :contestant "declines to force the Runner to encounter Archangel")
-                                                      (clear-wait-prompt :hero))}}}
+                         :no-ability {:effect (effect (system-msg :contestant "declines to force the Challenger to encounter Archangel")
+                                                      (clear-wait-prompt :challenger))}}}
                        card nil))}
    :subroutines [(trace-ability 6 {:delayed-completion true
-                                   :effect (effect (show-wait-prompt :hero "Corp to select Archangel target")
+                                   :effect (effect (show-wait-prompt :challenger "Contestant to select Archangel target")
                                                    (continue-ability {:choices {:req #(and (installed? %)
-                                                                                           (card-is? % :side :hero))}
-                                                                      :label "Add 1 installed card to the Runner's Grip"
-                                                                      :msg "add 1 installed card to the Runner's Grip"
-                                                                      :effect (effect (clear-wait-prompt :hero)
-                                                                                      (move :hero target :hand true)
+                                                                                           (card-is? % :side :challenger))}
+                                                                      :label "Add 1 installed card to the Challenger's Grip"
+                                                                      :msg "add 1 installed card to the Challenger's Grip"
+                                                                      :effect (effect (clear-wait-prompt :challenger)
+                                                                                      (move :challenger target :hand true)
                                                                                       (system-msg (str "adds " (:title target)
-                                                                                                       " to the Runner's Grip")))
-                                                                      :cancel-effect (effect (clear-wait-prompt :hero)
+                                                                                                       " to the Challenger's Grip")))
+                                                                      :cancel-effect (effect (clear-wait-prompt :challenger)
                                                                                              (effect-completed eid))}
                                                                      card nil))})]}
 
@@ -304,10 +304,10 @@
    "Authenticator"
    {:implementation "Encounter effect is manual"
     :abilities [give-tag]
-    :hero-abilities [{:label "Take 1 tag"
+    :challenger-abilities [{:label "Take 1 tag"
                         :delayed-completion true
-                        :effect (req (system-msg state :hero "takes 1 tag on encountering Authenticator to Bypass it")
-                                     (tag-hero state :hero eid 1 {:unpreventable true}))}]
+                        :effect (req (system-msg state :challenger "takes 1 tag on encountering Authenticator to Bypass it")
+                                     (tag-challenger state :challenger eid 1 {:unpreventable true}))}]
     :subroutines [(gain-credits 2)
                   end-the-run]}
 
@@ -317,12 +317,12 @@
     :subroutines [end-the-run]}
 
    "Bandwidth"
-   {:subroutines [{:msg "give the Runner 1 tag"
+   {:subroutines [{:msg "give the Challenger 1 tag"
                    :delayed-completion true
-                   :effect (effect (tag-hero :hero eid 1)
+                   :effect (effect (tag-challenger :challenger eid 1)
                                    (register-events
-                                     {:successful-run {:effect (effect (lose :hero :tag 1))
-                                                       :msg "make the Runner lose 1 tag"}
+                                     {:successful-run {:effect (effect (lose :challenger :tag 1))
+                                                       :msg "make the Challenger lose 1 tag"}
                                       :run-ends {:effect (effect (unregister-events card))}}
                                      card))}]
     :events {:successful-run nil :run-ends nil}}
@@ -334,19 +334,19 @@
    {:subroutines [end-the-run]}
 
    "Bloodletter"
-   {:subroutines [{:label "Runner trashes 1 program or top 2 cards of their Stack"
-                   :effect (req (if (empty? (filter #(is-type? % "Program") (all-installed state :hero)))
-                                   (do (mill state :hero 2)
-                                       (system-msg state :hero (str "trashes the top 2 cards of their Stack")))
-                                   (do (show-wait-prompt state :contestant "Runner to choose an option for Bloodletter")
-                                       (resolve-ability state :hero
+   {:subroutines [{:label "Challenger trashes 1 program or top 2 cards of their Stack"
+                   :effect (req (if (empty? (filter #(is-type? % "Program") (all-installed state :challenger)))
+                                   (do (mill state :challenger 2)
+                                       (system-msg state :challenger (str "trashes the top 2 cards of their Stack")))
+                                   (do (show-wait-prompt state :contestant "Challenger to choose an option for Bloodletter")
+                                       (resolve-ability state :challenger
                                          {:prompt "Trash 1 program or trash top 2 cards of the Stack?"
                                           :choices ["Trash 1 program" "Trash top 2 of Stack"]
-                                          :effect (req (if (and (= target "Trash top 2 of Stack") (pos? (count (:deck hero))))
-                                                         (do (mill state :hero 2)
-                                                             (system-msg state :hero (str "trashes the top 2 cards of their Stack"))
+                                          :effect (req (if (and (= target "Trash top 2 of Stack") (pos? (count (:deck challenger))))
+                                                         (do (mill state :challenger 2)
+                                                             (system-msg state :challenger (str "trashes the top 2 cards of their Stack"))
                                                              (clear-wait-prompt state :contestant))
-                                                         (resolve-ability state :hero trash-program card nil)))}
+                                                         (resolve-ability state :challenger trash-program card nil)))}
                                         card nil))))}]}
 
    "Bloom"
@@ -384,7 +384,7 @@
 
    "Brainstorm"
    {:abilities [{:label "Gain subroutines"
-                 :msg (msg "gain " (count (:hand hero)) " subroutines")}]
+                 :msg (msg "gain " (count (:hand challenger)) " subroutines")}]
     :subroutines [(do-brain-damage 1)]}
 
    "Builder"
@@ -414,11 +414,11 @@
    "Bulwark"
    {:effect take-bad-pub
     :abilities [{:msg "gain 2 [Credits] if there is an installed AI"
-                 :req (req (some #(has-subtype? % "AI") (all-installed state :hero)))
+                 :req (req (some #(has-subtype? % "AI") (all-installed state :challenger)))
                  :effect (effect (gain :credit 2))}]
-    :subroutines [(assoc trash-program :player :hero
-                                       :msg "force the Runner to trash 1 program"
-                                       :label "The Runner trashes 1 program")
+    :subroutines [(assoc trash-program :player :challenger
+                                       :msg "force the Challenger to trash 1 program"
+                                       :label "The Challenger trashes 1 program")
                   {:msg "gain 2 [Credits] and end the run"
                    :effect (effect (gain :credit 2)
                                    (end-run))}]}
@@ -426,16 +426,16 @@
 
    "Burke Bugs"
    {:subroutines [(trace-ability 0 (assoc trash-program :not-distinct true
-                                                        :player :hero
-                                                        :msg "force the Runner to trash a program"
-                                                        :label "Force the Runner to trash a program"))]}
+                                                        :player :challenger
+                                                        :msg "force the Challenger to trash a program"
+                                                        :label "Force the Challenger to trash a program"))]}
 
    "Caduceus"
    {:subroutines [(trace-ability 3 (gain-credits 3))
                   (trace-ability 2 end-the-run)]}
 
    "Cell Portal"
-   {:subroutines [{:msg "make the Runner approach the outermost ICE"
+   {:subroutines [{:msg "make the Challenger approach the outermost ICE"
                    :effect (req (let [srv (first (:server run))
                                       n (count (get-in @state [:contestant :servers srv :ices]))]
                                   (swap! state assoc-in [:run :position] n)
@@ -458,11 +458,11 @@
     :events {:successful-run nil :run-ends nil}}
 
    "Chetana"
-   {:subroutines [{:msg "make each player gain 2 [Credits]" :effect (effect (gain :hero :credit 2)
+   {:subroutines [{:msg "make each player gain 2 [Credits]" :effect (effect (gain :challenger :credit 2)
                                                                             (gain :contestant :credit 2))}
-                  (do-psi {:label "Do 1 net damage for each card in the Runner's grip"
-                           :effect (effect (damage eid :net (count (get-in @state [:hero :hand])) {:card card}))
-                           :msg (msg (str "do " (count (get-in @state [:hero :hand])) " net damage"))})]}
+                  (do-psi {:label "Do 1 net damage for each card in the Challenger's grip"
+                           :effect (effect (damage eid :net (count (get-in @state [:challenger :hand])) {:card card}))
+                           :msg (msg (str "do " (count (get-in @state [:challenger :hand])) " net damage"))})]}
 
    "Chimera"
    (let [turn-end-ability {:effect (effect (derez :contestant card)
@@ -474,16 +474,16 @@
                                  :subtype-target target
                                  :subtype (combine-subtypes true (:subtype card) target)))
                       (update-ice-strength card))
-      :events {:hero-turn-ends turn-end-ability
+      :events {:challenger-turn-ends turn-end-ability
                :contestant-turn-ends turn-end-ability}
       :subroutines [end-the-run]})
 
    "Chiyashi"
    {:implementation "Trash effect when using an AI to break is activated manually"
-    :abilities [{:label "Trash the top 2 cards of the Runner's Stack"
-                 :req (req (some #(has-subtype? % "AI") (all-installed state :hero)))
-                 :msg (msg (str "trash " (join ", " (map :title (take 2 (:deck hero)))) " from the Runner's Stack"))
-                 :effect (effect (mill :hero 2))}]
+    :abilities [{:label "Trash the top 2 cards of the Challenger's Stack"
+                 :req (req (some #(has-subtype? % "AI") (all-installed state :challenger)))
+                 :msg (msg (str "trash " (join ", " (map :title (take 2 (:deck challenger)))) " from the Challenger's Stack"))
+                 :effect (effect (mill :challenger 2))}]
     :subroutines [(do-net-damage 2)
                   end-the-run]}
 
@@ -491,10 +491,10 @@
    {:subroutines [(do-net-damage 2)]
     :access {:delayed-completion true
              :req (req (not= (first (:zone card)) :discard))
-             :effect (effect (show-wait-prompt :contestant "Runner to decide to break Chrysalis subroutine")
+             :effect (effect (show-wait-prompt :contestant "Challenger to decide to break Chrysalis subroutine")
                              (continue-ability
-                               :hero {:optional
-                                        {:player :hero
+                               :challenger {:optional
+                                        {:player :challenger
                                          :prompt "You are encountering Chrysalis. Allow its subroutine to fire?"
                                          :priority 1
                                          :yes-ability {:effect (effect (clear-wait-prompt :contestant)
@@ -504,9 +504,9 @@
                               card nil))}}
 
    "Chum"
-   {:subroutines [{:label "Give +2 strength to next ICE Runner encounters"
+   {:subroutines [{:label "Give +2 strength to next ICE Challenger encounters"
                    :req (req this-server)
-                   :prompt "Select the ICE the Runner is encountering"
+                   :prompt "Select the ICE the Challenger is encountering"
                    :choices {:req #(and (rezzed? %) (ice? %))}
                    :msg (msg "give " (:title target) " +2 strength")
                    :effect (req (let [ice (:cid target)]
@@ -534,10 +534,10 @@
 
    "Colossus"
    {:advanceable :always
-    :subroutines [{:label "Give the Runner 1 tag (Give the Runner 2 tags)"
+    :subroutines [{:label "Give the Challenger 1 tag (Give the Challenger 2 tags)"
                    :delayed-completion true
-                   :msg (msg "give the Runner " (if (> 3 (+ (:advance-counter card 0) (:extra-advance-counter card 0))) "1 tag" "2 tags"))
-                   :effect (effect (tag-hero :hero eid (if (> 3 (+ (:advance-counter card 0) (:extra-advance-counter card 0))) 1 2)))}
+                   :msg (msg "give the Challenger " (if (> 3 (+ (:advance-counter card 0) (:extra-advance-counter card 0))) "1 tag" "2 tags"))
+                   :effect (effect (tag-challenger :challenger eid (if (> 3 (+ (:advance-counter card 0) (:extra-advance-counter card 0))) 1 2)))}
                   {:label "Trash 1 program (Trash 1 program and 1 resource)"
                    :delayed-completion true
                    :msg (msg "trash 1 program" (when (< 2 (+ (:advance-counter card 0) (:extra-advance-counter card 0))) " and 1 resource"))
@@ -555,18 +555,18 @@
     :strength-bonus advance-counters}
 
    "Conundrum"
-   {:subroutines [(assoc trash-program :player :hero
-                                       :msg "force the Runner to trash 1 program"
-                                       :label "The Runner trashes 1 program")
-                  {:msg "force the Runner to lose 1 [Click] if able"
-                   :effect (effect (lose :hero :click 1))}
+   {:subroutines [(assoc trash-program :player :challenger
+                                       :msg "force the Challenger to trash 1 program"
+                                       :label "The Challenger trashes 1 program")
+                  {:msg "force the Challenger to lose 1 [Click] if able"
+                   :effect (effect (lose :challenger :click 1))}
                   end-the-run]
-    :strength-bonus (req (if (some #(has-subtype? % "AI") (all-installed state :hero)) 3 0))}
+    :strength-bonus (req (if (some #(has-subtype? % "AI") (all-installed state :challenger)) 3 0))}
 
    "Cortex Lock"
-   {:subroutines [{:label "Do 1 net damage for each unused memory unit the Runner has"
-                   :msg (msg "do " (:memory hero) " net damage")
-                   :effect (effect (damage eid :net (:memory hero) {:card card}))}]}
+   {:subroutines [{:label "Do 1 net damage for each unused memory unit the Challenger has"
+                   :msg (msg "do " (:memory challenger) " net damage")
+                   :effect (effect (damage eid :net (:memory challenger) {:card card}))}]}
 
    "Crick"
    {:subroutines [{:label "install a card from Archives"
@@ -597,80 +597,80 @@
               :msg (msg "trash " (:title target))
               :effect (req (do (trash state side target {:unpreventable true})
                                (continue-ability state side (reorder-choice
-                                                              :hero :hero (remove-once #(not= % target) cards)
+                                                              :challenger :challenger (remove-once #(not= % target) cards)
                                                               '() (count (remove-once #(not= % target) cards))
                                                               (remove-once #(not= % target) cards)) card nil)))})]
      {:subroutines [(trace-ability 2 {:delayed-completion true
                                       :label "Look at the top of Stack"
                                       :msg "look at top X cards of Stack"
-                                      :effect (req (show-wait-prompt state :hero "Corp to rearrange the top cards of the Runner's Stack")
+                                      :effect (req (show-wait-prompt state :challenger "Contestant to rearrange the top cards of the Challenger's Stack")
                                                    (let [c (- target (second targets))
-                                                         from (take c (:deck hero))]
+                                                         from (take c (:deck challenger))]
                                                      (system-msg state :contestant
                                                                  (str "looks at the top " c " cards of Stack"))
                                                      (if (< 1 c)
                                                        (continue-ability state side (dh-trash from) card nil)
                                                        (do (system-msg state :contestant (str "trashes " (:title (first from))))
                                                            (trash state side (first from) {:unpreventable true})
-                                                           (clear-wait-prompt state :hero)
+                                                           (clear-wait-prompt state :challenger)
                                                            (effect-completed state side eid card)))))})]})
 
    "Data Loop"
    {:implementation "Encounter effect is manual"
     :subroutines [end-the-run-if-tagged
                   end-the-run]
-    :hero-abilities [{:label "Add 2 cards from your Grip to the top of the Stack"
-                        :req (req (pos? (count (:hand hero))))
-                        :effect (req (let [n (min 2 (count (:hand hero)))]
+    :challenger-abilities [{:label "Add 2 cards from your Grip to the top of the Stack"
+                        :req (req (pos? (count (:hand challenger))))
+                        :effect (req (let [n (min 2 (count (:hand challenger)))]
                                        (resolve-ability state side
                                          {:prompt (msg "Choose " n " cards in your Grip to add to the top of the Stack (first card targeted will be topmost)")
                                           :choices {:max n :all true
-                                                    :req #(and (in-hand? %) (= (:side %) "Hero"))}
+                                                    :req #(and (in-hand? %) (= (:side %) "Challenger"))}
                                           :effect (req (doseq [c targets]
-                                                         (move state :hero c :deck {:front true}))
-                                                       (system-msg state :hero (str "adds " n " cards from their Grip to the top of the Stack")))}
+                                                         (move state :challenger c :deck {:front true}))
+                                                       (system-msg state :challenger (str "adds " n " cards from their Grip to the top of the Stack")))}
                                         card nil)))}]}
 
    "Data Mine"
    {:subroutines [{:msg "do 1 net damage"
-                   :effect (req (damage state :hero eid :net 1 {:card card})
+                   :effect (req (damage state :challenger eid :net 1 {:card card})
                                 (when current-ice
                                   (no-action state side nil)
                                   (continue state side nil))
                                 (trash state side card))}]}
 
    "Datapike"
-   {:subroutines [{:msg "force the Runner to pay 2 [Credits] if able"
-                   :effect (effect (pay :hero card :credit 2))}
+   {:subroutines [{:msg "force the Challenger to pay 2 [Credits] if able"
+                   :effect (effect (pay :challenger card :credit 2))}
                   end-the-run]}
 
    "Data Raven"
    {:implementation "Encounter effect is manual"
     :abilities [give-tag
                 (power-counter-ability give-tag)]
-    :hero-abilities [{:label "End the run"
-                        :effect (req (end-run state :hero)
-                                     (system-msg state :hero "chooses to end the run on encountering Data Raven"))}
+    :challenger-abilities [{:label "End the run"
+                        :effect (req (end-run state :challenger)
+                                     (system-msg state :challenger "chooses to end the run on encountering Data Raven"))}
                        {:label "Take 1 tag"
                         :delayed-completion true
-                        :effect (req (system-msg state :hero "chooses to take 1 tag on encountering Data Raven")
-                                     (tag-hero state :hero eid 1))}]
+                        :effect (req (system-msg state :challenger "chooses to take 1 tag on encountering Data Raven")
+                                     (tag-challenger state :challenger eid 1))}]
     :subroutines [(trace-ability 3 add-power-counter)]}
 
    "Data Ward"
-   {:hero-abilities [{:label "Pay 3 [Credits]"
-                        :effect (req (pay state :hero card :credit 3)
-                                     (system-msg state :hero "chooses to pay 3 [Credits] on encountering Data Ward"))}
+   {:challenger-abilities [{:label "Pay 3 [Credits]"
+                        :effect (req (pay state :challenger card :credit 3)
+                                     (system-msg state :challenger "chooses to pay 3 [Credits] on encountering Data Ward"))}
                        {:label "Take 1 tag"
                         :delayed-completion true
-                        :effect (req (system-msg state :hero "chooses to take 1 tag on encountering Data Ward")
-                                     (tag-hero state :hero eid 1))}]
+                        :effect (req (system-msg state :challenger "chooses to take 1 tag on encountering Data Ward")
+                                     (tag-challenger state :challenger eid 1))}]
     :subroutines [end-the-run-if-tagged]}
 
    "DNA Tracker"
-   {:subroutines [{:msg "do 1 net damage and make the Runner lose 2 [Credits]"
+   {:subroutines [{:msg "do 1 net damage and make the Challenger lose 2 [Credits]"
                    :effect (req (when-completed (damage state side :net 1 {:card card})
-                                                (lose state :hero :credit 2)))}]}
+                                                (lose state :challenger :credit 2)))}]}
 
    "Dracō"
    {:prompt "How many power counters?"
@@ -679,20 +679,20 @@
     :effect (effect (add-counter card :power target)
                     (update-ice-strength card))
     :strength-bonus (req (get-in card [:counter :power] 0))
-    :subroutines [(trace-ability 2 {:label "Give the Runner 1 tag and end the run"
-                                    :msg "give the Runner 1 tag and end the run"
+    :subroutines [(trace-ability 2 {:label "Give the Challenger 1 tag and end the run"
+                                    :msg "give the Challenger 1 tag and end the run"
                                     :delayed-completion true
-                                    :effect (effect (tag-hero :hero eid 1)
+                                    :effect (effect (tag-challenger :challenger eid 1)
                                                     (end-run))})]}
 
    "Eli 1.0"
    {:subroutines [end-the-run]
-    :hero-abilities [(hero-break [:click 1] 1)]}
+    :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Eli 2.0"
    {:subroutines [{:msg "draw 1 card" :effect (effect (draw))}
                   end-the-run]
-    :hero-abilities [(hero-break [:click 2] 2)]}
+    :challenger-abilities [(challenger-break [:click 2] 2)]}
 
    "Enforcer 1.0"
    {:additional-cost [:forfeit]
@@ -704,13 +704,13 @@
                    :msg (msg "trash " (:title target))
                    :effect (effect (trash target))}
                   {:msg "trash all virtual resources"
-                   :effect (req (doseq [c (filter #(has-subtype? % "Virtual") (all-installed state :hero))]
+                   :effect (req (doseq [c (filter #(has-subtype? % "Virtual") (all-installed state :challenger))]
                                   (trash state side c)))}]
-    :hero-abilities [(hero-break [:click 1] 1)]}
+    :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Enigma"
-   {:subroutines [{:msg "force the Runner to lose 1 [Click] if able"
-                   :effect (effect (lose :hero :click 1))}
+   {:subroutines [{:msg "force the Challenger to lose 1 [Click] if able"
+                   :effect (effect (lose :challenger :click 1))}
                   end-the-run]}
 
    "Errand Boy"
@@ -718,8 +718,8 @@
                   {:msg "draw 1 card" :effect (effect (draw))}]}
 
    "Excalibur"
-   {:subroutines [{:label "The Runner cannot make another run this turn"
-                   :msg "prevent the Runner from making another run"
+   {:subroutines [{:label "The Challenger cannot make another run this turn"
+                   :msg "prevent the Challenger from making another run"
                    :effect (effect (register-turn-flag! card :can-run nil))}]}
 
    "Executive Functioning"
@@ -728,43 +728,43 @@
    "Fairchild"
    {:subroutines [end-the-run
                   (do-brain-damage 1)]
-    :hero-abilities [(hero-break [:credit 4] 1)]}
+    :challenger-abilities [(challenger-break [:credit 4] 1)]}
 
    "Fairchild 1.0"
-   {:subroutines [{:label "Force the Runner to pay 1 [Credits] or trash an installed card"
-                   :msg "force the Runner to pay 1 [Credits] or trash an installed card"
-                   :player :hero
+   {:subroutines [{:label "Force the Challenger to pay 1 [Credits] or trash an installed card"
+                   :msg "force the Challenger to pay 1 [Credits] or trash an installed card"
+                   :player :challenger
                    :prompt "Choose one"
                    :choices ["Pay 1 [Credits]" "Trash an installed card"]
                    :effect (req (if (= target "Pay 1 [Credits]")
                                   (do (pay state side card :credit 1)
                                       (system-msg state side "pays 1 [Credits]"))
-                                  (resolve-ability state :hero trash-installed card nil)))}]
-    :hero-abilities [(hero-break [:click 1] 1)]}
+                                  (resolve-ability state :challenger trash-installed card nil)))}]
+    :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Fairchild 2.0"
-   {:subroutines [{:label "Force the Runner to pay 2 [Credits] or trash an installed card"
-                   :msg "force the Runner to pay 2 [Credits] or trash an installed card"
-                   :player :hero
+   {:subroutines [{:label "Force the Challenger to pay 2 [Credits] or trash an installed card"
+                   :msg "force the Challenger to pay 2 [Credits] or trash an installed card"
+                   :player :challenger
                    :prompt "Choose one"
                    :choices ["Pay 2 [Credits]" "Trash an installed card"]
                    :effect (req (if (= target "Pay 2 [Credits]")
                                   (do (pay state side card :credit 2)
                                       (system-msg state side "pays 2 [Credits]"))
-                                  (resolve-ability state :hero trash-installed card nil)))}
+                                  (resolve-ability state :challenger trash-installed card nil)))}
                   (do-brain-damage 1)]
-    :hero-abilities [(hero-break [:click 2] 2)]}
+    :challenger-abilities [(challenger-break [:click 2] 2)]}
 
    "Fairchild 3.0"
-   {:subroutines [{:label "Force the Runner to pay 3 [Credits] or trash an installed card"
-                   :msg "force the Runner to pay 3 [Credits] or trash an installed card"
-                   :player :hero
+   {:subroutines [{:label "Force the Challenger to pay 3 [Credits] or trash an installed card"
+                   :msg "force the Challenger to pay 3 [Credits] or trash an installed card"
+                   :player :challenger
                    :prompt "Choose one"
                    :choices ["Pay 3 [Credits]" "Trash an installed card"]
                    :effect (req (if (= target "Pay 3 [Credits]")
                                   (do (pay state side card :credit 3)
                                       (system-msg state side "pays 3 [Credits]"))
-                                  (resolve-ability state :hero trash-installed card nil)))}
+                                  (resolve-ability state :challenger trash-installed card nil)))}
                   {:label "Do 1 brain damage or end the run"
                    :prompt "Choose one"
                    :choices ["Do 1 brain damage" "End the run"]
@@ -772,7 +772,7 @@
                    :effect (req (if (= target "Do 1 brain damage")
                                   (damage state side eid :brain 1 {:card card})
                                   (end-run state side)))}]
-    :hero-abilities [(hero-break [:click 3] 3)]}
+    :challenger-abilities [(challenger-break [:click 3] 3)]}
 
    "Fenris"
    {:effect take-bad-pub
@@ -803,9 +803,9 @@
                                                      card nil))})]}
 
    "Free Lunch"
-   {:abilities [(power-counter-ability {:label "Runner loses 1 [Credits]"
-                                        :msg "make the Runner lose 1 [Credits]"
-                                        :effect (effect (lose :hero :credit 1))})]
+   {:abilities [(power-counter-ability {:label "Challenger loses 1 [Credits]"
+                                        :msg "make the Challenger lose 1 [Credits]"
+                                        :effect (effect (lose :challenger :credit 1))})]
     :subroutines [add-power-counter]}
 
    "Galahad"
@@ -829,12 +829,12 @@
    "Gyri Labyrinth"
    {:implementation "Hand size is not restored if trashed or derezzed after firing"
     :subroutines [{:req (req (:run @state))
-                   :label "Reduce Runner's maximum hand size by 2 until start of next Corp turn"
-                   :msg "reduce the Runner's maximum hand size by 2 until the start of the next Corp turn"
-                   :effect (effect (lose :hero :hand-size-modification 2)
+                   :label "Reduce Challenger's maximum hand size by 2 until start of next Contestant turn"
+                   :msg "reduce the Challenger's maximum hand size by 2 until the start of the next Contestant turn"
+                   :effect (effect (lose :challenger :hand-size-modification 2)
                                    (register-events {:contestant-turn-begins
-                                                     {:msg "increase the Runner's maximum hand size by 2"
-                                                      :effect (effect (gain :hero :hand-size-modification 2)
+                                                     {:msg "increase the Challenger's maximum hand size by 2"
+                                                      :effect (effect (gain :challenger :hand-size-modification 2)
                                                                       (unregister-events card))}} card))}]
     :events {:contestant-turn-begins nil}}
 
@@ -845,27 +845,27 @@
 
    "Hailstorm"
    {:subroutines [{:label "Remove a card in the Heap from the game"
-                   :prompt "Choose a card in the Runner's Heap"
-                   :choices (req (:discard hero))
+                   :prompt "Choose a card in the Challenger's Heap"
+                   :choices (req (:discard challenger))
                    :msg (msg "remove " (:title target) " from the game")
-                   :effect (effect (move :hero target :rfg))}
+                   :effect (effect (move :challenger target :rfg))}
                   end-the-run]}
 
    "Harvester"
-   {:subroutines [{:label "Runner draws 3 cards and discards down to maximum hand size"
-                   :msg "make the Runner draw 3 cards and discard down to their maximum hand size"
-                   :effect (req (draw state :hero 3)
-                                (let [delta (- (count (get-in @state [:hero :hand])) (hand-size state :hero))]
+   {:subroutines [{:label "Challenger draws 3 cards and discards down to maximum hand size"
+                   :msg "make the Challenger draw 3 cards and discard down to their maximum hand size"
+                   :effect (req (draw state :challenger 3)
+                                (let [delta (- (count (get-in @state [:challenger :hand])) (hand-size state :challenger))]
                                   (when (> delta 0)
                                     (resolve-ability
-                                      state :hero
+                                      state :challenger
                                       {:prompt (msg "Select " delta " cards to discard")
-                                       :player :hero
+                                       :player :challenger
                                        :choices {:max delta
                                                  :req #(in-hand? %)}
                                        :effect (req (doseq [c targets]
-                                                      (trash state :hero c))
-                                                    (system-msg state :hero
+                                                      (trash state :challenger c))
+                                                    (system-msg state :challenger
                                                                 (str "trashes " (join ", " (map :title targets)))))}
                                       card nil))))}]}
 
@@ -883,13 +883,13 @@
    "Heimdall 1.0"
    {:subroutines [(do-brain-damage 1)
                   end-the-run]
-    :hero-abilities [(hero-break [:click 1] 1)]}
+    :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Heimdall 2.0"
    {:subroutines [(do-brain-damage 1)
                   {:msg "do 1 brain damage and end the run" :effect (effect (damage eid :brain 1 {:card card}) (end-run))}
                   end-the-run]
-    :hero-abilities [(hero-break [:click 2] 2)]}
+    :challenger-abilities [(challenger-break [:click 2] 2)]}
 
    "Herald"
    {:subroutines [(gain-credits 2)
@@ -899,10 +899,10 @@
                    :cost [:credit 1] :effect (effect (add-prop target :advance-counter 1 {:placed true}))}]
     :access {:delayed-completion true
              :req (req (not= (first (:zone card)) :discard))
-             :effect (effect (show-wait-prompt :contestant "Runner to decide to break Herald subroutines")
+             :effect (effect (show-wait-prompt :contestant "Challenger to decide to break Herald subroutines")
                              (continue-ability
-                               :hero {:optional
-                                        {:player :hero
+                               :challenger {:optional
+                                        {:player :challenger
                                          :prompt "You are encountering Herald. Allow its subroutines to fire?"
                                          :priority 1
                                          :yes-ability {:effect (effect (clear-wait-prompt :contestant)
@@ -913,8 +913,8 @@
                               card nil))}}
 
    "Holmegaard"
-   {:subroutines [(trace-ability 4 {:label "Runner cannot access any cards this run"
-                                    :msg "stop the Runner from accessing any cards this run"
+   {:subroutines [(trace-ability 4 {:label "Challenger cannot access any cards this run"
+                                    :msg "stop the Challenger from accessing any cards this run"
                                     :effect (req (max-access state side 0)
                                                  (swap! state update-in [:run :run-effect] dissoc :replace-access))})
                   {:label "Trash an icebreaker"
@@ -923,7 +923,7 @@
                    :choices {:req #(and (installed? %)
                                         (has? % :subtype "Icebreaker"))}
                    :effect (effect (trash target {:cause :subroutine})
-                                   (clear-wait-prompt :hero))}]}
+                                   (clear-wait-prompt :challenger))}]}
 
    "Hortum"
    (letfn [(hort [n] {:prompt "Choose a card to add to HQ with Hortum"
@@ -955,8 +955,8 @@
                                         (effect-completed state side eid))))}]})
 
    "Hourglass"
-   {:subroutines [{:msg "force the Runner to lose 1 [Click] if able"
-                   :effect (effect (lose :hero :click 1))}]}
+   {:subroutines [{:msg "force the Challenger to lose 1 [Click] if able"
+                   :effect (effect (lose :challenger :click 1))}]}
 
    "Howler"
    (let [ice-index (fn [state i] (first (keep-indexed #(when (= (:cid %2) (:cid i)) %1)
@@ -987,41 +987,41 @@
                                           (derez (get-card state (:howler-target card))))}}})
 
    "Hudson 1.0"
-   {:subroutines [{:msg "prevent the Runner from accessing more than 1 card during this run"
+   {:subroutines [{:msg "prevent the Challenger from accessing more than 1 card during this run"
                    :effect (effect (max-access 1))}]
-    :hero-abilities [(hero-break [:click 1] 1)]}
+    :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Hunter"
    {:subroutines [(tag-trace 3)]}
 
    "Jua"
    {:implementation "Encounter effect is manual"
-    :abilities [{:msg "prevent the Runner from installing cards for the rest of the turn"
-                 :effect (effect (lock-install (:cid card) :hero)
-                                 (register-events {:hero-turn-ends
-                                                   {:effect (effect (unlock-install (:cid card) :hero)
+    :abilities [{:msg "prevent the Challenger from installing cards for the rest of the turn"
+                 :effect (effect (lock-install (:cid card) :challenger)
+                                 (register-events {:challenger-turn-ends
+                                                   {:effect (effect (unlock-install (:cid card) :challenger)
                                                                     (unregister-events card))}}
                                                   card))}]
-    :events {:hero-turn-ends nil}
-    :subroutines [{:label "Choose 2 installed Runner cards, if able. The Runner must add 1 of those to the top of the Stack."
-                   :req (req (>= (count (all-installed state :hero)) 2))
+    :events {:challenger-turn-ends nil}
+    :subroutines [{:label "Choose 2 installed Challenger cards, if able. The Challenger must add 1 of those to the top of the Stack."
+                   :req (req (>= (count (all-installed state :challenger)) 2))
                    :delayed-completion true
-                   :prompt "Select 2 installed Runner cards"
-                   :choices {:req #(and (= (:side %) "Hero") (installed? %)) :max 2 :all true}
+                   :prompt "Select 2 installed Challenger cards"
+                   :choices {:req #(and (= (:side %) "Challenger") (installed? %)) :max 2 :all true}
                    :msg (msg "add either " (card-str state (first targets)) " or " (card-str state (second targets)) " to the Stack")
                    :effect (req (when (= (count targets) 2)
-                                     (show-wait-prompt state :contestant "Runner to decide which card to move")
+                                     (show-wait-prompt state :contestant "Challenger to decide which card to move")
                                      (continue-ability
                                        state
-                                       :hero
-                                        {:player :hero
+                                       :challenger
+                                        {:player :challenger
                                          :priority 1
                                          :prompt "Select a card to move to the Stack"
                                          :choices [(card-str state (first targets)) (card-str state (second targets))]
-                                         :effect (req (let [c (installed-byname state :hero target)]
+                                         :effect (req (let [c (installed-byname state :challenger target)]
                                                         (clear-wait-prompt state :contestant)
-                                                        (move state :hero c :deck {:front true})
-                                                        (system-msg state :hero (str "selected " (:title c) " to move to the Stack"))))}
+                                                        (move state :challenger c :deck {:front true})
+                                                        (system-msg state :challenger (str "selected " (:title c) " to move to the Stack"))))}
                                          card nil)))}]}
 
    "Ice Wall"
@@ -1031,25 +1031,25 @@
 
    "Ichi 1.0"
    {:subroutines [trash-program
-                  (trace-ability 1 {:label "Give the Runner 1 tag and do 1 brain damage"
-                                    :msg "give the Runner 1 tag and do 1 brain damage"
+                  (trace-ability 1 {:label "Give the Challenger 1 tag and do 1 brain damage"
+                                    :msg "give the Challenger 1 tag and do 1 brain damage"
                                     :delayed-completion true
-                                    :effect (req (when-completed (damage state :hero :brain 1 {:card card})
-                                                                 (tag-hero state :hero eid 1)))})]
-    :hero-abilities [(hero-break [:click 1] 1)]}
+                                    :effect (req (when-completed (damage state :challenger :brain 1 {:card card})
+                                                                 (tag-challenger state :challenger eid 1)))})]
+    :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Ichi 2.0"
    {:subroutines [trash-program
-                  (trace-ability 3 {:label "Give the Runner 1 tag and do 1 brain damage"
-                                    :msg "give the Runner 1 tag and do 1 brain damage"
+                  (trace-ability 3 {:label "Give the Challenger 1 tag and do 1 brain damage"
+                                    :msg "give the Challenger 1 tag and do 1 brain damage"
                                     :delayed-completion true
-                                    :effect (req (when-completed (damage state :hero :brain 1 {:card card})
-                                                                 (tag-hero state :hero eid 1)))})]
-    :hero-abilities [(hero-break [:click 2] 2)]}
+                                    :effect (req (when-completed (damage state :challenger :brain 1 {:card card})
+                                                                 (tag-challenger state :challenger eid 1)))})]
+    :challenger-abilities [(challenger-break [:click 2] 2)]}
 
    "Inazuma"
-   {:abilities [{:msg "prevent the Runner from breaking subroutines on the next piece of ICE they encounter this run"}
-                {:msg "prevent the Runner from jacking out until after the next piece of ICE"
+   {:abilities [{:msg "prevent the Challenger from breaking subroutines on the next piece of ICE they encounter this run"}
+                {:msg "prevent the Challenger from jacking out until after the next piece of ICE"
                  :effect (effect (register-events
                                    {:pass-ice {:effect (req (swap! state update-in [:run] dissoc :prevent-jack-out)
                                                             (unregister-events state side card))}} card)
@@ -1058,13 +1058,13 @@
    "Information Overload"
    {:implementation "Encounter effect is manual"
     :abilities [{:label "Gain subroutines"
-                 :msg (msg "gain " (:tag hero 0) " subroutines")}
+                 :msg (msg "gain " (:tag challenger 0) " subroutines")}
                 (tag-trace 1)]
     :subroutines [trash-installed]}
 
    "IP Block"
-   {:abilities [(assoc give-tag :req (req (not-empty (filter #(has-subtype? % "AI") (all-installed state :hero))))
-                                :label "Give the Runner 1 tag if there is an installed AI")]
+   {:abilities [(assoc give-tag :req (req (not-empty (filter #(has-subtype? % "AI") (all-installed state :challenger))))
+                                :label "Give the Challenger 1 tag if there is an installed AI")]
     :subroutines [(tag-trace 3)
                   end-the-run-if-tagged]}
 
@@ -1083,8 +1083,8 @@
    "Ireress"
    {:abilities [{:label "Gain subroutines"
                  :msg (msg "gain " (:bad-publicity contestant 0) " subroutines")}]
-    :subroutines [{:msg "make the Runner lose 1 [Credits]"
-                   :effect (effect (lose :hero :credit 1))}]}
+    :subroutines [{:msg "make the Challenger lose 1 [Credits]"
+                   :effect (effect (lose :challenger :credit 1))}]}
 
    "Its a Trap!"
    {:expose {:msg "do 2 net damage"
@@ -1098,7 +1098,7 @@
 
    "Janus 1.0"
    {:subroutines [(do-brain-damage 1)]
-    :hero-abilities [(hero-break [:click 1] 1)]}
+    :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Kakugo"
    {:events {:pass-ice {:delayed-completion true
@@ -1110,31 +1110,31 @@
    "Kitsune"
    {:subroutines [{:prompt "Select a card in HQ to force access"
                    :choices {:req in-hand?}
-                   :label "Force the Runner to access a card in HQ"
-                   :msg (msg "force the Runner to access " (:title target))
+                   :label "Force the Challenger to access a card in HQ"
+                   :msg (msg "force the Challenger to access " (:title target))
                    :effect (req (trash state side card)
                                 (when-completed (handle-access state side targets)
                                   (when-completed (trigger-event-sync state side :pre-access :hq)
                                     (let [from-hq (dec (access-count state side :hq-access))]
                                       (continue-ability
-                                        state :hero
+                                        state :challenger
                                         (access-helper-hq
                                           state from-hq
                                           ; access-helper-hq uses a set to keep track of which cards have already
-                                          ; been accessed. by adding HQ root's contents to this set, we make the hero
+                                          ; been accessed. by adding HQ root's contents to this set, we make the challenger
                                           ; unable to access those cards, as Kitsune intends.
                                           (conj (set (get-in @state [:contestant :servers :hq :content])) target))
                                        card nil)))))}]}
 
    "Komainu"
    {:abilities [{:label "Gain subroutines"
-                 :msg (msg "gain " (count (:hand hero)) " subroutines")}]
+                 :msg (msg "gain " (count (:hand challenger)) " subroutines")}]
     :subroutines [(do-net-damage 1)]}
 
    "Lab Dog"
-   {:subroutines [(assoc trash-hardware :label "Force the Runner to trash an installed piece of hardware"
-                                        :player :hero
-                                        :msg (msg "force the Runner to trash " (:title target))
+   {:subroutines [(assoc trash-hardware :label "Force the Challenger to trash an installed piece of hardware"
+                                        :player :challenger
+                                        :msg (msg "force the Challenger to trash " (:title target))
                                         :effect (req (trash state side target)
                                                      (when current-ice
                                                        (no-action state side nil)
@@ -1146,30 +1146,30 @@
 
    "Little Engine"
    {:subroutines [end-the-run
-                  {:msg "make the Runner gain 5 [Credits]" :effect (effect (gain :hero :credit 5))}]}
+                  {:msg "make the Challenger gain 5 [Credits]" :effect (effect (gain :challenger :credit 5))}]}
 
    "Lockdown"
-   {:subroutines [{:label "The Runner cannot draw cards for the remainder of this turn"
-                   :msg "prevent the Runner from drawing cards" :effect (effect (prevent-draw))}]}
+   {:subroutines [{:label "The Challenger cannot draw cards for the remainder of this turn"
+                   :msg "prevent the Challenger from drawing cards" :effect (effect (prevent-draw))}]}
 
    "Loki"
    {:implementation "Encounter effects not implemented"
-    :subroutines [{:label "End the run unless the Runner shuffles their Grip into the Stack"
-                   :effect (req (if (zero? (count (:hand hero)))
+    :subroutines [{:label "End the run unless the Challenger shuffles their Grip into the Stack"
+                   :effect (req (if (zero? (count (:hand challenger)))
                                     (do (end-run state side)
                                         (system-msg state :contestant (str "uses Loki to end the run")))
-                                    (do (show-wait-prompt state :contestant "Runner to decide to shuffle their Grip into the Stack")
-                                        (resolve-ability state :hero
+                                    (do (show-wait-prompt state :contestant "Challenger to decide to shuffle their Grip into the Stack")
+                                        (resolve-ability state :challenger
                                           {:optional
                                            {:prompt "Reshuffle your Grip into the Stack?"
-                                            :player :hero
-                                            :yes-ability {:effect (req (doseq [c (:hand hero)]
-                                                                         (move state :hero c :deck))
-                                                                       (shuffle! state :hero :deck)
-                                                                       (system-msg state :hero (str "shuffles their Grip into their Stack"))
+                                            :player :challenger
+                                            :yes-ability {:effect (req (doseq [c (:hand challenger)]
+                                                                         (move state :challenger c :deck))
+                                                                       (shuffle! state :challenger :deck)
+                                                                       (system-msg state :challenger (str "shuffles their Grip into their Stack"))
                                                                        (clear-wait-prompt state :contestant))}
                                             :no-ability {:effect (effect (end-run)
-                                                                         (system-msg :hero (str "doesn't shuffle their Grip into their Stack. Loki ends the run"))
+                                                                         (system-msg :challenger (str "doesn't shuffle their Grip into their Stack. Loki ends the run"))
                                                                          (clear-wait-prompt :contestant))}}}
                                          card nil))))}]}
 
@@ -1190,12 +1190,12 @@
                                     :choices {:req #(and (installed? %)
                                                          (has? % :subtype "Virus"))}
                                     :effect (effect (trash target {:cause :subroutine})
-                                                    (clear-wait-prompt :hero))})
+                                                    (clear-wait-prompt :challenger))})
                   (trace-ability 2 {:label "Remove a virus in the Heap from the game"
                                     :prompt "Choose a virus in the Heap to remove from the game"
-                                    :choices (req (cancellable (filter #(has? % :subtype "Virus") (:discard hero)) :sorted))
+                                    :choices (req (cancellable (filter #(has? % :subtype "Virus") (:discard challenger)) :sorted))
                                     :msg (msg "remove " (:title target) " from the game")
-                                    :effect (effect (move :hero target :rfg))})
+                                    :effect (effect (move :challenger target :rfg))})
                   (trace-ability 1 end-the-run)]}
 
    "Magnet"
@@ -1213,7 +1213,7 @@
                                      (unregister-events state side hosted)
                                      (update! state side (dissoc hosted :abilities))))}
                      card nil)))
-    :events {:hero-install {:req (req (= (:cid card) (:cid (:host target))))
+    :events {:challenger-install {:req (req (= (:cid card) (:cid (:host target))))
                               :effect (req (doseq [c (get-in card [:hosted])]
                                              (unregister-events state side c)
                                              (update! state side (dissoc c :abilities)))
@@ -1231,7 +1231,7 @@
 
    "Markus 1.0"
    {:subroutines [trash-installed end-the-run]
-    :hero-abilities [(hero-break [:click 1] 1)]}
+    :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Matrix Analyzer"
    {:implementation "Encounter effect is manual"
@@ -1250,11 +1250,11 @@
                    :delayed-completion true
                    :msg (msg "do " (if (> 3 (+ (:advance-counter card 0) (:extra-advance-counter card 0))) 1 3) " net damage")
                    :effect (effect (damage eid :net (if (> 3 (+ (:advance-counter card 0) (:extra-advance-counter card 0))) 1 3) {:card card}))}
-                  {:label "Give the Runner 1 tag (and end the run)"
+                  {:label "Give the Challenger 1 tag (and end the run)"
                    :delayed-completion true
-                   :msg (msg "give the Runner 1 tag"
+                   :msg (msg "give the Challenger 1 tag"
                              (when (<= 3 (+ (:advance-counter card 0) (:extra-advance-counter card 0))) " and end the run"))
-                   :effect (req (tag-hero state :hero eid 1)
+                   :effect (req (tag-challenger state :challenger eid 1)
                                 (when (<= 3 (+ (:advance-counter card 0) (:extra-advance-counter card 0)))
                                   (end-run state side)))}]}
 
@@ -1309,12 +1309,12 @@
                                           (swap! state update-in [:run]
                                                  #(assoc % :position (count (get-in contestant (conj dest :ices)))
                                                            :server (rest dest)))))})]
-    :hero-abilities [{:label "Add an installed card to the bottom of your Stack"
+    :challenger-abilities [{:label "Add an installed card to the bottom of your Stack"
                         :prompt "Choose one of your installed cards"
                         :choices {:req #(and (installed? %)
-                                             (= (:side %) "Hero"))}
+                                             (= (:side %) "Challenger"))}
                         :effect (effect (move target :deck)
-                                        (system-msg :hero (str "adds " (:title target) " to the bottom of their Stack")))}]}
+                                        (system-msg :challenger (str "adds " (:title target) " to the bottom of their Stack")))}]}
 
    "Minelayer"
    {:subroutines [{:msg "install an ICE from HQ"
@@ -1324,8 +1324,8 @@
                    :effect (req (contestant-install state side target (zone->name (first (:server run))) {:no-install-cost true}))}]}
 
    "Mirāju"
-   {:abilities [{:label "Runner broke subroutine: Redirect run to Archives"
-                 :msg "make the Runner continue the run on Archives. Mirāju is derezzed"
+   {:abilities [{:label "Challenger broke subroutine: Redirect run to Archives"
+                 :msg "make the Challenger continue the run on Archives. Mirāju is derezzed"
                  :effect (req (swap! state update-in [:run]
                                      #(assoc % :position (count (get-in contestant [:servers :archives :ices]))
                                                :server [:archives]))
@@ -1371,7 +1371,7 @@
 
    "Najja 1.0"
    {:subroutines [end-the-run]
-    :hero-abilities [(hero-break [:click 1] 1)]}
+    :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Nebula"
    (space-ice trash-program)
@@ -1379,13 +1379,13 @@
    "Negotiator"
    {:subroutines [(gain-credits 2)
                   trash-program]
-    :hero-abilities [(hero-break [:credit 2] 1)]}
+    :challenger-abilities [(challenger-break [:credit 2] 1)]}
 
    "Nerine 2.0"
-   {:subroutines [{:label "Do 1 brain damage and Corp may draw 1 card"
+   {:subroutines [{:label "Do 1 brain damage and Contestant may draw 1 card"
                    :delayed-completion true
                    :msg "do 1 brain damage"
-                   :effect (req (when-completed (damage state :hero :brain 1 {:card card})
+                   :effect (req (when-completed (damage state :challenger :brain 1 {:card card})
                                                 (resolve-ability state side
                                                   {:optional
                                                    {:prompt "Draw 1 card?"
@@ -1393,7 +1393,7 @@
                                                                   :effect (effect (draw))}
                                                     :no-ability {:effect (req (effect-completed state side eid))}}}
                                                  card nil)))}]
-    :hero-abilities [(hero-break [:click 2] 2)]}
+    :challenger-abilities [(challenger-break [:click 2] 2)]}
 
    "Neural Katana"
    {:subroutines [(do-net-damage 3)]}
@@ -1401,7 +1401,7 @@
    "News Hound"
    {:subroutines [(tag-trace 3)
                   {:label "End the run if a Current is active"
-                   :req (req (or (not (empty? (hero :current)))
+                   :req (req (or (not (empty? (challenger :current)))
                                  (not (empty? (contestant :current)))))
                    :effect (effect (end-run)) :msg "end the run"}]}
 
@@ -1438,10 +1438,10 @@
     :subroutines [end-the-run]}
 
    "Nightdancer"
-   {:subroutines [{:label "The Runner loses [Click], if able. You have an additional [Click] to spend during your next turn."
-                   :msg "force the hero to lose a [Click], if able. Corp gains an additional [Click] to spend during their next turn"
+   {:subroutines [{:label "The Challenger loses [Click], if able. You have an additional [Click] to spend during your next turn."
+                   :msg "force the challenger to lose a [Click], if able. Contestant gains an additional [Click] to spend during their next turn"
                    :effect (req
-                             (lose state :hero :click 1)
+                             (lose state :challenger :click 1)
                              (swap! state update-in [:contestant :extra-click-temp] (fnil inc 0)))}]}
 
    "Orion"
@@ -1452,10 +1452,10 @@
    "Owl"
    {:subroutines [{:choices {:req #(and (installed? %)
                                         (is-type? % "Program"))}
-                   :label "Add installed program to the top of the Runner's Stack"
-                   :msg "add an installed program to the top of the Runner's Stack"
-                   :effect (effect (move :hero target :deck {:front true})
-                                   (system-msg (str "adds " (:title target) " to the top of the Runner's Stack")))}]}
+                   :label "Add installed program to the top of the Challenger's Stack"
+                   :msg "add an installed program to the top of the Challenger's Stack"
+                   :effect (effect (move :challenger target :deck {:front true})
+                                   (system-msg (str "adds " (:title target) " to the top of the Challenger's Stack")))}]}
 
    "Pachinko"
    {:subroutines [end-the-run-if-tagged]}
@@ -1465,14 +1465,14 @@
     :subroutines [end-the-run]}
 
    "Pop-up Window"
-   {:implementation "Encounter effect is manual. Runner choice is not implemented"
+   {:implementation "Encounter effect is manual. Challenger choice is not implemented"
     :abilities [(gain-credits 1)]
     :subroutines [end-the-run]
-    :hero-abilities [(hero-break [:credit 1] 1)]}
+    :challenger-abilities [(challenger-break [:credit 1] 1)]}
 
    "Pup"
    {:subroutines [(do-net-damage 1)]
-    :hero-abilities [(hero-break [:credit 1] 1)]}
+    :challenger-abilities [(challenger-break [:credit 1] 1)]}
 
    "Quandary"
    {:subroutines [end-the-run]}
@@ -1493,7 +1493,7 @@
    {:subroutines [{:label "Resolve a subroutine on another piece of rezzed bioroid ICE"
                    :choices {:req #(and (rezzed? %) (ice? %) (has-subtype? % "Bioroid"))}
                    :msg (msg "resolve a subroutine on " (:title target))}]
-    :hero-abilities [(hero-break [:click 1] 1)]}
+    :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Red Tape"
    {:subroutines [{:label "Give +3 strength to all ICE for the remainder of the run"
@@ -1508,11 +1508,11 @@
    "Resistor"
    {:effect (req (add-watch state (keyword (str "resistor" (:cid card)))
                             (fn [k ref old new]
-                              (let [tags (get-in new [:hero :tag])]
-                                (when (not= (get-in old [:hero :tag]) tags)
+                              (let [tags (get-in new [:challenger :tag])]
+                                (when (not= (get-in old [:challenger :tag]) tags)
                                   (update! ref side (assoc (get-card ref card) :strength-bonus tags))
                                   (update-ice-strength ref side (get-card ref card)))))))
-    :strength-bonus (req (:tag hero))
+    :strength-bonus (req (:tag challenger))
     :leave-play (req (remove-watch state (keyword (str "resistor" (:cid card)))))
     :subroutines [(trace-ability 4 end-the-run)]}
 
@@ -1533,7 +1533,7 @@
                    :label "Move Sand Storm and the run to another server"
                    :prompt "Choose another server and redirect the run to its outermost position"
                    :choices (req (cancellable servers))
-                   :msg (msg "move Sand Storm and the run.  The Runner is now running on " target ". Sand Storm is trashed")
+                   :msg (msg "move Sand Storm and the run.  The Challenger is now running on " target ". Sand Storm is trashed")
                    :effect (req (let [dest (server->zone state target)]
                                 (trash state side card {:unpreventable true})
                                 (swap! state update-in [:run]
@@ -1544,15 +1544,15 @@
    {:subroutines [trash-program]
     :access {:delayed-completion true
              :req (req (and (not= (first (:zone card)) :discard)
-                            (some #(is-type? % "Program") (all-installed state :hero))))
-             :effect (effect (show-wait-prompt :contestant "Runner to decide to break Sapper subroutine")
+                            (some #(is-type? % "Program") (all-installed state :challenger))))
+             :effect (effect (show-wait-prompt :contestant "Challenger to decide to break Sapper subroutine")
                              (continue-ability
-                               :hero {:optional
-                                        {:player :hero
+                               :challenger {:optional
+                                        {:player :challenger
                                          :prompt "Allow Sapper subroutine to fire?"
                                          :priority 1
                                          :yes-ability {:effect (req (clear-wait-prompt state :contestant)
-                                                                    (show-wait-prompt state :hero "Corp to trash a program with Sapper")
+                                                                    (show-wait-prompt state :challenger "Contestant to trash a program with Sapper")
                                                                     (play-subroutine state :contestant eid {:card card :subroutine 0}))}
                                          :no-ability {:effect (effect (clear-wait-prompt :contestant)
                                                                       (effect-completed eid))}}}
@@ -1561,11 +1561,11 @@
    "Searchlight"
    {:advanceable :always
     ;; Could replace this with (tag-trace advance-counters).
-    :subroutines [{:label "Trace X - Give the Runner 1 tag"
+    :subroutines [{:label "Trace X - Give the Challenger 1 tag"
                    :trace {:base advance-counters
                            :delayed-completion true
-                           :effect (effect (tag-hero :hero eid 1))
-                           :msg "give the Runner 1 tag"}}]}
+                           :effect (effect (tag-challenger :challenger eid 1))
+                           :msg "give the Challenger 1 tag"}}]}
 
    "Seidr Adaptive Barrier"
    {:effect (req (let [srv (second (:zone card))]
@@ -1594,26 +1594,26 @@
     :strength-bonus advance-counters}
 
    "Sherlock 1.0"
-   {:subroutines [{:label "Trace 4 - Add an installed program to the top of the Runner's Stack"
+   {:subroutines [{:label "Trace 4 - Add an installed program to the top of the Challenger's Stack"
                    :trace {:base 4
                            :choices {:req #(and (installed? %)
                                                 (is-type? % "Program"))}
-                           :msg (msg "add " (:title target) " to the top of the Runner's Stack")
-                           :effect (effect (move :hero target :deck {:front true}))}}]
-    :hero-abilities [(hero-break [:click 1] 1)]}
+                           :msg (msg "add " (:title target) " to the top of the Challenger's Stack")
+                           :effect (effect (move :challenger target :deck {:front true}))}}]
+    :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Sherlock 2.0"
-   {:subroutines [{:label "Trace 4 - Add an installed program to the bottom of the Runner's Stack"
+   {:subroutines [{:label "Trace 4 - Add an installed program to the bottom of the Challenger's Stack"
                    :trace {:base 4
                            :choices {:req #(and (installed? %)
                                                 (is-type? % "Program"))}
-                           :msg     (msg "add " (:title target) " to the bottom of the Runner's Stack")
-                           :effect  (effect (move :hero target :deck))}}
-                  {:label  "Give the Runner 1 tag"
-                   :msg    "give the Runner 1 tag"
+                           :msg     (msg "add " (:title target) " to the bottom of the Challenger's Stack")
+                           :effect  (effect (move :challenger target :deck))}}
+                  {:label  "Give the Challenger 1 tag"
+                   :msg    "give the Challenger 1 tag"
                    :delayed-completion true
-                   :effect (effect (tag-hero :hero eid 1))}]
-    :hero-abilities [(hero-break [:click 2] 2)]}
+                   :effect (effect (tag-challenger :challenger eid 1))}]
+    :challenger-abilities [(challenger-break [:click 2] 2)]}
 
    "Shinobi"
    {:effect take-bad-pub
@@ -1627,29 +1627,29 @@
    {:subroutines [{:label "Rearrange the top 3 cards of R&D"
                    :msg "rearrange the top 3 cards of R&D"
                    :delayed-completion true
-                   :effect (req (show-wait-prompt state :hero "Corp to rearrange the top cards of R&D")
+                   :effect (req (show-wait-prompt state :challenger "Contestant to rearrange the top cards of R&D")
                                 (let [from (take 3 (:deck contestant))]
                                   (if (pos? (count from))
-                                    (continue-ability state side (reorder-choice :contestant :hero from '()
+                                    (continue-ability state side (reorder-choice :contestant :challenger from '()
                                                                                  (count from) from) card nil)
-                                    (do (clear-wait-prompt state :hero)
+                                    (do (clear-wait-prompt state :challenger)
                                         (effect-completed state side eid card)))))}
-                  {:label "Force the Runner to access the top card of R&D"
-                   :effect (req (doseq [c (take (get-in @state [:hero :rd-access]) (:deck contestant))]
-                                  (system-msg state :hero (str "accesses " (:title c)))
+                  {:label "Force the Challenger to access the top card of R&D"
+                   :effect (req (doseq [c (take (get-in @state [:challenger :rd-access]) (:deck contestant))]
+                                  (system-msg state :challenger (str "accesses " (:title c)))
                                   (handle-access state side [c])))}]}
 
    "Snoop"
    {:implementation "Encounter effect is manual"
     :abilities [{:req (req (= current-ice card))
-                 :label "Reveal all cards in the Runner's Grip"
-                 :msg (msg "reveal the Runner's Grip ( " (join ", " (map :title (:hand hero))) " )")}
+                 :label "Reveal all cards in the Challenger's Grip"
+                 :msg (msg "reveal the Challenger's Grip ( " (join ", " (map :title (:hand challenger))) " )")}
                 {:req (req (> (get-in card [:counter :power] 0) 0))
                  :counter-cost [:power 1]
                  :label "Hosted power counter: Reveal all cards in Grip and trash 1 card"
                  :msg (msg "look at all cards in Grip and trash " (:title target)
                            " using 1 power counter")
-                 :choices (req (cancellable (:hand hero) :sorted))
+                 :choices (req (cancellable (:hand challenger) :sorted))
                  :prompt "Choose a card to trash"
                  :effect (effect (trash target))}]
     :subroutines [(trace-ability 3 add-power-counter)]}
@@ -1671,7 +1671,7 @@
 
    "Susanoo-no-Mikoto"
    {:subroutines [{:req (req (not= (:server run) [:discard]))
-                   :msg "make the Runner continue the run on Archives"
+                   :msg "make the Challenger continue the run on Archives"
                    :effect (req (swap! state update-in [:run]
                                        #(assoc % :position (count (get-in contestant [:servers :archives :ices]))
                                                  :server [:archives])))}]}
@@ -1682,7 +1682,7 @@
     :abilities [{:label "Gain subroutines"
                  :msg (msg "gain " (:advance-counter card 0) " subroutines")}]
     :subroutines [trash-program]
-    :hero-abilities [(hero-break [:credit 3] 1)]}
+    :challenger-abilities [(challenger-break [:credit 3] 1)]}
 
    "Swordsman"
    {:implementation "AI restriction not implemented"
@@ -1697,16 +1697,16 @@
 
    "SYNC BRE"
    {:subroutines [(trace-ability 4 give-tag)
-                  (trace-ability 2 {:label "Runner reduces cards accessed by 1 for this run"
+                  (trace-ability 2 {:label "Challenger reduces cards accessed by 1 for this run"
                                     :delayed-completion true
                                     :msg "reduce cards accessed for this run by 1"
                                     :effect (effect (access-bonus -1))})]}
 
    "Tapestry"
-   {:subroutines [{:label "force the Runner to lose 1 [Click], if able"
-                   :msg "force the Runner to lose 1 [Click]"
-                   :req (req (pos? (:click hero)))
-                   :effect (effect (lose :hero :click 1))}
+   {:subroutines [{:label "force the Challenger to lose 1 [Click], if able"
+                   :msg "force the Challenger to lose 1 [Click]"
+                   :req (req (pos? (:click challenger)))
+                   :effect (effect (lose :challenger :click 1))}
                   {:msg "draw 1 card"
                    :effect (effect (draw))}
                   {:req (req (pos? (count (:hand contestant))))
@@ -1720,18 +1720,18 @@
 
    "Thoth"
    {:implementation "Encounter effect is manual"
-    :hero-abilities [{:label "Take 1 tag"
+    :challenger-abilities [{:label "Take 1 tag"
                         :delayed-completion true
-                        :effect (req (system-msg state :hero "takes 1 tag on encountering Thoth")
-                                     (tag-hero state :hero eid 1))}]
-    :subroutines [(trace-ability 4 {:label "Do 1 net damage for each Runner tag"
+                        :effect (req (system-msg state :challenger "takes 1 tag on encountering Thoth")
+                                     (tag-challenger state :challenger eid 1))}]
+    :subroutines [(trace-ability 4 {:label "Do 1 net damage for each Challenger tag"
                                     :delayed-completion true
-                                    :msg (msg "do " (:tag hero) " net damage")
-                                    :effect (effect (damage eid :net (:tag hero) {:card card}))})
-                  (trace-ability 4 {:label "Runner loses 1 [Credits] for each tag"
+                                    :msg (msg "do " (:tag challenger) " net damage")
+                                    :effect (effect (damage eid :net (:tag challenger) {:card card}))})
+                  (trace-ability 4 {:label "Challenger loses 1 [Credits] for each tag"
                                     :delayed-completion true
-                                    :msg (msg "force the Runner to lose " (:tag hero) " [Credits]")
-                                    :effect (effect (lose :hero :credit (:tag hero)))})]}
+                                    :msg (msg "force the Challenger to lose " (:tag challenger) " [Credits]")
+                                    :effect (effect (lose :challenger :credit (:tag challenger)))})]}
 
    "Tithonium"
    {:alternative-cost [:forfeit]
@@ -1757,8 +1757,8 @@
 
    "Tollbooth"
    {:implementation "Encounter effect is manual"
-    :abilities [{:msg "make the Runner pay 3 [Credits], if able"
-                 :effect (effect (pay :hero card :credit 3))}]
+    :abilities [{:msg "make the Challenger pay 3 [Credits], if able"
+                 :effect (effect (pay :challenger card :credit 3))}]
     :subroutines [end-the-run]}
 
    "Tour Guide"
@@ -1768,18 +1768,18 @@
     :subroutines [end-the-run]}
 
    "Tribunal"
-   {:subroutines [{:msg "force the Runner to trash 1 installed card"
-                   :effect (effect (resolve-ability :hero trash-installed card nil))}]}
+   {:subroutines [{:msg "force the Challenger to trash 1 installed card"
+                   :effect (effect (resolve-ability :challenger trash-installed card nil))}]}
 
    "Troll"
    {:implementation "Encounter effect is manual"
-    :abilities [(trace-ability 2 {:label "Force the Runner to lose [Click] or end the run"
-                                  :msg "force the Runner to lose [Click] or end the run"
-                                  :player :hero
+    :abilities [(trace-ability 2 {:label "Force the Challenger to lose [Click] or end the run"
+                                  :msg "force the Challenger to lose [Click] or end the run"
+                                  :player :challenger
                                   :prompt "Choose one"
                                   :choices ["Lose [Click]" "End the run"]
                                   :effect (req (if-not (and (= target "Lose [Click]")
-                                                            (can-pay? state :hero nil [:click 1]))
+                                                            (can-pay? state :challenger nil [:click 1]))
                                                  (do (end-run state side)
                                                      (system-msg state side "ends the run"))
                                                  (do (lose state side :click 1)
@@ -1793,12 +1793,12 @@
    {:implementation "AI restriction not implemented"
     :subroutines [end-the-run]
     :strength-bonus (req (if (is-remote? (second (:zone card))) 3 0))
-    :hero-abilities [(hero-break [:click 3] 1)]}
+    :challenger-abilities [(challenger-break [:click 3] 1)]}
 
    "Turnpike"
    {:implementation "Encounter effect is manual"
-    :abilities [{:msg "force the Runner to lose 1 [Credits]"
-                 :effect (effect (lose :hero :credit 1))}]
+    :abilities [{:msg "force the Challenger to lose 1 [Credits]"
+                 :effect (effect (lose :challenger :credit 1))}]
     :subroutines [(tag-trace 5)]}
 
    "Tyrant"
@@ -1808,26 +1808,26 @@
     :subroutines [end-the-run]}
 
    "Universal Connectivity Fee"
-   {:subroutines [{:label "Force the Runner to lose credits"
-                   :msg (msg "force the Runner to lose " (if tagged "all credits" "1 [Credits]"))
+   {:subroutines [{:label "Force the Challenger to lose credits"
+                   :msg (msg "force the Challenger to lose " (if tagged "all credits" "1 [Credits]"))
                    :effect (req (if tagged
-                                  (do (lose state :hero :credit :all :run-credit :all)
+                                  (do (lose state :challenger :credit :all :run-credit :all)
                                       (when current-ice
                                         (no-action state side nil)
                                         (continue state side nil))
                                       (trash state side card))
-                                  (lose state :hero :credit 1)))}]}
+                                  (lose state :challenger :credit 1)))}]}
 
    "Upayoga"
    {:implementation "\"Resolve a subroutine...\" subroutine is not implemented"
-    :subroutines [(do-psi {:label "Make the Runner lose 2 [Credits]"
-                           :msg "make the Runner lose 2 [Credits]"
-                           :effect (effect (lose :hero :credit 2))})
+    :subroutines [(do-psi {:label "Make the Challenger lose 2 [Credits]"
+                           :msg "make the Challenger lose 2 [Credits]"
+                           :effect (effect (lose :challenger :credit 2))})
                   {:msg "resolve a subroutine on a piece of rezzed psi ICE"}]}
 
    "Uroboros"
-   {:subroutines [(trace-ability 4 {:label "Prevent the Runner from making another run"
-                                    :msg "prevent the Runner from making another run"
+   {:subroutines [(trace-ability 4 {:label "Prevent the Challenger from making another run"
+                                    :msg "prevent the Challenger from making another run"
                                     :effect (effect (register-turn-flag! card :can-run nil))})
 
                   (trace-ability 4 end-the-run)]}
@@ -1836,47 +1836,47 @@
    {:subroutines [end-the-run]}
 
    "Veritas"
-   {:subroutines [{:label "Corp gains 2 [Credits]"
+   {:subroutines [{:label "Contestant gains 2 [Credits]"
                    :msg "gain 2 [Credits]"
                    :effect (effect (gain :contestant :credit 2))}
-                  {:label "Runner loses 2 [Credits]"
-                   :msg "force the Runner to lose 2 [Credits]"
-                   :effect (effect (lose :hero :credit 2))}
+                  {:label "Challenger loses 2 [Credits]"
+                   :msg "force the Challenger to lose 2 [Credits]"
+                   :effect (effect (lose :challenger :credit 2))}
                   (trace-ability 2 give-tag)]}
 
    "Vikram 1.0"
    {:implementation "Program prevention is not implemented"
-    :subroutines [{:msg "prevent the Runner from using programs for the remainder of this run"}
+    :subroutines [{:msg "prevent the Challenger from using programs for the remainder of this run"}
                   (trace-ability 4 (do-brain-damage 1))]
-    :hero-abilities [(hero-break [:click 1] 1)]}
+    :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Viktor 1.0"
    {:subroutines [(do-brain-damage 1)
                   end-the-run]
-    :hero-abilities [(hero-break [:click 1] 1)]}
+    :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Viktor 2.0"
    {:abilities [(power-counter-ability (do-brain-damage 1))]
     :subroutines [(trace-ability 2 add-power-counter)
                   end-the-run]
-    :hero-abilities [(hero-break [:click 2] 2)]}
+    :challenger-abilities [(challenger-break [:click 2] 2)]}
 
    "Viper"
-   {:subroutines [(trace-ability 3 {:label "The Runner loses 1 [Click] if able"
-                                    :msg "force the Runner to lose 1 [Click] if able"
-                                    :effect (effect (lose :hero :click 1))})
+   {:subroutines [(trace-ability 3 {:label "The Challenger loses 1 [Click] if able"
+                                    :msg "force the Challenger to lose 1 [Click] if able"
+                                    :effect (effect (lose :challenger :click 1))})
                   (trace-ability 3 end-the-run)]}
 
    "Virgo"
    (constellation-ice give-tag)
 
    "Waiver"
-   {:subroutines [(trace-ability 5 {:label "Reveal the Runner's Grip and trash cards"
-                                    :msg (msg "reveal all cards in the Runner's Grip: " (join ", " (map :title (:hand hero)))
+   {:subroutines [(trace-ability 5 {:label "Reveal the Challenger's Grip and trash cards"
+                                    :msg (msg "reveal all cards in the Challenger's Grip: " (join ", " (map :title (:hand challenger)))
                                               ". Cards with a play/install cost less than or equal to " (- target (second targets))
                                               " will be trashed")
                                     :effect (req (let [delta (- target (second targets))]
-                                                   (doseq [c (:hand hero)]
+                                                   (doseq [c (:hand challenger)]
                                                      (when (<= (:cost c) delta)
                                                        (resolve-ability
                                                          state side
@@ -1901,27 +1901,27 @@
                                    (move target :hand))}]}
 
    "Weir"
-   {:subroutines [{:label "force the Runner to lose 1 [Click], if able"
-                   :req (req (pos? (:click hero)))
-                   :msg "force the Runner to lose 1 [Click]"
-                   :effect (effect (lose :hero :click 1))}
-                  {:label "Runner trashes 1 card from their Grip"
-                   :req (req (pos? (count (:hand hero))))
+   {:subroutines [{:label "force the Challenger to lose 1 [Click], if able"
+                   :req (req (pos? (:click challenger)))
+                   :msg "force the Challenger to lose 1 [Click]"
+                   :effect (effect (lose :challenger :click 1))}
+                  {:label "Challenger trashes 1 card from their Grip"
+                   :req (req (pos? (count (:hand challenger))))
                    :prompt "Choose a card to trash from your Grip"
-                   :player :hero
-                   :choices (req (:hand hero))
+                   :player :challenger
+                   :choices (req (:hand challenger))
                    :not-distinct true
-                   :effect (effect (trash :hero target)
-                                   (system-msg :hero (str "trashes " (:title target) " from their Grip")))}]}
+                   :effect (effect (trash :challenger target)
+                                   (system-msg :challenger (str "trashes " (:title target) " from their Grip")))}]}
 
    "Wendigo"
    (implementation-note
      "Program prevention is not implemented"
      (morph-ice "Code Gate" "Barrier"
-                {:msg "prevent the Runner from using a chosen program for the remainder of this run"}))
+                {:msg "prevent the Challenger from using a chosen program for the remainder of this run"}))
 
    "Whirlpool"
-   {:subroutines [{:msg "prevent the Runner from jacking out"
+   {:subroutines [{:msg "prevent the Challenger from jacking out"
                    :effect (req (when (and (is-remote? (second (:zone card)))
                                            (> (count (concat (:ices (card->server state card))
                                                              (:content (card->server state card)))) 1))
@@ -1945,18 +1945,18 @@
    "Wotan"
    {:subroutines [end-the-run
                   (do-brain-damage 1)]
-    :hero-abilities [(hero-break [:click 2] 1)
-                       (hero-break [:credit 3] 1)]}
+    :challenger-abilities [(challenger-break [:click 2] 1)
+                       (challenger-break [:credit 3] 1)]}
 
    "Wraparound"
    {:subroutines [end-the-run]
-    :strength-bonus (req (if (some #(has-subtype? % "Fracter") (all-installed state :hero))
+    :strength-bonus (req (if (some #(has-subtype? % "Fracter") (all-installed state :challenger))
                            0 7))
     :events (let [wr {:silent (req true)
                       :req (req (and (not= (:cid target) (:cid card))
                                      (has-subtype? target "Fracter")))
                       :effect (effect (update-ice-strength card))}]
-              {:hero-install wr :trash wr :card-moved wr})}
+              {:challenger-install wr :trash wr :card-moved wr})}
 
    "Yagura"
    {:subroutines [(do-net-damage 1)
@@ -1969,10 +1969,10 @@
    "Zed 1.0"
    {:implementation "Restriction on having spent [click] is not implemented"
     :subroutines [(do-brain-damage 1)]
-    :hero-abilities [(hero-break [:click 1] 1)]}
+    :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Zed 2.0"
    {:implementation "Restriction on having spent [click] is not implemented"
     :subroutines [trash-hardware
                   (do-brain-damage 2)]
-    :hero-abilities [(hero-break [:click 2] 2)]}})
+    :challenger-abilities [(challenger-break [:click 2] 2)]}})

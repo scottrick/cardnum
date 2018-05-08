@@ -4,7 +4,7 @@
 
 (declare card-str can-rez? can-advance? contestant-install effect-as-handler enforce-msg gain-agenda-point get-remote-names
          get-run-ices jack-out move name-zone play-instant purge resolve-select run has-subtype?
-         hero-install trash update-breaker-strength update-ice-in-server update-run-ice win can-run?
+         challenger-install trash update-breaker-strength update-ice-in-server update-run-ice win can-run?
          can-run-server? can-score? play-sfx)
 
 ;;; Neutral actions
@@ -14,7 +14,7 @@
   (let [card (get-card state card)]
     (case (:type card)
       ("Event" "Operation") (play-instant state side card {:extra-cost [:click 1]})
-      ("Hardware" "Resource" "Program") (hero-install state side (make-eid state) card {:extra-cost [:click 1]})
+      ("Hardware" "Resource" "Program") (challenger-install state side (make-eid state) card {:extra-cost [:click 1]})
       ("ICE" "Upgrade" "Asset" "Agenda") (contestant-install state side card server {:extra-cost [:click 1] :action :contestant-click-install}))
     (trigger-event state side :play card)))
 
@@ -34,7 +34,7 @@
   (when (and (not (get-in @state [side :register :cannot-draw]))
              (pay state side nil :click 1 {:action :contestant-click-draw}))
     (system-msg state side "spends [Click] to draw a card")
-    (trigger-event state side (if (= side :contestant) :contestant-click-draw :hero-click-draw) (->> @state side :deck (take 1)))
+    (trigger-event state side (if (= side :contestant) :contestant-click-draw :challenger-click-draw) (->> @state side :deck (take 1)))
     (draw state side)
     (play-sfx state side "click-card")))
 
@@ -44,7 +44,7 @@
   (when (pay state side nil :click 1 {:action :contestant-click-credit})
     (system-msg state side "spends [Click] to gain 1 [Credits]")
     (gain state side :credit 1)
-    (trigger-event state side (if (= side :contestant) :contestant-click-credit :hero-click-credit))
+    (trigger-event state side (if (= side :contestant) :contestant-click-credit :challenger-click-credit))
     (play-sfx state side "click-credit")))
 
 (defn change
@@ -72,17 +72,17 @@
                      (str " in " src) ; this string matches the message when a card is trashed via (trash)
                      (str " from their " src)))
         label (if (and (not= last-zone :play-area)
-                       (not (and (= (:side c) "Hero")
+                       (not (and (= (:side c) "Challenger")
                                  (= last-zone :hand)
                                  (= server "Grip")))
-                       (or (and (= (:side c) "Hero")
+                       (or (and (= (:side c) "Challenger")
                                 (not (:facedown c)))
                            (rezzed? c)
                            (:seen c)
                            (= last-zone :deck)))
                 (:title c)
                 "a card")
-        s (if (#{"HQ" "R&D" "Archives"} server) :contestant :hero)]
+        s (if (#{"HQ" "R&D" "Archives"} server) :contestant :challenger)]
     ;; allow moving from play-area always, otherwise only when same side, and to valid zone
     (when (and (not= src server)
                (same-side? s (:side card))
@@ -103,7 +103,7 @@
 
 (defn concede [state side args]
   (system-msg state side "concedes")
-  (win state (if (= side :contestant) :hero :contestant) "Concede"))
+  (win state (if (= side :contestant) :challenger :contestant) "Concede"))
 
 (defn- finish-prompt [state side prompt card]
   (when-let [end-effect (:end-effect prompt)]
@@ -111,10 +111,10 @@
   ;; remove the prompt from the queue
   (swap! state update-in [side :prompt] (fn [pr] (filter #(not= % prompt) pr)))
   ;; This is a dirty hack to end the run when the last access prompt is resolved.
-  (when (empty? (get-in @state [:hero :prompt]))
+  (when (empty? (get-in @state [:challenger :prompt]))
     (when-let [run (:run @state)]
       (when (:ended run)
-        (handle-end-run state :hero)))
+        (handle-end-run state :challenger)))
     (swap! state dissoc :access)))
 
 (defn resolve-prompt
@@ -209,7 +209,7 @@
         strdif (when current-ice (max 0 (- (or (:current-strength current-ice) (:strength current-ice))
                                            (or (:current-strength card) (:strength card)))))
         pumpnum (when strdif (int (Math/ceil (/ strdif (:pump pumpabi)))))]
-    (when (and pumpnum pumpcst (>= (get-in @state [:hero :credit]) (* pumpnum pumpcst)))
+    (when (and pumpnum pumpcst (>= (get-in @state [:challenger :credit]) (* pumpnum pumpcst)))
       (dotimes [n pumpnum] (resolve-ability state side (dissoc pumpabi :msg) (get-card state card) nil))
       (system-msg state side (str "spends " (* pumpnum pumpcst) " [Credits] to increase the strength of "
                                   (:title card) " to " (:current-strength (get-card state card)))))))
@@ -234,11 +234,11 @@
   [state side args]
   ((dynamic-abilities (:dynamic args)) state (keyword side) args))
 
-(defn play-hero-ability
-  "Triggers a contestant card's hero-ability using its zero-based index into the card's card-def :hero-abilities vector."
+(defn play-challenger-ability
+  "Triggers a contestant card's challenger-ability using its zero-based index into the card's card-def :challenger-abilities vector."
   [state side {:keys [card ability targets] :as args}]
   (let [cdef (card-def card)
-        ab (get-in cdef [:hero-abilities ability])]
+        ab (get-in cdef [:challenger-abilities ability])]
     (do-play-ability state side card ab targets)))
 
 (defn play-subroutine
@@ -253,7 +253,7 @@
        (when-let [activatemsg (:activatemsg sub)] (system-msg state side activatemsg))
        (resolve-ability state side eid sub card targets)))))
 
-;;; Corp actions
+;;; Contestant actions
 (defn trash-resource
   "Click to trash a resource."
   [state side args]
@@ -262,8 +262,8 @@
       (resolve-ability state side
                        {:prompt  "Choose a resource to trash"
                         :choices {:req (fn [card]
-                                         (if (and (seq (filter (fn [c] (untrashable-while-resources? c)) (all-installed state :hero)))
-                                                  (> (count (filter #(is-type? % "Resource") (all-installed state :hero))) 1))
+                                         (if (and (seq (filter (fn [c] (untrashable-while-resources? c)) (all-installed state :challenger)))
+                                                  (> (count (filter #(is-type? % "Resource") (all-installed state :challenger))) 1))
                                            (and (is-type? card "Resource") (not (untrashable-while-resources? card)))
                                            (is-type? card "Resource")))}
                         :cancel-effect (effect (gain :credit trash-cost :click 1))
@@ -393,7 +393,7 @@
             points (get-agenda-points state :contestant c)]
         (trigger-event-simult
           state :contestant (make-eid state) :agenda-scored
-          {:first-ability {:effect (req (when-let [current (first (get-in @state [:hero :current]))]
+          {:first-ability {:effect (req (when-let [current (first (get-in @state [:challenger :current]))]
                                           (say state side {:user "__system__" :text (str (:title current) " is trashed.")})
                                           ; This is to handle Employee Strike with damage IDs #2688
                                           (when (:disable-id (card-def current))
@@ -425,7 +425,7 @@
       (trigger-event state side :encounter-ice ice)
       (update-ice-strength state side ice))))
 
-;;; Runner actions
+;;; Challenger actions
 (defn click-run
   "Click to start a run."
   [state side {:keys [server] :as args}]
@@ -433,25 +433,25 @@
         click-cost-bonus (get-in @state [:bonus :click-run-cost])]
     (when (and (can-run? state side)
                (can-run-server? state server)
-               (can-pay? state :hero "a run" :click 1 cost-bonus click-cost-bonus))
-      (swap! state assoc-in [:hero :register :made-click-run] true)
+               (can-pay? state :challenger "a run" :click 1 cost-bonus click-cost-bonus))
+      (swap! state assoc-in [:challenger :register :made-click-run] true)
       (run state side server)
-      (when-let [cost-str (pay state :hero nil :click 1 cost-bonus click-cost-bonus)]
-        (system-msg state :hero
+      (when-let [cost-str (pay state :challenger nil :click 1 cost-bonus click-cost-bonus)]
+        (system-msg state :challenger
                     (str (build-spend-msg cost-str "make a run on") server))
         (play-sfx state side "click-run")))))
 
 (defn remove-tag
   "Click to remove a tag."
   [state side args]
-  (let [remove-cost (max 0 (- 2 (or (get-in @state [:hero :tag-remove-bonus]) 0)))]
+  (let [remove-cost (max 0 (- 2 (or (get-in @state [:challenger :tag-remove-bonus]) 0)))]
     (when-let [cost-str (pay state side nil :click 1 :credit remove-cost)]
       (lose state side :tag 1)
       (system-msg state side (build-spend-msg cost-str "remove 1 tag"))
       (play-sfx state side "click-remove-tag"))))
 
 (defn continue
-  "The hero decides to approach the next ice, or the server itself."
+  "The challenger decides to approach the next ice, or the server itself."
   [state side args]
   (when (get-in @state [:run :no-action])
     (let [run-ice (get-run-ices state)
@@ -470,7 +470,7 @@
                             (update-ice-strength state side cur-ice))
                           (when next-ice
                             (trigger-event-sync state side (make-eid state) :approach-ice next-ice))
-                          (doseq [p (filter #(has-subtype? % "Icebreaker") (all-installed state :hero))]
+                          (doseq [p (filter #(has-subtype? % "Icebreaker") (all-installed state :challenger))]
                             (update! state side (update-in (get-card state p) [:pump] dissoc :encounter))
                             (update-breaker-strength state side p)))))))
 

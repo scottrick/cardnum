@@ -6,7 +6,7 @@
                     :choices {:req #(and (installed? %)
                                          (is-type? % "Program"))}
                     :effect (effect (trash target {:cause :subroutine})
-                                    (clear-wait-prompt :hero))})
+                                    (clear-wait-prompt :challenger))})
 
 (def trash-hardware {:prompt "Select a piece of hardware to trash"
                      :label "Trash a piece of hardware"
@@ -23,15 +23,15 @@
                          :effect (effect (trash target {:cause :subroutine}))})
 
 (def trash-installed {:prompt "Select an installed card to trash"
-                      :player :hero
-                      :label "Force the Runner to trash an installed card"
-                      :msg (msg "force the Runner to trash " (:title target))
+                      :player :challenger
+                      :label "Force the Challenger to trash an installed card"
+                      :msg (msg "force the Challenger to trash " (:title target))
                       :choices {:req #(and (installed? %)
-                                           (= (:side %) "Hero"))}
+                                           (= (:side %) "Challenger"))}
                       :effect (effect (trash target {:cause :subroutine}))})
 
 (def contestant-rez-toast
-  "Effect to be placed with `:hero-turn-ends` to remind players of 'when turn begins'
+  "Effect to be placed with `:challenger-turn-ends` to remind players of 'when turn begins'
   triggers"
   {:effect (req (toast state :contestant "Reminder: You have unrezzed cards with \"when turn begins\" abilities." "info"))})
 

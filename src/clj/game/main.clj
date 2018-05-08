@@ -51,7 +51,7 @@
    "select" core/select
    "shuffle" core/shuffle-deck
    "ability" core/play-ability
-   "hero-ability" core/play-hero-ability
+   "challenger-ability" core/play-challenger-ability
    "subroutine" core/play-subroutine
    "trash-resource" core/trash-resource
    "dynamic-ability" core/play-dynamic-ability
@@ -74,7 +74,7 @@
 (defn not-spectator?
   "Returns true if the specified user in the specified state is not a spectator"
   [state user]
-  (and state (#{(get-in @state [:contestant :user]) (get-in @state [:hero :user])} user)))
+  (and state (#{(get-in @state [:contestant :user]) (get-in @state [:challenger :user])} user)))
 
 (defn handle-do
   "Ensures the user is allowed to do command they are trying to do"
@@ -92,13 +92,13 @@
                 :else card))
             cards)))
 
-(defn- make-private-hero [state]
-  (-> (:hero @state)
-      (update-in [:hand] #(private-card-vector state :hero %))
-      (update-in [:discard] #(private-card-vector state :hero %))
-      (update-in [:deck] #(private-card-vector state :hero %))
-      (update-in [:rig :facedown] #(private-card-vector state :hero %))
-      (update-in [:rig :resource] #(private-card-vector state :hero %))))
+(defn- make-private-challenger [state]
+  (-> (:challenger @state)
+      (update-in [:hand] #(private-card-vector state :challenger %))
+      (update-in [:discard] #(private-card-vector state :challenger %))
+      (update-in [:deck] #(private-card-vector state :challenger %))
+      (update-in [:rig :facedown] #(private-card-vector state :challenger %))
+      (update-in [:rig :resource] #(private-card-vector state :challenger %))))
 
 (defn- make-private-contestant [state]
   (let [zones (concat [[:hand]] [[:discard]] [[:deck]]
@@ -116,20 +116,20 @@
     (private-card-vector state side deck)))
 
 (defn- private-states [state]
-  "Generates privatized states for the Corp, Runner and any spectators from the base state.
+  "Generates privatized states for the Contestant, Challenger and any spectators from the base state.
   If `:spectatorhands` is on, all information is passed on to spectators as well."
-  ;; contestant, hero, spectator
+  ;; contestant, challenger, spectator
   (let [contestant-private (make-private-contestant state)
-        hero-private (make-private-hero state)
+        challenger-private (make-private-challenger state)
         contestant-deck (update-in (:contestant @state) [:deck] #(make-private-deck state :contestant %))
-        hero-deck (update-in (:hero @state) [:deck] #(make-private-deck state :hero %))]
-    [(assoc @state :hero hero-private
+        challenger-deck (update-in (:challenger @state) [:deck] #(make-private-deck state :challenger %))]
+    [(assoc @state :challenger challenger-private
                    :contestant contestant-deck)
      (assoc @state :contestant contestant-private
-                   :hero hero-deck)
+                   :challenger challenger-deck)
      (if (get-in @state [:options :spectatorhands])
-       (assoc @state :contestant contestant-deck :hero hero-deck)
-       (assoc @state :contestant contestant-private :hero hero-private))]))
+       (assoc @state :contestant contestant-deck :challenger challenger-deck)
+       (assoc @state :contestant contestant-private :challenger challenger-private))]))
 
 (defn- reset-all-cards
   [cards]
@@ -162,7 +162,7 @@
                ;; when rejoining, there is probably a new socket ID that needs to be set into the user.
                (let [side (cond
                             (= (:_id user) (get-in @state [:contestant :user :_id])) :contestant
-                            (= (:_id user) (get-in @state [:hero :user :_id])) :hero
+                            (= (:_id user) (get-in @state [:challenger :user :_id])) :challenger
                             :else nil)]
                  (swap! state assoc-in [side :user] user)
                  (swap! state update-in [:log] #(conj % {:user "__system__" :text text})))))
@@ -192,32 +192,32 @@
         (let [{:keys [gameid action command args] :as msg} (convert (.recv socket))]
           (if (= action "alert")
             (do (doseq [state (vals @game-states)]
-                  (doseq [side [:hero :contestant]]
+                  (doseq [side [:challenger :contestant]]
                     (toast state side command "warning" {:time-out 0 :close-button true})))
                 (.send socket (generate-string "ok")))
             (let [state (@game-states (:gameid msg))
                   old-state (when state (@old-states (:gameid msg)))
-                  [old-contestant old-hero old-spect] (when old-state (private-states (atom old-state)))]
+                  [old-contestant old-challenger old-spect] (when old-state (private-states (atom old-state)))]
               (if (handle-command msg state)
                 (if (= action "initialize")
                   (.send socket (generate-string "ok"))
                   (if-let [new-state (@game-states gameid)]
-                    (let [[new-contestant new-hero new-spect] (private-states new-state)]
+                    (let [[new-contestant new-challenger new-spect] (private-states new-state)]
                       (do
                         (swap! old-states assoc (:gameid msg) @new-state)
                         (if (#{"start" "reconnect" "notification" "rejoin"} action)
                           ;; send the whole state, not a diff
                           (.send socket (generate-string {:action      action
-                                                          :herostate (strip new-hero)
+                                                          :challengerstate (strip new-challenger)
                                                           :contestantstate   (strip new-contestant)
                                                           :spectstate  (strip new-spect)
                                                           :gameid      gameid}))
                           ;; send a diff
-                          (let [hero-diff (differ/diff (strip old-hero) (strip new-hero))
+                          (let [challenger-diff (differ/diff (strip old-challenger) (strip new-challenger))
                                 contestant-diff (differ/diff (strip old-contestant) (strip new-contestant))
                                 spect-diff (differ/diff (strip old-spect) (strip new-spect))]
                             (.send socket (generate-string {:action     action
-                                                            :herodiff hero-diff
+                                                            :challengerdiff challenger-diff
                                                             :contestantdiff   contestant-diff
                                                             :spectdiff  spect-diff
                                                             :gameid     gameid}))))))

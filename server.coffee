@@ -40,7 +40,7 @@ lobbyUpdate = false
 lobbyUpdates = {"create" : {}, "update" : {}, "delete" : {}}
 
 swapSide = (side) ->
-  if side is "Contestant" then "Hero" else "Contestant"
+  if side is "Contestant" then "Challenger" else "Contestant"
 
 refreshLobby = (type, gameid) ->
   lobbyUpdate = true
@@ -193,8 +193,8 @@ inc_game_start = (user, side, room) ->
 inc_contestant_game_start = (user, room) ->
   inc_game_start(user, "contestant", room)
 
-inc_hero_game_start = (user, room) ->
-  inc_game_start(user, "hero", room)
+inc_challenger_game_start = (user, room) ->
+  inc_game_start(user, "challenger", room)
 
 # ZeroMQ
 clojure_hostname = process.env['CLOJURE_HOST'] || "127.0.0.1"
@@ -214,7 +214,7 @@ requester.monitor(500, 0)
 requester.connect("tcp://#{clojure_hostname}:1043")
 
 sendGameResponse = (game, response) ->
-  diffs = response.herodiff
+  diffs = response.challengerdiff
 
   for player in game.players
     socket = io.sockets.connected[player.id]
@@ -224,10 +224,10 @@ sendGameResponse = (game, response) ->
       lobby.to(player.id).emit("meccg", {type: response.action,\
                                              diff: response.contestantdiff, \
                                              state: response.contestantstate})
-    else if player.side is "Hero"
+    else if player.side is "Challenger"
       lobby.to(player.id).emit("meccg", {type: response.action, \
-                                             diff: response.herodiff, \
-                                             state: response.herostate})
+                                             diff: response.challengerdiff, \
+                                             state: response.challengerstate})
   for spect in game.spectators
     lobby.to(spect.id).emit("meccg", {type: response.action,\
                                           diff: response.spectdiff, \
@@ -246,10 +246,10 @@ requester.on 'message', (data) ->
       db.collection('gamestats').update {gameid: response.gameid}, {$set: g}, (err) ->
         throw err if err
 
-      if response.state.contestant.user and response.state.hero.user # have two users in the game
+      if response.state.contestant.user and response.state.challenger.user # have two users in the game
         room = response.state.room
         inc_contestant_game_start(response.state.contestant, room)
-        inc_hero_game_start(response.state.hero, room)
+        inc_challenger_game_start(response.state.challenger, room)
         if response.state.winner # and someone won
           inc_game_win(response.state[response.state.winner], room)
           inc_game_loss(response.state[response.state.loser], room)
@@ -353,7 +353,7 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
 
         if not game.password or game.password.length is 0 or (msg.password and crypto.createHash('md5').update(msg.password).digest('hex') is game.password)
           fn("join ok")
-          if msg.alignment == null then msg.alignment = "Hero"
+          if msg.alignment == null then msg.alignment = "Challenger"
           joinGame(socket, msg.gameid, msg.options, msg.alignment)
           socket.broadcast.to(msg.gameid).emit 'meccg',
             type: "say"
@@ -477,16 +477,16 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
           if game
             if game.players.length is 2
               contestant = if game.players[0].side is "Contestant" then game.players[0] else game.players[1]
-              hero = if game.players[0].side is "Hero" then game.players[0] else game.players[1]
+              challenger = if game.players[0].side is "Challenger" then game.players[0] else game.players[1]
               g = {
                 gameid: socket.gameid
                 startDate: (new Date()).toISOString()
                 title: game.title
                 room: game.room
                 contestant: contestant.user.username
-                hero: hero.user.username
+                challenger: challenger.user.username
                 contestantIdentity: if contestant.deck then contestant.deck.identity.title else null
-                heroIdentity: if hero.deck then hero.deck.identity.title else null
+                challengerIdentity: if challenger.deck then challenger.deck.identity.title else null
               }
               db.collection('gamestats').insert g, (err, data) ->
                 console.log(err) if err

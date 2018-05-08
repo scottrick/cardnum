@@ -9,10 +9,10 @@
 (defn- dissoc-card
   "Dissoc relevant keys in card"
   [card keep-counter]
-  (let [c (dissoc card :current-strength :abilities :subroutines :hero-abilities :rezzed :special :new
+  (let [c (dissoc card :current-strength :abilities :subroutines :challenger-abilities :rezzed :special :new
                   :added-virus-counter :subtype-target :sifr-used :sifr-target)
         c (if keep-counter c (dissoc c :counter :rec-counter :advance-counter :extra-advance-counter))]
-    (if (and (= (:side c) "Hero") (not= (last (:zone c)) :facedown))
+    (if (and (= (:side c) "Challenger") (not= (last (:zone c)) :facedown))
       (dissoc c :installed :facedown :counter :rec-counter :pump :server-target) c)))
 
 (defn- trigger-leave-effect
@@ -20,8 +20,8 @@
   [state side {:keys [disabled installed rezzed facedown zone host] :as card}]
   (when-let [leave-effect (:leave-play (card-def card))]
     (when (and (not disabled)
-               (not (and (= (:side card) "Hero") host (not installed) (not facedown)))
-               (or (and (= (:side card) "Hero") installed (not facedown))
+               (not (and (= (:side card) "Challenger") host (not installed) (not facedown)))
+               (or (and (= (:side card) "Challenger") installed (not facedown))
                    rezzed
                    (and host (not facedown))
                    (= (first zone) :current)
@@ -46,7 +46,7 @@
    (trigger-leave-effect state side card)
    (handle-prevent-effect state card)
    (when (and (:memoryunits card) (:installed card) (not (:facedown card)))
-     (gain state :hero :memory (:memoryunits card)))
+     (gain state :challenger :memory (:memoryunits card)))
    (when (and (find-cid (:cid card) (all-installed state side))
               (not (:disabled card))
               (or (:rezzed card) (:installed card)))
@@ -65,10 +65,10 @@
     (for [ab abilities]
       (assoc (select-keys ab [:cost :pump :breaks]) :label (make-label ab)))))
 
-(defn- hero-ability-init
+(defn- challenger-ability-init
   "Gets abilities associated with the card"
   [cdef]
-  (for [ab (:hero-abilities cdef)]
+  (for [ab (:challenger-abilities cdef)]
     (assoc (select-keys ab [:cost]) :label (make-label ab))))
 
 (defn- subroutines-init
@@ -86,11 +86,11 @@
    (let [cdef (card-def card)
          recurring (:recurring cdef)
          abilities (ability-init cdef)
-         run-abs (hero-ability-init cdef)
+         run-abs (challenger-ability-init cdef)
          subroutines (subroutines-init cdef)
          c (merge card
                   (when init-data (:data cdef))
-                  {:abilities abilities :subroutines subroutines :hero-abilities run-abs})
+                  {:abilities abilities :subroutines subroutines :challenger-abilities run-abs})
          c (if (number? recurring) (assoc c :rec-counter recurring) c)
          c (if (string? (:strength c)) (assoc c :strength 0) c)]
      (when recurring
@@ -98,7 +98,7 @@
                  (effect (set-prop card :rec-counter recurring))
                  recurring)]
          (register-events state side
-                          {(if (= side :contestant) :contestant-phase-12 :hero-phase-12)
+                          {(if (= side :contestant) :contestant-phase-12 :challenger-phase-12)
                            {:effect r}} c)))
      (when-let [prevent (:prevent cdef)]
        (doseq [[ptype pvec] prevent]
@@ -282,8 +282,8 @@
          (clear-install-cost-bonus state side))))))
 
 
-;;; Installing a hero card
-(defn- hero-can-install-reason
+;;; Installing a challenger card
+(defn- challenger-can-install-reason
   "Checks if the specified card can be installed.
    Checks uniqueness of card and installed console.
    Returns true if there are no problems
@@ -299,7 +299,7 @@
       facedown true
       ;; Console check
       (and (has-subtype? card "Console")
-           (some #(has-subtype? % "Console") (all-installed state :hero)))
+           (some #(has-subtype? % "Console") (all-installed state :challenger)))
       :console
       ;; Installing not locked
       (install-locked? state side) :lock-install
@@ -310,10 +310,10 @@
       ;; Nothing preventing install
       :default true)))
 
-(defn- hero-can-install?
-  "Checks `hero-can-install-reason` if not true, toasts reason and returns false"
+(defn- challenger-can-install?
+  "Checks `challenger-can-install-reason` if not true, toasts reason and returns false"
   [state side card facedown]
-  (let [reason (hero-can-install-reason state side card facedown)
+  (let [reason (challenger-can-install-reason state side card facedown)
         reason-toast #(do (toast state side % "warning") false)
         title (:title card)]
     (case reason
@@ -332,7 +332,7 @@
       :req
       (reason-toast (str "Installation requirements are not fulfilled for " title)))))
 
-(defn- hero-get-cost
+(defn- challenger-get-cost
   "Get the total install cost for specified card"
   [state side {:keys [cost memoryunits] :as card}
    {:keys [extra-cost no-cost facedown] :as params}]
@@ -341,7 +341,7 @@
                         (when (and (not no-cost) (not facedown)) [:credit cost])
                         (when (and memoryunits (not facedown)) [:memory memoryunits]))))
 
-(defn- hero-install-message
+(defn- challenger-install-message
   "Prints the correct msg for the card install"
   [state side card-title cost-str
    {:keys [no-cost host-card facedown custom-message] :as params}]
@@ -361,24 +361,24 @@
            (pos? (get-in installed-card [:counter :virus] 0)))
     (update! state side (assoc installed-card :added-virus-counter true))))
 
-(defn hero-install
-  "Installs specified hero card if able
+(defn challenger-install
+  "Installs specified challenger card if able
   Params include extra-cost, no-cost, host-card, facedown and custom-message."
-  ([state side card] (hero-install state side (make-eid state) card nil))
-  ([state side card params] (hero-install state side (make-eid state) card params))
+  ([state side card] (challenger-install state side (make-eid state) card nil))
+  ([state side card params] (challenger-install state side (make-eid state) card params))
   ([state side eid card {:keys [host-card facedown] :as params}]
    (if (and (empty? (get-in @state [side :locked (-> card :zone first)]))
-            (not (seq (get-in @state [:hero :lock-install]))))
+            (not (seq (get-in @state [:challenger :lock-install]))))
      (if-let [hosting (and (not host-card) (not facedown) (:hosting (card-def card)))]
        (continue-ability state side
                          {:choices hosting
                           :prompt (str "Choose a card to host " (:title card) " on")
                           :delayed-completion true
-                          :effect (effect (hero-install eid card (assoc params :host-card target)))}
+                          :effect (effect (challenger-install eid card (assoc params :host-card target)))}
                          card nil)
        (do (trigger-event state side :pre-install card facedown)
-           (let [cost (hero-get-cost state side card params)]
-             (if (hero-can-install? state side card facedown)
+           (let [cost (challenger-get-cost state side card params)]
+             (if (challenger-can-install? state side card facedown)
                (if-let [cost-str (pay state side card cost)]
                  (let [c (if host-card
                            (host state side host-card card)
@@ -389,16 +389,16 @@
                                         (update! state side c)
                                         (card-init state side c {:resolve-effect false
                                                                  :init-data true}))]
-                   (hero-install-message state side (:title card) cost-str params)
-                   (play-sfx state side "install-hero")
-                   (when (and (is-type? card "Program") (neg? (get-in @state [:hero :memory])))
-                     (toast state :hero "You have run out of memory units!"))
+                   (challenger-install-message state side (:title card) cost-str params)
+                   (play-sfx state side "install-challenger")
+                   (when (and (is-type? card "Program") (neg? (get-in @state [:challenger :memory])))
+                     (toast state :challenger "You have run out of memory units!"))
                    (handle-virus-counter-flag state side installed-card)
                    (when (is-type? card "Resource")
-                     (swap! state assoc-in [:hero :register :installed-resource] true))
+                     (swap! state assoc-in [:challenger :register :installed-resource] true))
                    (when (has-subtype? c "Icebreaker")
                      (update-breaker-strength state side c))
-                   (trigger-event-simult state side eid :hero-install
+                   (trigger-event-simult state side eid :challenger-install
                                          {:card-ability (card-as-handler installed-card)}
                                          installed-card))
                  (effect-completed state side eid))

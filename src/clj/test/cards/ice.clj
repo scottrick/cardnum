@@ -11,7 +11,7 @@
   ;; Since all ETR ice share a common ability, we only need one test
   (do-game
     (new-game (default-contestant [(qty "Ice Wall" 3) (qty "Hedge Fund" 3) (qty "Restructure" 2)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "Ice Wall" "HQ")
     (take-credits state :contestant 2)
     (run-on state "HQ")
@@ -20,15 +20,15 @@
       (core/rez state :contestant iwall)
       (card-subroutine state :contestant iwall 0)
       (is (not (:run @state)) "Run is ended")
-      (is (get-in @state [:hero :register :unsuccessful-run]) "Run was unsuccessful"))))
+      (is (get-in @state [:challenger :register :unsuccessful-run]) "Run was unsuccessful"))))
 
 (deftest aimor
   ;; Aimor - trash the top 3 cards of the stack, trash Aimor
   (do-game
     (new-game (default-contestant [(qty "Aimor" 1)])
-              (default-hero [(qty "Sure Gamble" 2) (qty "Desperado" 1)
+              (default-challenger [(qty "Sure Gamble" 2) (qty "Desperado" 1)
                                (qty "Corroder" 1) (qty "Patron" 1)]))
-    (starting-hand state :hero ["Sure Gamble"]) ;move all other cards to stack
+    (starting-hand state :challenger ["Sure Gamble"]) ;move all other cards to stack
     (play-from-hand state :contestant "Aimor" "HQ")
     (is (= 1 (count (get-in @state [:contestant :servers :hq :ices]))) "Aimor installed")
     (take-credits state :contestant)
@@ -36,32 +36,32 @@
       (run-on state "HQ")
       (core/rez state :contestant aim)
       (card-subroutine state :contestant aim 0)
-      (is (= 3 (count (:discard (get-hero)))) "Runner trashed 3 cards")
-      (is (= 1 (count (:deck (get-hero)))) "Runner has 1 card in deck"))
+      (is (= 3 (count (:discard (get-challenger)))) "Challenger trashed 3 cards")
+      (is (= 1 (count (:deck (get-challenger)))) "Challenger has 1 card in deck"))
     (is (= 0 (count (get-in @state [:contestant :servers :hq :ices]))) "Aimor trashed")))
 
 (deftest archangel
   ;; Archangel - accessing from R&D does not cause run to hang.
   (do-game
     (new-game (default-contestant [(qty "Archangel" 1) (qty "Hedge Fund" 1)])
-              (default-hero [(qty "Bank Job" 1)]))
+              (default-challenger [(qty "Bank Job" 1)]))
     (starting-hand state :contestant ["Hedge Fund"])
     (take-credits state :contestant)
-    (play-from-hand state :hero "Bank Job")
+    (play-from-hand state :challenger "Bank Job")
     (run-empty-server state :rd)
     (prompt-choice :contestant "Yes")
-    (prompt-choice :hero "Yes")
+    (prompt-choice :challenger "Yes")
     (prompt-choice :contestant 0)
-    (prompt-choice :hero 0)
+    (prompt-choice :challenger 0)
     (prompt-select :contestant (get-resource state 0))
-    (prompt-choice :hero "OK")
+    (prompt-choice :challenger "OK")
     (is (not (:run @state)) "Run ended")))
 
 (deftest architect-untrashable
   ;; Architect is untrashable while installed and rezzed, but trashable if derezzed or from HQ
   (do-game
     (new-game (default-contestant [(qty "Architect" 3)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "Architect" "HQ")
     (let [architect (get-ice state :hq 0)]
       (core/rez state :contestant architect)
@@ -78,7 +78,7 @@
   ;; Asteroid Belt - Space ICE rez cost reduced by 3 credits per advancement
   (do-game
     (new-game (default-contestant [(qty "Asteroid Belt" 1)])
-              (default-hero))
+              (default-challenger))
     (core/gain state :contestant :credit 5)
     (play-from-hand state :contestant "Asteroid Belt" "HQ")
     (let [ab (get-ice state :hq 0)]
@@ -90,30 +90,30 @@
       (is (= 5 (:credit (get-contestant))) "Paid 3 credits to rez; 2 advancments on Asteroid Belt"))))
 
 (deftest bandwidth
-  ;; Bandwidth - Give the Runner 1 tag; remove 1 tag if the run is successful
+  ;; Bandwidth - Give the Challenger 1 tag; remove 1 tag if the run is successful
   (do-game
     (new-game (default-contestant [(qty "Bandwidth" 1)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "Bandwidth" "Archives")
     (let [bw (get-ice state :archives 0)]
       (take-credits state :contestant)
       (run-on state "Archives")
       (core/rez state :contestant bw)
       (card-subroutine state :contestant bw 0)
-      (is (= 1 (:tag (get-hero))) "Runner took 1 tag")
+      (is (= 1 (:tag (get-challenger))) "Challenger took 1 tag")
       (run-successful state)
-      (is (= 0 (:tag (get-hero))) "Run successful; Runner lost 1 tag")
+      (is (= 0 (:tag (get-challenger))) "Run successful; Challenger lost 1 tag")
       (run-on state "Archives")
       (card-subroutine state :contestant bw 0)
-      (is (= 1 (:tag (get-hero))) "Runner took 1 tag")
+      (is (= 1 (:tag (get-challenger))) "Challenger took 1 tag")
       (run-jack-out state)
-      (is (= 1 (:tag (get-hero))) "Run unsuccessful; Runner kept 1 tag"))))
+      (is (= 1 (:tag (get-challenger))) "Run unsuccessful; Challenger kept 1 tag"))))
 
 (deftest bullfrog
   ;; Bullfrog - Win psi to move to outermost position of another server and continue run there
   (do-game
     (new-game (default-contestant [(qty "Bullfrog" 1) (qty "Pup" 2)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "Bullfrog" "HQ")
     (play-from-hand state :contestant "Pup" "R&D")
     (play-from-hand state :contestant "Pup" "R&D")
@@ -124,17 +124,17 @@
       (is (= :hq (first (get-in @state [:run :server]))))
       (card-subroutine state :contestant frog 0)
       (prompt-choice :contestant "0 [Credits]")
-      (prompt-choice :hero "1 [Credits]")
+      (prompt-choice :challenger "1 [Credits]")
       (prompt-choice :contestant "R&D")
       (is (= :rd (first (get-in @state [:run :server]))) "Run redirected to R&D")
       (is (= 2 (get-in @state [:run :position])) "Passed Bullfrog")
       (is (= "Bullfrog" (:title (get-ice state :rd 2))) "Bullfrog at outermost position of R&D"))))
 
 (deftest cell-portal
-  ;; Cell Portal - Bounce Runner to outermost position and derez itself
+  ;; Cell Portal - Bounce Challenger to outermost position and derez itself
   (do-game
     (new-game (default-contestant [(qty "Cell Portal" 1) (qty "Paper Wall" 2)])
-              (default-hero))
+              (default-challenger))
     (core/gain state :contestant :credit 5)
     (play-from-hand state :contestant "Cell Portal" "HQ")
     (play-from-hand state :contestant "Paper Wall" "HQ")
@@ -154,7 +154,7 @@
   ;; Chimera - Gains chosen subtype
   (do-game
     (new-game (default-contestant [(qty "Chimera" 1)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "Chimera" "HQ")
     (let [ch (get-ice state :hq 0)]
       (core/rez state :contestant ch)
@@ -164,25 +164,25 @@
       (is (not (core/has-subtype? (refresh ch) "Barrier")) "Chimera does not have Barrier"))))
 
 (deftest cortex-lock
-  ;; Cortex Lock - Do net damage equal to Runner's unused memory
+  ;; Cortex Lock - Do net damage equal to Challenger's unused memory
   (do-game
     (new-game (default-contestant [(qty "Cortex Lock" 1)])
-              (default-hero [(qty "Corroder" 2) (qty "Sure Gamble" 3)]))
+              (default-challenger [(qty "Corroder" 2) (qty "Sure Gamble" 3)]))
     (play-from-hand state :contestant "Cortex Lock" "HQ")
     (take-credits state :contestant)
     (let [cort (get-ice state :hq 0)]
-      (play-from-hand state :hero "Corroder")
-      (is (= 3 (:memory (get-hero))))
+      (play-from-hand state :challenger "Corroder")
+      (is (= 3 (:memory (get-challenger))))
       (run-on state "HQ")
       (core/rez state :contestant cort)
       (card-subroutine state :contestant cort 0)
-      (is (= 3 (count (:discard (get-hero)))) "Runner suffered 3 net damage"))))
+      (is (= 3 (count (:discard (get-challenger)))) "Challenger suffered 3 net damage"))))
 
 (deftest crick
   ;; Crick - Strength boost when protecting Archives; installs a card from Archives
   (do-game
     (new-game (default-contestant [(qty "Crick" 2) (qty "Ice Wall" 1)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "Crick" "HQ")
     (play-from-hand state :contestant "Crick" "Archives")
     (core/move state :contestant (find-card "Ice Wall" (:hand (get-contestant))) :discard)
@@ -202,7 +202,7 @@
   ;; Curtain Wall - Strength boost when outermost ICE
   (do-game
     (new-game (default-contestant [(qty "Curtain Wall" 1) (qty "Paper Wall" 1)])
-              (default-hero))
+              (default-challenger))
     (core/gain state :contestant :credit 10)
     (play-from-hand state :contestant "Curtain Wall" "HQ")
     (let [curt (get-ice state :hq 0)]
@@ -218,9 +218,9 @@
   ;; Data Hound - Full test
   (do-game
     (new-game (default-contestant [(qty "Data Hound" 1)])
-              (default-hero [(qty "Sure Gamble" 2) (qty "Desperado" 1)
+              (default-challenger [(qty "Sure Gamble" 2) (qty "Desperado" 1)
                                (qty "Corroder" 1) (qty "Patron" 1)]))
-    (starting-hand state :hero ["Sure Gamble"]) ;move all other cards to stack
+    (starting-hand state :challenger ["Sure Gamble"]) ;move all other cards to stack
     (play-from-hand state :contestant "Data Hound" "HQ")
     (take-credits state :contestant)
     (let [dh (get-ice state :hq 0)]
@@ -228,49 +228,49 @@
       (core/rez state :contestant dh)
       (card-subroutine state :contestant dh 0)
       (prompt-choice :contestant 2)
-      (prompt-choice :hero 0)
+      (prompt-choice :challenger 0)
       ;; trash 1 card and rearrange the other 3
-      (prompt-choice :contestant (find-card "Desperado" (:deck (get-hero))))
-      (is (= 1 (count (:discard (get-hero)))))
-      (prompt-choice :contestant (find-card "Sure Gamble" (:deck (get-hero))))
-      (prompt-choice :contestant (find-card "Corroder" (:deck (get-hero))))
-      (prompt-choice :contestant (find-card "Patron" (:deck (get-hero))))
+      (prompt-choice :contestant (find-card "Desperado" (:deck (get-challenger))))
+      (is (= 1 (count (:discard (get-challenger)))))
+      (prompt-choice :contestant (find-card "Sure Gamble" (:deck (get-challenger))))
+      (prompt-choice :contestant (find-card "Corroder" (:deck (get-challenger))))
+      (prompt-choice :contestant (find-card "Patron" (:deck (get-challenger))))
       ;; try starting over
       (prompt-choice :contestant "Start over")
-      (prompt-choice :contestant (find-card "Patron" (:deck (get-hero))))
-      (prompt-choice :contestant (find-card "Corroder" (:deck (get-hero))))
-      (prompt-choice :contestant (find-card "Sure Gamble" (:deck (get-hero)))) ;this is the top card on stack
+      (prompt-choice :contestant (find-card "Patron" (:deck (get-challenger))))
+      (prompt-choice :contestant (find-card "Corroder" (:deck (get-challenger))))
+      (prompt-choice :contestant (find-card "Sure Gamble" (:deck (get-challenger)))) ;this is the top card on stack
       (prompt-choice :contestant "Done")
-      (is (= "Sure Gamble" (:title (first (:deck (get-hero))))))
-      (is (= "Corroder" (:title (second (:deck (get-hero))))))
-      (is (= "Patron" (:title (second (rest (:deck (get-hero)))))))
+      (is (= "Sure Gamble" (:title (first (:deck (get-challenger))))))
+      (is (= "Corroder" (:title (second (:deck (get-challenger))))))
+      (is (= "Patron" (:title (second (rest (:deck (get-challenger)))))))
       (run-jack-out state)
       (run-on state "HQ")
       (card-subroutine state :contestant dh 0)
       (prompt-choice :contestant 0)
-      (prompt-choice :hero 1)
+      (prompt-choice :challenger 1)
       ;; trash the only card automatically
-      (is (= 2 (count (:discard (get-hero)))))
-      (is (= "Corroder" (:title (first (:deck (get-hero)))))))))
+      (is (= 2 (count (:discard (get-challenger)))))
+      (is (= "Corroder" (:title (first (:deck (get-challenger)))))))))
 
 (deftest data-mine
   ;; Data Mine - do one net and trash
   (do-game
     (new-game (default-contestant [(qty "Data Mine" 1)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "Data Mine" "Server 1")
     (take-credits state :contestant)
     (let [dm (get-ice state :remote1 0)]
       (run-on state "Server 1")
       (core/rez state :contestant dm)
       (card-subroutine state :contestant dm 0)
-      (is (= 1 (count (:discard (get-hero)))) "Runner suffered 1 net damage"))))
+      (is (= 1 (count (:discard (get-challenger)))) "Challenger suffered 1 net damage"))))
 
 (deftest draco
   ;; Dracō - Pay credits when rezzed to increase strength; trace to give 1 tag and end the run
   (do-game
     (new-game (default-contestant [(qty "Dracō" 1)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "Dracō" "HQ")
     (take-credits state :contestant)
     (let [drac (get-ice state :hq 0)]
@@ -281,29 +281,29 @@
       (is (= 4 (:current-strength (refresh drac))) "Dracō is 4 strength")
       (card-subroutine state :contestant drac 0)
       (prompt-choice :contestant 0)
-      (prompt-choice :hero 0)
-      (is (= 1 (:tag (get-hero))) "Runner took 1 tag")
+      (prompt-choice :challenger 0)
+      (is (= 1 (:tag (get-challenger))) "Challenger took 1 tag")
       (is (nil? (get-in @state [:run])) "Run was ended"))))
 
 (deftest enigma
-  ;; Enigma - Force Runner to lose 1 click if able
+  ;; Enigma - Force Challenger to lose 1 click if able
   (do-game
     (new-game (default-contestant [(qty "Enigma" 1)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "Enigma" "HQ")
     (take-credits state :contestant)
     (let [enig (get-ice state :hq 0)]
       (run-on state "HQ")
-      (is (= 3 (:click (get-hero))))
+      (is (= 3 (:click (get-challenger))))
       (core/rez state :contestant enig)
       (card-subroutine state :contestant enig 0)
-      (is (= 2 (:click (get-hero))) "Runner lost 1 click"))))
+      (is (= 2 (:click (get-challenger))) "Challenger lost 1 click"))))
 
 (deftest excalibur
-  ;; Excalibur - Prevent Runner from making another run this turn
+  ;; Excalibur - Prevent Challenger from making another run this turn
   (do-game
     (new-game (default-contestant [(qty "Excalibur" 1)])
-              (default-hero [(qty "Stimhack" 1)]))
+              (default-challenger [(qty "Stimhack" 1)]))
     (play-from-hand state :contestant "Excalibur" "HQ")
     (take-credits state :contestant)
     (let [excal (get-ice state :hq 0)]
@@ -313,23 +313,23 @@
       (run-jack-out state)
       (run-on state "R&D")
       (is (not (:run @state)) "No run initiated")
-      (is (= 3 (:click (get-hero))))
-      (play-from-hand state :hero "Stimhack")
+      (is (= 3 (:click (get-challenger))))
+      (play-from-hand state :challenger "Stimhack")
       (is (not (:run @state)) "No run initiated")
-      (is (= 3 (:click (get-hero))))
-      (is (empty? (:discard (get-hero))) "Card not played from Grip")
+      (is (= 3 (:click (get-challenger))))
+      (is (empty? (:discard (get-challenger))) "Card not played from Grip")
       ; Check cannot run flag is cleared on next turn #2474
-      (take-credits state :hero)
-      (is (= :contestant (:active-player @state)) "Corp turn")
-      (core/gain state :hero :click 1)
+      (take-credits state :challenger)
+      (is (= :contestant (:active-player @state)) "Contestant turn")
+      (core/gain state :challenger :click 1)
       (run-on state "HQ")
       (is (:run @state) "Run initiated ok"))))
 
 (deftest fenris
-  ;; Fenris - Illicit ICE give Corp 1 bad publicity when rezzed
+  ;; Fenris - Illicit ICE give Contestant 1 bad publicity when rezzed
   (do-game
     (new-game (default-contestant [(qty "Fenris" 1)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "Fenris" "HQ")
     (take-credits state :contestant)
     (let [fen (get-ice state :hq 0)]
@@ -337,39 +337,39 @@
       (core/rez state :contestant fen)
       (is (= 1 (:bad-publicity (get-contestant))) "Gained 1 bad pub")
       (card-subroutine state :contestant fen 0)
-      (is (= 1 (:brain-damage (get-hero))) "Runner took 1 brain damage")
-      (is (= 1 (count (:discard (get-hero)))))
-      (is (= 4 (core/hand-size state :hero))))))
+      (is (= 1 (:brain-damage (get-challenger))) "Challenger took 1 brain damage")
+      (is (= 1 (count (:discard (get-challenger)))))
+      (is (= 4 (core/hand-size state :challenger))))))
 
 (deftest flare
   ;; Flare - Trash 1 program, do 2 unpreventable meat damage, and end the run
   (do-game
     (new-game (default-contestant [(qty "Flare" 1)])
-              (default-hero [(qty "Plascrete Carapace" 1) (qty "Clone Chip" 1) (qty "Cache" 3)]))
+              (default-challenger [(qty "Plascrete Carapace" 1) (qty "Clone Chip" 1) (qty "Cache" 3)]))
     (play-from-hand state :contestant "Flare" "HQ")
     (core/gain state :contestant :credit 2)
     (take-credits state :contestant)
-    (play-from-hand state :hero "Plascrete Carapace")
-    (play-from-hand state :hero "Clone Chip")
+    (play-from-hand state :challenger "Plascrete Carapace")
+    (play-from-hand state :challenger "Clone Chip")
     (let [flare (get-ice state :hq 0)
           cc (get-hardware state 1)]
       (run-on state :hq)
       (core/rez state :contestant flare)
       (card-subroutine state :contestant flare 0)
       (prompt-choice :contestant 0)
-      (prompt-choice :hero 0)
+      (prompt-choice :challenger 0)
       (prompt-select :contestant cc)
-      (is (= 1 (count (get-in @state [:hero :rig :hardware]))) "Clone Chip trashed")
-      (is (empty? (:prompt (get-hero))) "Plascrete didn't try preventing meat damage")
-      (is (= 1 (count (:hand (get-hero)))))
-      (is (= 3 (count (:discard (get-hero)))) "Clone Chip plus 2 cards lost from damage in discard")
+      (is (= 1 (count (get-in @state [:challenger :rig :hardware]))) "Clone Chip trashed")
+      (is (empty? (:prompt (get-challenger))) "Plascrete didn't try preventing meat damage")
+      (is (= 1 (count (:hand (get-challenger)))))
+      (is (= 3 (count (:discard (get-challenger)))) "Clone Chip plus 2 cards lost from damage in discard")
       (is (not (:run @state)) "Run ended"))))
 
 (deftest gemini-kicker
   ;; Gemini - Successfully trace to do 1 net damage; do 1 net damage if trace strength is 5 or more regardless of success
   (do-game
     (new-game (default-contestant [(qty "Gemini" 1) (qty "Hedge Fund" 2)])
-              (default-hero [(qty "Sure Gamble" 3) (qty "Dirty Laundry" 2)]))
+              (default-challenger [(qty "Sure Gamble" 3) (qty "Dirty Laundry" 2)]))
     (play-from-hand state :contestant "Gemini" "HQ")
     (play-from-hand state :contestant "Hedge Fund")
     (play-from-hand state :contestant "Hedge Fund")
@@ -379,18 +379,18 @@
       (core/rez state :contestant gem)
       (card-subroutine state :contestant gem 0)
       (prompt-choice :contestant 3) ; boost to trace strength 5
-      (prompt-choice :hero 0)
-      (is (= 2 (count (:discard (get-hero)))) "Did 2 net damage")
+      (prompt-choice :challenger 0)
+      (is (= 2 (count (:discard (get-challenger)))) "Did 2 net damage")
       (card-subroutine state :contestant gem 0)
       (prompt-choice :contestant 3) ; boost to trace strength 5
-      (prompt-choice :hero 5) ; match trace
-      (is (= 3 (count (:discard (get-hero)))) "Did only 1 net damage for having trace strength 5 or more"))))
+      (prompt-choice :challenger 5) ; match trace
+      (is (= 3 (count (:discard (get-challenger)))) "Did only 1 net damage for having trace strength 5 or more"))))
 
 (deftest gemini-chronos-protocol
   ;; Gemini - Interaction with Chronos Protocol and kicker
   (do-game
     (new-game (make-deck "Chronos Protocol: Selective Mind-mapping" [(qty "Gemini" 1) (qty "Hedge Fund" 2)])
-              (default-hero [(qty "Sure Gamble" 1) (qty "Dirty Laundry" 2)]))
+              (default-challenger [(qty "Sure Gamble" 1) (qty "Dirty Laundry" 2)]))
     (play-from-hand state :contestant "Gemini" "HQ")
     (play-from-hand state :contestant "Hedge Fund")
     (play-from-hand state :contestant "Hedge Fund")
@@ -400,16 +400,16 @@
       (core/rez state :contestant gem)
       (card-subroutine state :contestant gem 0)
       (prompt-choice :contestant 3) ; boost to trace strength 5
-      (prompt-choice :hero 0)
+      (prompt-choice :challenger 0)
       (prompt-choice :contestant "Yes")
-      (prompt-choice :contestant (find-card "Sure Gamble" (:hand (get-hero))))
-      (is (= 2 (count (:discard (get-hero)))) "Did 2 net damage"))))
+      (prompt-choice :contestant (find-card "Sure Gamble" (:hand (get-challenger))))
+      (is (= 2 (count (:discard (get-challenger)))) "Did 2 net damage"))))
 
 (deftest iq
   ;; IQ - Rez cost and strength equal to cards in HQ
   (do-game
     (new-game (default-contestant [(qty "IQ" 3) (qty "Hedge Fund" 3)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "Hedge Fund")
     (play-from-hand state :contestant "IQ" "R&D")
     (let [iq1 (get-ice state :rd 0)]
@@ -426,10 +426,10 @@
                  (= 2 (:credit (get-contestant)))) "3 cards in HQ: paid 3 to rez, both have 3 strength")))))
 
 (deftest jua-encounter
-  ;; Jua (encounter effect) - Prevent Runner from installing cards for the rest of the turn
+  ;; Jua (encounter effect) - Prevent Challenger from installing cards for the rest of the turn
   (do-game
     (new-game (default-contestant [(qty "Jua" 1)])
-              (default-hero [(qty "Desperado" 1) (qty "Sure Gamble" 1)]))
+              (default-challenger [(qty "Desperado" 1) (qty "Sure Gamble" 1)]))
     (play-from-hand state :contestant "Jua" "HQ")
     (take-credits state :contestant)
     (let [jua (get-ice state :hq 0)]
@@ -437,87 +437,87 @@
       (core/rez state :contestant jua)
       (card-ability state :contestant (refresh jua) 0)
       (run-successful state)
-      (is (= 2 (count (:hand (get-hero)))) "Runner starts with 2 cards in hand")
-      (play-from-hand state :hero "Desperado")
-      (is (= 2 (count (:hand (get-hero)))) "No cards installed")
-      (play-from-hand state :hero "Sure Gamble")
-      (is (= 1 (count (:hand (get-hero)))) "Can play events")
-      (take-credits state :hero)
+      (is (= 2 (count (:hand (get-challenger)))) "Challenger starts with 2 cards in hand")
+      (play-from-hand state :challenger "Desperado")
+      (is (= 2 (count (:hand (get-challenger)))) "No cards installed")
+      (play-from-hand state :challenger "Sure Gamble")
+      (is (= 1 (count (:hand (get-challenger)))) "Can play events")
+      (take-credits state :challenger)
       (take-credits state :contestant)
-      (is (= 1 (count (:hand (get-hero)))) "Runner starts with 1 cards in hand")
-      (play-from-hand state :hero "Desperado")
-      (is (= 0 (count (:hand (get-hero)))) "Card installed"))))
+      (is (= 1 (count (:hand (get-challenger)))) "Challenger starts with 1 cards in hand")
+      (play-from-hand state :challenger "Desperado")
+      (is (= 0 (count (:hand (get-challenger)))) "Card installed"))))
 
 (deftest jua-sub
-  ;; Jua (subroutine effect) - Select 2 hero cards, hero moves one to the stack
+  ;; Jua (subroutine effect) - Select 2 challenger cards, challenger moves one to the stack
   (do-game
     (new-game (default-contestant [(qty "Jua" 1)])
-              (default-hero [(qty "Desperado" 1) (qty "Gordian Blade" 1)]))
+              (default-challenger [(qty "Desperado" 1) (qty "Gordian Blade" 1)]))
     (play-from-hand state :contestant "Jua" "HQ")
     (take-credits state :contestant)
     (let [jua (get-ice state :hq 0)]
-      (core/gain state :hero :credit 10)
-      (play-from-hand state :hero "Desperado")
+      (core/gain state :challenger :credit 10)
+      (play-from-hand state :challenger "Desperado")
       (run-on state "HQ")
       (core/rez state :contestant jua)
       (card-subroutine state :contestant (refresh jua) 0)
       (is (empty? (:prompt (get-contestant))) "Can't fire for 1 installed card")
       (run-successful state)
 
-      (play-from-hand state :hero "Gordian Blade")
+      (play-from-hand state :challenger "Gordian Blade")
       (run-on state "HQ")
       (card-subroutine state :contestant (refresh jua) 0)
       (prompt-select :contestant (get-program state 0))
       (prompt-select :contestant (get-hardware state 0))
-      (prompt-choice :hero "Gordian Blade")
+      (prompt-choice :challenger "Gordian Blade")
       (is (nil? (get-program state 0)) "Card is uninstalled")
-      (is (= 1 (count (:deck (get-hero)))) "Runner puts card in deck"))))
+      (is (= 1 (count (:deck (get-challenger)))) "Challenger puts card in deck"))))
 
 (deftest lockdown
-  ;; Lockdown - Prevent Runner from drawing cards for the rest of the turn
+  ;; Lockdown - Prevent Challenger from drawing cards for the rest of the turn
   (do-game
     (new-game (default-contestant [(qty "Lockdown" 1)])
-              (default-hero [(qty "Diesel" 2) (qty "Sure Gamble" 3)]))
+              (default-challenger [(qty "Diesel" 2) (qty "Sure Gamble" 3)]))
     (play-from-hand state :contestant "Lockdown" "R&D")
     (take-credits state :contestant)
-    (core/move state :hero (find-card "Sure Gamble" (:hand (get-hero))) :deck)
-    (core/move state :hero (find-card "Sure Gamble" (:hand (get-hero))) :deck)
-    (core/move state :hero (find-card "Sure Gamble" (:hand (get-hero))) :deck)
+    (core/move state :challenger (find-card "Sure Gamble" (:hand (get-challenger))) :deck)
+    (core/move state :challenger (find-card "Sure Gamble" (:hand (get-challenger))) :deck)
+    (core/move state :challenger (find-card "Sure Gamble" (:hand (get-challenger))) :deck)
     (let [lock (get-ice state :rd 0)]
       (run-on state "R&D")
       (core/rez state :contestant lock)
       (card-subroutine state :contestant lock 0)
       (run-successful state)
-      (play-from-hand state :hero "Diesel")
-      (is (= 1 (count (:hand (get-hero)))) "No cards drawn")
-      (take-credits state :hero)
+      (play-from-hand state :challenger "Diesel")
+      (is (= 1 (count (:hand (get-challenger)))) "No cards drawn")
+      (take-credits state :challenger)
       (take-credits state :contestant)
-      (play-from-hand state :hero "Diesel")
-      (is (= 3 (count (:hand (get-hero))))
+      (play-from-hand state :challenger "Diesel")
+      (is (= 3 (count (:hand (get-challenger))))
           "New turn ends prevention; remaining 3 cards drawn from Stack"))))
 
 (deftest lotus-field-unlowerable
   ;; Lotus Field strength cannot be lowered
   (do-game
     (new-game (default-contestant [(qty "Lotus Field" 1) (qty "Lag Time" 1)])
-              (default-hero [(qty "Ice Carver" 1) (qty "Parasite" 1)]))
+              (default-challenger [(qty "Ice Carver" 1) (qty "Parasite" 1)]))
     (play-from-hand state :contestant "Lotus Field" "Archives")
     (take-credits state :contestant 2)
     (let [lotus (get-ice state :archives 0)]
       (core/rez state :contestant lotus)
-      (play-from-hand state :hero "Ice Carver")
+      (play-from-hand state :challenger "Ice Carver")
       (run-on state "Archives")
       (is (= 4 (:current-strength (refresh lotus))) "Lotus Field strength unchanged")
       (run-jack-out state)
-      (play-from-hand state :hero "Parasite")
-      (prompt-select :hero lotus)
+      (play-from-hand state :challenger "Parasite")
+      (prompt-select :challenger lotus)
       (is (= 1 (count (:hosted (refresh lotus)))) "Parasite hosted on Lotus Field")
-      (take-credits state :hero 1)
+      (take-credits state :challenger 1)
       (take-credits state :contestant)
-      (is (= 1 (core/get-virus-counters state :hero (first (:hosted (refresh lotus)))))
+      (is (= 1 (core/get-virus-counters state :challenger (first (:hosted (refresh lotus)))))
           "Parasite has 1 virus counter")
       (is (= 4 (:current-strength (refresh lotus))) "Lotus Field strength unchanged")
-      (take-credits state :hero)
+      (take-credits state :challenger)
       (play-from-hand state :contestant "Lag Time")
       (is (= 5 (:current-strength (refresh lotus))) "Lotus Field strength increased")
       (take-credits state :contestant 2)
@@ -527,43 +527,43 @@
   ;; Mausolus - 3 adv tokens change the subroutines
   (do-game
     (new-game (default-contestant [(qty "Mausolus" 1)])
-              (default-hero [(qty "NetChip" 5)]))
+              (default-challenger [(qty "NetChip" 5)]))
     (play-from-hand state :contestant "Mausolus" "HQ")
     (let [mau (get-ice state :hq 0)]
       (core/rez state :contestant mau)
       (take-credits state :contestant)
       (run-on state :hq)
       (is (= 3 (:credit (get-contestant))) "contestant starts encounter with 3 crs")
-      (is (= 0 (count (:discard (get-hero)))) "hero starts encounter with no cards in heap")
-      (is (= 0 (:tag (get-hero))) "hero starts encounter with 0 tags")
+      (is (= 0 (count (:discard (get-challenger)))) "challenger starts encounter with no cards in heap")
+      (is (= 0 (:tag (get-challenger))) "challenger starts encounter with 0 tags")
       (card-subroutine state :contestant mau 0)
       (card-subroutine state :contestant mau 1)
       (card-subroutine state :contestant mau 2)
       (is (= 4 (:credit (get-contestant))) "contestant gains 1 cr from mausolus")
-      (is (= 1 (count (:discard (get-hero)))) "contestant does 1 net damage")
-      (is (= 1 (:tag (get-hero))) "contestant gives 1 tag")
+      (is (= 1 (count (:discard (get-challenger)))) "contestant does 1 net damage")
+      (is (= 1 (:tag (get-challenger))) "contestant gives 1 tag")
       (run-jack-out state)
-      (take-credits state :hero)
+      (take-credits state :challenger)
       (core/advance state :contestant {:card (refresh mau)})
       (core/advance state :contestant {:card (refresh mau)})
       (core/advance state :contestant {:card (refresh mau)})
       (run-on state :hq)
       (is (= 1 (:credit (get-contestant))) "contestant starts encounter with 1 crs")
-      (is (= 1 (count (:discard (get-hero)))) "hero starts encounter with 1 card in heap")
-      (is (= 1 (:tag (get-hero))) "hero starts encounter with 1 tags")
+      (is (= 1 (count (:discard (get-challenger)))) "challenger starts encounter with 1 card in heap")
+      (is (= 1 (:tag (get-challenger))) "challenger starts encounter with 1 tags")
       (card-subroutine state :contestant mau 0)
       (card-subroutine state :contestant mau 1)
       (card-subroutine state :contestant mau 2)
       (is (= 4 (:credit (get-contestant))) "contestant gains 3 cr")
-      (is (= 4 (count (:discard (get-hero)))) "contestant does 3 net damage")
-      (is (= 2 (:tag (get-hero))) "contestant gives 1 tag")
+      (is (= 4 (count (:discard (get-challenger)))) "contestant does 3 net damage")
+      (is (= 2 (:tag (get-challenger))) "contestant gives 1 tag")
       (is (not (:run @state)) "Run is ended")
-      (is (get-in @state [:hero :register :unsuccessful-run]) "Run was unsuccessful"))))
+      (is (get-in @state [:challenger :register :unsuccessful-run]) "Run was unsuccessful"))))
 
 (deftest meru-mati
   (do-game
     (new-game (default-contestant [(qty "Meru Mati" 2)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "Meru Mati" "HQ")
     (play-from-hand state :contestant "Meru Mati" "R&D")
     (core/rez state :contestant (get-ice state :hq 0))
@@ -575,7 +575,7 @@
   ;; Mind game - PSI redirect to different server
   (do-game
     (new-game (default-contestant [(qty "Mind Game" 1)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "Mind Game" "HQ")
     (take-credits state :contestant)
     (run-on state :hq)
@@ -583,16 +583,16 @@
       (core/rez state :contestant mindgame)
       (card-subroutine state :contestant mindgame 0))
     (prompt-choice :contestant "1 [Credits]")
-    (prompt-choice :hero "0 [Credits]")
-    (is (= (set ["R&D" "Archives"]) (set (:choices (prompt-map :contestant)))) "Corp cannot choose server Runner is on")
+    (prompt-choice :challenger "0 [Credits]")
+    (is (= (set ["R&D" "Archives"]) (set (:choices (prompt-map :contestant)))) "Contestant cannot choose server Challenger is on")
     (prompt-choice :contestant "Archives")
-    (is (= [:archives] (get-in @state [:run :server])) "Runner now running on Archives")))
+    (is (= [:archives] (get-in @state [:run :server])) "Challenger now running on Archives")))
 
 (deftest minelayer
   ;; Minelayer - Install a piece of ICE in outermost position of Minelayer's server at no cost
   (do-game
     (new-game (default-contestant [(qty "Minelayer" 1) (qty "Fire Wall" 1)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "Minelayer" "HQ")
     (take-credits state :contestant)
     (run-on state :hq)
@@ -609,7 +609,7 @@
     (new-game (default-contestant [(qty "Wendigo" 1)
                              (qty "Shipment from SanSan" 1)
                              (qty "Superior Cyberwalls" 1)])
-              (default-hero))
+              (default-challenger))
     (core/gain state :contestant :click 2)
     (play-from-hand state :contestant "Superior Cyberwalls" "New remote")
     (let [sc (get-content state :remote1 0)]
@@ -633,7 +633,7 @@
   ;; Mother Goddess - Gains other ice subtypes
   (do-game
     (new-game (default-contestant [(qty "Mother Goddess" 1) (qty "NEXT Bronze" 1)])
-              (default-hero))
+              (default-challenger))
     (core/gain state :contestant :credit 1)
     (play-from-hand state :contestant "Mother Goddess" "HQ")
     (play-from-hand state :contestant "NEXT Bronze" "R&D")
@@ -652,7 +652,7 @@
   ;; NEXT Bronze - Add 1 strength for every rezzed NEXT ice
   (do-game
     (new-game (default-contestant [(qty "NEXT Bronze" 2) (qty "NEXT Silver" 1)])
-              (default-hero))
+              (default-challenger))
     (core/gain state :contestant :credit 2)
     (play-from-hand state :contestant "NEXT Bronze" "HQ")
     (play-from-hand state :contestant "NEXT Bronze" "R&D")
@@ -675,62 +675,62 @@
           "NEXT Bronze at 3 strength: 3 rezzed NEXT ice"))))
 
 (deftest nightdancer
-  ;; Nightdancer - Runner loses a click if able, contestant gains a click on next turn
+  ;; Nightdancer - Challenger loses a click if able, contestant gains a click on next turn
   (do-game
     (new-game (default-contestant [(qty "Nightdancer" 1)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "Nightdancer" "HQ")
     (take-credits state :contestant)
     (let [nd (get-ice state :hq 0)]
       (core/rez state :contestant nd)
       (run-on state "HQ")
-      (is (= 3 (:click (get-hero))) "Runner starts with 3 clicks")
+      (is (= 3 (:click (get-challenger))) "Challenger starts with 3 clicks")
       (card-subroutine state :contestant nd 0)
-      (is (= 2 (:click (get-hero))) "Runner lost 1 click")
+      (is (= 2 (:click (get-challenger))) "Challenger lost 1 click")
       (card-subroutine state :contestant nd 0)
-      (is (= 1 (:click (get-hero))) "Runner lost 1 click")
+      (is (= 1 (:click (get-challenger))) "Challenger lost 1 click")
       (run-jack-out state)
-      (take-credits state :hero)
-      (is (= 5 (:click (get-contestant))) "Corp has 5 clicks"))))
+      (take-credits state :challenger)
+      (is (= 5 (:click (get-contestant))) "Contestant has 5 clicks"))))
 
 (deftest resistor
-  ;; Resistor - Strength equal to Runner tags, lose strength when Runner removes a tag
+  ;; Resistor - Strength equal to Challenger tags, lose strength when Challenger removes a tag
   (do-game
     (new-game (default-contestant [(qty "Resistor" 1)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "Resistor" "HQ")
     (let [resistor (get-ice state :hq 0)]
       (core/rez state :contestant resistor)
-      (is (= 0 (:current-strength (refresh resistor))) "No Runner tags; 0 strength")
-      (core/tag-hero state :hero 2)
-      (is (= 2 (:tag (get-hero))))
-      (is (= 2 (:current-strength (refresh resistor))) "2 Runner tags; 2 strength")
+      (is (= 0 (:current-strength (refresh resistor))) "No Challenger tags; 0 strength")
+      (core/tag-challenger state :challenger 2)
+      (is (= 2 (:tag (get-challenger))))
+      (is (= 2 (:current-strength (refresh resistor))) "2 Challenger tags; 2 strength")
       (take-credits state :contestant)
-      (core/remove-tag state :hero 1)
-      (is (= 1 (:current-strength (refresh resistor))) "Runner removed 1 tag; down to 1 strength"))))
+      (core/remove-tag state :challenger 1)
+      (is (= 1 (:current-strength (refresh resistor))) "Challenger removed 1 tag; down to 1 strength"))))
 
 (deftest self-adapting-code-wall-unlowerable
   ;; self-adapting code wall strength cannot be lowered
   (do-game
     (new-game (default-contestant [(qty "Self-Adapting Code Wall" 1) (qty "Lag Time" 1)])
-              (default-hero [(qty "Ice Carver" 1) (qty "Parasite" 1)]))
+              (default-challenger [(qty "Ice Carver" 1) (qty "Parasite" 1)]))
     (play-from-hand state :contestant "Self-Adapting Code Wall" "Archives")
     (take-credits state :contestant 2)
     (let [sacw (get-ice state :archives 0)]
       (core/rez state :contestant sacw)
-      (play-from-hand state :hero "Ice Carver")
+      (play-from-hand state :challenger "Ice Carver")
       (run-on state "Archives")
       (is (= 1 (:current-strength (refresh sacw))) "Self-Adapting Code Wall strength unchanged")
       (run-jack-out state)
-      (play-from-hand state :hero "Parasite")
-      (prompt-select :hero sacw)
+      (play-from-hand state :challenger "Parasite")
+      (prompt-select :challenger sacw)
       (is (= 1 (count (:hosted (refresh sacw)))) "Parasite hosted on Self-Adapting Code Wall")
-      (take-credits state :hero 1)
+      (take-credits state :challenger 1)
       (take-credits state :contestant)
-      (is (= 1 (core/get-virus-counters state :hero (first (:hosted (refresh sacw)))))
+      (is (= 1 (core/get-virus-counters state :challenger (first (:hosted (refresh sacw)))))
           "Parasite has 1 virus counter")
       (is (= 1 (:current-strength (refresh sacw))) "Self-Adapting Code Wall strength unchanged")
-      (take-credits state :hero)
+      (take-credits state :challenger)
       (play-from-hand state :contestant "Lag Time")
       (is (= 2 (:current-strength (refresh sacw))) "Self-Adapting Code Wall strength increased")
       (take-credits state :contestant 2)
@@ -740,47 +740,47 @@
   ;; Searchlight - Trace bace equal to advancement counters
   (do-game
     (new-game (default-contestant [(qty "Searchlight" 1)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "Searchlight" "HQ")
     (let [searchlight (get-ice state :hq 0)]
       (core/rez state :contestant searchlight)
       (card-subroutine state :contestant (refresh searchlight) 0)
       (prompt-choice :contestant 0)
-      (prompt-choice :hero 0)
-      (is (= 0 (:tag (get-hero))) "Trace failed with 0 advancements")
+      (prompt-choice :challenger 0)
+      (is (= 0 (:tag (get-challenger))) "Trace failed with 0 advancements")
       (core/advance state :contestant {:card (refresh searchlight)})
       (card-subroutine state :contestant (refresh searchlight) 0)
       (prompt-choice :contestant 0)
-      (prompt-choice :hero 0)
-      (is (= 1 (:tag (get-hero))) "Trace succeeds with 0 advancements"))))
+      (prompt-choice :challenger 0)
+      (is (= 1 (:tag (get-challenger))) "Trace succeeds with 0 advancements"))))
 
 (deftest sherlock
-  ;; Sherlock 1.0 - Trace to add an installed program to the top of Runner's Stack
+  ;; Sherlock 1.0 - Trace to add an installed program to the top of Challenger's Stack
   (do-game
     (new-game (default-contestant [(qty "Sherlock 1.0" 1)])
-              (default-hero [(qty "Gordian Blade" 3) (qty "Sure Gamble" 3)]))
+              (default-challenger [(qty "Gordian Blade" 3) (qty "Sure Gamble" 3)]))
     (play-from-hand state :contestant "Sherlock 1.0" "HQ")
     (take-credits state :contestant)
-    (play-from-hand state :hero "Gordian Blade")
+    (play-from-hand state :challenger "Gordian Blade")
     (run-on state :hq)
     (core/rez state :contestant (get-ice state :hq 0))
     (card-subroutine state :contestant (get-ice state :hq 0) 0)
     (prompt-choice :contestant 0)
-    (prompt-choice :hero 0)
-    (prompt-select :contestant (get-in @state [:hero :rig :program 0]))
-    (is (empty? (get-in @state [:hero :rig :program])) "Gordian uninstalled")
-    (is (= "Gordian Blade" (:title (first (:deck (get-hero))))) "Gordian on top of Stack")))
+    (prompt-choice :challenger 0)
+    (prompt-select :contestant (get-in @state [:challenger :rig :program 0]))
+    (is (empty? (get-in @state [:challenger :rig :program])) "Gordian uninstalled")
+    (is (= "Gordian Blade" (:title (first (:deck (get-challenger))))) "Gordian on top of Stack")))
 
 (deftest shiro
   ;; Shiro - Full test
   (do-game
     (new-game (default-contestant [(qty "Shiro" 1) (qty "Caprice Nisei" 1)
                              (qty "Quandary" 1) (qty "Jackson Howard" 1)])
-              (default-hero [(qty "R&D Interface" 1)]))
+              (default-challenger [(qty "R&D Interface" 1)]))
     (starting-hand state :contestant ["Shiro"])
     (play-from-hand state :contestant "Shiro" "HQ")
     (take-credits state :contestant)
-    (play-from-hand state :hero "R&D Interface")
+    (play-from-hand state :challenger "R&D Interface")
     (let [shiro (get-ice state :hq 0)]
       (run-on state :hq)
       (core/rez state :contestant shiro)
@@ -799,16 +799,16 @@
       (is (= "Jackson Howard" (:title (second (rest (:deck (get-contestant)))))))
       (card-subroutine state :contestant shiro 1)
       (is (= (:cid (first (:deck (get-contestant))))
-             (:cid (:card (first (:prompt (get-hero)))))) "Access the top card of R&D")
-      (prompt-choice :hero "No")
+             (:cid (:card (first (:prompt (get-challenger)))))) "Access the top card of R&D")
+      (prompt-choice :challenger "No")
       (is (= (:cid (second (:deck (get-contestant))))
-             (:cid (:card (first (:prompt (get-hero)))))) "Access another card due to R&D Interface"))))
+             (:cid (:card (first (:prompt (get-challenger)))))) "Access another card due to R&D Interface"))))
 
 (deftest snowflake
   ;; Snowflake - Win a psi game to end the run
   (do-game
     (new-game (default-contestant [(qty "Snowflake" 1)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "Snowflake" "HQ")
     (take-credits state :contestant)
     (run-on state :hq)
@@ -816,18 +816,18 @@
       (core/rez state :contestant sf)
       (card-subroutine state :contestant sf 0)
       (prompt-choice :contestant "0 [Credits]")
-      (prompt-choice :hero "0 [Credits]")
-      (is (:run @state) "Runner won psi, run continues")
+      (prompt-choice :challenger "0 [Credits]")
+      (is (:run @state) "Challenger won psi, run continues")
       (card-subroutine state :contestant sf 0)
       (prompt-choice :contestant "0 [Credits]")
-      (prompt-choice :hero "1 [Credits]")
+      (prompt-choice :challenger "1 [Credits]")
       (is (not (:run @state)) "Run ended"))))
 
 (deftest special-offer-trash-ice-during-run
   ;; Special Offer trashes itself and updates the run position
   (do-game
     (new-game (default-contestant [(qty "Ice Wall" 1) (qty "Special Offer" 1)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "Ice Wall" "HQ")
     (play-from-hand state :contestant "Special Offer" "HQ")
     (take-credits state :contestant 1)
@@ -845,7 +845,7 @@
   ;; Forfeit option as rez cost, can have hosted condition counters
   (do-game
     (new-game (default-contestant [(qty "Hostile Takeover" 1) (qty "Tithonium" 1) (qty "Patch" 1)])
-              (default-hero [(qty "Pawn" 1) (qty "Wasteland" 1)]))
+              (default-challenger [(qty "Pawn" 1) (qty "Wasteland" 1)]))
     (core/gain state :contestant :click 10)
     (play-from-hand state :contestant "Hostile Takeover" "New remote")
     (play-from-hand state :contestant "Tithonium" "HQ")
@@ -870,19 +870,19 @@
       (take-credits state :contestant)
       (core/derez state :contestant (refresh ti))
       (is (= 1 (count (:hosted (refresh ti)))) "1 card on Tithonium")
-      (play-from-hand state :hero "Pawn")
-      (play-from-hand state :hero "Wasteland")
+      (play-from-hand state :challenger "Pawn")
+      (play-from-hand state :challenger "Wasteland")
       (let [pawn (get-program state 0)
             wast (get-resource state 0)]
-        (card-ability state :hero (refresh pawn) 0)
-        (prompt-select :hero (refresh ti))
+        (card-ability state :challenger (refresh pawn) 0)
+        (prompt-select :challenger (refresh ti))
         (is (= 2 (count (:hosted (refresh ti)))) "2 cards on Tithonium")
         (core/derez state :contestant (refresh ti))
         (is (= 2 (count (:hosted (refresh ti)))) "2 cards on Tithonium")
         (run-on state "HQ")
         (card-subroutine state :contestant ti 2)
         (prompt-select :contestant (refresh wast))
-        (is (= 1 (count (:discard (get-hero)))) "1 card trashed")
+        (is (= 1 (count (:discard (get-challenger)))) "1 card trashed")
         (card-subroutine state :contestant ti 1)
         (is (not (:run @state)) "Run ended")))))
 
@@ -890,7 +890,7 @@
   ;; Do not prompt for alt cost #2734
   (do-game
     (new-game (default-contestant [(qty "Hostile Takeover" 1) (qty "Oversight AI" 1) (qty "Tithonium" 1)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "Hostile Takeover" "New remote")
     (play-from-hand state :contestant "Tithonium" "R&D")
     (let [ht (get-content state :remote1 0)
@@ -906,12 +906,12 @@
   ;; TMI ICE test
   (do-game
     (new-game (default-contestant [(qty "TMI" 3)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "TMI" "HQ")
     (let [tmi (get-ice state :hq 0)]
       (core/rez state :contestant tmi)
       (prompt-choice :contestant 0)
-      (prompt-choice :hero 0)
+      (prompt-choice :challenger 0)
       (is (get-in (refresh tmi) [:rezzed])))))
 
 (deftest tmi-derez
@@ -923,14 +923,14 @@
     (let [tmi (get-ice state :hq 0)]
       (core/rez state :contestant tmi)
       (prompt-choice :contestant 0)
-      (prompt-choice :hero 0)
+      (prompt-choice :challenger 0)
       (is (not (get-in (refresh tmi) [:rezzed]))))))
 
 (deftest turing-positional-strength
   ;; Turing - Strength boosted when protecting a remote server
   (do-game
     (new-game (default-contestant [(qty "Turing" 2) (qty "Hedge Fund" 1)])
-              (default-hero))
+              (default-challenger))
     (play-from-hand state :contestant "Hedge Fund")
     (play-from-hand state :contestant "Turing" "HQ")
     (play-from-hand state :contestant "Turing" "New remote")
@@ -947,13 +947,13 @@
   ;; Wraparound - Strength boosted when no fracter is installed
   (do-game
     (new-game (default-contestant [(qty "Wraparound" 1)])
-              (default-hero [(qty "Corroder" 1)]))
+              (default-challenger [(qty "Corroder" 1)]))
     (play-from-hand state :contestant "Wraparound" "HQ")
     (let [wrap (get-ice state :hq 0)]
       (core/rez state :contestant wrap)
       (is (= 7 (:current-strength (refresh wrap)))
           "Wraparound +7 strength with no fracter in play")
       (take-credits state :contestant)
-      (play-from-hand state :hero "Corroder")
+      (play-from-hand state :challenger "Corroder")
       (is (= 0 (:current-strength (refresh wrap)))
           "Wraparound 0 strength after Corroder installed"))))

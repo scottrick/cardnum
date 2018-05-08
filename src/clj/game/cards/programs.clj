@@ -15,7 +15,7 @@
                                                                  (not (:advance-counter %)))}
                                             :effect (req (move state :contestant target :deck)
                                                          (shuffle! state :contestant :deck)
-                                                         (swap! state update-in [:hero :prompt] rest)
+                                                         (swap! state update-in [:challenger :prompt] rest)
                                                          (handle-end-run state side)) ; remove the replace-access prompt
                                             :msg "shuffle a card into R&D"}} card))}]}
 
@@ -52,9 +52,9 @@
 
    "Bug"
    {:implementation "Can only pay to see last card drawn after multiple draws"
-    :req (req (some #{:hq} (:successful-run hero-reg)))
+    :req (req (some #{:hq} (:successful-run challenger-reg)))
     :events {:contestant-draw {:optional
-                         {:prompt (msg "Pay 2 [Credits] to reveal card just drawn?") :player :hero
+                         {:prompt (msg "Pay 2 [Credits] to reveal card just drawn?") :player :challenger
                           :yes-ability {:msg (msg "reveal the card just drawn: " (:title (last (:hand contestant))))
                                         :cost [:credit 2]}}}}}
 
@@ -91,7 +91,7 @@
 
    "Collective Consciousness"
    {:events {:rez {:req (req (ice? target)) :msg "draw 1 card"
-                   :effect (effect (draw :hero))}}}
+                   :effect (effect (draw :challenger))}}}
 
    "Copycat"
    {:abilities [{:req (req (and (:run @state)
@@ -132,10 +132,10 @@
                                  (continue-ability state side (custsec-host (remove-once #(not= % target) cards))
                                                    card nil))))})]
      {:delayed-completion true
-      :interactive (req (some #(card-flag? % :hero-install-draw true) (all-active state :hero)))
-      :msg (msg "reveal the top 5 cards of their Stack: " (join ", " (map :title (take 5 (:deck hero)))))
-      :effect (req (show-wait-prompt state :contestant "Runner to host programs on Customized Secretary")
-                   (let [from (take 5 (:deck hero))]
+      :interactive (req (some #(card-flag? % :challenger-install-draw true) (all-active state :challenger)))
+      :msg (msg "reveal the top 5 cards of their Stack: " (join ", " (map :title (take 5 (:deck challenger)))))
+      :effect (req (show-wait-prompt state :contestant "Challenger to host programs on Customized Secretary")
+                   (let [from (take 5 (:deck challenger))]
                      (continue-ability state side (custsec-host from) card nil)))
       :abilities [{:cost [:click 1]
                    :prompt "Choose a program hosted on Customized Secretary to install"
@@ -143,7 +143,7 @@
                                                       (:hosted card))))
                    :msg (msg "install " (:title target))
                    :effect (req (when (can-pay? state side nil :credit (:cost target))
-                                  (hero-install state side target)))}]})
+                                  (challenger-install state side target)))}]})
 
    "D4v1d"
    {:implementation "Does not check that ICE strength is 5 or greater"
@@ -164,7 +164,7 @@
                                           :req (req (not (install-locked? state side)))
                                           :msg (msg "install " (:title target) " at no cost")
                                           :effect (effect (trash card {:cause :ability-cost})
-                                                          (hero-install target {:no-cost true}))}
+                                                          (challenger-install target {:no-cost true}))}
                                          card nil)))}]}
 
    "Datasucker"
@@ -187,7 +187,7 @@
    {:events {:successful-run {:silent (req true)
                               :effect (effect (add-counter card :virus 1))
                               :req (req (= target :rd))}
-             :hero-turn-begins
+             :challenger-turn-begins
                              {:req (req (>= (get-virus-counters state side card) 3)) :msg "look at the top card of R&D"
                               :effect (effect (prompt! card (str "The top card of R&D is "
                                                                  (:title (first (:deck contestant)))) ["OK"] {}))}}}
@@ -199,13 +199,13 @@
                                    {:cost [:click 1]
                                     :prompt "Choose a program in your Grip to install on Dhegdheer"
                                     :choices {:req #(and (is-type? % "Program")
-                                                         (hero-can-install? state side % false)
+                                                         (challenger-can-install? state side % false)
                                                          (in-hand? %))}
                                     :msg (msg "host " (:title target) (when (-> target :cost pos?) ", lowering its cost by 1 [Credit]"))
                                     :effect (effect (gain :memory (:memoryunits target))
                                                     (when (-> target :cost pos?)
                                                       (install-cost-bonus state side [:credit -1]))
-                                                    (hero-install target {:host-card card})
+                                                    (challenger-install target {:host-card card})
                                                     (update! (assoc (get-card state card) :dheg-prog (:cid target))))}
                                   card nil))}
                 {:label "Host an installed program on Dhegdheer"
@@ -241,7 +241,7 @@
                  :msg (msg "add " (:title target) " to their Grip")
                  :choices (req (cancellable (filter #(and (is-type? % "Program")
                                                           (has-subtype? % "Virus"))
-                                                    (:deck hero)) :sorted))
+                                                    (:deck challenger)) :sorted))
                  :cost [:click 1 :credit 1]
                  :effect (effect (trigger-event :searched-stack nil)
                                  (shuffle! :deck)
@@ -251,12 +251,12 @@
                                    {:cost [:click 1]
                                     :prompt "Choose a non-Icebreaker program in your Grip to install on Djinn"
                                     :choices {:req #(and (is-type? % "Program")
-                                                         (hero-can-install? state side % false)
+                                                         (challenger-can-install? state side % false)
                                                          (not (has-subtype? % "Icebreaker"))
                                                          (in-hand? %))}
                                     :msg (msg "install and host " (:title target))
                                     :effect (effect (gain :memory (:memoryunits target))
-                                                    (hero-install target {:host-card card})
+                                                    (challenger-install target {:host-card card})
                                                     (update! (assoc (get-card state card)
                                                                     :hosted-programs
                                                                     (cons (:cid target) (:hosted-programs card)))))}
@@ -290,22 +290,22 @@
                            (when (get-in card [:special :installing])
                              (update! state side (assoc (:host (get-card state card)) :subtype (combine-subtypes false(-> card :host :subtype) "Barrier" "Code Gate" "Sentry")))
                              (update! state side (update-in card [:special] dissoc :installing))
-                             (trigger-event state side :hero-install card))
+                             (trigger-event state side :challenger-install card))
                            (continue state side nil))}}}
 
    "Equivocation"
    (let [force-draw (fn [title]
-                      {:optional {:prompt (str "Force the Corp to draw " title "?")
+                      {:optional {:prompt (str "Force the Contestant to draw " title "?")
                                   :yes-ability {:delayed-completion true
-                                                :effect (req (show-wait-prompt state :hero "Corp to draw")
+                                                :effect (req (show-wait-prompt state :challenger "Contestant to draw")
                                                              (when-completed (draw state :contestant 1 nil)
                                                                              (do (system-msg state :contestant (str "is forced to draw " title))
-                                                                                 (clear-wait-prompt state :hero)
+                                                                                 (clear-wait-prompt state :challenger)
                                                                                  (effect-completed state side eid))))}}})
          reveal {:optional {:prompt "Reveal the top card of R&D?"
                             :yes-ability {:delayed-completion true
                                           :effect (req (let [topcard (-> contestant :deck first :title)]
-                                                         (system-msg state :hero (str "reveals " topcard
+                                                         (system-msg state :challenger (str "reveals " topcard
                                                                                         " from the top of R&D"))
                                                          (continue-ability state side (force-draw topcard) card nil)))}}}]
      {:events {:successful-run {:req (req (= target :rd))
@@ -330,7 +330,7 @@
    {:abilities [{:req (req (and run
                                 (< (:position run) (count run-ices))
                                 (not (rezzed? current-ice))))
-                 :msg "make the Corp rez the passed ICE or add it to HQ"
+                 :msg "make the Contestant rez the passed ICE or add it to HQ"
                  :effect (req (let [s (:server run)
                                     ice (nth (get-in @state (vec (concat [:contestant :servers] s [:ices]))) (:position run))
                                     icename (:title ice)
@@ -352,28 +352,28 @@
    {:abilities [{:cost [:click 1] :effect (effect (gain :credit (get-virus-counters state side card))
                                                   (trash card {:cause :ability-cost}))
                  :msg (msg "gain " (get-virus-counters state side card) " [Credits]")}]
-    :events {:contestant-click-credit {:effect (effect (add-counter :hero card :virus 1))}
-             :contestant-click-draw {:effect (effect (add-counter :hero card :virus 1))}}}
+    :events {:contestant-click-credit {:effect (effect (add-counter :challenger card :virus 1))}
+             :contestant-click-draw {:effect (effect (add-counter :challenger card :virus 1))}}}
 
    "Grappling Hook"
    {:abilities [{:msg "break all but 1 subroutine" :effect (effect (trash card {:cause :ability-cost}))}]}
 
    "Gravedigger"
    {:events (let [e {:req (req (and (installed? target) (= (:side target) "Contestant")))
-                               :effect (effect (add-counter :hero card :virus 1))}]
-              {:hero-trash e :contestant-trash e})
+                               :effect (effect (add-counter :challenger card :virus 1))}]
+              {:challenger-trash e :contestant-trash e})
     :abilities [{:counter-cost [:virus 1]
                  :cost [:click 1]
-                 :msg "force the Corp to trash the top card of R&D"
+                 :msg "force the Contestant to trash the top card of R&D"
                  :effect (effect (mill :contestant))}]}
 
    "Harbinger"
    {:trash-effect
      {:req (req (not (some #{:facedown :hand} (:previous-zone card))))
-      :effect (req (let [lock (get-in @state [:hero :locked :discard])]
-                     (swap! state assoc-in [:hero :locked] nil)
-                     (hero-install state :hero card {:facedown true})
-                     (swap! state assoc-in [:hero :locked] lock)))}}
+      :effect (req (let [lock (get-in @state [:challenger :locked :discard])]
+                     (swap! state assoc-in [:challenger :locked] nil)
+                     (challenger-install state :challenger card {:facedown true})
+                     (swap! state assoc-in [:challenger :locked] lock)))}}
 
    "Hemorrhage"
    {:events {:successful-run {:silent (req true)
@@ -381,14 +381,14 @@
     :abilities [{:counter-cost [:virus 2]
                  :cost [:click 1]
                  :req (req (> (count (:hand contestant)) 0))
-                 :msg "force the Corp to trash 1 card from HQ"
-                 :effect (req (show-wait-prompt state :hero "Corp to trash a card from HQ")
+                 :msg "force the Contestant to trash 1 card from HQ"
+                 :effect (req (show-wait-prompt state :challenger "Contestant to trash a card from HQ")
                               (resolve-ability
                                 state :contestant
                                 {:prompt "Choose a card to trash"
                                  :choices (req (filter #(= (:side %) "Contestant") (:hand contestant)))
                                  :effect (effect (trash target)
-                                                 (clear-wait-prompt :hero))}
+                                                 (clear-wait-prompt :challenger))}
                                card nil))}]}
 
    "Hivemind"
@@ -399,8 +399,8 @@
                  :choices {:req #(has-subtype? % "Virus")}
                  :effect (req (let [abilities (:abilities (card-def target))
                                     virus target]
-                                (add-counter state :hero virus :virus 1)
-                                (add-counter state :hero card :virus -1)
+                                (add-counter state :challenger virus :virus 1)
+                                (add-counter state :challenger card :virus -1)
                                 (if (= (count abilities) 1)
                                   (do (swap! state update-in [side :prompt] rest) ; remove the Hivemind prompt so Imp works
                                       (resolve-ability state side (first abilities) (get-card state virus) nil))
@@ -417,9 +417,9 @@
                  :msg (msg "trigger an ability on " (:title target))}]}
 
    "Hyperdriver"
-   {:flags {:hero-phase-12 (req true)}
+   {:flags {:challenger-phase-12 (req true)}
     :abilities [{:label "Remove Hyperdriver from the game to gain [Click] [Click] [Click]"
-                 :req (req (:hero-phase-12 @state))
+                 :req (req (:challenger-phase-12 @state))
                  :effect (effect (move card :rfg) (gain :click 3))
                  :msg "gain [Click] [Click] [Click]"}]}
 
@@ -432,7 +432,7 @@
                  :effect (effect (trash-no-cost))}]}
 
    "Incubator"
-   {:events {:hero-turn-begins {:effect (effect (add-counter card :virus 1))}}
+   {:events {:challenger-turn-begins {:effect (effect (add-counter card :virus 1))}}
     :abilities [{:cost [:click 1]
                  :msg (msg "move " (get-in card [:counter :virus] 0) " virus counter to " (:title target))
                  :choices {:req #(and (installed? %)
@@ -442,7 +442,7 @@
 
    "Ixodidae"
    {:events {:contestant-loss {:req (req (= (first target) :credit)) :msg "gain 1 [Credits]"
-                         :effect (effect (gain :hero :credit 1))}
+                         :effect (effect (gain :challenger :credit 1))}
              :purge {:effect (effect (trash card))}}}
 
    "Keyhole"
@@ -461,7 +461,7 @@
                                                      (shuffle! :contestant :deck))}} card))}]}
 
    "Lamprey"
-   {:events {:successful-run {:req (req (= target :hq)) :msg "force the Corp to lose 1 [Credits]"
+   {:events {:successful-run {:req (req (= target :hq)) :msg "force the Contestant to lose 1 [Credits]"
                               :effect (effect (lose :contestant :credit 1))}
              :purge {:effect (effect (trash card))}}}
 
@@ -472,11 +472,11 @@
                                    {:cost [:click 1]
                                     :prompt "Choose a program in your Grip to install on Leprechaun"
                                     :choices {:req #(and (is-type? % "Program")
-                                                         (hero-can-install? state side % false)
+                                                         (challenger-can-install? state side % false)
                                                          (in-hand? %))}
                                     :msg (msg "host " (:title target))
                                     :effect (effect (gain :memory (:memoryunits target))
-                                                    (hero-install target {:host-card card})
+                                                    (challenger-install target {:host-card card})
                                                     (update! (assoc (get-card state card)
                                                                     :hosted-programs
                                                                     (cons (:cid target) (:hosted-programs card)))))}
@@ -525,7 +525,7 @@
    "Misdirection"
    {:abilities [{:cost [:click 2]
                  :prompt "How many [Credits] to spend to remove that number of tags?"
-                 :choices {:number (req (min (:credit hero) (:tag hero)))}
+                 :choices {:number (req (min (:credit challenger) (:tag challenger)))}
                  :msg (msg "spend " target " [Credits] and remove " target " tags")
                  :effect (effect (lose :credit target)
                                  (lose :tag target))}]}
@@ -556,10 +556,10 @@
    "Origami"
    {:effect (effect (gain :hand-size-modification
                           (dec (* 2 (count (filter #(= (:title %) "Origami")
-                                                   (all-installed state :hero)))))))
+                                                   (all-installed state :challenger)))))))
     :leave-play (effect (lose :hand-size-modification
                               (dec (* 2 (count (filter #(= (:title %) "Origami")
-                                                       (all-installed state :hero)))))))}
+                                                       (all-installed state :challenger)))))))}
 
    "Paintbrush"
    {:abilities [{:cost [:click 1]
@@ -567,7 +567,7 @@
                  :effect (req (let [ice target
                                     stypes (:subtype ice)]
                            (resolve-ability
-                              state :hero
+                              state :challenger
                               {:prompt (msg "Choose a subtype")
                                :choices ["Sentry" "Code Gate" "Barrier"]
                                :msg (msg "spend [Click] and make " (card-str state ice) " gain " (.toLowerCase target)
@@ -592,7 +592,7 @@
                    (update-ice-strength state side h)
                    (when-let [card (get-card state card)]
                      (update! state side (update-in card [:special] dissoc :installing)))))
-    :events {:hero-turn-begins
+    :events {:challenger-turn-begins
              {:effect (req (add-counter state side card :virus 1))}
              :counter-added
              {:req (req (or (= (:title target) "Hivemind") (= (:cid target) (:cid card))))
@@ -607,7 +607,7 @@
               :effect (req (unregister-events state side card)
                            (when (get-in card [:special :installing])
                              (update! state side (update-in card [:special] dissoc :installing))
-                             (trigger-event state side :hero-install card))
+                             (trigger-event state side :challenger-install card))
                            (trash state side target)
                            (continue state side nil))
               :msg (msg "trash " (:title target))}}}
@@ -643,7 +643,7 @@
                                                         (not= (:cid %) this-pawn)
                                                         (#{[:hand] [:discard]} (:zone %)))}
                                    :msg (msg "install " (:title target))
-                                   :effect (effect (hero-install target {:no-cost true}))} card nil)
+                                   :effect (effect (challenger-install target {:no-cost true}))} card nil)
                                 (trash state side card)))}]}
 
    "Plague"
@@ -655,9 +655,9 @@
              {:req (req (= (zone->name (get-in @state [:run :server]))
                            (get-in (get-card state card) [:special :server-target])))
               :msg "gain 2 virus counters"
-              :effect (effect (add-counter :hero card :virus 2))}}}
+              :effect (effect (add-counter :challenger card :virus 2))}}}
 
-   "Pheromones"
+   "Pchallengermones"
    {:recurring (req (when (< (get card :rec-counter 0) (get-in card [:counter :virus] 0))
                       (set-prop state side card :rec-counter
                                 (get-in card [:counter :virus] 0))))
@@ -676,7 +676,7 @@
                                                          (in-hand? %))}
                                     :msg (msg "host " (:title target))
                                     :effect (effect (gain :memory (:memoryunits target))
-                                                    (hero-install target {:host-card card})
+                                                    (challenger-install target {:host-card card})
                                                     (update! (assoc (get-card state card)
                                                                     :hosted-programs
                                                                     (cons (:cid target) (:hosted-programs card)))))}
@@ -702,9 +702,9 @@
                                           (lose :memory (:memoryunits target)))}}}
 
    "Reaver"
-   {:events {:hero-trash {:req (req (and (first-installed-trash? state side)
+   {:events {:challenger-trash {:req (req (and (first-installed-trash? state side)
                                            (installed? target)))
-                            :effect (effect (draw :hero 1))
+                            :effect (effect (draw :challenger 1))
                             :msg "draw 1 card"}}}
 
    "RNG Key"
@@ -718,10 +718,10 @@
                                                                   {:prompt "Choose RNG Key award"
                                                                    :choices ["Gain 3 [Credits]" "Draw 2 cards"]
                                                                    :effect (req (if (= target "Draw 2 cards")
-                                                                                  (do (draw state :hero 2)
-                                                                                      (system-msg state :hero "uses RNG Key to draw 2 cards"))
-                                                                                  (do (gain state :hero :credit 3)
-                                                                                      (system-msg state :hero "uses RNG Key to gain 3 [Credits]"))))}
+                                                                                  (do (draw state :challenger 2)
+                                                                                      (system-msg state :challenger "uses RNG Key to draw 2 cards"))
+                                                                                  (do (gain state :challenger :credit 3)
+                                                                                      (system-msg state :challenger "uses RNG Key to gain 3 [Credits]"))))}
                                                                   card nil)
                                                 (effect-completed state side eid))
                                               (effect-completed state side eid)))}
@@ -772,7 +772,7 @@
                  :prompt "Choose a program to install from your grip"
                  :choices {:req #(and (is-type? % "Program")
                                       (in-hand? %))}
-                 :effect (effect (hero-install target))}]}
+                 :effect (effect (challenger-install target))}]}
 
    "Scheherazade"
    {:abilities [{:label "Install and host a program from Grip"
@@ -780,10 +780,10 @@
                                    {:cost [:click 1]
                                     :prompt "Choose a program to install on Scheherazade from your grip"
                                     :choices {:req #(and (is-type? % "Program")
-                                                         (hero-can-install? state side % false)
+                                                         (challenger-can-install? state side % false)
                                                          (in-hand? %))}
                                     :msg (msg "host " (:title target) " and gain 1 [Credits]")
-                                    :effect (effect (hero-install target {:host-card card}) (gain :credit 1))}
+                                    :effect (effect (challenger-install target {:host-card card}) (gain :credit 1))}
                                   card nil))}
                 {:label "Host an installed program"
                  :prompt "Choose a program to host on Scheherazade" :priority 2
@@ -804,13 +804,13 @@
                                                  :priority true
                                                  :choices (req (cancellable
                                                                  (conj (vec (sort-by :title (filter #(is-type? % "Program")
-                                                                                                    (:deck hero))))
+                                                                                                    (:deck challenger))))
                                                                        "No install")))
                                                  :cost [:credit 2]
                                                  :effect (req (trigger-event state side :searched-stack nil)
                                                               (shuffle! state side :deck)
                                                               (when (not= target "No install")
-                                                                (hero-install state side target)))} card nil)))}]}
+                                                                (challenger-install state side target)))} card nil)))}]}
 
    "Sneakdoor Beta"
    {:abilities [{:cost [:click 1]
@@ -886,12 +886,12 @@
    (let [ability {:label "Gain [Credits] (start of turn)"
                   :msg (msg "gain " (quot (:credit contestant) 5) " [Credits]")
                   :once :per-turn
-                  :req (req (:hero-phase-12 @state))
+                  :req (req (:challenger-phase-12 @state))
                   :effect (effect (gain :credit (quot (:credit contestant) 5)))}]
-     {:req (req (some #{:hq :rd :archives} (:successful-run hero-reg)))
+     {:req (req (some #{:hq :rd :archives} (:successful-run challenger-reg)))
       :flags {:drip-economy true}
       :abilities [ability]
-      :events {:hero-turn-begins ability
+      :events {:challenger-turn-begins ability
                :purge {:effect (effect (trash card))}}})
 
    "Tracker"
@@ -903,11 +903,11 @@
                    :req (req (some #(= (:server-target card) %) runnable-servers))
                    :msg (msg "make a run on " (:server-target card) ". Prevent the first subroutine that would resolve from resolving")
                    :effect (effect (run (:server-target card) nil card))}]
-      :events {:hero-turn-begins ability
-               :hero-turn-ends {:effect (effect (update! (dissoc card :server-target)))}}})
+      :events {:challenger-turn-begins ability
+               :challenger-turn-ends {:effect (effect (update! (dissoc card :server-target)))}}})
 
    "Trope"
-   {:events {:hero-turn-begins {:effect (effect (add-counter card :power 1))}}
+   {:events {:challenger-turn-begins {:effect (effect (add-counter card :power 1))}}
     :abilities [{:cost [:click 1]
                  :label "[Click], remove Trope from the game: Reshuffle cards from Heap back into Stack"
                  :effect (effect
@@ -915,9 +915,9 @@
                           (gain :memory 1)
                           (resolve-ability
                            {:show-discard true
-                            :choices {:max (min (get-in card [:counter :power] 0) (count (:discard hero)))
+                            :choices {:max (min (get-in card [:counter :power] 0) (count (:discard challenger)))
                                       :all true
-                                      :req #(and (= (:side %) "Hero")
+                                      :req #(and (= (:side %) "Challenger")
                                                  (in-discard? %))}
                             :msg (msg "shuffle " (join ", " (map :title targets))
                                       " into their Stack")
@@ -953,7 +953,7 @@
                              (do (if (and async-result
                                           (has-subtype? target chosen-subtype))
                                    (do (move state :contestant target :hand)
-                                       (system-msg state :hero
+                                       (system-msg state :challenger
                                                    (str "add " (:title target) " to HQ"))))
                                  (effect-completed state side eid))))})]
      {:events {:successful-run

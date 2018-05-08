@@ -21,8 +21,8 @@
   [state {:keys [cid] :as card}]
    (if (find-cid cid (get-in @state [:contestant :scored]))
       :contestant
-      (if (find-cid cid (get-in @state [:hero :scored]))
-        :hero
+      (if (find-cid cid (get-in @state [:challenger :scored]))
+        :challenger
         nil)))
 
 (defn get-card
@@ -37,7 +37,7 @@
         (some #(when (= cid (:cid %)) %)
               (let [zones (map to-keyword zone)]
                 (if (= (first zones) :scored)
-                  (into (get-in @state [:contestant :scored]) (get-in @state [:hero :scored]))
+                  (into (get-in @state [:contestant :scored]) (get-in @state [:challenger :scored]))
                   (get-in @state (cons (to-keyword side) zones))))))
       card)))
 
@@ -64,7 +64,7 @@
          target-zone (if (vector? to) (first to) to)
          same-zone? (= src-zone target-zone)]
      (when (and card (or host
-                         (some #(when (= cid (:cid %)) %) (get-in @state (cons :hero (vec zone))))
+                         (some #(when (= cid (:cid %)) %) (get-in @state (cons :challenger (vec zone))))
                          (some #(when (= cid (:cid %)) %) (get-in @state (cons :contestant (vec zone)))))
                 (or (empty? (get-in @state [side :locked (-> card :zone first)]))
                     force))
@@ -107,7 +107,7 @@
          (if front
            (swap! state update-in (cons side dest) #(cons moved-card (vec %)))
            (swap! state update-in (cons side dest) #(conj (vec %) moved-card)))
-         (doseq [s [:hero :contestant]]
+         (doseq [s [:challenger :contestant]]
            (if host
              (remove-from-host state side card)
              (swap! state update-in (cons s (vec zone)) (fn [coll] (remove-once #(not= (:cid %) cid) coll)))))
@@ -194,7 +194,7 @@
 (defn get-virus-counters
   "Calculate the number of virus countes on the given card, taking Hivemind into account."
   [state side card]
-  (let [hiveminds (filter #(= (:title %) "Hivemind") (all-installed state :hero))]
+  (let [hiveminds (filter #(= (:title %) "Hivemind") (all-installed state :challenger))]
     (reduce + (map #(get-in % [:counter :virus] 0) (cons card hiveminds)))))
 
 (defn card->server

@@ -11,8 +11,8 @@
                                        ;; Memory, agenda points or hand size mod may be negative
                                        #(- % value)
                                        #(max 0 (- % value))))
-  (when (and (= attr :credit) (= side :hero) (get-in @state [:hero :run-credit]))
-    (swap! state update-in [:hero :run-credit] #(max 0 (- % value))))
+  (when (and (= attr :credit) (= side :challenger) (get-in @state [:challenger :run-credit]))
+    (swap! state update-in [:challenger :run-credit] #(max 0 (- % value))))
   (when-let [cost-name (cost-names value attr)]
     cost-name))
 
@@ -24,12 +24,12 @@
     (when-not (or (some #(= type %) [:memory :net-damage])
                   (and (= type :forfeit) (>= (- (count (get-in @state [side :scored])) amount) 0))
                   (and (= type :mill) (>= (- (count (get-in @state [side :deck])) amount) 0))
-                  (and (= type :tag) (>= (- (get-in @state [:hero :tag]) amount) 0))
+                  (and (= type :tag) (>= (- (get-in @state [:challenger :tag]) amount) 0))
                   (and (= type :ice) (>= (- (count (filter (every-pred rezzed? ice?) (all-installed state :contestant))) amount) 0))
-                  (and (= type :hardware) (>= (- (count (get-in @state [:hero :rig :hardware])) amount) 0))
-                  (and (= type :program) (>= (- (count (get-in @state [:hero :rig :program])) amount) 0))
+                  (and (= type :hardware) (>= (- (count (get-in @state [:challenger :rig :hardware])) amount) 0))
+                  (and (= type :program) (>= (- (count (get-in @state [:challenger :rig :program])) amount) 0))
                   (and (= type :connection) (>= (- (count (filter #(has-subtype? % "Connection")
-                                                                  (all-installed state :hero))) amount) 0))
+                                                                  (all-installed state :challenger))) amount) 0))
                   (>= (- (or (get-in @state [side type]) -1 ) amount) 0))
       "Unable to pay")))
 
@@ -76,23 +76,23 @@
   [state side card action costs cost]
   (case (first cost)
     :click (do (trigger-event state side
-                              (if (= side :contestant) :contestant-spent-click :hero-spent-click)
+                              (if (= side :contestant) :contestant-spent-click :challenger-spent-click)
                               (first (keep :action action)) (:click (into {} costs)))
                (swap! state assoc-in [side :register :spent-click] true)
                (deduce state side cost))
     :forfeit (pay-forfeit state side card (second cost))
-    :hardware (pay-trash state side card :hardware (second cost) (get-in @state [:hero :rig :hardware]))
-    :program (pay-trash state side card :program (second cost) (get-in @state [:hero :rig :program]))
+    :hardware (pay-trash state side card :hardware (second cost) (get-in @state [:challenger :rig :hardware]))
+    :program (pay-trash state side card :program (second cost) (get-in @state [:challenger :rig :program]))
 
     ;; Connection
     :connection (pay-trash state side card :connection (second cost) (filter (fn [c] (has-subtype? c "Connection"))
-                                                                          (all-installed state :hero)))
+                                                                          (all-installed state :challenger)))
 
     ;; Rezzed ICE
     :ice (pay-trash state :contestant card :ice (second cost) (filter (every-pred rezzed? ice?) (all-installed state :contestant))
                     {:cause :ability-cost :keep-server-alive true})
 
-    :tag (deduce state :hero cost)
+    :tag (deduce state :challenger cost)
     :net-damage (damage state side :net (second cost) {:unpreventable true})
     :mill (mill state side (second cost))
 
@@ -119,7 +119,7 @@
 
 (defn lose [state side & args]
   (doseq [r (partition 2 args)]
-    (trigger-event state side (if (= side :contestant) :contestant-loss :hero-loss) r)
+    (trigger-event state side (if (= side :contestant) :contestant-loss :challenger-loss) r)
     (if (= (last r) :all)
       (swap! state assoc-in [side (first r)] 0)
       (deduce state side r))))

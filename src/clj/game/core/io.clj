@@ -80,15 +80,15 @@
   ([state card] (card-str state card nil))
   ([state card {:keys [visible] :as args}]
   (str (if (card-is? card :side :contestant)
-         ; Corp card messages
+         ; Contestant card messages
          (str (if (or (rezzed? card) visible) (:title card) (if (ice? card) "ICE" "a card"))
               ; Hosted cards do not need "in server 1" messages, host has them
               (if-not (:host card)
                 (str (if (ice? card) " protecting " " in ")
-                     ;TODO add naming of scoring area of contestant/hero
+                     ;TODO add naming of scoring area of contestant/challenger
                      (zone->name (second (:zone card)))
                      (if (ice? card) (str " at position " (ice-index state card))))))
-         ; Runner card messages
+         ; Challenger card messages
          (if (or (:facedown card) visible) "a facedown card" (:title card)))
        (if (:host card) (str " hosted on " (card-str state (:host card)))))))
 
@@ -96,9 +96,9 @@
   "Gets a string representation for the given zone."
   [side zone]
   (match (vec zone)
-         [:hand] (if (= side "Hero") "Grip" "HQ")
-         [:discard] (if (= side "Hero") "Heap" "Archives")
-         [:deck] (if (= side "Hero") "Stack" "R&D")
+         [:hand] (if (= side "Challenger") "Grip" "HQ")
+         [:discard] (if (= side "Challenger") "Heap" "Archives")
+         [:deck] (if (= side "Challenger") "Stack" "R&D")
          [:rig _] "Rig"
          [:servers :hq _] "the root of HQ"
          [:servers :rd _] "the root of R&D"
@@ -127,7 +127,7 @@
                         c-type (cond (= 1 (count existing)) (first (keys existing))
                                      (can-be-advanced? target) :advance-counter
                                      (and (is-type? target "Agenda") (is-scored? target)) :agenda
-                                     (and (card-is? target :side :hero) (has-subtype? target "Virus")) :virus)
+                                     (and (card-is? target :side :challenger) (has-subtype? target "Virus")) :virus)
                         advance (= :advance-counter c-type)]
                     (cond advance (set-adv-counter state side target value)
                           (not c-type) (toast state side (str "Could not infer what counter type you mean. Please specify one manually, by typing "
@@ -143,9 +143,9 @@
 (defn command-facedown [state side]
   (resolve-ability state side
                    {:prompt "Select a card to install facedown"
-                    :choices {:req #(and (= (:side %) "Hero")
+                    :choices {:req #(and (= (:side %) "Challenger")
                                          (in-hand? %))}
-                    :effect (effect (hero-install target {:facedown true}))}
+                    :effect (effect (challenger-install target {:facedown true}))}
                    {:title "/faceup command"} nil))
 
 (defn command-counter [state side args]
@@ -219,7 +219,7 @@
           "/end-run"    #(when (= %2 :contestant) (end-run %1 %2))
           "/error"      #(show-error-toast %1 %2)
           "/handsize"   #(swap! %1 assoc-in [%2 :hand-size-modification] (- (max 0 value) (:hand-size-base %2)))
-          "/jack-out"   #(when (= %2 :hero) (jack-out %1 %2 nil))
+          "/jack-out"   #(when (= %2 :challenger) (jack-out %1 %2 nil))
           "/link"       #(swap! %1 assoc-in [%2 :link] (max 0 value))
           "/memory"     #(swap! %1 assoc-in [%2 :memory] value)
           "/move-bottom"  #(resolve-ability %1 %2
@@ -249,13 +249,13 @@
                                                           (move %1 %2 c :rfg)))
                                            :choices {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/rfg command"} nil)
-          "/facedown"   #(when (= %2 :hero)
+          "/facedown"   #(when (= %2 :challenger)
                            (command-facedown %1 %2))
           "/roll"       #(command-roll %1 %2 value)
           "/tag"        #(swap! %1 assoc-in [%2 :tag] (max 0 value))
-          "/take-brain" #(when (= %2 :hero) (damage %1 %2 :brain (max 0 value)))
-          "/take-meat"  #(when (= %2 :hero) (damage %1 %2 :meat  (max 0 value)))
-          "/take-net"   #(when (= %2 :hero) (damage %1 %2 :net   (max 0 value)))
+          "/take-brain" #(when (= %2 :challenger) (damage %1 %2 :brain (max 0 value)))
+          "/take-meat"  #(when (= %2 :challenger) (damage %1 %2 :meat  (max 0 value)))
+          "/take-net"   #(when (= %2 :challenger) (damage %1 %2 :net   (max 0 value)))
           "/trace"      #(when (= %2 :contestant) (contestant-trace-prompt %1
                                                                {:title "/trace command" :side %2}
                                                                {:base (max 0 value)
@@ -271,7 +271,7 @@
   "Prints a message for the start or end of a turn, summarizing credits and cards in hand."
   [state side start-of-turn]
   (let [pre (if start-of-turn "started" "is ending")
-        hand (if (= side :hero) "their Grip" "HQ")
+        hand (if (= side :challenger) "their Grip" "HQ")
         cards (count (get-in @state [side :hand]))
         credits (get-in @state [side :credit])
         text (str pre " their turn " (:turn @state) " with " credits " [Credit] and " cards " cards in " hand)]

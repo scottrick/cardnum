@@ -452,10 +452,10 @@
    (swap! state assoc :psi {})
    (register-once state psi card)
    (system-msg state :contestant (str "uses " (:title card) " to start a psi game"))
-   (doseq [s [:contestant :hero]]
+   (doseq [s [:contestant :challenger]]
      (let [all-amounts (range (min 3 (inc (get-in @state [s :credit]))))
            valid-amounts (remove #(or (any-flag-fn? state :contestant :psi-prevent-spend %)
-                                      (any-flag-fn? state :hero :psi-prevent-spend %))
+                                      (any-flag-fn? state :challenger :psi-prevent-spend %))
                                  all-amounts)]
 
        (show-prompt-with-dice state s card (str "Choose an amount to spend for " (:title card))
@@ -468,7 +468,7 @@
   resolution ability."
   [state side eid card psi bet]
   (swap! state assoc-in [:psi side] bet)
-  (let [opponent (if (= side :contestant) :hero :contestant)]
+  (let [opponent (if (= side :contestant) :challenger :contestant)]
     (if-let [opponent-bet (get-in @state [:psi opponent])]
       (do (clear-wait-prompt state opponent)
           (deduce state opponent [:credit opponent-bet])
@@ -488,22 +488,22 @@
 
 ;;; Traces
 (defn- init-trace
-  "Shows a trace prompt to the hero, after the contestant has already spent credits to boost."
+  "Shows a trace prompt to the challenger, after the contestant has already spent credits to boost."
   [state side card {:keys [base eid] :as ability} boost]
-  (clear-wait-prompt state :hero)
-  (show-wait-prompt state :contestant "Runner to boost Link strength" {:priority 2})
+  (clear-wait-prompt state :challenger)
+  (show-wait-prompt state :contestant "Challenger to boost Link strength" {:priority 2})
   (trigger-event state side :pre-init-trace card)
   (let [bonus (get-in @state [:bonus :trace] 0)
         base (if (fn? base) (base state side (make-eid state) card nil) base)
         total (+ base boost bonus)
-        link (get-in @state [:hero :link] 0)]
+        link (get-in @state [:challenger :link] 0)]
     (system-msg state :contestant (str "uses " (:title card)
                                  " to initiate a trace with strength " total
                                  " (" base
                                  (when (pos? bonus) (str " + " bonus " bonus"))
                                  " + " boost " [Credits]) (" (make-label ability) ")"))
     (swap! state update-in [:bonus] dissoc :trace)
-    (show-trace-prompt state :hero card "Boost link strength?"
+    (show-trace-prompt state :challenger card "Boost link strength?"
                        #(resolve-trace state side eid %) {:priority 2 :base link})
     (swap! state assoc :trace {:strength total :ability ability :card card})
     (trigger-event state side :trace nil)))
@@ -512,18 +512,18 @@
   "Compares trace strength and link strength and triggers the appropriate effects."
   [state side eid boost]
   (clear-wait-prompt state :contestant)
-  (let [link (get-in @state [:hero :link] 0)
-        hero-trace (+ link boost)
+  (let [link (get-in @state [:challenger :link] 0)
+        challenger-trace (+ link boost)
         {:keys [strength ability card]} (:trace @state)]
-    (system-msg state :hero (str " spends " boost " [Credits] to increase link strength to " hero-trace))
-    (let [successful (> strength hero-trace)
+    (system-msg state :challenger (str " spends " boost " [Credits] to increase link strength to " challenger-trace))
+    (let [successful (> strength challenger-trace)
           which-ability (assoc (if successful ability (:unsuccessful ability)) :eid (make-eid state))]
-      (when-completed (trigger-event-sync state :contestant (if successful :successful-trace :unsuccessful-trace) {:hero-spent boost})
+      (when-completed (trigger-event-sync state :contestant (if successful :successful-trace :unsuccessful-trace) {:challenger-spent boost})
                       (when-completed (resolve-ability state :contestant (:eid which-ability) which-ability
-                                                                   card [strength hero-trace])
+                                                                   card [strength challenger-trace])
                                       (do (when-let [kicker (:kicker ability)]
                                             (when (>= strength (:min kicker))
-                                              (resolve-ability state :contestant kicker card [strength hero-trace])))
+                                              (resolve-ability state :contestant kicker card [strength challenger-trace])))
                                           (effect-completed state side eid nil)))))))
 
 (defn contestant-trace-prompt
@@ -531,7 +531,7 @@
   [state card {:keys [base] :as trace}]
   (let [base-trace (if (fn? base) (base state :contestant (make-eid state) card nil) base)
         bonus (or (get-in @state [:bonus :trace]) 0)]
-    (show-wait-prompt state :hero (str "Corp to initiate a trace from " (:title card)) {:priority 2})
+    (show-wait-prompt state :challenger (str "Contestant to initiate a trace from " (:title card)) {:priority 2})
     (show-trace-prompt state :contestant card "Boost trace strength?"
                        #(init-trace state :contestant card trace %) {:priority 2 :base base-trace :bonus bonus})))
 

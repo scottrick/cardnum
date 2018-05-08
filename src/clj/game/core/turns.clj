@@ -29,11 +29,11 @@
 
 (defn- init-hands [state]
   (draw state :contestant 8 {:suppress-event true})
-  (draw state :hero 8 {:suppress-event true})
+  (draw state :challenger 8 {:suppress-event true})
   (when (and (-> @state :contestant :identity :title)
-             (-> @state :hero :identity :title))
-    (show-wait-prompt state :hero "Corp to keep hand or mulligan"))
-  (doseq [side [:contestant :hero]]
+             (-> @state :challenger :identity :title))
+    (show-wait-prompt state :challenger "Contestant to keep hand or mulligan"))
+  (doseq [side [:contestant :challenger]]
     (when (-> @state side :identity :title)
       (show-prompt state side nil "Keep hand?"
                    ["Keep" "Mulligan"]
@@ -45,19 +45,19 @@
   "Initializes a new game with the given players vector."
   [{:keys [players gameid spectatorhands room] :as game}]
   (let [contestant (some #(when (= (:side %) "Contestant") %) players)
-        hero (some #(when (= (:side %) "Hero") %) players)
+        challenger (some #(when (= (:side %) "Challenger") %) players)
         contestant-deck (create-deck (:deck contestant) (:user contestant))
-        hero-deck (create-deck (:deck hero) (:user hero))
+        challenger-deck (create-deck (:deck challenger) (:user challenger))
         contestant-deck-id (get-in contestant [:deck :_id])
-        hero-deck-id (get-in hero [:deck :_id])
+        challenger-deck-id (get-in challenger [:deck :_id])
         contestant-options (get-in contestant [:options])
-        hero-options (get-in hero [:options])
+        challenger-options (get-in challenger [:options])
         contestant-identity (assoc (or (get-in contestant [:deck :identity]) {:side "Contestant" :type "Identity"}) :cid (make-cid))
         contestant-identity (assoc contestant-identity :implementation (card-implemented contestant-identity))
-        hero-identity (assoc (or (get-in hero [:deck :identity]) {:side "Hero" :type "Identity"}) :cid (make-cid))
-        hero-identity (assoc hero-identity :implementation (card-implemented hero-identity))
+        challenger-identity (assoc (or (get-in challenger [:deck :identity]) {:side "Challenger" :type "Identity"}) :cid (make-cid))
+        challenger-identity (assoc challenger-identity :implementation (card-implemented challenger-identity))
         state (atom
-                {:gameid gameid :log [] :active-player :hero :end-turn true
+                {:gameid gameid :log [] :active-player :challenger :end-turn true
                  :room room
                  :rid 0 :turn 0 :eid 0
                  :sfx [] :sfx-current-id 0
@@ -74,10 +74,10 @@
                         :hand-size-base 8 :hand-size-modification 0
                         :agenda-point 0
                         :click-per-turn 3 :agenda-point-req 7 :keep false}
-                 :hero {:user (:user hero) :identity hero-identity
-                          :options hero-options
-                          :deck (zone :deck hero-deck)
-                          :deck-id hero-deck-id
+                 :challenger {:user (:user challenger) :identity challenger-identity
+                          :options challenger-options
+                          :deck (zone :deck challenger-deck)
+                          :deck-id challenger-deck-id
                           :hand []
                           :discard [] :scored [] :rfg [] :play-area []
                           :rig {:program [] :resource [] :hardware []}
@@ -88,11 +88,11 @@
                           :hq-access 1 :rd-access 1 :tagged 0
                           :brain-damage 0 :click-per-turn 4 :agenda-point-req 7 :keep false}})]
     (init-identity state :contestant contestant-identity)
-    (init-identity state :hero hero-identity)
+    (init-identity state :challenger challenger-identity)
     (swap! game-states assoc gameid state)
     (let [side :contestant]
       (when-completed (trigger-event-sync state side :pre-start-game)
-                      (let [side :hero]
+                      (let [side :challenger]
                         (when-completed (trigger-event-sync state side :pre-start-game)
                                         (init-hands state)))))
     @game-states))
@@ -157,10 +157,10 @@
                   (keep-hand state side nil)
                   (mulligan state side nil))))
   ;;(trigger-event state side :pre-first-turn)
-  ;;(when (and (= side :contestant) (-> @state :hero :identity :title))
-    ;;(clear-wait-prompt state :hero)
-    ;;(show-wait-prompt state :contestant "Runner to keep hand or mulligan"))
-  ;;(when (and (= side :hero)  (-> @state :contestant :identity :title))
+  ;;(when (and (= side :contestant) (-> @state :challenger :identity :title))
+    ;;(clear-wait-prompt state :challenger)
+    ;;(show-wait-prompt state :contestant "Challenger to keep hand or mulligan"))
+  ;;(when (and (= side :challenger)  (-> @state :contestant :identity :title))
     ;;(clear-wait-prompt state :contestant)))
 
 (defn keep-hand
@@ -169,10 +169,10 @@
   (swap! state assoc-in [side :keep] true)
   (system-msg state side "keeps their hand")
   (trigger-event state side :pre-first-turn)
-  (when (and (= side :contestant) (-> @state :hero :identity :title))
-    (clear-wait-prompt state :hero)
-    (show-wait-prompt state :contestant "Runner to keep hand or mulligan"))
-  (when (and (= side :hero)  (-> @state :contestant :identity :title))
+  (when (and (= side :contestant) (-> @state :challenger :identity :title))
+    (clear-wait-prompt state :challenger)
+    (show-wait-prompt state :contestant "Challenger to keep hand or mulligan"))
+  (when (and (= side :challenger)  (-> @state :contestant :identity :title))
     (clear-wait-prompt state :contestant)))
 
 (defn end-phase-12
@@ -181,7 +181,7 @@
   (turn-message state side true)
   (let [extra-clicks (or (get-in @state [side :extra-click-temp]) 0)]
     (gain state side :click (get-in @state [side :click-per-turn]))
-    (when-completed (trigger-event-sync state side (if (= side :contestant) :contestant-turn-begins :hero-turn-begins))
+    (when-completed (trigger-event-sync state side (if (= side :contestant) :contestant-turn-begins :challenger-turn-begins))
                     (do (when (= side :contestant)
                           ;;(draw state side)
                           ;;(trigger-event state side :contestant-mandatory-draw)
@@ -196,7 +196,7 @@
                           (gain state side :click extra-clicks))
 
                         (swap! state dissoc-in [side :extra-click-temp])
-                        (swap! state dissoc (if (= side :contestant) :contestant-phase-12 :hero-phase-12))
+                        (swap! state dissoc (if (= side :contestant) :contestant-phase-12 :challenger-phase-12))
                         (when (= side :contestant)
                           (update-all-advancement-costs state side))))))
 
@@ -212,7 +212,7 @@
   (swap! state assoc :active-player side :per-turn nil :end-turn false)
   (swap! state assoc-in [side :register] nil)
 
-  (let [phase (if (= side :contestant) :contestant-phase-12 :hero-phase-12)
+  (let [phase (if (= side :contestant) :contestant-phase-12 :challenger-phase-12)
         start-cards (filter #(card-flag-fn? state side % phase true)
                             (all-active state side))]
     (swap! state assoc phase true)
@@ -230,22 +230,22 @@
   (let [max-hand-size (max (hand-size state side) 0)]
     (when (<= (count (get-in @state [side :hand])) max-hand-size)
       (turn-message state side false)
-      (if (= side :hero)
+      (if (= side :challenger)
         (do (when (neg? (hand-size state side))
               (flatline state))
-            (trigger-event state side :hero-turn-ends))
+            (trigger-event state side :challenger-turn-ends))
         (trigger-event state side :contestant-turn-ends))
       (doseq [a (get-in @state [side :register :end-turn])]
         (resolve-ability state side (:ability a) (:card a) (:targets a)))
       (swap! state assoc-in [side :register-last-turn] (-> @state side :register))
-      (let [rig-cards (apply concat (vals (get-in @state [:hero :rig])))
+      (let [rig-cards (apply concat (vals (get-in @state [:challenger :rig])))
             hosted-cards (filter :installed (mapcat :hosted rig-cards))
             hosted-on-ice (->> (get-in @state [:contestant :servers]) seq flatten (mapcat :ices) (mapcat :hosted))]
         (doseq [card (concat rig-cards hosted-cards hosted-on-ice)]
           ;; Clear the added-virus-counter flag for each virus in play.
           ;; We do this even on the contestant's turn to prevent shenanigans with something like Gorman Drip and Surge
           (when (has-subtype? card "Virus")
-            (set-prop state :hero card :added-virus-counter false))))
+            (set-prop state :challenger card :added-virus-counter false))))
       (swap! state assoc :end-turn true)
       (swap! state update-in [side :register] dissoc :cannot-draw)
       (swap! state update-in [side :register] dissoc :drawn-this-turn)

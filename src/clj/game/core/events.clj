@@ -230,12 +230,12 @@
 (defn first-successful-run-on-server?
   "Returns true if the active run is the first succesful run on the given server"
   [state server]
-  (empty? (filter #(= [server] %) (turn-events state :hero :successful-run))))
+  (empty? (filter #(= [server] %) (turn-events state :challenger :successful-run))))
 
 (defn get-turn-damage
   "Returns the value of damage take this turn"
   [state side]
-  (apply + (map #(nth % 2) (turn-events state :hero :damage))))
+  (apply + (map #(nth % 2) (turn-events state :challenger :damage))))
 
 (defn get-installed-trashed
   "Returns list of cards trashed this turn owned by side that were installed"
