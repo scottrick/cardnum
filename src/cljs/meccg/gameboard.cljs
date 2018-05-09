@@ -15,10 +15,10 @@
 (defonce last-state (atom {}))
 (defonce lock (atom false))
 
-(defn image-url [{:keys [side code] :as card}]
+(defn image-url [{:keys [side fullCode] :as card}]
   (let [art (or (:art card) ; use the art set on the card itself, or fall back to the user's preferences.
-                (get-in @game-state [(keyword (lower-case side)) :user :options :alt-arts (keyword code)]))
-        art-options (:alt_art (get (:alt-arts @app-state) code))
+                (get-in @game-state [(keyword (lower-case side)) :user :options :alt-arts (keyword fullCode)]))
+        art-options (:alt_art (get (:alt-arts @app-state) fullCode))
         special-user (get-in @game-state [(keyword (lower-case side)) :user :special])
         special-wants-art (get-in @game-state [(keyword (lower-case side)) :user :options :show-alt-art])
         viewer-wants-art (get-in @app-state [:options :show-alt-art])
@@ -28,8 +28,8 @@
                      art
                      (contains? art-options (keyword art)))
         version-path (if (and has-art show-art)
-                       (get art-options (keyword art) (:code card))
-                       (:code card))]
+                       (get art-options (keyword art) (:fullCode card))
+                       (:fullCode card))]
     (str "/img/cards/" (:setname card) "/" (:ImageName card))))
 
 (defn toastr-options
@@ -62,7 +62,6 @@
   (swap! game-state assoc :side side)
   (swap! last-state #(identity @game-state)))
 
-
 (defn launch-game [game]
   (let [user (:user @app-state)
         side (if (= (get-in game [:challenger :user :_id]) (:_id user))
@@ -70,7 +69,7 @@
                (if (= (get-in game [:contestant :user :_id]) (:_id user))
                  :contestant
                  :spectator))]
-    (swap! app-state assoc :side "Contestant")
+    (swap! app-state assoc :side side)
     (init-game game side))
   (set! (.-onbeforeunload js/window) #(clj->js "Leaving this page will disconnect you from the game."))
   (-> "#gamelobby" js/$ .fadeOut)
@@ -237,8 +236,8 @@
         (= (get-in @game-state [side :prompt 0 :prompt-type]) "select")
         (send-command "select" {:card card})
         ;; Card is an identity of player's side
-        (and (= (:type card) "Identity")
-             (= side (keyword (.toLowerCase (:side card)))))
+        ;;(and (= (:type card) "Identity")
+        ;;     (= side (keyword (.toLowerCase (:side card)))))
         (handle-abilities card owner)
         ;; Challenger side
         (= side :challenger)
@@ -296,7 +295,7 @@
            (has-subtype? card "Triple")
            (if (>= (:click me) 3) true false)
 
-           (= (:code card) "07036") ; Day Job
+           (= (:fullCode card) "07036") ; Day Job
            (if (>= (:click me) 4) true false)
 
            (has-subtype? card "Priority")
@@ -336,12 +335,12 @@
       [:div.smallwarning "!"]
       (if-let [class (anr-icons item)]
         [:span {:class (str "anr-icon " class)}]
-        (if-let [[title code] (extract-card-info item)]
-          [:span {:class "fake-link" :id code} title]
+        (if-let [[title fullCode] (extract-card-info item)]
+          [:span {:class "fake-link" :id fullCode} title]
           [:span item])))))
 
 (defn get-non-alt-art [[title cards]]
-  {:title title :code (:code (first cards))})
+  {:title title :fullCode (:fullCode (first cards))})
 
 (defn prepare-cards []
   (->> (:cards @app-state)
@@ -360,13 +359,13 @@
 
 (def find-card-regex (memoize find-card-regex-impl))
 
-(defn card-image-token-impl [title code]
-  (str "$1" ci-open title ci-seperator code ci-close))
+(defn card-image-token-impl [title fullCode]
+  (str "$1" ci-open title ci-seperator fullCode ci-close))
 
 (def card-image-token (memoize card-image-token-impl))
 
 (defn card-image-reducer [text card]
-  (.replace text (js/RegExp. (find-card-regex (:title card)) "g") (card-image-token (:title card) (:code card))))
+  (.replace text (js/RegExp. (find-card-regex (:title card)) "g") (card-image-token (:title card) (:fullCode card))))
 
 (defn add-image-codes-impl [text]
   (reduce card-image-reducer text (prepared-cards)))
@@ -383,20 +382,20 @@
 (def get-message-parts (memoize get-message-parts-impl))
 
 (defn get-card-code [e]
-  (let [code (str (.. e -target -id))]
-    (when (pos? (count code))
-      code)))
+  (let [fullCode (str (.. e -target -id))]
+    (when (pos? (count fullCode))
+      fullCode)))
 
 (defn card-preview-mouse-over [e channel]
   (.preventDefault e)
-  (when-let [code (get-card-code e)]
-    (when-let [card (some #(when (= (:code %) code) %) (:cards @app-state))]
+  (when-let [fullCode (get-card-code e)]
+    (when-let [card (some #(when (= (:fullCode %) fullCode) %) (:cards @app-state))]
       (put! channel (assoc card :implementation :full))))
   nil)
 
 (defn card-preview-mouse-out [e channel]
   (.preventDefault e)
-  (when-let [code (get-card-code e)]
+  (when-let [fullCode (get-card-code e)]
     (put! channel false))
   nil)
 
@@ -603,9 +602,9 @@
 
 (defn card-img
   "Build an image of the card (is always face-up). Only shows the zoomed card image, does not do any interaction."
-  [{:keys [code title] :as cursor}]
+  [{:keys [fullCode title] :as cursor}]
   (om/component
-   (when code
+   (when fullCode
      (sab/html
       [:div.card-frame
        [:div.blue-shade.card {:on-mouse-enter #(put! zoom-channel cursor)
@@ -660,7 +659,7 @@
      (when-let [url (image-url card)]
        [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])])))
 
-(defn card-view [{:keys [zone code type abilities counter advance-counter advancementcost current-cost subtype
+(defn card-view [{:keys [zone fullCode type abilities counter advance-counter advancementcost current-cost subtype
                          advanceable rezzed strength current-strength title remotes selected hosted
                          side rec-counter facedown server-target subtype-target icon new challenger-abilities subroutines]
                   :as cursor}
@@ -675,15 +674,15 @@
                             :on-touch-move  #(handle-touchmove %)
                             :on-drag-start #(handle-dragstart % cursor)
                             :on-drag-end #(-> % .-target js/$ (.removeClass "dragged"))
-                            :on-mouse-enter #(when (or (not (or (not code) flipped facedown))
+                            :on-mouse-enter #(when (or (not (or (not fullCode) flipped facedown))
                                                        (spectator-view-hidden?)
                                                        (= (:side @game-state) (keyword (.toLowerCase side))))
                                                (put! zoom-channel cursor))
                             :on-mouse-leave #(put! zoom-channel false)
                             :on-click #(handle-card-click @cursor owner)}
       (when-let [url (image-url cursor)]
-        (if (or (not code) flipped facedown)
-          (let [facedown-but-known (or (not (or (not code) flipped facedown))
+        (if (or (not fullCode) flipped facedown)
+          (let [facedown-but-known (or (not (or (not fullCode) flipped facedown))
                                        (spectator-view-hidden?)
                                        (= (:side @game-state) (keyword (.toLowerCase side))))
                 alt-str (if facedown-but-known (str "Facedown " title) nil)]
@@ -707,7 +706,7 @@
       (when subtype-target
         (let [colour-type (case subtype-target
                             ("Barrier" "Sentry") (lower-case subtype-target)
-                            "Code Gate" "code-gate"
+                            "Code Gate" "Code-gate"
                             nil)
               label (if (includes? subtype-target " - ")
                       (->> (split subtype-target #" - ")
@@ -1178,7 +1177,7 @@
                 [:div
                  [:div.credit-select
                   [:input#card-title {:placeholder "Enter a card title"
-                                      :onKeyUp #(when (= 13 (.-keyCode %))
+                                      :onKeyUp #(when (= 13 (.-keycode %))
                                                  (-> "#card-submit" js/$ .click)
                                                  (.stopPropagation %))}]]
                  [:button#card-submit {:on-click #(send-command "choice" {:choice (-> "#card-title" js/$ .val)})}
@@ -1202,9 +1201,9 @@
                     (if (string? c)
                       [:button {:on-click #(send-command "choice" {:choice c})}
                        (for [item (get-message-parts c)] (create-span item))]
-                      (let [[title code] (extract-card-info (add-image-codes (:title c)))]
+                      (let [[title fullCode] (extract-card-info (add-image-codes (:title c)))]
                         [:button {:class (when (:rotated c) :rotated)
-                                  :on-click #(send-command "choice" {:card @c}) :id code} title]))))))]
+                                  :on-click #(send-command "choice" {:card @c}) :id fullCode} title]))))))]
            (if run
              (let [s (:server run)
                    kw (keyword (first s))

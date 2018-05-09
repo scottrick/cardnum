@@ -353,7 +353,7 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
 
         if not game.password or game.password.length is 0 or (msg.password and crypto.createHash('md5').update(msg.password).digest('hex') is game.password)
           fn("join ok")
-          if msg.alignment == null then msg.alignment = "Challenger"
+          if msg.alignment == null then msg.alignment = "Hero"
           joinGame(socket, msg.gameid, msg.options, msg.alignment)
           socket.broadcast.to(msg.gameid).emit 'meccg',
             type: "say"
@@ -478,6 +478,7 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
             if game.players.length is 2
               contestant = if game.players[0].side is "Contestant" then game.players[0] else game.players[1]
               challenger = if game.players[0].side is "Challenger" then game.players[0] else game.players[1]
+              challenger.deck.identity.side = "Challenger"
               g = {
                 gameid: socket.gameid
                 startDate: (new Date()).toISOString()
