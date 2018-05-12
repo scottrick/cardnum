@@ -165,10 +165,10 @@
                                           ""
                                           (str ": " (:Secondary card)))]
     [:pre {:dangerouslySetInnerHTML #js {:__html
-                                         (let [new-text (atom (add-symbols (:text card)))]
-                                           (when (= @new-text (add-symbols @new-text))
-                                             @new-text
-                                             (swap! new-text #(add-symbols @new-text))))}}]]])
+                                         (loop [new-text (:text card)]
+                                           (if (= new-text (add-symbols new-text))
+                                             new-text
+                                             (recur (add-symbols new-text))))}}]]])
 
 (defn card-view [card owner]
   (reify
