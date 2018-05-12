@@ -236,8 +236,8 @@
         (= (get-in @game-state [side :prompt 0 :prompt-type]) "select")
         (send-command "select" {:card card})
         ;; Card is an identity of player's side
-        ;;(and (= (:type card) "Identity")
-        ;;     (= side (keyword (.toLowerCase (:side card)))))
+        (and (= (:type card) "Identity")
+             (= side (keyword (.toLowerCase ("Challenger")))))
         (handle-abilities card owner)
         ;; Challenger side
         (= side :challenger)
