@@ -2,9 +2,9 @@
 
 ;; These functions are called by main.clj in response to commands sent by users.
 
-(declare card-str can-rez? can-advance? minion-install effect-as-handler enforce-msg gain-agenda-point get-remote-names
+(declare card-str can-rez? can-advance? contestant-install effect-as-handler enforce-msg gain-agenda-point get-remote-names
          get-run-ices jack-out move name-zone play-instant purge resolve-select run has-subtype?
-         hero-install trash update-breaker-strength update-ice-in-server update-run-ice win can-run?
+         challenger-install trash update-breaker-strength update-ice-in-server update-run-ice win can-run?
          can-run-server? can-score? play-sfx)
 
 ;;; Neutral actions
@@ -14,8 +14,8 @@
   (let [card (get-card state card)]
     (case (:type card)
       ("Event" "Operation") (play-instant state side card {:extra-cost [:click 1]})
-      ("Hardware" "Resource" "Program") (hero-install state side (make-eid state) card {:extra-cost [:click 1]})
-      ("ICE" "Upgrade" "Asset" "Agenda") (minion-install state side card server {:extra-cost [:click 1] :action :minion-click-install}))
+      ("Hardware" "Resource" "Program") (challenger-install state side (make-eid state) card {:extra-cost [:click 1]})
+      ("ICE" "Upgrade" "Asset" "Agenda") (contestant-install state side card server {:extra-cost [:click 1] :action :contestant-click-install}))
     (trigger-event state side :play card)))
 
 (defn shuffle-deck
@@ -32,19 +32,19 @@
   "Click to draw."
   [state side args]
   (when (and (not (get-in @state [side :register :cannot-draw]))
-             (pay state side nil :click 1 {:action :minion-click-draw}))
+             (pay state side nil :click 1 {:action :contestant-click-draw}))
     (system-msg state side "spends [Click] to draw a card")
-    (trigger-event state side (if (= side :minion) :minion-click-draw :hero-click-draw) (->> @state side :deck (take 1)))
+    (trigger-event state side (if (= side :contestant) :contestant-click-draw :challenger-click-draw) (->> @state side :deck (take 1)))
     (draw state side)
     (play-sfx state side "click-card")))
 
 (defn click-credit
   "Click to gain 1 credit."
   [state side args]
-  (when (pay state side nil :click 1 {:action :minion-click-credit})
+  (when (pay state side nil :click 1 {:action :contestant-click-credit})
     (system-msg state side "spends [Click] to gain 1 [Credits]")
     (gain state side :credit 1)
-    (trigger-event state side (if (= side :minion) :minion-click-credit :hero-click-credit))
+    (trigger-event state side (if (= side :contestant) :contestant-click-credit :challenger-click-credit))
     (play-sfx state side "click-credit")))
 
 (defn change
@@ -72,17 +72,17 @@
                      (str " in " src) ; this string matches the message when a card is trashed via (trash)
                      (str " from their " src)))
         label (if (and (not= last-zone :play-area)
-                       (not (and (= (:side c) "Hero")
+                       (not (and (= (:side c) "Challenger")
                                  (= last-zone :hand)
                                  (= server "Grip")))
-                       (or (and (= (:side c) "Hero")
+                       (or (and (= (:side c) "Challenger")
                                 (not (:facedown c)))
                            (rezzed? c)
                            (:seen c)
                            (= last-zone :deck)))
                 (:title c)
                 "a card")
-        s (if (#{"HQ" "R&D" "Archives"} server) :minion :hero)]
+        s (if (#{"HQ" "R&D" "Archives"} server) :contestant :challenger)]
     ;; allow moving from play-area always, otherwise only when same side, and to valid zone
     (when (and (not= src server)
                (same-side? s (:side card))
@@ -103,7 +103,7 @@
 
 (defn concede [state side args]
   (system-msg state side "concedes")
-  (win state (if (= side :minion) :hero :minion) "Concede"))
+  (win state (if (= side :contestant) :challenger :contestant) "Concede"))
 
 (defn- finish-prompt [state side prompt card]
   (when-let [end-effect (:end-effect prompt)]
@@ -111,10 +111,10 @@
   ;; remove the prompt from the queue
   (swap! state update-in [side :prompt] (fn [pr] (filter #(not= % prompt) pr)))
   ;; This is a dirty hack to end the run when the last access prompt is resolved.
-  (when (empty? (get-in @state [:hero :prompt]))
+  (when (empty? (get-in @state [:challenger :prompt]))
     (when-let [run (:run @state)]
       (when (:ended run)
-        (handle-end-run state :hero)))
+        (handle-end-run state :challenger)))
     (swap! state dissoc :access)))
 
 (defn resolve-prompt
@@ -209,7 +209,7 @@
         strdif (when current-ice (max 0 (- (or (:current-strength current-ice) (:strength current-ice))
                                            (or (:current-strength card) (:strength card)))))
         pumpnum (when strdif (int (Math/ceil (/ strdif (:pump pumpabi)))))]
-    (when (and pumpnum pumpcst (>= (get-in @state [:hero :credit]) (* pumpnum pumpcst)))
+    (when (and pumpnum pumpcst (>= (get-in @state [:challenger :credit]) (* pumpnum pumpcst)))
       (dotimes [n pumpnum] (resolve-ability state side (dissoc pumpabi :msg) (get-card state card) nil))
       (system-msg state side (str "spends " (* pumpnum pumpcst) " [Credits] to increase the strength of "
                                   (:title card) " to " (:current-strength (get-card state card)))))))
@@ -234,11 +234,11 @@
   [state side args]
   ((dynamic-abilities (:dynamic args)) state (keyword side) args))
 
-(defn play-hero-ability
-  "Triggers a minion card's hero-ability using its zero-based index into the card's card-def :hero-abilities vector."
+(defn play-challenger-ability
+  "Triggers a contestant card's challenger-ability using its zero-based index into the card's card-def :challenger-abilities vector."
   [state side {:keys [card ability targets] :as args}]
   (let [cdef (card-def card)
-        ab (get-in cdef [:hero-abilities ability])]
+        ab (get-in cdef [:challenger-abilities ability])]
     (do-play-ability state side card ab targets)))
 
 (defn play-subroutine
@@ -253,17 +253,17 @@
        (when-let [activatemsg (:activatemsg sub)] (system-msg state side activatemsg))
        (resolve-ability state side eid sub card targets)))))
 
-;;; Corp actions
+;;; Contestant actions
 (defn trash-resource
   "Click to trash a resource."
   [state side args]
-  (let [trash-cost (max 0 (- 2 (or (get-in @state [:minion :trash-cost-bonus]) 0)))]
-    (when-let [cost-str (pay state side nil :click 1 :credit trash-cost {:action :minion-trash-resource})]
+  (let [trash-cost (max 0 (- 2 (or (get-in @state [:contestant :trash-cost-bonus]) 0)))]
+    (when-let [cost-str (pay state side nil :click 1 :credit trash-cost {:action :contestant-trash-resource})]
       (resolve-ability state side
                        {:prompt  "Choose a resource to trash"
                         :choices {:req (fn [card]
-                                         (if (and (seq (filter (fn [c] (untrashable-while-resources? c)) (all-installed state :hero)))
-                                                  (> (count (filter #(is-type? % "Resource") (all-installed state :hero))) 1))
+                                         (if (and (seq (filter (fn [c] (untrashable-while-resources? c)) (all-installed state :challenger)))
+                                                  (> (count (filter #(is-type? % "Resource") (all-installed state :challenger))) 1))
                                            (and (is-type? card "Resource") (not (untrashable-while-resources? card)))
                                            (is-type? card "Resource")))}
                         :cancel-effect (effect (gain :credit trash-cost :click 1))
@@ -274,7 +274,7 @@
 (defn do-purge
   "Purge viruses."
   [state side args]
-  (when-let [cost (pay state side nil :click 3 {:action :minion-click-purge})]
+  (when-let [cost (pay state side nil :click 3 {:action :contestant-click-purge})]
     (purge state side)
     (let [spent (build-spend-msg cost "purge")
           message (str spent "all virus counters")]
@@ -282,7 +282,7 @@
     (play-sfx state side "virus-purge")))
 
 (defn rez
-  "Rez a minion card."
+  "Rez a contestant card."
   ([state side card] (rez state side (make-eid state) card nil))
   ([state side card args]
    (rez state side (make-eid state) card args))
@@ -335,8 +335,8 @@
 
                                                    ignore-cost
                                                    " at no cost")))
-                     (when (and (not no-warning) (:minion-phase-12 @state))
-                       (toast state :minion "You are not allowed to rez cards between Start of Turn and Mandatory Draw.
+                     (when (and (not no-warning) (:contestant-phase-12 @state))
+                       (toast state :contestant "You are not allowed to rez cards between Start of Turn and Mandatory Draw.
                         Please rez prior to clicking Start Turn in the future." "warning"
                               {:time-out 0 :close-button true}))
                      (if (ice? card)
@@ -349,11 +349,11 @@
        (effect-completed state side eid)))))
 
 (defn derez
-  "Derez a minion card."
+  "Derez a contestant card."
   [state side card]
   (let [card (get-card state card)]
     (system-msg state side (str "derezzes " (:title card)))
-    (update! state :minion (deactivate state :minion card true))
+    (update! state :contestant (deactivate state :contestant card true))
     (let [cdef (card-def card)]
       (when-let [derez-effect (:derez-effect cdef)]
         (resolve-ability state side derez-effect (get-card state card) nil))
@@ -362,14 +362,14 @@
     (trigger-event state side :derez card side)))
 
 (defn advance
-  "Advance a minion card that can be advanced.
+  "Advance a contestant card that can be advanced.
    If you pass in a truthy value as the 4th parameter, it will advance at no cost (for the card Success)."
   ([state side {:keys [card]}] (advance state side card nil))
   ([state side card no-cost]
    (let [card (get-card state card)]
      (when (can-advance? state side card)
        (when-let [cost (pay state side card :click (if-not no-cost 1 0)
-                            :credit (if-not no-cost 1 0) {:action :minion-advance})]
+                            :credit (if-not no-cost 1 0) {:action :contestant-advance})]
          (let [spent   (build-spend-msg cost "advance")
                card    (card-str state card)
                message (str spent card)]
@@ -383,36 +383,36 @@
   [state side args]
   (let [card (or (:card args) args)]
     (when (and (can-score? state side card)
-               (empty? (filter #(= (:cid card) (:cid %)) (get-in @state [:minion :register :cannot-score])))
+               (empty? (filter #(= (:cid card) (:cid %)) (get-in @state [:contestant :register :cannot-score])))
                (>= (:advance-counter card 0) (or (:current-cost card) (:advancementcost card))))
 
       ;; do not card-init necessarily. if card-def has :effect, wrap a fake event
-      (let [moved-card (move state :minion card :scored)
-            c (card-init state :minion moved-card {:resolve-effect false
+      (let [moved-card (move state :contestant card :scored)
+            c (card-init state :contestant moved-card {:resolve-effect false
                                                  :init-data true})
-            points (get-agenda-points state :minion c)]
+            points (get-agenda-points state :contestant c)]
         (trigger-event-simult
-          state :minion (make-eid state) :agenda-scored
-          {:first-ability {:effect (req (when-let [current (first (get-in @state [:hero :current]))]
+          state :contestant (make-eid state) :agenda-scored
+          {:first-ability {:effect (req (when-let [current (first (get-in @state [:challenger :current]))]
                                           (say state side {:user "__system__" :text (str (:title current) " is trashed.")})
                                           ; This is to handle Employee Strike with damage IDs #2688
                                           (when (:disable-id (card-def current))
-                                            (swap! state assoc-in [:minion :disable-id] true))
+                                            (swap! state assoc-in [:contestant :disable-id] true))
                                           (trash state side current)))}
            :card-ability (card-as-handler c)
            :after-active-player {:effect (req (let [c (get-card state c)
-                                                    points (or (get-agenda-points state :minion c) points)]
-                                                (set-prop state :minion (get-card state moved-card) :advance-counter 0)
-                                                (system-msg state :minion (str "scores " (:title c) " and gains "
+                                                    points (or (get-agenda-points state :contestant c) points)]
+                                                (set-prop state :contestant (get-card state moved-card) :advance-counter 0)
+                                                (system-msg state :contestant (str "scores " (:title c) " and gains "
                                                                              (quantify points "agenda point")))
-                                                (swap! state update-in [:minion :register :scored-agenda] #(+ (or % 0) points))
-                                                (swap! state dissoc-in [:minion :disable-id])
-                                                (gain-agenda-point state :minion points)
+                                                (swap! state update-in [:contestant :register :scored-agenda] #(+ (or % 0) points))
+                                                (swap! state dissoc-in [:contestant :disable-id])
+                                                (gain-agenda-point state :contestant points)
                                                 (play-sfx state side "agenda-score")))}}
           c)))))
 
 (defn no-action
-  "The minion indicates they have no more actions for the encounter."
+  "The contestant indicates they have no more actions for the encounter."
   [state side args]
   (swap! state assoc-in [:run :no-action] true)
   (system-msg state side "has no further action")
@@ -425,7 +425,7 @@
       (trigger-event state side :encounter-ice ice)
       (update-ice-strength state side ice))))
 
-;;; Runner actions
+;;; Challenger actions
 (defn click-run
   "Click to start a run."
   [state side {:keys [server] :as args}]
@@ -433,25 +433,25 @@
         click-cost-bonus (get-in @state [:bonus :click-run-cost])]
     (when (and (can-run? state side)
                (can-run-server? state server)
-               (can-pay? state :hero "a run" :click 1 cost-bonus click-cost-bonus))
-      (swap! state assoc-in [:hero :register :made-click-run] true)
+               (can-pay? state :challenger "a run" :click 1 cost-bonus click-cost-bonus))
+      (swap! state assoc-in [:challenger :register :made-click-run] true)
       (run state side server)
-      (when-let [cost-str (pay state :hero nil :click 1 cost-bonus click-cost-bonus)]
-        (system-msg state :hero
+      (when-let [cost-str (pay state :challenger nil :click 1 cost-bonus click-cost-bonus)]
+        (system-msg state :challenger
                     (str (build-spend-msg cost-str "make a run on") server))
         (play-sfx state side "click-run")))))
 
 (defn remove-tag
   "Click to remove a tag."
   [state side args]
-  (let [remove-cost (max 0 (- 2 (or (get-in @state [:hero :tag-remove-bonus]) 0)))]
+  (let [remove-cost (max 0 (- 2 (or (get-in @state [:challenger :tag-remove-bonus]) 0)))]
     (when-let [cost-str (pay state side nil :click 1 :credit remove-cost)]
       (lose state side :tag 1)
       (system-msg state side (build-spend-msg cost-str "remove 1 tag"))
       (play-sfx state side "click-remove-tag"))))
 
 (defn continue
-  "The hero decides to approach the next ice, or the server itself."
+  "The challenger decides to approach the next ice, or the server itself."
   [state side args]
   (when (get-in @state [:run :no-action])
     (let [run-ice (get-run-ices state)
@@ -462,7 +462,7 @@
                      (get-card state (nth run-ice (- pos 2))))]
       (when-completed (trigger-event-sync state side :pass-ice cur-ice)
                       (do (update-ice-in-server
-                            state side (get-in @state (concat [:minion :servers] (get-in @state [:run :server]))))
+                            state side (get-in @state (concat [:contestant :servers] (get-in @state [:run :server]))))
                           (swap! state update-in [:run :position] dec)
                           (swap! state assoc-in [:run :no-action] false)
                           (system-msg state side "continues the run")
@@ -470,7 +470,7 @@
                             (update-ice-strength state side cur-ice))
                           (when next-ice
                             (trigger-event-sync state side (make-eid state) :approach-ice next-ice))
-                          (doseq [p (filter #(has-subtype? % "Icebreaker") (all-installed state :hero))]
+                          (doseq [p (filter #(has-subtype? % "Icebreaker") (all-installed state :challenger))]
                             (update! state side (update-in (get-card state p) [:pump] dissoc :encounter))
                             (update-breaker-strength state side p)))))))
 

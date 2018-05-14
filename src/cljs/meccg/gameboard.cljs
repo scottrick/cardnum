@@ -15,10 +15,10 @@
 (defonce last-state (atom {}))
 (defonce lock (atom false))
 
-(defn image-url [{:keys [side code] :as card}]
+(defn image-url [{:keys [side fullCode] :as card}]
   (let [art (or (:art card) ; use the art set on the card itself, or fall back to the user's preferences.
-                (get-in @game-state [(keyword (lower-case side)) :user :options :alt-arts (keyword code)]))
-        art-options (:alt_art (get (:alt-arts @app-state) code))
+                (get-in @game-state [(keyword (lower-case side)) :user :options :alt-arts (keyword fullCode)]))
+        art-options (:alt_art (get (:alt-arts @app-state) fullCode))
         special-user (get-in @game-state [(keyword (lower-case side)) :user :special])
         special-wants-art (get-in @game-state [(keyword (lower-case side)) :user :options :show-alt-art])
         viewer-wants-art (get-in @app-state [:options :show-alt-art])
@@ -28,8 +28,8 @@
                      art
                      (contains? art-options (keyword art)))
         version-path (if (and has-art show-art)
-                       (get art-options (keyword art) (:code card))
-                       (:code card))]
+                       (get art-options (keyword art) (:fullCode card))
+                       (:fullCode card))]
     (str "/img/cards/" (:setname card) "/" (:ImageName card))))
 
 (defn toastr-options
@@ -62,15 +62,14 @@
   (swap! game-state assoc :side side)
   (swap! last-state #(identity @game-state)))
 
-
 (defn launch-game [game]
   (let [user (:user @app-state)
-        side (if (= (get-in game [:hero :user :_id]) (:_id user))
-               :hero
-               (if (= (get-in game [:minion :user :_id]) (:_id user))
-                 :minion
+        side (if (= (get-in game [:challenger :user :_id]) (:_id user))
+               :challenger
+               (if (= (get-in game [:contestant :user :_id]) (:_id user))
+                 :contestant
                  :spectator))]
-    (swap! app-state assoc :side "Minion")
+    (swap! app-state assoc :side side)
     (init-game game side))
   (set! (.-onbeforeunload js/window) #(clj->js "Leaving this page will disconnect you from the game."))
   (-> "#gamelobby" js/$ .fadeOut)
@@ -128,7 +127,7 @@
   (.emit socket "meccg" (clj->js msg)))
 
 (defn not-spectator? [game-state app-state]
-  (#{(get-in @game-state [:minion :user]) (get-in @game-state [:hero :user])} (:user @app-state)))
+  (#{(get-in @game-state [:contestant :user]) (get-in @game-state [:challenger :user])} (:user @app-state)))
 
 (defn send-command
   ([command] (send-command command nil))
@@ -174,7 +173,7 @@
          msg
          "<br/>"
          "<button type=\"button\" class=\"reportbtn\" style=\"margin-top: 5px\" "
-         "onclick=\"window.open('https://github.com/mtgred/meccg/issues/new?body="
+         "onclick=\"window.open('https://github.com/rezwits/meccg/issues/new?body="
          (build-report-url error)
          "');\">Report on GitHub</button></div>")))
 
@@ -215,7 +214,7 @@
 (defn handle-abilities [{:keys [abilities facedown side type] :as card} owner]
   (let [actions (action-list card)
         c (+ (count actions) (count abilities))]
-    (when-not (and (= side "Hero") facedown)
+    (when-not (and (= side "Challenger") facedown)
       (cond
         ;; Open panel
         (or (> c 1)
@@ -238,10 +237,10 @@
         (send-command "select" {:card card})
         ;; Card is an identity of player's side
         (and (= (:type card) "Identity")
-             (= side (keyword (.toLowerCase (:side card)))))
+             (= side (keyword (.toLowerCase ("Challenger")))))
         (handle-abilities card owner)
-        ;; Runner side
-        (= side :hero)
+        ;; Challenger side
+        (= side :challenger)
         (case (first zone)
           "hand" (if (:host card)
                    (when (:installed card)
@@ -250,16 +249,16 @@
           ("rig" "current" "onhost" "play-area") (handle-abilities card owner)
           ("servers") (when (and (= type "ICE") (:rezzed card))
                         ;; ICE that should show list of abilities that send messages to fire sub
-                        (-> (om/get-node owner "hero-abilities") js/$ .toggle))
+                        (-> (om/get-node owner "challenger-abilities") js/$ .toggle))
           nil)
-        ;; Corp side
-        (= side :minion)
+        ;; Contestant side
+        (= side :contestant)
         (case (first zone)
           "hand" (case type
                    ("Upgrade" "ICE") (if root
                                        (send-command "play" {:card card :server root})
                                        (-> (om/get-node owner "servers") js/$ .toggle))
-                   ("Agenda" "Asset") (if (< (count (get-in @game-state [:minion :servers])) 4)
+                   ("Agenda" "Asset") (if (< (count (get-in @game-state [:contestant :servers])) 4)
                                         (send-command "play" {:card card :server "New remote"})
                                         (-> (om/get-node owner "servers") js/$ .toggle))
                    (send-command "play" {:card card}))
@@ -267,8 +266,8 @@
           nil)))))
 
 (defn in-play? [card]
-  (let [dest (when (= (:side card) "Hero")
-               (get-in @game-state [:hero :rig (keyword (.toLowerCase (:type card)))]))]
+  (let [dest (when (= (:side card) "Challenger")
+               (get-in @game-state [:challenger :rig (keyword (.toLowerCase (:type card)))]))]
     (some #(= (:title %) (:title card)) dest)))
 
 (defn has?
@@ -296,7 +295,7 @@
            (has-subtype? card "Triple")
            (if (>= (:click me) 3) true false)
 
-           (= (:code card) "07036") ; Day Job
+           (= (:fullCode card) "07036") ; Day Job
            (if (>= (:click me) 4) true false)
 
            (has-subtype? card "Priority")
@@ -336,12 +335,12 @@
       [:div.smallwarning "!"]
       (if-let [class (anr-icons item)]
         [:span {:class (str "anr-icon " class)}]
-        (if-let [[title code] (extract-card-info item)]
-          [:span {:class "fake-link" :id code} title]
+        (if-let [[title fullCode] (extract-card-info item)]
+          [:span {:class "fake-link" :id fullCode} title]
           [:span item])))))
 
 (defn get-non-alt-art [[title cards]]
-  {:title title :code (:code (first cards))})
+  {:title title :fullCode (:fullCode (first cards))})
 
 (defn prepare-cards []
   (->> (:cards @app-state)
@@ -360,13 +359,13 @@
 
 (def find-card-regex (memoize find-card-regex-impl))
 
-(defn card-image-token-impl [title code]
-  (str "$1" ci-open title ci-seperator code ci-close))
+(defn card-image-token-impl [title fullCode]
+  (str "$1" ci-open title ci-seperator fullCode ci-close))
 
 (def card-image-token (memoize card-image-token-impl))
 
 (defn card-image-reducer [text card]
-  (.replace text (js/RegExp. (find-card-regex (:title card)) "g") (card-image-token (:title card) (:code card))))
+  (.replace text (js/RegExp. (find-card-regex (:title card)) "g") (card-image-token (:title card) (:fullCode card))))
 
 (defn add-image-codes-impl [text]
   (reduce card-image-reducer text (prepared-cards)))
@@ -383,20 +382,20 @@
 (def get-message-parts (memoize get-message-parts-impl))
 
 (defn get-card-code [e]
-  (let [code (str (.. e -target -id))]
-    (when (pos? (count code))
-      code)))
+  (let [fullCode (str (.. e -target -id))]
+    (when (pos? (count fullCode))
+      fullCode)))
 
 (defn card-preview-mouse-over [e channel]
   (.preventDefault e)
-  (when-let [code (get-card-code e)]
-    (when-let [card (some #(when (= (:code %) code) %) (:cards @app-state))]
+  (when-let [fullCode (get-card-code e)]
+    (when-let [card (some #(when (= (:fullCode %) fullCode) %) (:cards @app-state))]
       (put! channel (assoc card :implementation :full))))
   nil)
 
 (defn card-preview-mouse-out [e channel]
   (.preventDefault e)
-  (when-let [code (get-card-code e)]
+  (when-let [fullCode (get-card-code e)]
     (put! channel false))
   nil)
 
@@ -465,7 +464,7 @@
 (defn handle-drop [e server]
   (-> e .-target js/$ (.removeClass "dragover"))
   (let [card (-> e .-dataTransfer (.getData "card") ((.-parse js/JSON)) (js->clj :keywordize-keys true))
-        side (if (#{"HQ" "R&D" "Archives"} server) "Minion" "Hero")]
+        side (if (#{"HQ" "R&D" "Archives"} server) "Contestant" "Challenger")]
     (send-command "move" {:card card :server server})))
 
 (defn abs [n] (max n (- n)))
@@ -603,9 +602,9 @@
 
 (defn card-img
   "Build an image of the card (is always face-up). Only shows the zoomed card image, does not do any interaction."
-  [{:keys [code title] :as cursor}]
+  [{:keys [fullCode title] :as cursor}]
   (om/component
-   (when code
+   (when fullCode
      (sab/html
       [:div.card-frame
        [:div.blue-shade.card {:on-mouse-enter #(put! zoom-channel cursor)
@@ -618,10 +617,10 @@
 (defn face-down?
   "Returns true if the installed card should be drawn face down."
   [{:keys [side type facedown rezzed host] :as card}]
-  (if (= side "Minion")
+  (if (= side "Contestant")
     (and (not= type "Operation")
          (not rezzed)
-         (not= (:side host) "Hero"))
+         (not= (:side host) "Challenger"))
     facedown))
 
 (defn card-zoom [card owner]
@@ -660,9 +659,9 @@
      (when-let [url (image-url card)]
        [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])])))
 
-(defn card-view [{:keys [zone code type abilities counter advance-counter advancementcost current-cost subtype
+(defn card-view [{:keys [zone fullCode type abilities counter advance-counter advancementcost current-cost subtype
                          advanceable rezzed strength current-strength title remotes selected hosted
-                         side rec-counter facedown server-target subtype-target icon new hero-abilities subroutines]
+                         side rec-counter facedown server-target subtype-target icon new challenger-abilities subroutines]
                   :as cursor}
                  owner {:keys [flipped] :as opts}]
   (om/component
@@ -675,15 +674,15 @@
                             :on-touch-move  #(handle-touchmove %)
                             :on-drag-start #(handle-dragstart % cursor)
                             :on-drag-end #(-> % .-target js/$ (.removeClass "dragged"))
-                            :on-mouse-enter #(when (or (not (or (not code) flipped facedown))
+                            :on-mouse-enter #(when (or (not (or (not fullCode) flipped facedown))
                                                        (spectator-view-hidden?)
                                                        (= (:side @game-state) (keyword (.toLowerCase side))))
                                                (put! zoom-channel cursor))
                             :on-mouse-leave #(put! zoom-channel false)
                             :on-click #(handle-card-click @cursor owner)}
       (when-let [url (image-url cursor)]
-        (if (or (not code) flipped facedown)
-          (let [facedown-but-known (or (not (or (not code) flipped facedown))
+        (if (or (not fullCode) flipped facedown)
+          (let [facedown-but-known (or (not (or (not fullCode) flipped facedown))
                                        (spectator-view-hidden?)
                                        (= (:side @game-state) (keyword (.toLowerCase side))))
                 alt-str (if facedown-but-known (str "Facedown " title) nil)]
@@ -707,7 +706,7 @@
       (when subtype-target
         (let [colour-type (case subtype-target
                             ("Barrier" "Sentry") (lower-case subtype-target)
-                            "Code Gate" "code-gate"
+                            "Code Gate" "Code-gate"
                             nil)
               label (if (includes? subtype-target " - ")
                       (->> (split subtype-target #" - ")
@@ -727,14 +726,14 @@
                                         (-> (om/get-node owner "servers") js/$ .fadeOut))}
                    label])
                 servers)]))
-      (when (pos? (+ (count hero-abilities) (count subroutines)))
-        [:div.panel.blue-shade.hero-abilities {:ref "hero-abilities"}
+      (when (pos? (+ (count challenger-abilities) (count subroutines)))
+        [:div.panel.blue-shade.challenger-abilities {:ref "challenger-abilities"}
          (map-indexed
           (fn [i ab]
-            [:div {:on-click #(do (send-command "hero-ability" {:card @cursor
+            [:div {:on-click #(do (send-command "challenger-ability" {:card @cursor
                                                                   :ability i}))
                    :dangerouslySetInnerHTML #js {:__html (add-symbols (str (ability-costs ab) (:label ab)))}}])
-          hero-abilities)
+          challenger-abilities)
          (when (> (count subroutines) 1)
            [:div {:on-click #(send-command "system-msg"
                                            {:msg (str "indicates to fire all subroutines on " title)})}
@@ -835,7 +834,7 @@
    (sab/html
     (let [side (get-in player [:identity :side])
           size (count (:hand player))
-          name (if (= side "Minion") "HQ" "Grip")]
+          name (if (= side "Contestant") "Hand" "Hand")]
       [:div.hand-container
        [:div.hand-controls
         [:div.panel.blue-shade.hand
@@ -864,15 +863,15 @@
   (om/component
    (sab/html
     [:div.blue-shade.identity
-     (om/build card-view (:identity player))])))
+     (facedown-card "Locations")])))
 
 (defn deck-view [{:keys [identity deck] :as cursor} owner]
   (om/component
    (sab/html
-    (let [is-hero (= "Hero" (:side identity))
-          side (if is-hero :hero :minion)
-          name (if is-hero "Stack" "R&D")
-          ref (if is-hero "stack" "rd")
+    (let [is-challenger (= "Challenger" (:side identity))
+          side (if is-challenger :challenger :contestant)
+          name (if is-challenger "Play Deck" "Play Deck")
+          ref (if is-challenger "stack" "rd")
           menu-ref (str ref "-menu")
           content-ref (str ref "-content")]
       [:div.blue-shade.deck
@@ -897,41 +896,70 @@
 
 (defmulti discard-view #(get-in % [:identity :side]))
 
-(defmethod discard-view "Hero" [{:keys [discard] :as cursor} owner]
+(defmethod discard-view "WhoKnew" [{:keys [discard] :as cursor} owner]
   (om/component
    (sab/html
     [:div.blue-shade.discard
-     (drop-area :hero "Heap" {:on-click #(-> (om/get-node owner "popup") js/$ .fadeToggle)})
+     (drop-area :challenger "Heap" {:on-click #(-> (om/get-node owner "popup") js/$ .fadeToggle)})
      (when-not (empty? discard)
        (om/build card-view (last discard)))
      (om/build label discard {:opts {:name "Heap"}})
-     [:div.panel.blue-shade.popup {:ref "popup" :class (if (= (:side @game-state) :hero) "me" "opponent")}
+     [:div.panel.blue-shade.popup {:ref "popup" :class (if (= (:side @game-state) :challenger) "me" "opponent")}
       [:div
        [:a {:on-click #(close-popup % owner "popup" nil false false)} "Close"]]
       (om/build-all card-view discard {:key :cid})]])))
 
-(defmethod discard-view "Minion" [{:keys [discard servers] :as cursor} owner]
+(defmethod discard-view "Challenger" [{:keys [discard servers] :as cursor} owner]
+  (om/component
+    (sab/html
+      (let [faceup? #(or (:seen %) (:rezzed %))
+            draw-card #(if (faceup? %)
+                         (om/build card-view %)
+                         (if (or (= (:side @game-state) :challenger)
+                                 (spectator-view-hidden?))
+                           [:div.unseen (om/build card-view %)]
+                           (facedown-card "challenger")))]
+        [:div.blue-shade.discard
+         (drop-area :contestant "Heap" {:on-click #(-> (om/get-node owner "popup") js/$ .fadeToggle)})
+
+         (when-not (empty? discard) (draw-card (last discard)))
+
+         (om/build label discard {:opts {:name "Discard Pile"
+                                         :fn (fn [cursor] (let [total (count cursor)
+                                                                face-up (count (filter faceup? cursor))]
+                                                            ;; use non-breaking space to keep counts on same line.
+                                                            (str face-up "↑ " (- total face-up) "↓")))}})
+
+         [:div.panel.blue-shade.popup {:ref "popup" :class (if (= (:side @game-state) :contestant) "opponent" "me")}
+          [:div
+           [:a {:on-click #(close-popup % owner "popup" nil false false)} "Close"]
+           [:label (let [total (count discard)
+                         face-up (count (filter faceup? discard))]
+                     (str total " cards, " (- total face-up) " face-down."))]]
+          (for [c discard] (draw-card c))]]))))
+
+(defmethod discard-view "Contestant" [{:keys [discard servers] :as cursor} owner]
   (om/component
    (sab/html
     (let [faceup? #(or (:seen %) (:rezzed %))
           draw-card #(if (faceup? %)
                        (om/build card-view %)
-                       (if (or (= (:side @game-state) :minion)
+                       (if (or (= (:side @game-state) :contestant)
                                (spectator-view-hidden?))
                          [:div.unseen (om/build card-view %)]
-                         (facedown-card "minion")))]
+                         (facedown-card "contestant")))]
       [:div.blue-shade.discard
-       (drop-area :minion "Archives" {:on-click #(-> (om/get-node owner "popup") js/$ .fadeToggle)})
+       (drop-area :contestant "Archives" {:on-click #(-> (om/get-node owner "popup") js/$ .fadeToggle)})
 
        (when-not (empty? discard) (draw-card (last discard)))
 
-       (om/build label discard {:opts {:name "Archives"
+       (om/build label discard {:opts {:name "Discard Pile"
                                        :fn (fn [cursor] (let [total (count cursor)
                                                               face-up (count (filter faceup? cursor))]
                                                           ;; use non-breaking space to keep counts on same line.
                                                           (str face-up "↑ " (- total face-up) "↓")))}})
 
-       [:div.panel.blue-shade.popup {:ref "popup" :class (if (= (:side @game-state) :hero) "opponent" "me")}
+       [:div.panel.blue-shade.popup {:ref "popup" :class (if (= (:side @game-state) :challenger) "opponent" "me")}
         [:div
          [:a {:on-click #(close-popup % owner "popup" nil false false)} "Close"]
          [:label (let [total (count discard)
@@ -984,7 +1012,7 @@
                       [:div.card-wrapper {:style {:left (* (/ 128 (dec size)) i)}}
                        [:div (om/build card-view card)]])
                     scored)
-       (om/build label scored {:opts {:name "Scored Area"}})]))))
+       (om/build label scored {:opts {:name "Marshalling Point Pile"}})]))))
 
 (defn controls [key]
   (sab/html
@@ -994,12 +1022,12 @@
 
 (defmulti stats-view #(get-in % [:identity :side]))
 
-(defmethod stats-view "Hero" [{:keys [user click credit run-credit memory link tag
+(defmethod stats-view "Challenger" [{:keys [user click credit run-credit memory link tag
                                         brain-damage agenda-point tagged hand-size-base
                                         hand-size-modification active]} owner]
   (om/component
    (sab/html
-    (let [me? (= (:side @game-state) :hero)]
+    (let [me? (= (:side @game-state) :challenger)]
       [:div.panel.blue-shade.stats {:class (when active "active-player")}
        [:h4.ellipsis (om/build avatar user {:opts {:size 22}}) (:username user)]
        [:div (str click " Click" (if (not= click 1) "s" "")) (when me? (controls :click))]
@@ -1017,11 +1045,11 @@
        [:div (str (+ hand-size-base hand-size-modification) " Max hand size")
         (when me? (controls :hand-size-modification))]]))))
 
-(defmethod stats-view "Minion" [{:keys [user click credit agenda-point bad-publicity has-bad-pub
+(defmethod stats-view "Contestant" [{:keys [user click credit agenda-point bad-publicity has-bad-pub
                                       hand-size-base hand-size-modification active]} owner]
   (om/component
    (sab/html
-    (let [me? (= (:side @game-state) :minion)]
+    (let [me? (= (:side @game-state) :contestant)]
       [:div.panel.blue-shade.stats {:class (when active "active-player")}
        [:h4.ellipsis (om/build avatar user {:opts {:size 22}}) (:username user)]
        [:div (str click " Click" (if (not= click 1) "s" "")) (when me? (controls :click))]
@@ -1072,13 +1100,13 @@
 
 (defmulti board-view #(get-in % [:player :identity :side]))
 
-(defmethod board-view "Minion" [{:keys [player run]}]
+(defmethod board-view "Contestant" [{:keys [player run]}]
   (om/component
    (sab/html
     (let [servers (:servers player)
           s (:server run)
           server-type (first s)]
-      [:div.minion-board {:class (if (= (:side @game-state) :hero) "opponent" "me")}
+      [:div.contestant-board {:class (if (= (:side @game-state) :challenger) "opponent" "me")}
        (for [server (reverse (get-remotes servers))
              :let [num (remote->num (first server))]]
          (om/build server-view {:server (second server)
@@ -1094,16 +1122,16 @@
                               :central-view (om/build discard-view player)
                               :run (when (= server-type "archives") run)})]))))
 
-(defmethod board-view "Hero" [{:keys [player run]}]
+(defmethod board-view "Challenger" [{:keys [player run]}]
   (om/component
    (sab/html
-    (let [is-me (= (:side @game-state) :hero)
+    (let [is-me (= (:side @game-state) :challenger)
           centrals (sab/html
-                    [:div.hero-centrals
+                    [:div.challenger-centrals
                      (om/build discard-view player)
                      (om/build deck-view player)
                      (om/build identity-view player)])]
-      [:div.hero-board {:class (if is-me "me" "opponent")}
+      [:div.challenger-board {:class (if is-me "me" "opponent")}
        (when-not is-me centrals)
        (for [zone [:program :hardware :resource :facedown]]
          [:div
@@ -1126,14 +1154,14 @@
       (send-command "end-turn"))))
 
 (defn runnable-servers
-  "List of servers the hero can run on."
-  [minion hero]
-  (let [servers (keys (:servers minion))
-        restricted-servers (keys (get-in hero [:register :cannot-run-on-server]))]
+  "List of servers the challenger can run on."
+  [contestant challenger]
+  (let [servers (keys (:servers contestant))
+        restricted-servers (keys (get-in challenger [:register :cannot-run-on-server]))]
     ;; remove restricted servers from all servers to just return allowed servers
     (remove (set restricted-servers) servers)))
 
-(defn button-pane [{:keys [side active-player run end-turn hero-phase-12 minion-phase-12 minion hero me opponent] :as cursor} owner]
+(defn button-pane [{:keys [side active-player run end-turn challenger-phase-12 contestant-phase-12 contestant challenger me opponent] :as cursor} owner]
   (reify
     om/IDidUpdate
     (did-update [this prev-props prev-state]
@@ -1178,7 +1206,7 @@
                 [:div
                  [:div.credit-select
                   [:input#card-title {:placeholder "Enter a card title"
-                                      :onKeyUp #(when (= 13 (.-keyCode %))
+                                      :onKeyUp #(when (= 13 (.-keycode %))
                                                  (-> "#card-submit" js/$ .click)
                                                  (.stopPropagation %))}]]
                  [:button#card-submit {:on-click #(send-command "choice" {:choice (-> "#card-title" js/$ .val)})}
@@ -1202,18 +1230,18 @@
                     (if (string? c)
                       [:button {:on-click #(send-command "choice" {:choice c})}
                        (for [item (get-message-parts c)] (create-span item))]
-                      (let [[title code] (extract-card-info (add-image-codes (:title c)))]
+                      (let [[title fullCode] (extract-card-info (add-image-codes (:title c)))]
                         [:button {:class (when (:rotated c) :rotated)
-                                  :on-click #(send-command "choice" {:card @c}) :id code} title]))))))]
+                                  :on-click #(send-command "choice" {:card @c}) :id fullCode} title]))))))]
            (if run
              (let [s (:server run)
                    kw (keyword (first s))
                    server (if-let [n (second s)]
-                            (get-in minion [:servers kw n])
-                            (get-in minion [:servers kw]))]
-               (if (= side :hero)
+                            (get-in contestant [:servers kw n])
+                            (get-in contestant [:servers kw]))]
+               (if (= side :challenger)
                  [:div.panel.blue-shade
-                  (when-not (:no-action run) [:h4 "Waiting for Corp's actions"])
+                  (when-not (:no-action run) [:h4 "Waiting for Contestant's actions"])
                   (if (zero? (:position run))
                     (cond-button "Successful Run" (:no-action run) #(send-command "access"))
                     (cond-button "Continue" (:no-action run) #(send-command "continue")))
@@ -1222,20 +1250,20 @@
                  [:div.panel.blue-shade
                   (when (zero? (:position run))
                     (cond-button "Action before access" (not (:no-action run))
-                                 #(send-command "minion-phase-43")))
+                                 #(send-command "contestant-phase-43")))
                   (cond-button "No more action" (not (:no-action run))
                                #(send-command "no-action"))]))
              [:div.panel.blue-shade
               (if (= (keyword active-player) side)
-                (when (and (zero? (:click me)) (not end-turn) (not hero-phase-12) (not minion-phase-12))
+                (when (and (zero? (:click me)) (not end-turn) (not challenger-phase-12) (not contestant-phase-12))
                   [:button {:on-click #(handle-end-turn)} "End Turn"])
                 (when end-turn
                   [:button {:on-click #(send-command "start-turn")} "Start Turn"]))
               (when (and (= (keyword active-player) side)
-                         (or hero-phase-12 minion-phase-12))
+                         (or challenger-phase-12 contestant-phase-12))
                 [:button {:on-click #(send-command "end-phase-12")}
-                 (if (= side :minion) "Mandatory Draw" "Take Clicks")])
-              (when (= side :hero)
+                 (if (= side :contestant) "Mandatory Draw" "Take Clicks")])
+              (when (= side :challenger)
                 [:div
                  (cond-button "Remove Tag"
                               (and (pos? (:click me))
@@ -1251,10 +1279,10 @@
                           [:div {:on-click #(do (send-command "run" {:server label})
                                                 (-> (om/get-node owner "servers") js/$ .fadeOut))}
                            label])
-                        (zones->sorted-names (runnable-servers minion hero)))]]])
-              (when (= side :minion)
+                        (zones->sorted-names (runnable-servers contestant challenger)))]]])
+              (when (= side :contestant)
                 (cond-button "Purge" (>= (:click me) 3) #(send-command "purge")))
-              (when (= side :minion)
+              (when (= side :contestant)
                 (cond-button "Trash Resource" (and (pos? (:click me))
                                                    (>= (:credit me) (- 2 (or (:trash-cost-bonus me) 0)))
                                                    (or (pos? (:tagged opponent))
@@ -1278,7 +1306,7 @@
   ;; Remember the most recent sfx id as last played so we don't repeat it later
   (om/set-state! owner :sfx-last-played {:gameid gameid :id sfx-current-id}))
 
-(defn gameboard [{:keys [side active-player run end-turn hero-phase-12 minion-phase-12 turn minion hero] :as cursor} owner]
+(defn gameboard [{:keys [side active-player run end-turn challenger-phase-12 contestant-phase-12 turn contestant challenger] :as cursor} owner]
   (reify
     om/IInitState
     (init-state [this]
@@ -1295,8 +1323,8 @@
                           (audio-sfx "click-run")
                           (audio-sfx "click-remove-tag")
                           (audio-sfx "game-end")
-                          (audio-sfx "install-minion")
-                          (audio-sfx "install-hero")
+                          (audio-sfx "install-contestant")
+                          (audio-sfx "install-challenger")
                           (audio-sfx "play-instant")
                           (audio-sfx "rez-ice")
                           (audio-sfx "rez-other")
@@ -1327,18 +1355,18 @@
     (render-state [this state]
       (sab/html
        (when side
-         (let [me       (assoc ((if (= side :hero) :hero :minion) cursor) :active (and (pos? turn) (= (keyword active-player) side)))
-               opponent (assoc ((if (= side :hero) :minion :hero) cursor) :active (and (pos? turn) (not= (keyword active-player) side)))]
+         (let [me       (assoc ((if (= side :challenger) :challenger :contestant) cursor) :active (and (pos? turn) (= (keyword active-player) side)))
+               opponent (assoc ((if (= side :challenger) :contestant :challenger) cursor) :active (and (pos? turn) (not= (keyword active-player) side)))]
            [:div.gameboard
             (when (and (:winner @game-state) (not (:win-shown @app-state)))
               [:div.win.centered.blue-shade
                (:winning-user @game-state) " (" (-> @game-state :winner capitalize)
                (cond
                  (= "Decked" (@game-state :reason capitalize))
-                 ") wins due to the Corp being decked"
+                 ") wins due to the Contestant being decked"
 
                  (= "Flatline" (@game-state :reason capitalize))
-                 ") wins by flatlining the Runner"
+                 ") wins by flatlining the Challenger"
 
                  :else
                  ") wins by scoring agenda points")
@@ -1366,7 +1394,7 @@
 
             [:div.leftpane
              [:div.opponent
-              (om/build hand-view {:player opponent :remotes (get-remotes (:servers minion))
+              (om/build hand-view {:player opponent :remotes (get-remotes (:servers contestant))
                                    :popup (= side :spectator) :popup-direction "opponent"})]
 
              [:div.inner-leftpane
@@ -1387,10 +1415,10 @@
                 (om/build rfg-view {:cards (:current opponent) :name "Current" :popup false})
                 (om/build rfg-view {:cards (:current me) :name "Current" :popup false})]
                (when-not (= side :spectator)
-                 (om/build button-pane {:side side :active-player active-player :run run :end-turn end-turn :hero-phase-12 hero-phase-12 :minion-phase-12 minion-phase-12 :minion minion :hero hero :me me :opponent opponent}))]]
+                 (om/build button-pane {:side side :active-player active-player :run run :end-turn end-turn :challenger-phase-12 challenger-phase-12 :contestant-phase-12 contestant-phase-12 :contestant contestant :challenger challenger :me me :opponent opponent}))]]
 
              [:div.me
-              (om/build hand-view {:player me :remotes (get-remotes (:servers minion))
+              (om/build hand-view {:player me :remotes (get-remotes (:servers contestant))
                                    :popup true :popup-direction "me"})]]]))))))
 
 (om/root gameboard game-state {:target (. js/document (getElementById "gameboard"))})

@@ -52,7 +52,7 @@
    (when (not= cid (:cid card))
      (when installed
        (unregister-events state side target))
-     (doseq [s [:hero :minion]]
+     (doseq [s [:challenger :contestant]]
        (if host
          (when-let [host-card (some #(when (= (:cid host) (:cid %)) %)
                                     (get-in @state (cons s (vec (map to-keyword (:zone host))))))]
@@ -72,11 +72,11 @@
            tdef (card-def c)]
        (update! state side (update-in card [:hosted] #(conj % c)))
 
-       ;; events should be registered for: hero cards that are installed; minion cards that are Operations, or are installed and rezzed
+       ;; events should be registered for: challenger cards that are installed; contestant cards that are Operations, or are installed and rezzed
        (when (or (is-type? target "Operation")
                  (and (is-type? target "Event") (not facedown))
-                 (and installed (card-is? target :side :hero))
-                 (and installed (card-is? target :side :minion) (:rezzed target)))
+                 (and installed (card-is? target :side :challenger))
+                 (and installed (card-is? target :side :contestant) (:rezzed target)))
          (when-let [events (:events tdef)]
            (register-events state side events c))
          (when (or (:recurring tdef) (:prevent tdef))

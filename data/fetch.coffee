@@ -32,7 +32,7 @@ mapSets = {}
 cardFields = {
   "Set" : rename("setname"),
   "Primary" : rename("type"),
-  "Alignment" : rename("side"),
+  "Alignment" : rename("alignment"),
   "MEID" : same,
   "Artist" : same,
   "Rarity" : same,
@@ -81,7 +81,8 @@ cardFields = {
   "fullCode" : same,
   "alignCode" : same,
   "setCode" : same,
-  "normalizedtitle" : same
+  "normalizedtitle" : same,
+  "side" : same
 }
 
 baseurl = "http://192.168.1.180:8080/rez/"
@@ -125,6 +126,7 @@ fetchCards = (callback) ->
       imgDir = path.join(__dirname, "..", "resources", "public", "img", "cards")
       i = 0
       for card in cards
+        card.side = "Contestant"
         imgPath = path.join(imgDir, "#{card.setname}", "#{card.ImageName}")
         if !fs.existsSync(imgPath)
           fetchImg((baseurl + card.setname + "/"), card.ImageName, imgPath, i++ * 200)
@@ -134,4 +136,22 @@ fetchCards = (callback) ->
             console.log("#{cards.length} cards fetched")
             callback(null, cards.length)
 
-async.series [fetchSets, fetchCards, () -> db.close()]
+fetchChrds = (callback) ->
+  request.get baseurl + "cards", (error, response, body) ->
+    if !error and response.statusCode is 200
+      data = JSON.parse(body)
+      chrds = selectFields(cardFields, data)
+      imgDir = path.join(__dirname, "..", "resources", "public", "img", "cards")
+      i = 0
+      for card in chrds
+        card.side = "Challenger"
+        imgPath = path.join(imgDir, "#{card.setname}", "#{card.ImageName}")
+        if !fs.existsSync(imgPath)
+          fetchImg((baseurl + card.setname + "/"), card.ImageName, imgPath, i++ * 200)
+      db.collection("chrds").remove ->
+        db.collection("chrds").insert chrds, (err, result) ->
+          fs.writeFile "andb-chrds.json", JSON.stringify(chrds), ->
+            console.log("#{chrds.length} chrds fetched")
+            callback(null, chrds.length)
+
+async.series [fetchSets, fetchCards, fetchChrds, () -> db.close()]
