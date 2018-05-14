@@ -863,7 +863,7 @@
   (om/component
    (sab/html
     [:div.blue-shade.identity
-     (om/build card-view (:identity player))])))
+     (facedown-card "Locations")])))
 
 (defn deck-view [{:keys [identity deck] :as cursor} owner]
   (om/component
