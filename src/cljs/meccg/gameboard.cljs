@@ -834,7 +834,7 @@
    (sab/html
     (let [side (get-in player [:identity :side])
           size (count (:hand player))
-          name (if (= side "Contestant") "HQ" "Grip")]
+          name (if (= side "Contestant") "Hand" "Hand")]
       [:div.hand-container
        [:div.hand-controls
         [:div.panel.blue-shade.hand
@@ -870,7 +870,7 @@
    (sab/html
     (let [is-challenger (= "Challenger" (:side identity))
           side (if is-challenger :challenger :contestant)
-          name (if is-challenger "Stack" "R&D")
+          name (if is-challenger "Play Deck" "Play Deck")
           ref (if is-challenger "stack" "rd")
           menu-ref (str ref "-menu")
           content-ref (str ref "-content")]
@@ -896,7 +896,7 @@
 
 (defmulti discard-view #(get-in % [:identity :side]))
 
-(defmethod discard-view "Challenger" [{:keys [discard] :as cursor} owner]
+(defmethod discard-view "WhoKnew" [{:keys [discard] :as cursor} owner]
   (om/component
    (sab/html
     [:div.blue-shade.discard
@@ -908,6 +908,35 @@
       [:div
        [:a {:on-click #(close-popup % owner "popup" nil false false)} "Close"]]
       (om/build-all card-view discard {:key :cid})]])))
+
+(defmethod discard-view "Challenger" [{:keys [discard servers] :as cursor} owner]
+  (om/component
+    (sab/html
+      (let [faceup? #(or (:seen %) (:rezzed %))
+            draw-card #(if (faceup? %)
+                         (om/build card-view %)
+                         (if (or (= (:side @game-state) :challenger)
+                                 (spectator-view-hidden?))
+                           [:div.unseen (om/build card-view %)]
+                           (facedown-card "challenger")))]
+        [:div.blue-shade.discard
+         (drop-area :contestant "Heap" {:on-click #(-> (om/get-node owner "popup") js/$ .fadeToggle)})
+
+         (when-not (empty? discard) (draw-card (last discard)))
+
+         (om/build label discard {:opts {:name "Discard Pile"
+                                         :fn (fn [cursor] (let [total (count cursor)
+                                                                face-up (count (filter faceup? cursor))]
+                                                            ;; use non-breaking space to keep counts on same line.
+                                                            (str face-up "↑ " (- total face-up) "↓")))}})
+
+         [:div.panel.blue-shade.popup {:ref "popup" :class (if (= (:side @game-state) :contestant) "opponent" "me")}
+          [:div
+           [:a {:on-click #(close-popup % owner "popup" nil false false)} "Close"]
+           [:label (let [total (count discard)
+                         face-up (count (filter faceup? discard))]
+                     (str total " cards, " (- total face-up) " face-down."))]]
+          (for [c discard] (draw-card c))]]))))
 
 (defmethod discard-view "Contestant" [{:keys [discard servers] :as cursor} owner]
   (om/component
@@ -924,7 +953,7 @@
 
        (when-not (empty? discard) (draw-card (last discard)))
 
-       (om/build label discard {:opts {:name "Archives"
+       (om/build label discard {:opts {:name "Discard Pile"
                                        :fn (fn [cursor] (let [total (count cursor)
                                                               face-up (count (filter faceup? cursor))]
                                                           ;; use non-breaking space to keep counts on same line.
@@ -983,7 +1012,7 @@
                       [:div.card-wrapper {:style {:left (* (/ 128 (dec size)) i)}}
                        [:div (om/build card-view card)]])
                     scored)
-       (om/build label scored {:opts {:name "Scored Area"}})]))))
+       (om/build label scored {:opts {:name "Marshalling Point Pile"}})]))))
 
 (defn controls [key]
   (sab/html

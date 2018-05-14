@@ -64,6 +64,7 @@
    (fn [user]
      (om/set-state! owner :title (str (:username user) "'s game"))
      (om/set-state! owner :side "Contestant")
+     (om/set-state! owner :alignment "Hero")
      (om/set-state! owner :editing true)
      (om/set-state! owner :flash-message "")
      (om/set-state! owner :protected false)
@@ -211,7 +212,7 @@
            specs (:allowspectator game)]
        (cond
          (and (some? faction) (not= "Neutral" faction) specs) (faction-icon faction identity)
-         alignment [:span.alignment (str "(" alignment ")")]))])))
+         alignment [:span.alignment (str " (" alignment ")")]))])))
 
 (defn chat-view [messages owner]
   (reify
