@@ -204,6 +204,8 @@ requester.on 'connect', (fd, ep) ->
   requester_connected = true
   db.collection("cards").find().sort(_id: 1).toArray (err, data) ->
     requester.send(JSON.stringify({action: "initialize", cards: data}))
+  db.collection("chrds").find().sort(_id: 1).toArray (err, data) ->
+    requester.send(JSON.stringify({action: "initialize", chrds: data}))
 
 requester.on 'close', (fd,ep) ->
   requester_connected = false
@@ -895,6 +897,9 @@ app.get '/admin/init', (req, res) ->
   if req.user and req.user.isadmin
     db.collection("cards").find().sort(_id: 1).toArray (err, data) ->
       requester.send(JSON.stringify({action: "initialize", cards: data}))
+      res.status(200).send({result: "ok"})
+    db.collection("chrds").find().sort(_id: 1).toArray (err, data) ->
+      requester.send(JSON.stringify({action: "initialize", chrds: data}))
       res.status(200).send({result: "ok"})
   else
     res.status(401).send({message: 'Unauthorized'})

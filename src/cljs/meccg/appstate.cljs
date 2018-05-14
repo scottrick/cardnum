@@ -14,8 +14,10 @@
                          (:options (js->clj js/user :keywordize-keys true)))
 
          :cards [] :cards-loaded false
+         :chrds [] :chrds-loaded false
          :sets [] :mwl [] :cycles []
          :decks [] :decks-loaded false
+         :chcks [] :chcks-loaded false
          :stats (:stats (js->clj js/user :keywordize-keys true))
          :games [] :gameid nil :messages []
          :channels {:general []}

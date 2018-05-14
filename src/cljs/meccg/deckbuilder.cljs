@@ -6,7 +6,7 @@
             [clojure.string :refer [split split-lines join escape] :as s]
             [meccg.appstate :refer [app-state]]
             [meccg.auth :refer [authenticated] :as auth]
-            [meccg.cardbrowser :refer [cards-channel image-url card-view show-alt-art? filter-title expand-alts] :as cb]
+            [meccg.cardbrowser :refer [cards-channel chrds-channel image-url card-view show-alt-art? filter-title expand-alts] :as cb]
             [meccg.account :refer [load-alt-arts]]
             [meccg.ajax :refer [POST GET]]
             [goog.string :as gstring]
@@ -84,6 +84,26 @@
                     (<= i (count (:title card))) (recur (inc i) (filter-title subquery matches))
                     :else card))))))
 
+(defn chokup
+  "Lookup the card title (query) looking at all cards on specified alignment"
+  [alignment card]
+  (let [q (.toLowerCase (:title card))
+        id (:id card)
+        cards (:chrds @app-state)
+        exact-matches (filter-exact-title q cards)]
+    (cond (and id
+               (first (filter #(= id (:code %)) cards)))
+          (let [id-matches (filter #(= id (:code %)) cards)]
+            (first (filter-exact-title q id-matches)))
+          (not-empty exact-matches) (take-best-card exact-matches)
+          :else
+          (loop [i 2 matches cards]
+            (let [subquery (subs q 0 i)]
+              (cond (zero? (count matches)) card
+                    (or (= (count matches) 1) (identical-cards? matches)) (take-best-card matches)
+                    (<= i (count (:title card))) (recur (inc i) (filter-title subquery matches))
+                    :else card))))))
+
 (defn identity-lookup
   "Lookup the card title (query) looking at all cards on specified alignment"
   [alignment card]
@@ -91,6 +111,27 @@
         id (:id card)
         cards (filter #(= (:alignment %) alignment)
                       (:cards @app-state))
+        exact-matches (filter-exact-title q cards)]
+    (cond (and id
+               (first (filter #(= id (:code %)) cards)))
+          (let [id-matches (filter #(= id (:code %)) cards)]
+            (first (filter-exact-title q id-matches)))
+          (not-empty exact-matches) (take-best-card exact-matches)
+          :else
+          (loop [i 2 matches cards]
+            (let [subquery (subs q 0 i)]
+              (cond (zero? (count matches)) card
+                    (or (= (count matches) 1) (identical-cards? matches)) (take-best-card matches)
+                    (<= i (count (:title card))) (recur (inc i) (filter-title subquery matches))
+                    :else card))))))
+
+(defn identity-chokup
+  "Lookup the card title (query) looking at all cards on specified alignment"
+  [alignment card]
+  (let [q (.toLowerCase (:title card))
+        id (:id card)
+        cards (filter #(= (:alignment %) alignment)
+                      (:chrds @app-state))
         exact-matches (filter-exact-title q cards)]
     (cond (and id
                (first (filter #(= id (:code %)) cards)))
@@ -116,6 +157,12 @@
   "Parse an id to the corresponding card map"
   [{:keys [alignment title art setname]}]
   (let [card (identity-lookup alignment {:title title})]
+    (assoc card :art art :display-name (build-identity-name title setname art))))
+
+(defn chrse-identity
+  "Parse an id to the corresponding card map"
+  [{:keys [alignment title art setname]}]
+  (let [card (identity-chokup alignment {:title title})]
     (assoc card :art art :display-name (build-identity-name title setname art))))
 
 (defn add-params-to-card
@@ -186,6 +233,13 @@
     ;; lookup each card and replace title with cardmap
     (map #(assoc % :card (lookup alignment (assoc % :title (:card %)))) card-list)))
 
+(defn lookup-chck
+  "Takes a list of {:qty n :card title} and looks up each title and replaces it with the corresponding cardmap"
+  [alignment card-list]
+  (let [card-list (collate-deck card-list)]
+    ;; lookup each card and replace title with cardmap
+    (map #(assoc % :card (chokup alignment (assoc % :title (:card %)))) card-list)))
+
 (defn parse-deck-string
   "Parses a string containing the decklist and returns a list of lines {:qty :card}"
   [alignment deck-string]
@@ -216,6 +270,11 @@
   (put! select-channel (first (sort-by :date > decks)))
   (swap! app-state assoc :decks-loaded true))
 
+(defn load-chcks [decks]
+  (swap! app-state assoc :chcks decks)
+  (put! select-channel (first (sort-by :date > decks)))
+  (swap! app-state assoc :chcks-loaded true))
+
 (defn process-decks
   "Process the raw deck from the database into a more useful format"
   [decks]
@@ -230,6 +289,24 @@
           joined (into (:resources deck) (:hazards deck))
           combed (into (:characters deck) joined)
           cards (lookup-deck (:alignment identity) combed)]
+      (assoc deck :resources resources :hazards hazards :sideboard sideboard
+                  :characters characters :pool pool :fwsb fwsb :cards cards
+                  :identity identity))))
+
+(defn process-chcks
+  "Process the raw deck from the database into a more useful format"
+  [decks]
+  (for [deck decks]
+    (let [identity (chrse-identity (:identity deck))
+          resources (lookup-chck (:alignment identity) (:resources deck))
+          hazards (lookup-chck (:alignment identity) (:hazards deck))
+          sideboard (lookup-chck (:alignment identity) (:sideboard deck))
+          characters (lookup-chck (:alignment identity) (:characters deck))
+          pool (lookup-chck (:alignment identity) (:pool deck))
+          fwsb (lookup-chck (:alignment identity) (:fwsb deck))
+          joined (into (:resources deck) (:hazards deck))
+          combed (into (:characters deck) joined)
+          cards (lookup-chck (:alignment identity) combed)]
       (assoc deck :resources resources :hazards hazards :sideboard sideboard
                   :characters characters :pool pool :fwsb fwsb :cards cards
                   :identity identity))))
@@ -700,6 +777,72 @@
       (let [deck (assoc (om/get-state owner :deck) :date (.toJSON (js/Date.)))
             deck (dissoc deck :stats)
             decks (remove #(= (:_id deck) (:_id %)) (:decks @app-state))
+            resources (for [card (:resources deck) :when (get-in card [:card :title])]
+                        (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
+                              card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
+                          (if (contains? card :art)
+                            (conj card-id {:art (:art card)})
+                            card-id)))
+            hazards (for [card (:hazards deck) :when (get-in card [:card :title])]
+                      (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
+                            card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
+                        (if (contains? card :art)
+                          (conj card-id {:art (:art card)})
+                          card-id)))
+            sideboard (for [card (:sideboard deck) :when (get-in card [:card :title])]
+                        (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
+                              card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
+                          (if (contains? card :art)
+                            (conj card-id {:art (:art card)})
+                            card-id)))
+            characters (for [card (:characters deck) :when (get-in card [:card :title])]
+                         (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
+                               card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
+                           (if (contains? card :art)
+                             (conj card-id {:art (:art card)})
+                             card-id)))
+            pool (for [card (:pool deck) :when (get-in card [:card :title])]
+                   (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
+                         card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
+                     (if (contains? card :art)
+                       (conj card-id {:art (:art card)})
+                       card-id)))
+            fwsb (for [card (:fwsb deck) :when (get-in card [:card :title])]
+                   (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
+                         card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
+                     (if (contains? card :art)
+                       (conj card-id {:art (:art card)})
+                       card-id)))
+            cards (for [card (:cards deck) :when (get-in card [:card :title])]
+                    (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
+                          card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
+                      (if (contains? card :art)
+                        (conj card-id {:art (:art card)})
+                        card-id)))
+            ;; only include keys that are relevant
+            identity (select-keys (:identity deck) [:title :side :alignment :code])
+            identity-art (if (contains? (:identity deck) :art)
+                           (do
+                             (conj identity {:art (:art (:identity deck))}))
+                           identity)
+            data (assoc deck :resources resources :hazards hazards :sideboard sideboard
+                             :characters characters :pool pool :fwsb fwsb :cards cards
+                             :identity identity-art)]
+        (try (js/ga "send" "event" "deckbuilder" "save") (catch js/Error e))
+        (go (let [new-id (get-in (<! (POST "/data/decks/" data :json)) [:json :_id])
+                  new-deck (if (:_id deck) deck (assoc deck :_id new-id))
+                  all-decks (process-decks (:json (<! (GET (str "/data/decks")))))]
+              (om/update! cursor :decks (conj decks new-deck))
+              (om/set-state! owner :deck new-deck)
+              (load-decks all-decks)))))))
+
+(defn save-chck [cursor owner]
+  (authenticated
+    (fn [user]
+      (end-edit owner)
+      (let [deck (assoc (om/get-state owner :deck) :date (.toJSON (js/Date.)))
+            deck (dissoc deck :stats)
+            decks (remove #(= (:_id deck) (:_id %)) (:chcks @app-state))
             resources (for [card (:resources deck) :when (get-in card [:card :title])]
                         (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
                               card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
@@ -1436,7 +1579,11 @@
 (go (let [cards (<! cards-channel)
           decks (process-decks (:json (<! (GET (str "/data/decks")))))]
       (load-decks decks)
-      (load-alt-arts)
       (>! cards-channel cards)))
+
+(go (let [chrds (<! chrds-channel)
+          chcks (process-chcks (:json (<! (GET (str "/data/decks")))))]
+      (load-chcks chcks)
+      (>! chrds-channel chrds)))
 
 (om/root deck-builder app-state {:target (. js/document (getElementById "deckbuilder"))})
