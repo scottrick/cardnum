@@ -480,7 +480,6 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
             if game.players.length is 2
               contestant = if game.players[0].side is "Contestant" then game.players[0] else game.players[1]
               challenger = if game.players[0].side is "Challenger" then game.players[0] else game.players[1]
-              challenger.deck.identity.side = "Challenger"
               g = {
                 gameid: socket.gameid
                 startDate: (new Date()).toISOString()

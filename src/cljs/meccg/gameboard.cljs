@@ -173,7 +173,7 @@
          msg
          "<br/>"
          "<button type=\"button\" class=\"reportbtn\" style=\"margin-top: 5px\" "
-         "onclick=\"window.open('https://github.com/mtgred/meccg/issues/new?body="
+         "onclick=\"window.open('https://github.com/rezwits/meccg/issues/new?body="
          (build-report-url error)
          "');\">Report on GitHub</button></div>")))
 
