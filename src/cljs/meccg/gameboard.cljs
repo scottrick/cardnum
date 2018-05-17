@@ -870,7 +870,7 @@
    (sab/html
     (let [is-challenger (= "Challenger" (:side identity))
           side (if is-challenger :challenger :contestant)
-          name (if is-challenger "Play Deck" "Play Deck")
+          name (if is-challenger "Stack" "R&D")
           ref (if is-challenger "stack" "rd")
           menu-ref (str ref "-menu")
           content-ref (str ref "-content")]
