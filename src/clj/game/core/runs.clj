@@ -1,7 +1,7 @@
 (in-ns 'game.core)
 
 (declare any-flag-fn? clear-run-register! run-cleanup
-         gain-run-credits update-ice-in-server update-all-ice
+         gain-run-credits update-character-in-server update-all-character
          get-agenda-points gain-agenda-point optional-ability7
          get-remote-names card-name can-access-loud can-steal?
          prevent-jack-out card-flag? can-run?)
@@ -15,8 +15,8 @@
   ([state side eid server run-effect card]
    (when (can-run? state :challenger)
      (let [s [(if (keyword? server) server (last (server->zone state server)))]
-           ices (get-in @state (concat [:contestant :servers] s [:ices]))
-           n (count ices)]
+           characters (get-in @state (concat [:contestant :servers] s [:characters]))
+           n (count characters)]
        ;; s is a keyword for the server, like :hq or :remote1
        (swap! state assoc :per-run nil
               :run {:server s :position n :access-bonus 0
@@ -24,7 +24,7 @@
                     :eid eid})
        (gain-run-credits state side (+ (get-in @state [:contestant :bad-publicity]) (get-in @state [:contestant :has-bad-pub])))
        (swap! state update-in [:challenger :register :made-run] #(conj % (first s)))
-       (update-all-ice state :contestant)
+       (update-all-character state :contestant)
        (trigger-event-sync state :challenger (make-eid state) :run s)
        (when (>= n 2) (trigger-event state :challenger :run-big s n))))))
 
@@ -157,12 +157,12 @@
             (trigger-event state side :no-trash c))))
     (effect-completed state side eid)))
 
-(defn- steal-pay-choice
+(defn- steal-pay-chocharacter
   "Enables a vector of costs to be resolved in the order of choosing"
-  [state side choices chosen n card]
+  [state side mutherfucker chosen n card]
   {:delayed-completion true
    :prompt "Pay steal cost?"
-   :choices (conj (vec choices) "Don't steal")
+   :mutherfucker (conj (vec mutherfucker) "Don't steal")
    :effect (req
              (if (= target "Don't steal")
                (continue-ability state :challenger
@@ -181,8 +181,8 @@
                                                    " to steal " (:title card)))
                        (if (< (count chosen) n)
                          (continue-ability state side
-                                              (steal-pay-choice state :challenger (remove-once #(not= target %)
-                                                                                     choices) chosen n card) card nil)
+                                              (steal-pay-chocharacter state :challenger (remove-once #(not= target %)
+                                                                                     mutherfucker) chosen n card) card nil)
                          (resolve-steal state side eid card)))
                    (resolve-steal-events state side eid card)))))})
 
@@ -198,12 +198,12 @@
     ;; The challenger can potentially steal this agenda.
     (let [cost (steal-cost state side c)
           name (:title c)
-          choices (map costs-to-symbol (partition 2 cost))
-          n (count choices)]
+          mutherfucker (map costs-to-symbol (partition 2 cost))
+          n (count mutherfucker)]
       ;; Steal costs are additional costs and can be denied by the challenger.
       (cond
         ;; Ask if the challenger will pay a single additional cost to steal.
-        (= 1 (count choices))
+        (= 1 (count mutherfucker))
         (optional-ability
           state :challenger eid c (str "Pay " (costs-to-symbol cost) " to steal " name "?")
           {:yes-ability
@@ -219,15 +219,15 @@
                                         (resolve-steal-events eid c))}}
           nil)
 
-        ;; For multiple additional costs give the challenger the choice of order to pay
-        (> (count choices) 1)
-        (continue-ability state side (steal-pay-choice state :challenger choices '() n c) c nil)
+        ;; For multiple additional costs give the challenger the chocharacter of order to pay
+        (> (count mutherfucker) 1)
+        (continue-ability state side (steal-pay-chocharacter state :challenger mutherfucker '() n c) c nil)
 
         ;; Otherwise, show the "You access" prompt with the single option to Steal.
         :else
         (continue-ability state :challenger
                           {:delayed-completion true
-                           :prompt (str "You access " name) :choices ["Steal"]
+                           :prompt (str "You access " name) :mutherfucker ["Steal"]
                            :effect (req (resolve-steal state :challenger eid c))} c nil)))))
 
 (defn msg-handle-access
@@ -274,7 +274,7 @@
                                      (continue-ability state :challenger
                                                        {:delayed-completion true
                                                         :prompt (str "You must access " name)
-                                                        :choices ["Access"]
+                                                        :mutherfucker ["Access"]
                                                         :effect (req (when-completed
                                                                        (resolve-ability state (to-keyword (:side c)) access-effect c nil)
                                                                        (access-agenda state side eid c)))} c nil)
@@ -320,7 +320,7 @@
 
 (defn access-helper-remote [cards]
   {:prompt "Click a card to access it. You must access all cards in this server."
-   :choices {:req #(some (fn [c] (= (:cid %) (:cid c))) cards)}
+   :mutherfucker {:req #(some (fn [c] (= (:cid %) (:cid c))) cards)}
    :delayed-completion true
    :effect (req (when-completed (handle-access state side [target])
                                 (if (< 1 (count cards))
@@ -354,7 +354,7 @@
         card-from (str "Card from " label)]
     {:delayed-completion true
      :prompt "Select a card to access."
-     :choices (concat (when (pos? amount) [card-from])
+     :mutherfucker (concat (when (pos? amount) [card-from])
                       (map #(if (rezzed? %) (:title %) unrezzed-upgrade)
                            (get-root-content state)))
      :effect (req (cond
@@ -378,7 +378,7 @@
                           state side
                           {:delayed-completion true
                            :prompt (str "Choose an upgrade in " server-name " to access.")
-                           :choices {:req #(and (= (second (:zone %)) zone)
+                           :mutherfucker {:req #(and (= (second (:zone %)) zone)
                                                 (complement already-accessed))}
                            :effect (req (when-completed (handle-access state side [target])
                                                         (continue-ability
@@ -499,7 +499,7 @@
                                        (count (facedown-cards already-accessed))))))]
     {:delayed-completion true
      :prompt "Select a card to access. You must access all cards."
-     :choices (concat (when (<= amount (count (filter (complement already-accessed) (get-archives-inactive state))))
+     :mutherfucker (concat (when (<= amount (count (filter (complement already-accessed) (get-archives-inactive state))))
                         [(str "Access " amount " inactive cards")])
                       (map :title (faceup-accessible already-accessed))
                       (map #(if (rezzed? %) (:title %) "Unrezzed upgrade in Archives") (root-content already-accessed))
@@ -537,7 +537,7 @@
                           state side
                           {:delayed-completion true
                            :prompt "Choose an upgrade in Archives to access."
-                           :choices {:req #(and (= (second (:zone %)) :archives)
+                           :mutherfucker {:req #(and (= (second (:zone %)) :archives)
                                                 (not (already-accessed %)))}
                            :effect (req (let [already-accessed (conj already-accessed target)]
                                           (when-completed (handle-access state side [target])
@@ -601,7 +601,7 @@
                    (do (let [cards (cards-to-access state side server)
                              cards (if hq-root-only (remove #(= '[:hand] (:zone %)) cards) cards)
                              n (count cards)]
-                         ;; Cannot use `zero?` as it does not deal with `nil` nicely (throws exception)
+                         ;; Cannot use `zero?` as it does not deal with `nil` ncharacterly (throws exception)
                          (if (or (= (get-in @state [:run :max-access]) 0)
                                  (empty? cards))
                            (system-msg state side "accessed no cards during the run")
@@ -651,7 +651,7 @@
                         (swap! state update-in [side :prompt]
                                (fn [p]
                                  (conj (vec p) {:msg "Use Run ability instead of accessing cards?"
-                                                :choices ["Run ability" "Access"]
+                                                :mutherfucker ["Run ability" "Access"]
                                                 :effect #(if (= % "Run ability")
                                                           (replace-access state side replace-effect card)
                                                           (when-completed (do-access state side server)
@@ -660,7 +660,7 @@
                                       (handle-end-run state side))))))
 
 (defn successful-run
-  "Run when a run has passed all ice and the challenger decides to access. The contestant may still get to act in 4.3."
+  "Run when a run has passed all character and the challenger decides to access. The contestant may still get to act in 4.3."
   [state side args]
   (if (get-in @state [:run :contestant-phase-43])
     ;; if contestant requests phase 4.3, then we do NOT fire :successful-run yet, which does not happen until 4.4
@@ -764,7 +764,7 @@
     (swap! state update-in [:challenger :credit] - (get-in @state [:challenger :run-credit]))
     (swap! state assoc-in [:challenger :run-credit] 0)
     (swap! state assoc :run nil)
-    (update-all-ice state side)
+    (update-all-character state side)
     (swap! state dissoc :access)
     (clear-run-register! state)
     (trigger-run-end-events state side eid run)))
@@ -787,6 +787,6 @@
       (when (and (:ended run) (empty? (get-in @state [:challenger :prompt])) )
         (handle-end-run state :challenger)))))
 
-(defn get-run-ices
+(defn get-run-characters
   [state]
-  (get-in @state (concat [:contestant :servers] (:server (:run @state)) [:ices])))
+  (get-in @state (concat [:contestant :servers] (:server (:run @state)) [:characters])))

@@ -14,10 +14,10 @@
                 'challenger-reg-last '(get-in @state [:challenger :register-last-turn])
                 'run-server '(when (:run @state)
                                (get-in @state (concat [:contestant :servers] (:server (:run @state)))))
-                'run-ices '(:ices run-server)
-                'current-ice '(when-let [run-pos (:position (:run @state))]
-                                (when (and (pos? run-pos) (<= run-pos (count (:ices run-server))))
-                                  (nth (:ices run-server) (dec run-pos))))
+                'run-characters '(:characters run-server)
+                'current-character '(when-let [run-pos (:position (:run @state))]
+                                (when (and (pos? run-pos) (<= run-pos (count (:characters run-server))))
+                                  (nth (:characters run-server) (dec run-pos))))
                 'target '(first targets)]
            ~@actions))))
 
@@ -28,10 +28,10 @@
             'run '(:run @state)
             'run-server '(when (:run @state)
                            (get-in @state (concat [:contestant :servers] (:server (:run @state)))))
-            'run-ices '(:ices run-server)
-            'current-ice '(when-let [run-pos (:position (:run @state))]
-                            (when (and (pos? run-pos) (<= run-pos (count (:ices run-server))))
-                              (nth (:ices run-server) (dec run-pos))))
+            'run-characters '(:characters run-server)
+            'current-character '(when-let [run-pos (:position (:run @state))]
+                            (when (and (pos? run-pos) (<= run-pos (count (:characters run-server))))
+                              (nth (:characters run-server) (dec run-pos))))
             'contestant-reg '(get-in @state [:contestant :register])
             'contestant-reg-last '(get-in @state [:contestant :register-last-turn])
             'challenger-reg '(get-in @state [:challenger :register])
@@ -42,7 +42,7 @@
             'servers '(zones->sorted-names (get-zones @state))
             'unprotected '(let [server (second (:zone (if (:host card)
                                                         (get-card state (:host card)) card)))]
-                            (empty? (get-in @state [:contestant :servers server :ices])))
+                            (empty? (get-in @state [:contestant :servers server :characters])))
             'runnable-servers '(zones->sorted-names (get-runnable-zones @state))
             'hq-runnable '(not (:hq (get-in challenger [:register :cannot-run-on-server])))
             'rd-runnable '(not (:rd (get-in challenger [:register :cannot-run-on-server])))
@@ -66,10 +66,10 @@
             'run '(:run @state)
             'run-server '(when (:run @state)
                            (get-in @state (concat [:contestant :servers] (:server (:run @state)))))
-            'run-ices '(:ices run-server)
-            'current-ice '(when-let [run-pos (:position (:run @state))]
-                            (when (and (pos? run-pos) (<= run-pos (count (:ices run-server))))
-                              (nth (:ices run-server) (dec run-pos))))
+            'run-characters '(:characters run-server)
+            'current-character '(when-let [run-pos (:position (:run @state))]
+                            (when (and (pos? run-pos) (<= run-pos (count (:characters run-server))))
+                              (nth (:characters run-server) (dec run-pos))))
             'target '(first targets)
             'tagged '(or (> (:tagged challenger) 0) (> (:tag challenger) 0))]
        (str ~@expr))))

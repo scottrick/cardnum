@@ -34,7 +34,7 @@
       (play-from-hand state :challenger "Cache")
       (play-from-hand state :challenger "Cache")
       (run-empty-server state "Server 1")
-      (prompt-choice :contestant "Yes")
+      (prompt-chocharacter :contestant "Yes")
       (is (= 3 (get-in @state [:contestant :credit])))
       ;; Contestant can trash one program
       (prompt-select :contestant (get-in @state [:challenger :rig :program 1]))
@@ -55,7 +55,7 @@
       (is (= 1 (count (:discard (get-contestant)))) "Alexa Belsky trashed")
       (is (= 5 (count (:hand (get-contestant)))))
       (is (= 0 (count (:deck (get-contestant)))))
-      (prompt-choice :challenger 5) ;Challenger chooses to pay 5 credits so 2 cards are prevented from being shuffled
+      (prompt-chocharacter :challenger 5) ;Challenger chooses to pay 5 credits so 2 cards are prevented from being shuffled
       (is (= 2 (count (:hand (get-contestant)))))
       (is (= 3 (count (:deck (get-contestant)))))
       (is (= 0 (:credit (get-challenger)))))))
@@ -88,7 +88,7 @@
     (= 1 (count (get-in @state [:contestant :discard])))
     (take-credits state :contestant)
     (run-empty-server state :archives)
-    (prompt-choice :challenger "Yes")
+    (prompt-chocharacter :challenger "Yes")
     (is (= 2 (:agenda-point (get-challenger))) "Challenger has 2 agenda points")
     (= 1 (count (get-in @state [:challenger :scored])))))
 
@@ -108,14 +108,14 @@
     (let [filter (get-hardware state 0)]
       (is (= 1 (count (:prompt (get-challenger)))) "Challenger has a single damage prevention prompt")
       (card-ability state :challenger filter 0)
-      (prompt-choice :challenger "Done")
+      (prompt-chocharacter :challenger "Done")
       (is (= 0 (count (:discard (get-challenger)))) "Challenger prevented damage")
       (is (= 1 (count (:prompt (get-challenger)))) "Challenger has a next damage prevention prompt")
-      (prompt-choice :challenger "Done")
+      (prompt-chocharacter :challenger "Done")
       (is (= 1 (count (:discard (get-challenger)))) "Challenger took 1 net damage"))))
 
 (deftest brain-taping-warehouse
-  ;; Brain-Taping Warehouse - Lower rez cost of Bioroid ICE by 1 for each unspent Challenger click
+  ;; Brain-Taping Warehouse - Lower rez cost of Bioroid Character by 1 for each unspent Challenger click
   (do-game
     (new-game (default-contestant [(qty "Brain-Taping Warehouse" 1) (qty "Ichi 1.0" 1)
                              (qty "Eli 1.0" 1)])
@@ -123,8 +123,8 @@
     (play-from-hand state :contestant "Brain-Taping Warehouse" "New remote")
     (play-from-hand state :contestant "Ichi 1.0" "Server 1")
     (play-from-hand state :contestant "Eli 1.0" "HQ")
-    (let [ichi (get-ice state :remote1 0)
-          eli (get-ice state :hq 0)]
+    (let [ichi (get-character state :remote1 0)
+          eli (get-character state :hq 0)]
       (take-credits state :contestant)
       (run-on state :remote1)
       (core/rez state :contestant (get-content state :remote1 0))
@@ -147,8 +147,8 @@
       (core/rez state :contestant cap)
       (card-ability state :contestant cap 0)
       (card-ability state :contestant cap 0)
-      (is (= 0 (:click (get-contestant))) "Used twice, spent 2 clicks")
-      (is (= 7 (:credit (get-contestant))) "Used twice, gained 4 credits"))))
+      (is (= 0 (:click (get-contestant))) "Used twcharacter, spent 2 clicks")
+      (is (= 7 (:credit (get-contestant))) "Used twcharacter, gained 4 credits"))))
 
 (deftest chairman-hiro
   ;; Chairman Hiro - Reduce Challenger max hand size; add as 2 agenda points if Challenger trashes him
@@ -157,7 +157,7 @@
               (default-challenger))
     (play-from-hand state :contestant "Chairman Hiro" "New remote")
     (play-from-hand state :contestant "Chairman Hiro" "Server 1")
-    (prompt-choice :contestant "OK")
+    (prompt-chocharacter :contestant "OK")
     (is (= 1 (count (:discard (get-contestant)))) "First Hiro trashed")
     (is (= 0 (:agenda-point (get-challenger))) "No points for Challenger if trashed by Contestant")
     (let [hiro (get-content state :remote1 0)]
@@ -166,7 +166,7 @@
       (take-credits state :contestant)
       (take-credits state :challenger 3)
       (run-empty-server state "Server 1")
-      (prompt-choice :challenger "Yes") ; trash Hiro
+      (prompt-chocharacter :challenger "Yes") ; trash Hiro
       (is (= 2 (:credit (get-challenger))) "Challenger paid 6 credits to trash")
       (is (= 5 (core/hand-size state :challenger)) "Challenger max hand size restored to 5")
       (is (= 1 (count (get-in @state [:challenger :scored])))
@@ -182,13 +182,13 @@
     (let [surv (get-content state :remote1 0)]
       (core/rez state :contestant surv)
       (take-credits state :contestant)
-      (prompt-choice :challenger "Pay 1 [Credits]")
+      (prompt-chocharacter :challenger "Pay 1 [Credits]")
       (is (= 4 (:credit (get-challenger))) "Challenger paid 1 credit")
       (is (= 0 (:tag (get-challenger))) "Challenger didn't take a tag")
       (is (empty? (:prompt (get-challenger))) "City Surveillance only fired once")
       (take-credits state :challenger)
       (take-credits state :contestant)
-      (prompt-choice :challenger "Take 1 tag")
+      (prompt-chocharacter :challenger "Take 1 tag")
       (is (= 8 (:credit (get-challenger))) "Challenger paid no credits")
       (is (= 1 (:tag (get-challenger))) "Challenger took 1 tag"))
       (is (empty? (:prompt (get-challenger))) "City Surveillance only fired once")))
@@ -208,7 +208,7 @@
       (card-ability state :contestant clyde 0)
       (is (= 9 (:credit (get-challenger))))
       (is (= 2 (count (:deck (get-challenger)))))
-      (prompt-choice :challenger "Pay 1 [Credits]")
+      (prompt-chocharacter :challenger "Pay 1 [Credits]")
       (is (= 8 (:credit (get-challenger))))
       (is (= 2 (count (:deck (get-challenger)))))
       (core/end-phase-12 state :contestant nil)
@@ -219,7 +219,7 @@
       (card-ability state :contestant clyde 0)
       (is (= 0 (:credit (get-challenger))))
       (is (= 2 (count (:deck (get-challenger)))))
-      (prompt-choice :challenger "Pay 1 [Credits]")
+      (prompt-chocharacter :challenger "Pay 1 [Credits]")
       (is (= 0 (:credit (get-challenger))))
       (is (= 1 (count (:deck (get-challenger)))))
       (core/end-phase-12 state :contestant nil)
@@ -229,7 +229,7 @@
       (card-ability state :contestant clyde 0)
       (is (= 4 (:credit (get-challenger))))
       (is (= 1 (count (:deck (get-challenger)))))
-      (prompt-choice :challenger "Trash top card")
+      (prompt-chocharacter :challenger "Trash top card")
       (is (= 4 (:credit (get-challenger))))
       (is (= 0 (count (:deck (get-challenger)))))
       (core/end-phase-12 state :contestant nil)
@@ -239,7 +239,7 @@
       (card-ability state :contestant clyde 0)
       (is (= 8 (:credit (get-challenger))))
       (is (= 0 (count (:deck (get-challenger)))))
-      (prompt-choice :challenger "Trash top card")
+      (prompt-chocharacter :challenger "Trash top card")
       (is (= 7 (:credit (get-challenger))))
       (is (= 0 (count (:deck (get-challenger))))))))
 
@@ -360,7 +360,7 @@
     (let [ep (get-content state :remote1 0)
           bl (get-content state :remote2 0)
           gb (get-content state :remote3 0)
-          iw (get-ice state :hq 0)]
+          iw (get-character state :hq 0)]
       (core/rez state :contestant ep)
       (take-credits state :contestant)
       (take-credits state :challenger)
@@ -399,13 +399,13 @@
     (run-empty-server state "Server 1")
     (is (= :waiting (-> @state :challenger :prompt first :prompt-type))
         "Challenger waiting for Contestant to act")
-    (prompt-choice :contestant "Yes")
-    (prompt-choice :challenger "Yes")
+    (prompt-chocharacter :contestant "Yes")
+    (prompt-chocharacter :challenger "Yes")
     (is (= 2 (:brain-damage (get-challenger))) "Challenger took 2 brain damage")
     (run-empty-server state "Server 2")
-    (prompt-choice :contestant "Yes")
-    (prompt-choice :challenger "Yes")
-    (is (= 2 (:brain-damage (get-challenger))) "Challenger did not take brain damage when no ICE protected Edge of World")))
+    (prompt-chocharacter :contestant "Yes")
+    (prompt-chocharacter :challenger "Yes")
+    (is (= 2 (:brain-damage (get-challenger))) "Challenger did not take brain damage when no Character protected Edge of World")))
 
 (deftest elizabeth-mills
   ;; Elizabeth Mills - Remove 1 bad publicity when rezzed; click-trash to trash a location
@@ -435,7 +435,7 @@
     (core/gain state :contestant :click 2)
     (play-from-hand state :contestant "Wotan" "R&D")
     (play-from-hand state :contestant "Eliza's Toybox" "New remote")
-    (let [wotan (get-ice state :rd 0)
+    (let [wotan (get-character state :rd 0)
           eliza (get-content state :remote1 0)]
       (core/rez state :contestant eliza)
       (is (= 1 (:credit (get-contestant))))
@@ -460,7 +460,7 @@
       (run-empty-server state "Server 1")
       (is (= 4 (core/trash-cost state :challenger (refresh ep1)))
           "Trash cost increased to 4 by two active Encryption Protocols")
-      (prompt-choice :challenger "Yes") ; trash first EP
+      (prompt-chocharacter :challenger "Yes") ; trash first EP
       (run-empty-server state "Server 2")
       (is (= 3 (core/trash-cost state :challenger (refresh ep2)))
           "Trash cost increased to 3 by one active Encryption Protocol"))))
@@ -514,7 +514,7 @@
     (core/rez state :contestant (get-content state :remote1 0))
     (take-credits state :contestant 1)
     (run-empty-server state "Server 2")
-    (prompt-choice :challenger "Steal")
+    (prompt-chocharacter :challenger "Steal")
     (is (= 0 (count (get-in @state [:contestant :servers :server2 :content]))) "Agenda was stolen")
     (is (= 2 (:agenda-point (get-challenger))) "Challenger stole 2 points")
     (is (= 0 (count (get-in @state [:contestant :servers :server1 :content])))
@@ -545,7 +545,7 @@
         (is (= 4 (get-counters (refresh lc) :credit)) "4cr left on Launch Campaign")
         (play-from-hand state :contestant "Interns")
         (prompt-select :contestant (find-card "Launch Campaign" (:hand (get-contestant))))
-        (prompt-choice :contestant (refresh fir))
+        (prompt-chocharacter :contestant (refresh fir))
         (is (= 2 (count (:hosted (refresh fir)))) "Interns installed onto FIR")))))
 
 (deftest full-immersion-recstudio-sandburg
@@ -558,7 +558,7 @@
     (play-from-hand state :contestant "Full Immersion RecStudio" "New remote")
     (play-from-hand state :contestant "Vanilla" "HQ")
     (let [fir (get-content state :remote1 0)
-          van (get-ice state :hq 0)]
+          van (get-character state :hq 0)]
       (core/rez state :contestant fir)
       (core/rez state :contestant van)
       (card-ability state :contestant fir 0)
@@ -571,117 +571,117 @@
       (core/advance state :contestant {:card (last (:hosted (refresh fir)))})
       (is (= 11 (:credit (get-contestant))) "Gained 1cr from advancing Oaktown"))))
 
-(deftest gene-splicer-access-unadvanced-no-trash
-  ;; Challenger accesses an unadvanced Gene Splicer and doesn't trash
-  ;; No net damage is dealt and Gene Splicer remains installed
+(deftest gene-splcharacterr-access-unadvanced-no-trash
+  ;; Challenger accesses an unadvanced Gene Splcharacterr and doesn't trash
+  ;; No net damage is dealt and Gene Splcharacterr remains installed
   (do-game
     (new-game
-      (default-contestant [(qty "Gene Splicer" 1)])
+      (default-contestant [(qty "Gene Splcharacterr" 1)])
       (default-challenger [(qty "Sure Gamble" 3)]))
-    (play-from-hand state :contestant "Gene Splicer" "New remote")
+    (play-from-hand state :contestant "Gene Splcharacterr" "New remote")
     (take-credits state :contestant)
     (run-empty-server state "Server 1")
-    (prompt-choice :challenger "No")
+    (prompt-chocharacter :challenger "No")
     (is (= 0 (count (:discard (get-challenger)))) "Challenger took no net damage")
-    (is (= "Gene Splicer" (:title (get-content state :remote1 0))) "Gene Splicer was not trashed")
+    (is (= "Gene Splcharacterr" (:title (get-content state :remote1 0))) "Gene Splcharacterr was not trashed")
     (is (= 5 (:credit (get-challenger))) "Challenger spent no credits")))
 
-(deftest gene-splicer-access-unadvanced-trash
-  ;; Challenger accesses an unadvanced Gene Splicer and trashes it - no net damage is dealt and Gene Splicer is trashed
+(deftest gene-splcharacterr-access-unadvanced-trash
+  ;; Challenger accesses an unadvanced Gene Splcharacterr and trashes it - no net damage is dealt and Gene Splcharacterr is trashed
   (do-game
     (new-game
-      (default-contestant [(qty "Gene Splicer" 1)])
+      (default-contestant [(qty "Gene Splcharacterr" 1)])
       (default-challenger [(qty "Sure Gamble" 3)]))
-    (play-from-hand state :contestant "Gene Splicer" "New remote")
+    (play-from-hand state :contestant "Gene Splcharacterr" "New remote")
     (take-credits state :contestant)
     (run-empty-server state "Server 1")
-    (prompt-choice :challenger "Yes")
+    (prompt-chocharacter :challenger "Yes")
     (is (= 0 (count (:discard (get-challenger)))) "Challenger took no net damage")
-    (is (= nil (get-content state :remote1 0)) "Gene Splicer is no longer in remote")
-    (is (= (:title (last (:discard (get-contestant)))) "Gene Splicer") "Gene Splicer trashed")
-    (is (= 4 (:credit (get-challenger))) "Challenger spent 1 credit to trash Gene Splicer")))
+    (is (= nil (get-content state :remote1 0)) "Gene Splcharacterr is no longer in remote")
+    (is (= (:title (last (:discard (get-contestant)))) "Gene Splcharacterr") "Gene Splcharacterr trashed")
+    (is (= 4 (:credit (get-challenger))) "Challenger spent 1 credit to trash Gene Splcharacterr")))
 
-(deftest gene-splicer-access-single-advanced-no-trash
-  ;; Challenger accesses a single-advanced Gene Splicer and doesn't trash
-  ;; 1 net damage is dealt and Gene Splicer remains installed
+(deftest gene-splcharacterr-access-single-advanced-no-trash
+  ;; Challenger accesses a single-advanced Gene Splcharacterr and doesn't trash
+  ;; 1 net damage is dealt and Gene Splcharacterr remains installed
   (do-game
     (new-game
-      (default-contestant [(qty "Gene Splicer" 1)])
+      (default-contestant [(qty "Gene Splcharacterr" 1)])
       (default-challenger [(qty "Sure Gamble" 3)]))
-    (play-from-hand state :contestant "Gene Splicer" "New remote")
+    (play-from-hand state :contestant "Gene Splcharacterr" "New remote")
     (core/add-counter state :contestant (get-content state :remote1 0) :advancement 1)
     (take-credits state :contestant)
     (run-empty-server state "Server 1")
-    (prompt-choice :challenger "No")
+    (prompt-chocharacter :challenger "No")
     (is (= 1 (count (:discard (get-challenger)))) "Challenger took 1 net damage")
-    (is (= "Gene Splicer" (:title (get-content state :remote1 0))) "Gene Splicer was not trashed")
+    (is (= "Gene Splcharacterr" (:title (get-content state :remote1 0))) "Gene Splcharacterr was not trashed")
     (is (= 5 (:credit (get-challenger))) "Challenger spent no credits")))
 
-(deftest gene-splicer-access-single-advanced-trash
-  ;; Challenger accesses a single-advanced Gene Splicer and trashes it
-  ;; 1 net damage is dealt and Gene Splicer is trashed
+(deftest gene-splcharacterr-access-single-advanced-trash
+  ;; Challenger accesses a single-advanced Gene Splcharacterr and trashes it
+  ;; 1 net damage is dealt and Gene Splcharacterr is trashed
   (do-game
     (new-game
-      (default-contestant [(qty "Gene Splicer" 1)])
+      (default-contestant [(qty "Gene Splcharacterr" 1)])
       (default-challenger [(qty "Sure Gamble" 3)]))
-    (play-from-hand state :contestant "Gene Splicer" "New remote")
+    (play-from-hand state :contestant "Gene Splcharacterr" "New remote")
     (core/add-counter state :contestant (get-content state :remote1 0) :advancement 1)
     (take-credits state :contestant)
     (run-empty-server state "Server 1")
-    (prompt-choice :challenger "Yes")
+    (prompt-chocharacter :challenger "Yes")
     (is (= 1 (count (:discard (get-challenger)))) "Challenger took 1 net damage")
-    (is (= nil (get-content state :remote1 0)) "Gene Splicer is no longer in remote")
-    (is (= (:title (last (:discard (get-contestant)))) "Gene Splicer") "Gene Splicer trashed")
-    (is (= 4 (:credit (get-challenger))) "Challenger spent 1 credit to trash Gene Splicer")))
+    (is (= nil (get-content state :remote1 0)) "Gene Splcharacterr is no longer in remote")
+    (is (= (:title (last (:discard (get-contestant)))) "Gene Splcharacterr") "Gene Splcharacterr trashed")
+    (is (= 4 (:credit (get-challenger))) "Challenger spent 1 credit to trash Gene Splcharacterr")))
 
-(deftest gene-splicer-access-double-advanced-no-trash
-  ;; Challenger accesses a double-advanced Gene Splicer and doesn't trash
-  ;; 2 net damage is dealt and Gene Splicer remains installed
+(deftest gene-splcharacterr-access-double-advanced-no-trash
+  ;; Challenger accesses a double-advanced Gene Splcharacterr and doesn't trash
+  ;; 2 net damage is dealt and Gene Splcharacterr remains installed
   (do-game
     (new-game
-      (default-contestant [(qty "Gene Splicer" 1)])
+      (default-contestant [(qty "Gene Splcharacterr" 1)])
       (default-challenger [(qty "Sure Gamble" 3)]))
-    (play-from-hand state :contestant "Gene Splicer" "New remote")
+    (play-from-hand state :contestant "Gene Splcharacterr" "New remote")
     (core/add-counter state :contestant (get-content state :remote1 0) :advancement 2)
     (take-credits state :contestant)
     (run-empty-server state "Server 1")
-    (prompt-choice :challenger "No")
+    (prompt-chocharacter :challenger "No")
     (is (= 2 (count (:discard (get-challenger)))) "Challenger took 2 net damage")
-    (is (= "Gene Splicer" (:title (get-content state :remote1 0))) "Gene Splicer was not trashed")
+    (is (= "Gene Splcharacterr" (:title (get-content state :remote1 0))) "Gene Splcharacterr was not trashed")
     (is (= 5 (:credit (get-challenger))) "Challenger spent no credits")))
 
-(deftest gene-splicer-access-double-advanced-trash
-  ;; Challenger accesses a double-advanced Gene Splicer and trashes it
-  ;; 2 net damage is dealt and Gene Splicer is trashed
+(deftest gene-splcharacterr-access-double-advanced-trash
+  ;; Challenger accesses a double-advanced Gene Splcharacterr and trashes it
+  ;; 2 net damage is dealt and Gene Splcharacterr is trashed
   (do-game
     (new-game
-      (default-contestant [(qty "Gene Splicer" 1)])
+      (default-contestant [(qty "Gene Splcharacterr" 1)])
       (default-challenger [(qty "Sure Gamble" 3)]))
-    (play-from-hand state :contestant "Gene Splicer" "New remote")
+    (play-from-hand state :contestant "Gene Splcharacterr" "New remote")
     (core/add-counter state :contestant (get-content state :remote1 0) :advancement 2)
     (take-credits state :contestant)
     (run-empty-server state "Server 1")
-    (prompt-choice :challenger "Yes")
+    (prompt-chocharacter :challenger "Yes")
     (is (= 2 (count (:discard (get-challenger)))) "Challenger took 2 net damage")
-    (is (= nil (get-content state :remote1 0)) "Gene Splicer is no longer in remote")
-    (is (= (:title (last (:discard (get-contestant)))) "Gene Splicer") "Gene Splicer trashed")
-    (is (= 4 (:credit (get-challenger))) "Challenger spent 1 credit to trash Gene Splicer")))
+    (is (= nil (get-content state :remote1 0)) "Gene Splcharacterr is no longer in remote")
+    (is (= (:title (last (:discard (get-contestant)))) "Gene Splcharacterr") "Gene Splcharacterr trashed")
+    (is (= 4 (:credit (get-challenger))) "Challenger spent 1 credit to trash Gene Splcharacterr")))
 
-(deftest gene-splicer-agenda-ability
-  ;; Contestant triple-advances a Gene Splicer and uses its ability to add to their score area as a 1 point agenda
+(deftest gene-splcharacterr-agenda-ability
+  ;; Contestant triple-advances a Gene Splcharacterr and uses its ability to add to their score area as a 1 point agenda
   (do-game
     (new-game
-      (default-contestant [(qty "Gene Splicer" 2) (qty "Ice Wall" 3) (qty "Vanilla" 2)])
+      (default-contestant [(qty "Gene Splcharacterr" 2) (qty "Ice Wall" 3) (qty "Vanilla" 2)])
       (default-challenger [(qty "Sure Gamble" 3)]))
-    (play-from-hand state :contestant "Gene Splicer" "New remote")
+    (play-from-hand state :contestant "Gene Splcharacterr" "New remote")
     (let [gs (get-content state :remote1 0)]
       (core/add-counter state :contestant gs :advancement 2)
       (take-credits state :challenger)
       (core/add-counter state :contestant (refresh gs) :advancement 1)
       (core/rez state :contestant (refresh gs))
       (card-ability state :contestant (refresh gs) 0)
-      (is (= nil (get-content state :remote1 0)) "Gene Splicer is no longer in remote")
-      (is (= 1 (:agendapoints (get-in @state [:contestant :scored 0]))) "Gene Splicer added to Contestant score area"))))
+      (is (= nil (get-content state :remote1 0)) "Gene Splcharacterr is no longer in remote")
+      (is (= 1 (:agendapoints (get-in @state [:contestant :scored 0]))) "Gene Splcharacterr added to Contestant score area"))))
 
 (deftest genetics-pavilion
   ;; Genetics Pavilion - Limit Challenger to 2 draws per turn, but only during Challenger's turn
@@ -760,7 +760,7 @@
       (card-ability state :challenger mrli 0)
       (is (= 1 (count (:hand (get-challenger)))))
       (prompt-select :challenger (first (:hand (get-challenger)))) ;will fail because not a valid target
-      (prompt-choice :challenger "Done") ;cancel out
+      (prompt-chocharacter :challenger "Done") ;cancel out
       (take-credits state :challenger)
       (take-credits state :contestant)
       (core/draw state :challenger)
@@ -785,7 +785,7 @@
       (is (= 2 (get-in (refresh gb) [:advance-counter])))
       (take-credits state :contestant)
       (run-empty-server state "Server 1")
-      (prompt-choice :contestant "Yes") ; choose to do the optional ability
+      (prompt-chocharacter :contestant "Yes") ; choose to do the optional ability
       (is (= 2 (:tag (get-challenger))) "Challenger given 2 tags"))))
 
 (deftest honeyfarm
@@ -813,10 +813,10 @@
     (core/rez state :contestant (get-content state :remote1 0))
     (take-credits state :contestant)
     (run-empty-server state :hq)
-    (prompt-choice :challenger "Yes")
+    (prompt-chocharacter :challenger "Yes")
     (is (= 1 (count (:discard (get-challenger)))) "Took 1 net damage")
     (run-empty-server state :remote1)
-    (prompt-choice :challenger "Yes")
+    (prompt-chocharacter :challenger "Yes")
     (is (= 2 (count (:discard (get-challenger)))) "Took 1 net damage")))
 
 (deftest hyoubu-research-facility
@@ -826,19 +826,19 @@
     (play-from-hand state :contestant "Hyoubu Research Facility" "New remote")
     (play-from-hand state :contestant "Snowflake" "HQ")
     (let [hrf (get-content state :remote1 0)
-          sf (get-ice state :hq 0)]
+          sf (get-character state :hq 0)]
       (take-credits state :contestant)
       (run-on state "HQ")
       (core/rez state :contestant hrf)
       (core/rez state :contestant sf)
       (card-subroutine state :contestant sf 0)
-      (prompt-choice :contestant "2 [Credits]")
-      (prompt-choice :challenger "0 [Credits]")
+      (prompt-chocharacter :contestant "2 [Credits]")
+      (prompt-chocharacter :challenger "0 [Credits]")
       (is (= 5 (:credit (get-contestant))) "Gained 2c from Hyoubu")
       (run-on state "HQ")
       (card-subroutine state :contestant sf 0)
-      (prompt-choice :contestant "2 [Credits]")
-      (prompt-choice :challenger "0 [Credits]")
+      (prompt-chocharacter :contestant "2 [Credits]")
+      (prompt-chocharacter :challenger "0 [Credits]")
       (is (= 3 (:credit (get-contestant))) "No credits gained from Hyoubu"))))
 
 (deftest illegal-arms-factory
@@ -859,25 +859,25 @@
       (core/rez state :contestant iaf)
       (take-credits state :contestant)
 	  (run-empty-server state :remote1)
-      (prompt-choice :challenger "Yes")
+      (prompt-chocharacter :challenger "Yes")
       (is (= 0 (:bad-publicity (get-contestant))) "Took no bad pub on unrezzed trash")
       (take-credits state :challenger)
 	  (is (= 3 (count (:hand (get-contestant)))) "Drew a card from IAF + mandatory")
       (is (= 4 (:credit (get-contestant))) "Gained 1 credit from IAF")
       (take-credits state :contestant)
 	  (run-empty-server state :remote2)
-      (prompt-choice :challenger "Yes")
+      (prompt-chocharacter :challenger "Yes")
       (is (= 1 (:bad-publicity (get-contestant))) "Took a bad pub on rezzed trash"))))
 
 (deftest it-department
-  ;; IT Department - Add strength to rezzed ICE until end of turn
+  ;; IT Department - Add strength to rezzed Character until end of turn
   (do-game
     (new-game (default-contestant [(qty "IT Department" 1) (qty "Wall of Static" 1)])
               (default-challenger))
     (play-from-hand state :contestant "IT Department" "New remote")
     (play-from-hand state :contestant "Wall of Static" "Server 1")
     (let [itd (get-content state :remote1 0)
-          wos (get-ice state :remote1 0)]
+          wos (get-character state :remote1 0)]
       (core/rez state :contestant itd)
       (core/rez state :contestant wos)
       (card-ability state :contestant itd 1)
@@ -990,7 +990,7 @@
       (take-credits state :challenger)
       (is (:contestant-phase-12 @state) "Contestant is in Step 1.2")
       (card-ability state :contestant tv 0)
-      (prompt-choice :contestant "Done")
+      (prompt-chocharacter :contestant "Done")
       (card-ability state :contestant tv 1)
       (is (= 1 (count (:discard (get-contestant)))))
       (is (= 1 (count (:discard (get-challenger)))))
@@ -1094,15 +1094,15 @@
     (play-from-hand state :contestant "Blacklist" "New remote")
     (take-credits state :contestant)
     (run-empty-server state :archives)
-    (prompt-choice :challenger "Take 2 tags")
+    (prompt-chocharacter :challenger "Take 2 tags")
     (is (= 2 (:tag (get-challenger))) "Challenger has 2 tags")
     (run-empty-server state :archives)
-    (prompt-choice :challenger "Add News Team to score area")
+    (prompt-chocharacter :challenger "Add News Team to score area")
     (is (= 1 (count (:scored (get-challenger)))) "News Team added to Challenger score area")
     (trash-from-hand state :contestant "News Team")
     (core/rez state :contestant (get-content state :remote1 0))
     (run-empty-server state :archives)
-    (prompt-choice :challenger "Add News Team to score area")
+    (prompt-chocharacter :challenger "Add News Team to score area")
     (is (= 2 (count (:scored (get-challenger)))) "News Team added to Challenger score area with Blacklist rez")))
 
 (deftest net-analytics
@@ -1125,29 +1125,29 @@
       (take-credits state :contestant)
       (is (= 1 (count (:hand (get-contestant)))) "Contestant hand size is 1 before run")
       (run-empty-server state "Server 1")
-      (prompt-choice :contestant "Yes") ; choose to do the optional ability
+      (prompt-chocharacter :contestant "Yes") ; choose to do the optional ability
       (card-ability state :challenger nach 0)
-      (prompt-choice :challenger "Done")
-      (prompt-choice :contestant "Yes") ; Draw from Net Analytics
-      (prompt-choice :challenger "No")
+      (prompt-chocharacter :challenger "Done")
+      (prompt-chocharacter :contestant "Yes") ; Draw from Net Analytics
+      (prompt-chocharacter :challenger "No")
       (is (empty? (:prompt (get-challenger))) "Challenger waiting prompt is cleared")
       (is (= 0 (:tag (get-challenger))) "Avoided 1 Ghost Branch tag")
       (is (= 2 (count (:hand (get-contestant)))) "Contestant draw from NA")
       ; tag removal
       (core/tag-challenger state :challenger 1)
-      (prompt-choice :challenger "No") ; Don't prevent the tag
+      (prompt-chocharacter :challenger "No") ; Don't prevent the tag
       (core/remove-tag state :challenger 1)
-      (prompt-choice :contestant "Yes") ; Draw from Net Analytics
+      (prompt-chocharacter :contestant "Yes") ; Draw from Net Analytics
       (is (= 3 (count (:hand (get-contestant)))) "Contestant draw from NA"))))
 
-(deftest net-police
-  ;; Net Police - Recurring credits equal to Challenger's link
+(deftest net-polcharacter
+  ;; Net Polcharacter - Recurring credits equal to Challenger's link
   (do-game
     (new-game
-      (default-contestant [(qty "Net Police" 1)])
+      (default-contestant [(qty "Net Polcharacter" 1)])
       (make-deck "Sunny Lebeau: Security Specialist" [(qty "Dyson Mem Chip" 1)
                                                       (qty "Access to Globalsec" 1)]))
-    (play-from-hand state :contestant "Net Police" "New remote")
+    (play-from-hand state :contestant "Net Polcharacter" "New remote")
     (is (= 2 (:link (get-challenger))))
     (let [netpol (get-content state :remote1 0)]
       (core/rez state :contestant netpol)
@@ -1208,7 +1208,7 @@
     (take-credits state :contestant)
     (run-empty-server state :remote1)
     ;; prompt for contestant to use Plan B
-    (prompt-choice :contestant "Yes")
+    (prompt-chocharacter :contestant "Yes")
     ;; Pick TFP, does not score
     (prompt-select :contestant (find-card "The Future Perfect" (:hand (get-contestant))))
     (is (find-card "The Future Perfect" (:hand (get-contestant))) "TFP is not scored")
@@ -1227,14 +1227,14 @@
     (core/rez state :contestant (get-content state :remote1 0))
     ;; Install Medical Breakthrough
     (core/draw state :contestant)
-    (prompt-choice :contestant "Yes")
-    (prompt-choice :contestant "New remote")
+    (prompt-chocharacter :contestant "Yes")
+    (prompt-chocharacter :contestant "New remote")
     (is (= "Medical Breakthrough" (:title (get-content state :remote2 0)))
         "Medical Breakthrough installed by Political Dealings")
     ;; Install Oaktown Renovation
     (core/draw state :contestant)
-    (prompt-choice :contestant "Yes")
-    (prompt-choice :contestant "New remote")
+    (prompt-chocharacter :contestant "Yes")
+    (prompt-chocharacter :contestant "New remote")
     (is (= "Oaktown Renovation" (:title (get-content state :remote3 0)))
         "Oaktown Renovation installed by Political Dealings")
     (is (= true (:rezzed (get-content state :remote3 0)))
@@ -1263,13 +1263,13 @@
       ;; Install first agenda
       (is (= 2 (count (:hand (get-contestant)))))
       (is (= 0 (:credit (get-contestant))))
-      (prompt-choice :contestant "Yes")
-      (prompt-choice :contestant "New remote")
+      (prompt-chocharacter :contestant "Yes")
+      (prompt-chocharacter :contestant "New remote")
       (is (= (:cid agenda1) (:cid (get-content state :remote4 0))))
       (is (= 1 (:credit (get-contestant))) "Turtlebacks triggered")
       ;; Install second agenda
-      (prompt-choice :contestant "Yes")
-      (prompt-choice :contestant "New remote")
+      (prompt-chocharacter :contestant "Yes")
+      (prompt-chocharacter :contestant "New remote")
       (is (= (:cid agenda2) (:cid (get-content state :remote5 0))))
       (is (= 2 (:credit (get-contestant))) "Turtlebacks triggered")
       ;; DBS - put first agenda at bottom of R&D
@@ -1289,21 +1289,21 @@
       (take-credits state :contestant)
       (starting-hand state :challenger ["Infiltration" "Sure Gamble" "Sure Gamble"])
       (play-from-hand state :challenger "Infiltration")
-      (prompt-choice :challenger "Expose a card")
+      (prompt-chocharacter :challenger "Expose a card")
       (prompt-select :challenger psyf1)
       (is (= 2 (count (:hand (get-challenger)))))
-      (prompt-choice :contestant "2 [Credits]")
-      (prompt-choice :challenger "0 [Credits]")
+      (prompt-chocharacter :contestant "2 [Credits]")
+      (prompt-chocharacter :challenger "0 [Credits]")
       (is (= 3 (count (:discard (get-challenger)))) "Suffered 2 net damage on expose and psi loss")
       (core/gain state :challenger :click 3)
       (core/draw state :challenger 3)
       (is (= 3 (count (:hand (get-challenger)))))
       (run-empty-server state :remote2)
-      (prompt-choice :contestant "1 [Credits]")
-      (prompt-choice :challenger "0 [Credits]")
+      (prompt-chocharacter :contestant "1 [Credits]")
+      (prompt-chocharacter :challenger "0 [Credits]")
       (is (= 6 (count (:discard (get-challenger)))) "Suffered 3 net damage on access and psi loss"))))
 
-(deftest psychic-field-no-access-choice-in-archives
+(deftest psychic-field-no-access-chocharacter-in-archives
   ;; Regression test for issue #1965 (Psychic Field showing up as an option to access / trigger in archives
   (do-game
     (new-game (default-contestant [(qty "Psychic Field" 2) (qty "Shock!" 2) (qty "Clone Retirement" 2)])
@@ -1312,10 +1312,10 @@
     (trash-from-hand state :contestant "Shock!")
     (trash-from-hand state :contestant "Clone Retirement")
     (take-credits state :contestant)
-    ;; Challenger run on archives to trigger access choice
+    ;; Challenger run on archives to trigger access chocharacter
     (run-empty-server state :archives)
-    (is (not-any? #{"Psychic Field"} (get-in @state [:challenger :prompt :choices]))
-        "Psychic Field is not a choice to access in Archives")))
+    (is (not-any? #{"Psychic Field"} (get-in @state [:challenger :prompt :mutherfucker]))
+        "Psychic Field is not a chocharacter to access in Archives")))
 
 (deftest psychic-field-neutralize-all-threats
   ;; Psychic Field - Interaction with Neutralize All Threats and Hostile Infrastructure, #1208
@@ -1328,8 +1328,8 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Neutralize All Threats")
     (run-empty-server state :remote1)
-    (prompt-choice :contestant "0 [Credits]")
-    (prompt-choice :challenger "1 [Credits]")
+    (prompt-chocharacter :contestant "0 [Credits]")
+    (prompt-chocharacter :challenger "1 [Credits]")
     (is (not (get-content state :remote1)) "Psychic Field trashed by Neutralize All Threats")
     (is (= "Flatline" (:reason @state)) "Win condition reports flatline")))
 
@@ -1361,7 +1361,7 @@
 
       ;; Challenger turn 2, run and trash publics2
       (run-empty-server state "Server 2")
-      (prompt-choice :challenger "Yes") ; pay to trash
+      (prompt-chocharacter :challenger "Yes") ; pay to trash
       (is (= 5 (:credit (get-challenger))))
       (take-credits state :challenger)
 
@@ -1380,7 +1380,7 @@
         (is (= 1 (:agendapoints scored-pub)))))))
 
 (deftest quarantine-system
-  ;; Forfeit agenda to rez up to 3 ICE with 2 credit discount per agenda point
+  ;; Forfeit agenda to rez up to 3 Character with 2 credit discount per agenda point
   (do-game
     (new-game
       (default-contestant [(qty "Chiyashi" 3) (qty "Quarantine System" 1) (qty "Project Beale" 1)])
@@ -1393,14 +1393,14 @@
     (play-from-hand state :contestant "Quarantine System" "New remote")
     (play-from-hand state :contestant "Project Beale" "New remote")
     (is (= 102 (:credit (get-contestant))) "Contestant has 102 creds")
-    (let [ch1 (get-ice state :hq 0)
-          ch2 (get-ice state :hq 1)
-          ch3 (get-ice state :hq 2)
+    (let [ch1 (get-character state :hq 0)
+          ch2 (get-character state :hq 1)
+          ch3 (get-character state :hq 2)
           qs (get-content state :remote1 0)
           beale (get-content state :remote2 0)]
       (core/rez state :contestant qs)
       (card-ability state :contestant qs 0)
-      (is (empty? (:prompt (get-contestant))) "No prompt to rez ICE")
+      (is (empty? (:prompt (get-contestant))) "No prompt to rez Character")
       (score-agenda state :contestant beale)
       ; 1 on rez
       (is (= 101 (:credit (get-contestant))) "Contestant has 101 creds")
@@ -1411,7 +1411,7 @@
       (prompt-select :contestant ch3)
       ; pay 8 per Chiyashi - 24 total
       (is (= 77 (:credit (get-contestant))) "Contestant has 77 creds")
-      (is (empty? (:prompt (get-contestant))) "No prompt to rez ICE"))))
+      (is (empty? (:prompt (get-contestant))) "No prompt to rez Character"))))
 
 (deftest reality-threedee
   ;; Reality Threedee - Take 1 bad pub on rez; gain 1c at turn start (2c if Challenger tagged)
@@ -1446,8 +1446,8 @@
       (is (= 1 (:advance-counter (refresh rc))) "Reconstruction Contract has 1 advancement token")
       (starting-hand state :challenger ["Imp" "Imp"])
       (play-from-hand state :contestant "Pup" "HQ")
-      (core/rez state :contestant (get-ice state :hq 0))
-      (card-subroutine state :contestant (get-ice state :hq 0) 0)
+      (core/rez state :contestant (get-character state :hq 0))
+      (card-subroutine state :contestant (get-character state :hq 0) 0)
       (is (= 5 (count (:discard (get-challenger)))))
       (is (= 1 (:advance-counter (refresh rc))) "Reconstruction Contract doesn't get advancement token for net damage"))))
 
@@ -1484,10 +1484,10 @@
     (take-credits state :contestant)
     (core/rez state :contestant (get-content state :remote1 0))
     (run-empty-server state :remote2)
-    (prompt-choice :challenger "Yes") ; trash MMC
+    (prompt-chocharacter :challenger "Yes") ; trash MMC
     (is (= 2 (:click (get-challenger))) "Lost 1 click")
     (run-empty-server state :remote1)
-    (prompt-choice :challenger "Yes") ; trash Ronald Five
+    (prompt-chocharacter :challenger "Yes") ; trash Ronald Five
     (is (= 0 (:click (get-challenger))) "Lost 1 click")))
 
 (deftest ronin
@@ -1512,7 +1512,7 @@
       (is (= 2 (count (:discard (get-contestant)))) "Ronin trashed"))))
 
 (deftest sandburg
-  ;; Sandburg - +1 strength to all ICE for every 5c when Contestant has over 10c
+  ;; Sandburg - +1 strength to all Character for every 5c when Contestant has over 10c
   (do-game
     (new-game (default-contestant [(qty "Sandburg" 1) (qty "Ice Wall" 2) (qty "Hedge Fund" 3)])
               (default-challenger))
@@ -1521,8 +1521,8 @@
     (play-from-hand state :contestant "Ice Wall" "HQ")
     (play-from-hand state :contestant "Ice Wall" "R&D")
     (let [sb (get-content state :remote1 0)
-          iwall1 (get-ice state :hq 0)
-          iwall2 (get-ice state :rd 0)]
+          iwall1 (get-character state :hq 0)
+          iwall2 (get-character state :rd 0)]
       (core/rez state :contestant iwall1)
       (core/rez state :contestant iwall2)
       (core/rez state :contestant sb)
@@ -1538,7 +1538,7 @@
       (is (= 4 (:current-strength (refresh iwall2))) "Strength boosted by 3")
       (take-credits state :contestant)
       (run-empty-server state "Server 1")
-      (prompt-choice :challenger "Yes")
+      (prompt-chocharacter :challenger "Yes")
       (is (= 1 (:current-strength (refresh iwall1))) "Strength back to default")
       (is (= 1 (:current-strength (refresh iwall2))) "Strength back to default"))))
 
@@ -1552,25 +1552,25 @@
     (let [sv (get-content state :remote1 0)]
       (core/rez state :contestant sv)
       (card-ability state :contestant sv 0)
-      (prompt-choice :contestant 8)
+      (prompt-chocharacter :contestant 8)
       (is (= 8 (get-counters (refresh sv) :credit)) "8 credits stored on Sealed Vault")
       (is (= 0 (:credit (get-contestant))))
       (card-ability state :contestant sv 1)
-      (prompt-choice :contestant 8)
+      (prompt-chocharacter :contestant 8)
       (is (= 0 (get-counters (refresh sv) :credit)) "Credits removed from Sealed Vault")
       (is (= 8 (:credit (get-contestant))))
       (is (= 0 (:click (get-contestant))) "Spent a click")
       (card-ability state :contestant sv 0)
-      (prompt-choice :contestant 7)
+      (prompt-chocharacter :contestant 7)
       (is (= 7 (get-counters (refresh sv) :credit)) "7 credits stored on Sealed Vault")
       (is (= 0 (:credit (get-contestant))))
       (card-ability state :contestant sv 2)
-      (prompt-choice :contestant 7)
+      (prompt-chocharacter :contestant 7)
       (is (= 7 (:credit (get-contestant))))
       (is (= 2 (count (:discard (get-contestant)))) "Sealed Vault trashed"))))
 
 (deftest server-diagnostics
-  ;; Server Diagnostics - Gain 2c when turn begins; trashed when ICE is installed
+  ;; Server Diagnostics - Gain 2c when turn begins; trashed when Character is installed
   (do-game
     (new-game (default-contestant [(qty "Server Diagnostics" 1) (qty "Pup" 1)
                              (qty "Launch Campaign" 1)])
@@ -1578,12 +1578,12 @@
     (play-from-hand state :contestant "Server Diagnostics" "New remote")
     (core/rez state :contestant (get-content state :remote1 0))
     (play-from-hand state :contestant "Launch Campaign" "New remote")
-    (is (= 1 (count (get-content state :remote1))) "Non-ICE install didn't trash Serv Diag")
+    (is (= 1 (count (get-content state :remote1))) "Non-Character install didn't trash Serv Diag")
     (take-credits state :contestant)
     (take-credits state :challenger)
     (is (= 5 (:credit (get-contestant))) "Gained 2c at start of turn")
     (play-from-hand state :contestant "Pup" "HQ")
-    (is (= 1 (count (:discard (get-contestant)))) "Server Diagnostics trashed by ICE install")))
+    (is (= 1 (count (:discard (get-contestant)))) "Server Diagnostics trashed by Character install")))
 
 (deftest shock
   ;; do 1 net damage on access
@@ -1623,7 +1623,7 @@
     (run-empty-server state "Server 1")
     (is (= :waiting (-> @state :challenger :prompt first :prompt-type))
         "Challenger has prompt to wait for Snare!")
-    (prompt-choice :contestant "Yes")
+    (prompt-chocharacter :contestant "Yes")
     (is (= 3 (:credit (get-contestant))) "Contestant had 7 and paid 4 for Snare! 1 left")
     (is (= 1 (:tag (get-challenger))) "Challenger has 1 tag")
     (is (= 0 (count (:hand (get-challenger)))) "Challenger took 3 net damage")
@@ -1640,9 +1640,9 @@
     (run-empty-server state "Server 1")
     (is (= :waiting (-> @state :challenger :prompt first :prompt-type))
         "Challenger has prompt to wait for Snare!")
-    (prompt-choice :contestant "Yes")
+    (prompt-chocharacter :contestant "Yes")
     (is (= 0 (:tag (get-challenger))) "Challenger has 0 tags")
-    (prompt-choice :challenger "Yes")
+    (prompt-chocharacter :challenger "Yes")
     (is (empty? (:prompt (get-challenger))) "Challenger waiting prompt is cleared")
     (is (= 0 (count (:discard (get-challenger)))) "Challenger took no damage")))
 
@@ -1661,9 +1661,9 @@
       (run-successful state)
       (is (= :waiting (-> @state :challenger :prompt first :prompt-type))
           "Challenger has prompt to wait for Snare!")
-      (prompt-choice :contestant "Yes")
+      (prompt-chocharacter :contestant "Yes")
       (is (= 1 (:tag (get-challenger))) "Challenger has 1 tag")
-      (prompt-choice :challenger "Yes")
+      (prompt-chocharacter :challenger "Yes")
       (is (= 5 (count (:discard (get-challenger)))) "Challenger took 5 damage"))))
 
 (deftest space-camp-archives
@@ -1676,10 +1676,10 @@
     (play-from-hand state :contestant "Breaking News" "New remote")
     (take-credits state :contestant)
     (run-empty-server state :archives)
-    (prompt-choice :challenger "News Team")
-    (prompt-choice :challenger "Take 2 tags")
-    (prompt-choice :challenger "Space Camp")
-    (prompt-choice :contestant "Yes")
+    (prompt-chocharacter :challenger "News Team")
+    (prompt-chocharacter :challenger "Take 2 tags")
+    (prompt-chocharacter :challenger "Space Camp")
+    (prompt-chocharacter :contestant "Yes")
     (prompt-select :contestant (get-content state :remote1 0))
     (is (= 1 (:advance-counter (get-content state :remote1 0))) "Agenda advanced once from Space Camp")
     (is (= 2 (:tag (get-challenger))) "Challenger has 2 tags")
@@ -1752,7 +1752,7 @@
       (core/rez state :contestant tsp)
       (score-agenda state :contestant ag1)
       (prompt-select :contestant (find-card "Adonis Campaign" (:hand (get-contestant))))
-      (prompt-choice :contestant "New remote")
+      (prompt-chocharacter :contestant "New remote")
       (is (= "Adonis Campaign" (:title (get-content state :remote3 0)))
           "Adonis installed by Team Sponsorship")
       (is (nil? (find-card "Adonis Campaign" (:hand (get-contestant)))) "No Adonis in hand"))))
@@ -1772,7 +1772,7 @@
       (core/rez state :contestant tsp)
       (score-agenda state :contestant ag1)
       (prompt-select :contestant (find-card "Adonis Campaign" (:discard (get-contestant))))
-      (prompt-choice :contestant "New remote")
+      (prompt-chocharacter :contestant "New remote")
       (is (= "Adonis Campaign" (:title (get-content state :remote3 0)))
           "Adonis installed by Team Sponsorship")
       (is (nil? (find-card "Adonis Campaign" (:discard (get-contestant)))) "No Adonis in discard"))))
@@ -1794,11 +1794,11 @@
       (core/rez state :contestant tsp1)
       (core/rez state :contestant tsp2)
       (score-agenda state :contestant ag1)
-      (prompt-choice :contestant "Team Sponsorship")
+      (prompt-chocharacter :contestant "Team Sponsorship")
       (prompt-select :contestant (find-card "Adonis Campaign" (:discard (get-contestant))))
-      (prompt-choice :contestant "New remote")
+      (prompt-chocharacter :contestant "New remote")
       (prompt-select :contestant (find-card "Adonis Campaign" (:hand (get-contestant))))
-      (prompt-choice :contestant "New remote")
+      (prompt-chocharacter :contestant "New remote")
       (is (= "Adonis Campaign" (:title (get-content state :remote4 0)))
           "Adonis installed by Team Sponsorship")
       (is (= "Adonis Campaign" (:title (get-content state :remote5 0)))
@@ -1823,7 +1823,7 @@
     (score-agenda state :contestant (get-content state :remote1 1))
     (prompt-select :contestant (find-card "AstroScript Pilot Program" (:hand (get-contestant))))
     (is (= 0 (get-counters (second (:scored (get-contestant))) :agenda)) "AstroScript not resolved yet")
-    (prompt-choice :contestant "Server 1")
+    (prompt-chocharacter :contestant "Server 1")
     (is (= 1 (get-counters (second (:scored (get-contestant))) :agenda)) "AstroScript resolved")
     (card-ability state :contestant (first (:scored (get-contestant))) 0)
     (prompt-select :contestant (get-content state :remote1 1))
@@ -1831,11 +1831,11 @@
     (prompt-select :contestant (get-content state :remote1 1))
     (core/score state :contestant {:card (get-content state :remote1 1)})
     (prompt-select :contestant (find-card "Breaking News" (:hand (get-contestant))))
-    (prompt-choice :contestant "Server 1")
+    (prompt-chocharacter :contestant "Server 1")
     (card-ability state :contestant (second (next (:scored (get-contestant)))) 0)
     (prompt-select :contestant (get-content state :remote1 1))
     (core/score state :contestant {:card (get-content state :remote1 1)})
-    (prompt-choice :contestant "Done")
+    (prompt-chocharacter :contestant "Done")
     (is (= 7 (:agenda-point (get-contestant))) "Scored 5 points in one turn")))
 
 (deftest the-board
@@ -1863,7 +1863,7 @@
     (take-credits state :contestant)
 
     (run-empty-server state :remote3)
-    (prompt-choice :challenger "Steal")
+    (prompt-chocharacter :challenger "Steal")
     (is (= 2 (count (:scored (get-challenger)))) "Firmware Updates stolen")
     (is (= 1 (:agenda-point (get-challenger))) "Challenger has 1 agenda point")
 
@@ -1871,18 +1871,18 @@
     (is (= -1 (:agenda-point (get-challenger))) "Challenger has -1 agenda points")
 
     (run-empty-server state :remote2)
-    (prompt-choice :challenger "Add News Team to score area")
+    (prompt-chocharacter :challenger "Add News Team to score area")
     (is (= 3 (count (:scored (get-challenger)))) "News Team added to Challenger score area")
     (is (= -3 (:agenda-point (get-challenger))) "Challenger has -3 agenda points")
 
     (card-ability state :challenger (get-resource state 0) 0)
-    (prompt-choice :challenger (->> @state :challenger :prompt first :choices first))
+    (prompt-chocharacter :challenger (->> @state :challenger :prompt first :mutherfucker first))
     (prompt-select :challenger (first (:scored (get-challenger))))
     (is (= 2 (count (:scored (get-challenger)))) "Fan Site removed from Challenger score area")
     (is (= -2 (:agenda-point (get-challenger))) "Challenger has -2 agenda points")
 
     (run-empty-server state :remote1)
-    (prompt-choice :challenger "Yes")
+    (prompt-chocharacter :challenger "Yes")
     (is (= 3 (count (:scored (get-challenger)))) "The Board added to Challenger score area")
     (is (= 2 (:agenda-point (get-challenger))) "Challenger has 2 agenda points")))
 
@@ -1918,15 +1918,15 @@
       (run-empty-server state "Server 1")
       (is (= :waiting (-> @state :challenger :prompt first :prompt-type))
           "Challenger has prompt to wait for Toshiyuki")
-      (prompt-choice :contestant "Yes") ; choose to do a swap
+      (prompt-chocharacter :contestant "Yes") ; choose to do a swap
       (prompt-select :contestant (find-card "Hedge Fund" (:hand (get-contestant))))
       (is (= (refresh toshi) (get-content state :remote1 0)) "Toshiyuki still in remote; can't target an operation in hand")
       (prompt-select :contestant (find-card "Project Junebug" (:hand (get-contestant))))
       (let [june (get-content state :remote1 0)]
         (is (= "Project Junebug" (:title (refresh june))) "Project Junebug swapped into Server 1")
         (is (= 2 (:advance-counter (refresh june))) "Project Junebug has 2 advancements")
-        (prompt-choice :challenger "Yes") ; choose to access new card
-        (prompt-choice :contestant "Yes") ; pay 1c to fire Junebug
+        (prompt-chocharacter :challenger "Yes") ; choose to access new card
+        (prompt-chocharacter :contestant "Yes") ; pay 1c to fire Junebug
         (is (= 4 (count (:discard (get-challenger)))) "Challenger took 4 net damage")))))
 
 (deftest turtlebacks
@@ -1981,7 +1981,7 @@
       (is (= 4 (count (:discard (get-challenger)))) "Urban Renewal did 4 meat damage"))))
 
 (deftest watchdog
-  ;; Watchdog - Reduce rez cost of first ICE per turn by number of Challenger tags
+  ;; Watchdog - Reduce rez cost of first Character per turn by number of Challenger tags
   (do-game
     (new-game (default-contestant [(qty "Watchdog" 1) (qty "Architect" 1) (qty "Wraparound" 1)])
               (default-challenger))
@@ -1989,8 +1989,8 @@
     (play-from-hand state :contestant "Wraparound" "HQ")
     (play-from-hand state :contestant "Architect" "HQ")
     (let [wd (get-content state :remote1 0)
-          arch (get-ice state :hq 1)
-          wrap (get-ice state :hq 0)]
+          arch (get-character state :hq 1)
+          wrap (get-character state :hq 0)]
       (take-credits state :contestant)
       (is (= 4 (:credit (get-contestant))))
       (core/gain state :challenger :tag 2)
@@ -2014,7 +2014,7 @@
       (let [gfi (find-card "Global Food Initiative" (:hand (get-contestant)))]
         (core/trash state :challenger gfi)
         (card-ability state :contestant wr 0)
-        (prompt-choice :contestant "Global Food Initiative") ;; into archives
+        (prompt-chocharacter :contestant "Global Food Initiative") ;; into archives
         (prompt-select :contestant (first (:discard (get-contestant)))) ;; into R&D
         (is (= 0 (count (:discard (get-contestant)))) "Only card in discard placed in bottom of R&D")
         (is (= "Global Food Initiative" (:title (last (:deck (get-contestant))))) "GFI last card in deck")))))

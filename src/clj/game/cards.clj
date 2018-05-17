@@ -3,7 +3,7 @@
 (def trash-program {:prompt "Select a program to trash"
                     :label "Trash a program"
                     :msg (msg "trash " (:title target))
-                    :choices {:req #(and (installed? %)
+                    :mutherfucker {:req #(and (installed? %)
                                          (is-type? % "Program"))}
                     :effect (effect (trash target {:cause :subroutine})
                                     (clear-wait-prompt :challenger))})
@@ -11,14 +11,14 @@
 (def trash-hardware {:prompt "Select a piece of hardware to trash"
                      :label "Trash a piece of hardware"
                      :msg (msg "trash " (:title target))
-                     :choices {:req #(and (installed? %)
+                     :mutherfucker {:req #(and (installed? %)
                                           (is-type? % "Hardware"))}
                      :effect (effect (trash target {:cause :subroutine}))})
 
 (def trash-resource-sub {:prompt "Select a resource to trash"
                          :label "Trash a resource"
                          :msg (msg "trash " (:title target))
-                         :choices {:req #(and (installed? %)
+                         :mutherfucker {:req #(and (installed? %)
                                               (is-type? % "Resource"))}
                          :effect (effect (trash target {:cause :subroutine}))})
 
@@ -26,7 +26,7 @@
                       :player :challenger
                       :label "Force the Challenger to trash an installed card"
                       :msg (msg "force the Challenger to trash " (:title target))
-                      :choices {:req #(and (installed? %)
+                      :mutherfucker {:req #(and (installed? %)
                                            (= (:side %) "Challenger"))}
                       :effect (effect (trash target {:cause :subroutine}))})
 
@@ -35,28 +35,28 @@
   triggers"
   {:effect (req (toast state :contestant "Reminder: You have unrezzed cards with \"when turn begins\" abilities." "info"))})
 
-(declare reorder-final) ; forward reference since reorder-choice and reorder-final are mutually recursive
+(declare reorder-final) ; forward reference since reorder-chocharacter and reorder-final are mutually recursive
 
-(defn reorder-choice
+(defn reorder-chocharacter
   "Generates a recursive prompt structure for cards that do reordering (Indexing, Making an Entrance, etc.)
 
   reorder-side is the side to be reordered, i.e. :contestant for Indexing and Precognition.
   wait-side is the side that has a wait prompt while ordering is in progress, i.e. :contestant for Indexing and Spy Camera.
 
-  This is part 1 - the player keeps choosing cards until there are no more available choices. A wait prompt should
+  This is part 1 - the player keeps choosing cards until there are no more available mutherfucker. A wait prompt should
   exist before calling this function. See Indexing and Making an Entrance for examples on how to call this function."
 
-  ([reorder-side cards] (reorder-choice reorder-side (other-side reorder-side) cards `() (count cards) cards nil))
-  ([reorder-side wait-side remaining chosen n original] (reorder-choice reorder-side wait-side remaining chosen n original nil))
+  ([reorder-side cards] (reorder-chocharacter reorder-side (other-side reorder-side) cards `() (count cards) cards nil))
+  ([reorder-side wait-side remaining chosen n original] (reorder-chocharacter reorder-side wait-side remaining chosen n original nil))
   ([reorder-side wait-side remaining chosen n original dest]
   {:prompt (str "Select a card to move next "
                 (if (= dest "bottom") "under " "onto ")
                 (if (= reorder-side :contestant) "R&D" "your Stack"))
-   :choices remaining
+   :mutherfucker remaining
    :delayed-completion true
    :effect (req (let [chosen (cons target chosen)]
                   (if (< (count chosen) n)
-                    (continue-ability state side (reorder-choice reorder-side wait-side (remove-once #(not= target %) remaining)
+                    (continue-ability state side (reorder-chocharacter reorder-side wait-side (remove-once #(not= target %) remaining)
                                                                  chosen n original dest) card nil)
                     (continue-ability state side (reorder-final reorder-side wait-side chosen original dest) card nil))))}))
 
@@ -71,7 +71,7 @@
                    " will be " (join  ", " (map :title (reverse chosen))) ".")
               (str "The top cards of " (if (= reorder-side :contestant) "R&D" "your Stack")
                    " will be " (join  ", " (map :title chosen)) "."))
-   :choices ["Done" "Start over"]
+   :mutherfucker ["Done" "Start over"]
    :delayed-completion true
    :effect (req
              (cond
@@ -88,13 +88,13 @@
                    (effect-completed state side eid card))
 
                :else
-               (continue-ability state side (reorder-choice reorder-side wait-side original '() (count original) original dest) card nil)))}))
+               (continue-ability state side (reorder-chocharacter reorder-side wait-side original '() (count original) original dest) card nil)))}))
 
-(defn swap-ice
-  "Swaps two pieces of ICE."
+(defn swap-character
+  "Swaps two pieces of Character."
   [state side a b]
-  (let [a-index (ice-index state a)
-        b-index (ice-index state b)
+  (let [a-index (character-index state a)
+        b-index (character-index state b)
         a-new (assoc a :zone (:zone b))
         b-new (assoc b :zone (:zone a))]
     (swap! state update-in (cons :contestant (:zone a)) #(assoc % a-index b-new))
@@ -107,16 +107,16 @@
           (update! state side newh)
           (unregister-events state side h)
           (register-events state side (:events (card-def newh)) newh))))
-    (update-ice-strength state side a-new)
-    (update-ice-strength state side b-new)))
+    (update-character-strength state side a-new)
+    (update-character-strength state side b-new)))
 
 (defn card-index
-  "Get the zero-based index of the given card in its server's list of content. Same as ice-index"
+  "Get the zero-based index of the given card in its server's list of content. Same as character-index"
   [state card]
   (first (keep-indexed #(when (= (:cid %2) (:cid card)) %1) (get-in @state (cons :contestant (:zone card))))))
 
 (defn swap-installed
-  "Swaps two installed contestant cards - like swap ICE except no strength update"
+  "Swaps two installed contestant cards - like swap Character except no strength update"
   [state side a b]
   (let [a-index (card-index state a)
         b-index (card-index state b)
@@ -146,5 +146,5 @@
 (load "cards/resources")
 (load "cards/upgrades")
 
-(def cards (merge cards-agendas cards-assets cards-events cards-hardware cards-ice cards-icebreakers cards-identities
+(def cards (merge cards-agendas cards-assets cards-events cards-hardware cards-character cards-icebreakers cards-identities
                   cards-operations cards-programs cards-resources cards-upgrades))

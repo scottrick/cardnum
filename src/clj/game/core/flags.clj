@@ -89,7 +89,7 @@
 ;;; Run flag - cleared at end of run
 (defn register-run-flag!
   "Registers a flag for the current run only. The flag gets cleared in end-run.
-  Example: Blackmail flags the inability to rez ice."
+  Example: Blackmail flags the inability to rez character."
   [state side card flag condition]
   (register-flag! state side card :current-run flag condition))
 
@@ -262,8 +262,8 @@
   [card]
   (or (not (rezzed? card)) (not (:cannot-host (card-def card)))))
 
-(defn ice? [card]
-  (is-type? card "ICE"))
+(defn character? [card]
+  (is-type? card "Character"))
 
 (defn program? [card]
   (is-type? card "Program"))

@@ -207,7 +207,7 @@
           (cons "advance" %) %))
       (#(if (and (= type "Agenda") (>= advance-counter current-cost))
           (cons "score" %) %))
-      (#(if (#{"Asset" "ICE" "Upgrade"} type)
+      (#(if (#{"Asset" "Character" "Upgrade"} type)
           (if-not rezzed (cons "rez" %) (cons "derez" %))
           %))))
 
@@ -219,7 +219,7 @@
         ;; Open panel
         (or (> c 1)
             (some #{"derez" "advance"} actions)
-            (and (= type "ICE")
+            (and (= type "Character")
                  (not (:run @game-state))))  ; Horrible hack to check if currently in a run
         (-> (om/get-node owner "abilities") js/$ .toggle)
         ;; Trigger first (and only) ability / action
@@ -247,15 +247,15 @@
                      (handle-abilities card owner))
                    (send-command "play" {:card card}))
           ("rig" "current" "onhost" "play-area") (handle-abilities card owner)
-          ("servers") (when (and (= type "ICE") (:rezzed card))
-                        ;; ICE that should show list of abilities that send messages to fire sub
+          ("servers") (when (and (= type "Character") (:rezzed card))
+                        ;; Character that should show list of abilities that send messages to fire sub
                         (-> (om/get-node owner "challenger-abilities") js/$ .toggle))
           nil)
         ;; Contestant side
         (= side :contestant)
         (case (first zone)
           "hand" (case type
-                   ("Upgrade" "ICE") (if root
+                   ("Upgrade" "Character") (if root
                                        (send-command "play" {:card card :server root})
                                        (-> (om/get-node owner "servers") js/$ .toggle))
                    ("Agenda" "Asset") (if (< (count (get-in @game-state [:contestant :servers])) 4)
@@ -306,7 +306,7 @@
 
          (and (= zone ["hand"])
               (or (not uniqueness) (not (in-play? card)))
-              (or (#{"Agenda" "Asset" "Upgrade" "ICE"} type) (>= (:credit me) cost))
+              (or (#{"Agenda" "Asset" "Upgrade" "Character"} type) (>= (:credit me) cost))
               (pos? (:click me))))))
 
 (defn spectator-view-hidden?
@@ -714,11 +714,11 @@
                            (join " - "))
                       subtype-target)]
           [:div.darkbg.subtype-target {:class colour-type} label]))
-      (when (and (= zone ["hand"]) (#{"Agenda" "Asset" "ICE" "Upgrade"} type))
+      (when (and (= zone ["hand"]) (#{"Agenda" "Asset" "Character" "Upgrade"} type))
         (let [centrals ["Archives" "R&D" "HQ"]
               remotes (concat (remote-list remotes) ["New remote"])
               servers (case type
-                        ("Upgrade" "ICE") (concat centrals remotes)
+                        ("Upgrade" "Character") (concat centrals remotes)
                         ("Agenda" "Asset") remotes)]
           [:div.panel.blue-shade.servers-menu {:ref "servers"}
            (map (fn [label]
@@ -748,7 +748,7 @@
             dynabi-count (count (filter :dynamic abilities))]
         (when (or (> (+ (count actions) (count abilities) (count subroutines)) 1)
                   (some #{"derez" "advance"} actions)
-                  (= type "ICE"))
+                  (= type "Character"))
           [:div.panel.blue-shade.abilities {:ref "abilities"}
            (map (fn [action]
                   [:div {:on-click #(do (send-command action {:card @cursor}))} (capitalize action)])
@@ -1066,22 +1066,22 @@
    (sab/html
     (let [content (:content server)]
       [:div.server
-       (let [ices (:ices server)
+       (let [characters (:characters server)
              run-pos (:position run)
-             current-ice (when (and run (pos? run-pos) (<= run-pos (count ices)))
-                           (nth ices (dec run-pos)))
+             current-character (when (and run (pos? run-pos) (<= run-pos (count characters)))
+                           (nth characters (dec run-pos)))
              run-arrow (sab/html [:div.run-arrow [:div]])
-             max-hosted (apply max (map #(count (:hosted %)) ices))]
-         [:div.ices {:style {:width (when (pos? max-hosted)
+             max-hosted (apply max (map #(count (:hosted %)) characters))]
+         [:div.characters {:style {:width (when (pos? max-hosted)
                                       (+ 84 3 (* 42 (dec max-hosted))))}}
           (when-let [run-card (:card (:run-effect run))]
             [:div.run-card (om/build card-img run-card)])
-          (for [ice (reverse ices)]
-            [:div.ice {:class (when (not-empty (:hosted ice)) "host")}
-             (om/build card-view ice {:opts {:flipped (not (:rezzed ice))}})
-             (when (and current-ice (= (:cid current-ice) (:cid ice)))
+          (for [character (reverse characters)]
+            [:div.character {:class (when (not-empty (:hosted character)) "host")}
+             (om/build card-view character {:opts {:flipped (not (:rezzed character))}})
+             (when (and current-character (= (:cid current-character) (:cid character)))
                run-arrow)])
-          (when (and run (not current-ice))
+          (when (and run (not current-character))
             run-arrow)])
        [:div.content
         (when central-view
@@ -1165,7 +1165,7 @@
   (reify
     om/IDidUpdate
     (did-update [this prev-props prev-state]
-      (when-let [autocomp (get-in cursor [side :prompt 0 :choices :autocomplete])]
+      (when-let [autocomp (get-in cursor [side :prompt 0 :mutherfucker :autocomplete])]
         (-> "#card-title" js/$ (.autocomplete (clj->js {"source" autocomp})))))
 
     om/IRenderState
@@ -1176,18 +1176,18 @@
          (if-let [prompt (first (:prompt me))]
            [:div.panel.blue-shade
             [:h4 (for [item (get-message-parts (:msg prompt))] (create-span item))]
-            (if-let [n (get-in prompt [:choices :number])]
+            (if-let [n (get-in prompt [:mutherfucker :number])]
               [:div
                [:div.credit-select
-                [:select#credit {:default-value (get-in prompt [:choices :default] 0)}
+                [:select#credit {:default-value (get-in prompt [:mutherfucker :default] 0)}
                  (for [i (range (inc n))]
                    [:option {:value i} i])]]
-               [:button {:on-click #(send-command "choice"
-                                                  {:choice (-> "#credit" js/$ .val js/parseInt)})}
+               [:button {:on-click #(send-command "chocharacter"
+                                                  {:chocharacter (-> "#credit" js/$ .val js/parseInt)})}
                 "OK"]]
               (cond
-                ;; choice of number of credits
-                (= (:choices prompt) "credit")
+                ;; chocharacter of number of credits
+                (= (:mutherfucker prompt) "credit")
                 [:div
                  [:div.credit-select
                   ;; Inform user of base trace / link and any bonuses
@@ -1197,42 +1197,42 @@
                       [:span (str preamble " + ")]))
                   [:select#credit (for [i (range (inc (:credit me)))]
                                     [:option {:value i} i])] " credits"]
-                 [:button {:on-click #(send-command "choice"
-                                                    {:choice (-> "#credit" js/$ .val js/parseInt)})}
+                 [:button {:on-click #(send-command "chocharacter"
+                                                    {:chocharacter (-> "#credit" js/$ .val js/parseInt)})}
                   "OK"]]
 
                 ;; auto-complete text box
-                (:card-title (:choices prompt))
+                (:card-title (:mutherfucker prompt))
                 [:div
                  [:div.credit-select
                   [:input#card-title {:placeholder "Enter a card title"
                                       :onKeyUp #(when (= 13 (.-keycode %))
                                                  (-> "#card-submit" js/$ .click)
                                                  (.stopPropagation %))}]]
-                 [:button#card-submit {:on-click #(send-command "choice" {:choice (-> "#card-title" js/$ .val)})}
+                 [:button#card-submit {:on-click #(send-command "chocharacter" {:chocharacter (-> "#card-title" js/$ .val)})}
                   "OK"]]
 
-                ;; choice of specified counters on card
-                (:counter (:choices prompt))
-                (let [counter-type (keyword (:counter (:choices prompt)))
+                ;; chocharacter of specified counters on card
+                (:counter (:mutherfucker prompt))
+                (let [counter-type (keyword (:counter (:mutherfucker prompt)))
                       num-counters (get-in prompt [:card :counter counter-type] 0)]
                   [:div
                    [:div.credit-select
                     [:select#credit (for [i (range (inc num-counters))]
                                       [:option {:value i} i])] " credits"]
-                   [:button {:on-click #(send-command "choice"
-                                                      {:choice (-> "#credit" js/$ .val js/parseInt)})}
+                   [:button {:on-click #(send-command "chocharacter"
+                                                      {:chocharacter (-> "#credit" js/$ .val js/parseInt)})}
                     "OK"]])
-                ;; otherwise choice of all present choices
+                ;; otherwise chocharacter of all present mutherfucker
                 :else
-                (for [c (:choices prompt)]
+                (for [c (:mutherfucker prompt)]
                   (when (not= c "Hide")
                     (if (string? c)
-                      [:button {:on-click #(send-command "choice" {:choice c})}
+                      [:button {:on-click #(send-command "chocharacter" {:chocharacter c})}
                        (for [item (get-message-parts c)] (create-span item))]
                       (let [[title fullCode] (extract-card-info (add-image-codes (:title c)))]
                         [:button {:class (when (:rotated c) :rotated)
-                                  :on-click #(send-command "choice" {:card @c}) :id fullCode} title]))))))]
+                                  :on-click #(send-command "chocharacter" {:card @c}) :id fullCode} title]))))))]
            (if run
              (let [s (:server run)
                    kw (keyword (first s))
@@ -1326,7 +1326,7 @@
                           (audio-sfx "install-contestant")
                           (audio-sfx "install-challenger")
                           (audio-sfx "play-instant")
-                          (audio-sfx "rez-ice")
+                          (audio-sfx "rez-character")
                           (audio-sfx "rez-other")
                           (audio-sfx "run-successful")
                           (audio-sfx "run-unsuccessful")

@@ -1,7 +1,7 @@
 (in-ns 'game.core)
 
 (declare host in-play? install-locked? make-rid rez run-flag? server-list server->zone set-prop system-msg
-         turn-flag? update-breaker-strength update-ice-strength update-run-ice)
+         turn-flag? update-breaker-strength update-character-strength update-run-character)
 
 ;;;; Functions for the installation and deactivation of cards.
 
@@ -120,7 +120,7 @@
   "Checks if the specified card can be installed.
    Returns true if there are no problems
    Returns :region if Region check fails
-   Returns :ice if ICE check fails
+   Returns :character if Character check fails
    !! NB: This should only be used in a check with `true?` as all return values are truthy"
   [state side card dest-zone]
   (cond
@@ -128,10 +128,10 @@
     (and (has-subtype? card "Region")
          (some #(has-subtype? % "Region") dest-zone))
     :region
-    ;; ICE install prevented by Unscheduled Maintenance
-    (and (ice? card)
-         (not (turn-flag? state side card :can-install-ice)))
-    :ice
+    ;; Character install prevented by Unscheduled Maintenance
+    (and (character? card)
+         (not (turn-flag? state side card :can-install-character)))
+    :character
     ;; Installing not locked
     (install-locked? state side) :lock-install
     ;; no restrictions
@@ -152,14 +152,14 @@
       ;; failed install lock check
       :lock-install
       (reason-toast (str "Unable to install " title ", installing is currently locked"))
-      ;; failed ICE check
-      :ice
-      (reason-toast (str "Unable to install " title ": can only install 1 piece of ICE per turn")))))
+      ;; failed Character check
+      :character
+      (reason-toast (str "Unable to install " title ": can only install 1 piece of Character per turn")))))
 
 (defn contestant-installable-type?
   "Is the card of an acceptable type to be installed in a server"
   [card]
-  (some? (#{"Asset" "Agenda" "ICE" "Upgrade"} (:type card))))
+  (some? (#{"Asset" "Agenda" "Character" "Upgrade"} (:type card))))
 
 (defn- contestant-install-asset-agenda
   "Forces the contestant to trash an existing asset or agenda if a second was just installed."
@@ -169,7 +169,7 @@
              prev-card
              (not (:host card)))
       (resolve-ability state side eid {:prompt (str "The " (:title prev-card) " in " server " will now be trashed.")
-                                       :choices ["OK"]
+                                       :mutherfucker ["OK"]
                                        :effect (req (system-msg state :contestant (str "trashes " (card-str state prev-card)))
                                                     (when (get-card state prev-card) ; make sure they didn't trash the card themselves
                                                     (trash state :contestant prev-card {:keep-server-alive true})))}
@@ -183,12 +183,12 @@
                           (= :face-up install-state)
                           (:rezzed card))
                     (:title card)
-                    (if (ice? card) "ICE" "a card"))
+                    (if (character? card) "Character" "a card"))
         server-name (if (= server "New remote")
                       (str (remote-num->name (get-in @state [:rid])) " (new remote)")
                       server)]
     (system-msg state side (str (build-spend-msg cost-str "install") card-name
-                                (if (ice? card) " protecting " " in ") server-name))))
+                                (if (character? card) " protecting " " in ") server-name))))
 
 (defn contestant-install-list
   "Returns a list of targets for where a given card can be installed."
@@ -208,7 +208,7 @@
      (not server)
      (continue-ability state side
                        {:prompt (str "Choose a location to install " (:title card))
-                        :choices (contestant-install-list state card)
+                        :mutherfucker (contestant-install-list state card)
                         :delayed-completion true
                         :effect (effect (contestant-install eid card target args))}
                        card nil)
@@ -220,16 +220,16 @@
      (let [cdef (card-def card)
            slot (if host-card
                   (:zone host-card)
-                  (conj (server->zone state server) (if (ice? card) :ices :content)))
+                  (conj (server->zone state server) (if (character? card) :characters :content)))
            dest-zone (get-in @state (cons :contestant slot))]
        ;; trigger :pre-contestant-install before computing install costs so that
        ;; event handlers may adjust the cost.
        (trigger-event state side :pre-contestant-install card {:server server :dest-zone dest-zone})
-       (let [ice-cost (if (and (ice? card)
+       (let [character-cost (if (and (character? card)
                                (not no-install-cost)
                                (not (ignore-install-cost? state side)))
                         (count dest-zone) 0)
-             all-cost (concat extra-cost [:credit ice-cost])
+             all-cost (concat extra-cost [:credit character-cost])
              end-cost (if no-install-cost 0 (install-cost state side card all-cost))
              install-state (or install-state (:install-state cdef))]
          (when (and (contestant-can-install? state side card dest-zone) (not (install-locked? state :contestant)))
@@ -371,7 +371,7 @@
             (not (seq (get-in @state [:challenger :lock-install]))))
      (if-let [hosting (and (not host-card) (not facedown) (:hosting (card-def card)))]
        (continue-ability state side
-                         {:choices hosting
+                         {:mutherfucker hosting
                           :prompt (str "Choose a card to host " (:title card) " on")
                           :delayed-completion true
                           :effect (effect (challenger-install eid card (assoc params :host-card target)))}

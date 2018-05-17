@@ -54,7 +54,7 @@
 
 (defn trigger-event-sync
   "Triggers the given event synchronously, requiring each handler to complete before alerting the next handler. Does not
-  give the user a choice of what order to resolve handlers."
+  give the user a chocharacter of what order to resolve handlers."
   [state side eid event & targets]
   (let [get-side #(-> % :card :side game.utils/to-keyword)
         is-active-player #(= (:active-player @state) (get-side %))]
@@ -103,7 +103,7 @@
                                       (continue-ability state side (choose-handler (next handlers)) nil event-targets)
                                       (effect-completed state side eid nil)))}))
                   {:prompt "Choose a trigger to resolve"
-                   :choices titles
+                   :mutherfucker titles
                    :delayed-completion true
                    :effect (req (let [to-resolve (some #(when (= target (:title (:card %))) %) handlers)
                                       the-card (get-card state (:card to-resolve))]
@@ -127,8 +127,8 @@
 (defn card-as-handler
   "Wraps a card's definition as an event handler."
   [card]
-  (let [{:keys [effect prompt choices psi optional trace] :as cdef} (card-def card)]
-    (when (or effect prompt choices psi optional trace)
+  (let [{:keys [effect prompt mutherfucker psi optional trace] :as cdef} (card-def card)]
+    (when (or effect prompt mutherfucker psi optional trace)
       (ability-as-handler card cdef))))
 
 (defn effect-as-handler

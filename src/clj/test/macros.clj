@@ -7,9 +7,9 @@
          ~'get-contestant (fn [] (:contestant @~'state))
          ~'get-challenger (fn [] (:challenger @~'state))
          ~'refresh (fn [~'card] (core/get-card ~'state ~'card))
-         ~'prompt-choice (fn [~'side ~'choice]
+         ~'prompt-chocharacter (fn [~'side ~'chocharacter]
                            (is (first (get-in @~'state [~'side :prompt])) "There is a prompt")
-                           (core/resolve-prompt ~'state ~'side {:choice (~'refresh ~'choice)}))
+                           (core/resolve-prompt ~'state ~'side {:chocharacter (~'refresh ~'chocharacter)}))
          ~'prompt-card (fn [~'side ~'card]
                          (is (first (get-in @~'state [~'side :prompt])) "There is a prompt")
                          (core/resolve-prompt ~'state ~'side {:card (~'refresh ~'card)}))
@@ -26,7 +26,7 @@
                                   (= ~'type (-> @~'state ~'side :prompt first :prompt-type))))
 
          ~'prompt-map (fn [side#] (first (get-in @~'state [side# :prompt])))
-         ~'prompt-titles (fn [side#] (map #(:title %) (:choices (~'prompt-map side#))))]
+         ~'prompt-titles (fn [side#] (map #(:title %) (:mutherfucker (~'prompt-map side#))))]
      ~@body))
 
 (defmacro deftest-pending [name & body]

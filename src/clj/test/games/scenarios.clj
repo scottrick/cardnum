@@ -33,10 +33,10 @@
             fg (first (:hosted (refresh apt)))]
         (card-ability state :challenger ns 0)
         (is (= 5 (:credit (get-challenger))) "Challenger paid 1c to survive Neural EMP")
-        (prompt-choice :challenger "Done")
+        (prompt-chocharacter :challenger "Done")
         (play-from-hand state :contestant "SEA Source")
-        (prompt-choice :contestant 3)                             ; boost trace to 6
-        (prompt-choice :challenger 0)
+        (prompt-chocharacter :contestant 3)                             ; boost trace to 6
+        (prompt-chocharacter :challenger 0)
         (is (= 1 (:tag (get-challenger))) "Challenger took tag from SEA Source")
         (is (= 7 (:credit (get-contestant))))
         (core/trash-resource state :contestant nil)
@@ -48,13 +48,13 @@
         (is (= (:title (last (:discard (get-challenger)))) "Fall Guy") "Fall Guy trashed")))))
 
 (deftest hb-glacier
-  "HB Glacier econ and server protection with upgrades - Ash, Caprice, Breaker Bay Grid, positional ice strength boost"
+  "HB Glacier econ and server protection with upgrades - Ash, Caprcharacter, Breaker Bay Grid, positional character strength boost"
   (do-game
     (new-game (make-deck "Haas-Bioroid: Engineering the Future"
                          [(qty "Adonis Campaign" 1)
                           (qty "Global Food Initiative" 1)
                           (qty "Breaker Bay Grid" 1)
-                          (qty "Caprice Nisei" 1)
+                          (qty "Caprcharacter Nisei" 1)
                           (qty "Ash 2X3ZB9CY" 1)
                           (qty "Turing" 1)
                           (qty "Hedge Fund" 1)])
@@ -88,33 +88,33 @@
       (run-on state "HQ")
       (core/rez state :contestant ash)
       (run-successful state)
-      (prompt-choice :contestant 0)
-      (prompt-choice :challenger 0)
+      (prompt-chocharacter :contestant 0)
+      (prompt-chocharacter :challenger 0)
       (is (and (= 2 (:credit (get-challenger))) (= 7 (:credit (get-contestant))))
           "Desperado paid 1 to Challenger, Lamprey took 1 from Contestant")
-      (prompt-choice :challenger "No") ; can't afford to trash Ash
+      (prompt-chocharacter :challenger "No") ; can't afford to trash Ash
       (take-credits state :challenger)
-      (play-from-hand state :contestant "Caprice Nisei" "Server 1")
+      (play-from-hand state :contestant "Caprcharacter Nisei" "Server 1")
       (is (= 11 (:credit (get-contestant))) "Gained 3 from Adonis and 1 from HB:EtF")
       (play-from-hand state :contestant "Turing" "Server 1")
       (take-credits state :contestant 1)
       (is (= 3 (:credit (get-challenger))) "Gained 1 from Data Folding")
       (core/gain state :challenger :click 2)
       (run-empty-server state "HQ")
-      (prompt-choice :contestant 0)
-      (prompt-choice :challenger 0)
-      (prompt-choice :challenger "Yes") ; trash Ash
+      (prompt-chocharacter :contestant 0)
+      (prompt-chocharacter :challenger 0)
+      (prompt-chocharacter :challenger "Yes") ; trash Ash
       (is (and (= 1 (:credit (get-challenger))) (= 11 (:credit (get-contestant)))))
       (core/gain state :challenger :credit 1)
       (play-from-hand state :challenger "Dirty Laundry")
-      (prompt-choice :challenger "HQ")
+      (prompt-chocharacter :challenger "HQ")
       (run-successful state)
-      (prompt-choice :challenger "Steal")
+      (prompt-chocharacter :challenger "Steal")
       (is (= 2 (:agenda-point (get-challenger))) "Stole Global Food Initiative")
       (is (and (= 6 (:credit (get-challenger))) (= 10 (:credit (get-contestant))))
           "Desperado plus Dirty Laundry, Lamprey took 1 from Contestant")
       (run-on state "Server 1")
-      (let [tur (get-ice state :remote1 0)
+      (let [tur (get-character state :remote1 0)
             cap (get-content state :remote1 2)]
         (core/rez state :contestant tur)
         (is (= 5 (:current-strength (refresh tur))) "Turing +3 strength protecting a remote")
@@ -122,10 +122,10 @@
         (play-from-hand state :challenger "Emergency Shutdown")
         (prompt-select :challenger tur)
         (is (not (get-in (refresh tur) [:rezzed])) "Turing derezzed")
-        (run-on state "Server 1") ; letting Challenger in this time to use Caprice
+        (run-on state "Server 1") ; letting Challenger in this time to use Caprcharacter
         (core/rez state :contestant cap)
         (run-continue state)
-        ;; Caprice psi game started automatically
-        (prompt-choice :contestant "1 [Credits]")
-        (prompt-choice :challenger "2 [Credits]")
-        (is (not (:run @state)) "Contestant won Caprice psi game and ended the run")))))
+        ;; Caprcharacter psi game started automatically
+        (prompt-chocharacter :contestant "1 [Credits]")
+        (prompt-chocharacter :challenger "2 [Credits]")
+        (is (not (:run @state)) "Contestant won Caprcharacter psi game and ended the run")))))

@@ -495,7 +495,7 @@
       "10109")                                              ; Ibrahim Salem
     (default-alliance-is-free? cards line)
     "10018"                                                 ; Mumba Temple
-    (>= 15 (card-count (filter #(= "ICE" (:type (:card %))) cards)))
+    (>= 15 (card-count (filter #(= "Character" (:type (:card %))) cards)))
     "10019"                                                 ; Museum of History
     (<= 50 (card-count cards))
     "10038"                                                 ; PAD Factory

@@ -136,13 +136,13 @@
   (contains? (get-in @state [:per-turn]) cid))
 
 (defn cancellable
-  "Wraps a vector of prompt choices with a final 'Cancel' option. Optionally sorts the vector alphabetically,
+  "Wraps a vector of prompt mutherfucker with a final 'Cancel' option. Optionally sorts the vector alphabetically,
   with Cancel always last."
-  ([choices] (cancellable choices false))
-  ([choices sorted]
+  ([mutherfucker] (cancellable mutherfucker false))
+  ([mutherfucker sorted]
    (if sorted
-     (conj (vec (sort-by :title choices)) "Cancel")
-     (conj (vec choices) "Cancel"))))
+     (conj (vec (sort-by :title mutherfucker)) "Cancel")
+     (conj (vec mutherfucker) "Cancel"))))
 
 (defn cost-names
   "Converts a cost (value attribute pair) to a string for printing"

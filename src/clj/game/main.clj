@@ -47,7 +47,7 @@
    "jack-out" core/jack-out
    "advance" core/advance
    "score" #(core/score %1 %2 (game.core/get-card %1 %3))
-   "choice" core/resolve-prompt
+   "chocharacter" core/resolve-prompt
    "select" core/select
    "shuffle" core/shuffle-deck
    "ability" core/play-ability
@@ -102,7 +102,7 @@
 
 (defn- make-private-contestant [state]
   (let [zones (concat [[:hand]] [[:discard]] [[:deck]]
-                      (for [server (keys (:servers (:contestant @state)))] [:servers server :ices])
+                      (for [server (keys (:servers (:contestant @state)))] [:servers server :characters])
                       (for [server (keys (:servers (:contestant @state)))] [:servers server :content]))]
     (loop [s (:contestant @state)
            z zones]
@@ -173,7 +173,7 @@
                     (do (show-error-toast state (keyword side))
                         (swap! state assoc :last-error (str "Error " action " " command " "
                                                             (or (get-in args [:card :title])
-                                                                (get-in args [:choice]))
+                                                                (get-in args [:chocharacter]))
                                                             " " (pr-str e)))
                         true)
                     false)

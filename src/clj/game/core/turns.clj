@@ -240,8 +240,8 @@
       (swap! state assoc-in [side :register-last-turn] (-> @state side :register))
       (let [rig-cards (apply concat (vals (get-in @state [:challenger :rig])))
             hosted-cards (filter :installed (mapcat :hosted rig-cards))
-            hosted-on-ice (->> (get-in @state [:contestant :servers]) seq flatten (mapcat :ices) (mapcat :hosted))]
-        (doseq [card (concat rig-cards hosted-cards hosted-on-ice)]
+            hosted-on-character (->> (get-in @state [:contestant :servers]) seq flatten (mapcat :characters) (mapcat :hosted))]
+        (doseq [card (concat rig-cards hosted-cards hosted-on-character)]
           ;; Clear the added-virus-counter flag for each virus in play.
           ;; We do this even on the contestant's turn to prevent shenanigans with something like Gorman Drip and Surge
           (when (has-subtype? card "Virus")

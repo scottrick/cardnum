@@ -1,6 +1,6 @@
 (in-ns 'game.core)
 
-(declare ice-index parse-command show-error-toast)
+(declare character-index parse-command show-error-toast)
 
 (defn say
   "Prints a message to the log as coming from the given username. The special user string
@@ -81,13 +81,13 @@
   ([state card {:keys [visible] :as args}]
   (str (if (card-is? card :side :contestant)
          ; Contestant card messages
-         (str (if (or (rezzed? card) visible) (:title card) (if (ice? card) "ICE" "a card"))
+         (str (if (or (rezzed? card) visible) (:title card) (if (character? card) "Character" "a card"))
               ; Hosted cards do not need "in server 1" messages, host has them
               (if-not (:host card)
-                (str (if (ice? card) " protecting " " in ")
+                (str (if (character? card) " protecting " " in ")
                      ;TODO add naming of scoring area of contestant/challenger
                      (zone->name (second (:zone card)))
-                     (if (ice? card) (str " at position " (ice-index state card))))))
+                     (if (character? card) (str " at position " (character-index state card))))))
          ; Challenger card messages
          (if (or (:facedown card) visible) "a facedown card" (:title card)))
        (if (:host card) (str " hosted on " (card-str state (:host card)))))))
@@ -116,7 +116,7 @@
 (defn command-adv-counter [state side value]
   (resolve-ability state side
                    {:effect (effect (set-adv-counter target value))
-                    :choices {:req (fn [t] (card-is? t :side side))}}
+                    :mutherfucker {:req (fn [t] (card-is? t :side side))}}
                    {:title "/adv-counter command"} nil))
 
 (defn command-counter-smart [state side args]
@@ -137,13 +137,13 @@
                           :else (do (set-prop state side target :counter (merge (:counter target) {c-type value}))
                                     (system-msg state side (str "sets " (name c-type) " counters to " value " on "
                                                                 (card-str state target)))))))
-     :choices {:req (fn [t] (card-is? t :side side))}}
+     :mutherfucker {:req (fn [t] (card-is? t :side side))}}
     {:title "/counter command"} nil))
 
 (defn command-facedown [state side]
   (resolve-ability state side
                    {:prompt "Select a card to install facedown"
-                    :choices {:req #(and (= (:side %) "Challenger")
+                    :mutherfucker {:req #(and (= (:side %) "Challenger")
                                          (in-hand? %))}
                     :effect (effect (challenger-install target {:facedown true}))}
                    {:title "/faceup command"} nil))
@@ -167,7 +167,7 @@
                        {:effect (effect (set-prop target :counter (merge (:counter target) {c-type value}))
                                         (system-msg (str "sets " (name c-type) " counters to " value " on "
                                                          (card-str state target))))
-                        :choices {:req (fn [t] (card-is? t :side side))}}
+                        :mutherfucker {:req (fn [t] (card-is? t :side side))}}
                        {:title "/counter command"} nil)))))
 
 (defn command-rezall [state side value]
@@ -205,7 +205,7 @@
                                           {:effect (effect (system-msg (str "shows card-info of "
                                                                             (card-str state target)
                                                                             ": " (get-card state target))))
-                                           :choices {:req (fn [t] (card-is? t :side %2))}}
+                                           :mutherfucker {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/card-info command"} nil)
           "/clear-win"  #(clear-win %1 %2)
           "/click"      #(swap! %1 assoc-in [%2 :click] (max 0 value))
@@ -225,13 +225,13 @@
           "/move-bottom"  #(resolve-ability %1 %2
                                             {:prompt "Select a card in hand to put on the bottom of your deck"
                                              :effect (effect (move target :deck))
-                                             :choices {:req (fn [t] (and (card-is? t :side %2) (in-hand? t)))}}
+                                             :mutherfucker {:req (fn [t] (and (card-is? t :side %2) (in-hand? t)))}}
                                             {:title "/move-bottom command"} nil)
           "/move-hand"  #(resolve-ability %1 %2
                                           {:prompt "Select a card to move to your hand"
                                            :effect (req (let [c (deactivate %1 %2 target)]
                                                           (move %1 %2 c :hand)))
-                                           :choices {:req (fn [t] (card-is? t :side %2))}}
+                                           :mutherfucker {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/move-hand command"} nil)
           "/psi"        #(when (= %2 :contestant) (psi-game %1 %2
                                                       {:title "/psi command" :side %2}
@@ -240,14 +240,14 @@
           "/rez"        #(when (= %2 :contestant)
                            (resolve-ability %1 %2
                                             {:effect (effect (rez target {:ignore-cost :all-costs :force true}))
-                                             :choices {:req (fn [t] (card-is? t :side %2))}}
+                                             :mutherfucker {:req (fn [t] (card-is? t :side %2))}}
                                             {:title "/rez command"} nil))
           "/rez-all"    #(when (= %2 :contestant) (command-rezall %1 %2 value))
           "/rfg"        #(resolve-ability %1 %2
                                           {:prompt "Select a card to remove from the game"
                                            :effect (req (let [c (deactivate %1 %2 target)]
                                                           (move %1 %2 c :rfg)))
-                                           :choices {:req (fn [t] (card-is? t :side %2))}}
+                                           :mutherfucker {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/rfg command"} nil)
           "/facedown"   #(when (= %2 :challenger)
                            (command-facedown %1 %2))

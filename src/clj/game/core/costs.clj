@@ -25,7 +25,7 @@
                   (and (= type :forfeit) (>= (- (count (get-in @state [side :scored])) amount) 0))
                   (and (= type :mill) (>= (- (count (get-in @state [side :deck])) amount) 0))
                   (and (= type :tag) (>= (- (get-in @state [:challenger :tag]) amount) 0))
-                  (and (= type :ice) (>= (- (count (filter (every-pred rezzed? ice?) (all-installed state :contestant))) amount) 0))
+                  (and (= type :character) (>= (- (count (filter (every-pred rezzed? character?) (all-installed state :contestant))) amount) 0))
                   (and (= type :hardware) (>= (- (count (get-in @state [:challenger :rig :hardware])) amount) 0))
                   (and (= type :program) (>= (- (count (get-in @state [:challenger :rig :program])) amount) 0))
                   (and (= type :connection) (>= (- (count (filter #(has-subtype? % "Connection")
@@ -54,7 +54,7 @@
   (resolve-ability state side
                    {:prompt "Choose an Agenda to forfeit"
                     :delayed-completion true
-                    :choices {:max n
+                    :mutherfucker {:max n
                               :req #(is-scored? state side %)}
                     :effect (effect (forfeit eid target))}
                    card nil)
@@ -65,9 +65,9 @@
   "Trash a card as part of paying for a card or ability"
   ;; If multiples needed in future likely prompt-select needs work to take a function
   ;; instead of an ability
-  ([state side card type amount choices] (pay-trash state side card type amount choices nil))
-  ([state side card type amount choices args]
-   (prompt! state side card (str "Choose a " (name type) " to trash") choices
+  ([state side card type amount mutherfucker] (pay-trash state side card type amount mutherfucker nil))
+  ([state side card type amount mutherfucker args]
+   (prompt! state side card (str "Choose a " (name type) " to trash") mutherfucker
             {:effect (effect (trash target args))})
    (when-let [cost-name (cost-names amount type)] cost-name)))
 
@@ -88,8 +88,8 @@
     :connection (pay-trash state side card :connection (second cost) (filter (fn [c] (has-subtype? c "Connection"))
                                                                           (all-installed state :challenger)))
 
-    ;; Rezzed ICE
-    :ice (pay-trash state :contestant card :ice (second cost) (filter (every-pred rezzed? ice?) (all-installed state :contestant))
+    ;; Rezzed Character
+    :character (pay-trash state :contestant card :character (second cost) (filter (every-pred rezzed? character?) (all-installed state :contestant))
                     {:cause :ability-cost :keep-server-alive true})
 
     :tag (deduce state :challenger cost)

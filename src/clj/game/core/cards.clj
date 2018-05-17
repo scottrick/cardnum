@@ -1,8 +1,8 @@
 (in-ns 'game.core)
 
-(declare active? all-installed cards card-init deactivate card-flag? get-card-hosted handle-end-run hardware? has-subtype? ice?
+(declare active? all-installed cards card-init deactivate card-flag? get-card-hosted handle-end-run hardware? has-subtype? character?
          make-eid program? register-events remove-from-host remove-icon reset-card resource? rezzed? trash trigger-event update-hosted!
-         update-ice-strength unregister-events)
+         update-character-strength unregister-events)
 
 ;;; Functions for loading card information.
 (defn card-def
@@ -115,7 +115,7 @@
            (when (and (not keep-server-alive)
                       (is-remote? z)
                       (empty? (get-in @state (conj z :content)))
-                      (empty? (get-in @state (conj z :ices))))
+                      (empty? (get-in @state (conj z :characters))))
              (when-let [run (:run @state)]
                (when (= (last (:server run)) (last z))
                  (handle-end-run state side)))
@@ -149,7 +149,7 @@
                         card)]
      (update! state side (update-in updated-card [key] #(+ (or % 0) n)))
      (if (= key :advance-counter)
-       (do (when (and (ice? updated-card) (rezzed? updated-card)) (update-ice-strength state side updated-card))
+       (do (when (and (character? updated-card) (rezzed? updated-card)) (update-character-strength state side updated-card))
            (if-not placed
              (trigger-event state side :advance (get-card state updated-card))
              (trigger-event state side :advancement-placed (get-card state updated-card))))

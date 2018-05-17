@@ -41,12 +41,12 @@
         zone2 (get-nested-zone card2)]
     (= (second zone1) (second zone2))))
 
-(defn protecting-same-server? [card ice]
-  "True if an ice is protecting the server that the card is in or protecting."
+(defn protecting-same-server? [card character]
+  "True if an character is protecting the server that the card is in or protecting."
   (let [zone1 (get-nested-zone card)
-        zone2 (get-nested-zone ice)]
+        zone2 (get-nested-zone character)]
     (and (= (second zone1) (second zone2))
-         (= :ices (last zone2)))))
+         (= :characters (last zone2)))))
 
 (defn in-same-server? [card1 card2]
   "True if the two cards are installed IN the same server, or hosted on cards IN the same server."
@@ -67,16 +67,16 @@
   [state side]
   (if (= side :challenger)
     (let [top-level-cards (flatten (for [t [:program :hardware :resource]] (get-in @state [:challenger :rig t])))
-          hosted-on-ice (->> (:contestant @state) :servers seq flatten (mapcat :ices) (mapcat :hosted))]
-      (loop [unchecked (concat top-level-cards (filter #(= (:side %) "Challenger") hosted-on-ice)) installed ()]
+          hosted-on-character (->> (:contestant @state) :servers seq flatten (mapcat :characters) (mapcat :hosted))]
+      (loop [unchecked (concat top-level-cards (filter #(= (:side %) "Challenger") hosted-on-character)) installed ()]
         (if (empty? unchecked)
           (filter :installed installed)
           (let [[card & remaining] unchecked]
             (recur (filter identity (into remaining (:hosted card))) (into installed [card]))))))
     (let [servers (->> (:contestant @state) :servers seq flatten)
           content (mapcat :content servers)
-          ice (mapcat :ices servers)
-          top-level-cards (concat ice content)]
+          character (mapcat :characters servers)
+          top-level-cards (concat character content)]
       (loop [unchecked top-level-cards installed ()]
         (if (empty? unchecked)
           (filter #(= (:side %) "Contestant") installed)
