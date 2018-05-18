@@ -49,12 +49,12 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Bank Job")
     (run-empty-server state :rd)
-    (prompt-chocharacter :contestant "Yes")
-    (prompt-chocharacter :challenger "Yes")
-    (prompt-chocharacter :contestant 0)
-    (prompt-chocharacter :challenger 0)
+    (prompt-choice :contestant "Yes")
+    (prompt-choice :challenger "Yes")
+    (prompt-choice :contestant 0)
+    (prompt-choice :challenger 0)
     (prompt-select :contestant (get-resource state 0))
-    (prompt-chocharacter :challenger "OK")
+    (prompt-choice :challenger "OK")
     (is (not (:run @state)) "Run ended")))
 
 (deftest architect-untrashable
@@ -123,9 +123,9 @@
       (core/rez state :contestant frog)
       (is (= :hq (first (get-in @state [:run :server]))))
       (card-subroutine state :contestant frog 0)
-      (prompt-chocharacter :contestant "0 [Credits]")
-      (prompt-chocharacter :challenger "1 [Credits]")
-      (prompt-chocharacter :contestant "R&D")
+      (prompt-choice :contestant "0 [Credits]")
+      (prompt-choice :challenger "1 [Credits]")
+      (prompt-choice :contestant "R&D")
       (is (= :rd (first (get-in @state [:run :server]))) "Run redirected to R&D")
       (is (= 2 (get-in @state [:run :position])) "Passed Bullfrog")
       (is (= "Bullfrog" (:title (get-character state :rd 2))) "Bullfrog at outermost position of R&D"))))
@@ -158,7 +158,7 @@
     (play-from-hand state :contestant "Chimera" "HQ")
     (let [ch (get-character state :hq 0)]
       (core/rez state :contestant ch)
-      (prompt-chocharacter :contestant "Barrier")
+      (prompt-choice :contestant "Barrier")
       (is (core/has-subtype? (refresh ch) "Barrier") "Chimera has Barrier")
       (take-credits state :contestant)
       (is (not (core/has-subtype? (refresh ch) "Barrier")) "Chimera does not have Barrier"))))
@@ -195,7 +195,7 @@
       (is (= 6 (:current-strength (refresh cr2))) "+3 strength over Archives")
       (card-subroutine state :contestant cr2 0)
       (prompt-select :contestant (find-card "Ice Wall" (:discard (get-contestant))))
-      (prompt-chocharacter :contestant "HQ")
+      (prompt-choice :contestant "HQ")
       (is (= 3 (:credit (get-contestant))) "Paid 1 credit to install as 2nd Character over HQ"))))
 
 (deftest curtain-wall
@@ -227,28 +227,28 @@
       (run-on state "HQ")
       (core/rez state :contestant dh)
       (card-subroutine state :contestant dh 0)
-      (prompt-chocharacter :contestant 2)
-      (prompt-chocharacter :challenger 0)
+      (prompt-choice :contestant 2)
+      (prompt-choice :challenger 0)
       ;; trash 1 card and rearrange the other 3
-      (prompt-chocharacter :contestant (find-card "Desperado" (:deck (get-challenger))))
+      (prompt-choice :contestant (find-card "Desperado" (:deck (get-challenger))))
       (is (= 1 (count (:discard (get-challenger)))))
-      (prompt-chocharacter :contestant (find-card "Sure Gamble" (:deck (get-challenger))))
-      (prompt-chocharacter :contestant (find-card "Corroder" (:deck (get-challenger))))
-      (prompt-chocharacter :contestant (find-card "Patron" (:deck (get-challenger))))
+      (prompt-choice :contestant (find-card "Sure Gamble" (:deck (get-challenger))))
+      (prompt-choice :contestant (find-card "Corroder" (:deck (get-challenger))))
+      (prompt-choice :contestant (find-card "Patron" (:deck (get-challenger))))
       ;; try starting over
-      (prompt-chocharacter :contestant "Start over")
-      (prompt-chocharacter :contestant (find-card "Patron" (:deck (get-challenger))))
-      (prompt-chocharacter :contestant (find-card "Corroder" (:deck (get-challenger))))
-      (prompt-chocharacter :contestant (find-card "Sure Gamble" (:deck (get-challenger)))) ;this is the top card on stack
-      (prompt-chocharacter :contestant "Done")
+      (prompt-choice :contestant "Start over")
+      (prompt-choice :contestant (find-card "Patron" (:deck (get-challenger))))
+      (prompt-choice :contestant (find-card "Corroder" (:deck (get-challenger))))
+      (prompt-choice :contestant (find-card "Sure Gamble" (:deck (get-challenger)))) ;this is the top card on stack
+      (prompt-choice :contestant "Done")
       (is (= "Sure Gamble" (:title (first (:deck (get-challenger))))))
       (is (= "Corroder" (:title (second (:deck (get-challenger))))))
       (is (= "Patron" (:title (second (rest (:deck (get-challenger)))))))
       (run-jack-out state)
       (run-on state "HQ")
       (card-subroutine state :contestant dh 0)
-      (prompt-chocharacter :contestant 0)
-      (prompt-chocharacter :challenger 1)
+      (prompt-choice :contestant 0)
+      (prompt-choice :challenger 1)
       ;; trash the only card automatically
       (is (= 2 (count (:discard (get-challenger)))))
       (is (= "Corroder" (:title (first (:deck (get-challenger)))))))))
@@ -276,12 +276,12 @@
     (let [drac (get-character state :hq 0)]
       (run-on state "HQ")
       (core/rez state :contestant drac)
-      (prompt-chocharacter :contestant 4)
+      (prompt-choice :contestant 4)
       (is (= 4 (get-counters (refresh drac) :power)) "Dracō has 4 power counters")
       (is (= 4 (:current-strength (refresh drac))) "Dracō is 4 strength")
       (card-subroutine state :contestant drac 0)
-      (prompt-chocharacter :contestant 0)
-      (prompt-chocharacter :challenger 0)
+      (prompt-choice :contestant 0)
+      (prompt-choice :challenger 0)
       (is (= 1 (:tag (get-challenger))) "Challenger took 1 tag")
       (is (nil? (get-in @state [:run])) "Run was ended"))))
 
@@ -356,8 +356,8 @@
       (run-on state :hq)
       (core/rez state :contestant flare)
       (card-subroutine state :contestant flare 0)
-      (prompt-chocharacter :contestant 0)
-      (prompt-chocharacter :challenger 0)
+      (prompt-choice :contestant 0)
+      (prompt-choice :challenger 0)
       (prompt-select :contestant cc)
       (is (= 1 (count (get-in @state [:challenger :rig :hardware]))) "Clone Chip trashed")
       (is (empty? (:prompt (get-challenger))) "Plascrete didn't try preventing meat damage")
@@ -378,12 +378,12 @@
       (run-on state "HQ")
       (core/rez state :contestant gem)
       (card-subroutine state :contestant gem 0)
-      (prompt-chocharacter :contestant 3) ; boost to trace strength 5
-      (prompt-chocharacter :challenger 0)
+      (prompt-choice :contestant 3) ; boost to trace strength 5
+      (prompt-choice :challenger 0)
       (is (= 2 (count (:discard (get-challenger)))) "Did 2 net damage")
       (card-subroutine state :contestant gem 0)
-      (prompt-chocharacter :contestant 3) ; boost to trace strength 5
-      (prompt-chocharacter :challenger 5) ; match trace
+      (prompt-choice :contestant 3) ; boost to trace strength 5
+      (prompt-choice :challenger 5) ; match trace
       (is (= 3 (count (:discard (get-challenger)))) "Did only 1 net damage for having trace strength 5 or more"))))
 
 (deftest gemini-chronos-protocol
@@ -399,10 +399,10 @@
       (run-on state "HQ")
       (core/rez state :contestant gem)
       (card-subroutine state :contestant gem 0)
-      (prompt-chocharacter :contestant 3) ; boost to trace strength 5
-      (prompt-chocharacter :challenger 0)
-      (prompt-chocharacter :contestant "Yes")
-      (prompt-chocharacter :contestant (find-card "Sure Gamble" (:hand (get-challenger))))
+      (prompt-choice :contestant 3) ; boost to trace strength 5
+      (prompt-choice :challenger 0)
+      (prompt-choice :contestant "Yes")
+      (prompt-choice :contestant (find-card "Sure Gamble" (:hand (get-challenger))))
       (is (= 2 (count (:discard (get-challenger)))) "Did 2 net damage"))))
 
 (deftest iq
@@ -469,7 +469,7 @@
       (card-subroutine state :contestant (refresh jua) 0)
       (prompt-select :contestant (get-program state 0))
       (prompt-select :contestant (get-hardware state 0))
-      (prompt-chocharacter :challenger "Gordian Blade")
+      (prompt-choice :challenger "Gordian Blade")
       (is (nil? (get-program state 0)) "Card is uninstalled")
       (is (= 1 (count (:deck (get-challenger)))) "Challenger puts card in deck"))))
 
@@ -582,10 +582,10 @@
     (let [mindgame (get-character state :hq 0)]
       (core/rez state :contestant mindgame)
       (card-subroutine state :contestant mindgame 0))
-    (prompt-chocharacter :contestant "1 [Credits]")
-    (prompt-chocharacter :challenger "0 [Credits]")
-    (is (= (set ["R&D" "Archives"]) (set (:mutherfucker (prompt-map :contestant)))) "Contestant cannot choose server Challenger is on")
-    (prompt-chocharacter :contestant "Archives")
+    (prompt-choice :contestant "1 [Credits]")
+    (prompt-choice :challenger "0 [Credits]")
+    (is (= (set ["R&D" "Archives"]) (set (:choices (prompt-map :contestant)))) "Contestant cannot choose server Challenger is on")
+    (prompt-choice :contestant "Archives")
     (is (= [:archives] (get-in @state [:run :server])) "Challenger now running on Archives")))
 
 (deftest minelayer
@@ -623,7 +623,7 @@
         (is (= false (has? (refresh wend) :subtype "Code Gate")) "Wendigo lost Code Gate")
         (is (= 5 (:current-strength (refresh wend))) "Wendigo boosted to 5 strength by scored Superior Cyberwalls")
         (play-from-hand state :contestant "Shipment from SanSan")
-        (prompt-chocharacter :contestant "1")
+        (prompt-choice :contestant "1")
         (prompt-select :contestant wend)
         (is (= false (has? (refresh wend) :subtype "Barrier")) "Wendigo lost Barrier")
         (is (= true (has? (refresh wend) :subtype "Code Gate")) "Wendigo gained Code Gate")
@@ -745,13 +745,13 @@
     (let [searchlight (get-character state :hq 0)]
       (core/rez state :contestant searchlight)
       (card-subroutine state :contestant (refresh searchlight) 0)
-      (prompt-chocharacter :contestant 0)
-      (prompt-chocharacter :challenger 0)
+      (prompt-choice :contestant 0)
+      (prompt-choice :challenger 0)
       (is (= 0 (:tag (get-challenger))) "Trace failed with 0 advancements")
       (core/advance state :contestant {:card (refresh searchlight)})
       (card-subroutine state :contestant (refresh searchlight) 0)
-      (prompt-chocharacter :contestant 0)
-      (prompt-chocharacter :challenger 0)
+      (prompt-choice :contestant 0)
+      (prompt-choice :challenger 0)
       (is (= 1 (:tag (get-challenger))) "Trace succeeds with 0 advancements"))))
 
 (deftest sherlock
@@ -765,8 +765,8 @@
     (run-on state :hq)
     (core/rez state :contestant (get-character state :hq 0))
     (card-subroutine state :contestant (get-character state :hq 0) 0)
-    (prompt-chocharacter :contestant 0)
-    (prompt-chocharacter :challenger 0)
+    (prompt-choice :contestant 0)
+    (prompt-choice :challenger 0)
     (prompt-select :contestant (get-in @state [:challenger :rig :program 0]))
     (is (empty? (get-in @state [:challenger :rig :program])) "Gordian uninstalled")
     (is (= "Gordian Blade" (:title (first (:deck (get-challenger))))) "Gordian on top of Stack")))
@@ -785,22 +785,22 @@
       (run-on state :hq)
       (core/rez state :contestant shiro)
       (card-subroutine state :contestant shiro 0)
-      (prompt-chocharacter :contestant (find-card "Caprcharacter Nisei" (:deck (get-contestant))))
-      (prompt-chocharacter :contestant (find-card "Quandary" (:deck (get-contestant))))
-      (prompt-chocharacter :contestant (find-card "Jackson Howard" (:deck (get-contestant))))
+      (prompt-choice :contestant (find-card "Caprcharacter Nisei" (:deck (get-contestant))))
+      (prompt-choice :contestant (find-card "Quandary" (:deck (get-contestant))))
+      (prompt-choice :contestant (find-card "Jackson Howard" (:deck (get-contestant))))
       ;; try starting over
-      (prompt-chocharacter :contestant "Start over")
-      (prompt-chocharacter :contestant (find-card "Jackson Howard" (:deck (get-contestant))))
-      (prompt-chocharacter :contestant (find-card "Quandary" (:deck (get-contestant))))
-      (prompt-chocharacter :contestant (find-card "Caprcharacter Nisei" (:deck (get-contestant)))) ;this is the top card of R&D
-      (prompt-chocharacter :contestant "Done")
+      (prompt-choice :contestant "Start over")
+      (prompt-choice :contestant (find-card "Jackson Howard" (:deck (get-contestant))))
+      (prompt-choice :contestant (find-card "Quandary" (:deck (get-contestant))))
+      (prompt-choice :contestant (find-card "Caprcharacter Nisei" (:deck (get-contestant)))) ;this is the top card of R&D
+      (prompt-choice :contestant "Done")
       (is (= "Caprcharacter Nisei" (:title (first (:deck (get-contestant))))))
       (is (= "Quandary" (:title (second (:deck (get-contestant))))))
       (is (= "Jackson Howard" (:title (second (rest (:deck (get-contestant)))))))
       (card-subroutine state :contestant shiro 1)
       (is (= (:cid (first (:deck (get-contestant))))
              (:cid (:card (first (:prompt (get-challenger)))))) "Access the top card of R&D")
-      (prompt-chocharacter :challenger "No")
+      (prompt-choice :challenger "No")
       (is (= (:cid (second (:deck (get-contestant))))
              (:cid (:card (first (:prompt (get-challenger)))))) "Access another card due to R&D Interface"))))
 
@@ -815,12 +815,12 @@
     (let [sf (get-character state :hq 0)]
       (core/rez state :contestant sf)
       (card-subroutine state :contestant sf 0)
-      (prompt-chocharacter :contestant "0 [Credits]")
-      (prompt-chocharacter :challenger "0 [Credits]")
+      (prompt-choice :contestant "0 [Credits]")
+      (prompt-choice :challenger "0 [Credits]")
       (is (:run @state) "Challenger won psi, run continues")
       (card-subroutine state :contestant sf 0)
-      (prompt-chocharacter :contestant "0 [Credits]")
-      (prompt-chocharacter :challenger "1 [Credits]")
+      (prompt-choice :contestant "0 [Credits]")
+      (prompt-choice :challenger "1 [Credits]")
       (is (not (:run @state)) "Run ended"))))
 
 (deftest special-offer-trash-character-during-run
@@ -855,11 +855,11 @@
       (is (= 1 (count (:scored (get-contestant)))) "Agenda scored")
       (is (= 12 (:credit (get-contestant))) "Gained 7 credits")
       (core/rez state :contestant ti)
-      (prompt-chocharacter :contestant "No") ; don't use alternative cost
+      (prompt-choice :contestant "No") ; don't use alternative cost
       (is (= 3 (:credit (get-contestant))) "Spent 9 to Rez")
       (core/derez state :contestant (refresh ti))
       (core/rez state :contestant ti)
-      (prompt-chocharacter :contestant "Yes") ; use alternative cost
+      (prompt-choice :contestant "Yes") ; use alternative cost
       (prompt-select :contestant (get-in (get-contestant) [:scored 0]))
       (is (= 3 (:credit (get-contestant))) "Still on 3c")
       (is (= 0 (count (:scored (get-contestant)))) "Agenda forfeited")
@@ -910,8 +910,8 @@
     (play-from-hand state :contestant "TMI" "HQ")
     (let [tmi (get-character state :hq 0)]
       (core/rez state :contestant tmi)
-      (prompt-chocharacter :contestant 0)
-      (prompt-chocharacter :challenger 0)
+      (prompt-choice :contestant 0)
+      (prompt-choice :challenger 0)
       (is (get-in (refresh tmi) [:rezzed])))))
 
 (deftest tmi-derez
@@ -922,8 +922,8 @@
     (play-from-hand state :contestant "TMI" "HQ")
     (let [tmi (get-character state :hq 0)]
       (core/rez state :contestant tmi)
-      (prompt-chocharacter :contestant 0)
-      (prompt-chocharacter :challenger 0)
+      (prompt-choice :contestant 0)
+      (prompt-choice :challenger 0)
       (is (not (get-in (refresh tmi) [:rezzed]))))))
 
 (deftest turing-positional-strength

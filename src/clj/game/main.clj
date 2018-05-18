@@ -47,7 +47,7 @@
    "jack-out" core/jack-out
    "advance" core/advance
    "score" #(core/score %1 %2 (game.core/get-card %1 %3))
-   "chocharacter" core/resolve-prompt
+   "choice" core/resolve-prompt
    "select" core/select
    "shuffle" core/shuffle-deck
    "ability" core/play-ability
@@ -173,7 +173,7 @@
                     (do (show-error-toast state (keyword side))
                         (swap! state assoc :last-error (str "Error " action " " command " "
                                                             (or (get-in args [:card :title])
-                                                                (get-in args [:chocharacter]))
+                                                                (get-in args [:choice]))
                                                             " " (pr-str e)))
                         true)
                     false)

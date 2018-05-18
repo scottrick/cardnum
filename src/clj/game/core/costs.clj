@@ -54,7 +54,7 @@
   (resolve-ability state side
                    {:prompt "Choose an Agenda to forfeit"
                     :delayed-completion true
-                    :mutherfucker {:max n
+                    :choices {:max n
                               :req #(is-scored? state side %)}
                     :effect (effect (forfeit eid target))}
                    card nil)
@@ -65,9 +65,9 @@
   "Trash a card as part of paying for a card or ability"
   ;; If multiples needed in future likely prompt-select needs work to take a function
   ;; instead of an ability
-  ([state side card type amount mutherfucker] (pay-trash state side card type amount mutherfucker nil))
-  ([state side card type amount mutherfucker args]
-   (prompt! state side card (str "Choose a " (name type) " to trash") mutherfucker
+  ([state side card type amount choices] (pay-trash state side card type amount choices nil))
+  ([state side card type amount choices args]
+   (prompt! state side card (str "Choose a " (name type) " to trash") choices
             {:effect (effect (trash target args))})
    (when-let [cost-name (cost-names amount type)] cost-name)))
 

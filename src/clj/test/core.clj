@@ -38,11 +38,11 @@
           state (second (last states))]
       (when-not dont-start-game
         (if (#{:both :contestant} mulligan)
-          (core/resolve-prompt state :contestant {:chocharacter "Mulligan"})
-          (core/resolve-prompt state :contestant {:chocharacter "Keep"}))
+          (core/resolve-prompt state :contestant {:choice "Mulligan"})
+          (core/resolve-prompt state :contestant {:choice "Keep"}))
         (if (#{:both :challenger} mulligan)
-          (core/resolve-prompt state :challenger {:chocharacter "Mulligan"})
-          (core/resolve-prompt state :challenger {:chocharacter "Keep"}))
+          (core/resolve-prompt state :challenger {:choice "Mulligan"})
+          (core/resolve-prompt state :challenger {:choice "Keep"}))
         (when-not dont-start-turn (core/start-turn state :contestant nil))
         (when (= start-as :challenger) (take-credits state :contestant)))
       state)))

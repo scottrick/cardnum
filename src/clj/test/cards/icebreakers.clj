@@ -12,7 +12,7 @@
     (new-game (default-contestant) (default-challenger [(qty "Atman" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Atman")
-    (prompt-chocharacter :challenger 0)
+    (prompt-choice :challenger 0)
     (is (= 3 (:memory (get-challenger))))
     (let [atman (get-in @state [:challenger :rig :program 0])]
       (is (= 0 (get-counters atman :power)) "0 power counters")
@@ -25,7 +25,7 @@
               (default-challenger [(qty "Atman" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Atman")
-    (prompt-chocharacter :challenger 2)
+    (prompt-choice :challenger 2)
     (is (= 3 (:memory (get-challenger))))
     (let [atman (get-in @state [:challenger :rig :program 0])]
       (is (= 2 (get-counters atman :power)) "2 power counters")
@@ -70,7 +70,7 @@
     (let [chip (get-in @state [:challenger :rig :hardware 0])]
       (card-ability state :challenger chip 0)
       (prompt-select :challenger (find-card "Chameleon" (:discard (get-challenger))))
-      (prompt-chocharacter :challenger "Sentry"))
+      (prompt-choice :challenger "Sentry"))
     (take-credits state :contestant)
     (is (= 0 (count (:hand (get-challenger)))) "Chameleon not returned to hand at end of contestant turn")
     (take-credits state :challenger)
@@ -82,7 +82,7 @@
     (new-game (default-contestant) (default-challenger [(qty "Chameleon" 2) (qty "Scheherazade" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Chameleon")
-    (prompt-chocharacter :challenger "Barrier")
+    (prompt-choice :challenger "Barrier")
     (is (= 3 (:credit (get-challenger))) "-2 from playing Chameleon")
     ;; Host the Chameleon on Scheherazade that was just played (as in Personal Workshop/Hayley ability scenarios)
     (play-from-hand state :challenger "Scheherazade")
@@ -93,7 +93,7 @@
       ;; Install another Chameleon directly onto Scheherazade
       (card-ability state :challenger scheherazade 0) ; Install and host a program from Grip
       (prompt-select :challenger (find-card "Chameleon" (:hand (get-challenger))))
-      (prompt-chocharacter :challenger "Code Gate")
+      (prompt-choice :challenger "Code Gate")
       (is (= 2 (count (:hosted (refresh scheherazade)))) "2 Chameleons hosted on Scheherazade")
       (is (= 3 (:credit (get-challenger))) "-2 from playing Chameleon, +1 from installing onto Scheherazade"))
     (is (= 0 (count (:hand (get-challenger)))) "Both Chameleons in play - hand size 0")
@@ -186,10 +186,10 @@
     (core/gain state :challenger :credit 10)
     (play-from-hand state :challenger "Deus X")
     (run-empty-server state "Server 1")
-    (prompt-chocharacter :challenger "Yes")
+    (prompt-choice :challenger "Yes")
     (let [dx (get-program state 0)]
       (card-ability state :challenger dx 1)
-      (prompt-chocharacter :challenger "Done")
+      (prompt-choice :challenger "Done")
       (is (= 2 (count (:hand (get-challenger)))) "Deus X prevented one Hostile net damage"))))
 
 (deftest deus-x-fetal-jinteki-pe
@@ -203,11 +203,11 @@
     (core/gain state :challenger :credit 10)
     (play-from-hand state :challenger "Deus X")
     (run-empty-server state "Server 1")
-    (prompt-chocharacter :challenger "Access")
+    (prompt-choice :challenger "Access")
     (let [dx (get-program state 0)]
       (card-ability state :challenger dx 1)
-      (prompt-chocharacter :challenger "Done")
-      (prompt-chocharacter :challenger "Yes")
+      (prompt-choice :challenger "Done")
+      (prompt-choice :challenger "Yes")
       (is (= 3 (count (:hand (get-challenger)))) "Deus X prevented net damage from accessing Fetal AI, but not from Personal Evolution")
       (is (= 1 (count (:scored (get-challenger)))) "Fetal AI stolen"))))
 
@@ -304,7 +304,7 @@
       (is (= 2 (:current-strength (refresh nanotk))) "1 character on HQ")
       (card-subroutine state :contestant (refresh architect) 1)
       (prompt-select :contestant (find-card "Eli 1.0" (:hand (get-contestant))))
-      (prompt-chocharacter :contestant "HQ")
+      (prompt-choice :contestant "HQ")
       (is (= 3 (:current-strength (refresh nanotk))) "2 character on HQ")
       (run-jack-out state)
       (is (= 1 (:current-strength (refresh nanotk))) "Back to default strength"))))
@@ -355,7 +355,7 @@
     (trash-from-hand state :challenger "Paperclip")
     (run-on state "Archives")
     (core/rez state :contestant (get-character state :archives 0))
-    (prompt-chocharacter :challenger "Yes") ; install paperclip
+    (prompt-choice :challenger "Yes") ; install paperclip
     (run-continue state)
     (run-successful state)
     (is (not (:run @state)) "Run ended")
@@ -376,17 +376,17 @@
     (trash-from-hand state :challenger "Paperclip")
     (run-on state "Archives")
     (core/rez state :contestant (get-character state :archives 1))
-    (prompt-chocharacter :challenger "No")
+    (prompt-choice :challenger "No")
     (is (empty? (:prompt (get-challenger))) "No additional prompts to rez other copies of Paperclip")
     (run-continue state)
     ;; we should get the prompt on a second character even after denying the first.
     (core/rez state :contestant (get-character state :archives 0))
-    (prompt-chocharacter :challenger "No")
+    (prompt-choice :challenger "No")
     (is (empty? (:prompt (get-challenger))) "No additional prompts to rez other copies of Paperclip")
     (core/jack-out state :challenger)
     ;; Run again, make sure we get the prompt to install again.
     (run-on state "Archives")
-    (prompt-chocharacter :challenger "No")
+    (prompt-choice :challenger "No")
     (is (empty? (:prompt (get-challenger))) "No additional prompts to rez other copies of Paperclip")))
 
 (deftest shiv
@@ -495,16 +495,16 @@
       (is (= 3 (get-in (refresh cache) [:counter :virus])) "Initial Cache virus counters")
       (card-ability state :challenger yusuf 0)
       (prompt-select :challenger cache)
-      (prompt-chocharacter :challenger 1)
+      (prompt-choice :challenger 1)
       (is (= 2 (get-in (refresh cache) [:counter :virus])) "Cache lost a virus counter to pump")
       (is (= 4 (:current-strength (refresh yusuf))) "Yusuf strength 4")
       (is (= 1 (get-in (refresh yusuf) [:counter :virus])) "Initial Yusuf virus counters")
       (card-ability state :challenger yusuf 0)
       (prompt-select :challenger yusuf)
-      (prompt-chocharacter :challenger 1)
+      (prompt-choice :challenger 1)
       (is (= 5 (:current-strength (refresh yusuf))) "Yusuf strength 5")
       (is (= 0 (get-in (refresh yusuf) [:counter :virus])) "Yusuf lost a virus counter")
       (card-ability state :challenger yusuf 1)
       (prompt-select :challenger cache)
-      (prompt-chocharacter :challenger 1)
+      (prompt-choice :challenger 1)
       (is (= 1 (get-in (refresh cache) [:counter :virus])) "Cache lost a virus counter to break"))))

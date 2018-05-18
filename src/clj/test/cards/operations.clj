@@ -37,14 +37,14 @@
     (let [ag1 (get-content state :remote1 0)
           ag2 (get-content state :remote2 0)]
       (score-agenda state :contestant ag1)
-      (prompt-chocharacter :contestant "No")
+      (prompt-choice :contestant "No")
       (score-agenda state :contestant ag2)
-      (prompt-chocharacter :contestant "No")
+      (prompt-choice :contestant "No")
       (play-from-hand state :contestant "24/7 News Cycle")
       (prompt-select :contestant (find-card "Posted Bounty" (:scored (get-contestant))))
       (is (= 1 (:agenda-point (get-contestant))) "Forfeited Posted Bounty")
       (prompt-select :contestant (find-card "Posted Bounty" (:scored (get-contestant))))
-      (prompt-chocharacter :contestant "Yes") ; "Forfeit Posted Bounty to give 1 tag?"
+      (prompt-choice :contestant "Yes") ; "Forfeit Posted Bounty to give 1 tag?"
       (is (= 1 (:tag (get-challenger))) "Challenger given 1 tag")
       (is (= 1 (:bad-publicity (get-contestant))) "Contestant has 1 bad publicity")
       (is (= 0 (:agenda-point (get-contestant))) "Forfeited Posted Bounty to 24/7 News Cycle"))))
@@ -60,7 +60,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Turntable")
     (core/steal state :challenger (find-card "Profiteering" (:hand (get-contestant))))
-    (prompt-chocharacter :challenger "Yes")
+    (prompt-choice :challenger "Yes")
     (prompt-select :challenger (find-card "Philotic Entanglement" (:scored (get-contestant))))
     (is (= 2 (:agenda-point (get-contestant))))
     (is (= 2 (:agenda-point (get-challenger))))
@@ -75,7 +75,7 @@
     ;; resolve 'when scored' ability on swapped Profiteering
     (is (= 8 (:credit (get-contestant))))
     (prompt-select :contestant (find-card "Profiteering" (:scored (get-contestant))))
-    (prompt-chocharacter :contestant "3")
+    (prompt-choice :contestant "3")
     (is (= 1 (:agenda-point (get-contestant))))
     (is (= 3 (:bad-publicity (get-contestant))))
     (is (= 23 (:credit (get-contestant))) "Gained 15 credits")))
@@ -98,7 +98,7 @@
           co (get-content state :remote1 0)]
       (is (= 3 (count playarea)) "3 cards in play area")
       (prompt-select :contestant ss)
-      (prompt-chocharacter :contestant "2")
+      (prompt-choice :contestant "2")
       (prompt-select :contestant co)
       (is (= 2 (:advance-counter (refresh co))) "Cerebral Overwriter gained 2 advancements")
       (prompt-select :contestant hf)
@@ -129,7 +129,7 @@
       (is (= "Enhanced Login Protocol" (:title (first (get-in @state [:contestant :current]))))
         "Enhanced Login Protocol active in Current area")
       (prompt-select :contestant ss)
-      (prompt-chocharacter :contestant "2")
+      (prompt-choice :contestant "2")
       (prompt-select :contestant co)
       (is (= 2 (:advance-counter (refresh co))) "Cerebral Overwriter gained 2 advancements")
       (prompt-select :contestant hf)
@@ -141,10 +141,10 @@
     (new-game (default-contestant [(qty "Celebrity Gift" 1) (qty "An Offer You Can't Refuse" 1)])
               (default-challenger))
     (play-from-hand state :contestant "An Offer You Can't Refuse")
-    (prompt-chocharacter :contestant "R&D")
+    (prompt-choice :contestant "R&D")
     (core/move state :contestant (find-card "Celebrity Gift" (:hand (get-contestant))) :discard)
     (is (= 2 (count (:discard (get-contestant)))))
-    (prompt-chocharacter :challenger "No")
+    (prompt-choice :challenger "No")
     (is (= 1 (:agenda-point (get-contestant))) "An Offer the Challenger refused")
     (is (= 1 (count (:scored (get-contestant)))))
     (is (find-card "An Offer You Can't Refuse" (:scored (get-contestant))))
@@ -196,24 +196,24 @@
       (is (= 4 (:current-strength (refresh hunter))))
       (play-from-hand state :contestant "Casting Call")
       (prompt-select :contestant (find-card "Improved Tracers" (:hand (get-contestant))))
-      (prompt-chocharacter :contestant "New remote")
+      (prompt-choice :contestant "New remote")
       (let [imptrac (get-content state :remote1 0)]
         (is (get-in (refresh imptrac) [:rezzed]) "Improved Tracers is faceup")
         (is (= 4 (:current-strength (refresh hunter))) "Hunter hasn't gained strength")
         (play-from-hand state :contestant "Casting Call")
         (prompt-select :contestant (find-card "Oaktown Renovation" (:hand (get-contestant))))
-        (prompt-chocharacter :contestant "New remote")
+        (prompt-choice :contestant "New remote")
         (let [oak (get-content state :remote2 0)]
           (core/advance state :contestant {:card (refresh oak)})
           (is (= 5 (:credit (get-contestant))) "Events on Public agenda work; gained 2 credits from advancing")
           (take-credits state :contestant)
           (run-empty-server state "Server 2")
           (prompt-select :challenger oak)
-          (prompt-chocharacter :challenger "Steal")
+          (prompt-choice :challenger "Steal")
           (is (= 2 (:tag (get-challenger))) "Challenger took 2 tags from accessing agenda with Casting Call hosted on it"))))))
 
 (deftest cerebral-cast-challenger-wins
-  ;; Cerebral Cast: if the challenger succefully ran last turn, psi game to give challenger chocharacter of tag or BD
+  ;; Cerebral Cast: if the challenger succefully ran last turn, psi game to give challenger choice of tag or BD
   (do-game
     (new-game (default-contestant [(qty "Cerebral Cast" 1)])
               (default-challenger))
@@ -223,13 +223,13 @@
 	    (run-empty-server state "Archives")
 	    (take-credits state :challenger)
 	    (play-from-hand state :contestant "Cerebral Cast")
-        (prompt-chocharacter :contestant "0 [Credits]")
-        (prompt-chocharacter :challenger "0 [Credits]")
+        (prompt-choice :contestant "0 [Credits]")
+        (prompt-choice :challenger "0 [Credits]")
 	    (is (= 0 (count (:discard (get-challenger)))) "Challenger took no damage")
 		(is (= 0 (:tag (get-challenger))) "Challenger took no tags")))
 
 (deftest cerebral-cast-contestant-wins
-  ;; Cerebral Cast: if the challenger succefully ran last turn, psi game to give challenger chocharacter of tag or BD
+  ;; Cerebral Cast: if the challenger succefully ran last turn, psi game to give challenger choice of tag or BD
   (do-game
     (new-game (default-contestant [(qty "Cerebral Cast" 2)])
               (default-challenger))
@@ -237,17 +237,17 @@
 	    (run-empty-server state "Archives")
 	    (take-credits state :challenger)
 	    (play-from-hand state :contestant "Cerebral Cast")
-        (prompt-chocharacter :contestant "0 [Credits]")
-        (prompt-chocharacter :challenger "1 [Credits]")
-		(prompt-chocharacter :challenger "1 brain damage")
+        (prompt-choice :contestant "0 [Credits]")
+        (prompt-choice :challenger "1 [Credits]")
+		(prompt-choice :challenger "1 brain damage")
 	    (is (= 1 (count (:discard (get-challenger)))) "Challenger took a brain damage")
-		(is (= 0 (:tag (get-challenger))) "Challenger took no tags from brain damage chocharacter")
+		(is (= 0 (:tag (get-challenger))) "Challenger took no tags from brain damage choice")
 	    (play-from-hand state :contestant "Cerebral Cast")
-        (prompt-chocharacter :contestant "0 [Credits]")
-        (prompt-chocharacter :challenger "1 [Credits]")
-		(prompt-chocharacter :challenger "1 tag")
+        (prompt-choice :contestant "0 [Credits]")
+        (prompt-choice :challenger "1 [Credits]")
+		(prompt-choice :challenger "1 tag")
 	    (is (= 1 (count (:discard (get-challenger)))) "Challenger took no additional damage")
-		(is (= 1 (:tag (get-challenger))) "Challenger took a tag from Cerebral Cast chocharacter")))
+		(is (= 1 (:tag (get-challenger))) "Challenger took a tag from Cerebral Cast choice")))
 
 
 (deftest cerebral-static-chaos-theory
@@ -299,7 +299,7 @@
     (is (= 7 (:credit (get-contestant))) "Gained 2 for double advanced character from Commercialization")))
 
 (deftest consulting-visit
-  ;; Consulting Visit - Only show single copies of operations contestant can afford as mutherfucker. Play chosen operation
+  ;; Consulting Visit - Only show single copies of operations contestant can afford as choices. Play chosen operation
   (do-game
     (new-game (default-contestant [(qty "Consulting Visit" 1)
                              (qty "Beanstalk Royalties" 2)
@@ -312,10 +312,10 @@
     (play-from-hand state :contestant "Consulting Visit")
 
     (let [get-prompt (fn [] (first (#(get-in @state [:contestant :prompt]))))
-          prompt-names (fn [] (map #(:title %) (:mutherfucker (get-prompt))))]
+          prompt-names (fn [] (map #(:title %) (:choices (get-prompt))))]
 
       (is (= (list "Beanstalk Royalties" "Green Level Clearance" nil) (prompt-names)))
-      (prompt-chocharacter :contestant (find-card "Beanstalk Royalties" (:deck (get-contestant))))
+      (prompt-choice :contestant (find-card "Beanstalk Royalties" (:deck (get-contestant))))
       (is (= 6 (:credit (get-contestant)))))))
 
 (deftest consulting-visit-mumbad
@@ -335,16 +335,16 @@
 
     (let [hall (get-content state :remote1 0)
           get-prompt (fn [] (first (#(get-in @state [:contestant :prompt]))))
-          prompt-names (fn [] (map #(:title %) (:mutherfucker (get-prompt))))]
+          prompt-names (fn [] (map #(:title %) (:choices (get-prompt))))]
 
       (card-ability state :contestant hall 0)
       (is (= (list "Consulting Visit" "Mumba Temple" nil) (prompt-names)))
 
-      (prompt-chocharacter :contestant (find-card "Consulting Visit" (:deck (get-contestant))))
+      (prompt-choice :contestant (find-card "Consulting Visit" (:deck (get-contestant))))
       (is (= 3 (:credit (get-contestant))))
       (is (= (list "Beanstalk Royalties" "Green Level Clearance" nil) (prompt-names)))
 
-      (prompt-chocharacter :contestant (find-card "Green Level Clearance" (:deck (get-contestant))))
+      (prompt-choice :contestant (find-card "Green Level Clearance" (:deck (get-contestant))))
       (is (= 5 (:credit (get-contestant)))))))
 
 (deftest defective-brainchips
@@ -374,14 +374,14 @@
     (prompt-select :contestant (first (:hand (get-contestant))))
     (prompt-select :contestant (first (next (:hand (get-contestant)))))
     (prompt-select :contestant (first (:discard (get-contestant))))
-    (prompt-chocharacter :contestant "Done")
+    (prompt-choice :contestant "Done")
     (is (= 1 (count (:discard (get-contestant)))) "1 card still discarded")
     (is (= 1 (count (:deck (get-contestant)))) "1 card shuffled into R&D")
     (is (= 1 (count (:rfg (get-contestant)))) "Distract the Masses removed from game")
     (is (= 7 (:credit (get-challenger))) "Challenger gained 2 credits")
     (play-from-hand state :contestant "Distract the Masses")
     (prompt-select :contestant (first (:hand (get-contestant))))
-    (prompt-chocharacter :contestant "Done")
+    (prompt-choice :contestant "Done")
     (prompt-select :contestant (first (:discard (get-contestant))))
     (prompt-select :contestant (first (next (:discard (get-contestant)))))
     (is (= 0 (count (:discard (get-contestant)))) "No cards left in archives")
@@ -510,9 +510,9 @@
 
     (run-on state :remote1)
     (run-successful state)
-    (prompt-chocharacter :challenger "Steal")
+    (prompt-choice :challenger "Steal")
 
-    (prompt-chocharacter :contestant "Yes")
+    (prompt-choice :contestant "Yes")
     (prompt-select :contestant (find-card "Enhanced Login Protocol"
                                     (:discard (get-contestant))))
 
@@ -529,7 +529,7 @@
 
     (is (= 4 (:click (get-challenger))) "Challenger has 4 clicks")
     (play-from-hand state :challenger "Out of the Ashes")
-    (prompt-chocharacter :challenger "Archives")
+    (prompt-choice :challenger "Archives")
     (is (= 3 (:click (get-challenger)))
         "Challenger doesn't spend 1 additional click to run with a run event")
     (run-successful state)
@@ -541,7 +541,7 @@
 
     (take-credits state :challenger)
     (take-credits state :contestant)
-    (prompt-chocharacter :challenger "No") ; Out of the Ashes prompt
+    (prompt-choice :challenger "No") ; Out of the Ashes prompt
 
     (is (= 4 (:click (get-challenger))) "Challenger has 4 clicks")
     (run-on state :archives)
@@ -561,8 +561,8 @@
     (core/gain state :challenger :credit 2)
     (play-from-hand state :challenger "Hades Shard")
     (card-ability state :challenger (get-in @state [:challenger :rig :resource 0]) 0)
-    (prompt-chocharacter :challenger "Steal")
-    (prompt-chocharacter :contestant "Yes")
+    (prompt-choice :challenger "Steal")
+    (prompt-choice :contestant "Yes")
     (prompt-select :contestant (find-card "Enhanced Login Protocol"
                                     (:hand (get-contestant))))
     (is (find-card "Enhanced Login Protocol" (:current (get-contestant)))
@@ -585,13 +585,13 @@
 
     (run-on state :hq)
     (run-successful state)
-    (prompt-chocharacter :challenger "OK")
+    (prompt-choice :challenger "OK")
 
     (core/gain state :challenger :credit 2)
     (play-from-hand state :challenger "Hades Shard")
     (card-ability state :challenger (get-in @state [:challenger :rig :resource 0]) 0)
-    (prompt-chocharacter :challenger "Steal")
-    (prompt-chocharacter :contestant "Yes")
+    (prompt-choice :challenger "Steal")
+    (prompt-choice :contestant "Yes")
     (prompt-select :contestant (find-card "Enhanced Login Protocol"
                                     (:hand (get-contestant))))
     (is (find-card "Enhanced Login Protocol" (:current (get-contestant)))
@@ -791,30 +791,30 @@
     (core/gain state :contestant :click 3 :credit 6)
     ;; trash 2 cards
     (play-from-hand state :contestant "Invasion of Privacy")
-    (prompt-chocharacter :contestant 0) ; default trace
-    (prompt-chocharacter :challenger 0) ; Challenger won't match
+    (prompt-choice :contestant 0) ; default trace
+    (prompt-choice :challenger 0) ; Challenger won't match
     (is (= 5 (count (:hand (get-challenger)))))
     (let [get-prompt (fn [] (first (#(get-in @state [:contestant :prompt]))))
-          prompt-names (fn [] (map #(:title %) (:mutherfucker (get-prompt))))]
+          prompt-names (fn [] (map #(:title %) (:choices (get-prompt))))]
       (is (= (list "Fall Guy" "Sure Gamble" nil) (prompt-names)))
-      (prompt-chocharacter :contestant (find-card "Sure Gamble" (:hand (get-challenger))))
-      (prompt-chocharacter :contestant (find-card "Sure Gamble" (:hand (get-challenger)))))
+      (prompt-choice :contestant (find-card "Sure Gamble" (:hand (get-challenger))))
+      (prompt-choice :contestant (find-card "Sure Gamble" (:hand (get-challenger)))))
     (is (= 3 (count (:hand (get-challenger)))))
     ;; able to trash 2 cards but only 1 available target in Challenger's hand
     (play-from-hand state :contestant "Invasion of Privacy")
-    (prompt-chocharacter :contestant 0) ; default trace
-    (prompt-chocharacter :challenger 0) ; Challenger won't match
+    (prompt-choice :contestant 0) ; default trace
+    (prompt-choice :challenger 0) ; Challenger won't match
     (is (= 3 (count (:hand (get-challenger)))))
     (let [get-prompt (fn [] (first (#(get-in @state [:contestant :prompt]))))
-          prompt-names (fn [] (map #(:title %) (:mutherfucker (get-prompt))))]
+          prompt-names (fn [] (map #(:title %) (:choices (get-prompt))))]
       (is (= (list "Fall Guy" nil) (prompt-names)))
-      (prompt-chocharacter :contestant (find-card "Fall Guy" (:hand (get-challenger))))
+      (prompt-choice :contestant (find-card "Fall Guy" (:hand (get-challenger))))
       (is (empty? (get-in @state [:contestant :prompt])) "No prompt for second card"))
     (is (= 2 (count (:hand (get-challenger)))))
     ;; failed trace - take the bad publicity
     (play-from-hand state :contestant "Invasion of Privacy")
-    (prompt-chocharacter :contestant 0) ; default trace
-    (prompt-chocharacter :challenger 2) ; Challenger matches
+    (prompt-choice :contestant 0) ; default trace
+    (prompt-choice :challenger 2) ; Challenger matches
     (is (= 1 (:bad-publicity (get-contestant))))))
 
 (deftest ipo-terminal
@@ -850,7 +850,7 @@
     (is (= 5 (:credit (get-contestant))))
     (play-from-hand state :contestant "Lateral Growth")
     (prompt-select :contestant (find-card "Breaking News" (:hand (get-contestant))))
-    (prompt-chocharacter :contestant "New remote")
+    (prompt-choice :contestant "New remote")
     (is (= "Breaking News" (:title (get-content state :remote1 0)))
       "Breaking News installed by Lateral Growth")
     (is (= 7 (:credit (get-contestant))))))
@@ -881,14 +881,14 @@
     (take-credits state :contestant)
     (run-empty-server state "HQ")
     (is (:prompt (get-contestant)) "Manhunt trace initiated")
-    (prompt-chocharacter :contestant 0)
-    (prompt-chocharacter :challenger 0)
+    (prompt-choice :contestant 0)
+    (prompt-choice :challenger 0)
     (is (= 1 (:tag (get-challenger))) "Challenger took 1 tag")
-    (prompt-chocharacter :challenger "OK")
+    (prompt-choice :challenger "OK")
     (is (not (:run @state)) "Run ended")
     (run-empty-server state "HQ")
     (is (empty? (:prompt (get-contestant))) "No Manhunt trace on second run")
-    (prompt-chocharacter :challenger "OK")
+    (prompt-choice :challenger "OK")
     (is (not (:run @state)) "Run ended")))
 
 (deftest midseason-replacements
@@ -903,12 +903,12 @@
     (is (= 7 (:credit (get-contestant))))
     (let [bn (get-content state :remote1 0)]
       (run-empty-server state "Server 1")
-      (prompt-chocharacter :challenger "Steal")
+      (prompt-choice :challenger "Steal")
       (is (= 1 (:agenda-point (get-challenger))) "Stole Breaking News")
       (take-credits state :challenger)
       (play-from-hand state :contestant "Midseason Replacements")
-      (prompt-chocharacter :contestant 0) ; default trace
-      (prompt-chocharacter :challenger 0) ; Challenger won't match
+      (prompt-choice :contestant 0) ; default trace
+      (prompt-choice :challenger 0) ; Challenger won't match
       (is (= 6 (:tag (get-challenger))) "Challenger took 6 tags"))))
 
 (deftest mushin-no-shin
@@ -935,7 +935,7 @@
         (take-credits state :contestant)
         (take-credits state :challenger)
         (core/score state :contestant (refresh prof))
-        (prompt-chocharacter :contestant "0")
+        (prompt-choice :contestant "0")
         (is (= 1 (:agenda-point (get-contestant))) "Profiteering was able to be scored")))))
 
 (deftest neural-emp
@@ -1023,7 +1023,7 @@
     (core/move state :contestant (find-card "Hive" (:hand (get-contestant))) :deck)
     (core/move state :contestant (find-card "Hive" (:hand (get-contestant))) :deck)
     (play-from-hand state :contestant "Power Shutdown")
-    (prompt-chocharacter :contestant 2)
+    (prompt-choice :contestant 2)
     (is (= 3 (count (:discard (get-contestant)))) "2 cards trashed from R&D")
     (is (= 1 (count (:deck (get-contestant)))) "1 card remaining in R&D")
     (prompt-select :challenger (get-in @state [:challenger :rig :hardware 0])) ; try targeting Grimoire
@@ -1039,19 +1039,19 @@
               (default-challenger))
     (starting-hand state :contestant ["Precognition"])
     (play-from-hand state :contestant "Precognition")
-    (prompt-chocharacter :contestant (find-card "Caprcharacter Nisei" (:deck (get-contestant))))
-    (prompt-chocharacter :contestant (find-card "Adonis Campaign" (:deck (get-contestant))))
-    (prompt-chocharacter :contestant (find-card "Quandary" (:deck (get-contestant))))
-    (prompt-chocharacter :contestant (find-card "Jackson Howard" (:deck (get-contestant))))
-    (prompt-chocharacter :contestant (find-card "Global Food Initiative" (:deck (get-contestant))))
+    (prompt-choice :contestant (find-card "Caprcharacter Nisei" (:deck (get-contestant))))
+    (prompt-choice :contestant (find-card "Adonis Campaign" (:deck (get-contestant))))
+    (prompt-choice :contestant (find-card "Quandary" (:deck (get-contestant))))
+    (prompt-choice :contestant (find-card "Jackson Howard" (:deck (get-contestant))))
+    (prompt-choice :contestant (find-card "Global Food Initiative" (:deck (get-contestant))))
     ;; try starting over
-    (prompt-chocharacter :contestant "Start over")
-    (prompt-chocharacter :contestant (find-card "Global Food Initiative" (:deck (get-contestant))))
-    (prompt-chocharacter :contestant (find-card "Jackson Howard" (:deck (get-contestant))))
-    (prompt-chocharacter :contestant (find-card "Quandary" (:deck (get-contestant))))
-    (prompt-chocharacter :contestant (find-card "Adonis Campaign" (:deck (get-contestant))))
-    (prompt-chocharacter :contestant (find-card "Caprcharacter Nisei" (:deck (get-contestant)))) ;this is the top card of R&D
-    (prompt-chocharacter :contestant "Done")
+    (prompt-choice :contestant "Start over")
+    (prompt-choice :contestant (find-card "Global Food Initiative" (:deck (get-contestant))))
+    (prompt-choice :contestant (find-card "Jackson Howard" (:deck (get-contestant))))
+    (prompt-choice :contestant (find-card "Quandary" (:deck (get-contestant))))
+    (prompt-choice :contestant (find-card "Adonis Campaign" (:deck (get-contestant))))
+    (prompt-choice :contestant (find-card "Caprcharacter Nisei" (:deck (get-contestant)))) ;this is the top card of R&D
+    (prompt-choice :contestant "Done")
     (is (= "Caprcharacter Nisei" (:title (first (:deck (get-contestant))))))
     (is (= "Adonis Campaign" (:title (second (:deck (get-contestant))))))
     (is (= "Quandary" (:title (second (rest (:deck (get-contestant)))))))
@@ -1083,7 +1083,7 @@
     (play-from-hand state :contestant "Project Junebug" "New remote")
     (let [pj (get-content state :remote1 0)]
       (play-from-hand state :contestant "Psychographics")
-      (prompt-chocharacter :contestant 4)
+      (prompt-choice :contestant 4)
       (prompt-select :contestant pj)
       (is (= 1 (:credit (get-contestant))) "Spent 4 credits")
       (is (= 4 (:advance-counter (refresh pj))) "Junebug has 4 advancements"))))
@@ -1097,29 +1097,29 @@
     (starting-hand state :contestant ["Psychokinesis","Psychokinesis","Psychokinesis"])
     ;; Test installing an Upgrade
     (play-from-hand state :contestant "Psychokinesis")
-    (prompt-chocharacter :contestant (find-card "Caprcharacter Nisei" (:deck (get-contestant))))
-    (prompt-chocharacter :contestant "New remote")
+    (prompt-choice :contestant (find-card "Caprcharacter Nisei" (:deck (get-contestant))))
+    (prompt-choice :contestant "New remote")
     (is (= "Caprcharacter Nisei" (:title (get-content state :remote1 0)))
       "Caprcharacter Nisei installed by Psychokinesis")
     ;; Test installing an Asset
     (core/gain state :contestant :click 1)
     (play-from-hand state :contestant "Psychokinesis")
-    (prompt-chocharacter :contestant (find-card "Adonis Campaign" (:deck (get-contestant))))
-    (prompt-chocharacter :contestant "New remote")
+    (prompt-choice :contestant (find-card "Adonis Campaign" (:deck (get-contestant))))
+    (prompt-choice :contestant "New remote")
     (is (= "Adonis Campaign" (:title (get-content state :remote2 0)))
       "Adonis Campaign installed by Psychokinesis")
     ;; Test installing an Agenda
     (core/gain state :contestant :click 1)
     (play-from-hand state :contestant "Psychokinesis")
-    (prompt-chocharacter :contestant (find-card "Global Food Initiative" (:deck (get-contestant))))
-    (prompt-chocharacter :contestant "New remote")
+    (prompt-choice :contestant (find-card "Global Food Initiative" (:deck (get-contestant))))
+    (prompt-choice :contestant "New remote")
     (is (= "Global Food Initiative" (:title (get-content state :remote3 0)))
       "Global Food Initiative installed by Psychokinesis")
     ;; Test selecting "None"
     (core/gain state :contestant :click 1)
     (core/move state :contestant (find-card "Psychokinesis" (:discard (get-contestant))) :hand)
     (play-from-hand state :contestant "Psychokinesis")
-    (prompt-chocharacter :contestant "None")
+    (prompt-choice :contestant "None")
     (is (= nil (:title (get-content state :remote4 0)))
       "Nothing is installed by Psychokinesis")))
 
@@ -1131,12 +1131,12 @@
     (play-from-hand state :contestant "Global Food Initiative" "New remote")
     (take-credits state :contestant)
     (run-empty-server state :remote1)
-    (prompt-chocharacter :challenger "Steal")
+    (prompt-choice :challenger "Steal")
     (is (= 2 (:agenda-point (get-challenger))) "Challenger scored 2 points")
     (take-credits state :challenger)
     (play-from-hand state :contestant "Punitive Counterstrike")
-    (prompt-chocharacter :contestant 0)
-    (prompt-chocharacter :challenger 0)
+    (prompt-choice :contestant 0)
+    (prompt-choice :challenger 0)
     (is (empty? (:hand (get-challenger))) "Challenger took 3 meat damage")))
 
 (deftest reuse
@@ -1149,7 +1149,7 @@
     (prompt-select :contestant (find-card "Ice Wall" (:hand (get-contestant))))
     (prompt-select :contestant (find-card "Hive" (:hand (get-contestant))))
     (prompt-select :contestant (find-card "IQ" (:hand (get-contestant))))
-    (prompt-chocharacter :contestant "Done")
+    (prompt-choice :contestant "Done")
     (is (= 4 (count (:discard (get-contestant)))) "3 cards trashed plus operation played")
     (is (= 11 (:credit (get-contestant))) "Gained 6 credits")
     (is (= 1 (:click (get-contestant))) "Spent 2 clicks")))
@@ -1162,10 +1162,10 @@
                                (qty "Levy AR Lab Access" 1)]))
     (play-from-hand state :contestant "Salem's Hospitality")
     (is (= 5 (count (:hand (get-challenger)))))
-    (prompt-chocharacter :contestant "I've Had Worse")
+    (prompt-choice :contestant "I've Had Worse")
     (is (= 2 (count (:hand (get-challenger)))))
     (play-from-hand state :contestant "Salem's Hospitality")
-    (prompt-chocharacter :contestant "Plascrete Carapace")
+    (prompt-choice :contestant "Plascrete Carapace")
     (is (= 2 (count (:hand (get-challenger)))))))
 
 (deftest scorched-earth
@@ -1210,7 +1210,7 @@
     (prompt-select :contestant (find-card "Scorched Earth" (:hand (get-contestant))))
     (is (and (= 1 (count (:prompt (get-contestant)))) (= :waiting (-> (get-contestant) :prompt first :prompt-type)))
         "Contestant does not have Subcontract prompt until damage prevention completes")
-    (prompt-chocharacter :challenger "Done")
+    (prompt-choice :challenger "Done")
     (is (not-empty (:prompt (get-contestant))) "Contestant can now play second Subcontract operation")))
 
 (deftest subcontract-terminal
@@ -1225,8 +1225,8 @@
     (take-credits state :challenger)
     (play-from-hand state :contestant "Subcontract")
     (prompt-select :contestant (find-card "Hard-Hitting News" (:hand (get-contestant))))
-    (prompt-chocharacter :contestant 0)
-    (prompt-chocharacter :challenger 0)
+    (prompt-choice :contestant 0)
+    (prompt-choice :challenger 0)
     (is (= 5 (:tag (get-challenger))) "Challenger has 5 tags")
     (is (empty? (:prompt (get-contestant))) "Contestant does not have a second Subcontract selection prompt")))
 
@@ -1338,7 +1338,7 @@
     (play-from-hand state :challenger "Out of the Ashes")
     (is (= 3 (:credit (get-challenger)))
         "Challenger spends 1 additional credit to run with a run event")
-    (prompt-chocharacter :challenger "Archives")
+    (prompt-choice :challenger "Archives")
     (run-successful state)
 
     (run-on state :archives)
@@ -1348,7 +1348,7 @@
 
     (take-credits state :challenger)
     (take-credits state :contestant)
-    (prompt-chocharacter :challenger "No") ; Out of the Ashes prompt
+    (prompt-choice :challenger "No") ; Out of the Ashes prompt
 
     (core/lose state :challenger :credit 4)
     (is (= 4 (:click (get-challenger))) "Challenger has 4 clicks")
@@ -1371,8 +1371,8 @@
     (core/gain state :challenger :credit 3)
     (play-from-hand state :challenger "Hades Shard")
     (card-ability state :challenger (get-in @state [:challenger :rig :resource 0]) 0)
-    (prompt-chocharacter :challenger "Steal")
-    (prompt-chocharacter :contestant "Yes")
+    (prompt-choice :challenger "Steal")
+    (prompt-choice :contestant "Yes")
     (prompt-select :contestant (find-card "Servcharacter Outage" (:hand (get-contestant))))
     (is (find-card "Servcharacter Outage" (:current (get-contestant)))
         "Servcharacter Outage is in play")
@@ -1393,13 +1393,13 @@
 
     (run-on state :hq)
     (run-successful state)
-    (prompt-chocharacter :challenger "OK")
+    (prompt-choice :challenger "OK")
 
     (core/gain state :challenger :credit 3)
     (play-from-hand state :challenger "Hades Shard")
     (card-ability state :challenger (get-in @state [:challenger :rig :resource 0]) 0)
-    (prompt-chocharacter :challenger "Steal")
-    (prompt-chocharacter :contestant "Yes")
+    (prompt-choice :challenger "Steal")
+    (prompt-choice :contestant "Yes")
     (prompt-select :contestant (find-card "Servcharacter Outage" (:hand (get-contestant))))
     (is (find-card "Servcharacter Outage" (:current (get-contestant)))
         "Servcharacter Outage is in play")
@@ -1422,9 +1422,9 @@
 
     (run-on state :remote1)
     (run-successful state)
-    (prompt-chocharacter :challenger "Steal")
+    (prompt-choice :challenger "Steal")
 
-    (prompt-chocharacter :contestant "Yes")
+    (prompt-choice :contestant "Yes")
     (prompt-select :contestant (find-card "Servcharacter Outage"
                                     (:discard (get-contestant))))
 
@@ -1445,7 +1445,7 @@
     (play-from-hand state :contestant "Ice Wall" "HQ")
     (let [iwall (get-character state :hq 0)]
       (play-from-hand state :contestant "Shipment from SanSan")
-      (prompt-chocharacter :contestant "2")
+      (prompt-choice :contestant "2")
       (prompt-select :contestant iwall)
       (is (= 5 (:credit (get-contestant))))
       (is (= 2 (:advance-counter (refresh iwall)))))))
@@ -1459,9 +1459,9 @@
     (play-from-hand state :contestant "Hostile Takeover" "New remote")
     (take-credits state :contestant)
     (run-empty-server state "Server 1")
-    (prompt-chocharacter :challenger "Steal")
+    (prompt-choice :challenger "Steal")
     (run-empty-server state "Server 2")
-    (prompt-chocharacter :challenger "Steal")
+    (prompt-choice :challenger "Steal")
     (take-credits state :challenger)
     (is (= 2 (count (:scored (get-challenger)))))
     (play-from-hand state :contestant "Stock Buy-Back")
@@ -1495,9 +1495,9 @@
     (is (= 0 (count (:hand (get-contestant)))))
     (take-credits state :contestant)
     (take-credits state :challenger)
-    (prompt-chocharacter :contestant "Yes")
-    (prompt-chocharacter :contestant "Yes")
-    (prompt-chocharacter :contestant "Yes")
+    (prompt-choice :contestant "Yes")
+    (prompt-choice :contestant "Yes")
+    (prompt-choice :contestant "Yes")
     (is (= 3 (count (:hand (get-contestant)))) "All 3 Subliminals returned to HQ")
     (core/move state :contestant (find-card "Subliminal Messaging" (:hand (get-contestant))) :deck)
     (take-credits state :contestant)
@@ -1506,9 +1506,9 @@
     (let [utopia (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger utopia 0))
     (take-credits state :challenger)
-    (prompt-chocharacter :contestant "Yes")
-    (prompt-chocharacter :contestant "Yes")
-    (prompt-chocharacter :contestant "Yes")
+    (prompt-choice :contestant "Yes")
+    (prompt-choice :contestant "Yes")
+    (prompt-choice :contestant "Yes")
     (is (= 3 (count (:hand (get-contestant)))) "All 3 Subliminals returned to HQ")
     (play-from-hand state :contestant "Subliminal Messaging")
     (take-credits state :contestant)
@@ -1533,13 +1533,13 @@
     (is (= 1 (count (:hand (get-contestant)))))
     (take-credits state :contestant)
     (take-credits state :challenger)
-    (prompt-chocharacter :contestant "No")
+    (prompt-choice :contestant "No")
     (is (empty? (get-in @state [:contestant :prompt])) "Only 1 Subliminal prompt")
     (play-from-hand state :contestant "Subliminal Messaging")
     (take-credits state :contestant)
     (take-credits state :challenger)
-    (prompt-chocharacter :contestant "Yes")
-    (prompt-chocharacter :contestant "Yes")
+    (prompt-choice :contestant "Yes")
+    (prompt-choice :contestant "Yes")
     (is (empty? (get-in @state [:contestant :prompt]))
         "Only 2 Subliminal prompts - there will be a third if flag not cleared")))
 
@@ -1555,14 +1555,14 @@
       (core/rez state :contestant jhow)
       (card-ability state :contestant jhow 1)
       (prompt-select :contestant (find-card "Subliminal Messaging" (:discard (get-contestant))))
-      (prompt-chocharacter :contestant "Done")
+      (prompt-choice :contestant "Done")
       (is (= 0 (count (:discard (get-contestant)))))
       (is (= 1 (count (:rfg (get-contestant))))))
     (take-credits state :challenger)
     (play-from-hand state :contestant "Subliminal Messaging")
     (take-credits state :contestant)
     (take-credits state :challenger)
-    (prompt-chocharacter :contestant "Yes")
+    (prompt-choice :contestant "Yes")
     (is (= 1 (count (:hand (get-contestant)))) "Subliminal returned to HQ")
     (is (empty? (get-in @state [:contestant :prompt]))
         "Subliminal prompt cleared - there will be a second prompt if flag not cleared")))
@@ -1581,8 +1581,8 @@
   (is (empty? (get-in @state [:contestant :prompt])) "No prompt here because challenger made a run last turn")
   (take-credits state :contestant)
   (take-credits state :challenger)
-  (prompt-chocharacter :contestant "Yes")
-  (prompt-chocharacter :contestant "Yes")
+  (prompt-choice :contestant "Yes")
+  (prompt-choice :contestant "Yes")
   (is (= 2 (count (:hand (get-contestant)))) "Both Subliminals returned to HQ")
   (is (= 0 (count (:discard (get-contestant)))) "No Subliminals in Archives")))
 
@@ -1595,14 +1595,14 @@
     (trash-from-hand state :contestant "Subliminal Messaging")
     (take-credits state :contestant)
     (take-credits state :challenger)
-    (prompt-chocharacter :contestant "No")
-    (prompt-chocharacter :contestant "No")
+    (prompt-choice :contestant "No")
+    (prompt-choice :contestant "No")
     (is (= 0 (count (:hand (get-contestant)))) "Neither Subliminal returned to HQ")
     (is (= 2 (count (:discard (get-contestant)))) "Both Subliminals in Archives")
     (take-credits state :contestant)
     (take-credits state :challenger)
-    (prompt-chocharacter :contestant "Yes")
-    (prompt-chocharacter :contestant "Yes")
+    (prompt-choice :contestant "Yes")
+    (prompt-choice :contestant "Yes")
     (is (= 2 (count (:hand (get-contestant)))) "Both Subliminals returned to HQ")
     (is (= 0 (count (:discard (get-contestant)))) "No Subliminals in Archives")))
 
@@ -1697,7 +1697,7 @@
 
     (run-on state :remote1)
     (run-successful state)
-    (prompt-chocharacter :challenger "Yes") ;trash
+    (prompt-choice :challenger "Yes") ;trash
     (core/gain state :challenger :credit 5)
     (play-from-hand state :challenger "Desperado")
     (play-from-hand state :challenger "Corroder")
@@ -1706,14 +1706,14 @@
     (is (= 0 (:tag (get-challenger))) "Challenger starts with 0 tags")
     (play-from-hand state :contestant "Threat Assessment")
     (prompt-select :contestant (find-card "Desperado" (-> (get-challenger) :rig :hardware)))
-    (prompt-chocharacter :challenger "2 tags")
+    (prompt-choice :challenger "2 tags")
     (is (= 2 (:tag (get-challenger))) "Challenger took 2 tags")
     (is (= 1 (count (-> (get-challenger) :rig :hardware))) "Didn't trash Desperado")
     (is (= "Threat Assessment" (:title (first (:rfg (get-contestant))))) "Threat Assessment removed from game")
 
     (play-from-hand state :contestant "Threat Assessment")
     (prompt-select :contestant (find-card "Corroder" (-> (get-challenger) :rig :program)))
-    (prompt-chocharacter :challenger "Move Corroder")
+    (prompt-choice :challenger "Move Corroder")
     (is (= 2 (:tag (get-challenger))) "Challenger didn't take tags")
     (is (= "Corroder" (:title (first (:deck (get-challenger))))) "Moved Corroder to the deck")
     (is (= 2 (count (:rfg (get-contestant)))))
@@ -1735,7 +1735,7 @@
     (play-from-hand state :contestant "Oaktown Renovation" "New remote")
     (play-from-hand state :contestant "Casting Call")
     (prompt-select :contestant (find-card "Project Atlas" (:hand (get-contestant))))
-    (prompt-chocharacter :contestant "New remote")
+    (prompt-choice :contestant "New remote")
     (play-from-hand state :contestant "Hostile Takeover" "New remote")
     (let [oaktown (get-content state :remote1 0)
           atlas (get-content state :remote2 0)
@@ -1775,9 +1775,9 @@
     (let [eli (get-character state :rd 0)
           vanilla (get-character state :hq 0)]
       (play-from-hand state :contestant "Wetwork Refit")
-      (is (not-any? #{"Eli 1.0"} (get-in @state [:contestant :prompt :mutherfucker]))
-          "Unrezzed Eli 1.0 is not a chocharacter to host Wetwork Refit")
-      (prompt-chocharacter :contestant "Done")
+      (is (not-any? #{"Eli 1.0"} (get-in @state [:contestant :prompt :choices]))
+          "Unrezzed Eli 1.0 is not a choice to host Wetwork Refit")
+      (prompt-choice :contestant "Done")
 
       (take-credits state :contestant)
       (take-credits state :challenger)

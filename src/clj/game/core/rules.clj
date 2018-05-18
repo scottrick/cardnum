@@ -157,11 +157,11 @@
 (defn get-defer-damage [state side dtype {:keys [unpreventable] :as args}]
   (when-not unpreventable (get-in @state [:damage :defer-damage dtype])))
 
-(defn enable-challenger-damage-chocharacter
+(defn enable-challenger-damage-choice
   [state side]
   (swap! state assoc-in [:damage :damage-choose-challenger] true))
 
-(defn enable-contestant-damage-chocharacter
+(defn enable-contestant-damage-choice
   [state side]
   (swap! state assoc-in [:damage :damage-choose-contestant] true))
 
@@ -173,7 +173,7 @@
   [state]
   (get-in @state [:damage :damage-choose-contestant]))
 
-(defn damage-chocharacter-priority
+(defn damage-choice-priority
   "Determines which side gets to act if either or both have the ability to choose cards for damage.
   Currently just for Chronos Protocol vs Titanium Ribs"
   [state]
@@ -188,7 +188,7 @@
   prevent damage."
   [state side eid type n {:keys [unpreventable unboostable card] :as args}]
   (swap! state update-in [:damage :defer-damage] dissoc type)
-  (damage-chocharacter-priority state)
+  (damage-choice-priority state)
   (when-completed (trigger-event-sync state side :pre-resolve-damage type card n)
                   (do (when-not (or (get-in @state [:damage :damage-replace])
                                     (challenger-can-choose-damage? state))

@@ -101,7 +101,7 @@
               (default-challenger [(qty "Diwan" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Diwan")
-    (prompt-chocharacter :challenger "HQ")
+    (prompt-choice :challenger "HQ")
     (take-credits state :challenger)
     (is (= 8 (:credit (get-contestant))) "8 credits for contestant at start of second turn")
     (play-from-hand state :contestant "Ice Wall" "R&D")
@@ -183,18 +183,18 @@
     (play-from-hand state :challenger "Equivocation")
     (play-from-hand state :challenger "Desperado")
     (run-empty-server state :rd)
-    (prompt-chocharacter :challenger "Laramy Fisk: Savvy Investor")
-    (prompt-chocharacter :challenger "Yes")
+    (prompt-choice :challenger "Laramy Fisk: Savvy Investor")
+    (prompt-choice :challenger "Yes")
     (is (= 2 (count (:hand (get-contestant)))) "Contestant forced to draw by Fisk")
-    (prompt-chocharacter :challenger "Yes") ; Equivocation prompt
-    (prompt-chocharacter :challenger "Yes") ; force the draw
+    (prompt-choice :challenger "Yes") ; Equivocation prompt
+    (prompt-choice :challenger "Yes") ; force the draw
     (is (= 1 (:credit (get-challenger))) "Challenger gained 1cr from Desperado")
     (is (= 3 (count (:hand (get-contestant)))) "Contestant forced to draw by Equivocation")
-    (prompt-chocharacter :challenger "OK")
+    (prompt-choice :challenger "OK")
     (is (not (:run @state)) "Run ended")))
 
 (deftest false-echo
-  ;; False Echo - chocharacter for Contestant
+  ;; False Echo - choice for Contestant
   (do-game
     (new-game (default-contestant [(qty "Ice Wall" 3)])
               (default-challenger [(qty "False Echo" 3)]))
@@ -208,12 +208,12 @@
     (let [echo1 (get-program state 0)
           echo2 (get-program state 1)]
       (card-ability state :challenger echo1 0)
-      (prompt-chocharacter :contestant "Add to HQ")
+      (prompt-choice :contestant "Add to HQ")
       (is (= 2 (count (:hand (get-contestant)))) "Ice Wall added to HQ")
       (is (= 1 (count (:discard (get-challenger)))) "False Echo trashed")
       (run-continue state)
       (card-ability state :challenger echo2 0)
-      (prompt-chocharacter :contestant "Rez")
+      (prompt-choice :contestant "Rez")
       (is (:rezzed (get-character state :archives 0)) "Ice Wall rezzed")
       (is (= 2 (count (:discard (get-challenger)))) "False Echo trashed"))))
 
@@ -313,9 +313,9 @@
     (testing "Trashing after lose psi game"
       (run-empty-server state "HQ")
       ;; Access prompt for TFP
-      (prompt-chocharacter :challenger "Access")
-      (prompt-chocharacter :contestant "0 [Credit]")
-      (prompt-chocharacter :challenger "1 [Credit]")
+      (prompt-choice :challenger "Access")
+      (prompt-choice :contestant "0 [Credit]")
+      (prompt-choice :challenger "1 [Credit]")
       ;; Fail psi game
       (card-ability state :challenger (get-program state 0) 0)
       (is (empty? (get-in @state [:challenger :prompt])) "Should be no steal prompt for TFP")
@@ -363,8 +363,8 @@
       (is (prompt-is-card? :contestant s) "Contestant prompt is on Snowflake")
       (is (prompt-is-card? :challenger s) "Challenger prompt is on Snowflake")
       (is (= 6 (:credit (get-contestant))) "Contestant paid 1 credit to rezz Snowflake")
-      (prompt-chocharacter :contestant "1")
-      (prompt-chocharacter :challenger "1")
+      (prompt-choice :contestant "1")
+      (prompt-choice :challenger "1")
       (is (= 5 (:credit (get-contestant))) "Contestant paid 1 credit to psi game")
       (is (= 2 (:credit (get-challenger))) "Challenger did not gain 1 credit from Ixodidae when contestant spent on psi game")
       (run-continue state)
@@ -452,11 +452,11 @@
       (card-ability state :challenger pb 0)
       (prompt-select :challenger iwall)
       (is (= 3 (:click (get-challenger))) "Ice Wall not rezzed, so no click charged")
-      (prompt-chocharacter :challenger "Done") ; cancel out
+      (prompt-choice :challenger "Done") ; cancel out
       (core/rez state :contestant iwall)
       (card-ability state :challenger pb 0)
       (prompt-select :challenger iwall)
-      (prompt-chocharacter :challenger "Code Gate")
+      (prompt-choice :challenger "Code Gate")
       (is (= 2 (:click (get-challenger))) "Click charged")
       (is (= true (has? (refresh iwall) :subtype "Code Gate")) "Ice Wall gained Code Gate")
       (run-empty-server state "Archives")
@@ -516,7 +516,7 @@
           _ (take-credits state :challenger)
           orig-builder (refresh builder)
           _ (card-ability state :contestant builder 0)
-          _ (prompt-chocharacter :contestant "HQ")
+          _ (prompt-choice :contestant "HQ")
           moved-builder (get-character state :hq 1)
           _ (is (= (:current-strength orig-builder) (:current-strength moved-builder)) "Builder's state is maintained")
           orig-psite (dissoc (first (:hosted orig-builder)) :host)
@@ -599,7 +599,7 @@
     (play-from-hand state :contestant "Mark Yale" "New remote")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Plague")
-    (prompt-chocharacter :challenger "Server 1")
+    (prompt-choice :challenger "Server 1")
     (let [plague (get-in @state [:challenger :rig :program 0])]
       (run-empty-server state "Server 1")
       (is (= 2 (get-counters (refresh plague) :virus)) "Plague gained 2 counters")
@@ -663,7 +663,7 @@
     (play-from-hand state :challenger "Reaver")
     (is (= 1 (count (:hand (get-challenger)))) "One card in hand")
     (run-empty-server state "Server 1")
-    (prompt-chocharacter :challenger "Yes") ; Trash PAD campaign
+    (prompt-choice :challenger "Yes") ; Trash PAD campaign
     (is (= 2 (count (:hand (get-challenger)))) "Drew a card from trash of contestant card")
     (play-from-hand state :challenger "Fall Guy")
     (play-from-hand state :challenger "Fall Guy")
@@ -689,7 +689,7 @@
     (play-from-hand state :challenger "Freelance Coding Contract")
     (prompt-select :challenger (find-card "Snitch" (:hand (get-challenger))))
     (prompt-select :challenger (find-card "Imp" (:hand (get-challenger))))
-    (prompt-chocharacter :challenger "Done")
+    (prompt-choice :challenger "Done")
     (is (= 7 (:credit (get-challenger))) "7 credits - FCC fired")
     (is (= 0 (count (:hand (get-challenger)))) "No cards in hand")))
 
@@ -706,15 +706,15 @@
     (is (= 5 (:credit (get-challenger))) "Starts at 5 credits")
     (run-on state "HQ")
     (run-successful state)
-    (prompt-chocharacter :challenger "Yes")
-    (prompt-chocharacter :challenger 5)
-    (prompt-chocharacter :challenger "Gain 3 [Credits]")
+    (prompt-choice :challenger "Yes")
+    (prompt-choice :challenger 5)
+    (prompt-choice :challenger "Gain 3 [Credits]")
     (is (= 8 (:credit (get-challenger))) "Gained 3 credits")
-    (prompt-chocharacter :challenger "OK")
+    (prompt-choice :challenger "OK")
 
     (run-on state "R&D")
     (run-successful state)
-    (prompt-chocharacter :challenger "OK")
+    (prompt-choice :challenger "OK")
     (take-credits state :challenger)
     (take-credits state :contestant)
 
@@ -722,18 +722,18 @@
     (run-successful state)
     (run-on state "R&D")
     (run-successful state)
-    (prompt-chocharacter :challenger "No")
+    (prompt-choice :challenger "No")
     (run-on state "HQ")
     (run-successful state)
-    (prompt-chocharacter :challenger "OK")
+    (prompt-choice :challenger "OK")
     (take-credits state :challenger)
     (take-credits state :contestant)
 
     (run-on state "R&D")
     (run-successful state)
-    (prompt-chocharacter :challenger "Yes")
-    (prompt-chocharacter :challenger 2)
-    (prompt-chocharacter :challenger "OK")
+    (prompt-choice :challenger "Yes")
+    (prompt-choice :challenger 2)
+    (prompt-choice :challenger "OK")
 
     (take-credits state :challenger)
     (take-credits state :contestant)
@@ -741,10 +741,10 @@
     (is (= 0 (count (:hand (get-challenger)))) "Started with 0 cards")
     (run-on state "R&D")
     (run-successful state)
-    (prompt-chocharacter :challenger "Yes")
-    (prompt-chocharacter :challenger 3)
-    (prompt-chocharacter :challenger "Draw 2 cards")
-    (prompt-chocharacter :challenger "OK")
+    (prompt-choice :challenger "Yes")
+    (prompt-choice :challenger 3)
+    (prompt-choice :challenger "Draw 2 cards")
+    (prompt-choice :challenger "OK")
     (is (= 2 (count (:hand (get-challenger)))) "Gained 2 cards")
     (is (= 0 (count (:deck (get-challenger)))) "Cards came from deck")))
 
@@ -827,8 +827,8 @@
       (core/rez state :contestant ash)
       (card-ability state :challenger sb 0)
       (run-successful state)
-      (prompt-chocharacter :contestant 0)
-      (prompt-chocharacter :challenger 0)
+      (prompt-choice :contestant 0)
+      (prompt-choice :challenger 0)
       (is (= 3 (:credit (get-challenger))) "Gained 2 credits from Gabe's ability")
       (is (= (:cid ash) (-> (get-challenger) :prompt first :card :cid)) "Ash interrupted HQ access after Sneakdoor run")
       (is (= :hq (-> (get-challenger) :register :successful-run first)) "Successful Run on HQ recorded"))))
@@ -861,7 +861,7 @@
     (is (= 3 (:credit (get-challenger))))
     (take-credits state :contestant)
     (let [sb (get-in @state [:challenger :rig :program 0])]
-      (prompt-chocharacter :challenger "HQ")
+      (prompt-choice :challenger "HQ")
       (card-ability state :challenger sb 0)
       (run-successful state)
       (is (not (:run @state)) "Switched to HQ and ended the run from Security Testing")
@@ -883,7 +883,7 @@
       (run-on state "R&D")
       (card-ability state :challenger snitch 0)
       (is (prompt-is-card? :challenger snitch) "Option to jack out")
-      (prompt-chocharacter :challenger "Yes")
+      (prompt-choice :challenger "Yes")
       ;; rezzed character scenario
       (run-on state "HQ")
       (card-ability state :challenger snitch 0)
@@ -984,8 +984,8 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Wari")
     (run-empty-server state "HQ")
-    (prompt-chocharacter :challenger "Yes")
-    (prompt-chocharacter :challenger "Barrier")
+    (prompt-choice :challenger "Yes")
+    (prompt-choice :challenger "Barrier")
     (prompt-select :challenger (get-character state :rd 0))
     (is (= 1 (count (:discard (get-challenger)))) "Wari in heap")
     (is (not (empty? (get-in @state [:challenger :prompt]))) "Challenger is currently accessing Ice Wall")))

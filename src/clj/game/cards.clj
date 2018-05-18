@@ -3,7 +3,7 @@
 (def trash-program {:prompt "Select a program to trash"
                     :label "Trash a program"
                     :msg (msg "trash " (:title target))
-                    :mutherfucker {:req #(and (installed? %)
+                    :choices {:req #(and (installed? %)
                                          (is-type? % "Program"))}
                     :effect (effect (trash target {:cause :subroutine})
                                     (clear-wait-prompt :challenger))})
@@ -11,14 +11,14 @@
 (def trash-hardware {:prompt "Select a piece of hardware to trash"
                      :label "Trash a piece of hardware"
                      :msg (msg "trash " (:title target))
-                     :mutherfucker {:req #(and (installed? %)
+                     :choices {:req #(and (installed? %)
                                           (is-type? % "Hardware"))}
                      :effect (effect (trash target {:cause :subroutine}))})
 
 (def trash-resource-sub {:prompt "Select a resource to trash"
                          :label "Trash a resource"
                          :msg (msg "trash " (:title target))
-                         :mutherfucker {:req #(and (installed? %)
+                         :choices {:req #(and (installed? %)
                                               (is-type? % "Resource"))}
                          :effect (effect (trash target {:cause :subroutine}))})
 
@@ -26,7 +26,7 @@
                       :player :challenger
                       :label "Force the Challenger to trash an installed card"
                       :msg (msg "force the Challenger to trash " (:title target))
-                      :mutherfucker {:req #(and (installed? %)
+                      :choices {:req #(and (installed? %)
                                            (= (:side %) "Challenger"))}
                       :effect (effect (trash target {:cause :subroutine}))})
 
@@ -35,28 +35,28 @@
   triggers"
   {:effect (req (toast state :contestant "Reminder: You have unrezzed cards with \"when turn begins\" abilities." "info"))})
 
-(declare reorder-final) ; forward reference since reorder-chocharacter and reorder-final are mutually recursive
+(declare reorder-final) ; forward reference since reorder-choice and reorder-final are mutually recursive
 
-(defn reorder-chocharacter
+(defn reorder-choice
   "Generates a recursive prompt structure for cards that do reordering (Indexing, Making an Entrance, etc.)
 
   reorder-side is the side to be reordered, i.e. :contestant for Indexing and Precognition.
   wait-side is the side that has a wait prompt while ordering is in progress, i.e. :contestant for Indexing and Spy Camera.
 
-  This is part 1 - the player keeps choosing cards until there are no more available mutherfucker. A wait prompt should
+  This is part 1 - the player keeps choosing cards until there are no more available choices. A wait prompt should
   exist before calling this function. See Indexing and Making an Entrance for examples on how to call this function."
 
-  ([reorder-side cards] (reorder-chocharacter reorder-side (other-side reorder-side) cards `() (count cards) cards nil))
-  ([reorder-side wait-side remaining chosen n original] (reorder-chocharacter reorder-side wait-side remaining chosen n original nil))
+  ([reorder-side cards] (reorder-choice reorder-side (other-side reorder-side) cards `() (count cards) cards nil))
+  ([reorder-side wait-side remaining chosen n original] (reorder-choice reorder-side wait-side remaining chosen n original nil))
   ([reorder-side wait-side remaining chosen n original dest]
   {:prompt (str "Select a card to move next "
                 (if (= dest "bottom") "under " "onto ")
                 (if (= reorder-side :contestant) "R&D" "your Stack"))
-   :mutherfucker remaining
+   :choices remaining
    :delayed-completion true
    :effect (req (let [chosen (cons target chosen)]
                   (if (< (count chosen) n)
-                    (continue-ability state side (reorder-chocharacter reorder-side wait-side (remove-once #(not= target %) remaining)
+                    (continue-ability state side (reorder-choice reorder-side wait-side (remove-once #(not= target %) remaining)
                                                                  chosen n original dest) card nil)
                     (continue-ability state side (reorder-final reorder-side wait-side chosen original dest) card nil))))}))
 
@@ -71,7 +71,7 @@
                    " will be " (join  ", " (map :title (reverse chosen))) ".")
               (str "The top cards of " (if (= reorder-side :contestant) "R&D" "your Stack")
                    " will be " (join  ", " (map :title chosen)) "."))
-   :mutherfucker ["Done" "Start over"]
+   :choices ["Done" "Start over"]
    :delayed-completion true
    :effect (req
              (cond
@@ -88,7 +88,7 @@
                    (effect-completed state side eid card))
 
                :else
-               (continue-ability state side (reorder-chocharacter reorder-side wait-side original '() (count original) original dest) card nil)))}))
+               (continue-ability state side (reorder-choice reorder-side wait-side original '() (count original) original dest) card nil)))}))
 
 (defn swap-character
   "Swaps two pieces of Character."

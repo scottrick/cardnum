@@ -119,39 +119,39 @@
 
 (defn resolve-prompt
   "Resolves a prompt by invoking its effect funtion with the selected target of the prompt.
-  Triggered by a selection of a prompt chocharacter button in the UI."
-  [state side {:keys [chocharacter card] :as args}]
+  Triggered by a selection of a prompt choice button in the UI."
+  [state side {:keys [choice card] :as args}]
   (let [servercard (get-card state card)
         card (if (not= (:title card) (:title servercard))
                (@all-cards (:title card))
                servercard)
         prompt (first (get-in @state [side :prompt]))
-        mutherfucker (:mutherfucker prompt)
-        chocharacter (if (= (:mutherfucker prompt) :credit)
-                 (min chocharacter (get-in @state [side :credit]))
-                 chocharacter)]
-    (if (not= chocharacter "Cancel")
-      (if (:card-title mutherfucker) ; check the card has a :card-title function
-        (let [title-fn (:card-title mutherfucker)
-              found (some #(when (= (lower-case chocharacter) (lower-case (:title % ""))) %) (vals @all-cards))]
+        choices (:choices prompt)
+        choice (if (= (:choices prompt) :credit)
+                 (min choice (get-in @state [side :credit]))
+                 choice)]
+    (if (not= choice "Cancel")
+      (if (:card-title choices) ; check the card has a :card-title function
+        (let [title-fn (:card-title choices)
+              found (some #(when (= (lower-case choice) (lower-case (:title % ""))) %) (vals @all-cards))]
           (if found
             (if (title-fn state side (make-eid state) (:card prompt) [found])
-              (do ((:effect prompt) (or chocharacter card))
+              (do ((:effect prompt) (or choice card))
                   (finish-prompt state side prompt card))
-              (toast state side (str "You cannot choose " chocharacter " for this effect.") "warning"))
-            (toast state side (str "Could not find a card named " chocharacter ".") "warning")))
-        (do (when (= mutherfucker :credit) ; :credit prompts require payment
-              (pay state side card :credit chocharacter))
-            (when (and (map? mutherfucker)
-                       (:counter mutherfucker))
+              (toast state side (str "You cannot choose " choice " for this effect.") "warning"))
+            (toast state side (str "Could not find a card named " choice ".") "warning")))
+        (do (when (= choices :credit) ; :credit prompts require payment
+              (pay state side card :credit choice))
+            (when (and (map? choices)
+                       (:counter choices))
               ;; :Counter prompts deduct counters from the card
-              (add-counter state side (:card prompt) (:counter mutherfucker) (- chocharacter)))
+              (add-counter state side (:card prompt) (:counter choices) (- choice)))
             ;; trigger the prompt's effect function
-            ((:effect prompt) (or chocharacter card))
+            ((:effect prompt) (or choice card))
             (finish-prompt state side prompt card)))
       (do (if-let [cancel-effect (:cancel-effect prompt)]
             ;; trigger the cancel effect
-            (cancel-effect chocharacter)
+            (cancel-effect choice)
             (effect-completed state side (:eid prompt) nil))
           (finish-prompt state side prompt card)))))
 
@@ -261,7 +261,7 @@
     (when-let [cost-str (pay state side nil :click 1 :credit trash-cost {:action :contestant-trash-resource})]
       (resolve-ability state side
                        {:prompt  "Choose a resource to trash"
-                        :mutherfucker {:req (fn [card]
+                        :choices {:req (fn [card]
                                          (if (and (seq (filter (fn [c] (untrashable-while-resources? c)) (all-installed state :challenger)))
                                                   (> (count (filter #(is-type? % "Resource") (all-installed state :challenger))) 1))
                                            (and (is-type? card "Resource") (not (untrashable-while-resources? card)))

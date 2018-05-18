@@ -169,7 +169,7 @@
              prev-card
              (not (:host card)))
       (resolve-ability state side eid {:prompt (str "The " (:title prev-card) " in " server " will now be trashed.")
-                                       :mutherfucker ["OK"]
+                                       :choices ["OK"]
                                        :effect (req (system-msg state :contestant (str "trashes " (card-str state prev-card)))
                                                     (when (get-card state prev-card) ; make sure they didn't trash the card themselves
                                                     (trash state :contestant prev-card {:keep-server-alive true})))}
@@ -208,7 +208,7 @@
      (not server)
      (continue-ability state side
                        {:prompt (str "Choose a location to install " (:title card))
-                        :mutherfucker (contestant-install-list state card)
+                        :choices (contestant-install-list state card)
                         :delayed-completion true
                         :effect (effect (contestant-install eid card target args))}
                        card nil)
@@ -371,7 +371,7 @@
             (not (seq (get-in @state [:challenger :lock-install]))))
      (if-let [hosting (and (not host-card) (not facedown) (:hosting (card-def card)))]
        (continue-ability state side
-                         {:mutherfucker hosting
+                         {:choices hosting
                           :prompt (str "Choose a card to host " (:title card) " on")
                           :delayed-completion true
                           :effect (effect (challenger-install eid card (assoc params :host-card target)))}

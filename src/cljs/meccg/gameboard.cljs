@@ -1188,7 +1188,7 @@
   (reify
     om/IDidUpdate
     (did-update [this prev-props prev-state]
-      (when-let [autocomp (get-in cursor [side :prompt 0 :mutherfucker :autocomplete])]
+      (when-let [autocomp (get-in cursor [side :prompt 0 :choices :autocomplete])]
         (-> "#card-title" js/$ (.autocomplete (clj->js {"source" autocomp})))))
 
     om/IRenderState
@@ -1199,18 +1199,18 @@
          (if-let [prompt (first (:prompt me))]
            [:div.panel.blue-shade
             [:h4 (for [item (get-message-parts (:msg prompt))] (create-span item))]
-            (if-let [n (get-in prompt [:mutherfucker :number])]
+            (if-let [n (get-in prompt [:choices :number])]
               [:div
                [:div.credit-select
-                [:select#credit {:default-value (get-in prompt [:mutherfucker :default] 0)}
+                [:select#credit {:default-value (get-in prompt [:choices :default] 0)}
                  (for [i (range (inc n))]
                    [:option {:value i} i])]]
-               [:button {:on-click #(send-command "chocharacter"
-                                                  {:chocharacter (-> "#credit" js/$ .val js/parseInt)})}
+               [:button {:on-click #(send-command "choice"
+                                                  {:choice (-> "#credit" js/$ .val js/parseInt)})}
                 "OK"]]
               (cond
-                ;; chocharacter of number of credits
-                (= (:mutherfucker prompt) "credit")
+                ;; choice of number of credits
+                (= (:choices prompt) "credit")
                 [:div
                  [:div.credit-select
                   ;; Inform user of base trace / link and any bonuses
@@ -1220,42 +1220,42 @@
                       [:span (str preamble " + ")]))
                   [:select#credit (for [i (range (inc (:credit me)))]
                                     [:option {:value i} i])] " credits"]
-                 [:button {:on-click #(send-command "chocharacter"
-                                                    {:chocharacter (-> "#credit" js/$ .val js/parseInt)})}
+                 [:button {:on-click #(send-command "choice"
+                                                    {:choice (-> "#credit" js/$ .val js/parseInt)})}
                   "OK"]]
 
                 ;; auto-complete text box
-                (:card-title (:mutherfucker prompt))
+                (:card-title (:choices prompt))
                 [:div
                  [:div.credit-select
                   [:input#card-title {:placeholder "Enter a card title"
                                       :onKeyUp #(when (= 13 (.-keycode %))
                                                  (-> "#card-submit" js/$ .click)
                                                  (.stopPropagation %))}]]
-                 [:button#card-submit {:on-click #(send-command "chocharacter" {:chocharacter (-> "#card-title" js/$ .val)})}
+                 [:button#card-submit {:on-click #(send-command "choice" {:choice (-> "#card-title" js/$ .val)})}
                   "OK"]]
 
-                ;; chocharacter of specified counters on card
-                (:counter (:mutherfucker prompt))
-                (let [counter-type (keyword (:counter (:mutherfucker prompt)))
+                ;; choice of specified counters on card
+                (:counter (:choices prompt))
+                (let [counter-type (keyword (:counter (:choices prompt)))
                       num-counters (get-in prompt [:card :counter counter-type] 0)]
                   [:div
                    [:div.credit-select
                     [:select#credit (for [i (range (inc num-counters))]
                                       [:option {:value i} i])] " credits"]
-                   [:button {:on-click #(send-command "chocharacter"
-                                                      {:chocharacter (-> "#credit" js/$ .val js/parseInt)})}
+                   [:button {:on-click #(send-command "choice"
+                                                      {:choice (-> "#credit" js/$ .val js/parseInt)})}
                     "OK"]])
-                ;; otherwise chocharacter of all present mutherfucker
+                ;; otherwise choice of all present choices
                 :else
-                (for [c (:mutherfucker prompt)]
+                (for [c (:choices prompt)]
                   (when (not= c "Hide")
                     (if (string? c)
-                      [:button {:on-click #(send-command "chocharacter" {:chocharacter c})}
+                      [:button {:on-click #(send-command "choice" {:choice c})}
                        (for [item (get-message-parts c)] (create-span item))]
                       (let [[title fullCode] (extract-card-info (add-image-codes (:title c)))]
                         [:button {:class (when (:rotated c) :rotated)
-                                  :on-click #(send-command "chocharacter" {:card @c}) :id fullCode} title]))))))]
+                                  :on-click #(send-command "choice" {:card @c}) :id fullCode} title]))))))]
            (if run
              (let [s (:server run)
                    kw (keyword (first s))

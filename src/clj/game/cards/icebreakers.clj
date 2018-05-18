@@ -125,7 +125,7 @@
                                 {:req (req (seq (filter #(has-subtype? % "Deva") (:hand challenger))))
                                  :label "Swap with a deva program from your Grip" :cost [:credit 2]
                                  :prompt (str "Select a deva program in your Grip to swap with " name)
-                                 :mutherfucker {:req #(and in-hand? (has-subtype? % "Deva"))}
+                                 :choices {:req #(and in-hand? (has-subtype? % "Deva"))}
                                  :msg (msg "swap in " (:title target) " from their Grip")
                                  :effect (req (if-let [hostcard (:host card)]
                                                 (let [hosted (host state side (get-card state hostcard) target)]
@@ -232,7 +232,7 @@
 
    "Atman"
    {:prompt "How many power counters?"
-    :mutherfucker :credit
+    :choices :credit
     :msg (msg "add " target " power counters")
     :effect (effect (add-counter card :power target))
     :abilities [(break-sub 1 1)]
@@ -264,13 +264,13 @@
    (let [host-click {:cost [:click 1]
                      :label "Install a non-AI icebreaker on Baba Yaga"
                      :prompt "Choose a non-AI icebreaker in your Grip to install on Baba Yaga"
-                     :mutherfucker {:req #(and (has-subtype? % "Icebreaker")
+                     :choices {:req #(and (has-subtype? % "Icebreaker")
                                           (not (has-subtype? % "AI"))
                                           (in-hand? %))}
                      :effect (effect (challenger-install target {:host-card card}))}
          host-free {:label "Host an installed non-AI icebreaker on Baba Yaga"
                     :prompt "Choose an installed non-AI icebreaker to host on Baba Yaga"
-                    :mutherfucker {:req #(and (has-subtype? % "Icebreaker")
+                    :choices {:req #(and (has-subtype? % "Icebreaker")
                                          (not (has-subtype? % "AI"))
                                          (installed? %))}
                     :effect (req (when (host state side card target)
@@ -299,7 +299,7 @@
                              :delayed-completion true
                              :effect (effect (continue-ability :challenger
                                                {:prompt "How many subroutines are on the encountered Barrier?"
-                                                :mutherfucker {:number (req 10)}
+                                                :choices {:number (req 10)}
                                                 :delayed-completion true
                                                 :effect (effect (system-msg (str "pumps Berserker by " target " on encounter with the current Character"))
                                                                 (pump card target))} card nil))}}}
@@ -348,7 +348,7 @@
 
    "Chameleon"
    {:prompt "Choose one subtype"
-    :mutherfucker ["Barrier" "Code Gate" "Sentry"]
+    :choices ["Barrier" "Code Gate" "Sentry"]
     :msg (msg "choose " target)
     :effect (effect (update! (assoc card :subtype-target target)))
     :events {:challenger-turn-ends {:msg "add itself to Grip" :effect (effect (move card :hand))}}
@@ -390,7 +390,7 @@
    (auto-icebreaker ["Code Gate"]
                     {:prompt "Choose a server where this copy of Cyber-Cypher can be used:"
                      :msg (msg "target " target)
-                     :mutherfucker (req servers)
+                     :choices (req servers)
                      :effect (effect (update! (assoc card :server-target target)))
                      :leave-play (effect (update! (dissoc card :server-target)))
                      :abilities [(break-sub 1 1 "Code Gate")
@@ -449,7 +449,7 @@
    "Endless Hunger"
    {:abilities [{:label "Trash 1 installed card to break 1 \"End the run.\" subroutine"
                  :prompt "Select a card to trash for Endless Hunger"
-                 :mutherfucker {:req #(and (= (:side %) "Challenger") (:installed %))}
+                 :choices {:req #(and (= (:side %) "Challenger") (:installed %))}
                  :msg (msg "trash " (:title target)
                            " and break 1 \"[Subroutine] End the run.\" subroutine")
                  :effect (effect (trash target {:unpreventable true}))}]}
@@ -464,12 +464,12 @@
    "Faust"
    {:abilities [{:label "Trash 1 card from Grip to break 1 subroutine"
                  :prompt "Select a card from your grip to trash for Faust"
-                 :mutherfucker {:req in-hand?}
+                 :choices {:req in-hand?}
                  :msg (msg "trash " (:title target) " and break 1 subroutine")
                  :effect (effect (trash target {:unpreventable true}))}
                 {:label "Trash 1 card from Grip to add 2 strength"
                  :prompt "Select a card from your grip to trash for Faust"
-                 :mutherfucker {:req in-hand?}
+                 :choices {:req in-hand?}
                  :msg (msg "trash " (:title target) " and add 2 strength")
                  :effect (effect (trash target {:unpreventable true}) (pump card 2))}]}
 
@@ -477,7 +477,7 @@
    {:implementation "Stealth credit restriction not enforced"
     :abilities [(break-sub 1 1 "Sentry")
                 {:label (str "X [Credits]: +X strength for the remainder of the run (using at least 1 stealth [Credits])")
-                 :mutherfucker :credit
+                 :choices :credit
                  :prompt "How many credits?"
                  :effect (effect (pump card target :all-run))
                  :msg (msg "increase strength by " target " for the remainder of the run")}]}
@@ -485,7 +485,7 @@
    "Femme Fatale"
    (auto-icebreaker ["Sentry"]
                     {:prompt "Select a piece of Character to target for bypassing"
-                     :mutherfucker {:req character?}
+                     :choices {:req character?}
                      :leave-play (req (remove-icon state side card))
                      :effect (req (let [character target
                                         serv (zone->name (second (:zone character)))]
@@ -579,7 +579,7 @@
                                   :once :per-turn
                                   :req (req (:run @state))
                                   :prompt "Select the Code Gate you just passed and another piece of Character to swap positions"
-                                  :mutherfucker {:req #(and (installed? %) (character? %)) :max 2}
+                                  :choices {:req #(and (installed? %) (character? %)) :max 2}
                                   :msg (msg "swap the positions of " (card-str state (first targets)) " and " (card-str state (second targets)))
                                   :effect (req (when (= (count targets) 2)
                                                  (swap-character state side (first targets) (second targets))))}
@@ -594,7 +594,7 @@
                                 (resolve-ability state side
                                  {:prompt (msg "Host Knight on a piece of Character" (when hosted " not before or after the current host Character"))
                                   :cost [:click 1]
-                                  :mutherfucker {:req #(if hosted
+                                  :choices {:req #(if hosted
                                                     (and (or (when (= (:zone %) (:zone (:host k)))
                                                                (not= 1 (abs (- (character-index state %) characterpos))))
                                                              (not= (:zone %) (:zone (:host k))))
@@ -631,7 +631,7 @@
                     {:flags {:challenger-phase-12 (req (> (:credit challenger) 0))}
                      :abilities [{:label "X [Credits]: Place X power counters"
                                   :prompt "How many power counters to place on Mammon?" :once :per-turn
-                                  :mutherfucker {:number (req (:credit challenger))}
+                                  :choices {:number (req (:credit challenger))}
                                   :req (req (:challenger-phase-12 @state))
                                   :effect (effect (lose :credit target)
                                                   (add-counter card :power target))
@@ -722,7 +722,7 @@
    "Paperclip"
    (conspiracy "Paperclip" "Barrier"
                [{:label (str "X [Credits]: +X strength, break X subroutines")
-                 :mutherfucker {:number (req (:credit challenger))
+                 :choices {:number (req (:credit challenger))
                            :default (req (if current-character
                                            (max (- (:current-strength current-character)
                                                    (:current-strength card))
@@ -765,7 +765,7 @@
                                          :optional {:prompt (msg "Use Persephone's ability??")
                                                     :yes-ability {:prompt "How many subroutines resolved on the passed Character?"
                                                                   :delayed-completion true
-                                                                  :mutherfucker {:number (req 10)}
+                                                                  :choices {:number (req 10)}
                                                                   :msg (msg (if (pos? target)
                                                                               (str "trash " (:title (first (:deck challenger))) " from their Stack and trash " target " cards from R&D")
                                                                               (str "trash " (:title (first (:deck challenger))) " from their Stack and nothing from R&D")))
@@ -915,13 +915,13 @@
                                               (add-counter card :virus 1))}}
     :abilities [{:label "Add strength"
                  :prompt "Choose a card with virus counters"
-                 :mutherfucker {:req #(pos? (get-in % [:counter :virus] 0))}
+                 :choices {:req #(pos? (get-in % [:counter :virus] 0))}
                  :effect (req (let [selected-virus target
                                     yusuf card
                                     counters (get-in selected-virus [:counter :virus] 0)]
                                 (resolve-ability state side
                                                  {:prompt "Spend how many counters?"
-                                                  :mutherfucker {:number (req counters)
+                                                  :choices {:number (req counters)
                                                             :default (req 1)}
                                                   :effect (req (let [cost target]
                                                                  (resolve-ability
@@ -934,13 +934,13 @@
                                                  yusuf nil)))}
                 {:label "Break barrier subroutine(s)"
                  :prompt "Choose a card with virus counters"
-                 :mutherfucker {:req #(pos? (get-in % [:counter :virus] 0))}
+                 :choices {:req #(pos? (get-in % [:counter :virus] 0))}
                  :effect (req (let [selected-virus target
                                     yusuf card
                                     counters (get-in selected-virus [:counter :virus] 0)]
                                 (resolve-ability state side
                                                  {:prompt "Spend how many counters?"
-                                                  :mutherfucker {:number (req counters)
+                                                  :choices {:number (req counters)
                                                             :default (req 1)}
                                                   :effect (req (let [cost target]
                                                                  (resolve-ability

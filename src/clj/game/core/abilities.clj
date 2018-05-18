@@ -1,7 +1,7 @@
 (in-ns 'game.core)
 (declare any-flag-fn? contestant-trace-prompt optional-ability
          check-optional check-psi check-trace complete-ability
-         do-mutherfucker do-ability
+         do-choices do-ability
          psi-game resolve-ability-eid resolve-psi resolve-trace show-select)
 
 ;;;; Functions for implementing card abilities and prompts
@@ -51,9 +51,9 @@
   :player -- manually specifies which player the ability should affect, rather than leave it implicit.
 
   PROMPT KEYS
-  :mutherfucker -- this key signals a prompt of some kind. Can be:
+  :choices -- this key signals a prompt of some kind. Can be:
       * a 4-argument function returning a vector of cards or strings -- user chooses one option.
-        Called a 'chocharacter' prompt.
+        Called a 'choice' prompt.
       * the keyword :credit -- user chooses an integer up to their current credit amount.
       * the keyword :counter -- user chooses an integer up to the :counter value of the given card.
       * a map containing the keyword :number with a value of a 4-argument function returning an integer -- user
@@ -66,7 +66,7 @@
                on priority, with higher priorities coming first. The sort is stable, so if two prompts have the same
                priority, the prompt that was inserted first will remain first after the sort. You should rarely need
                to use a priority larger than 1.
-  :not-distinct -- true if the prompt should not collapse :mutherfucker entries of the same string to one button.
+  :not-distinct -- true if the prompt should not collapse :choices entries of the same string to one button.
                    Defaults to false.
   :cancel-effect -- if the prompt uses a Cancel button, this 4-argument function will be called if the user
                     chooses Cancel.
@@ -129,9 +129,9 @@
          ;; Ensure this ability can be triggered more than once per turn,
          ;; or has not been yet been triggered this turn.
          (if (can-trigger? state side ability card targets)
-           (if (:mutherfucker ability)
+           (if (:choices ability)
              ;; It's a prompt!
-             (do-mutherfucker state side ability card targets)
+             (do-choices state side ability card targets)
              ;; Not a prompt. Trigger the ability.
              (do-ability state side ability card targets))
            (effect-completed state side eid card))
@@ -139,11 +139,11 @@
 
 ;;; Checking functions for resolve-ability
 (defn- complete-ability
-  [state side {:keys [eid mutherfucker optional prompt delayed-completion psi trace] :as ability} card]
-  ;if it doesn't have mutherfucker and it doesn't have a true delayed-completion; or
-  ;if it does have mutherfucker and has false delayed-completion
-  (when (or (and (not mutherfucker) (not optional) (not psi) (not trace) (not delayed-completion))
-            (and (or optional psi mutherfucker trace) (false? delayed-completion)))
+  [state side {:keys [eid choices optional prompt delayed-completion psi trace] :as ability} card]
+  ;if it doesn't have choices and it doesn't have a true delayed-completion; or
+  ;if it does have choices and has false delayed-completion
+  (when (or (and (not choices) (not optional) (not psi) (not trace) (not delayed-completion))
+            (and (or optional psi choices trace) (false? delayed-completion)))
     (effect-completed state side eid card)))
 
 (defn- check-optional
@@ -170,42 +170,42 @@
       (contestant-trace-prompt state card (assoc trace :eid (:eid ability)))
       (effect-completed state side eid card))))
 
-(defn- do-mutherfucker
-  "Handle a mutherfucker ability"
-  [state side {:keys [mutherfucker player priority cancel-effect not-distinct prompt eid] :as ability}
+(defn- do-choices
+  "Handle a choices ability"
+  [state side {:keys [choices player priority cancel-effect not-distinct prompt eid] :as ability}
    card targets]
   (let [s (or player side)
-        ab (dissoc ability :mutherfucker)
+        ab (dissoc ability :choices)
         args {:priority priority :cancel-effect cancel-effect}]
-   (if (map? mutherfucker)
-     ;; Two types of mutherfucker use maps: select prompts, and :number prompts.
+   (if (map? choices)
+     ;; Two types of choices use maps: select prompts, and :number prompts.
      (cond
        ;; a counter prompt
-       (:counter mutherfucker)
-       (prompt! state s card prompt mutherfucker ab args)
+       (:counter choices)
+       (prompt! state s card prompt choices ab args)
        ;; a select prompt
-       (:req mutherfucker)
+       (:req choices)
        (show-select state s card ability args)
        ;; a :number prompt
-       (:number mutherfucker)
-       (let [n ((:number mutherfucker) state side eid card targets)
-             d (if-let [dfunc (:default mutherfucker)]
+       (:number choices)
+       (let [n ((:number choices) state side eid card targets)
+             d (if-let [dfunc (:default choices)]
                  (dfunc state side (make-eid state) card targets)
                  0)]
          (prompt! state s card prompt {:number n :default d} ab args))
-       (:card-title mutherfucker)
+       (:card-title choices)
        (prompt!
          state s card prompt
-         (assoc mutherfucker :autocomplete
-                        (sort (map :title (filter #((:card-title mutherfucker) state side (make-eid state) nil [%])
+         (assoc choices :autocomplete
+                        (sort (map :title (filter #((:card-title choices) state side (make-eid state) nil [%])
                                                   (vals @all-cards)))))
          ab (assoc args :prompt-type :card-title))
-       ;; unknown chocharacter
+       ;; unknown choice
        :else nil)
      ;; Not a map; either :credit, :counter, or a vector of cards or strings.
-     (let [cs (if-not (fn? mutherfucker)
-                mutherfucker ; :credit or :counter
-                (let [cards (mutherfucker state side eid card targets)] ; a vector of cards or strings
+     (let [cs (if-not (fn? choices)
+                choices ; :credit or :counter
+                (let [cards (choices state side eid card targets)] ; a vector of cards or strings
                   (if not-distinct cards (distinct-by :title cards))))]
        (prompt! state s card prompt cs ab args)))))
 
@@ -291,22 +291,22 @@
 
 ;;; Prompts
 (defn prompt!
-  "Shows a prompt with the given message and mutherfucker. The given ability will be resolved
+  "Shows a prompt with the given message and choices. The given ability will be resolved
   when the user resolves the prompt. Cards should generally not call this function directly; they
   should use resolve-ability to resolve a map containing prompt data.
 
-  mutherfucker can be:
+  choices can be:
   1. a vector of strings -- shows one prompt button for each string; the selected option is passed to the
         ability as target.
   2. a vector of cards -- shows one button for each card's title; the selected card is passed as target.
   3. the keyword :credit -- shows a numeric selection box with a max value equal to the player's credits.
   4. the keyword :counter -- shows a numeric selection box with a max value equal to the :counter of the card.
   5. a map with keyword :number -- shows a numeric selection box with max value equal to the :number of the map."
-  ([state side card msg mutherfucker ability] (prompt! state side card msg mutherfucker ability nil))
-  ([state side card msg mutherfucker ability args]
+  ([state side card msg choices ability] (prompt! state side card msg choices ability nil))
+  ([state side card msg choices ability args]
    (letfn [(wrap-function [args kw]
             (let [f (kw args)] (if f (assoc args kw #(f state side (:eid ability) card [%])) args)))]
-     (show-prompt state side (:eid ability) card msg mutherfucker #(resolve-ability state side ability card [%])
+     (show-prompt state side (:eid ability) card msg choices #(resolve-ability state side ability card [%])
                   (-> args
                       (wrap-function :cancel-effect)
                       (wrap-function :end-effect))))))
@@ -323,14 +323,14 @@
 (defn show-prompt
   "Engine-private method for displaying a prompt where a *function*, not a card ability, is invoked
   when the prompt is resolved. All prompts flow through this method."
-  ([state side card msg mutherfucker f] (show-prompt state side (make-eid state) card msg mutherfucker f nil))
-  ([state side card msg mutherfucker f args] (show-prompt state side (make-eid state) card msg mutherfucker f args))
-  ([state side eid card msg mutherfucker f
+  ([state side card msg choices f] (show-prompt state side (make-eid state) card msg choices f nil))
+  ([state side card msg choices f args] (show-prompt state side (make-eid state) card msg choices f args))
+  ([state side eid card msg choices f
     {:keys [priority prompt-type show-discard cancel-effect end-effect] :as args}]
    (let [prompt (if (string? msg) msg (msg state side nil card nil))
          newitem {:eid eid
                   :msg prompt
-                  :mutherfucker mutherfucker
+                  :choices choices
                   :effect f
                   :card card
                   :prompt-type prompt-type
@@ -339,21 +339,21 @@
                   :cancel-effect cancel-effect
                   :end-effect end-effect}]
      (when (or (= prompt-type :waiting)
-               (:number mutherfucker)
-               (:card-title mutherfucker)
-               (#{:credit :counter} mutherfucker)
-               (pos? (count mutherfucker)))
+               (:number choices)
+               (:card-title choices)
+               (#{:credit :counter} choices)
+               (pos? (count choices)))
        (add-to-prompt-queue state side newitem)))))
 
 (defn- show-trace-prompt
   "Specific function for displaying a trace prompt. Works like `show-prompt` with some extensions.
-  Always uses `:credit` as the `mutherfucker` variable, and passes on some extra properties, such as base and bonus."
+  Always uses `:credit` as the `choices` variable, and passes on some extra properties, such as base and bonus."
   ([state side card msg f args] (show-trace-prompt state side (make-eid state) card msg f args))
   ([state side eid card msg f {:keys [priority base bonus] :as args}]
    (let [prompt (if (string? msg) msg (msg state side nil card nil))
          newitem {:eid eid
                   :msg prompt
-                  :mutherfucker :credit
+                  :choices :credit
                   :effect f
                   :card card
                   :priority priority
@@ -370,24 +370,24 @@
    ;; that can be selected.
    (letfn [(wrap-function [args kw]
              (let [f (kw args)] (if f (assoc args kw #(f state side (:eid ability) card [%])) args)))]
-     (let [ability (update-in ability [:mutherfucker :max] #(if (fn? %) (% state side (make-eid state) card nil) %))
-           all (get-in ability [:mutherfucker :all])]
+     (let [ability (update-in ability [:choices :max] #(if (fn? %) (% state side (make-eid state) card nil) %))
+           all (get-in ability [:choices :all])]
        (swap! state update-in [side :selected]
-              #(conj (vec %) {:ability (dissoc ability :mutherfucker) :req (get-in ability [:mutherfucker :req])
-                              :max (get-in ability [:mutherfucker :max])
+              #(conj (vec %) {:ability (dissoc ability :choices) :req (get-in ability [:choices :req])
+                              :max (get-in ability [:choices :max])
                               :all all}))
        (show-prompt state side card
                     (if-let [msg (:prompt ability)]
                       msg
-                      (if-let [m (get-in ability [:mutherfucker :max])]
+                      (if-let [m (get-in ability [:choices :max])]
                         (str "Select up to " m " targets for " (:title card))
                         (str "Select a target for " (:title card))))
                     (if all ["Hide"] ["Done"])
                     (if all
-                      (fn [chocharacter]
-                        (toast state side (str "You must choose " (get-in ability [:mutherfucker :max])))
+                      (fn [choice]
+                        (toast state side (str "You must choose " (get-in ability [:choices :max])))
                         (show-select state side card ability args))
-                      (fn [chocharacter] (resolve-select state side)))
+                      (fn [choice] (resolve-select state side)))
                     (-> args
                         (assoc :prompt-type :select :show-discard (:show-discard ability))
                         (wrap-function :cancel-effect)))))))
@@ -428,20 +428,20 @@
 ;;; Psi games
 
 (defn show-prompt-with-dcharacter
-  "Calls show-prompt normally, but appends a 'roll d6' button to mutherfucker.
+  "Calls show-prompt normally, but appends a 'roll d6' button to choices.
   If user chooses to roll d6, reveal the result to user and re-display
   the prompt without the 'roll d6 button'."
-  ([state side card msg other-mutherfucker f]
-   (show-prompt state side card msg other-mutherfucker f nil))
-  ([state side card msg other-mutherfucker f args]
+  ([state side card msg other-choices f]
+   (show-prompt state side card msg other-choices f nil))
+  ([state side card msg other-choices f args]
    (let [dcharacter-msg "Roll a d6",
-         mutherfucker (conj other-mutherfucker dcharacter-msg)]
-     (show-prompt state side card msg mutherfucker
+         choices (conj other-choices dcharacter-msg)]
+     (show-prompt state side card msg choices
                   #(if (not= % dcharacter-msg)
                      (f %)
                      (show-prompt state side card
                                   (str msg " (Dcharacter result: " (inc (rand-int 6)) ")")
-                                  other-mutherfucker f args))
+                                  other-choices f args))
                   args))))
 
 (defn psi-game
@@ -541,7 +541,7 @@
    (move state side card :rfg)
    (continue-ability state side
                     {:show-discard  true
-                     :mutherfucker       {:max n
+                     :choices       {:max n
                                      :req #(and (= (:side %) "Contestant")
                                                 (= (:zone %) [:discard]))}
                      :msg           (msg "shuffle "

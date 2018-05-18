@@ -33,10 +33,10 @@
             fg (first (:hosted (refresh apt)))]
         (card-ability state :challenger ns 0)
         (is (= 5 (:credit (get-challenger))) "Challenger paid 1c to survive Neural EMP")
-        (prompt-chocharacter :challenger "Done")
+        (prompt-choice :challenger "Done")
         (play-from-hand state :contestant "SEA Source")
-        (prompt-chocharacter :contestant 3)                             ; boost trace to 6
-        (prompt-chocharacter :challenger 0)
+        (prompt-choice :contestant 3)                             ; boost trace to 6
+        (prompt-choice :challenger 0)
         (is (= 1 (:tag (get-challenger))) "Challenger took tag from SEA Source")
         (is (= 7 (:credit (get-contestant))))
         (core/trash-resource state :contestant nil)
@@ -88,11 +88,11 @@
       (run-on state "HQ")
       (core/rez state :contestant ash)
       (run-successful state)
-      (prompt-chocharacter :contestant 0)
-      (prompt-chocharacter :challenger 0)
+      (prompt-choice :contestant 0)
+      (prompt-choice :challenger 0)
       (is (and (= 2 (:credit (get-challenger))) (= 7 (:credit (get-contestant))))
           "Desperado paid 1 to Challenger, Lamprey took 1 from Contestant")
-      (prompt-chocharacter :challenger "No") ; can't afford to trash Ash
+      (prompt-choice :challenger "No") ; can't afford to trash Ash
       (take-credits state :challenger)
       (play-from-hand state :contestant "Caprcharacter Nisei" "Server 1")
       (is (= 11 (:credit (get-contestant))) "Gained 3 from Adonis and 1 from HB:EtF")
@@ -101,15 +101,15 @@
       (is (= 3 (:credit (get-challenger))) "Gained 1 from Data Folding")
       (core/gain state :challenger :click 2)
       (run-empty-server state "HQ")
-      (prompt-chocharacter :contestant 0)
-      (prompt-chocharacter :challenger 0)
-      (prompt-chocharacter :challenger "Yes") ; trash Ash
+      (prompt-choice :contestant 0)
+      (prompt-choice :challenger 0)
+      (prompt-choice :challenger "Yes") ; trash Ash
       (is (and (= 1 (:credit (get-challenger))) (= 11 (:credit (get-contestant)))))
       (core/gain state :challenger :credit 1)
       (play-from-hand state :challenger "Dirty Laundry")
-      (prompt-chocharacter :challenger "HQ")
+      (prompt-choice :challenger "HQ")
       (run-successful state)
-      (prompt-chocharacter :challenger "Steal")
+      (prompt-choice :challenger "Steal")
       (is (= 2 (:agenda-point (get-challenger))) "Stole Global Food Initiative")
       (is (and (= 6 (:credit (get-challenger))) (= 10 (:credit (get-contestant))))
           "Desperado plus Dirty Laundry, Lamprey took 1 from Contestant")
@@ -126,6 +126,6 @@
         (core/rez state :contestant cap)
         (run-continue state)
         ;; Caprcharacter psi game started automatically
-        (prompt-chocharacter :contestant "1 [Credits]")
-        (prompt-chocharacter :challenger "2 [Credits]")
+        (prompt-choice :contestant "1 [Credits]")
+        (prompt-choice :challenger "2 [Credits]")
         (is (not (:run @state)) "Contestant won Caprcharacter psi game and ended the run")))))
