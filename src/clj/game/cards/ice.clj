@@ -1144,6 +1144,9 @@
    "Lancelot"
    (grail-character trash-program)
 
+   "Lieutenant of Morgul"
+   {:subroutines [end-the-run]}
+
    "Little Engine"
    {:subroutines [end-the-run
                   {:msg "make the Challenger gain 5 [Credits]" :effect (effect (gain :challenger :credit 5))}]}
@@ -1444,6 +1447,9 @@
                              (lose state :challenger :click 1)
                              (swap! state update-in [:contestant :extra-click-temp] (fnil inc 0)))}]}
 
+   "Orc Tracker"
+   {:subroutines [end-the-run]}
+
    "Orion"
    ;; TODO: wormhole subroutine
    (implementation-note "\"Resolve a subroutine...\" subroutine is not implemented"
@@ -1717,6 +1723,9 @@
 
    "Taurus"
    (constellation-character trash-hardware)
+
+   "The Grimburgoth"
+   {:subroutines [end-the-run]}
 
    "Thoth"
    {:implementation "Encounter effect is manual"

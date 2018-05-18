@@ -1,6 +1,6 @@
 (in-ns 'game.core)
 
-(declare all-active card-flag-fn? clear-turn-register! clear-wait-prompt create-deck hand-size keep-hand mulligan
+(declare all-active card-flag-fn? clear-turn-register! clear-wait-prompt create-pool create-deck hand-size keep-hand mulligan
          show-wait-prompt turn-message)
 
 (def game-states (atom {}))
@@ -28,8 +28,8 @@
     (gain state side :link baselink)))
 
 (defn- init-hands [state]
-  (draw state :contestant 8 {:suppress-event true})
-  (draw state :challenger 8 {:suppress-event true})
+  ;;(draw state :contestant 8 {:suppress-event true})
+  ;;(draw state :challenger 8 {:suppress-event true})
   (when (and (-> @state :contestant :identity :title)
              (-> @state :challenger :identity :title))
     (show-wait-prompt state :challenger "Contestant to keep hand or mulligan"))
@@ -46,6 +46,8 @@
   [{:keys [players gameid spectatorhands room] :as game}]
   (let [contestant (some #(when (= (:side %) "Contestant") %) players)
         challenger (some #(when (= (:side %) "Challenger") %) players)
+        contestant-pool (create-pool (:deck contestant) (:user contestant))
+        challenger-pool (create-pool (:deck challenger) (:user challenger))
         contestant-deck (create-deck (:deck contestant) (:user contestant))
         challenger-deck (create-deck (:deck challenger) (:user challenger))
         contestant-deck-id (get-in contestant [:deck :_id])
@@ -66,19 +68,20 @@
                         :options contestant-options
                         :deck (zone :deck contestant-deck)
                         :deck-id contestant-deck-id
-                        :hand []
+                        :hand (zone :hand contestant-pool)
                         :discard [] :scored [] :rfg [] :play-area []
                         :servers {:hq {} :rd{} :archives {}}
                         :click 0 :credit 5 :bad-publicity 0 :has-bad-pub 0
                         :toast []
                         :hand-size-base 8 :hand-size-modification 0
                         :agenda-point 0
-                        :click-per-turn 3 :agenda-point-req 7 :keep false}
+                        :click-per-turn 3 :agenda-point-req 7 :keep false
+                        :pass false :drafted false}
                  :challenger {:user (:user challenger) :identity challenger-identity
                           :options challenger-options
                           :deck (zone :deck challenger-deck)
                           :deck-id challenger-deck-id
-                          :hand []
+                          :hand (zone :hand challenger-pool)
                           :discard [] :scored [] :rfg [] :play-area []
                           :rig {:program [] :resource [] :hardware []}
                           :toast []
@@ -86,7 +89,8 @@
                           :hand-size-base 8 :hand-size-modification 0
                           :agenda-point 0
                           :hq-access 1 :rd-access 1 :tagged 0
-                          :brain-damage 0 :click-per-turn 4 :agenda-point-req 7 :keep false}})]
+                          :brain-damage 0 :click-per-turn 4 :agenda-point-req 7 :keep false
+                          :pass false :drafted false}})]
     (init-identity state :contestant contestant-identity)
     (init-identity state :challenger challenger-identity)
     (swap! game-states assoc gameid state)
@@ -114,6 +118,18 @@
   "Resets a card back to its original state overlaid with any play-state data"
   ([state side card]
    (update! state side (merge card (make-card (get @all-cards (:title card)) (:cid card))))))
+
+(defn create-pool
+  "Creates a the character pool for the character draft from the pool
+  section of the deck.  These will be loaded into the hand"
+  ([deck] (create-pool deck nil))
+  ([deck user]
+   (mapcat #(map (fn [card]
+                            (let [server-card (or (server-card (:title card) user) card)
+                                  c (assoc (make-card server-card) :art (:art card))]
+                              (if-let [init (:init (card-def c))] (merge c init) c)))
+                          (repeat (:qty %) (assoc (:card %) :art (:art %))))
+                    (vec (:pool deck)))))
 
 (defn create-deck
   "Creates a shuffled draw deck (R&D/Stack) from the given list of cards.
