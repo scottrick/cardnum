@@ -242,14 +242,15 @@
         ;; Challenger side
         (= side :challenger)
         (case (first zone)
-          "hand" (if (:host card)
-                   (when (:installed card)
-                     (handle-abilities card owner))
+          "hand" (case type
+                   ("Upgrade" "Character") (if root
+                                       (send-command "play" {:card card :server root})
+                                       (-> (om/get-node owner "servers") js/$ .toggle))
+                   ("Agenda" "Asset") (if (< (count (get-in @game-state [:contestant :servers])) 4)
+                                        (send-command "play" {:card card :server "New remote"})
+                                        (-> (om/get-node owner "servers") js/$ .toggle))
                    (send-command "play" {:card card}))
-          ("rig" "current" "onhost" "play-area") (handle-abilities card owner)
-          ("servers") (when (and (= type "Character") (:rezzed card))
-                        ;; Character that should show list of abilities that send messages to fire sub
-                        (-> (om/get-node owner "challenger-abilities") js/$ .toggle))
+          ("servers" "scored" "current" "onhost") (handle-abilities card owner)
           nil)
         ;; Contestant side
         (= side :contestant)
@@ -920,7 +921,7 @@
                            [:div.unseen (om/build card-view %)]
                            (facedown-card "challenger")))]
         [:div.blue-shade.discard
-         (drop-area :contestant "Heap" {:on-click #(-> (om/get-node owner "popup") js/$ .fadeToggle)})
+         (drop-area :challenger "Heap" {:on-click #(-> (om/get-node owner "popup") js/$ .fadeToggle)})
 
          (when-not (empty? discard) (draw-card (last discard)))
 
@@ -1156,7 +1157,7 @@
       (let [servers (:servers player)
             s (:server run)
             server-type (first s)]
-        [:div.challenger-board {:class (if (= (:side @game-state) :challenger) "opponent" "me")}
+        [:div.challenger-board {:class (if (= (:side @game-state) :contestant) "opponent" "me")}
          (for [server (reverse (get-remotes servers))
                :let [num (remote->num (first server))]]
            (om/build server-view {:server (second server)
@@ -1417,7 +1418,7 @@
 
             [:div.leftpane
              [:div.opponent
-              (om/build hand-view {:player opponent :remotes (get-remotes (:servers contestant))
+              (om/build hand-view {:player opponent :remotes (get-remotes (:servers (if (= side :challenger) contestant challenger)))
                                    :popup (= side :spectator) :popup-direction "opponent"})]
 
 
@@ -1449,7 +1450,7 @@
               ]
 
              [:div.me
-              (om/build hand-view {:player me :remotes (get-remotes (:servers contestant))
+              (om/build hand-view {:player me :remotes (get-remotes (:servers (if (= side :challenger) challenger contestant)))
                                    :popup true :popup-direction "me"})]]]))))))
 
 (om/root gameboard game-state {:target (. js/document (getElementById "gameboard"))})

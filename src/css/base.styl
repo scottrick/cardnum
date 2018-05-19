@@ -1712,33 +1712,6 @@ nav ul
     .card-wrapper
       margin: 3px 6px
 
-    .challenger-board
-      flex(1)
-      display-flex()
-      flex-direction(column)
-
-      > div
-        display-flex()
-
-        &:first-child
-          margin-top: auto
-
-      .challenger-centrals
-        padding: 5px 0
-        display-flex()
-
-        .deck, .discard, .identity
-          margin-left: 16px
-          margin-right: 16px
-
-    .challenger-board.opponent
-      opacity: 0.99
-      > div:first-child
-        margin-top: 0
-
-      > div:last-child
-        margin-bottom: auto
-
     .contestant-board
       flex(1)
       display-flex()
@@ -1866,6 +1839,169 @@ nav ul
           display-flex()
 
     .contestant-board.opponent .server
+      transform(initial)
+
+      .content
+        transform(initial)
+
+      .strength
+        transform(rotate(-90deg))
+
+      .icon
+        transform(rotate(-90deg))
+
+      .characters
+        opacity: 0.99
+        flex-direction(column)
+        transform(rotate(180deg), translateY(0%))
+
+        .subtype-target
+          transform(rotate(-90deg), translateY(-100%))
+
+        .hosted
+          .card-frame
+            transform(rotate(-90deg))
+
+          .counters
+            transform(rotate(90deg))
+
+          .abilities, .challenger-abilities
+            top: 100%
+            bottom: auto
+
+        .counter
+          transform(rotate(-90deg))
+
+        .run-card
+          transform(initial)
+
+    .challenger-board
+      flex(1)
+      display-flex()
+      flex-direction(row-reverse)
+      justify-content(flex-end)
+
+      .server
+        position: relative
+        min-width: 84px
+        margin: 0 4px
+        transform(rotate(180deg))
+        display-flex()
+        flex-direction(column-reverse)
+        justify-content(flex-end)
+        align-items(center)
+
+        .characters
+          position: relative
+          display-flex()
+          flex-direction(column-reverse)
+          justify-content(flex-end)
+          align-items(center)
+
+          .run-card
+            margin-top: 100px
+            transform(rotate(180deg))
+
+          .run-arrow
+            position: relative
+            top: 20px
+            animation: fadein 0.5s
+
+            > div
+              position: absolute
+              left: 50%
+              top: 0
+              bottom: -70px
+              width: 16px
+              background-color: transparent-orange
+              transform(translateX(-50%))
+              border-radius: 0 0 4px 4px
+
+              &:before
+                content: ""
+                display: block
+                position: absolute
+                right: 8px
+                width: 0
+                height: 0
+                border-left: 16px solid transparent
+                border-right: 16px solid transparent
+                bottom: 100%
+                left: 50%
+                transform(translateX(-50%))
+                border-bottom: 22px solid transparent-orange
+
+          .character
+            margin: -7px 0
+            transform(rotate(-180deg))
+            cursor: pointer
+
+            &.host
+              margin-bottom: 5px
+
+            .run-arrow
+              top: auto
+              bottom: 42px
+              left: 57px
+              transform: rotate(-90deg)
+
+          .hosted
+            margin-top: -69px
+            flex-direction(column)
+
+            .card-frame
+              margin-left: 0
+              transform(rotate(90deg))
+
+              &:not(:first-child)
+                margin-top: -42px
+
+              .counters
+                transform(rotate(-90deg))
+
+              .abilities, .contestant-abilities
+                top: auto
+                bottom: 100%
+                left: 0
+                margin: 6px -1px
+                transform(initial)
+
+          .strength
+            transform(rotate(90deg))
+
+          .subtype-target
+            transform(rotate(90deg), translateX(100%))
+            transform-origin(100% 0)
+
+          .icon
+            transform(rotate(90deg))
+
+          .counter
+            transform(rotate(90deg))
+
+          .abilities, .challenger-abilities
+            left: 100%
+            margin: -1px 6px
+
+          .abilities
+            top: 0
+            bottom: auto
+            transform(rotate(90deg) translateY(-100%))
+            transform-origin(0 0)
+
+          .contestant-abilities
+            bottom: 0
+            transform(rotate(-90deg) translateY(100%))
+            transform-origin(0 100%)
+
+        .content
+          position: relative
+          min-height: 84px
+          margin: 5px
+          transform(rotate(180deg))
+          display-flex()
+
+    .challenger-board.opponent .server
       transform(initial)
 
       .content
