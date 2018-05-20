@@ -237,7 +237,7 @@
         (send-command "select" {:card card})
         ;; Card is an identity of player's side
         (and (= (:type card) "Identity")
-             (= side (keyword (.toLowerCase ("Challenger")))))
+             (= side (keyword (:side card))))
         (handle-abilities card owner)
         ;; Challenger side
         (= side :challenger)
@@ -246,7 +246,7 @@
                    ("Upgrade" "Character") (if root
                                        (send-command "play" {:card card :server root})
                                        (-> (om/get-node owner "servers") js/$ .toggle))
-                   ("Agenda" "Asset") (if (< (count (get-in @game-state [:contestant :servers])) 4)
+                   ("Agenda" "Asset") (if (< (count (get-in @game-state [:challenger :servers])) 4)
                                         (send-command "play" {:card card :server "New remote"})
                                         (-> (om/get-node owner "servers") js/$ .toggle))
                    (send-command "play" {:card card}))
