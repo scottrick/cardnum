@@ -181,6 +181,12 @@
   "Display a toast warning with the specified message.
   Sends a command to clear any server side toasts."
   [msg type options]
+  true)
+
+(defn toast-old
+  "Display a toast warning with the specified message.
+  Sends a command to clear any server side toasts."
+  [msg type options]
   (set! (.-options js/toastr) (toastr-options options))
   (let [f (aget js/toastr (if (= "exception" type) "error" type))]
     (f (if (= "exception" type) (build-exception-msg msg (:last-error @game-state)) msg))

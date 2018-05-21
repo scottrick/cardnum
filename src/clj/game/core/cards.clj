@@ -110,16 +110,16 @@
          (doseq [s [:challenger :contestant]]
            (if host
              (remove-from-host state side card)
-             (swap! state update-in (cons s (vec zone)) (fn [coll] (remove-once #(not= (:cid %) cid) coll)))))
-         (let [z (vec (cons :contestant (butlast zone)))]
-           (when (and (not keep-server-alive)
-                      (is-remote? z)
-                      (empty? (get-in @state (conj z :content)))
-                      (empty? (get-in @state (conj z :characters))))
-             (when-let [run (:run @state)]
-               (when (= (last (:server run)) (last z))
-                 (handle-end-run state side)))
-             (swap! state dissoc-in z)))
+             (swap! state update-in (cons s (vec zone)) (fn [coll] (remove-once #(not= (:cid %) cid) coll))))
+           (let [z (vec (cons s (butlast zone)))]
+             (when (and (not keep-server-alive)
+                        (is-remote? z)
+                        (empty? (get-in @state (conj z :content)))
+                        (empty? (get-in @state (conj z :characters))))
+               (when-let [run (:run @state)]
+                 (when (= (last (:server run)) (last z))
+                   (handle-end-run state side)))
+               (swap! state dissoc-in z))))
          (when-let [card-moved (:move-zone (card-def c))]
            (card-moved state side (make-eid state) moved-card card))
          (trigger-event state side :card-moved card moved-card)

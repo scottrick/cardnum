@@ -65,31 +65,31 @@
                  :sfx [] :sfx-current-id 0
                  :options {:spectatorhands spectatorhands}
                  :contestant {:user (:user contestant) :identity contestant-identity
-                        :options contestant-options
-                        :deck (zone :deck contestant-deck)
-                        :deck-id contestant-deck-id
-                        :hand (zone :hand contestant-pool)
-                        :discard [] :scored [] :rfg [] :play-area []
-                        :servers {:hq {} :rd {} :archives {}}
-                        :click 0 :credit 5 :bad-publicity 0 :has-bad-pub 0
-                        :toast []
-                        :hand-size-base 8 :hand-size-modification 0
-                        :agenda-point 0
-                        :click-per-turn 3 :agenda-point-req 7 :keep false}
+                              :options contestant-options
+                              :deck (zone :deck contestant-deck)
+                              :deck-id contestant-deck-id
+                              :hand (zone :hand contestant-pool)
+                              :discard [] :scored [] :rfg [] :play-area []
+                              :servers {}
+                              :click 0 :credit 5 :bad-publicity 0 :has-bad-pub 0
+                              :toast []
+                              :hand-size-base 8 :hand-size-modification 0
+                              :agenda-point 0
+                              :click-per-turn 3 :agenda-point-req 7 :keep false}
                  :challenger {:user (:user challenger) :identity challenger-identity
-                          :options challenger-options
-                          :deck (zone :deck challenger-deck)
-                          :deck-id challenger-deck-id
-                          :hand (zone :hand challenger-pool)
-                          :discard [] :scored [] :rfg [] :play-area []
-                          :servers {}
-                          :rig {:program [] :resource [] :hardware []}
-                          :toast []
-                          :click 0 :credit 5 :run-credit 0 :memory 4 :link 0 :tag 0
-                          :hand-size-base 8 :hand-size-modification 0
-                          :agenda-point 0
-                          :hq-access 1 :rd-access 1 :tagged 0
-                          :brain-damage 0 :click-per-turn 4 :agenda-point-req 7 :keep false}})]
+                              :options challenger-options
+                              :deck (zone :deck challenger-deck)
+                              :deck-id challenger-deck-id
+                              :hand (zone :hand challenger-pool)
+                              :discard [] :scored [] :rfg [] :play-area []
+                              :servers {}
+                              :rig {:program [] :resource [] :hardware []}
+                              :toast []
+                              :click 0 :credit 5 :run-credit 0 :memory 4 :link 0 :tag 0
+                              :hand-size-base 8 :hand-size-modification 0
+                              :agenda-point 0
+                              :hq-access 1 :rd-access 1 :tagged 0
+                              :brain-damage 0 :click-per-turn 4 :agenda-point-req 7 :keep false}})]
     (init-identity state :contestant contestant-identity)
     (init-identity state :challenger challenger-identity)
     (swap! game-states assoc gameid state)
