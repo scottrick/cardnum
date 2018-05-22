@@ -14,7 +14,7 @@
   ([state side server run-effect card] (run state side (make-eid state) server run-effect card))
   ([state side eid server run-effect card]
    (when (can-run? state :challenger)
-     (let [s [(if (keyword? server) server (last (server->zone state server)))]
+     (let [s [(if (keyword? server) server (last (server->zone state server nil)))]
            characters (get-in @state (concat [:contestant :servers] s [:characters]))
            n (count characters)]
        ;; s is a keyword for the server, like :hq or :remote1

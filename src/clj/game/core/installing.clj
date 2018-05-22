@@ -220,7 +220,7 @@
      (let [cdef (card-def card)
            slot (if host-card
                   (:zone host-card)
-                  (conj (server->zone state server) (if (character? card) :characters :content)))
+                  (conj (server->zone state server card) (if (character? card) :characters :content)))
            dest-zone (get-in @state (cons :contestant slot))]
        ;; trigger :pre-contestant-install before computing install costs so that
        ;; event handlers may adjust the cost.

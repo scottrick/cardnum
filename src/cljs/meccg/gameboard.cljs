@@ -536,11 +536,11 @@
                         (clojure.string/join "" (repeat (second c) (str "[" (capitalize (name (first c))) "]"))))))) ": ")))
 
 (defn remote->num [server]
-  (-> server str (clojure.string/split #":remote") last js/parseInt))
+  (-> server str (clojure.string/replace #":remote" "")))
 
 (defn remote->name [server]
   (let [num (remote->num server)]
-    (str "Server " num)))
+    (str "" num)))
 
 (defn central->name [zone]
   "Converts a central zone keyword to a string."

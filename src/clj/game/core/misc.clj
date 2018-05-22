@@ -25,15 +25,15 @@
       (zones->sorted-names (get-zones @state)))
     ["New remote"]))
 
-(defn server->zone [state server]
+(defn server->zone [state server party-head]
   (if (sequential? server)
     (vec (cons :servers server))
     (case server
       "HQ" [:servers :hq]
       "R&D" [:servers :rd]
       "Archives" [:servers :archives]
-      "New remote" [:servers (keyword (str "remote" (make-rid state)))]
-      [:servers (->> (split server #" ") last (str "remote") keyword)])))
+      "New remote" [:servers (keyword (str "remote" (make-rid state) " " (:title party-head)))]
+      [:servers (->> server (str "remote") keyword)])))
 
 (defn same-server? [card1 card2]
   "True if the two cards are IN or PROTECTING the same server."
