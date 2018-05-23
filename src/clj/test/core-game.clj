@@ -3,14 +3,14 @@
 (deftest contestant-rez-unique
   ;; Rezzing a second copy of a unique Contestant card
   (do-game
-    (new-game (default-contestant [(qty "Caprice Nisei" 2)])
+    (new-game (default-contestant [(qty "Caprcharacter Nisei" 2)])
               (default-challenger))
-    (play-from-hand state :contestant "Caprice Nisei" "HQ")
-    (play-from-hand state :contestant "Caprice Nisei" "R&D")
+    (play-from-hand state :contestant "Caprcharacter Nisei" "HQ")
+    (play-from-hand state :contestant "Caprcharacter Nisei" "R&D")
     (core/rez state :contestant (get-content state :hq 0))
-    (is (:rezzed (get-content state :hq 0)) "First Caprice rezzed")
+    (is (:rezzed (get-content state :hq 0)) "First Caprcharacter rezzed")
     (core/rez state :contestant (get-content state :rd 0))
-    (is (not (:rezzed (get-content state :rd 0))) "Second Caprice could not be rezzed")))
+    (is (not (:rezzed (get-content state :rd 0))) "Second Caprcharacter could not be rezzed")))
 
 (deftest challenger-install-program
   ;; challenger-install - Program; ensure costs are paid
@@ -103,7 +103,7 @@
     (take-credits state :contestant 2)
     (play-from-hand state :challenger "Off-Campus Apartment")
     (play-from-hand state :challenger "Compromised Employee")
-    (let [iwall (get-ice state :hq 0)
+    (let [iwall (get-character state :hq 0)
           apt (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger apt 1) ; use Off-Campus option to host an installed card
       (prompt-select :challenger (find-card "Compromised Employee"
@@ -113,7 +113,7 @@
         (is (= 4 (:credit (get-challenger))))
         (is (= 0 (:rec-counter (refresh cehosted))))
         (core/rez state :contestant iwall)
-        (is (= 5 (:credit (get-challenger))) "Compromised Employee gave 1 credit from ice rez")
+        (is (= 5 (:credit (get-challenger))) "Compromised Employee gave 1 credit from character rez")
         (take-credits state :challenger)
         (take-credits state :contestant)
         (is (= 1 (:rec-counter (refresh cehosted)))
@@ -139,9 +139,9 @@
     (play-from-hand state :challenger "Clone Chip")
     (play-from-hand state :challenger "Paparazzi")
     (play-from-hand state :challenger "Parasite")
-    (let [hqiwall0 (get-ice state :hq 0)
-          hqiwall1 (get-ice state :hq 1)
-          rdiwall (get-ice state :rd 0)
+    (let [hqiwall0 (get-character state :hq 0)
+          hqiwall1 (get-character state :hq 1)
+          rdiwall (get-character state :rd 0)
           jh1 (get-content state :remote1 0)
           jh2 (get-content state :remote2 0)
           corr (get-in @state [:challenger :rig :program 0])
@@ -151,8 +151,8 @@
       (core/rez state :contestant jh1)
       (prompt-select :challenger (refresh hqiwall0))
       (is (= (core/card-str state (refresh hqiwall0)) "Ice Wall protecting HQ at position 0"))
-      (is (= (core/card-str state (refresh hqiwall1)) "ICE protecting HQ at position 1"))
-      (is (= (core/card-str state (refresh rdiwall)) "ICE protecting R&D at position 0"))
+      (is (= (core/card-str state (refresh hqiwall1)) "Character protecting HQ at position 1"))
+      (is (= (core/card-str state (refresh rdiwall)) "Character protecting R&D at position 0"))
       (is (= (core/card-str state (refresh rdiwall) {:visible true})
              "Ice Wall protecting R&D at position 0"))
       (is (= (core/card-str state (refresh jh1)) "Jackson Howard in Server 1"))
@@ -268,12 +268,12 @@
     (is (not (:seen (get-content state :remote2 0))) "New asset is unseen")))
 
 (deftest all-installed-challenger-test
-  ;; Tests all-installed for programs hosted on ICE, nested hosted programs, and non-installed hosted programs
+  ;; Tests all-installed for programs hosted on Character, nested hosted programs, and non-installed hosted programs
   (do-game
     (new-game (default-contestant [(qty "Wraparound" 1)])
               (default-challenger [(qty "Omni-drive" 1) (qty "Personal Workshop" 1) (qty "Leprechaun" 1) (qty "Corroder" 1) (qty "Mimic" 1) (qty "Knight" 1)]))
     (play-from-hand state :contestant "Wraparound" "HQ")
-    (let [wrap (get-ice state :hq 0)]
+    (let [wrap (get-character state :hq 0)]
       (core/rez state :contestant wrap)
       (take-credits state :contestant)
       (core/draw state :challenger)
@@ -441,16 +441,16 @@
 (deftest run-psi-bad-publicity-credits
   ;; Should pay from Bad Pub for Psi games during run #2374
   (do-game
-    (new-game (default-contestant [(qty "Caprice Nisei" 3)])
+    (new-game (default-contestant [(qty "Caprcharacter Nisei" 3)])
               (make-deck "Valencia Estevez: The Angel of Cayambe" [(qty "Sure Gamble" 3)]))
     (is (= 1 (:bad-publicity (get-contestant))) "Contestant starts with 1 BP")
-    (play-from-hand state :contestant "Caprice Nisei" "New remote")
+    (play-from-hand state :contestant "Caprcharacter Nisei" "New remote")
     (take-credits state :contestant)
-    (let [caprice (get-content state :remote1 0)]
-      (core/rez state :contestant caprice)
+    (let [caprcharacter (get-content state :remote1 0)]
+      (core/rez state :contestant caprcharacter)
       (run-on state "Server 1")
-      (is (prompt-is-card? :contestant caprice) "Caprice prompt even with no ice, once challenger makes run")
-      (is (prompt-is-card? :challenger caprice) "Challenger has Caprice prompt")
+      (is (prompt-is-card? :contestant caprcharacter) "Caprcharacter prompt even with no character, once challenger makes run")
+      (is (prompt-is-card? :challenger caprcharacter) "Challenger has Caprcharacter prompt")
       (prompt-choice :contestant "2 [Credits]")
       (prompt-choice :challenger "1 [Credits]")
       (is (= 5 (:credit (get-challenger))) "Challenger spend bad pub credit on psi game")

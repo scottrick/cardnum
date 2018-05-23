@@ -65,7 +65,7 @@
    (is (= 7 (core/hand-size state :challenger)))))
 
 (deftest blackguard
-  ;; Blackguard - +2 MU, forced rez of exposed ice
+  ;; Blackguard - +2 MU, forced rez of exposed character
   (do-game
    (new-game (default-contestant [(qty "Ice Wall" 1)])
              (default-challenger [(qty "Blackguard" 1)
@@ -77,7 +77,7 @@
    (is (= 6 (:memory (get-challenger))) "Challenger has 6 MU")
    (play-from-hand state :challenger "Snitch")
    (let [snitch (get-in @state [:challenger :rig :program 0])
-         iwall (get-ice state :archives 0)]
+         iwall (get-character state :archives 0)]
      (run-on state :archives)
      (card-ability state :challenger snitch 0)
      (is (:rezzed (refresh iwall)) "Ice Wall was rezzed"))))
@@ -156,14 +156,14 @@
       (is (nil? (:comet-event (core/get-card state comet))) "Comet ability disabled"))))
 
 (deftest cortez-chip
-  ;; Cortez Chip - Trash to add 2 credits to rez cost of an ICE until end of turn
+  ;; Cortez Chip - Trash to add 2 credits to rez cost of an Character until end of turn
   (do-game
     (new-game (default-contestant [(qty "Quandary" 1)])
               (default-challenger [(qty "Cortez Chip" 1)]))
     (play-from-hand state :contestant "Quandary" "R&D")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Cortez Chip")
-    (let [quan (get-ice state :rd 0)
+    (let [quan (get-character state :rd 0)
           cortez (get-hardware state 0)]
       (card-ability state :challenger cortez 0)
       (prompt-select :challenger quan)
@@ -260,7 +260,7 @@
     (prompt-select :contestant (find-card "Cerebral Overwriter" (:hand (get-contestant))))
     (play-from-hand state :contestant "Data Mine" "Server 1")
     (let [co (get-content state :remote1 0)
-          dm (get-ice state :remote1 0)]
+          dm (get-character state :remote1 0)]
       (is (= 3 (:advance-counter (refresh co))) "3 advancements on Overwriter")
       (take-credits state :contestant)
       (play-from-hand state :challenger "Sure Gamble")
@@ -604,7 +604,7 @@
     (play-from-hand state :contestant "Data Mine" "Server 1")
     (play-from-hand state :contestant "Snare!" "Server 1")
     (let [sn (get-content state :remote1 0)
-          dm (get-ice state :remote1 0)]
+          dm (get-character state :remote1 0)]
       (take-credits state :contestant)
       (play-from-hand state :challenger "Ramujan-reliant 550 BMI")
       (play-from-hand state :challenger "Ramujan-reliant 550 BMI")
@@ -638,7 +638,7 @@
     (new-game (default-contestant [(qty "Data Mine" 1)])
               (default-challenger [(qty "Ramujan-reliant 550 BMI" 1) (qty "Sure Gamble" 1)]))
     (play-from-hand state :contestant "Data Mine" "Server 1")
-    (let [dm (get-ice state :remote1 0)]
+    (let [dm (get-character state :remote1 0)]
       (take-credits state :contestant)
       (play-from-hand state :challenger "Ramujan-reliant 550 BMI")
       (let [rr1 (get-in @state [:challenger :rig :hardware 0])]
@@ -693,7 +693,7 @@
    (is (= 2 (count (:hand (get-challenger)))) "Drew 2 cards")))
 
 (deftest sifr
-  ;; Once per turn drop encountered ICE to zero strenght
+  ;; Once per turn drop encountered Character to zero strenght
   ;; Also handle archangel then re-install sifr should not break the game #2576
   (do-game
     (new-game (default-contestant [(qty "Archangel" 1) (qty "IP Block" 1) (qty "Hedge Fund" 1)])
@@ -706,8 +706,8 @@
     (trash-from-hand state :challenger "Parasite")
     (play-from-hand state :challenger "Şifr")
     (is (= 2 (count (:hand (get-challenger)))) "Modded and Clone Chip in hand")
-    (let [arch (get-ice state :hq 0)
-          ip (get-ice state :hq 1)
+    (let [arch (get-character state :hq 0)
+          ip (get-character state :hq 1)
           sifr (get-hardware state 0)]
       (core/rez state :contestant arch)
       (core/rez state :contestant ip)
@@ -753,7 +753,7 @@
     (play-from-hand state :contestant "Caduceus" "HQ")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Spinal Modem")
-    (let [cad (get-ice state :hq 0)
+    (let [cad (get-character state :hq 0)
           sm (get-hardware state 0)]
       (is (= 5 (:memory (get-challenger))))
       (is (= 2 (:rec-counter (refresh sm))))
@@ -867,7 +867,7 @@
     (is (empty? (:prompt (get-challenger))) "Fall Guy didn't try to prevent trashing of Kati")
     (is (= 2 (count (:discard (get-challenger)))) "2 cards trashed for Ribs installation meat damage")
     (run-on state "HQ")
-    (let [pup (get-ice state :hq 0)]
+    (let [pup (get-character state :hq 0)]
       (core/rez state :contestant pup)
       (card-subroutine state :contestant pup 0)
       (prompt-select :challenger (find-card "Sure Gamble" (:hand (get-challenger)))) ; Ribs takes precedence over CP on Challenger turn
@@ -961,9 +961,9 @@
    (is (= 1 (:credit (get-challenger))) "At 1 credit")
    (play-from-hand state :challenger "Infiltration")
    (prompt-choice :challenger "Expose a card")
-   (prompt-select :challenger (get-ice state :archives 0))
+   (prompt-select :challenger (get-character state :archives 0))
    (is (= 2 (:credit (get-challenger))) "Gained 1 credit from exposing")
    (play-from-hand state :challenger "Infiltration")
    (prompt-choice :challenger "Expose a card")
-   (prompt-select :challenger (get-ice state :archives 0))
+   (prompt-select :challenger (get-character state :archives 0))
    (is (= 3 (:credit (get-challenger))) "Gained 1 more credit from exposing")))

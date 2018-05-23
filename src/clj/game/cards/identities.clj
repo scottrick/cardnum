@@ -54,17 +54,17 @@
 
    "AgInfusion: New Miracles for a New World"
    {:abilities [{:once :per-turn
-                 :req (req (and (:run @state) (not (rezzed? current-ice)) (can-rez? state side current-ice {:ignore-unique true})))
+                 :req (req (and (:run @state) (not (rezzed? current-character)) (can-rez? state side current-character {:ignore-unique true})))
                  :prompt "Choose another server and redirect the run to its outermost position"
                  :choices (req (cancellable (remove #{(-> @state :run :server central->name)} servers)))
-                 :msg (msg "trash the approached ICE. The Challenger is now running on " target)
+                 :msg (msg "trash the approached Character. The Challenger is now running on " target)
                  :effect (req (let [dest (server->zone state target)]
-                                (trash state side current-ice)
+                                (trash state side current-character)
                                 (swap! state update-in [:run]
-                                       #(assoc % :position (count (get-in contestant (conj dest :ices)))
+                                       #(assoc % :position (count (get-in contestant (conj dest :characters)))
                                                  :server (rest dest)))))}]}
 
-   "Alice Merchant: Clan Agitator"
+   "Alcharacter Merchant: Clan Agitator"
    {:events {:successful-run
              {:delayed-completion true
               :interactive (req true)
@@ -128,7 +128,7 @@
                                {:prompt (str "Select a "
                                              (if (is-remote? z)
                                                "non-agenda"
-                                               "piece of ice")
+                                               "piece of character")
                                              " in HQ to install with Asa Group: Security Through Vigilance (optional)")
                                 :delayed-completion true
                                 :choices {:req #(and (in-hand? %)
@@ -136,7 +136,7 @@
                                                      (contestant-installable-type? %)
                                                      (not (is-type? % "Agenda"))
                                                      (or (is-remote? z)
-                                                         (ice? %)))}
+                                                         (character? %)))}
                                 :effect (effect (contestant-install eid target (zone->name z) nil))}
                                card nil)))}}}
 
@@ -298,10 +298,10 @@
      :challenger-turn-begins {:player :contestant
                           :req (req (and (not (:disabled card))
                                          (has-most-faction? state :contestant "Weyland Consortium")
-                                         (some ice? (all-installed state side))))
-                          :prompt "Select a piece of ICE to place 1 advancement token on"
+                                         (some character? (all-installed state side))))
+                          :prompt "Select a piece of Character to place 1 advancement token on"
                           :choices {:req #(and (installed? %)
-                                               (ice? %))}
+                                               (character? %))}
                           :msg (msg "place 1 advancement token on " (card-str state target))
                           :effect (req (add-prop state :contestant target :advance-counter 1 {:placed true}))}}}
 
@@ -337,13 +337,13 @@
       :leave-play (effect (clear-turn-flag! card :can-steal))})
 
    "Haas-Bioroid: Architects of Tomorrow"
-   {:events {:pass-ice
+   {:events {:pass-character
              {:delayed-completion true
               :once :per-turn
               :req (req (and (rezzed? target)
                              (has-subtype? target "Bioroid")
                              (empty? (filter #(and (rezzed? %) (has-subtype? % "Bioroid"))
-                                             (turn-events state side :pass-ice)))))
+                                             (turn-events state side :pass-character)))))
               :effect (effect (show-wait-prompt :challenger "Contestant to use Haas-Bioroid: Architects of Tomorrow")
                               (continue-ability
                                 {:prompt "Select a Bioroid to rez" :player :contestant
@@ -361,10 +361,10 @@
                             :effect (effect (gain :credit 1))}}}
 
    "Haas-Bioroid: Stronger Together"
-   {:events {:pre-ice-strength {:req (req (and (ice? target) (has-subtype? target "Bioroid")))
-                                :effect (effect (ice-strength-bonus 1 target))}}
-    :leave-play (effect (update-all-ice))
-    :effect (effect (update-all-ice))}
+   {:events {:pre-character-strength {:req (req (and (character? target) (has-subtype? target "Bioroid")))
+                                :effect (effect (character-strength-bonus 1 target))}}
+    :leave-play (effect (update-all-character))
+    :effect (effect (update-all-character))}
 
    "Harishchandra Ent.: Where Youre the Star"
    {:effect (req (when tagged
@@ -438,13 +438,13 @@
                            :once :per-turn
                            :effect (effect (draw 1))}}}
 
-   "Jemison Astronautics: Sacrifice. Audacity. Success."
+   "Jemison Astronautics: Sacrifcharacter. Audacity. Success."
    {:events {:contestant-forfeit-agenda
              {:delayed-completion true
               :effect (req (show-wait-prompt state :challenger "Contestant to place advancement tokens")
                            (let [p (inc (get-agenda-points state :contestant target))]
                              (continue-ability state side
-                               {:prompt "Select a card to place advancement tokens on with Jemison Astronautics: Sacrifice. Audacity. Success."
+                               {:prompt "Select a card to place advancement tokens on with Jemison Astronautics: Sacrifcharacter. Audacity. Success."
                                 :choices {:req #(and (installed? %) (= (:side %) "Contestant"))}
                                 :msg (msg "place " p " advancement tokens on " (card-str state target))
                                 :cancel-effect (effect (clear-wait-prompt :challenger))
@@ -567,8 +567,8 @@
                           :effect (effect (gain :credit 1))}}}
 
    "Khan: Savvy Skiptracer"
-   {:events {:pass-ice
-             {:req (req (first-event? state :contestant :pass-ice))
+   {:events {:pass-character
+             {:req (req (first-event? state :contestant :pass-character))
               :delayed-completion true
               :effect (req (if (some #(has-subtype? % "Icebreaker") (:hand challenger))
                              (continue-ability state side
@@ -609,7 +609,7 @@
 
    "Los: Data Hijacker"
    {:events {:rez {:once :per-turn
-                   :req (req (ice? target))
+                   :req (req (character? target))
                    :msg "gain 2 [Credits]"
                    :effect (effect (gain :challenger :credit 2))}}}
 
@@ -628,19 +628,19 @@
 
    "Nasir Meidan: Cyber Explorer"
    {:events {:rez {:req (req (and (:run @state)
-                                  ;; check that the rezzed item is the encountered ice
+                                  ;; check that the rezzed item is the encountered character
                                   (= (:cid target)
-                                     (:cid (get-card state current-ice)))))
-                   :effect (req (toast state :challenger "Click Nasir Meidan: Cyber Explorer to lose all credits and gain credits equal to the rez cost of the newly rezzed ice." "info"))}}
+                                     (:cid (get-card state current-character)))))
+                   :effect (req (toast state :challenger "Click Nasir Meidan: Cyber Explorer to lose all credits and gain credits equal to the rez cost of the newly rezzed character." "info"))}}
     :abilities [{:req (req (and (:run @state)
-                                (:rezzed (get-card state current-ice))))
-                 :effect (req (let [current-ice (get-card state current-ice)]
-                                (trigger-event state side :pre-rez-cost current-ice)
-                                (let [cost (rez-cost state side current-ice)]
+                                (:rezzed (get-card state current-character))))
+                 :effect (req (let [current-character (get-card state current-character)]
+                                (trigger-event state side :pre-rez-cost current-character)
+                                (let [cost (rez-cost state side current-character)]
                                   (lose state side :credit (:credit challenger))
                                   (gain state side :credit cost)
                                   (system-msg state side (str "loses all credits and gains " cost
-                                                              " [Credits] from the rez of " (:title current-ice)))
+                                                              " [Credits] from the rez of " (:title current-character)))
                                   (swap! state update-in [:bonus] dissoc :cost))))}]}
 
    "NBN: Controlling the Message"
@@ -680,7 +680,7 @@
                               :effect (effect (draw 1))}}}
 
    "Nero Severn: Information Broker"
-   {:abilities [{:req (req (has-subtype? current-ice "Sentry"))
+   {:abilities [{:req (req (has-subtype? current-character "Sentry"))
                  :once :per-turn
                  :msg "jack out when encountering a Sentry"
                  :effect (effect (jack-out nil))}]}
@@ -702,15 +702,15 @@
 
    "NEXT Design: Guarding the Net"
    (let [ndhelper (fn nd [n] {:prompt (msg "When finished, click NEXT Design: Guarding the Net to draw back up to 5 cards in HQ. "
-                                           "Select a piece of ICE in HQ to install:")
+                                           "Select a piece of Character in HQ to install:")
                               :choices {:req #(and (= (:side %) "Contestant")
-                                                   (ice? %)
+                                                   (character? %)
                                                    (in-hand? %))}
                               :effect (req (contestant-install state side target nil)
                                            (when (< n 3)
                                              (resolve-ability state side (nd (inc n)) card nil)))})]
      {:events {:pre-first-turn {:req (req (= side :contestant))
-                                :msg "install up to 3 pieces of ICE and draw back up to 5 cards"
+                                :msg "install up to 3 pieces of Character and draw back up to 5 cards"
                                 :effect (effect (resolve-ability (ndhelper 1) card nil)
                                                 (update! (assoc card :fill-hq true)))}}
       :abilities [{:req (req (:fill-hq card))
@@ -728,17 +728,17 @@
 
    "Null: Whistleblower"
    {:abilities [{:once :per-turn
-                 :req (req (and (:run @state) (rezzed? current-ice)))
+                 :req (req (and (:run @state) (rezzed? current-character)))
                  :prompt "Select a card in your Grip to trash"
                  :choices {:req in-hand?}
-                 :msg (msg "trash " (:title target) " and reduce the strength of " (:title current-ice)
+                 :msg (msg "trash " (:title target) " and reduce the strength of " (:title current-character)
                            " by 2 for the remainder of the run")
-                 :effect (effect (update! (assoc card :null-target current-ice))
-                                 (update-ice-strength current-ice)
+                 :effect (effect (update! (assoc card :null-target current-character))
+                                 (update-character-strength current-character)
                                  (trash target {:unpreventable true}))}]
-    :events {:pre-ice-strength
+    :events {:pre-character-strength
              {:req (req (= (:cid target) (get-in card [:null-target :cid])))
-              :effect (effect (ice-strength-bonus -2 target))}
+              :effect (effect (character-strength-bonus -2 target))}
              :run-ends
              {:effect (req (swap! state dissoc-in [:challenger :identity :null-target]))}}}
 
@@ -774,24 +774,24 @@
    {:abilities [{:once :per-turn :msg "break 1 Barrier subroutine"}]}
 
    "Reina Roja: Freedom Fighter"
-   {:events {:pre-rez {:req (req (and (ice? target) (not (get-in @state [:per-turn (:cid card)]))))
+   {:events {:pre-rez {:req (req (and (character? target) (not (get-in @state [:per-turn (:cid card)]))))
                        :effect (effect (rez-cost-bonus 1))}
-             :rez {:req (req (and (ice? target) (not (get-in @state [:per-turn (:cid card)]))))
+             :rez {:req (req (and (character? target) (not (get-in @state [:per-turn (:cid card)]))))
                    :effect (req (swap! state assoc-in [:per-turn (:cid card)] true))}}}
 
    "Rielle \"Kit\" Peddler: Transhuman"
    {:abilities [{:req (req (and (:run @state)
-                                (:rezzed (get-card state current-ice))))
-                 :once :per-turn :msg (msg "make " (:title current-ice) " gain Code Gate until the end of the run")
-                 :effect (req (let [ice current-ice
-                                    stypes (:subtype ice)]
-                                (update! state side (assoc ice :subtype (combine-subtypes true stypes "Code Gate")))
+                                (:rezzed (get-card state current-character))))
+                 :once :per-turn :msg (msg "make " (:title current-character) " gain Code Gate until the end of the run")
+                 :effect (req (let [character current-character
+                                    stypes (:subtype character)]
+                                (update! state side (assoc character :subtype (combine-subtypes true stypes "Code Gate")))
                                 (register-events state side
-                                                 {:run-ends {:effect (effect (update! (assoc ice :subtype stypes))
-                                                                             (trigger-event :ice-subtype-changed ice)
+                                                 {:run-ends {:effect (effect (update! (assoc character :subtype stypes))
+                                                                             (trigger-event :character-subtype-changed character)
                                                                              (unregister-events card))}} card)
-                                (update-ice-strength state side ice)
-                                (trigger-event state side :ice-subtype-changed ice)))}]
+                                (update-character-strength state side character)
+                                (trigger-event state side :character-subtype-changed character)))}]
     :events {:run-ends nil}}
 
    "Seidr Laboratories: Destiny Defined"
@@ -923,12 +923,12 @@
    {:events {:pre-start-game {:effect draft-points-target}}
     :flags {:contestant-phase-12 (req (and (not (:disabled (get-card state card)))
                                      (has-most-faction? state :contestant "Jinteki")
-                                     (> (count (filter ice? (all-installed state :contestant))) 1)))}
-    :abilities [{:prompt "Select two pieces of ICE to swap positions"
-                 :choices {:req #(and (installed? %) (ice? %)) :max 2}
+                                     (> (count (filter character? (all-installed state :contestant))) 1)))}
+    :abilities [{:prompt "Select two pieces of Character to swap positions"
+                 :choices {:req #(and (installed? %) (character? %)) :max 2}
                  :once :per-turn
                  :effect (req (when (= (count targets) 2)
-                                (swap-ice state side (first targets) (second targets))))
+                                (swap-character state side (first targets) (second targets))))
                  :msg (msg "swap the positions of " (card-str state (first targets))
                            " and " (card-str state (second targets)))}]}
 
@@ -943,13 +943,13 @@
 
    "The Foundry: Refining the Process"
    {:events
-    {:rez {:req (req (and (ice? target) ;; Did you rez and ice just now
+    {:rez {:req (req (and (character? target) ;; Did you rez and character just now
                           ;; Are there more copies in the deck or play area (ABT interaction)?
                           ;; (some #(= (:title %) (:title target)) (concat (:deck contestant) (:play-area contestant)))
                           ;; Based on ruling re: searching and failing to find, we no longer enforce the requirement
-                          ;; of there being a target ice to bring into HQ.
+                          ;; of there being a target character to bring into HQ.
                           (empty? (let [rezzed-this-turn (map first (turn-events state side :rez))]
-                                    (filter ice? rezzed-this-turn))))) ;; Is this the first ice you've rezzed this turn
+                                    (filter character? rezzed-this-turn))))) ;; Is this the first character you've rezzed this turn
            :optional
            {:prompt "Add another copy to HQ?"
             :yes-ability {:effect (req (if-let [found-card (some #(when (= (:title %) (:title target)) %) (concat (:deck contestant) (:play-area contestant)))]

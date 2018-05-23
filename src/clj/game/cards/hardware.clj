@@ -29,7 +29,7 @@
                     (host (get-card state target) (get-card state card)))
     :abilities [{:cost [:click 1]
                  :req (req run)
-                 :msg "break ice subroutine"}]
+                 :msg "break character subroutine"}]
     :events {:pre-card-moved {:req (req (= (:cid target) (:cid card)))
                               :effect (effect (update! (assoc (-> card :host) :subtype (-> card :host :subtype (remove-subtypes-once ["AI"])))))}}}
 
@@ -202,13 +202,13 @@
                                  (update! (dissoc (get-card state card) :comet-event)))}]}
 
    "Cortez Chip"
-   {:abilities [{:prompt "Select a piece of ICE"
-                 :choices {:req ice?}
-                 :effect (req (let [ice target]
-                                (update! state side (assoc card :cortez-target ice))
+   {:abilities [{:prompt "Select a piece of Character"
+                 :choices {:req character?}
+                 :effect (req (let [character target]
+                                (update! state side (assoc card :cortez-target character))
                                 (trash state side (get-card state card) {:cause :ability-cost})
                                 (system-msg state side
-                                  (str "trashes Cortez Chip to increase the rez cost of " (card-str state ice)
+                                  (str "trashes Cortez Chip to increase the rez cost of " (card-str state character)
                                        " by 2 [Credits] until the end of the turn"))))}]
     :trash-effect {:effect (effect (register-events {:pre-rez {:req (req (= (:cid target) (:cid (:cortez-target card))))
                                                                :effect (effect (rez-cost-bonus 2))}
@@ -220,7 +220,7 @@
    "Cyberdelia"
    {:implementation "Credit gain is manually triggered."
     :in-play [:memory 1]
-    :abilities [{:msg "gain 1 [Credits] for breaking all subroutines on a piece of ice"
+    :abilities [{:msg "gain 1 [Credits] for breaking all subroutines on a piece of character"
                  :once :per-turn
                  :effect (effect (gain :credit 1))}]}
 
@@ -361,17 +361,17 @@
                                                  (swap! ref assoc-in [:challenger :memory] hand-size))))))
     :leave-play (req (remove-watch state :ekomind))}
 
-   "EMP Device"
+   "EMP Devcharacter"
    {:abilities [{:req (req (:run @state))
-                 :msg "prevent the Contestant from rezzing more than 1 piece of ICE for the remainder of the run"
+                 :msg "prevent the Contestant from rezzing more than 1 piece of Character for the remainder of the run"
                  :effect (effect (register-events
-                                   {:rez {:req (req (ice? target))
+                                   {:rez {:req (req (character? target))
                                           :effect (effect (register-run-flag!
                                                             card :can-rez
                                                             (fn [state side card]
-                                                              (if (ice? card)
+                                                              (if (character? card)
                                                                 ((constantly false)
-                                                                 (toast state :contestant "Cannot rez ICE the rest of this run due to EMP Device"))
+                                                                 (toast state :contestant "Cannot rez Character the rest of this run due to EMP Devcharacter"))
                                                                 true))))}
                                     :run-ends {:effect (effect (unregister-events card))}} (assoc card :zone '(:discard)))
                                  (trash card {:cause :ability-cost}))}]
@@ -396,9 +396,9 @@
 
    "GPI Net Tap"
    {:implementation "Trash and jack out effect is manual"
-    :abilities [{:req (req (and (ice? current-ice) (not (rezzed? current-ice))))
+    :abilities [{:req (req (and (character? current-character) (not (rezzed? current-character))))
                  :delayed-completion true
-                 :effect (effect (expose eid current-ice))}]}
+                 :effect (effect (expose eid current-character))}]}
 
    "Grimoire"
    {:in-play [:memory 2]
@@ -457,8 +457,8 @@
 
    "Māui"
    {:in-play [:memory 2]
-    :recurring (effect (set-prop card :rec-counter (count (:ices (get-in @state [:contestant :servers :hq])))))
-    :effect (effect (set-prop card :rec-counter (count (:ices (get-in @state [:contestant :servers :hq])))))}
+    :recurring (effect (set-prop card :rec-counter (count (:characters (get-in @state [:contestant :servers :hq])))))
+    :effect (effect (set-prop card :rec-counter (count (:characters (get-in @state [:contestant :servers :hq])))))}
 
    "Maw"
    (let [ability {:label "Trash a card from HQ"
@@ -659,7 +659,7 @@
                :no-ability {:effect (req (system-msg state side (str "does not use Polyhistor"))
                                          (effect-completed state side eid))}}}]
      {:in-play [:link 1 :memory 1]
-      :events {:pass-ice {:req (req (and (= (:server run) [:hq]) (= (:position run) 1) ; trigger when last ICE passed
+      :events {:pass-character {:req (req (and (= (:server run) [:hq]) (= (:position run) 1) ; trigger when last Character passed
                                          (pos? (count (:deck challenger)))))
                           :delayed-completion true
                           :once :per-turn
@@ -670,7 +670,7 @@
                      :once :per-turn
                      :effect (req (continue-ability state :challenger abi card nil))}}})
 
-   "Prepaid VoicePAD"
+   "Prepaid VocharacterPAD"
    {:recurring 1}
 
    "Public Terminal"
@@ -806,7 +806,7 @@
                  :delayed-completion true
                  :prompt "How many [Credits]?" :choices :credit
                  :effect (effect (system-msg (str "spends a [Click] and " target " [Credit] on Rubicon Switch"))
-                                 (resolve-ability {:choices {:req #(and (ice? %)
+                                 (resolve-ability {:choices {:req #(and (character? %)
                                                                         (= :this-turn (:rezzed %))
                                                                         (<= (:cost %) target))}
                                                    :effect (effect (derez target))
@@ -844,7 +844,7 @@
                  :label "Trace 5 - Give the Challenger 1 tag and end the run"
                  :trace {:base 5 :msg "give the Challenger 1 tag and end the run"
                          :effect (effect (tag-challenger :challenger eid 1) (end-run))
-                         :unsuccessful {:msg "bypass the current ICE"}}}]}
+                         :unsuccessful {:msg "bypass the current Character"}}}]}
 
    "Severnius Stim Implant"
    {:abilities [{:cost [:click 1]
@@ -870,17 +870,17 @@
    "Şifr"
    {:in-play [:memory 2]
     :abilities [{:once :per-turn
-                 :req (req (rezzed? current-ice))
-                 :msg (msg "lower their maximum hand size by 1 and lower the strength of " (:title current-ice) " to 0")
+                 :req (req (rezzed? current-character))
+                 :msg (msg "lower their maximum hand size by 1 and lower the strength of " (:title current-character) " to 0")
                  :effect (effect (lose :challenger :hand-size-modification 1)
-                                 (update! (assoc card :sifr-target current-ice :sifr-used true))
-                                 (update-ice-strength current-ice))}]
+                                 (update! (assoc card :sifr-target current-character :sifr-used true))
+                                 (update-character-strength current-character))}]
     :events {:challenger-turn-begins {:req (req (:sifr-used card))
                                   :effect (effect (gain :challenger :hand-size-modification 1)
                                                   (update! (dissoc card :sifr-used)))}
-             :pre-ice-strength {:req (req (= (:cid target) (get-in card [:sifr-target :cid])))
-                                :effect (req (let [ice-str (:current-strength target)]
-                                               (ice-strength-bonus state side (- ice-str) target)))}
+             :pre-character-strength {:req (req (= (:cid target) (get-in card [:sifr-target :cid])))
+                                :effect (req (let [character-str (:current-strength target)]
+                                               (character-strength-bonus state side (- character-str) target)))}
              :run-ends {:effect (effect (update! (dissoc card :sifr-target)))}}}
 
    "Silencer"
@@ -923,17 +923,17 @@
                                  (trash card {:cause :ability-cost}))}]}
 
    "The Gauntlet"
-   {:implementation "Requires Challenger to manually (and honestly) set how many ICE were broken directly protecting HQ"
+   {:implementation "Requires Challenger to manually (and honestly) set how many Character were broken directly protecting HQ"
     :in-play [:memory 2]
     :events {:successful-run {:req (req (and (= :hq target)
                                          run))
                               :silent (req true)
                               :delayed-completion true
                               :effect (effect (continue-ability
-                                                {:prompt "How many ICE protecting HQ did you break all subroutines on?"
-                                                 ;; Makes number of ice on server (HQ) the upper limit.
-                                                 ;; This should work since trashed ice do not count according to UFAQ
-                                                 :choices {:number (req (count (get-in @state [:contestant :servers :hq :ices])))}
+                                                {:prompt "How many Character protecting HQ did you break all subroutines on?"
+                                                 ;; Makes number of character on server (HQ) the upper limit.
+                                                 ;; This should work since trashed character do not count according to UFAQ
+                                                 :choices {:number (req (count (get-in @state [:contestant :servers :hq :characters])))}
                                                  :effect (effect (access-bonus target))}
                                                 card nil))}}}
 

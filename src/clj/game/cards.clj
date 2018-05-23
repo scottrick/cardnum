@@ -90,11 +90,11 @@
                :else
                (continue-ability state side (reorder-choice reorder-side wait-side original '() (count original) original dest) card nil)))}))
 
-(defn swap-ice
-  "Swaps two pieces of ICE."
+(defn swap-character
+  "Swaps two pieces of Character."
   [state side a b]
-  (let [a-index (ice-index state a)
-        b-index (ice-index state b)
+  (let [a-index (character-index state a)
+        b-index (character-index state b)
         a-new (assoc a :zone (:zone b))
         b-new (assoc b :zone (:zone a))]
     (swap! state update-in (cons :contestant (:zone a)) #(assoc % a-index b-new))
@@ -107,16 +107,16 @@
           (update! state side newh)
           (unregister-events state side h)
           (register-events state side (:events (card-def newh)) newh))))
-    (update-ice-strength state side a-new)
-    (update-ice-strength state side b-new)))
+    (update-character-strength state side a-new)
+    (update-character-strength state side b-new)))
 
 (defn card-index
-  "Get the zero-based index of the given card in its server's list of content. Same as ice-index"
+  "Get the zero-based index of the given card in its server's list of content. Same as character-index"
   [state card]
   (first (keep-indexed #(when (= (:cid %2) (:cid card)) %1) (get-in @state (cons :contestant (:zone card))))))
 
 (defn swap-installed
-  "Swaps two installed contestant cards - like swap ICE except no strength update"
+  "Swaps two installed contestant cards - like swap Character except no strength update"
   [state side a b]
   (let [a-index (card-index state a)
         b-index (card-index state b)
@@ -146,5 +146,5 @@
 (load "cards/resources")
 (load "cards/upgrades")
 
-(def cards (merge cards-agendas cards-assets cards-events cards-hardware cards-ice cards-icebreakers cards-identities
+(def cards (merge cards-agendas cards-assets cards-events cards-hardware cards-character cards-icebreakers cards-identities
                   cards-operations cards-programs cards-resources cards-upgrades))

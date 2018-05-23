@@ -120,7 +120,7 @@
      (is (= 3 (get-counters (refresh rex) :power)) "One counter used to break"))))
 
 (deftest crypsis
-  ;; Crypsis - Loses a virus counter after encountering ice it broke
+  ;; Crypsis - Loses a virus counter after encountering character it broke
   (do-game
     (new-game (default-contestant [(qty "Ice Wall" 1)])
               (default-challenger [(qty "Crypsis" 2)]))
@@ -134,7 +134,7 @@
           "Crypsis has 1 virus counter")
 
       (run-on state "Archives")
-      (core/rez state :contestant (get-ice state :archives 0))
+      (core/rez state :contestant (get-character state :archives 0))
       (card-ability state :challenger (refresh crypsis) 0) ; Match strength
       (card-ability state :challenger (refresh crypsis) 1) ; Break
       (is (= 1 (get-in (refresh crypsis) [:counter :virus]))
@@ -222,7 +222,7 @@
     (play-from-hand state :challenger "Faerie")
     (let [fae (get-program state 0)]
       (run-on state :archives)
-      (core/rez state :contestant (get-ice state :archives 0))
+      (core/rez state :contestant (get-character state :archives 0))
       (card-ability state :challenger fae 0)
       (is (refresh fae) "Faerie not trashed until encounter over")
       (run-continue state)
@@ -276,7 +276,7 @@
    (play-from-hand state :contestant "Ice Wall" "HQ")
    (take-credits state :contestant)
    (core/gain state :challenger :credit 18)
-   (let [iw (get-ice state :hq 0)]
+   (let [iw (get-character state :hq 0)]
     (play-from-hand state :challenger "Femme Fatale")
     (prompt-select :challenger iw)
     (is (:icon (refresh iw)) "Ice Wall has an icon")
@@ -288,8 +288,8 @@
     (core/trash state :contestant iw)
     (is (not (:icon (refresh iw))) "Ice Wall does not have an icon after itself trashed"))))
 
-(deftest nanotk-install-ice-during-run
-  ;; Na'Not'K - Strength adjusts accordingly when ice installed during run
+(deftest nanotk-install-character-during-run
+  ;; Na'Not'K - Strength adjusts accordingly when character installed during run
   (do-game
     (new-game (default-contestant [(qty "Architect" 1) (qty "Eli 1.0" 1)])
               (default-challenger [(qty "Na'Not'K" 1)]))
@@ -297,15 +297,15 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Na'Not'K")
     (let [nanotk (get-program state 0)
-          architect (get-ice state :hq 0)]
+          architect (get-character state :hq 0)]
       (is (= 1 (:current-strength (refresh nanotk))) "Default strength")
       (run-on state "HQ")
       (core/rez state :contestant architect)
-      (is (= 2 (:current-strength (refresh nanotk))) "1 ice on HQ")
+      (is (= 2 (:current-strength (refresh nanotk))) "1 character on HQ")
       (card-subroutine state :contestant (refresh architect) 1)
       (prompt-select :contestant (find-card "Eli 1.0" (:hand (get-contestant))))
       (prompt-choice :contestant "HQ")
-      (is (= 3 (:current-strength (refresh nanotk))) "2 ice on HQ")
+      (is (= 3 (:current-strength (refresh nanotk))) "2 character on HQ")
       (run-jack-out state)
       (is (= 1 (:current-strength (refresh nanotk))) "Back to default strength"))))
 
@@ -320,13 +320,13 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Na'Not'K")
     (let [nanotk (get-program state 0)
-          susanoo (get-ice state :hq 1)]
+          susanoo (get-character state :hq 1)]
       (is (= 1 (:current-strength (refresh nanotk))) "Default strength")
       (run-on state "HQ")
       (core/rez state :contestant susanoo)
-      (is (= 3 (:current-strength (refresh nanotk))) "2 ice on HQ")
+      (is (= 3 (:current-strength (refresh nanotk))) "2 character on HQ")
       (card-subroutine state :contestant (refresh susanoo) 0)
-      (is (= 2 (:current-strength (refresh nanotk))) "1 ice on Archives")
+      (is (= 2 (:current-strength (refresh nanotk))) "1 character on Archives")
       (run-jack-out state)
       (is (= 1 (:current-strength (refresh nanotk))) "Back to default strength"))))
 
@@ -354,7 +354,7 @@
     (take-credits state :contestant)
     (trash-from-hand state :challenger "Paperclip")
     (run-on state "Archives")
-    (core/rez state :contestant (get-ice state :archives 0))
+    (core/rez state :contestant (get-character state :archives 0))
     (prompt-choice :challenger "Yes") ; install paperclip
     (run-continue state)
     (run-successful state)
@@ -375,12 +375,12 @@
     (trash-from-hand state :challenger "Paperclip")
     (trash-from-hand state :challenger "Paperclip")
     (run-on state "Archives")
-    (core/rez state :contestant (get-ice state :archives 1))
+    (core/rez state :contestant (get-character state :archives 1))
     (prompt-choice :challenger "No")
     (is (empty? (:prompt (get-challenger))) "No additional prompts to rez other copies of Paperclip")
     (run-continue state)
-    ;; we should get the prompt on a second ice even after denying the first.
-    (core/rez state :contestant (get-ice state :archives 0))
+    ;; we should get the prompt on a second character even after denying the first.
+    (core/rez state :contestant (get-character state :archives 0))
     (prompt-choice :challenger "No")
     (is (empty? (:prompt (get-challenger))) "No additional prompts to rez other copies of Paperclip")
     (core/jack-out state :challenger)
@@ -421,8 +421,8 @@
    (take-credits state :contestant)
    (core/gain state :challenger :credit 10)
    (play-from-hand state :challenger "Snowball")
-   (let [sp (get-ice state :hq 1)
-         fw (get-ice state :hq 0)
+   (let [sp (get-character state :hq 1)
+         fw (get-character state :hq 0)
          snow (get-program state 0)]
      (run-on state "HQ")
      (core/rez state :contestant sp)
@@ -463,7 +463,7 @@
      (is (= 2 (:current-strength (refresh sg))) "2 strength"))))
 
 (deftest wyrm
-  ;; Wyrm reduces strength of ice
+  ;; Wyrm reduces strength of character
   (do-game
    (new-game (default-contestant [(qty "Ice Wall" 1)])
              (default-challenger [(qty "Wyrm" 1)]))
@@ -471,13 +471,13 @@
    (take-credits state :contestant)
    (play-from-hand state :challenger "Wyrm")
    (run-on state "HQ")
-   (let [ice-wall (get-ice state :hq 0)
+   (let [character-wall (get-character state :hq 0)
          wyrm (get-in @state [:challenger :rig :program 0])]
-     (core/rez state :contestant ice-wall)
+     (core/rez state :contestant character-wall)
      (card-ability state :challenger wyrm 1)
-     (is (= 0 (:current-strength (refresh ice-wall))) "Strength of Ice Wall reduced to 0")
+     (is (= 0 (:current-strength (refresh character-wall))) "Strength of Ice Wall reduced to 0")
      (card-ability state :challenger wyrm 1)
-     (is (= -1 (:current-strength (refresh ice-wall))) "Strength of Ice Wall reduced to -1"))))
+     (is (= -1 (:current-strength (refresh character-wall))) "Strength of Ice Wall reduced to -1"))))
 
 (deftest yusuf
   ;; Yusuf gains virus counters on successful runs and can spend virus counters from any installed card

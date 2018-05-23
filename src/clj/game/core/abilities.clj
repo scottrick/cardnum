@@ -78,7 +78,7 @@
             returning an integer for the base strength. The map is otherwise a normal ability map that can
             contain :req, :effect, or any other key in an ability; the :effect is only triggered if the trace
             succeeds. Can also have a key :kicker that is an ability map with key :min, whose effect triggers
-            if the trace strength matches or exceeds the :min value. (Constellation ice.)
+            if the trace strength matches or exceeds the :min value. (Constellation character.)
 
   SIMULTANEOUS EFFECT RESOLUTION KEYS
   :interactive -- when simultaneous effect resolution has been enabled for a specific event, the user receives
@@ -427,20 +427,20 @@
 
 ;;; Psi games
 
-(defn show-prompt-with-dice
+(defn show-prompt-with-dcharacter
   "Calls show-prompt normally, but appends a 'roll d6' button to choices.
   If user chooses to roll d6, reveal the result to user and re-display
   the prompt without the 'roll d6 button'."
   ([state side card msg other-choices f]
    (show-prompt state side card msg other-choices f nil))
   ([state side card msg other-choices f args]
-   (let [dice-msg "Roll a d6",
-         choices (conj other-choices dice-msg)]
+   (let [dcharacter-msg "Roll a d6",
+         choices (conj other-choices dcharacter-msg)]
      (show-prompt state side card msg choices
-                  #(if (not= % dice-msg)
+                  #(if (not= % dcharacter-msg)
                      (f %)
                      (show-prompt state side card
-                                  (str msg " (Dice result: " (inc (rand-int 6)) ")")
+                                  (str msg " (Dcharacter result: " (inc (rand-int 6)) ")")
                                   other-choices f args))
                   args))))
 
@@ -458,7 +458,7 @@
                                       (any-flag-fn? state :challenger :psi-prevent-spend %))
                                  all-amounts)]
 
-       (show-prompt-with-dice state s card (str "Choose an amount to spend for " (:title card))
+       (show-prompt-with-dcharacter state s card (str "Choose an amount to spend for " (:title card))
                               (map #(str % " [Credits]") valid-amounts)
                               #(resolve-psi state s eid card psi (Integer/parseInt (first (split % #" "))))
                     {:priority 2})))))

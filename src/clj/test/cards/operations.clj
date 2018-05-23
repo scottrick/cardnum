@@ -191,7 +191,7 @@
               (default-challenger))
     (core/gain state :contestant :click 1)
     (play-from-hand state :contestant "Hunter" "HQ")
-    (let [hunter (get-ice state :hq 0)]
+    (let [hunter (get-character state :hq 0)]
       (core/rez state :contestant hunter)
       (is (= 4 (:current-strength (refresh hunter))))
       (play-from-hand state :contestant "Casting Call")
@@ -281,10 +281,10 @@
                              (qty "Ice Wall" 1)])
               (default-challenger))
     (play-from-hand state :contestant "Ice Wall" "HQ")
-    (core/add-counter state :contestant (refresh (get-ice state :hq 0)) :advancement 1)
+    (core/add-counter state :contestant (refresh (get-character state :hq 0)) :advancement 1)
     (play-from-hand state :contestant "Commercialization")
-    (prompt-select :contestant (refresh (get-ice state :hq 0)))
-    (is (= 6 (:credit (get-contestant))) "Gained 1 for single advanced ice from Commercialization")))
+    (prompt-select :contestant (refresh (get-character state :hq 0)))
+    (is (= 6 (:credit (get-contestant))) "Gained 1 for single advanced character from Commercialization")))
 
 (deftest commercialization-double-advancement
   ;; Commercialization - Two advancement tokens
@@ -293,10 +293,10 @@
                              (qty "Ice Wall" 1)])
               (default-challenger))
     (play-from-hand state :contestant "Ice Wall" "HQ")
-    (core/add-counter state :contestant (refresh (get-ice state :hq 0)) :advancement 2)
+    (core/add-counter state :contestant (refresh (get-character state :hq 0)) :advancement 2)
     (play-from-hand state :contestant "Commercialization")
-    (prompt-select :contestant (refresh (get-ice state :hq 0)))
-    (is (= 7 (:credit (get-contestant))) "Gained 2 for double advanced ice from Commercialization")))
+    (prompt-select :contestant (refresh (get-character state :hq 0)))
+    (is (= 7 (:credit (get-contestant))) "Gained 2 for double advanced character from Commercialization")))
 
 (deftest consulting-visit
   ;; Consulting Visit - Only show single copies of operations contestant can afford as choices. Play chosen operation
@@ -356,7 +356,7 @@
     (play-from-hand state :contestant "Viktor 1.0" "HQ")
     (take-credits state :contestant)
     (run-on state :hq)
-    (let [vik (get-ice state :hq 0)]
+    (let [vik (get-character state :hq 0)]
       (core/rez state :contestant vik)
       (card-subroutine state :contestant vik 0)
       (is (= 2 (count (:discard (get-challenger)))) "2 cards lost to brain damage")
@@ -401,7 +401,7 @@
     (play-from-hand state :contestant "PAD Campaign" "New remote")
     (play-from-hand state :contestant "PAD Campaign" "New remote")
     (play-from-hand state :contestant "Diversified Portfolio")
-    (is (= 7 (:credit (get-contestant))) "Ignored remote with ICE but no server contents")))
+    (is (= 7 (:credit (get-contestant))) "Ignored remote with Character but no server contents")))
 
 (deftest economic-warfare
   ;; Economic Warfare - If successful run last turn, make the challenger lose 4 credits if able
@@ -838,10 +838,10 @@
     (play-from-hand state :contestant "Vanilla" "HQ")
     (play-from-hand state :contestant "Lotus Field" "R&D")
     (play-from-hand state :contestant "Lag Time")
-    (core/rez state :contestant (get-ice state :hq 0))
-    (core/rez state :contestant (get-ice state :rd 0))
-    (is (= 1 (:current-strength (get-ice state :hq 0))) "Vanilla at 1 strength")
-	(is (= 5 (:current-strength (get-ice state :rd 0))) "Lotus Field at 5 strength")))
+    (core/rez state :contestant (get-character state :hq 0))
+    (core/rez state :contestant (get-character state :rd 0))
+    (is (= 1 (:current-strength (get-character state :hq 0))) "Vanilla at 1 strength")
+	(is (= 5 (:current-strength (get-character state :rd 0))) "Lotus Field at 5 strength")))
 
 (deftest lateral-growth
   (do-game
@@ -865,12 +865,12 @@
     (play-from-hand state :contestant "Ice Wall" "R&D")
     (play-from-hand state :contestant "Ice Wall" "Archives")
     (take-credits state :challenger)
-    (core/advance state :contestant {:card (refresh (get-ice state :hq 0))})
-    (core/advance state :contestant {:card (refresh (get-ice state :archives 0))})
-    (core/advance state :contestant {:card (refresh (get-ice state :rd 0))})
+    (core/advance state :contestant {:card (refresh (get-character state :hq 0))})
+    (core/advance state :contestant {:card (refresh (get-character state :archives 0))})
+    (core/advance state :contestant {:card (refresh (get-character state :rd 0))})
     (take-credits state :challenger)
     (play-from-hand state :contestant "Mass Commercialization")
-    (is (= 8 (:credit (get-contestant))) "Gained 6 for 3 advanced ice from Mass Commercialization")))
+    (is (= 8 (:credit (get-contestant))) "Gained 6 for 3 advanced character from Mass Commercialization")))
 
 (deftest manhunt-every-run
   ;; Manhunt - only fires once per turn. Unreported issue.
@@ -952,12 +952,12 @@
     (is (= 1 (count (:discard (get-challenger)))) "Challenger took 1 net damage")))
 
 (deftest oversight-ai
-  ;; Oversight AI - Rez a piece of ICE ignoring all costs
+  ;; Oversight AI - Rez a piece of Character ignoring all costs
   (do-game
     (new-game (default-contestant [(qty "Oversight AI" 1) (qty "Archer" 1)])
               (default-challenger))
     (play-from-hand state :contestant "Archer" "R&D")
-    (let [archer (get-ice state :rd 0)]
+    (let [archer (get-character state :rd 0)]
       (play-from-hand state :contestant "Oversight AI")
       (prompt-select :contestant archer)
       (is (get-in (refresh archer) [:rezzed]))
@@ -971,10 +971,10 @@
     (new-game (default-contestant [(qty "Patch" 1) (qty "Vanilla" 1)])
               (default-challenger))
     (play-from-hand state :contestant "Vanilla" "HQ")
-    (core/rez state :contestant (get-ice state :hq 0))
+    (core/rez state :contestant (get-character state :hq 0))
     (play-from-hand state :contestant "Patch")
-    (prompt-select :contestant (get-ice state :hq 0))
-    (is (= 2 (:current-strength (get-ice state :hq 0))) "Vanilla at 2 strength")))
+    (prompt-select :contestant (get-character state :hq 0))
+    (is (= 2 (:current-strength (get-character state :hq 0))) "Vanilla at 2 strength")))
 
 (deftest paywall-implementation
   ;; Paywall Implementation - Gain 1 credit for every successful run
@@ -992,7 +992,7 @@
     (is (= 9 (:credit (get-contestant))) "Gained 1 credit from successful run")))
 
 (deftest peak-efficiency
-  ;; Peak Efficiency - Gain 1 credit for each rezzed ICE
+  ;; Peak Efficiency - Gain 1 credit for each rezzed Character
   (do-game
     (new-game (default-contestant [(qty "Peak Efficiency" 1) (qty "Paper Wall" 3) (qty "Wraparound" 1)])
               (default-challenger))
@@ -1001,11 +1001,11 @@
     (play-from-hand state :contestant "Paper Wall" "R&D")
     (play-from-hand state :contestant "Paper Wall" "New remote")
     (play-from-hand state :contestant "Wraparound" "New remote")
-    (core/rez state :contestant (get-ice state :hq 0))
-    (core/rez state :contestant (get-ice state :rd 0))
-    (core/rez state :contestant (get-ice state :remote1 0))
+    (core/rez state :contestant (get-character state :hq 0))
+    (core/rez state :contestant (get-character state :rd 0))
+    (core/rez state :contestant (get-character state :remote1 0))
     (play-from-hand state :contestant "Peak Efficiency")
-    (is (= 7 (:credit (get-contestant))) "Gained 3 credits for 3 rezzed ICE; unrezzed ICE ignored")))
+    (is (= 7 (:credit (get-contestant))) "Gained 3 credits for 3 rezzed Character; unrezzed Character ignored")))
 
 (deftest power-shutdown
   ;; Power Shutdown - Trash cards from R&D to force Challenger to trash a program or hardware
@@ -1034,12 +1034,12 @@
 (deftest precognition
   ;; Precognition - Full test
   (do-game
-    (new-game (default-contestant [(qty "Precognition" 1) (qty "Caprice Nisei" 1) (qty "Adonis Campaign" 1)
+    (new-game (default-contestant [(qty "Precognition" 1) (qty "Caprcharacter Nisei" 1) (qty "Adonis Campaign" 1)
                              (qty "Quandary" 1) (qty "Jackson Howard" 1) (qty "Global Food Initiative" 1)])
               (default-challenger))
     (starting-hand state :contestant ["Precognition"])
     (play-from-hand state :contestant "Precognition")
-    (prompt-choice :contestant (find-card "Caprice Nisei" (:deck (get-contestant))))
+    (prompt-choice :contestant (find-card "Caprcharacter Nisei" (:deck (get-contestant))))
     (prompt-choice :contestant (find-card "Adonis Campaign" (:deck (get-contestant))))
     (prompt-choice :contestant (find-card "Quandary" (:deck (get-contestant))))
     (prompt-choice :contestant (find-card "Jackson Howard" (:deck (get-contestant))))
@@ -1050,9 +1050,9 @@
     (prompt-choice :contestant (find-card "Jackson Howard" (:deck (get-contestant))))
     (prompt-choice :contestant (find-card "Quandary" (:deck (get-contestant))))
     (prompt-choice :contestant (find-card "Adonis Campaign" (:deck (get-contestant))))
-    (prompt-choice :contestant (find-card "Caprice Nisei" (:deck (get-contestant)))) ;this is the top card of R&D
+    (prompt-choice :contestant (find-card "Caprcharacter Nisei" (:deck (get-contestant)))) ;this is the top card of R&D
     (prompt-choice :contestant "Done")
-    (is (= "Caprice Nisei" (:title (first (:deck (get-contestant))))))
+    (is (= "Caprcharacter Nisei" (:title (first (:deck (get-contestant))))))
     (is (= "Adonis Campaign" (:title (second (:deck (get-contestant))))))
     (is (= "Quandary" (:title (second (rest (:deck (get-contestant)))))))
     (is (= "Jackson Howard" (:title (second (rest (rest (:deck (get-contestant))))))))
@@ -1091,16 +1091,16 @@
 (deftest psychokinesis
   ;; Pyschokinesis - Terminal Event (end the turn); Look at R&D, install an Asset, Agenda, or Upgrade in a Remote Server
   (do-game
-    (new-game (default-contestant [(qty "Psychokinesis" 3) (qty "Caprice Nisei" 1) (qty "Adonis Campaign" 1)
+    (new-game (default-contestant [(qty "Psychokinesis" 3) (qty "Caprcharacter Nisei" 1) (qty "Adonis Campaign" 1)
                               (qty "Global Food Initiative" 1)])
               (default-challenger))
     (starting-hand state :contestant ["Psychokinesis","Psychokinesis","Psychokinesis"])
     ;; Test installing an Upgrade
     (play-from-hand state :contestant "Psychokinesis")
-    (prompt-choice :contestant (find-card "Caprice Nisei" (:deck (get-contestant))))
+    (prompt-choice :contestant (find-card "Caprcharacter Nisei" (:deck (get-contestant))))
     (prompt-choice :contestant "New remote")
-    (is (= "Caprice Nisei" (:title (get-content state :remote1 0)))
-      "Caprice Nisei installed by Psychokinesis")
+    (is (= "Caprcharacter Nisei" (:title (get-content state :remote1 0)))
+      "Caprcharacter Nisei installed by Psychokinesis")
     ;; Test installing an Asset
     (core/gain state :contestant :click 1)
     (play-from-hand state :contestant "Psychokinesis")
@@ -1252,12 +1252,12 @@
     (is (= 0 (count (get-in @state [:challenger :rig :program]))) "No programs installed")
     (is (= 0 (count (get-in @state [:challenger :rig :hardware]))) "No hardware installed")))
 
-(deftest service-outage
-  ;; Service Outage - First click run each turn costs a credit
+(deftest servcharacter-outage
+  ;; Servcharacter Outage - First click run each turn costs a credit
   (do-game
-    (new-game (default-contestant [(qty "Service Outage" 1)])
+    (new-game (default-contestant [(qty "Servcharacter Outage" 1)])
               (default-challenger [(qty "Employee Strike" 1)]))
-    (play-from-hand state :contestant "Service Outage")
+    (play-from-hand state :contestant "Servcharacter Outage")
     (take-credits state :contestant)
 
     (is (= 5 (:credit (get-challenger))) "Challenger has 5 credits")
@@ -1293,12 +1293,12 @@
     (is (= 1 (:credit (get-challenger)))
         "Challenger doesn't spend 1 credit to make a run")))
 
-(deftest service-outage-card-ability
-  ;; Service Outage - First card ability run each turn costs an additional credit
+(deftest servcharacter-outage-card-ability
+  ;; Servcharacter Outage - First card ability run each turn costs an additional credit
   (do-game
-    (new-game (default-contestant [(qty "Service Outage" 1)])
+    (new-game (default-contestant [(qty "Servcharacter Outage" 1)])
               (default-challenger [(qty "Sneakdoor Beta" 1)]))
-    (play-from-hand state :contestant "Service Outage")
+    (play-from-hand state :contestant "Servcharacter Outage")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Sneakdoor Beta")
     (take-credits state :challenger 1)
@@ -1326,12 +1326,12 @@
       (is (= 4 (:click (get-challenger))) "Challenger has 4 clicks")
       (is (= 0 (:credit (get-challenger))) "Challenger has 0 credits"))))
 
-(deftest service-outage-run-events
-  ;; Service Outage - First run event each turn costs an additional credit
+(deftest servcharacter-outage-run-events
+  ;; Servcharacter Outage - First run event each turn costs an additional credit
   (do-game
-    (new-game (default-contestant [(qty "Service Outage" 1)])
+    (new-game (default-contestant [(qty "Servcharacter Outage" 1)])
               (default-challenger [(qty "Out of the Ashes" 2)]))
-    (play-from-hand state :contestant "Service Outage")
+    (play-from-hand state :contestant "Servcharacter Outage")
     (take-credits state :contestant)
 
     (is (= 5 (:credit (get-challenger))) "Challenger has 5 credits")
@@ -1359,10 +1359,10 @@
     (is (= 4 (:click (get-challenger))) "Challenger has 4 clicks")
     (is (= 1 (:credit (get-challenger))) "Challenger has 1 credit")))
 
-(deftest service-outage-challenger-turn-first-run
-  ;; Service Outage - Works when played on the challenger's turn
+(deftest servcharacter-outage-challenger-turn-first-run
+  ;; Servcharacter Outage - Works when played on the challenger's turn
   (do-game
-    (new-game (make-deck "New Angeles Sol: Your News" [(qty "Service Outage" 1)
+    (new-game (make-deck "New Angeles Sol: Your News" [(qty "Servcharacter Outage" 1)
                                                        (qty "Breaking News" 1)])
               (default-challenger [(qty "Hades Shard" 1)]))
     (trash-from-hand state :contestant "Breaking News")
@@ -1373,19 +1373,19 @@
     (card-ability state :challenger (get-in @state [:challenger :rig :resource 0]) 0)
     (prompt-choice :challenger "Steal")
     (prompt-choice :contestant "Yes")
-    (prompt-select :contestant (find-card "Service Outage" (:hand (get-contestant))))
-    (is (find-card "Service Outage" (:current (get-contestant)))
-        "Service Outage is in play")
+    (prompt-select :contestant (find-card "Servcharacter Outage" (:hand (get-contestant))))
+    (is (find-card "Servcharacter Outage" (:current (get-contestant)))
+        "Servcharacter Outage is in play")
 
     (is (= 1 (:credit (get-challenger))) "Challenger has 1 credit")
     (run-on state :archives)
     (is (= 0 (:credit (get-challenger)))
         "Challenger spends 1 additional credit to make a run")))
 
-(deftest service-outage-challenger-turn-second-run
-  ;; Service Outage - Doesn't fire if already run when played on the challenger's turn
+(deftest servcharacter-outage-challenger-turn-second-run
+  ;; Servcharacter Outage - Doesn't fire if already run when played on the challenger's turn
   (do-game
-    (new-game (make-deck "New Angeles Sol: Your News" [(qty "Service Outage" 1)
+    (new-game (make-deck "New Angeles Sol: Your News" [(qty "Servcharacter Outage" 1)
                                                        (qty "Breaking News" 1)])
               (default-challenger [(qty "Hades Shard" 1)]))
     (trash-from-hand state :contestant "Breaking News")
@@ -1400,24 +1400,24 @@
     (card-ability state :challenger (get-in @state [:challenger :rig :resource 0]) 0)
     (prompt-choice :challenger "Steal")
     (prompt-choice :contestant "Yes")
-    (prompt-select :contestant (find-card "Service Outage" (:hand (get-contestant))))
-    (is (find-card "Service Outage" (:current (get-contestant)))
-        "Service Outage is in play")
+    (prompt-select :contestant (find-card "Servcharacter Outage" (:hand (get-contestant))))
+    (is (find-card "Servcharacter Outage" (:current (get-contestant)))
+        "Servcharacter Outage is in play")
 
     (is (= 1 (:credit (get-challenger))) "Challenger has 1 credit")
     (run-on state :archives)
     (is (= 1 (:credit (get-challenger)))
         "Challenger doesn't spend 1 additional credit to make a run")))
 
-(deftest service-outage-new-angeles-sol
-  ;; Service Outage trashed and reinstalled on steal doesn't double remove penalty
+(deftest servcharacter-outage-new-angeles-sol
+  ;; Servcharacter Outage trashed and reinstalled on steal doesn't double remove penalty
   (do-game
     (new-game
-      (make-deck "New Angeles Sol: Your News" [(qty "Service Outage" 1)
+      (make-deck "New Angeles Sol: Your News" [(qty "Servcharacter Outage" 1)
                                                (qty "Breaking News" 1)])
       (default-challenger))
     (play-from-hand state :contestant "Breaking News" "New remote")
-    (play-from-hand state :contestant "Service Outage")
+    (play-from-hand state :contestant "Servcharacter Outage")
     (take-credits state :contestant)
 
     (run-on state :remote1)
@@ -1425,7 +1425,7 @@
     (prompt-choice :challenger "Steal")
 
     (prompt-choice :contestant "Yes")
-    (prompt-select :contestant (find-card "Service Outage"
+    (prompt-select :contestant (find-card "Servcharacter Outage"
                                     (:discard (get-contestant))))
 
     (take-credits state :challenger)
@@ -1443,7 +1443,7 @@
     (new-game (default-contestant [(qty "Shipment from SanSan" 3) (qty "Ice Wall" 3)])
               (default-challenger))
     (play-from-hand state :contestant "Ice Wall" "HQ")
-    (let [iwall (get-ice state :hq 0)]
+    (let [iwall (get-character state :hq 0)]
       (play-from-hand state :contestant "Shipment from SanSan")
       (prompt-choice :contestant "2")
       (prompt-select :contestant iwall)
@@ -1468,17 +1468,17 @@
     (is (= 11 (:credit (get-contestant))))))
 
 (deftest sub-boost
-  ;; Sub Boost - Give ICE Barrier
+  ;; Sub Boost - Give Character Barrier
   (do-game
     (new-game (default-contestant [(qty "Sub Boost" 1) (qty "Quandary" 1)])
               (default-challenger))
     (play-from-hand state :contestant "Quandary" "HQ")
     (play-from-hand state :contestant "Sub Boost")
-    (let [qu (get-ice state :hq 0)]
+    (let [qu (get-character state :hq 0)]
       (core/rez state :contestant qu)
       (prompt-select :contestant qu)
       (is (core/has-subtype? (refresh qu) "Code Gate") "Quandary has Code Gate")
-      (is (core/has-subtype? (refresh qu) "Barrier") "Quandary ICE Barrier"))))
+      (is (core/has-subtype? (refresh qu) "Barrier") "Quandary Character Barrier"))))
 
 (deftest subliminal-messaging
   ;; Subliminal Messaging - Playing/trashing/milling will all prompt returning to hand
@@ -1653,7 +1653,7 @@
 (deftest success-jemison
   ;; Success interaction with Jemison, regression test for issue #2704
   (do-game
-    (new-game (make-deck "Jemison Astronautics: Sacrifice. Audacity. Success."
+    (new-game (make-deck "Jemison Astronautics: Sacrifcharacter. Audacity. Success."
                          [(qty "Success" 1)
                           (qty "High-Risk Investment" 1)
                           (qty "Government Takeover" 1)])
@@ -1762,7 +1762,7 @@
       (is (= 5 (:credit (get-contestant))) "Transparency initiative didn't fire"))))
 
 (deftest wetwork-refit
-  ;; Wetwork Refit - Only works on Bioroid ICE and adds a subroutine
+  ;; Wetwork Refit - Only works on Bioroid Character and adds a subroutine
   (do-game
     (new-game (default-contestant [(qty "Eli 1.0" 1)
                              (qty "Vanilla" 1)
@@ -1772,8 +1772,8 @@
     (core/gain state :contestant :click 10)
     (play-from-hand state :contestant "Eli 1.0" "R&D")
     (play-from-hand state :contestant "Vanilla" "HQ")
-    (let [eli (get-ice state :rd 0)
-          vanilla (get-ice state :hq 0)]
+    (let [eli (get-character state :rd 0)
+          vanilla (get-character state :hq 0)]
       (play-from-hand state :contestant "Wetwork Refit")
       (is (not-any? #{"Eli 1.0"} (get-in @state [:contestant :prompt :choices]))
           "Unrezzed Eli 1.0 is not a choice to host Wetwork Refit")

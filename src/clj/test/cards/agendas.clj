@@ -91,14 +91,14 @@
       (play-from-hand state :contestant "Ice Wall" "HQ")
       (let [no-token-astro (get-in @state [:contestant :scored 0])
             token-astro (get-in @state [:contestant :scored 1])
-            hand-ice-wall (find-card "Ice Wall" (:hand get-contestant))
-            installed-ice-wall (get-ice state :hq 0)]
+            hand-character-wall (find-card "Ice Wall" (:hand get-contestant))
+            installed-character-wall (get-character state :hq 0)]
         (should-not-place token-astro no-token-astro " that is scored")
-        (should-not-place token-astro hand-ice-wall " in hand")
-        (should-place token-astro installed-ice-wall " that is installed")))))
+        (should-not-place token-astro hand-character-wall " in hand")
+        (should-place token-astro installed-character-wall " that is installed")))))
 
 (deftest braintrust
-  ;; Braintrust - Discount ICE rez by 1 for every 2 over-advancements when scored
+  ;; Braintrust - Discount Character rez by 1 for every 2 over-advancements when scored
   (do-game
     (new-game (default-contestant [(qty "Braintrust" 1) (qty "Ichi 1.0" 1)])
               (default-challenger))
@@ -110,7 +110,7 @@
         (is (= 2 (get-counters (refresh scored-bt) :agenda))
             "Scored w/ 4 over-advancements; 2 agenda counters")
         (play-from-hand state :contestant "Ichi 1.0" "HQ")
-        (core/rez state :contestant (get-ice state :hq 0))
+        (core/rez state :contestant (get-character state :hq 0))
         (is (= 2 (:credit (get-contestant))) "2c discount to rez Ichi")))))
 
 (deftest breaking-news
@@ -192,10 +192,10 @@
   ;; Dedicated Neural Net
   (do-game
     (new-game (default-contestant [(qty "Dedicated Neural Net" 1) (qty "Scorched Earth" 2)
-                             (qty "Hedge Fund" 1) "Caprice Nisei"])
+                             (qty "Hedge Fund" 1) "Caprcharacter Nisei"])
               (default-challenger [(qty "HQ Interface" 1)]))
     (play-from-hand state :contestant "Dedicated Neural Net" "New remote")
-    (play-from-hand state :contestant "Caprice Nisei" "HQ")
+    (play-from-hand state :contestant "Caprcharacter Nisei" "HQ")
     (score-agenda state :contestant (get-content state :remote1 0))
     (take-credits state :contestant)
     (run-empty-server state :hq)
@@ -208,7 +208,7 @@
     (prompt-choice :challenger "OK")
     ;; test for #2376
     (prompt-choice :challenger "Unrezzed upgrade in HQ")
-    (is (accessing state "Caprice Nisei") "Challenger accessing Caprice")
+    (is (accessing state "Caprcharacter Nisei") "Challenger accessing Caprcharacter")
     (prompt-choice :challenger "No")
     (is (not (:run @state)) "Run completed")
     (run-empty-server state :hq)
@@ -222,7 +222,7 @@
     (is (= 2 (-> (get-contestant) :selected first :max)) "Contestant chooses 2 cards for Challenger to access")))
 
 (deftest eden-fragment
-  ;; Test that Eden Fragment ignores the install cost of the first ice
+  ;; Test that Eden Fragment ignores the install cost of the first character
   (do-game
     (new-game (default-contestant [(qty "Eden Fragment" 3) (qty "Ice Wall" 3)])
               (default-challenger))
@@ -235,11 +235,11 @@
     (take-credits state :challenger)
     (take-credits state :challenger)
     (play-from-hand state :contestant "Ice Wall" "HQ")
-    (is (not (nil? (get-ice state :hq 1))) "Contestant has two ice installed on HQ")
-    (is (= 6 (get-in @state [:contestant :credit])) "Contestant does not pay for installing the first ICE of the turn")
+    (is (not (nil? (get-character state :hq 1))) "Contestant has two character installed on HQ")
+    (is (= 6 (get-in @state [:contestant :credit])) "Contestant does not pay for installing the first Character of the turn")
     (play-from-hand state :contestant "Ice Wall" "HQ")
-    (is (not (nil? (get-ice state :hq 2))) "Contestant has three ice installed on HQ")
-    (is (= 4 (get-in @state [:contestant :credit])) "Contestant pays for installing the second ICE of the turn")))
+    (is (not (nil? (get-character state :hq 2))) "Contestant has three character installed on HQ")
+    (is (= 4 (get-in @state [:contestant :credit])) "Contestant pays for installing the second Character of the turn")))
 
 (deftest efficiency-committee
   ;; Efficiency Committee - Cannot advance cards if agenda counter is used
@@ -255,7 +255,7 @@
     (let [ec1 (get-content state :remote1 0)
           ec2 (get-content state :remote2 0)
           ec3 (get-content state :remote3 0)
-          iw (get-ice state :hq 0)]
+          iw (get-character state :hq 0)]
       (score-agenda state :contestant ec1)
       (let [ec1_scored (get-in @state [:contestant :scored 0])]
         (is (= 3 (get-counters (refresh ec1_scored) :agenda)))
@@ -981,7 +981,7 @@
     (play-from-hand state :contestant "Viktor 1.0" "HQ")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Feedback Filter")
-    (let [viktor (get-ice state :hq 0)
+    (let [viktor (get-character state :hq 0)
           ff (get-in @state [:challenger :rig :hardware 0])]
       (run-on state "HQ")
       (core/rez state :contestant viktor)

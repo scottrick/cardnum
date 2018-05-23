@@ -154,7 +154,7 @@
     (play-from-hand state :contestant "Pup" "HQ")
     (take-credits state :contestant)
     (run-on state :hq)
-    (let [pup (get-ice state :hq 0)]
+    (let [pup (get-character state :hq 0)]
       (core/rez state :contestant pup)
       (card-subroutine state :contestant pup 0)
       (prompt-choice :contestant "Yes")
@@ -184,7 +184,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Employee Strike")
     (run-on state :hq)
-    (let [pup (get-ice state :hq 0)]
+    (let [pup (get-character state :hq 0)]
       (core/rez state :contestant pup)
       (card-subroutine state :contestant pup 0)
       (is (empty? (:prompt (get-contestant))) "No choice because of Employee Strike")
@@ -281,7 +281,7 @@
   ;; Gagarin - pay 1c to access each card in remote
   (do-game
     (new-game
-      (make-deck "Gagarin Deep Space: Expanding the Horizon" [(qty "PAD Campaign" 1) (qty "Caprice Nisei" 1)])
+      (make-deck "Gagarin Deep Space: Expanding the Horizon" [(qty "PAD Campaign" 1) (qty "Caprcharacter Nisei" 1)])
       (default-challenger))
     (core/lose state :challenger :credit 4)
     (is (= 1 (:credit (get-challenger))) "Challenger has 1 credit")
@@ -299,7 +299,7 @@
     (is (not (last-log-contains? state "PAD Campaign")) "No card name was logged")
     (run-empty-server state :hq)
     (prompt-choice :challenger "No") ; Dismiss trash prompt
-    (is (last-log-contains? state "Caprice") "Accessed card name was logged")))
+    (is (last-log-contains? state "Caprcharacter") "Accessed card name was logged")))
 
 (deftest grndl-power-unleashed
   ;; GRNDL: Power Unleashed - start game with 10 credits and 1 bad pub.
@@ -372,12 +372,12 @@
     (play-from-hand state :contestant "Eli 1.0" "HQ")
     (take-credits state :contestant)
     (run-on state "Archives")
-    (core/rez state :contestant (get-ice state :archives 1))
+    (core/rez state :contestant (get-character state :archives 1))
     (run-continue state)
-    (core/rez state :contestant (get-ice state :archives 0))
+    (core/rez state :contestant (get-character state :archives 0))
     (is (= 3 (:credit (get-contestant))) "Contestant has 3 credits after rezzing Eli 1.0")
     (run-continue state)
-    (prompt-select :contestant (get-ice state :hq 0))
+    (prompt-select :contestant (get-character state :hq 0))
     (is (= 3 (:credit (get-contestant))) "Contestant not charged for Architects of Tomorrow rez of Eli 1.0")))
 
 (deftest haas-bioroid-asa-group
@@ -413,13 +413,13 @@
     (is (= 9 (:credit (get-contestant))) "Contestant gained 1cr from EtF")))
 
 (deftest haas-bioroid-stronger-together
-  ;; Stronger Together - +1 strength for Bioroid ice
+  ;; Stronger Together - +1 strength for Bioroid character
   (do-game
     (new-game
       (make-deck "Haas-Bioroid: Stronger Together" [(qty "Eli 1.0" 1)])
       (default-challenger))
     (play-from-hand state :contestant "Eli 1.0" "Archives")
-    (let [eli (get-ice state :archives 0)]
+    (let [eli (get-character state :archives 0)]
       (core/rez state :contestant eli)
       (is (= 5 (:current-strength (refresh eli))) "Eli 1.0 at 5 strength"))))
 
@@ -461,14 +461,14 @@
   ;; Jemison Astronautics - Place advancements when forfeiting agendas
   (do-game
     (new-game
-      (make-deck "Jemison Astronautics: Sacrifice. Audacity. Success." [(qty "Enforcer 1.0" 1) (qty "Hostile Takeover" 1)
+      (make-deck "Jemison Astronautics: Sacrifcharacter. Audacity. Success." [(qty "Enforcer 1.0" 1) (qty "Hostile Takeover" 1)
                                                                         (qty "Ice Wall" 1) (qty "Global Food Initiative" 1)])
       (default-challenger [(qty "Data Dealer" 1)]))
     (play-from-hand state :contestant "Enforcer 1.0" "HQ")
     (play-from-hand state :contestant "Ice Wall" "R&D")
     (play-from-hand state :contestant "Hostile Takeover" "New remote")
-    (let [enf (get-ice state :hq 0)
-          iwall (get-ice state :rd 0)]
+    (let [enf (get-character state :hq 0)
+          iwall (get-character state :rd 0)]
       (take-credits state :contestant)
       (play-from-hand state :challenger "Data Dealer")
       (run-empty-server state "Server 1")
@@ -492,7 +492,7 @@
               (make-deck "Jesminder Sareen: Girl Behind the Curtain" [(qty "Sure Gamble" 3)]))
     (play-from-hand state :contestant "Data Raven" "Archives")
     (take-credits state :contestant)
-    (let [dr (-> @state :contestant :servers :archives :ices first)]
+    (let [dr (-> @state :contestant :servers :archives :characters first)]
       (core/rez state :contestant dr)
       (core/click-run state :challenger {:server "Archives"})
       (card-ability state :contestant dr 0)
@@ -672,14 +672,14 @@
     (play-run-event state (first (:hand (get-challenger))) :hq)
     (is (= 16 (:credit (get-challenger))) "No credit gained for second Run event")))
 
-(deftest khan-vs-caprice
-  ;; Khan - proper order of events when vs. Caprice
+(deftest khan-vs-caprcharacter
+  ;; Khan - proper order of events when vs. Caprcharacter
   (do-game
     (new-game
-      (default-contestant [(qty "Eli 1.0" 1) (qty "Caprice Nisei" 1)])
+      (default-contestant [(qty "Eli 1.0" 1) (qty "Caprcharacter Nisei" 1)])
       (make-deck "Khan: Savvy Skiptracer" [(qty "Corroder" 1)]))
     (play-from-hand state :contestant "Eli 1.0" "Archives")
-    (play-from-hand state :contestant "Caprice Nisei" "Archives")
+    (play-from-hand state :contestant "Caprcharacter Nisei" "Archives")
     (core/rez state :contestant (get-content state :archives 0))
     (take-credits state :contestant)
     (run-on state "Archives")
@@ -691,7 +691,7 @@
     (prompt-select :challenger (first (:hand (get-challenger))))
     (is (find-card "Corroder" (-> (get-challenger) :rig :program)) "Corroder installed")
     (is (= 4 (:credit (get-challenger))) "1cr discount from Khan")
-    (is (= "Caprice Nisei" (-> (get-challenger) :prompt first :card :title)) "Caprice prompt showing")
+    (is (= "Caprcharacter Nisei" (-> (get-challenger) :prompt first :card :title)) "Caprcharacter prompt showing")
     (prompt-choice :challenger "0 [Credits]")
     (prompt-choice :contestant "1 [Credits]")
     (is (not (:run @state)) "Run ended")))
@@ -840,7 +840,7 @@
     (take-credits state :contestant)
 
     (run-on state "HQ")
-    (let [iwall (get-ice state :hq 0)
+    (let [iwall (get-character state :hq 0)
           nasir (get-in @state [:challenger :identity])]
       (core/rez state :contestant iwall)
       (is (= 5 (:credit (get-challenger))) "Nasir Ability does not trigger automatically")
@@ -859,7 +859,7 @@
     (swap! state assoc-in [:challenger :credit] 6)
     (play-from-hand state :challenger "Xanadu")
     (run-on state "HQ")
-    (let [iwall (get-in @state [:contestant :servers :hq :ices 0])
+    (let [iwall (get-in @state [:contestant :servers :hq :characters 0])
           nasir (get-in @state [:challenger :identity])]
       (core/rez state :contestant iwall)
       (is (= 3 (:credit (get-challenger))) "Pay 3 to install Xanadu")
@@ -936,8 +936,8 @@
     (play-from-hand state :contestant "Snowflake" "HQ")
     (play-from-hand state :contestant "Snowflake" "HQ")
     (take-credits state :contestant)
-    (let [s1 (get-in @state [:contestant :servers :hq :ices 0])
-          s2 (get-in @state [:contestant :servers :hq :ices 1])]
+    (let [s1 (get-in @state [:contestant :servers :hq :characters 0])
+          s2 (get-in @state [:contestant :servers :hq :characters 1])]
       (run-on state "HQ")
       (core/rez state :contestant s2)
       (is (= 4 (:credit (get-contestant))))
@@ -1004,10 +1004,10 @@
     (take-credits state :contestant)
     (run-on state "HQ")
     (let [null (get-in @state [:challenger :identity])
-          wrap1 (get-ice state :hq 0)
-          wrap2 (get-ice state :hq 1)]
+          wrap1 (get-character state :hq 0)
+          wrap2 (get-character state :hq 1)]
       (card-ability state :challenger null 0)
-      (is (empty? (:prompt (get-challenger))) "Ability won't work on unrezzed ICE")
+      (is (empty? (:prompt (get-challenger))) "Ability won't work on unrezzed Character")
       (core/rez state :contestant wrap2)
       (card-ability state :challenger null 0)
       (prompt-select :challenger (find-card "Sure Gamble" (:hand (get-challenger))))
@@ -1020,7 +1020,7 @@
       (is (= 7 (:current-strength (refresh wrap2))) "Outer Wraparound back to 7 strength"))))
 
 (deftest null-trashed
-  ;; Null ability - does not affect next ice when current is trashed. Issue #1788.
+  ;; Null ability - does not affect next character when current is trashed. Issue #1788.
   (do-game
     (new-game
       (default-contestant [(qty "Wraparound" 1) (qty "Spiderweb" 1)])
@@ -1030,8 +1030,8 @@
     (take-credits state :contestant)
     (core/gain state :contestant :credit 10)
     (let [null (get-in @state [:challenger :identity])
-          spider (get-ice state :hq 0)
-          wrap (get-ice state :hq 1)]
+          spider (get-character state :hq 0)
+          wrap (get-character state :hq 1)]
       (core/rez state :contestant spider)
       (core/rez state :contestant wrap)
       (play-from-hand state :challenger "Parasite")
@@ -1145,7 +1145,7 @@
     (take-credits state :contestant)
     (run-on state "HQ")
     (let [q (get-in @state [:challenger :identity])
-          iwall (get-ice state :hq 0)
+          iwall (get-character state :hq 0)
           qdef (core/card-def (get-in @state [:challenger :identity]))]
       (core/rez state :contestant iwall)
       (card-ability state :challenger q 0)
@@ -1168,7 +1168,7 @@
       (core/jack-out state :challenger nil))))
 
 (deftest reina-rez-cost-increase
-  ;; Reina Roja - Increase cost of first rezzed ICE
+  ;; Reina Roja - Increase cost of first rezzed Character
   (do-game
     (new-game
       (default-contestant [(qty "Quandary" 3)])
@@ -1177,12 +1177,12 @@
     (take-credits state :contestant)
     (is (= 7 (:credit (get-contestant))))
     (run-on state "R&D")
-    (let [quan (get-ice state :rd 0)]
+    (let [quan (get-character state :rd 0)]
       (core/rez state :contestant quan)
       (is (= 5 (:credit (get-contestant))) "Rez cost increased by 1"))))
 
 (deftest rielle-kit-peddler-ability
-  ;; Rielle "Kit" Peddler - Give ICE Code Gate
+  ;; Rielle "Kit" Peddler - Give Character Code Gate
   (do-game
     (new-game (default-contestant [(qty "Ice Wall" 2)])
               (make-deck "Rielle \"Kit\" Peddler: Transhuman" [(qty "Sure Gamble" 3)]))
@@ -1190,7 +1190,7 @@
     (take-credits state :contestant)
     (run-on state "HQ")
     (let [k (get-in @state [:challenger :identity])
-          iwall (get-ice state :hq 0)]
+          iwall (get-character state :hq 0)]
       (core/rez state :contestant iwall)
       (card-ability state :challenger k 0)
       (is (core/has-subtype? (refresh iwall) "Barrier") "Ice Wall has Barrier")
@@ -1226,7 +1226,7 @@
     (prompt-choice :contestant (find-card "The Maker's Eye" (:discard (get-challenger))))
     (is (= 1 (count (get-in @state [:challenger :rfg]))) "One card RFGed")
     (card-ability state :contestant (get-in @state [:contestant :identity]) 0)
-    (is (empty? (:prompt (get-contestant))) "Cannot use Skorpios twice")))
+    (is (empty? (:prompt (get-contestant))) "Cannot use Skorpios twcharacter")))
 
 (deftest silhouette-expose-trigger-before-access
   ;; Silhouette - Expose trigger ability resolves completely before access. Issue #2173.
@@ -1326,8 +1326,8 @@
     (play-from-hand state :contestant "Eli 1.0" "New remote")
     (play-from-hand state :contestant "Hedge Fund")
     (play-from-hand state :contestant "Crick" "New remote")
-    (let [i1 (get-ice state :remote1 0)
-          i2 (get-ice state :remote2 0)]
+    (let [i1 (get-character state :remote1 0)
+          i2 (get-character state :remote2 0)]
       (take-credits state :contestant 0)
       (take-credits state :challenger)
       (core/rez state :contestant i1)

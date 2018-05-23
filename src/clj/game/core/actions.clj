@@ -3,8 +3,8 @@
 ;; These functions are called by main.clj in response to commands sent by users.
 
 (declare card-str can-rez? can-advance? contestant-install effect-as-handler enforce-msg gain-agenda-point get-remote-names
-         get-run-ices jack-out move name-zone play-instant purge resolve-select run has-subtype?
-         challenger-install trash update-breaker-strength update-ice-in-server update-run-ice win can-run?
+         get-run-characters jack-out move name-zone play-instant purge resolve-select run has-subtype?
+         challenger-install trash update-breaker-strength update-character-in-server update-run-character win can-run?
          can-run-server? can-score? play-sfx)
 
 ;;; Neutral actions
@@ -14,8 +14,8 @@
   (let [card (get-card state card)]
     (case (:type card)
       ("Event" "Operation") (play-instant state side card {:extra-cost [:click 1]})
-      ("Hardware" "Resource" "Program") (challenger-install state side (make-eid state) card {:extra-cost [:click 1]})
-      ("ICE" "Upgrade" "Asset" "Agenda") (contestant-install state side card server {:extra-cost [:click 1] :action :contestant-click-install}))
+      ("Hardware" "Resource" "Program") (challenger-install state side (make-eid state) card {:extra-cost [:click 0]})
+      ("Character" "Upgrade" "Asset" "Agenda") (contestant-install state side card server {:extra-cost [:click 0] :action :contestant-click-install}))
     (trigger-event state side :play card)))
 
 (defn shuffle-deck
@@ -200,13 +200,13 @@
       (do-play-ability state side card ab targets))))
 
 (defn play-auto-pump
-  "Use the 'match strength with ice' function of icebreakers."
+  "Use the 'match strength with character' function of icebreakers."
   [state side args]
   (let [run (:run @state) card (get-card state (:card args))
-        current-ice (when (and run (> (or (:position run) 0) 0)) (get-card state ((get-run-ices state) (dec (:position run)))))
+        current-character (when (and run (> (or (:position run) 0) 0)) (get-card state ((get-run-characters state) (dec (:position run)))))
         pumpabi (some #(when (:pump %) %) (:abilities (card-def card)))
         pumpcst (when pumpabi (second (drop-while #(and (not= % :credit) (not= % "credit")) (:cost pumpabi))))
-        strdif (when current-ice (max 0 (- (or (:current-strength current-ice) (:strength current-ice))
+        strdif (when current-character (max 0 (- (or (:current-strength current-character) (:strength current-character))
                                            (or (:current-strength card) (:strength card)))))
         pumpnum (when strdif (int (Math/ceil (/ strdif (:pump pumpabi)))))]
     (when (and pumpnum pumpcst (>= (get-in @state [:challenger :credit]) (* pumpnum pumpcst)))
@@ -295,7 +295,7 @@
      (if (or force (can-rez? state side card))
        (do
          (trigger-event state side :pre-rez card)
-         (if (or (#{"Asset" "ICE" "Upgrade"} (:type card))
+         (if (or (#{"Asset" "Character" "Upgrade"} (:type card))
                    (:install-rezzed (card-def card)))
            (do (trigger-event state side :pre-rez-cost card)
                (if (and altcost (can-pay? state side nil altcost)(not ignore-cost))
@@ -339,9 +339,9 @@
                        (toast state :contestant "You are not allowed to rez cards between Start of Turn and Mandatory Draw.
                         Please rez prior to clicking Start Turn in the future." "warning"
                               {:time-out 0 :close-button true}))
-                     (if (ice? card)
-                       (do (update-ice-strength state side card)
-                           (play-sfx state side "rez-ice"))
+                     (if (character? card)
+                       (do (update-character-strength state side card)
+                           (play-sfx state side "rez-character"))
                        (play-sfx state side "rez-other"))
                      (trigger-event-sync state side eid :rez card)))))
            (effect-completed state side eid))
@@ -417,13 +417,13 @@
   (swap! state assoc-in [:run :no-action] true)
   (system-msg state side "has no further action")
   (trigger-event state side :no-action)
-  (let [run-ice (get-run-ices state)
+  (let [run-character (get-run-characters state)
         pos (get-in @state [:run :position])
-        ice (when (and pos (pos? pos) (<= pos (count run-ice)))
-              (get-card state (nth run-ice (dec pos))))]
-    (when (rezzed? ice)
-      (trigger-event state side :encounter-ice ice)
-      (update-ice-strength state side ice))))
+        character (when (and pos (pos? pos) (<= pos (count run-character)))
+              (get-card state (nth run-character (dec pos))))]
+    (when (rezzed? character)
+      (trigger-event state side :encounter-character character)
+      (update-character-strength state side character))))
 
 ;;; Challenger actions
 (defn click-run
@@ -451,25 +451,25 @@
       (play-sfx state side "click-remove-tag"))))
 
 (defn continue
-  "The challenger decides to approach the next ice, or the server itself."
+  "The challenger decides to approach the next character, or the server itself."
   [state side args]
   (when (get-in @state [:run :no-action])
-    (let [run-ice (get-run-ices state)
+    (let [run-character (get-run-characters state)
           pos (get-in @state [:run :position])
-          cur-ice (when (and pos (pos? pos) (<= pos (count run-ice)))
-                    (get-card state (nth run-ice (dec pos))))
-          next-ice (when (and pos (< 1 pos) (<= (dec pos) (count run-ice)))
-                     (get-card state (nth run-ice (- pos 2))))]
-      (when-completed (trigger-event-sync state side :pass-ice cur-ice)
-                      (do (update-ice-in-server
+          cur-character (when (and pos (pos? pos) (<= pos (count run-character)))
+                    (get-card state (nth run-character (dec pos))))
+          next-character (when (and pos (< 1 pos) (<= (dec pos) (count run-character)))
+                     (get-card state (nth run-character (- pos 2))))]
+      (when-completed (trigger-event-sync state side :pass-character cur-character)
+                      (do (update-character-in-server
                             state side (get-in @state (concat [:contestant :servers] (get-in @state [:run :server]))))
                           (swap! state update-in [:run :position] dec)
                           (swap! state assoc-in [:run :no-action] false)
                           (system-msg state side "continues the run")
-                          (when cur-ice
-                            (update-ice-strength state side cur-ice))
-                          (when next-ice
-                            (trigger-event-sync state side (make-eid state) :approach-ice next-ice))
+                          (when cur-character
+                            (update-character-strength state side cur-character))
+                          (when next-character
+                            (trigger-event-sync state side (make-eid state) :approach-character next-character))
                           (doseq [p (filter #(has-subtype? % "Icebreaker") (all-installed state :challenger))]
                             (update! state side (update-in (get-card state p) [:pump] dissoc :encounter))
                             (update-breaker-strength state side p)))))))

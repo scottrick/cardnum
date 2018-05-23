@@ -10,7 +10,7 @@
                  :effect (effect (run :rd {:req (req (= target :rd))
                                            :replace-access
                                            {:prompt "Choose a card to shuffle into R&D"
-                                            :choices {:req #(and (not (ice? %))
+                                            :choices {:req #(and (not (character? %))
                                                                  (not (rezzed? %))
                                                                  (not (:advance-counter %)))}
                                             :effect (req (move state :contestant target :deck)
@@ -25,30 +25,30 @@
    "Bishop"
    {:abilities [{:cost [:click 1]
                  :effect (req (let [b (get-card state card)
-                                    hosted? (ice? (:host b))
+                                    hosted? (character? (:host b))
                                     remote? (is-remote? (second (:zone (:host b))))]
                                 (resolve-ability state side
-                                 {:prompt (msg "Host Bishop on a piece of ICE protecting "
+                                 {:prompt (msg "Host Bishop on a piece of Character protecting "
                                             (if hosted? (if remote? "a central" "a remote") "any") " server")
                                   :choices {:req #(if hosted?
                                                     (and (if remote?
                                                            (is-central? (second (:zone %)))
                                                            (is-remote? (second (:zone %))))
-                                                         (ice? %)
+                                                         (character? %)
                                                          (can-host? %)
-                                                         (= (last (:zone %)) :ices)
+                                                         (= (last (:zone %)) :characters)
                                                          (not (some (fn [c] (has-subtype? c "Caïssa"))
                                                                     (:hosted %))))
-                                                    (and (ice? %)
+                                                    (and (character? %)
                                                          (can-host? %)
-                                                         (= (last (:zone %)) :ices)
+                                                         (= (last (:zone %)) :characters)
                                                          (not (some (fn [c] (has-subtype? c :subtype "Caïssa"))
                                                                     (:hosted %)))))}
                                   :msg (msg "host it on " (card-str state target))
                                   :effect (effect (host target card))} card nil)))}]
-    :events {:pre-ice-strength
+    :events {:pre-character-strength
              {:req (req (and (= (:cid target) (:cid (:host card))) (:rezzed target)))
-              :effect (effect (ice-strength-bonus -2 target))}}}
+              :effect (effect (character-strength-bonus -2 target))}}}
 
    "Bug"
    {:implementation "Can only pay to see last card drawn after multiple draws"
@@ -90,22 +90,22 @@
     :leave-play (req (swap! state update-in [:contestant :register] dissoc :cannot-score))}
 
    "Collective Consciousness"
-   {:events {:rez {:req (req (ice? target)) :msg "draw 1 card"
+   {:events {:rez {:req (req (character? target)) :msg "draw 1 card"
                    :effect (effect (draw :challenger))}}}
 
    "Copycat"
    {:abilities [{:req (req (and (:run @state)
-                                (:rezzed current-ice)))
-                 :effect (req (let [icename (:title current-ice)]
+                                (:rezzed current-character)))
+                 :effect (req (let [charactername (:title current-character)]
                                 (resolve-ability
                                   state side
-                                  {:prompt (msg "Choose a rezzed copy of " icename)
+                                  {:prompt (msg "Choose a rezzed copy of " charactername)
                                    :choices {:req #(and (rezzed? %)
-                                                        (ice? %)
-                                                        (= (:title %) icename))}
+                                                        (character? %)
+                                                        (= (:title %) charactername))}
                                    :msg "redirect the run"
                                    :effect (req (let [dest (second (:zone target))
-                                                      tgtndx (ice-index state target)]
+                                                      tgtndx (character-index state target)]
                                                   (swap! state update-in [:run]
                                                          #(assoc % :position tgtndx :server [dest]))
                                                   (trash state side card {:cause :ability-cost})))}
@@ -113,9 +113,9 @@
 
    "Crescentus"
    {:implementation "Does not check that all subroutines were broken"
-    :abilities [{:req (req (rezzed? current-ice))
-                 :msg (msg "derez " (:title current-ice))
-                 :effect (effect (trash card {:cause :ability-cost}) (derez current-ice))}]}
+    :abilities [{:req (req (rezzed? current-character))
+                 :msg (msg "derez " (:title current-character))
+                 :effect (effect (trash card {:cause :ability-cost}) (derez current-character))}]}
 
    "Customized Secretary"
    (letfn [(custsec-host [cards]
@@ -146,7 +146,7 @@
                                   (challenger-install state side target)))}]})
 
    "D4v1d"
-   {:implementation "Does not check that ICE strength is 5 or greater"
+   {:implementation "Does not check that Character strength is 5 or greater"
     :data {:counter {:power 3}}
     :abilities [{:counter-cost [:power 1]
                  :msg "break 1 subroutine"}]}
@@ -172,16 +172,16 @@
               {:successful-run {:silent (req true)
                                 :effect (effect (add-counter card :virus 1))
                                 :req (req (#{:hq :rd :archives} target))}
-               :pre-ice-strength {:req (req (and (= (:cid target) (:cid current-ice))
+               :pre-character-strength {:req (req (and (= (:cid target) (:cid current-character))
                                                  (:datasucker-count card)))
                                   :effect (req (let [c (:datasucker-count (get-card state card))]
-                                                 (ice-strength-bonus state side (- c) target)))}
-               :pass-ice ds :run-ends ds})
+                                                 (character-strength-bonus state side (- c) target)))}
+               :pass-character ds :run-ends ds})
     :abilities [{:counter-cost [:virus 1]
-                 :msg (msg "give -1 strength to " (:title current-ice))
-                 :req (req (and current-ice (:rezzed current-ice)))
+                 :msg (msg "give -1 strength to " (:title current-character))
+                 :req (req (and current-character (:rezzed current-character)))
                  :effect (req (update! state side (update-in card [:datasucker-count] (fnil #(+ % 1) 0)))
-                              (update-ice-strength state side current-ice))}]}
+                              (update-character-strength state side current-character))}]}
 
    "Deep Thought"
    {:events {:successful-run {:silent (req true)
@@ -278,14 +278,14 @@
 
    "Egret"
    {:implementation "Added subtypes don't get removed when Egret is moved/trashed"
-    :hosting {:req #(and (ice? %) (can-host? %) (rezzed? %))}
+    :hosting {:req #(and (character? %) (can-host? %) (rezzed? %))}
     :msg (msg "make " (card-str state (:host card)) " gain Barrier, Code Gate and Sentry subtypes")
     :effect (req (when-let [h (:host card)]
                    (update! state side (assoc-in card [:special :installing] true))
-                   (update-ice-strength state side h)
+                   (update-character-strength state side h)
                    (when-let [card (get-card state card)]
                      (update! state side (update-in card [:special] dissoc :installing)))))
-    :events {:ice-strength-changed
+    :events {:character-strength-changed
              {:effect (req (unregister-events state side card)
                            (when (get-in card [:special :installing])
                              (update! state side (assoc (:host (get-card state card)) :subtype (combine-subtypes false(-> card :host :subtype) "Barrier" "Code Gate" "Sentry")))
@@ -328,23 +328,23 @@
 
    "False Echo"
    {:abilities [{:req (req (and run
-                                (< (:position run) (count run-ices))
-                                (not (rezzed? current-ice))))
-                 :msg "make the Contestant rez the passed ICE or add it to HQ"
+                                (< (:position run) (count run-characters))
+                                (not (rezzed? current-character))))
+                 :msg "make the Contestant rez the passed Character or add it to HQ"
                  :effect (req (let [s (:server run)
-                                    ice (nth (get-in @state (vec (concat [:contestant :servers] s [:ices]))) (:position run))
-                                    icename (:title ice)
-                                    icecost (rez-cost state side ice)]
+                                    character (nth (get-in @state (vec (concat [:contestant :servers] s [:characters]))) (:position run))
+                                    charactername (:title character)
+                                    charactercost (rez-cost state side character)]
                                 (continue-ability
                                   state side
-                                  {:prompt (msg "Rez " icename " or add it to HQ?") :player :contestant
-                                   :choices (req (if (< (:credit contestant) icecost)
+                                  {:prompt (msg "Rez " charactername " or add it to HQ?") :player :contestant
+                                   :choices (req (if (< (:credit contestant) charactercost)
                                                      ["Add to HQ"]
                                                      ["Rez" "Add to HQ"]))
                                    :effect (req (if (= target "Rez")
-                                                  (rez state side ice)
-                                                  (do (move state :contestant ice :hand nil)
-                                                      (system-msg state :contestant (str "chooses to add the passed ICE to HQ"))))
+                                                  (rez state side character)
+                                                  (do (move state :contestant character :hand nil)
+                                                      (system-msg state :contestant (str "chooses to add the passed Character to HQ"))))
                                                 (trash state side card))}
                                  card nil)))}]}
 
@@ -563,44 +563,44 @@
 
    "Paintbrush"
    {:abilities [{:cost [:click 1]
-                 :choices {:req #(and (installed? %) (ice? %) (rezzed? %))}
-                 :effect (req (let [ice target
-                                    stypes (:subtype ice)]
+                 :choices {:req #(and (installed? %) (character? %) (rezzed? %))}
+                 :effect (req (let [character target
+                                    stypes (:subtype character)]
                            (resolve-ability
                               state :challenger
                               {:prompt (msg "Choose a subtype")
                                :choices ["Sentry" "Code Gate" "Barrier"]
-                               :msg (msg "spend [Click] and make " (card-str state ice) " gain " (.toLowerCase target)
+                               :msg (msg "spend [Click] and make " (card-str state character) " gain " (.toLowerCase target)
                                          " until the end of the next run this turn")
-                               :effect (effect (update! (assoc ice :subtype (combine-subtypes true stypes target)))
-                                               (update-ice-strength (get-card state ice))
+                               :effect (effect (update! (assoc character :subtype (combine-subtypes true stypes target)))
+                                               (update-character-strength (get-card state character))
                                                (register-events {:run-ends
-                                                                 {:effect (effect (update! (assoc ice :subtype stypes))
+                                                                 {:effect (effect (update! (assoc character :subtype stypes))
                                                                                   (unregister-events card)
-                                                                                  (update-ice-strength (get-card state ice)))}} card))}
+                                                                                  (update-character-strength (get-card state character)))}} card))}
                             card nil)))}]
     :events {:run-ends nil}}
 
    "Panchatantra"
-   {:abilities [{:msg "add a custom subtype to currently encountered ICE"
+   {:abilities [{:msg "add a custom subtype to currently encountered Character"
                  :once :per-turn}]}
 
    "Parasite"
-   {:hosting {:req #(and (ice? %) (can-host? %) (rezzed? %))}
+   {:hosting {:req #(and (character? %) (can-host? %) (rezzed? %))}
     :effect (req (when-let [h (:host card)]
                    (update! state side (assoc-in card [:special :installing] true))
-                   (update-ice-strength state side h)
+                   (update-character-strength state side h)
                    (when-let [card (get-card state card)]
                      (update! state side (update-in card [:special] dissoc :installing)))))
     :events {:challenger-turn-begins
              {:effect (req (add-counter state side card :virus 1))}
              :counter-added
              {:req (req (or (= (:title target) "Hivemind") (= (:cid target) (:cid card))))
-              :effect (effect (update-ice-strength (:host card)))}
-             :pre-ice-strength
+              :effect (effect (update-character-strength (:host card)))}
+             :pre-character-strength
              {:req (req (= (:cid target) (:cid (:host card))))
-              :effect (effect (ice-strength-bonus (- (get-virus-counters state side card)) target))}
-             :ice-strength-changed
+              :effect (effect (character-strength-bonus (- (get-virus-counters state side card)) target))}
+             :character-strength-changed
              {:req (req (and (= (:cid target) (:cid (:host card)))
                              (not (card-flag? (:host card) :untrashable-while-rezzed true))
                              (<= (:current-strength target) 0)))
@@ -617,19 +617,19 @@
 
    "Pawn"
    {:implementation "All abilities are manual"
-    :abilities [{:label "Host Pawn on the outermost ICE of a central server"
-                 :prompt "Host Pawn on the outermost ICE of a central server" :cost [:click 1]
-                 :choices {:req #(and (ice? %)
+    :abilities [{:label "Host Pawn on the outermost Character of a central server"
+                 :prompt "Host Pawn on the outermost Character of a central server" :cost [:click 1]
+                 :choices {:req #(and (character? %)
                                       (can-host? %)
-                                      (= (last (:zone %)) :ices)
+                                      (= (last (:zone %)) :characters)
                                       (is-central? (second (:zone %))))}
                  :msg (msg "host it on " (card-str state target))
                  :effect (effect (host target card))}
-                {:label "Advance to next ICE"
-                 :prompt "Choose the next innermost ICE to host Pawn on it"
-                 :choices {:req #(and (ice? %)
+                {:label "Advance to next Character"
+                 :prompt "Choose the next innermost Character to host Pawn on it"
+                 :choices {:req #(and (character? %)
                                       (can-host? %)
-                                      (= (last (:zone %)) :ices)
+                                      (= (last (:zone %)) :characters)
                                       (is-central? (second (:zone %))))}
                  :msg (msg "host it on " (card-str state target))
                  :effect (effect (host target card))}
@@ -738,23 +738,23 @@
    "Rook"
    {:abilities [{:cost [:click 1]
                  :effect (req (let [r (get-card state card)
-                                    hosted? (ice? (:host r))
-                                    icepos (ice-index state (get-card state (:host r)))]
+                                    hosted? (character? (:host r))
+                                    characterpos (character-index state (get-card state (:host r)))]
                                 (resolve-ability state side
                                  {:prompt (if hosted?
-                                            (msg "Host Rook on a piece of ICE protecting this server or at position "
-                                              icepos " of a different server")
-                                            (msg "Host Rook on a piece of ICE protecting any server"))
+                                            (msg "Host Rook on a piece of Character protecting this server or at position "
+                                              characterpos " of a different server")
+                                            (msg "Host Rook on a piece of Character protecting any server"))
                                   :choices {:req #(if hosted?
                                                     (and (or (= (:zone %) (:zone (:host r)))
-                                                             (= (ice-index state %) icepos))
-                                                         (= (last (:zone %)) :ices)
-                                                         (ice? %)
+                                                             (= (character-index state %) characterpos))
+                                                         (= (last (:zone %)) :characters)
+                                                         (character? %)
                                                          (can-host? %)
                                                          (not (some (fn [c] (has? c :subtype "Caïssa")) (:hosted %))))
-                                                    (and (ice? %)
+                                                    (and (character? %)
                                                          (can-host? %)
-                                                         (= (last (:zone %)) :ices)
+                                                         (= (last (:zone %)) :characters)
                                                          (not (some (fn [c] (has? c :subtype "Caïssa")) (:hosted %)))))}
                                   :msg (msg "host it on " (card-str state target))
                                   :effect (effect (host target card))} card nil)))}]
@@ -830,9 +830,9 @@
                                    card))}]}
 
    "Snitch"
-   {:abilities [{:once :per-run :req (req (and (ice? current-ice) (not (rezzed? current-ice))))
+   {:abilities [{:once :per-run :req (req (and (character? current-character) (not (rezzed? current-character))))
                  :delayed-completion true
-                 :effect (req (when-completed (expose state side current-ice)
+                 :effect (req (when-completed (expose state side current-character)
                                               (continue-ability
                                                 state side
                                                 {:optional {:prompt "Jack out?"
@@ -842,28 +842,28 @@
                                                 card nil)))}]}
 
    "Surfer"
-   (letfn [(surf [state cice]
-             {:prompt (msg "Choose an ICE before or after " (:title cice))
-              :choices {:req #(and (ice? %)
-                                   (= (:zone %) (:zone cice))
-                                   (= 1 (abs (- (ice-index state %)
-                                                (ice-index state cice)))))}
-              :msg "swap a piece of Barrier ICE"
-              :effect (req (let [tgtndx (ice-index state target)
-                                 cidx (ice-index state cice)]
-                             (swap! state update-in (cons :contestant (:zone cice))
-                                    #(assoc % tgtndx cice))
-                             (swap! state update-in (cons :contestant (:zone cice))
+   (letfn [(surf [state ccharacter]
+             {:prompt (msg "Choose an Character before or after " (:title ccharacter))
+              :choices {:req #(and (character? %)
+                                   (= (:zone %) (:zone ccharacter))
+                                   (= 1 (abs (- (character-index state %)
+                                                (character-index state ccharacter)))))}
+              :msg "swap a piece of Barrier Character"
+              :effect (req (let [tgtndx (character-index state target)
+                                 cidx (character-index state ccharacter)]
+                             (swap! state update-in (cons :contestant (:zone ccharacter))
+                                    #(assoc % tgtndx ccharacter))
+                             (swap! state update-in (cons :contestant (:zone ccharacter))
                                     #(assoc % cidx target))
                              (swap! state update-in [:run] #(assoc % :position (inc tgtndx)))
-                             (update-all-ice state side)
-                             (trigger-event state side :approach-ice current-ice)))})]
+                             (update-all-character state side)
+                             (trigger-event state side :approach-character current-character)))})]
      {:abilities [{:cost [:credit 2]
                    :req (req (and (:run @state)
-                                  (rezzed? current-ice)
-                                  (has-subtype? current-ice "Barrier")))
-                   :label "Swap the Barrier ICE currently being encountered with a piece of ICE directly before or after it"
-                   :effect (effect (resolve-ability (surf state current-ice) card nil))}]})
+                                  (rezzed? current-character)
+                                  (has-subtype? current-character "Barrier")))
+                   :label "Swap the Barrier Character currently being encountered with a piece of Character directly before or after it"
+                   :effect (effect (resolve-ability (surf state current-character) card nil))}]})
 
    "Takobi"
    {:implementation "Adding power counter is manual"
@@ -871,7 +871,7 @@
                  :effect (effect (add-counter card :power 1)
                                  (system-msg "adds a power counter to Takobi"))}
                 {:req (req (and (:run @state)
-                                (rezzed? current-ice)
+                                (rezzed? current-character)
                                 (>= (get-in card [:counter :power] 0) 2)))
                  :counter-cost [:power 2]
                  :label "Increase non-AI icebreaker strength by +3 until end of encounter"
@@ -946,7 +946,7 @@
                                                card nil)))})
            
            (expose-and-maybe-bounce [chosen-subtype]
-             {:choices {:req #(and (ice? %) (not (rezzed? %)))}
+             {:choices {:req #(and (character? %) (not (rezzed? %)))}
               :delayed-completion true
               :msg (str "name " chosen-subtype)
               :effect (req (when-completed (expose state side target)
@@ -961,7 +961,7 @@
                :delayed-completion true
                :req (req (and (= target :hq)
                               (first-successful-run-on-server? state :hq)
-                              (some #(and (ice? %) (not (rezzed? %)))
+                              (some #(and (character? %) (not (rezzed? %)))
                                     (all-installed state :contestant))))
                :effect (effect (continue-ability
                                 {:prompt "Use Wari?"

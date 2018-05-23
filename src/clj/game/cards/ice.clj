@@ -2,7 +2,7 @@
 
 (declare trash-program trash-hardware trash-resource-sub trash-installed)
 
-;;;; Helper functions specific for ICE
+;;;; Helper functions specific for Character
 
 ;;; Challenger abilites for breaking subs
 (defn challenger-break
@@ -102,24 +102,24 @@
           (system-msg (str "takes 1 bad publicity from " (:title card)))))
 
 
-;;; For Advanceable ICE
+;;; For Advanceable Character
 (def advance-counters
-  "Number of advancement counters - for advanceable ICE."
+  "Number of advancement counters - for advanceable Character."
   (req (+ (:advance-counter card 0) (:extra-advance-counter card 0))))
 
-(def space-ice-rez-bonus
-  "Amount of rez reduction for the Space ICE."
+(def space-character-rez-bonus
+  "Amount of rez reduction for the Space Character."
   (req (* -3 (+ (:advance-counter card 0) (:extra-advance-counter card 0)))))
 
-(defn space-ice
-  "Creates data for Space ICE with specified abilities."
+(defn space-character
+  "Creates data for Space Character with specified abilities."
   [& abilities]
   {:advanceable :always
    :subroutines (vec abilities)
-   :rez-cost-bonus space-ice-rez-bonus})
+   :rez-cost-bonus space-character-rez-bonus})
 
 
-;;; For Grail ICE
+;;; For Grail Character
 (defn grail-in-hand
   "Req that specified card is a Grail card in the Contestant's hand."
   [card]
@@ -128,55 +128,55 @@
        (has-subtype? card "Grail")))
 
 (def reveal-grail
-  "Ability for revealing Grail ICE from HQ."
-  {:label "Reveal up to 2 Grail ICE from HQ"
+  "Ability for revealing Grail Character from HQ."
+  {:label "Reveal up to 2 Grail Character from HQ"
    :choices {:max 2
              :req grail-in-hand}
    :msg (let [sub-label #(:label (first (:subroutines (card-def %))))]
           (msg "reveal " (join ", " (map #(str (:title %) " (" (sub-label %) ")") targets))))})
 
 (def resolve-grail
-  "Ability for resolving a subroutine on a Grail ICE in HQ."
-  {:label "Resolve a Grail ICE subroutine from HQ"
+  "Ability for resolving a subroutine on a Grail Character in HQ."
+  {:label "Resolve a Grail Character subroutine from HQ"
    :choices {:req grail-in-hand}
-   :effect (req (doseq [ice targets]
-                  (let [subroutine (first (:subroutines (card-def ice)))]
+   :effect (req (doseq [character targets]
+                  (let [subroutine (first (:subroutines (card-def character)))]
                     (resolve-ability state side subroutine card nil))))})
 
-(defn grail-ice
-  "Creates data for grail ICE"
+(defn grail-character
+  "Creates data for grail Character"
   [ability]
   {:abilities [reveal-grail]
    :subroutines [ability resolve-grail]})
 
 
-;;; For NEXT ICE
-(defn next-ice-count
-  "Counts number of rezzed NEXT ICE - for use with NEXT Bronze and NEXT Gold"
+;;; For NEXT Character
+(defn next-character-count
+  "Counts number of rezzed NEXT Character - for use with NEXT Bronze and NEXT Gold"
   [contestant]
   (let [servers (flatten (seq (:servers contestant)))
         rezzed-next? #(and (rezzed? %) (has-subtype? % "NEXT"))]
-    (reduce (fn [c server] (+ c (count (filter rezzed-next? (:ices server))))) 0 servers)))
+    (reduce (fn [c server] (+ c (count (filter rezzed-next? (:characters server))))) 0 servers)))
 
 
-;;; For Morph ICE
+;;; For Morph Character
 (defn morph [state side card new old]
   (update! state side (assoc card
                         :subtype-target new
                         :subtype (combine-subtypes true
                                                    (remove-subtypes (:subtype card) old)
                                                    new)))
-  (update-ice-strength state side card))
+  (update-character-strength state side card))
 
 (defn morph-effect
-  "Creates morph effect for ICE. Morphs from base type to other type"
+  "Creates morph effect for Character. Morphs from base type to other type"
   [base other]
   (req (if (odd? (get (get-card state card) :advance-counter 0))
          (morph state side card other base)
          (morph state side card base other))))
 
-(defn morph-ice
-  "Creates the data for morph ICE with specified types and ability."
+(defn morph-character
+  "Creates the data for morph Character with specified types and ability."
   [base other ability]
   (let [ab {:req (req (= (:cid card) (:cid target)))
             :effect (morph-effect base other)}]
@@ -186,21 +186,21 @@
      :events {:advance ab :advancement-placed ab}}))
 
 
-;;; For Constellation ICE
-(defn constellation-ice
-  "Generates map for Constellation ICE with specified effect."
+;;; For Constellation Character
+(defn constellation-character
+  "Generates map for Constellation Character with specified effect."
   [ability]
   {:subroutines [(trace-ability 2 (assoc ability :kicker (assoc ability :min 5)))]})
 
-;;; Helper function for adding implementation notes to ICE defined with functions
+;;; Helper function for adding implementation notes to Character defined with functions
 (defn- implementation-note
-  "Adds an implementation note to the ice-definition"
-  [note ice-def]
-  (assoc ice-def :implementation note))
+  "Adds an implementation note to the character-definition"
+  [note character-def]
+  (assoc character-def :implementation note))
 
 
 ;;;; Card definitions
-(def cards-ice
+(def cards-character
   {"Aiki"
    {:subroutines [(do-psi {:label "Challenger draws 2 cards"
                            :msg "make the Challenger draw 2 cards"
@@ -215,7 +215,7 @@
                                                    (join ", " (map :title (take 3 (:deck challenger))))
                                                    " from the Challenger's Stack"))
                                   (mill state :challenger 3))
-                                (when current-ice
+                                (when current-character
                                   (no-action state :contestant nil)
                                   (continue state :challenger nil))
                                 (trash state side card)
@@ -299,7 +299,7 @@
                   (trace-ability 4 trash-program)]}
 
    "Asteroid Belt"
-   (space-ice end-the-run)
+   (space-character end-the-run)
 
    "Authenticator"
    {:implementation "Encounter effect is manual"
@@ -350,37 +350,37 @@
                                         card nil))))}]}
 
    "Bloom"
-   (let [ice-index (fn [state i] (first (keep-indexed #(when (= (:cid %2) (:cid i)) %1)
+   (let [character-index (fn [state i] (first (keep-indexed #(when (= (:cid %2) (:cid i)) %1)
                                                       (get-in @state (cons :contestant (:zone i))))))]
      {:subroutines
-              [{:label "Install a piece of ice from HQ protecting another server, ignoring all costs"
-                :prompt "Choose ICE to install from HQ in another server"
+              [{:label "Install a piece of character from HQ protecting another server, ignoring all costs"
+                :prompt "Choose Character to install from HQ in another server"
                 :delayed-completion true
-                :choices {:req #(and (ice? %)
+                :choices {:req #(and (character? %)
                                      (in-hand? %))}
                 :effect (req (let [this (zone->name (second (:zone card)))
-                                   nice target]
+                                   ncharacter target]
                                (continue-ability state side
                                                  {:prompt (str "Choose a location to install " (:title target))
-                                                  :choices (req (remove #(= this %) (contestant-install-list state nice)))
+                                                  :choices (req (remove #(= this %) (contestant-install-list state ncharacter)))
                                                   :delayed-completion true
-                                                  :effect (effect (contestant-install nice target {:no-install-cost true}))}
+                                                  :effect (effect (contestant-install ncharacter target {:no-install-cost true}))}
                                                  card nil)))}
-               {:label "Install a piece of ice from HQ in the next innermost position, protecting this server, ignoring all costs"
-                :prompt "Choose ICE to install from HQ in this server"
+               {:label "Install a piece of character from HQ in the next innermost position, protecting this server, ignoring all costs"
+                :prompt "Choose Character to install from HQ in this server"
                 :delayed-completion true
-                :choices {:req #(and (ice? %)
+                :choices {:req #(and (character? %)
                                      (in-hand? %))}
-                :effect (req (let [newice (assoc target :zone (:zone card))
-                                   bndx (ice-index state card)
-                                   ices (get-in @state (cons :contestant (:zone card)))
-                                   newices (apply conj (subvec ices 0 bndx) newice (subvec ices bndx))]
-                               (swap! state assoc-in (cons :contestant (:zone card)) newices)
+                :effect (req (let [newcharacter (assoc target :zone (:zone card))
+                                   bndx (character-index state card)
+                                   characters (get-in @state (cons :contestant (:zone card)))
+                                   newcharacters (apply conj (subvec characters 0 bndx) newcharacter (subvec characters bndx))]
+                               (swap! state assoc-in (cons :contestant (:zone card)) newcharacters)
                                (swap! state update-in (cons :contestant (:zone target))
                                       (fn [coll] (remove-once #(not= (:cid %) (:cid target)) coll)))
-                               (card-init state side newice {:resolve-effect false
+                               (card-init state side newcharacter {:resolve-effect false
                                                              :init-data true})
-                               (trigger-event state side :contestant-install newice)))}]})
+                               (trigger-event state side :contestant-install newcharacter)))}]})
 
    "Brainstorm"
    {:abilities [{:label "Gain subroutines"
@@ -391,10 +391,10 @@
    {:abilities [{:label "Move Builder to the outermost position of any server"
                  :cost [:click 1] :prompt "Choose a server" :choices (req servers)
                  :msg (msg "move it to the outermost position of " target)
-                 :effect (effect (move card (conj (server->zone state target) :ices)))}]
-    :subroutines [{:label "Place 1 advancement token on an ICE that can be advanced protecting this server"
+                 :effect (effect (move card (conj (server->zone state target) :characters)))}]
+    :subroutines [{:label "Place 1 advancement token on an Character that can be advanced protecting this server"
                    :msg (msg "place 1 advancement token on " (card-str state target))
-                   :choices {:req #(and (ice? %)
+                   :choices {:req #(and (character? %)
                                         (can-be-advanced? %))}
                    :effect (effect (add-prop target :advance-counter 1 {:placed true}))}]}
 
@@ -406,10 +406,10 @@
                            :msg (msg "move it to the outermost position of " target)
                            :effect (req (let [dest (server->zone state target)]
                                           (swap! state update-in [:run]
-                                                 #(assoc % :position (count (get-in contestant (conj dest :ices)))
+                                                 #(assoc % :position (count (get-in contestant (conj dest :characters)))
                                                            :server (rest dest))))
                                         (move state side card
-                                              (conj (server->zone state target) :ices)))})]}
+                                              (conj (server->zone state target) :characters)))})]}
 
    "Bulwark"
    {:effect take-bad-pub
@@ -435,14 +435,14 @@
                   (trace-ability 2 end-the-run)]}
 
    "Cell Portal"
-   {:subroutines [{:msg "make the Challenger approach the outermost ICE"
+   {:subroutines [{:msg "make the Challenger approach the outermost Character"
                    :effect (req (let [srv (first (:server run))
-                                      n (count (get-in @state [:contestant :servers srv :ices]))]
+                                      n (count (get-in @state [:contestant :servers srv :characters]))]
                                   (swap! state assoc-in [:run :position] n)
                                   (derez state side card)))}]}
 
    "Changeling"
-   (morph-ice "Barrier" "Sentry" end-the-run)
+   (morph-character "Barrier" "Sentry" end-the-run)
 
    "Checkpoint"
    {:effect take-bad-pub
@@ -473,7 +473,7 @@
       :effect (effect (update! (assoc card
                                  :subtype-target target
                                  :subtype (combine-subtypes true (:subtype card) target)))
-                      (update-ice-strength card))
+                      (update-character-strength card))
       :events {:challenger-turn-ends turn-end-ability
                :contestant-turn-ends turn-end-ability}
       :subroutines [end-the-run]})
@@ -504,20 +504,20 @@
                               card nil))}}
 
    "Chum"
-   {:subroutines [{:label "Give +2 strength to next ICE Challenger encounters"
+   {:subroutines [{:label "Give +2 strength to next Character Challenger encounters"
                    :req (req this-server)
-                   :prompt "Select the ICE the Challenger is encountering"
-                   :choices {:req #(and (rezzed? %) (ice? %))}
+                   :prompt "Select the Character the Challenger is encountering"
+                   :choices {:req #(and (rezzed? %) (character? %))}
                    :msg (msg "give " (:title target) " +2 strength")
-                   :effect (req (let [ice (:cid target)]
+                   :effect (req (let [character (:cid target)]
                                   (register-events state side
-                                    {:pre-ice-strength {:req (req (= (:cid target) ice))
-                                                        :effect (effect (ice-strength-bonus 2 target))}
+                                    {:pre-character-strength {:req (req (= (:cid target) character))
+                                                        :effect (effect (character-strength-bonus 2 target))}
                                      :run-ends {:effect (effect (unregister-events card))}}
                                    card)
-                                  (update-all-ice state side)))}
+                                  (update-all-character state side)))}
                   (do-net-damage 3)]
-    :events {:pre-ice-strength nil :run-ends nil}}
+    :events {:pre-character-strength nil :run-ends nil}}
 
    "Clairvoyant Monitor"
    {:subroutines [(do-psi {:label "Place 1 advancement token and end the run"
@@ -582,11 +582,11 @@
 
    "Curtain Wall"
    {:subroutines [end-the-run]
-    :strength-bonus (req (let [ices (:ices (card->server state card))]
-                           (if (= (:cid card) (:cid (last ices))) 4 0)))
+    :strength-bonus (req (let [characters (:characters (card->server state card))]
+                           (if (= (:cid card) (:cid (last characters))) 4 0)))
     :events (let [cw {:req (req (and (not= (:cid card) (:cid target))
                                      (= (card->server state card) (card->server state target))))
-                      :effect (effect (update-ice-strength card))}]
+                      :effect (effect (update-character-strength card))}]
               {:contestant-install cw :trash cw :card-moved cw})}
 
    "Data Hound"
@@ -634,7 +634,7 @@
    "Data Mine"
    {:subroutines [{:msg "do 1 net damage"
                    :effect (req (damage state :challenger eid :net 1 {:card card})
-                                (when current-ice
+                                (when current-character
                                   (no-action state side nil)
                                   (continue state side nil))
                                 (trash state side card))}]}
@@ -677,7 +677,7 @@
     :choices :credit
     :msg (msg "add " target " power counters")
     :effect (effect (add-counter card :power target)
-                    (update-ice-strength card))
+                    (update-character-strength card))
     :strength-bonus (req (get-in card [:counter :power] 0))
     :subroutines [(trace-ability 2 {:label "Give the Challenger 1 tag and end the run"
                                     :msg "give the Challenger 1 tag and end the run"
@@ -809,10 +809,10 @@
     :subroutines [add-power-counter]}
 
    "Galahad"
-   (grail-ice end-the-run)
+   (grail-character end-the-run)
 
    "Gemini"
-   (constellation-ice (do-net-damage 1))
+   (constellation-character (do-net-damage 1))
 
    "Grim"
    {:effect take-bad-pub
@@ -959,29 +959,29 @@
                    :effect (effect (lose :challenger :click 1))}]}
 
    "Howler"
-   (let [ice-index (fn [state i] (first (keep-indexed #(when (= (:cid %2) (:cid i)) %1)
+   (let [character-index (fn [state i] (first (keep-indexed #(when (= (:cid %2) (:cid i)) %1)
                                                       (get-in @state (cons :contestant (:zone i))))))]
      {:subroutines
-      [{:label "Install a piece of Bioroid ICE from HQ or Archives"
-        :prompt "Install ICE from HQ or Archives?"
+      [{:label "Install a piece of Bioroid Character from HQ or Archives"
+        :prompt "Install Character from HQ or Archives?"
         :choices ["HQ" "Archives"]
         :effect (req (let [fr target]
                        (resolve-ability state side
-                                        {:prompt "Choose a Bioroid ICE to install"
-                                         :choices (req (filter #(and (ice? %)
+                                        {:prompt "Choose a Bioroid Character to install"
+                                         :choices (req (filter #(and (character? %)
                                                                      (has-subtype? % "Bioroid"))
                                                                ((if (= fr "HQ") :hand :discard) contestant)))
-                                         :effect (req (let [newice (assoc target :zone (:zone card) :rezzed true)
-                                                            hndx (ice-index state card)
-                                                            ices (get-in @state (cons :contestant (:zone card)))
-                                                            newices (apply conj (subvec ices 0 hndx) newice (subvec ices hndx))]
-                                                        (swap! state assoc-in (cons :contestant (:zone card)) newices)
+                                         :effect (req (let [newcharacter (assoc target :zone (:zone card) :rezzed true)
+                                                            hndx (character-index state card)
+                                                            characters (get-in @state (cons :contestant (:zone card)))
+                                                            newcharacters (apply conj (subvec characters 0 hndx) newcharacter (subvec characters hndx))]
+                                                        (swap! state assoc-in (cons :contestant (:zone card)) newcharacters)
                                                         (swap! state update-in (cons :contestant (:zone target))
                                                                (fn [coll] (remove-once #(not= (:cid %) (:cid target)) coll)))
-                                                        (update! state side (assoc card :howler-target newice))
-                                                        (card-init state side newice {:resolve-effect false
+                                                        (update! state side (assoc card :howler-target newcharacter))
+                                                        (card-init state side newcharacter {:resolve-effect false
                                                                                       :init-data true})
-                                                        (trigger-event state side :contestant-install newice)))} card nil)))}]
+                                                        (trigger-event state side :contestant-install newcharacter)))} card nil)))}]
       :events {:run-ends {:req (req (:howler-target card))
                           :effect (effect (trash card {:cause :self-trash})
                                           (derez (get-card state (:howler-target card))))}}})
@@ -1048,10 +1048,10 @@
     :challenger-abilities [(challenger-break [:click 2] 2)]}
 
    "Inazuma"
-   {:abilities [{:msg "prevent the Challenger from breaking subroutines on the next piece of ICE they encounter this run"}
-                {:msg "prevent the Challenger from jacking out until after the next piece of ICE"
+   {:abilities [{:msg "prevent the Challenger from breaking subroutines on the next piece of Character they encounter this run"}
+                {:msg "prevent the Challenger from jacking out until after the next piece of Character"
                  :effect (effect (register-events
-                                   {:pass-ice {:effect (req (swap! state update-in [:run] dissoc :prevent-jack-out)
+                                   {:pass-character {:effect (req (swap! state update-in [:run] dissoc :prevent-jack-out)
                                                             (unregister-events state side card))}} card)
                                  (prevent-jack-out))}]}
 
@@ -1074,7 +1074,7 @@
                               (let [handsize (count (get-in new [:contestant :hand]))]
                                 (when (not= (count (get-in old [:contestant :hand])) handsize)
                                   (update! ref side (assoc (get-card ref card) :strength-bonus handsize))
-                                  (update-ice-strength ref side (get-card ref card)))))))
+                                  (update-character-strength ref side (get-card ref card)))))))
     :subroutines [end-the-run]
     :strength-bonus (req (count (:hand contestant)))
     :rez-cost-bonus (req (count (:hand contestant)))
@@ -1091,7 +1091,7 @@
              :delayed-completion true
              :effect (effect (damage eid :net 2 {:card card}))}
     :subroutines [(assoc trash-installed :effect (req (trash state side target {:cause :subroutine})
-                                                      (when current-ice
+                                                      (when current-character
                                                         (no-action state side nil)
                                                         (continue state side nil))
                                                       (trash state side card)))]}
@@ -1101,7 +1101,7 @@
     :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Kakugo"
-   {:events {:pass-ice {:delayed-completion true
+   {:events {:pass-character {:delayed-completion true
                         :req (req (= target card))
                         :msg "do 1 net damage"
                         :effect (effect (damage eid :net 1 {:card card}))}}
@@ -1136,13 +1136,16 @@
                                         :player :challenger
                                         :msg (msg "force the Challenger to trash " (:title target))
                                         :effect (req (trash state side target)
-                                                     (when current-ice
+                                                     (when current-character
                                                        (no-action state side nil)
                                                        (continue state side nil))
                                                      (trash state side card)))]}
 
    "Lancelot"
-   (grail-ice trash-program)
+   (grail-character trash-program)
+
+   "Lieutenant of Morgul"
+   {:subroutines [end-the-run]}
 
    "Little Engine"
    {:subroutines [end-the-run
@@ -1178,7 +1181,7 @@
     :flags {:cannot-lower-strength true}}
 
    "Lycan"
-   (morph-ice "Sentry" "Code Gate" trash-program)
+   (morph-character "Sentry" "Code Gate" trash-program)
 
    "Macrophage"
    {:subroutines [(trace-ability 4 {:label "Purge virus counters"
@@ -1207,7 +1210,7 @@
                                       (remove-once #(not= (:cid %) (:cid magnet)) (all-installed state contestant))))
                       :prompt "Select a Program to host on Magnet"
                       :choices {:req #(and (card-is? % :type "Program")
-                                           (ice? (:host %))
+                                           (character? (:host %))
                                            (not= (:cid (:host %)) (:cid magnet)))}
                       :effect (req (let [hosted (host state side card target)]
                                      (unregister-events state side hosted)
@@ -1217,7 +1220,7 @@
                               :effect (req (doseq [c (get-in card [:hosted])]
                                              (unregister-events state side c)
                                              (update! state side (dissoc c :abilities)))
-                                           (update-ice-strength state side card))}}
+                                           (update-character-strength state side card))}}
     :subroutines [end-the-run]}
 
    "Mamba"
@@ -1226,8 +1229,8 @@
                   (do-psi add-power-counter)]}
 
    "Marker"
-   {:subroutines [{:label "Give the next ICE encountered \"End the run\" for the remainder of the run"
-                   :msg (msg "give the next ICE encountered \"[Subroutine] End the run\" after all its other subroutines for the remainder of the run")}]}
+   {:subroutines [{:label "Give the next Character encountered \"End the run\" for the remainder of the run"
+                   :msg (msg "give the next Character encountered \"[Subroutine] End the run\" after all its other subroutines for the remainder of the run")}]}
 
    "Markus 1.0"
    {:subroutines [trash-installed end-the-run]
@@ -1259,29 +1262,29 @@
                                   (end-run state side)))}]}
 
    "Merlin"
-   (grail-ice (do-net-damage 2))
+   (grail-character (do-net-damage 2))
 
    "Meru Mati"
    {:subroutines [end-the-run]
     :strength-bonus (req (if (= (second (:zone card)) :hq) 3 0))}
 
    "Metamorph"
-   {:subroutines [{:label "Swap two ICE or swap two installed non-ICE"
-                   :msg "swap two ICE or swap two installed non-ICE"
+   {:subroutines [{:label "Swap two Character or swap two installed non-Character"
+                   :msg "swap two Character or swap two installed non-Character"
                    :delayed-completion true
                    :prompt "Choose one"
-                   :choices ["Swap two ICE" "Swap two non-ICE"]
-                   :effect (req (if (= target "Swap two ICE")
-                                  (continue-ability state side {:prompt "Select the two ICE to swap"
+                   :choices ["Swap two Character" "Swap two non-Character"]
+                   :effect (req (if (= target "Swap two Character")
+                                  (continue-ability state side {:prompt "Select the two Character to swap"
                                                                 :delayed-completion true
-                                                                :choices {:req #(and (installed? %) (ice? %)) :max 2 :all true}
+                                                                :choices {:req #(and (installed? %) (character? %)) :max 2 :all true}
                                                                 :msg (msg "swap the positions of " (card-str state (first targets)) " and " (card-str state (second targets)))
                                                                 :effect (req (when (= (count targets) 2)
-                                                                               (swap-ice state side (first targets) (second targets))
+                                                                               (swap-character state side (first targets) (second targets))
                                                                                (effect-completed state side eid card)))} card nil)
                                   (continue-ability state side {:prompt "Select the two cards to swap"
                                                                 :delayed-completion true
-                                                                :choices {:req #(and (installed? %) (not (ice? %))) :max 2 :all true}
+                                                                :choices {:req #(and (installed? %) (not (character? %))) :max 2 :all true}
                                                                 :msg (msg "swap the positions of " (card-str state (first targets)) " and " (card-str state (second targets)))
                                                                 :effect (req (when (= (count targets) 2)
                                                                                (swap-installed state side (first targets) (second targets))
@@ -1307,7 +1310,7 @@
                            :msg (msg "redirect the run to " target)
                            :effect (req (let [dest (server->zone state target)]
                                           (swap! state update-in [:run]
-                                                 #(assoc % :position (count (get-in contestant (conj dest :ices)))
+                                                 #(assoc % :position (count (get-in contestant (conj dest :characters)))
                                                            :server (rest dest)))))})]
     :challenger-abilities [{:label "Add an installed card to the bottom of your Stack"
                         :prompt "Choose one of your installed cards"
@@ -1317,17 +1320,17 @@
                                         (system-msg :challenger (str "adds " (:title target) " to the bottom of their Stack")))}]}
 
    "Minelayer"
-   {:subroutines [{:msg "install an ICE from HQ"
-                   :choices {:req #(and (ice? %)
+   {:subroutines [{:msg "install an Character from HQ"
+                   :choices {:req #(and (character? %)
                                         (in-hand? %))}
-                   :prompt "Choose an ICE to install from HQ"
+                   :prompt "Choose an Character to install from HQ"
                    :effect (req (contestant-install state side target (zone->name (first (:server run))) {:no-install-cost true}))}]}
 
    "Mirāju"
    {:abilities [{:label "Challenger broke subroutine: Redirect run to Archives"
                  :msg "make the Challenger continue the run on Archives. Mirāju is derezzed"
                  :effect (req (swap! state update-in [:run]
-                                     #(assoc % :position (count (get-in contestant [:servers :archives :ices]))
+                                     #(assoc % :position (count (get-in contestant [:servers :archives :characters]))
                                                :server [:archives]))
                               (derez state side card))}]
     :subroutines [{:label "Draw 1 card, then shuffle 1 card from HQ into R&D"
@@ -1348,7 +1351,7 @@
                                                  card nil)))}]}
 
    "Mother Goddess"
-   (let [ab (effect (update! (let [subtype (->> (mapcat :ices (flatten (seq (:servers contestant))))
+   (let [ab (effect (update! (let [subtype (->> (mapcat :characters (flatten (seq (:servers contestant))))
                                                 (filter #(and (rezzed? %) (not= (:cid card) (:cid %))))
                                                 (mapcat #(split (:subtype %) #" - "))
                                                 (cons "Mythic")
@@ -1356,11 +1359,11 @@
                                                 (join " - "))]
                                (assoc card :subtype-target (remove-subtypes subtype "Mythic")
                                            :subtype subtype))))
-         mg {:req (req (ice? target))
+         mg {:req (req (character? target))
              :effect ab}]
      {:effect ab
       :subroutines [end-the-run]
-      :events {:rez mg :card-moved mg :derez mg :ice-subtype-changed mg}})
+      :events {:rez mg :card-moved mg :derez mg :character-subtype-changed mg}})
 
    "Muckraker"
    {:effect take-bad-pub
@@ -1374,7 +1377,7 @@
     :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Nebula"
-   (space-ice trash-program)
+   (space-character trash-program)
 
    "Negotiator"
    {:subroutines [(gain-credits 2)
@@ -1407,16 +1410,16 @@
 
    "NEXT Bronze"
    {:subroutines [end-the-run]
-    :strength-bonus (req (next-ice-count contestant))
+    :strength-bonus (req (next-character-count contestant))
     :events (let [nb {:req (req (and (not= (:cid target) (:cid card))
                                      (has-subtype? target "NEXT")))
-                      :effect (effect (update-ice-strength card))}]
+                      :effect (effect (update-character-strength card))}]
               {:rez nb :derez nb :trash nb :card-moved nb})}
 
    "NEXT Gold"
-   {:subroutines [{:label "Do 1 net damage for each rezzed NEXT ice"
-                   :msg (msg "do " (next-ice-count contestant) " net damage")
-                   :effect (effect (damage eid :net (next-ice-count contestant) {:card card}))}
+   {:subroutines [{:label "Do 1 net damage for each rezzed NEXT character"
+                   :msg (msg "do " (next-character-count contestant) " net damage")
+                   :effect (effect (damage eid :net (next-character-count contestant) {:card card}))}
                   trash-program]}
 
    "NEXT Opal"
@@ -1431,7 +1434,7 @@
 
    "NEXT Silver"
    {:abilities [{:label "Gain subroutines"
-                 :msg (msg "gain " (count (filter #(and (is-type? % "ICE")
+                 :msg (msg "gain " (count (filter #(and (is-type? % "Character")
                                                         (has-subtype? % "NEXT")
                                                         (rezzed? %))
                                                   (all-installed state :contestant))) " subroutines")}]
@@ -1444,10 +1447,13 @@
                              (lose state :challenger :click 1)
                              (swap! state update-in [:contestant :extra-click-temp] (fnil inc 0)))}]}
 
+   "Orc Tracker"
+   {:subroutines [end-the-run]}
+
    "Orion"
    ;; TODO: wormhole subroutine
    (implementation-note "\"Resolve a subroutine...\" subroutine is not implemented"
-                        (space-ice trash-program end-the-run))
+                        (space-character trash-program end-the-run))
 
    "Owl"
    {:subroutines [{:choices {:req #(and (installed? %)
@@ -1479,10 +1485,10 @@
 
    "Quicksand"
    {:implementation "Encounter effect is manual"
-    :abilities [{:req (req (and this-server (= (dec (:position run)) (ice-index state card))))
+    :abilities [{:req (req (and this-server (= (dec (:position run)) (character-index state card))))
                  :label "Add 1 power counter"
                  :effect (effect (add-counter card :power 1)
-                                 (update-all-ice))}]
+                                 (update-all-character))}]
     :subroutines [end-the-run]
     :strength-bonus (req (get-in card [:counter :power] 0))}
 
@@ -1490,20 +1496,20 @@
    {:subroutines [end-the-run]}
 
    "Ravana 1.0"
-   {:subroutines [{:label "Resolve a subroutine on another piece of rezzed bioroid ICE"
-                   :choices {:req #(and (rezzed? %) (ice? %) (has-subtype? % "Bioroid"))}
+   {:subroutines [{:label "Resolve a subroutine on another piece of rezzed bioroid Character"
+                   :choices {:req #(and (rezzed? %) (character? %) (has-subtype? % "Bioroid"))}
                    :msg (msg "resolve a subroutine on " (:title target))}]
     :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Red Tape"
-   {:subroutines [{:label "Give +3 strength to all ICE for the remainder of the run"
-                   :msg "give +3 strength to all ICE for the remainder of the run"
+   {:subroutines [{:label "Give +3 strength to all Character for the remainder of the run"
+                   :msg "give +3 strength to all Character for the remainder of the run"
                    :effect (effect (register-events
-                                     {:pre-ice-strength {:effect (effect (ice-strength-bonus 3 target))}
+                                     {:pre-character-strength {:effect (effect (character-strength-bonus 3 target))}
                                       :run-ends {:effect (effect (unregister-events card))}}
                                      card)
-                                   (update-all-ice))}]
-    :events {:pre-ice-strength nil :run-ends nil}}
+                                   (update-all-character))}]
+    :events {:pre-character-strength nil :run-ends nil}}
 
    "Resistor"
    {:effect (req (add-watch state (keyword (str "resistor" (:cid card)))
@@ -1511,7 +1517,7 @@
                               (let [tags (get-in new [:challenger :tag])]
                                 (when (not= (get-in old [:challenger :tag]) tags)
                                   (update! ref side (assoc (get-card ref card) :strength-bonus tags))
-                                  (update-ice-strength ref side (get-card ref card)))))))
+                                  (update-character-strength ref side (get-card ref card)))))))
     :strength-bonus (req (:tag challenger))
     :leave-play (req (remove-watch state (keyword (str "resistor" (:cid card)))))
     :subroutines [(trace-ability 4 end-the-run)]}
@@ -1520,7 +1526,7 @@
    {:subroutines [trash-program end-the-run]}
 
    "Sagittarius"
-   (constellation-ice trash-program)
+   (constellation-character trash-program)
 
    "Salvage"
    {:advanceable :while-rezzed
@@ -1537,7 +1543,7 @@
                    :effect (req (let [dest (server->zone state target)]
                                 (trash state side card {:unpreventable true})
                                 (swap! state update-in [:run]
-                                       #(assoc % :position (count (get-in contestant (conj dest :ices)))
+                                       #(assoc % :position (count (get-in contestant (conj dest :characters)))
                                                  :server (rest dest)))))}]}
 
    "Sapper"
@@ -1571,11 +1577,11 @@
    {:effect (req (let [srv (second (:zone card))]
                    (add-watch state (keyword (str "sab" (:cid card)))
                               (fn [k ref old new]
-                                (let [ices (count (get-in new [:contestant :servers srv :ices]))]
-                                  (when (not= (count (get-in old [:contestant :servers srv :ices])) ices)
-                                    (update! ref side (assoc (get-card ref card) :strength-bonus ices))
-                                    (update-ice-strength ref side (get-card ref card))))))))
-    :strength-bonus (req (count (:ices (card->server state card))))
+                                (let [characters (count (get-in new [:contestant :servers srv :characters]))]
+                                  (when (not= (count (get-in old [:contestant :servers srv :characters])) characters)
+                                    (update! ref side (assoc (get-card ref card) :strength-bonus characters))
+                                    (update-character-strength ref side (get-card ref card))))))))
+    :strength-bonus (req (count (:characters (card->server state card))))
     :leave-play (req (remove-watch state (keyword (str "sab" (:cid card)))))
     :subroutines [end-the-run]}
 
@@ -1584,8 +1590,8 @@
     :flags {:cannot-lower-strength true}}
 
    "Sensei"
-   {:subroutines [{:label "Give each other ICE encountered \"End the run\" for the remainder of the run"
-                   :msg (msg "give each other ICE encountered \"[Subroutine] End the run\" after all its other subroutines for the remainder of the run")}]}
+   {:subroutines [{:label "Give each other Character encountered \"End the run\" for the remainder of the run"
+                   :msg (msg "give each other Character encountered \"[Subroutine] End the run\" after all its other subroutines for the remainder of the run")}]}
 
    "Shadow"
    {:advanceable :always
@@ -1641,7 +1647,7 @@
 
    "Snoop"
    {:implementation "Encounter effect is manual"
-    :abilities [{:req (req (= current-ice card))
+    :abilities [{:req (req (= current-character card))
                  :label "Reveal all cards in the Challenger's Grip"
                  :msg (msg "reveal the Challenger's Grip ( " (join ", " (map :title (:hand challenger))) " )")}
                 {:req (req (> (get-in card [:counter :power] 0) 0))
@@ -1660,7 +1666,7 @@
    "Special Offer"
    {:subroutines [{:label "Gain 5 [Credits] and trash Special Offer"
                    :effect (req (gain state :contestant :credit 5)
-                                (when current-ice
+                                (when current-character
                                   (no-action state side nil)
                                   (continue state side nil))
                                 (trash state side card)
@@ -1673,7 +1679,7 @@
    {:subroutines [{:req (req (not= (:server run) [:discard]))
                    :msg "make the Challenger continue the run on Archives"
                    :effect (req (swap! state update-in [:run]
-                                       #(assoc % :position (count (get-in contestant [:servers :archives :ices]))
+                                       #(assoc % :position (count (get-in contestant [:servers :archives :characters]))
                                                  :server [:archives])))}]}
 
    "Swarm"
@@ -1716,7 +1722,10 @@
                    :effect (effect (move target :deck {:front true}))}]}
 
    "Taurus"
-   (constellation-ice trash-hardware)
+   (constellation-character trash-hardware)
+
+   "The Grimburgoth"
+   {:subroutines [end-the-run]}
 
    "Thoth"
    {:implementation "Encounter effect is manual"
@@ -1747,7 +1756,7 @@
                    :effect (effect (trash target {:reason :subroutine}))}]}
 
    "TL;DR"
-   {:subroutines [{:msg "duplicate subroutines on next piece of ICE encountered this run"}]}
+   {:subroutines [{:msg "duplicate subroutines on next piece of Character encountered this run"}]}
 
    "TMI"
    {:trace {:base 2
@@ -1812,7 +1821,7 @@
                    :msg (msg "force the Challenger to lose " (if tagged "all credits" "1 [Credits]"))
                    :effect (req (if tagged
                                   (do (lose state :challenger :credit :all :run-credit :all)
-                                      (when current-ice
+                                      (when current-character
                                         (no-action state side nil)
                                         (continue state side nil))
                                       (trash state side card))
@@ -1823,7 +1832,7 @@
     :subroutines [(do-psi {:label "Make the Challenger lose 2 [Credits]"
                            :msg "make the Challenger lose 2 [Credits]"
                            :effect (effect (lose :challenger :credit 2))})
-                  {:msg "resolve a subroutine on a piece of rezzed psi ICE"}]}
+                  {:msg "resolve a subroutine on a piece of rezzed psi Character"}]}
 
    "Uroboros"
    {:subroutines [(trace-ability 4 {:label "Prevent the Challenger from making another run"
@@ -1868,7 +1877,7 @@
                   (trace-ability 3 end-the-run)]}
 
    "Virgo"
-   (constellation-ice give-tag)
+   (constellation-character give-tag)
 
    "Waiver"
    {:subroutines [(trace-ability 5 {:label "Reveal the Challenger's Grip and trash cards"
@@ -1917,16 +1926,16 @@
    "Wendigo"
    (implementation-note
      "Program prevention is not implemented"
-     (morph-ice "Code Gate" "Barrier"
+     (morph-character "Code Gate" "Barrier"
                 {:msg "prevent the Challenger from using a chosen program for the remainder of this run"}))
 
    "Whirlpool"
    {:subroutines [{:msg "prevent the Challenger from jacking out"
                    :effect (req (when (and (is-remote? (second (:zone card)))
-                                           (> (count (concat (:ices (card->server state card))
+                                           (> (count (concat (:characters (card->server state card))
                                                              (:content (card->server state card)))) 1))
                                   (prevent-jack-out state side))
-                                (when current-ice
+                                (when current-character
                                   (no-action state side nil)
                                   (continue state side nil))
                                 (trash state side card))}]}
@@ -1940,7 +1949,7 @@
    "Wormhole"
    ;; TODO: create an ability for wormhole
    (implementation-note "Wormhole subroutine is not implemented"
-                        (space-ice))
+                        (space-character))
 
    "Wotan"
    {:subroutines [end-the-run
@@ -1955,7 +1964,7 @@
     :events (let [wr {:silent (req true)
                       :req (req (and (not= (:cid target) (:cid card))
                                      (has-subtype? target "Fracter")))
-                      :effect (effect (update-ice-strength card))}]
+                      :effect (effect (update-character-strength card))}]
               {:challenger-install wr :trash wr :card-moved wr})}
 
    "Yagura"

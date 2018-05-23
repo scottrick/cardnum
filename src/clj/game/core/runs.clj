@@ -1,7 +1,7 @@
 (in-ns 'game.core)
 
 (declare any-flag-fn? clear-run-register! run-cleanup
-         gain-run-credits update-ice-in-server update-all-ice
+         gain-run-credits update-character-in-server update-all-character
          get-agenda-points gain-agenda-point optional-ability7
          get-remote-names card-name can-access-loud can-steal?
          prevent-jack-out card-flag? can-run?)
@@ -14,9 +14,9 @@
   ([state side server run-effect card] (run state side (make-eid state) server run-effect card))
   ([state side eid server run-effect card]
    (when (can-run? state :challenger)
-     (let [s [(if (keyword? server) server (last (server->zone state server)))]
-           ices (get-in @state (concat [:contestant :servers] s [:ices]))
-           n (count ices)]
+     (let [s [(if (keyword? server) server (last (server->zone state server nil)))]
+           characters (get-in @state (concat [:contestant :servers] s [:characters]))
+           n (count characters)]
        ;; s is a keyword for the server, like :hq or :remote1
        (swap! state assoc :per-run nil
               :run {:server s :position n :access-bonus 0
@@ -24,7 +24,7 @@
                     :eid eid})
        (gain-run-credits state side (+ (get-in @state [:contestant :bad-publicity]) (get-in @state [:contestant :has-bad-pub])))
        (swap! state update-in [:challenger :register :made-run] #(conj % (first s)))
-       (update-all-ice state :contestant)
+       (update-all-character state :contestant)
        (trigger-event-sync state :challenger (make-eid state) :run s)
        (when (>= n 2) (trigger-event state :challenger :run-big s n))))))
 
@@ -601,7 +601,7 @@
                    (do (let [cards (cards-to-access state side server)
                              cards (if hq-root-only (remove #(= '[:hand] (:zone %)) cards) cards)
                              n (count cards)]
-                         ;; Cannot use `zero?` as it does not deal with `nil` nicely (throws exception)
+                         ;; Cannot use `zero?` as it does not deal with `nil` ncharacterly (throws exception)
                          (if (or (= (get-in @state [:run :max-access]) 0)
                                  (empty? cards))
                            (system-msg state side "accessed no cards during the run")
@@ -660,7 +660,7 @@
                                       (handle-end-run state side))))))
 
 (defn successful-run
-  "Run when a run has passed all ice and the challenger decides to access. The contestant may still get to act in 4.3."
+  "Run when a run has passed all character and the challenger decides to access. The contestant may still get to act in 4.3."
   [state side args]
   (if (get-in @state [:run :contestant-phase-43])
     ;; if contestant requests phase 4.3, then we do NOT fire :successful-run yet, which does not happen until 4.4
@@ -764,7 +764,7 @@
     (swap! state update-in [:challenger :credit] - (get-in @state [:challenger :run-credit]))
     (swap! state assoc-in [:challenger :run-credit] 0)
     (swap! state assoc :run nil)
-    (update-all-ice state side)
+    (update-all-character state side)
     (swap! state dissoc :access)
     (clear-run-register! state)
     (trigger-run-end-events state side eid run)))
@@ -787,6 +787,6 @@
       (when (and (:ended run) (empty? (get-in @state [:challenger :prompt])) )
         (handle-end-run state :challenger)))))
 
-(defn get-run-ices
+(defn get-run-characters
   [state]
-  (get-in @state (concat [:contestant :servers] (:server (:run @state)) [:ices])))
+  (get-in @state (concat [:contestant :servers] (:server (:run @state)) [:characters])))

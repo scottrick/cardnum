@@ -48,13 +48,13 @@
         (is (= (:title (last (:discard (get-challenger)))) "Fall Guy") "Fall Guy trashed")))))
 
 (deftest hb-glacier
-  "HB Glacier econ and server protection with upgrades - Ash, Caprice, Breaker Bay Grid, positional ice strength boost"
+  "HB Glacier econ and server protection with upgrades - Ash, Caprcharacter, Breaker Bay Grid, positional character strength boost"
   (do-game
     (new-game (make-deck "Haas-Bioroid: Engineering the Future"
                          [(qty "Adonis Campaign" 1)
                           (qty "Global Food Initiative" 1)
                           (qty "Breaker Bay Grid" 1)
-                          (qty "Caprice Nisei" 1)
+                          (qty "Caprcharacter Nisei" 1)
                           (qty "Ash 2X3ZB9CY" 1)
                           (qty "Turing" 1)
                           (qty "Hedge Fund" 1)])
@@ -94,7 +94,7 @@
           "Desperado paid 1 to Challenger, Lamprey took 1 from Contestant")
       (prompt-choice :challenger "No") ; can't afford to trash Ash
       (take-credits state :challenger)
-      (play-from-hand state :contestant "Caprice Nisei" "Server 1")
+      (play-from-hand state :contestant "Caprcharacter Nisei" "Server 1")
       (is (= 11 (:credit (get-contestant))) "Gained 3 from Adonis and 1 from HB:EtF")
       (play-from-hand state :contestant "Turing" "Server 1")
       (take-credits state :contestant 1)
@@ -114,7 +114,7 @@
       (is (and (= 6 (:credit (get-challenger))) (= 10 (:credit (get-contestant))))
           "Desperado plus Dirty Laundry, Lamprey took 1 from Contestant")
       (run-on state "Server 1")
-      (let [tur (get-ice state :remote1 0)
+      (let [tur (get-character state :remote1 0)
             cap (get-content state :remote1 2)]
         (core/rez state :contestant tur)
         (is (= 5 (:current-strength (refresh tur))) "Turing +3 strength protecting a remote")
@@ -122,10 +122,10 @@
         (play-from-hand state :challenger "Emergency Shutdown")
         (prompt-select :challenger tur)
         (is (not (get-in (refresh tur) [:rezzed])) "Turing derezzed")
-        (run-on state "Server 1") ; letting Challenger in this time to use Caprice
+        (run-on state "Server 1") ; letting Challenger in this time to use Caprcharacter
         (core/rez state :contestant cap)
         (run-continue state)
-        ;; Caprice psi game started automatically
+        ;; Caprcharacter psi game started automatically
         (prompt-choice :contestant "1 [Credits]")
         (prompt-choice :challenger "2 [Credits]")
-        (is (not (:run @state)) "Contestant won Caprice psi game and ended the run")))))
+        (is (not (:run @state)) "Contestant won Caprcharacter psi game and ended the run")))))

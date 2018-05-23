@@ -53,13 +53,13 @@
                                     (remove #(= '(:onhost) (:zone %)))
                                     (sort-by #(vec (:zone %)))
                                     (reverse))]
-                   ; Trash hosted cards first so they don't get trashed twice
+                   ; Trash hosted cards first so they don't get trashed twcharacter
                    (doseq [c onhost]
                      (trash state side c))
                    (doseq [c allcontestant]
                      (trash state side (get-card state c))))
 
-                 ;; do hosted cards first so they don't get trashed twice
+                 ;; do hosted cards first so they don't get trashed twcharacter
                  (doseq [c (all-installed state :challenger)]
                    (when (or (= ["onhost"] (get c :zone)) (= '(:onhost) (get c :zone)))
                      (move state side c [:rig :facedown])
@@ -74,28 +74,28 @@
    "Blackmail"
    (run-event
     {:req (req has-bad-pub)
-     :msg "prevent ICE from being rezzed during this run"}
+     :msg "prevent Character from being rezzed during this run"}
     nil
     (effect (register-run-flag!
               card
               :can-rez
               (fn [state side card]
-                (if (ice? card)
+                (if (character? card)
                   ((constantly false)
-                    (toast state :contestant "Cannot rez ICE on this run due to Blackmail"))
+                    (toast state :contestant "Cannot rez Character on this run due to Blackmail"))
                   true)))))
 
    "Bribery"
    {:prompt "How many credits?"
     :choices :credit
-    :msg (msg "increase the rez cost of the first unrezzed ICE approached by " target " [Credits]")
+    :msg (msg "increase the rez cost of the first unrezzed Character approached by " target " [Credits]")
     :effect (effect (resolve-ability (run-event) card nil))}
 
    "Brute-Force-Hack"
-   {:implementation "Challenger must calculate the right number of credits including other game effects for the planned target ICE"
+   {:implementation "Challenger must calculate the right number of credits including other game effects for the planned target Character"
     :prompt "How many [Credits]?" :choices :credit
     :effect (effect (system-msg (str "spends " target " [Credit] on Brute-Force-Hack"))
-                    (resolve-ability {:choices {:req #(and (ice? %)
+                    (resolve-ability {:choices {:req #(and (character? %)
                                                            (rezzed? %)
                                                            (<= (:cost %) target))}
                                       :effect (effect (derez target))
@@ -184,7 +184,7 @@
                            :choices (req (filter #(is-type? % "Program") (:deck challenger)))
                            :effect (effect (trigger-event :searched-stack nil)
                                            (shuffle! :deck)
-                                           (install-cost-bonus [:credit (* -3 (count (get-in contestant [:servers :rd :ices])))])
+                                           (install-cost-bonus [:credit (* -3 (count (get-in contestant [:servers :rd :characters])))])
                                            (challenger-install target)
                                            (tag-challenger eid 1) )}} card))}
 
@@ -262,14 +262,14 @@
                    (continue-ability
                      state :contestant
                      {:optional
-                      {:prompt (msg "Rez a piece of ICE protecting " serv "?")
-                       :yes-ability {:prompt (msg "Select a piece of ICE protecting " serv " to rez")
+                      {:prompt (msg "Rez a piece of Character protecting " serv "?")
+                       :yes-ability {:prompt (msg "Select a piece of Character protecting " serv " to rez")
                                      :player :contestant
                                      :choices {:req #(and (not (:rezzed %))
-                                                          (= (last (:zone %)) :ices))}
+                                                          (= (last (:zone %)) :characters))}
                                      :effect (req (rez state :contestant target nil))}
                        :no-ability {:effect (effect (game.core/run eid serv nil card))
-                                    :msg (msg "make a run on " serv " during which no ICE can be rezzed")}}}
+                                    :msg (msg "make a run on " serv " during which no Character can be rezzed")}}}
                     card nil)))}
 
    "Data Breach"
@@ -339,9 +339,9 @@
                :msg "draw 2 cards"}
               {:effect (effect (lose :tag 1))
                :msg "remove 1 tag"}
-              {:prompt "Select 1 piece of ice to expose"
-               :msg "expose 1 ice and make a run"
-               :choices {:req #(and (installed? %) (ice? %))}
+              {:prompt "Select 1 piece of character to expose"
+               :msg "expose 1 character and make a run"
+               :choices {:req #(and (installed? %) (character? %))}
                :delayed-completion true
                :effect (req (when-completed (expose state side target)
                                             (continue-ability
@@ -367,7 +367,7 @@
    "Dianas Hunt"
    {:implementation "One program per encounter not enforced"
     :prompt "Choose a server"
-    :msg "make a run and install a program on encounter with each ICE"
+    :msg "make a run and install a program on encounter with each Character"
     :choices (req runnable-servers)
     :delayed-completion true
     :abilities [{:label "Install a program using Diana's Hunt?"
@@ -413,7 +413,7 @@
                           (= (last (:zone topmost)) :content)
                           (not (:rezzed %))))}
     :delayed-completion true
-    :effect (req (when-completed (expose state side target) ;; would be nice if this could return a value on completion
+    :effect (req (when-completed (expose state side target) ;; would be ncharacter if this could return a value on completion
                                  (if async-result ;; expose was successful
                                    (if (#{"Asset" "Upgrade"} (:type target))
                                      (do (system-msg state :challenger (str "uses Drive By to trash " (:title target)))
@@ -434,7 +434,7 @@
    "Emergency Shutdown"
    {:req (req (some #{:hq} (:successful-run challenger-reg)))
     :msg (msg "derez " (:title target))
-    :choices {:req #(and (ice? %)
+    :choices {:req #(and (character? %)
                          (rezzed? %))}
     :effect (effect (derez target))}
 
@@ -483,23 +483,23 @@
     :effect (req (let [runtgt (first (flatten (turn-events state side :run)))
                        serv (zone->name runtgt)]
                    (resolve-ability state side
-                     {:prompt (msg "Choose an unrezzed piece of ICE protecting " serv " that you passed on your last run")
-                      :choices {:req #(and (ice? %)
+                     {:prompt (msg "Choose an unrezzed piece of Character protecting " serv " that you passed on your last run")
+                      :choices {:req #(and (character? %)
                                            (not (rezzed? %)))}
                       :msg (msg "trash " (card-str state target))
                       :effect (effect (trash target))}
                     card nil)))}
 
    "Escher"
-   (letfn [(es [] {:prompt "Select two pieces of ICE to swap positions"
-                   :choices {:req #(and (installed? %) (ice? %)) :max 2}
+   (letfn [(es [] {:prompt "Select two pieces of Character to swap positions"
+                   :choices {:req #(and (installed? %) (character? %)) :max 2}
                    :effect (req (if (= (count targets) 2)
-                                  (do (swap-ice state side (first targets) (second targets))
+                                  (do (swap-character state side (first targets) (second targets))
                                       (resolve-ability state side (es) card nil))
-                                  (system-msg state side "has finished rearranging ICE")))})]
+                                  (system-msg state side "has finished rearranging Character")))})]
      {:req (req hq-runnable)
             :effect (effect (run :hq {:replace-access
-                                {:msg "rearrange installed ICE"
+                                {:msg "rearrange installed Character"
                                  :effect (effect (resolve-ability (es) card nil))}} card))})
 
    "Eureka!"
@@ -532,8 +532,8 @@
    {:req (req (and (some #{:hq} (:successful-run challenger-reg))
                    (some #{:rd} (:successful-run challenger-reg))
                    (some #{:archives} (:successful-run challenger-reg))))
-    :prompt "Choose up to 3 pieces of ICE to derez"
-    :choices {:max 3 :req #(and (rezzed? %) (ice? %))}
+    :prompt "Choose up to 3 pieces of Character to derez"
+    :choices {:max 3 :req #(and (rezzed? %) (character? %))}
     :msg (msg "derez " (join ", " (map :title targets)))
     :effect (req (doseq [c targets]
                    (derez state side c)))}
@@ -621,21 +621,21 @@
     :effect (effect (draw 3) (draw :contestant 3))}
 
    "Forged Activation Orders"
-   {:choices {:req #(and (ice? %)
+   {:choices {:req #(and (character? %)
                          (not (rezzed? %)))}
-    :effect (req (let [ice target
-                       serv (zone->name (second (:zone ice)))
-                       icepos (ice-index state ice)]
+    :effect (req (let [character target
+                       serv (zone->name (second (:zone character)))
+                       characterpos (character-index state character)]
                    (resolve-ability
                      state :contestant
-                     {:prompt (msg "Rez " (:title ice) " at position " icepos
+                     {:prompt (msg "Rez " (:title character) " at position " characterpos
                                    " of " serv " or trash it?") :choices ["Rez" "Trash"]
                       :effect (effect (resolve-ability
-                                        (if (and (= target "Rez") (<= (rez-cost state :contestant ice) (:credit contestant)))
-                                          {:msg (msg "force the rez of " (:title ice))
-                                           :effect (effect (rez :contestant ice))}
-                                          {:msg (msg "trash the ICE at position " icepos " of " serv)
-                                           :effect (effect (trash :contestant ice))})
+                                        (if (and (= target "Rez") (<= (rez-cost state :contestant character) (:credit contestant)))
+                                          {:msg (msg "force the rez of " (:title character))
+                                           :effect (effect (rez :contestant character))}
+                                          {:msg (msg "trash the Character at position " characterpos " of " serv)
+                                           :effect (effect (trash :contestant character))})
                                         card nil))}
                      card nil)))}
 
@@ -707,15 +707,15 @@
 
    "Hacktivist Meeting"
    {:implementation "Does not prevent rez if HQ is empty"
-    :events {:rez {:req (req (and (not (ice? target)) (< 0 (count (:hand contestant)))))
+    :events {:rez {:req (req (and (not (character? target)) (< 0 (count (:hand contestant)))))
                    ;; FIXME the above condition is just a bandaid, proper fix would be preventing the rez altogether
                    :msg "force the Contestant to trash 1 card from HQ at random"
                    :effect (effect (trash (first (shuffle (:hand contestant)))))}}}
 
    "High-Stakes Job"
    (run-event
-    {:choices (req (let [unrezzed-ice #(seq (filter (complement rezzed?) (:ices (second %))))
-                         bad-zones (keys (filter (complement unrezzed-ice) (get-in @state [:contestant :servers])))]
+    {:choices (req (let [unrezzed-character #(seq (filter (complement rezzed?) (:characters (second %))))
+                         bad-zones (keys (filter (complement unrezzed-character) (get-in @state [:contestant :servers])))]
                      (zones->sorted-names (remove (set bad-zones) (get-runnable-zones @state)))))}
     {:end-run {:req (req (:successful run))
                :msg "gain 12 [Credits]"
@@ -752,21 +752,21 @@
     :events {:pre-access
              {:delayed-completion true
               :req (req (and (= target :archives)
-                             ;; don't prompt unless there's at least 1 rezzed ICE matching one in Archives
+                             ;; don't prompt unless there's at least 1 rezzed Character matching one in Archives
                              (not-empty (clojure.set/intersection
-                                          (into #{} (map :title (filter #(ice? %) (:discard contestant))))
+                                          (into #{} (map :title (filter #(character? %) (:discard contestant))))
                                           (into #{} (map :title (filter #(rezzed? %) (all-installed state :contestant))))))))
               :effect (req (continue-ability state side
                              {:delayed-completion true
-                              :prompt "Choose a piece of ICE in Archives"
-                              :choices (req (filter ice? (:discard contestant)))
-                              :effect (req (let [icename (:title target)]
+                              :prompt "Choose a piece of Character in Archives"
+                              :choices (req (filter character? (:discard contestant)))
+                              :effect (req (let [charactername (:title target)]
                                              (continue-ability state side
                                                {:delayed-completion true
-                                                :prompt (msg "Select a rezzed copy of " icename " to trash")
-                                                :choices {:req #(and (ice? %)
+                                                :prompt (msg "Select a rezzed copy of " charactername " to trash")
+                                                :choices {:req #(and (character? %)
                                                                      (rezzed? %)
-                                                                     (= (:title %) icename))}
+                                                                     (= (:title %) charactername))}
                                                 :msg (msg "trash " (card-str state target))
                                                 :effect (req (trash state :contestant target)
                                                              (unregister-events state side card)
@@ -887,11 +887,11 @@
    (let [ab (effect (register-turn-flag!
                      card :can-rez
                      (fn [state side card]
-                       (if (and (= (:active-player @state) :challenger) (not (ice? card)))
+                       (if (and (= (:active-player @state) :challenger) (not (character? card)))
                          ((constantly false)
-                          (toast state :contestant "Cannot rez non-ICE on the Challenger's turn due to Interdiction"))
+                          (toast state :contestant "Cannot rez non-Character on the Challenger's turn due to Interdiction"))
                          true))))]
-     {:msg "prevent the Contestant from rezzing non-ICE cards on the Challenger's turn"
+     {:msg "prevent the Contestant from rezzing non-Character cards on the Challenger's turn"
       :effect ab
       :events {:challenger-turn-begins {:effect ab}}
       :leave-play (req (clear-all-flags-for-card! state side card))})
@@ -918,13 +918,13 @@
 
    "Kraken"
    {:req (req (:stole-agenda challenger-reg)) :prompt "Choose a server" :choices (req servers)
-    :msg (msg "force the Contestant to trash an ICE protecting " target)
+    :msg (msg "force the Contestant to trash an Character protecting " target)
     :effect (req (let [serv (next (server->zone state target))
                        servname target]
                    (resolve-ability
                      state :contestant
-                     {:prompt (msg "Select a piece of ICE in " target " to trash")
-                      :choices {:req #(and (= (last (:zone %)) :ices)
+                     {:prompt (msg "Select a piece of Character in " target " to trash")
+                      :choices {:req #(and (= (last (:zone %)) :characters)
                                            (= serv (rest (butlast (:zone %)))))}
                       :effect (req (trash state :contestant target)
                                    (system-msg state side (str "trashes "
@@ -948,19 +948,19 @@
 
    "Leave No Trace"
    {:prompt "Choose a server"
-    :msg "make a run and derez any ICE that are rezzed during this run"
+    :msg "make a run and derez any Character that are rezzed during this run"
     :choices (req runnable-servers)
     :delayed-completion true
     :effect (req
-              (let [old-ice (filter #(and (rezzed? %) (is-type? % "ICE")) (all-installed state :contestant))]
-                (swap! state assoc :lnt old-ice)
+              (let [old-character (filter #(and (rezzed? %) (is-type? % "Character")) (all-installed state :contestant))]
+                (swap! state assoc :lnt old-character)
                 (register-events state side (:events (card-def card)) (assoc card :zone '(:discard)))
                 (game.core/run state side (make-eid state) target nil card)))
-    :events {:run-ends {:effect (req (let [new (set (filter #(and (rezzed? %) (is-type? % "ICE")) (all-installed state :contestant)))
+    :events {:run-ends {:effect (req (let [new (set (filter #(and (rezzed? %) (is-type? % "Character")) (all-installed state :contestant)))
                                            old (set (:lnt @state))
                                            diff (seq (clojure.set/difference new old))]
-                                       (doseq [ice diff]
-                                         (derez state side ice))
+                                       (doseq [character diff]
+                                         (derez state side character))
                                        (when-not (empty? diff)
                                          (system-msg state side (str "derezzes " (join ", " (map :title diff)) " via Leave No Trace")))
                                        (swap! state dissoc :lnt)
@@ -1358,11 +1358,11 @@
    (run-event)
 
    "Reshape"
-   {:prompt "Select two non-rezzed ICE to swap positions"
-    :choices {:req #(and (installed? %) (not (rezzed? %)) (ice? %)) :max 2}
+   {:prompt "Select two non-rezzed Character to swap positions"
+    :choices {:req #(and (installed? %) (not (rezzed? %)) (character? %)) :max 2}
     :msg (msg "swap the positions of " (card-str state (first targets)) " and " (card-str state (second targets)))
     :effect (req (when (= (count targets) 2)
-                   (swap-ice state side (first targets) (second targets))))}
+                   (swap-character state side (first targets) (second targets))))}
 
    "Retrieval Run"
    {:req (req archives-runnable)
@@ -1375,9 +1375,9 @@
                         :effect (effect (challenger-install target {:no-cost true}))}} card))}
 
    "Rigged Results"
-   (letfn [(choose-ice []
-             {:prompt "Select a piece of ICE to bypass"
-              :choices {:req #(ice? %)}
+   (letfn [(choose-character []
+             {:prompt "Select a piece of Character to bypass"
+              :choices {:req #(character? %)}
               :msg (msg "bypass " (card-str state target))
               :effect (final-effect (run (second (:zone target))))})
            (contestant-choice [spent]
@@ -1389,7 +1389,7 @@
                            (clear-wait-prompt state :challenger)
                            (lose state :challenger :credit spent)
                            (if (not= (str spent) target)
-                             (continue-ability state :challenger (choose-ice) card nil)
+                             (continue-ability state :challenger (choose-character) card nil)
                              (effect-completed state side eid)))})
            (challenger-choice [cr]
              {:prompt "Spend how many credits?"
@@ -1445,7 +1445,7 @@
    "Run Amok"
    {:implementation "Ice trash is manual"
     :prompt "Choose a server" :choices (req runnable-servers)
-    :effect (effect (run target {:end-run {:msg " trash 1 piece of ICE that was rezzed during the run"}} card))}
+    :effect (effect (run target {:end-run {:msg " trash 1 piece of Character that was rezzed during the run"}} card))}
 
    "Running Interference"
    (run-event
@@ -1453,7 +1453,7 @@
               :run-ends nil}}
     nil
     nil
-    (effect (register-events {:pre-rez {:req (req (ice? target))
+    (effect (register-events {:pre-rez {:req (req (character? target))
                                         :effect (effect (rez-cost-bonus (:cost target)))}
                               :run-ends {:effect (effect (unregister-events card))}}
                              (assoc card :zone '(:discard)))))
@@ -1484,11 +1484,11 @@
 
    "Scrubbed"
    {:events (let [sc {:effect (req (update! state side (dissoc card :scrubbed-target)))}]
-                 {:encounter-ice {:once :per-turn
+                 {:encounter-character {:once :per-turn
                                   :effect (effect (update! (assoc card :scrubbed-target target))
-                                                  (update-ice-strength current-ice))}
-                  :pre-ice-strength {:req (req (= (:cid target) (get-in card [:scrubbed-target :cid])))
-                                     :effect (effect (ice-strength-bonus -2 target))}
+                                                  (update-character-strength current-character))}
+                  :pre-character-strength {:req (req (= (:cid target) (get-in card [:scrubbed-target :cid])))
+                                     :effect (effect (character-strength-bonus -2 target))}
                   :run-ends sc})}
 
    "Showing Off"
@@ -1519,15 +1519,15 @@
                                      (trash state side c)))}})
 
    "Social Engineering"
-   {:prompt "Select an unrezzed piece of ICE"
-    :choices {:req #(and (= (last (:zone %)) :ices) (not (rezzed? %)) (ice? %))}
-    :effect (req (let [ice target
-                       serv (zone->name (second (:zone ice)))]
+   {:prompt "Select an unrezzed piece of Character"
+    :choices {:req #(and (= (last (:zone %)) :characters) (not (rezzed? %)) (character? %))}
+    :effect (req (let [character target
+                       serv (zone->name (second (:zone character)))]
               (resolve-ability
                  state :challenger
-                 {:msg (msg "select the piece of ICE at position " (ice-index state ice) " of " serv)
+                 {:msg (msg "select the piece of Character at position " (character-index state character) " of " serv)
                   :effect (effect (register-events {:pre-rez-cost
-                                                    {:req (req (= target ice))
+                                                    {:req (req (= target character))
                                                      :effect (req (let [cost (rez-cost state side (get-card state target))]
                                                                     (gain state :challenger :credit cost)))
                                                      :msg (msg "gain " (rez-cost state side (get-card state target)) " [Credits]")}}
@@ -1557,9 +1557,9 @@
     :effect (effect (run target nil card))}
 
    "Spot the Prey"
-   {:prompt "Select 1 non-ICE card to expose"
+   {:prompt "Select 1 non-Character card to expose"
     :msg "expose 1 card and make a run"
-    :choices {:req #(and (installed? %) (not (ice? %)) (= (:side %) "Contestant"))}
+    :choices {:req #(and (installed? %) (not (character? %)) (= (:side %) "Contestant"))}
     :delayed-completion true
     :effect (req (when-completed (expose state side target)
                                  (continue-ability
@@ -1617,7 +1617,7 @@
                               :req (req (not (get-in @state [:per-turn (:cid card)])))
                               :effect (effect (update! (update-in (second targets) [:pump :all-run] (fnil #(+ % (first targets)) 0)))
                                               (update-breaker-strength (second targets)))}
-               :pass-ice ss :run-ends ss}
+               :pass-character ss :run-ends ss}
       :move-zone (req (when (= [:discard] (:zone card))
                         (unregister-events state side card)))})
 
@@ -1663,16 +1663,16 @@
                     :choices (req runnable-servers)
                     :msg (msg "trash their Grip and make a run on " target ", preventing all damage")
                     :effect (req (let [runtgt [(last (server->zone state target))]
-                                       ices (get-in @state (concat [:contestant :servers] runtgt [:ices]))]
+                                       characters (get-in @state (concat [:contestant :servers] runtgt [:characters]))]
                                    (swap! state assoc :per-run nil
-                                                      :run {:server runtgt :position (count ices)
+                                                      :run {:server runtgt :position (count characters)
                                                             :access-bonus 0 :run-effect nil})
                                    (gain-run-credits state :challenger (:bad-publicity contestant))
                                    (swap! state update-in [:challenger :register :made-run] #(conj % (first runtgt)))
                                    (trigger-event state :challenger :run runtgt)))} card nil))
     :events {:pre-damage nil :run-ends nil}}
 
-   "The Price of Freedom"
+   "The Prcharacter of Freedom"
    {:additional-cost [:connection 1]
     :msg "prevent the Contestant from advancing cards during their next turn"
     :effect (effect (register-events (:events (card-def card)) (assoc card :zone '(:rfg)))
@@ -1681,7 +1681,7 @@
              {:effect (effect (register-turn-flag! card :can-advance
                                 (fn [state side card]
                                   ((constantly false)
-                                   (toast state :contestant "Cannot advance cards this turn due to The Price of Freedom." "warning"))))
+                                   (toast state :contestant "Cannot advance cards this turn due to The Prcharacter of Freedom." "warning"))))
                               (unregister-events card))}}}
 
    "Three Steps Ahead"
@@ -1689,18 +1689,18 @@
                :msg (msg "gain " (* 2 (count (:successful-run challenger-reg))) " [Credits]")}}
 
    "Tinkering"
-   {:prompt "Select a piece of ICE"
-    :choices {:req #(and (= (last (:zone %)) :ices) (ice? %))}
-    :effect (req (let [ice target
-                       serv (zone->name (second (:zone ice)))
-                       stypes (:subtype ice)]
+   {:prompt "Select a piece of Character"
+    :choices {:req #(and (= (last (:zone %)) :characters) (character? %))}
+    :effect (req (let [character target
+                       serv (zone->name (second (:zone character)))
+                       stypes (:subtype character)]
               (resolve-ability
                  state :challenger
-                 {:msg (msg "make " (card-str state ice) " gain Sentry, Code Gate, and Barrier until the end of the turn")
-                  :effect (effect (update! (assoc ice :subtype (combine-subtypes true (:subtype ice) "Sentry" "Code Gate" "Barrier")))
-                                  (update-ice-strength (get-card state ice))
+                 {:msg (msg "make " (card-str state character) " gain Sentry, Code Gate, and Barrier until the end of the turn")
+                  :effect (effect (update! (assoc character :subtype (combine-subtypes true (:subtype character) "Sentry" "Code Gate" "Barrier")))
+                                  (update-character-strength (get-card state character))
                                   (register-events {:challenger-turn-ends
-                                                    {:effect (effect (update! (assoc (get-card state ice) :subtype stypes)))}}
+                                                    {:effect (effect (update! (assoc (get-card state character) :subtype stypes)))}}
                                   (assoc card :zone '(:discard))))}
                card nil)))
     :events {:challenger-turn-ends nil}}
@@ -1734,15 +1734,15 @@
     :effect (effect (move target :hand))}
 
    "Unscheduled Maintenance"
-   {:events {:contestant-install {:req (req (ice? target))
+   {:events {:contestant-install {:req (req (character? target))
                             :effect (effect (register-turn-flag!
-                                              card :can-install-ice
+                                              card :can-install-character
                                               (fn [state side card]
-                                                (if (ice? card)
+                                                (if (character? card)
                                                   ((constantly false)
-                                                   (toast state :contestant "Cannot install ICE the rest of this turn due to Unscheduled Maintenance"))
+                                                   (toast state :contestant "Cannot install Character the rest of this turn due to Unscheduled Maintenance"))
                                                   true))))}}
-    :leave-play (effect (clear-turn-flag! card :can-install-ice))}
+    :leave-play (effect (clear-turn-flag! card :can-install-character))}
 
    "Vamp"
    {:req (req hq-runnable)

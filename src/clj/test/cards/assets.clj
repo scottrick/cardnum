@@ -115,7 +115,7 @@
       (is (= 1 (count (:discard (get-challenger)))) "Challenger took 1 net damage"))))
 
 (deftest brain-taping-warehouse
-  ;; Brain-Taping Warehouse - Lower rez cost of Bioroid ICE by 1 for each unspent Challenger click
+  ;; Brain-Taping Warehouse - Lower rez cost of Bioroid Character by 1 for each unspent Challenger click
   (do-game
     (new-game (default-contestant [(qty "Brain-Taping Warehouse" 1) (qty "Ichi 1.0" 1)
                              (qty "Eli 1.0" 1)])
@@ -123,8 +123,8 @@
     (play-from-hand state :contestant "Brain-Taping Warehouse" "New remote")
     (play-from-hand state :contestant "Ichi 1.0" "Server 1")
     (play-from-hand state :contestant "Eli 1.0" "HQ")
-    (let [ichi (get-ice state :remote1 0)
-          eli (get-ice state :hq 0)]
+    (let [ichi (get-character state :remote1 0)
+          eli (get-character state :hq 0)]
       (take-credits state :contestant)
       (run-on state :remote1)
       (core/rez state :contestant (get-content state :remote1 0))
@@ -147,8 +147,8 @@
       (core/rez state :contestant cap)
       (card-ability state :contestant cap 0)
       (card-ability state :contestant cap 0)
-      (is (= 0 (:click (get-contestant))) "Used twice, spent 2 clicks")
-      (is (= 7 (:credit (get-contestant))) "Used twice, gained 4 credits"))))
+      (is (= 0 (:click (get-contestant))) "Used twcharacter, spent 2 clicks")
+      (is (= 7 (:credit (get-contestant))) "Used twcharacter, gained 4 credits"))))
 
 (deftest chairman-hiro
   ;; Chairman Hiro - Reduce Challenger max hand size; add as 2 agenda points if Challenger trashes him
@@ -360,7 +360,7 @@
     (let [ep (get-content state :remote1 0)
           bl (get-content state :remote2 0)
           gb (get-content state :remote3 0)
-          iw (get-ice state :hq 0)]
+          iw (get-character state :hq 0)]
       (core/rez state :contestant ep)
       (take-credits state :contestant)
       (take-credits state :challenger)
@@ -405,7 +405,7 @@
     (run-empty-server state "Server 2")
     (prompt-choice :contestant "Yes")
     (prompt-choice :challenger "Yes")
-    (is (= 2 (:brain-damage (get-challenger))) "Challenger did not take brain damage when no ICE protected Edge of World")))
+    (is (= 2 (:brain-damage (get-challenger))) "Challenger did not take brain damage when no Character protected Edge of World")))
 
 (deftest elizabeth-mills
   ;; Elizabeth Mills - Remove 1 bad publicity when rezzed; click-trash to trash a location
@@ -435,7 +435,7 @@
     (core/gain state :contestant :click 2)
     (play-from-hand state :contestant "Wotan" "R&D")
     (play-from-hand state :contestant "Eliza's Toybox" "New remote")
-    (let [wotan (get-ice state :rd 0)
+    (let [wotan (get-character state :rd 0)
           eliza (get-content state :remote1 0)]
       (core/rez state :contestant eliza)
       (is (= 1 (:credit (get-contestant))))
@@ -558,7 +558,7 @@
     (play-from-hand state :contestant "Full Immersion RecStudio" "New remote")
     (play-from-hand state :contestant "Vanilla" "HQ")
     (let [fir (get-content state :remote1 0)
-          van (get-ice state :hq 0)]
+          van (get-character state :hq 0)]
       (core/rez state :contestant fir)
       (core/rez state :contestant van)
       (card-ability state :contestant fir 0)
@@ -571,117 +571,117 @@
       (core/advance state :contestant {:card (last (:hosted (refresh fir)))})
       (is (= 11 (:credit (get-contestant))) "Gained 1cr from advancing Oaktown"))))
 
-(deftest gene-splicer-access-unadvanced-no-trash
-  ;; Challenger accesses an unadvanced Gene Splicer and doesn't trash
-  ;; No net damage is dealt and Gene Splicer remains installed
+(deftest gene-splcharacterr-access-unadvanced-no-trash
+  ;; Challenger accesses an unadvanced Gene Splcharacterr and doesn't trash
+  ;; No net damage is dealt and Gene Splcharacterr remains installed
   (do-game
     (new-game
-      (default-contestant [(qty "Gene Splicer" 1)])
+      (default-contestant [(qty "Gene Splcharacterr" 1)])
       (default-challenger [(qty "Sure Gamble" 3)]))
-    (play-from-hand state :contestant "Gene Splicer" "New remote")
+    (play-from-hand state :contestant "Gene Splcharacterr" "New remote")
     (take-credits state :contestant)
     (run-empty-server state "Server 1")
     (prompt-choice :challenger "No")
     (is (= 0 (count (:discard (get-challenger)))) "Challenger took no net damage")
-    (is (= "Gene Splicer" (:title (get-content state :remote1 0))) "Gene Splicer was not trashed")
+    (is (= "Gene Splcharacterr" (:title (get-content state :remote1 0))) "Gene Splcharacterr was not trashed")
     (is (= 5 (:credit (get-challenger))) "Challenger spent no credits")))
 
-(deftest gene-splicer-access-unadvanced-trash
-  ;; Challenger accesses an unadvanced Gene Splicer and trashes it - no net damage is dealt and Gene Splicer is trashed
+(deftest gene-splcharacterr-access-unadvanced-trash
+  ;; Challenger accesses an unadvanced Gene Splcharacterr and trashes it - no net damage is dealt and Gene Splcharacterr is trashed
   (do-game
     (new-game
-      (default-contestant [(qty "Gene Splicer" 1)])
+      (default-contestant [(qty "Gene Splcharacterr" 1)])
       (default-challenger [(qty "Sure Gamble" 3)]))
-    (play-from-hand state :contestant "Gene Splicer" "New remote")
+    (play-from-hand state :contestant "Gene Splcharacterr" "New remote")
     (take-credits state :contestant)
     (run-empty-server state "Server 1")
     (prompt-choice :challenger "Yes")
     (is (= 0 (count (:discard (get-challenger)))) "Challenger took no net damage")
-    (is (= nil (get-content state :remote1 0)) "Gene Splicer is no longer in remote")
-    (is (= (:title (last (:discard (get-contestant)))) "Gene Splicer") "Gene Splicer trashed")
-    (is (= 4 (:credit (get-challenger))) "Challenger spent 1 credit to trash Gene Splicer")))
+    (is (= nil (get-content state :remote1 0)) "Gene Splcharacterr is no longer in remote")
+    (is (= (:title (last (:discard (get-contestant)))) "Gene Splcharacterr") "Gene Splcharacterr trashed")
+    (is (= 4 (:credit (get-challenger))) "Challenger spent 1 credit to trash Gene Splcharacterr")))
 
-(deftest gene-splicer-access-single-advanced-no-trash
-  ;; Challenger accesses a single-advanced Gene Splicer and doesn't trash
-  ;; 1 net damage is dealt and Gene Splicer remains installed
+(deftest gene-splcharacterr-access-single-advanced-no-trash
+  ;; Challenger accesses a single-advanced Gene Splcharacterr and doesn't trash
+  ;; 1 net damage is dealt and Gene Splcharacterr remains installed
   (do-game
     (new-game
-      (default-contestant [(qty "Gene Splicer" 1)])
+      (default-contestant [(qty "Gene Splcharacterr" 1)])
       (default-challenger [(qty "Sure Gamble" 3)]))
-    (play-from-hand state :contestant "Gene Splicer" "New remote")
+    (play-from-hand state :contestant "Gene Splcharacterr" "New remote")
     (core/add-counter state :contestant (get-content state :remote1 0) :advancement 1)
     (take-credits state :contestant)
     (run-empty-server state "Server 1")
     (prompt-choice :challenger "No")
     (is (= 1 (count (:discard (get-challenger)))) "Challenger took 1 net damage")
-    (is (= "Gene Splicer" (:title (get-content state :remote1 0))) "Gene Splicer was not trashed")
+    (is (= "Gene Splcharacterr" (:title (get-content state :remote1 0))) "Gene Splcharacterr was not trashed")
     (is (= 5 (:credit (get-challenger))) "Challenger spent no credits")))
 
-(deftest gene-splicer-access-single-advanced-trash
-  ;; Challenger accesses a single-advanced Gene Splicer and trashes it
-  ;; 1 net damage is dealt and Gene Splicer is trashed
+(deftest gene-splcharacterr-access-single-advanced-trash
+  ;; Challenger accesses a single-advanced Gene Splcharacterr and trashes it
+  ;; 1 net damage is dealt and Gene Splcharacterr is trashed
   (do-game
     (new-game
-      (default-contestant [(qty "Gene Splicer" 1)])
+      (default-contestant [(qty "Gene Splcharacterr" 1)])
       (default-challenger [(qty "Sure Gamble" 3)]))
-    (play-from-hand state :contestant "Gene Splicer" "New remote")
+    (play-from-hand state :contestant "Gene Splcharacterr" "New remote")
     (core/add-counter state :contestant (get-content state :remote1 0) :advancement 1)
     (take-credits state :contestant)
     (run-empty-server state "Server 1")
     (prompt-choice :challenger "Yes")
     (is (= 1 (count (:discard (get-challenger)))) "Challenger took 1 net damage")
-    (is (= nil (get-content state :remote1 0)) "Gene Splicer is no longer in remote")
-    (is (= (:title (last (:discard (get-contestant)))) "Gene Splicer") "Gene Splicer trashed")
-    (is (= 4 (:credit (get-challenger))) "Challenger spent 1 credit to trash Gene Splicer")))
+    (is (= nil (get-content state :remote1 0)) "Gene Splcharacterr is no longer in remote")
+    (is (= (:title (last (:discard (get-contestant)))) "Gene Splcharacterr") "Gene Splcharacterr trashed")
+    (is (= 4 (:credit (get-challenger))) "Challenger spent 1 credit to trash Gene Splcharacterr")))
 
-(deftest gene-splicer-access-double-advanced-no-trash
-  ;; Challenger accesses a double-advanced Gene Splicer and doesn't trash
-  ;; 2 net damage is dealt and Gene Splicer remains installed
+(deftest gene-splcharacterr-access-double-advanced-no-trash
+  ;; Challenger accesses a double-advanced Gene Splcharacterr and doesn't trash
+  ;; 2 net damage is dealt and Gene Splcharacterr remains installed
   (do-game
     (new-game
-      (default-contestant [(qty "Gene Splicer" 1)])
+      (default-contestant [(qty "Gene Splcharacterr" 1)])
       (default-challenger [(qty "Sure Gamble" 3)]))
-    (play-from-hand state :contestant "Gene Splicer" "New remote")
+    (play-from-hand state :contestant "Gene Splcharacterr" "New remote")
     (core/add-counter state :contestant (get-content state :remote1 0) :advancement 2)
     (take-credits state :contestant)
     (run-empty-server state "Server 1")
     (prompt-choice :challenger "No")
     (is (= 2 (count (:discard (get-challenger)))) "Challenger took 2 net damage")
-    (is (= "Gene Splicer" (:title (get-content state :remote1 0))) "Gene Splicer was not trashed")
+    (is (= "Gene Splcharacterr" (:title (get-content state :remote1 0))) "Gene Splcharacterr was not trashed")
     (is (= 5 (:credit (get-challenger))) "Challenger spent no credits")))
 
-(deftest gene-splicer-access-double-advanced-trash
-  ;; Challenger accesses a double-advanced Gene Splicer and trashes it
-  ;; 2 net damage is dealt and Gene Splicer is trashed
+(deftest gene-splcharacterr-access-double-advanced-trash
+  ;; Challenger accesses a double-advanced Gene Splcharacterr and trashes it
+  ;; 2 net damage is dealt and Gene Splcharacterr is trashed
   (do-game
     (new-game
-      (default-contestant [(qty "Gene Splicer" 1)])
+      (default-contestant [(qty "Gene Splcharacterr" 1)])
       (default-challenger [(qty "Sure Gamble" 3)]))
-    (play-from-hand state :contestant "Gene Splicer" "New remote")
+    (play-from-hand state :contestant "Gene Splcharacterr" "New remote")
     (core/add-counter state :contestant (get-content state :remote1 0) :advancement 2)
     (take-credits state :contestant)
     (run-empty-server state "Server 1")
     (prompt-choice :challenger "Yes")
     (is (= 2 (count (:discard (get-challenger)))) "Challenger took 2 net damage")
-    (is (= nil (get-content state :remote1 0)) "Gene Splicer is no longer in remote")
-    (is (= (:title (last (:discard (get-contestant)))) "Gene Splicer") "Gene Splicer trashed")
-    (is (= 4 (:credit (get-challenger))) "Challenger spent 1 credit to trash Gene Splicer")))
+    (is (= nil (get-content state :remote1 0)) "Gene Splcharacterr is no longer in remote")
+    (is (= (:title (last (:discard (get-contestant)))) "Gene Splcharacterr") "Gene Splcharacterr trashed")
+    (is (= 4 (:credit (get-challenger))) "Challenger spent 1 credit to trash Gene Splcharacterr")))
 
-(deftest gene-splicer-agenda-ability
-  ;; Contestant triple-advances a Gene Splicer and uses its ability to add to their score area as a 1 point agenda
+(deftest gene-splcharacterr-agenda-ability
+  ;; Contestant triple-advances a Gene Splcharacterr and uses its ability to add to their score area as a 1 point agenda
   (do-game
     (new-game
-      (default-contestant [(qty "Gene Splicer" 2) (qty "Ice Wall" 3) (qty "Vanilla" 2)])
+      (default-contestant [(qty "Gene Splcharacterr" 2) (qty "Ice Wall" 3) (qty "Vanilla" 2)])
       (default-challenger [(qty "Sure Gamble" 3)]))
-    (play-from-hand state :contestant "Gene Splicer" "New remote")
+    (play-from-hand state :contestant "Gene Splcharacterr" "New remote")
     (let [gs (get-content state :remote1 0)]
       (core/add-counter state :contestant gs :advancement 2)
       (take-credits state :challenger)
       (core/add-counter state :contestant (refresh gs) :advancement 1)
       (core/rez state :contestant (refresh gs))
       (card-ability state :contestant (refresh gs) 0)
-      (is (= nil (get-content state :remote1 0)) "Gene Splicer is no longer in remote")
-      (is (= 1 (:agendapoints (get-in @state [:contestant :scored 0]))) "Gene Splicer added to Contestant score area"))))
+      (is (= nil (get-content state :remote1 0)) "Gene Splcharacterr is no longer in remote")
+      (is (= 1 (:agendapoints (get-in @state [:contestant :scored 0]))) "Gene Splcharacterr added to Contestant score area"))))
 
 (deftest genetics-pavilion
   ;; Genetics Pavilion - Limit Challenger to 2 draws per turn, but only during Challenger's turn
@@ -826,7 +826,7 @@
     (play-from-hand state :contestant "Hyoubu Research Facility" "New remote")
     (play-from-hand state :contestant "Snowflake" "HQ")
     (let [hrf (get-content state :remote1 0)
-          sf (get-ice state :hq 0)]
+          sf (get-character state :hq 0)]
       (take-credits state :contestant)
       (run-on state "HQ")
       (core/rez state :contestant hrf)
@@ -870,14 +870,14 @@
       (is (= 1 (:bad-publicity (get-contestant))) "Took a bad pub on rezzed trash"))))
 
 (deftest it-department
-  ;; IT Department - Add strength to rezzed ICE until end of turn
+  ;; IT Department - Add strength to rezzed Character until end of turn
   (do-game
     (new-game (default-contestant [(qty "IT Department" 1) (qty "Wall of Static" 1)])
               (default-challenger))
     (play-from-hand state :contestant "IT Department" "New remote")
     (play-from-hand state :contestant "Wall of Static" "Server 1")
     (let [itd (get-content state :remote1 0)
-          wos (get-ice state :remote1 0)]
+          wos (get-character state :remote1 0)]
       (core/rez state :contestant itd)
       (core/rez state :contestant wos)
       (card-ability state :contestant itd 1)
@@ -1140,14 +1140,14 @@
       (prompt-choice :contestant "Yes") ; Draw from Net Analytics
       (is (= 3 (count (:hand (get-contestant)))) "Contestant draw from NA"))))
 
-(deftest net-police
-  ;; Net Police - Recurring credits equal to Challenger's link
+(deftest net-polcharacter
+  ;; Net Polcharacter - Recurring credits equal to Challenger's link
   (do-game
     (new-game
-      (default-contestant [(qty "Net Police" 1)])
+      (default-contestant [(qty "Net Polcharacter" 1)])
       (make-deck "Sunny Lebeau: Security Specialist" [(qty "Dyson Mem Chip" 1)
                                                       (qty "Access to Globalsec" 1)]))
-    (play-from-hand state :contestant "Net Police" "New remote")
+    (play-from-hand state :contestant "Net Polcharacter" "New remote")
     (is (= 2 (:link (get-challenger))))
     (let [netpol (get-content state :remote1 0)]
       (core/rez state :contestant netpol)
@@ -1380,7 +1380,7 @@
         (is (= 1 (:agendapoints scored-pub)))))))
 
 (deftest quarantine-system
-  ;; Forfeit agenda to rez up to 3 ICE with 2 credit discount per agenda point
+  ;; Forfeit agenda to rez up to 3 Character with 2 credit discount per agenda point
   (do-game
     (new-game
       (default-contestant [(qty "Chiyashi" 3) (qty "Quarantine System" 1) (qty "Project Beale" 1)])
@@ -1393,14 +1393,14 @@
     (play-from-hand state :contestant "Quarantine System" "New remote")
     (play-from-hand state :contestant "Project Beale" "New remote")
     (is (= 102 (:credit (get-contestant))) "Contestant has 102 creds")
-    (let [ch1 (get-ice state :hq 0)
-          ch2 (get-ice state :hq 1)
-          ch3 (get-ice state :hq 2)
+    (let [ch1 (get-character state :hq 0)
+          ch2 (get-character state :hq 1)
+          ch3 (get-character state :hq 2)
           qs (get-content state :remote1 0)
           beale (get-content state :remote2 0)]
       (core/rez state :contestant qs)
       (card-ability state :contestant qs 0)
-      (is (empty? (:prompt (get-contestant))) "No prompt to rez ICE")
+      (is (empty? (:prompt (get-contestant))) "No prompt to rez Character")
       (score-agenda state :contestant beale)
       ; 1 on rez
       (is (= 101 (:credit (get-contestant))) "Contestant has 101 creds")
@@ -1411,7 +1411,7 @@
       (prompt-select :contestant ch3)
       ; pay 8 per Chiyashi - 24 total
       (is (= 77 (:credit (get-contestant))) "Contestant has 77 creds")
-      (is (empty? (:prompt (get-contestant))) "No prompt to rez ICE"))))
+      (is (empty? (:prompt (get-contestant))) "No prompt to rez Character"))))
 
 (deftest reality-threedee
   ;; Reality Threedee - Take 1 bad pub on rez; gain 1c at turn start (2c if Challenger tagged)
@@ -1446,8 +1446,8 @@
       (is (= 1 (:advance-counter (refresh rc))) "Reconstruction Contract has 1 advancement token")
       (starting-hand state :challenger ["Imp" "Imp"])
       (play-from-hand state :contestant "Pup" "HQ")
-      (core/rez state :contestant (get-ice state :hq 0))
-      (card-subroutine state :contestant (get-ice state :hq 0) 0)
+      (core/rez state :contestant (get-character state :hq 0))
+      (card-subroutine state :contestant (get-character state :hq 0) 0)
       (is (= 5 (count (:discard (get-challenger)))))
       (is (= 1 (:advance-counter (refresh rc))) "Reconstruction Contract doesn't get advancement token for net damage"))))
 
@@ -1512,7 +1512,7 @@
       (is (= 2 (count (:discard (get-contestant)))) "Ronin trashed"))))
 
 (deftest sandburg
-  ;; Sandburg - +1 strength to all ICE for every 5c when Contestant has over 10c
+  ;; Sandburg - +1 strength to all Character for every 5c when Contestant has over 10c
   (do-game
     (new-game (default-contestant [(qty "Sandburg" 1) (qty "Ice Wall" 2) (qty "Hedge Fund" 3)])
               (default-challenger))
@@ -1521,8 +1521,8 @@
     (play-from-hand state :contestant "Ice Wall" "HQ")
     (play-from-hand state :contestant "Ice Wall" "R&D")
     (let [sb (get-content state :remote1 0)
-          iwall1 (get-ice state :hq 0)
-          iwall2 (get-ice state :rd 0)]
+          iwall1 (get-character state :hq 0)
+          iwall2 (get-character state :rd 0)]
       (core/rez state :contestant iwall1)
       (core/rez state :contestant iwall2)
       (core/rez state :contestant sb)
@@ -1570,7 +1570,7 @@
       (is (= 2 (count (:discard (get-contestant)))) "Sealed Vault trashed"))))
 
 (deftest server-diagnostics
-  ;; Server Diagnostics - Gain 2c when turn begins; trashed when ICE is installed
+  ;; Server Diagnostics - Gain 2c when turn begins; trashed when Character is installed
   (do-game
     (new-game (default-contestant [(qty "Server Diagnostics" 1) (qty "Pup" 1)
                              (qty "Launch Campaign" 1)])
@@ -1578,12 +1578,12 @@
     (play-from-hand state :contestant "Server Diagnostics" "New remote")
     (core/rez state :contestant (get-content state :remote1 0))
     (play-from-hand state :contestant "Launch Campaign" "New remote")
-    (is (= 1 (count (get-content state :remote1))) "Non-ICE install didn't trash Serv Diag")
+    (is (= 1 (count (get-content state :remote1))) "Non-Character install didn't trash Serv Diag")
     (take-credits state :contestant)
     (take-credits state :challenger)
     (is (= 5 (:credit (get-contestant))) "Gained 2c at start of turn")
     (play-from-hand state :contestant "Pup" "HQ")
-    (is (= 1 (count (:discard (get-contestant)))) "Server Diagnostics trashed by ICE install")))
+    (is (= 1 (count (:discard (get-contestant)))) "Server Diagnostics trashed by Character install")))
 
 (deftest shock
   ;; do 1 net damage on access
@@ -1981,7 +1981,7 @@
       (is (= 4 (count (:discard (get-challenger)))) "Urban Renewal did 4 meat damage"))))
 
 (deftest watchdog
-  ;; Watchdog - Reduce rez cost of first ICE per turn by number of Challenger tags
+  ;; Watchdog - Reduce rez cost of first Character per turn by number of Challenger tags
   (do-game
     (new-game (default-contestant [(qty "Watchdog" 1) (qty "Architect" 1) (qty "Wraparound" 1)])
               (default-challenger))
@@ -1989,8 +1989,8 @@
     (play-from-hand state :contestant "Wraparound" "HQ")
     (play-from-hand state :contestant "Architect" "HQ")
     (let [wd (get-content state :remote1 0)
-          arch (get-ice state :hq 1)
-          wrap (get-ice state :hq 0)]
+          arch (get-character state :hq 1)
+          wrap (get-character state :hq 0)]
       (take-credits state :contestant)
       (is (= 4 (:credit (get-contestant))))
       (core/gain state :challenger :tag 2)

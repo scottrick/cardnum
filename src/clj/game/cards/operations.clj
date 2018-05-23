@@ -199,7 +199,7 @@
 
    "Bioroid Efficiency Research"
    {:implementation "Derez is manual"
-    :choices {:req #(and (ice? %)
+    :choices {:req #(and (character? %)
                          (has-subtype? % "Bioroid")
                          (installed? %)
                          (not (rezzed? %)))}
@@ -275,7 +275,7 @@
 
    "Commercialization"
    {:msg (msg "gain " (or (:advance-counter target) 0) " [Credits]")
-    :choices {:req ice?}
+    :choices {:req character?}
     :effect (final-effect (gain :credit (or (:advance-counter target) 0)))}
 
    "Consulting Visit"
@@ -656,9 +656,9 @@
    {:msg "gain 13 [Credits]" :effect (effect (gain :credit 13))}
 
    "Lag Time"
-   {:effect (effect (update-all-ice))
-    :events {:pre-ice-strength {:effect (effect (ice-strength-bonus 1 target))}}
-    :leave-play (effect (update-all-ice))}
+   {:effect (effect (update-all-character))
+    :events {:pre-character-strength {:effect (effect (character-strength-bonus 1 target))}}
+    :leave-play (effect (update-all-character))}
 
    "Lateral Growth"
    {:delayed-completion true
@@ -773,26 +773,26 @@
                          true)))))}
 
    "Mutate"
-   {:additional-cost [:ice 1]
+   {:additional-cost [:character 1]
     :effect (effect (register-events (:events (card-def card)) (assoc card :zone '(:discard))))
 
-    :events {:contestant-trash {:effect (req (let [i (ice-index state target)
-                       [reveal r] (split-with (complement ice?) (get-in @state [:contestant :deck]))
+    :events {:contestant-trash {:effect (req (let [i (character-index state target)
+                       [reveal r] (split-with (complement character?) (get-in @state [:contestant :deck]))
                        titles (->> (conj (vec reveal) (first r)) (filter identity) (map :title))]
                                            (system-msg state side (str "uses Mutate to trash " (:title target)))
                                            (when (seq titles)
                                              (system-msg state side (str "reveals " (clojure.string/join ", " titles) " from R&D")))
-                                           (if-let [ice (first r)]
-                                             (let [newice (assoc ice :zone (:zone target) :rezzed true)
-                                                   ices (get-in @state (cons :contestant (:zone target)))
-                                                   newices (apply conj (subvec ices 0 i) newice (subvec ices i))]
-                                               (swap! state assoc-in (cons :contestant (:zone target)) newices)
-                                               (swap! state update-in [:contestant :deck] (fn [coll] (remove-once #(not= (:cid %) (:cid newice)) coll)))
-                                               (trigger-event state side :contestant-install newice)
-                                               (card-init state side newice {:resolve-effect false})
-                                               (system-msg state side (str "uses Mutate to install and rez " (:title newice) " from R&D at no cost"))
-                                               (trigger-event state side :rez newice))
-                                             (system-msg state side (str "does not find any ICE to install from R&D")))
+                                           (if-let [character (first r)]
+                                             (let [newcharacter (assoc character :zone (:zone target) :rezzed true)
+                                                   characters (get-in @state (cons :contestant (:zone target)))
+                                                   newcharacters (apply conj (subvec characters 0 i) newcharacter (subvec characters i))]
+                                               (swap! state assoc-in (cons :contestant (:zone target)) newcharacters)
+                                               (swap! state update-in [:contestant :deck] (fn [coll] (remove-once #(not= (:cid %) (:cid newcharacter)) coll)))
+                                               (trigger-event state side :contestant-install newcharacter)
+                                               (card-init state side newcharacter {:resolve-effect false})
+                                               (system-msg state side (str "uses Mutate to install and rez " (:title newcharacter) " from R&D at no cost"))
+                                               (trigger-event state side :rez newcharacter))
+                                             (system-msg state side (str "does not find any Character to install from R&D")))
                                            (shuffle! state :contestant :deck)
                                            (effect-completed state side eid card)
                                            (unregister-events state side card)))}}}
@@ -833,31 +833,31 @@
                      card nil))}
 
    "Oversight AI"
-   {:implementation "Trashing ICE is manual"
-    :choices {:req #(and (ice? %) (not (rezzed? %)) (= (last (:zone %)) :ices))}
+   {:implementation "Trashing Character is manual"
+    :choices {:req #(and (character? %) (not (rezzed? %)) (= (last (:zone %)) :characters))}
     :msg (msg "rez " (:title target) " at no cost")
     :effect (final-effect (rez target {:ignore-cost :all-costs})
                           (host (get-card state target) (assoc card :zone [:discard] :seen true :condition true)))}
 
    "Patch"
-   {:choices {:req #(and (ice? %) (rezzed? %))}
+   {:choices {:req #(and (character? %) (rezzed? %))}
     :msg (msg "give +2 strength to " (card-str state target))
     :effect (final-effect (host target (assoc card :zone [:discard] :seen true :condition true))
-                          (update-ice-strength (get-card state target)))
-    :events {:pre-ice-strength {:req (req (= (:cid target) (:cid (:host card))))
-                                :effect (effect (ice-strength-bonus 2 target))}}}
+                          (update-character-strength (get-card state target)))
+    :events {:pre-character-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                :effect (effect (character-strength-bonus 2 target))}}}
 
    "Paywall Implementation"
    {:events {:successful-run {:msg "gain 1 [Credits]" :effect (effect (gain :contestant :credit 1))}}}
 
    "Peak Efficiency"
    {:msg (msg "gain " (reduce (fn [c server]
-                                (+ c (count (filter (fn [ice] (:rezzed ice)) (:ices server)))))
+                                (+ c (count (filter (fn [character] (:rezzed character)) (:characters server)))))
                               0 (flatten (seq (:servers contestant))))
               " [Credits]")
     :effect (effect (gain :credit
                           (reduce (fn [c server]
-                                    (+ c (count (filter (fn [ice] (:rezzed ice)) (:ices server)))))
+                                    (+ c (count (filter (fn [character] (:rezzed character)) (:characters server)))))
                                   0 (flatten (seq (:servers contestant))))))}
 
    "Power Grid Overload"
@@ -914,9 +914,9 @@
              :delayed-completion true
              :effect (effect (contestant-install (assoc (move state side chosen :play-area) :advance-counter 3) target {:no-install-cost true}))})]
      {:delayed-completion true
-      :prompt "Choose a piece of ICE in HQ to install"
-      :choices {:req #(and (in-hand? %) (= (:side %) "Contestant") (ice? %))}
-      :msg "install an ICE from HQ and place 3 advancements on it"
+      :prompt "Choose a piece of Character in HQ to install"
+      :choices {:req #(and (in-hand? %) (= (:side %) "Contestant") (character? %))}
+      :msg "install an Character from HQ and place 3 advancements on it"
       :cancel-effect (req (effect-completed state side eid))
       :effect (effect (continue-ability (install-card target) card nil))})
 
@@ -953,7 +953,7 @@
              {:prompt "Select an agenda, asset, or upgrade to install"
               :choices (cons "None" cards)
               :delayed-completion true
-              :effect (req (if-not (or (= target "None") (ice? target) (is-type? target "Operation"))
+              :effect (req (if-not (or (= target "None") (character? target) (is-type? target "Operation"))
                              (continue-ability state side (install-card target) card nil)
                              (system-msg state side "does not install an asset, agenda, or upgrade"))
                            (effect-completed state side eid card)
@@ -1037,7 +1037,7 @@
                    (doseq [c installed]
                      (update! state side (dissoc c :advance-counter)))
                    (set-prop state side target :advance-counter total-adv)
-                   (update-all-ice state side)
+                   (update-all-character state side)
                    (system-msg state side (str "uses Red Planet Couriers to move " total-adv
                                                " advancement tokens to " (card-str state target)))
                    (effect-completed state side eid)))}
@@ -1123,16 +1123,16 @@
              :pre-play-instant {:effect (effect (play-cost-bonus [:credit 1]))}}}
 
    "Rover Algorithm"
-   {:choices {:req #(and (ice? %) (rezzed? %))}
+   {:choices {:req #(and (character? %) (rezzed? %))}
     :msg (msg "host it as a condition counter on " (card-str state target))
     :effect (final-effect (host target (assoc card :zone [:discard] :seen true :condition true))
-                          (update-ice-strength (get-card state target)))
-    :events {:pass-ice {:req (req (= (:cid target) (:cid (:host card))))
+                          (update-character-strength (get-card state target)))
+    :events {:pass-character {:req (req (= (:cid target) (:cid (:host card))))
                                 :effect (effect (add-counter card :power 1))}
-             :pre-ice-strength {:req (req (= (:cid target) (:cid (:host card))))
-                                :effect (effect (ice-strength-bonus (get-in card [:counter :power] 0) target))}}}
+             :pre-character-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                :effect (effect (character-strength-bonus (get-in card [:counter :power] 0) target))}}}
 
-   "Sacrifice"
+   "Sacrifcharacter"
    {:req (req (pos? (:bad-publicity contestant)))
     :delayed-completion true
     :additional-cost [:forfeit]
@@ -1141,8 +1141,8 @@
     :events {:contestant-forfeit-agenda {:effect (req (let [bplost (min (:agendapoints (last (:rfg contestant))) (:bad-publicity contestant))]
                                                   (if (not (neg? bplost)) (do (lose state side :bad-publicity bplost)
                                                                               (gain state side :credit bplost)
-                                                                              (system-msg state side (str "uses Sacrifice to lose " bplost " bad publicity and gain " bplost " [Credits]")))
-                                                                          (system-msg state side "uses Sacrifice but gains no credits and loses no Bad Publicity"))
+                                                                              (system-msg state side (str "uses Sacrifcharacter to lose " bplost " bad publicity and gain " bplost " [Credits]")))
+                                                                          (system-msg state side "uses Sacrifcharacter but gains no credits and loses no Bad Publicity"))
                                                   (effect-completed state side eid)
                                                   (unregister-events state side card)))}}}
    "Salems Hospitality"
@@ -1186,7 +1186,7 @@
     :effect (req (doseq [c targets]
                    (move state :challenger c :hand)))}
 
-   "Service Outage"
+   "Servcharacter Outage"
    (letfn [(so-activated [state]
              (get-in @state [:contestant :register :so-activated] false))
            (add-effect [state side]
@@ -1249,10 +1249,10 @@
     :effect (effect (add-prop target :advance-counter 2 {:placed true}))}
 
    "Shoot the Moon"
-   {:choices {:req #(and (ice? %) (not (rezzed? %)))
+   {:choices {:req #(and (character? %) (not (rezzed? %)))
               :max (req (min (:tag challenger)
                              (reduce (fn [c server]
-                                       (+ c (count (filter #(not (:rezzed %)) (:ices server)))))
+                                       (+ c (count (filter #(not (:rezzed %)) (:characters server)))))
                                      0 (flatten (seq (:servers contestant))))))}
     :req (req tagged)
     :effect (req (doseq [t targets] (rez state side t {:ignore-cost :all-costs}))
@@ -1298,10 +1298,10 @@
     :effect (effect (gain :credit (* 3 (count (:scored challenger)))))}
 
    "Sub Boost"
-   {:choices {:req #(and (ice? %) (rezzed? %))}
+   {:choices {:req #(and (character? %) (rezzed? %))}
     :msg (msg "make " (card-str state target) " gain Barrier and \"[Subroutine] End the run\"")
     :effect (effect (update! (assoc target :subtype (combine-subtypes true (:subtype target) "Barrier")))
-                    (update-ice-strength target)
+                    (update-character-strength target)
                     (host (get-card state target) (assoc card :zone [:discard] :seen true :condition true)))}
 
    "Subcontract"
@@ -1363,19 +1363,19 @@
 
    "Sunset"
    (letfn [(sun [serv]
-             {:prompt "Select two pieces of ICE to swap positions"
-              :choices {:req #(and (= serv (rest (butlast (:zone %)))) (ice? %))
+             {:prompt "Select two pieces of Character to swap positions"
+              :choices {:req #(and (= serv (rest (butlast (:zone %)))) (character? %))
                         :max 2}
               :delayed-completion true
               :effect (req (if (= (count targets) 2)
-                             (do (swap-ice state side (first targets) (second targets))
+                             (do (swap-character state side (first targets) (second targets))
                                  (continue-ability state side (sun serv) card nil))
-                             (do (system-msg state side "has finished rearranging ICE")
+                             (do (system-msg state side "has finished rearranging Character")
                                  (effect-completed state side eid card))))})]
      {:prompt "Choose a server"
       :choices (req servers)
       :delayed-completion true
-      :msg (msg "rearrange ICE protecting " target)
+      :msg (msg "rearrange Character protecting " target)
       :effect (req (let [serv (next (server->zone state target))]
                      (continue-ability state side (sun serv) card nil)))})
 
@@ -1539,7 +1539,7 @@
                                      card nil)))}
 
    "Wetwork Refit"
-   {:choices {:req #(and (ice? %)
+   {:choices {:req #(and (character? %)
                          (has-subtype? % "Bioroid")
                          (rezzed? %))}
     :msg (msg "give " (card-str state target) "\"[Subroutine] Do 1 brain damage\" before all its other subroutines")

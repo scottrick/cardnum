@@ -102,7 +102,7 @@
 
 (defn- make-private-contestant [state]
   (let [zones (concat [[:hand]] [[:discard]] [[:deck]]
-                      (for [server (keys (:servers (:contestant @state)))] [:servers server :ices])
+                      (for [server (keys (:servers (:contestant @state)))] [:servers server :characters])
                       (for [server (keys (:servers (:contestant @state)))] [:servers server :content]))]
     (loop [s (:contestant @state)
            z zones]

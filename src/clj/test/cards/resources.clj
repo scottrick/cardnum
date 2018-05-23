@@ -238,7 +238,7 @@
     (is (= 3 (count (:discard (get-challenger)))) "Conventional meat damage not prevented by Parlor")))
 
 (deftest compromised-employee
-  ;; Compromised Employee - Gain 1c every time Contestant rezzes ICE
+  ;; Compromised Employee - Gain 1c every time Contestant rezzes Character
   (do-game
     (new-game (default-contestant [(qty "Pup" 2) (qty "Launch Campaign" 1)])
               (default-challenger [(qty "Compromised Employee" 1)]))
@@ -249,10 +249,10 @@
     (play-from-hand state :challenger "Compromised Employee")
     (let [ce (get-resource state 0)]
       (is (= 1 (:rec-counter (refresh ce))) "Has 1 recurring credit")
-      (core/rez state :contestant (get-ice state :hq 0))
-      (is (= 4 (:credit (get-challenger))) "Gained 1c from ICE rez")
-      (core/rez state :contestant (get-ice state :rd 0))
-      (is (= 5 (:credit (get-challenger))) "Gained 1c from ICE rez")
+      (core/rez state :contestant (get-character state :hq 0))
+      (is (= 4 (:credit (get-challenger))) "Gained 1c from Character rez")
+      (core/rez state :contestant (get-character state :rd 0))
+      (is (= 5 (:credit (get-challenger))) "Gained 1c from Character rez")
       (core/rez state :contestant (get-content state :remote1 0))
       (is (= 5 (:credit (get-challenger))) "Asset rezzed, no credit gained"))))
 
@@ -400,7 +400,7 @@
     (is (= 8 (:credit (get-challenger))) "No credits gained at turn start")))
 
 (deftest ddos
-  ;; Prevent rezzing of outermost ice for the rest of the turn
+  ;; Prevent rezzing of outermost character for the rest of the turn
   (do-game
     (new-game (default-contestant [(qty "Ice Wall" 3)])
               (default-challenger [(qty "DDoS" 1)]))
@@ -409,7 +409,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "DDoS")
     (let [ddos (get-in @state [:challenger :rig :resource 0])
-          iwall (get-ice state :hq 1)]
+          iwall (get-character state :hq 1)]
       (card-ability state :challenger ddos 0)
       (is (= (:title ddos) (get-in @state [:challenger :discard 0 :title])))
       (run-on state "HQ")
@@ -649,21 +649,21 @@
       (prompt-choice :challenger "Steal"))))
 
 (deftest gene-conditioning-shoppe
-  ;; Gene Conditioning Shoppe - set :genetics-trigger-twice flag
+  ;; Gene Conditioning Shoppe - set :genetics-trigger-twcharacter flag
   (do-game
    (new-game (default-contestant [(qty "Hedge Fund" 3)])
              (default-challenger [(qty "Gene Conditioning Shoppe" 1)
                               (qty "Adjusted Chronotype" 1)]))
    (take-credits state :contestant)
    (play-from-hand state :challenger "Adjusted Chronotype")
-   (is (not (core/has-flag? state :challenger :persistent :genetics-trigger-twice)))
+   (is (not (core/has-flag? state :challenger :persistent :genetics-trigger-twcharacter)))
    (play-from-hand state :challenger "Gene Conditioning Shoppe")
-   (is (core/has-flag? state :challenger :persistent :genetics-trigger-twice))
+   (is (core/has-flag? state :challenger :persistent :genetics-trigger-twcharacter))
    (core/trash state :challenger (get-in @state [:challenger :rig :resource 1]))
-   (is (not (core/has-flag? state :challenger :persistent :genetics-trigger-twice)))))
+   (is (not (core/has-flag? state :challenger :persistent :genetics-trigger-twcharacter)))))
 
 (deftest gene-conditioning-shoppe-redundancy
-  ;; Gene Conditioning Shoppe - set :genetics-trigger-twice flag - ensure redundant copies work
+  ;; Gene Conditioning Shoppe - set :genetics-trigger-twcharacter flag - ensure redundant copies work
   (do-game
    (new-game (default-contestant [(qty "Hedge Fund" 3)])
              (default-challenger [(qty "Gene Conditioning Shoppe" 2)
@@ -673,16 +673,16 @@
    (take-credits state :contestant)
    (play-from-hand state :challenger "Adjusted Chronotype")
    (let [adjusted-chronotype (get-in @state [:challenger :rig :resource 0])]
-     (is (not (core/has-flag? state :challenger :persistent :genetics-trigger-twice)))
+     (is (not (core/has-flag? state :challenger :persistent :genetics-trigger-twcharacter)))
      (play-from-hand state :challenger "Gene Conditioning Shoppe")
      (play-from-hand state :challenger "Gene Conditioning Shoppe")
      (let [gcs1 (get-in @state [:challenger :rig :resource 1])
            gcs2 (get-in @state [:challenger :rig :resource 2])]
-       (is (core/has-flag? state :challenger :persistent :genetics-trigger-twice))
+       (is (core/has-flag? state :challenger :persistent :genetics-trigger-twcharacter))
        (core/trash state :challenger gcs1)
-       (is (core/has-flag? state :challenger :persistent :genetics-trigger-twice))
+       (is (core/has-flag? state :challenger :persistent :genetics-trigger-twcharacter))
        (core/trash state :challenger gcs2)
-       (is (not (core/has-flag? state :challenger :persistent :genetics-trigger-twice)))))))
+       (is (not (core/has-flag? state :challenger :persistent :genetics-trigger-twcharacter)))))))
 
 (deftest globalsec-security-clearance
   ;; Globalsec Security Clearance - Ability, click lost on use
@@ -730,14 +730,14 @@
     (is (= 5 (:credit (get-challenger))) "Gained 2c")
     (is (= 3 (:click (get-challenger))) "Lost 1 click")))
 
-(deftest ice-carver
-  ;; Ice Carver - lower ice strength on encounter
+(deftest character-carver
+  ;; Ice Carver - lower character strength on encounter
   (do-game
     (new-game (default-contestant [(qty "Ice Wall" 1)])
               (default-challenger [(qty "Ice Carver" 1)]))
     (play-from-hand state :contestant "Ice Wall" "Archives")
     (take-credits state :contestant 2)
-    (let [iwall (get-ice state :archives 0)]
+    (let [iwall (get-character state :archives 0)]
       (core/rez state :contestant iwall)
       (play-from-hand state :challenger "Ice Carver")
       (run-on state "Archives")
@@ -913,8 +913,8 @@
     (play-from-hand state :contestant "Tollbooth" "HQ")
     (play-from-hand state :contestant "Ice Wall" "Archives")
     (take-credits state :contestant)
-    (let [toll (get-ice state :hq 0)
-          iw (get-ice state :archives 0)]
+    (let [toll (get-character state :hq 0)
+          iw (get-character state :archives 0)]
       (core/rez state :contestant iw)
       (core/move state :challenger (find-card "Hedge Fund" (:hand (get-challenger))) :deck)
 
@@ -936,8 +936,8 @@
                                                         (qty "Muertos Gang Member" 1)]))
     (play-from-hand state :contestant "Tollbooth" "HQ")
     (play-from-hand state :contestant "Ice Wall" "Archives")
-    (let [toll (get-ice state :hq 0)
-          iw (get-ice state :archives 0)]
+    (let [toll (get-character state :hq 0)
+          iw (get-character state :archives 0)]
       (core/rez state :contestant iw)
       (take-credits state :contestant)
       (core/lose state :contestant :credit 100)
@@ -983,7 +983,7 @@
       (is (= "Net Mercur" (:title (:card (first (get-in @state [:challenger :prompt]))))) "Net Mercur triggers itself"))))
 
 (deftest network-exchange
-  ;; ICE install costs 1 more except for inner most
+  ;; Character install costs 1 more except for inner most
   (do-game
     (new-game (default-contestant [(qty "Paper Wall" 3)])
               (default-challenger [(qty "Network Exchange" 1)]))
@@ -1006,7 +1006,7 @@
     (take-credits state :contestant) ; contestant has 7 credits
     (play-from-hand state :challenger "Network Exchange")
     (take-credits state :challenger)
-    (let [architect (get-ice state :hq 0)]
+    (let [architect (get-character state :hq 0)]
       (core/rez state :contestant architect)
       (is (= 3 (:credit (get-contestant))) "Contestant has 3 credits after rez")
       (core/move state :contestant (find-card "Architect" (:hand (get-contestant))) :deck)
@@ -1122,22 +1122,22 @@
           ;; the fact that we got this far means the bug is fixed
           (is (= 1 (count (get-hardware state))) "Spy Camera installed"))))))
 
-(deftest officer-frank
-  ;; Officer Frank - meat damage to trash 2 from HQ
+(deftest offcharacterr-frank
+  ;; Offcharacterr Frank - meat damage to trash 2 from HQ
   (do-game
       (new-game (default-contestant [(qty "Swordsman" 1) (qty "Hedge Fund" 2)])
-                (default-challenger [(qty "Officer Frank" 1) (qty "Skulljack" 1) (qty "Respirocytes" 4)]))
+                (default-challenger [(qty "Offcharacterr Frank" 1) (qty "Skulljack" 1) (qty "Respirocytes" 4)]))
    (play-from-hand state :contestant "Swordsman" "Archives")
    (take-credits state :contestant)
-   (starting-hand state :challenger ["Officer Frank" "Skulljack" "Respirocytes" "Respirocytes" "Respirocytes" "Respirocytes"])
-   (play-from-hand state :challenger "Officer Frank")
+   (starting-hand state :challenger ["Offcharacterr Frank" "Skulljack" "Respirocytes" "Respirocytes" "Respirocytes" "Respirocytes"])
+   (play-from-hand state :challenger "Offcharacterr Frank")
    (card-ability state :challenger (get-resource state 0) 0)
    (is (= 0 (count (:discard (get-contestant)))) "Nothing discarded from HQ")
    (play-from-hand state :challenger "Skulljack")
    (is (= 3 (count (:hand (get-challenger)))) "Took 1 brain damage")
    (card-ability state :challenger (get-resource state 0) 0)
    (is (= 0 (count (:discard (get-contestant)))) "Nothing discarded from HQ")
-   (let [sm (get-ice state :archives 0)]
+   (let [sm (get-character state :archives 0)]
      (run-on state :archives)
      (core/rez state :contestant sm)
      (card-subroutine state :contestant sm 0)
@@ -1589,7 +1589,7 @@
     (is (= 1 (:credit (get-challenger))) "Challenger has 1 credit")
     (play-from-hand state :challenger "Street Peddler")
     (let [sp (get-in @state [:challenger :rig :resource 0])
-          pu (get-ice state :hq 0)]
+          pu (get-character state :hq 0)]
       (core/rez state :contestant pu)
       (card-ability state :challenger sp 0)
       (prompt-card :challenger (first (:hosted sp))) ; choose to install Parasite
@@ -1683,8 +1683,8 @@
    (play-from-hand state :contestant "Data Mine" "HQ")
    (play-from-hand state :contestant "Data Mine" "HQ")
    (take-credits state :contestant)
-   (let [first-dm (get-ice state :hq 1)
-         second-dm (get-ice state :hq 0)]
+   (let [first-dm (get-character state :hq 1)
+         second-dm (get-character state :hq 0)]
      (play-from-hand state :challenger "Synthetic Blood")
      (run-on state "HQ")
      (core/rez state :contestant first-dm)
@@ -1705,8 +1705,8 @@
    (play-from-hand state :contestant "Data Mine" "HQ")
    (play-from-hand state :contestant "Data Mine" "HQ")
    (take-credits state :contestant)
-   (let [first-dm (get-ice state :hq 1)
-         second-dm (get-ice state :hq 0)]
+   (let [first-dm (get-character state :hq 1)
+         second-dm (get-character state :hq 0)]
      (play-from-hand state :challenger "Synthetic Blood")
      (play-from-hand state :challenger "Gene Conditioning Shoppe")
      (run-on state "HQ")
@@ -2028,7 +2028,7 @@
     (is (= 8 (:credit (get-challenger))) "Gained 2c from Fall Guy but no credits from Wasteland")))
 
 (deftest xanadu
-  ;; Xanadu - Increase all ICE rez cost by 1 credit
+  ;; Xanadu - Increase all Character rez cost by 1 credit
   (do-game
     (new-game (default-contestant [(qty "Paper Wall" 2) (qty "Launch Campaign" 1)])
               (default-challenger [(qty "Xanadu" 1)]))
@@ -2037,15 +2037,15 @@
     (play-from-hand state :contestant "Launch Campaign" "New remote")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Xanadu")
-    (let [pw1 (get-ice state :hq 0)
-          pw2 (get-ice state :rd 0)
+    (let [pw1 (get-character state :hq 0)
+          pw2 (get-character state :rd 0)
           lc (get-content state :remote1 0)]
       (core/rez state :contestant pw1)
       (is (= 4 (:credit (get-contestant))) "Paid 1 instead of 0 to rez Paper Wall")
       (core/rez state :contestant pw2)
       (is (= 3 (:credit (get-contestant))) "Paid 1 instead of 0 to rez Paper Wall")
       (core/rez state :contestant lc)
-      (is (= 2 (:credit (get-contestant))) "Paid 1 to rez Launch Campaign; no effect on non-ICE"))))
+      (is (= 2 (:credit (get-contestant))) "Paid 1 to rez Launch Campaign; no effect on non-Character"))))
 
 (deftest zona-sul-shipping
   ;; Zona Sul Shipping - Gain 1c per turn, click to take all credits. Trash when tagged

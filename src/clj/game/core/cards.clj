@@ -1,8 +1,8 @@
 (in-ns 'game.core)
 
-(declare active? all-installed cards card-init deactivate card-flag? get-card-hosted handle-end-run hardware? has-subtype? ice?
+(declare active? all-installed cards card-init deactivate card-flag? get-card-hosted handle-end-run hardware? has-subtype? character?
          make-eid program? register-events remove-from-host remove-icon reset-card resource? rezzed? trash trigger-event update-hosted!
-         update-ice-strength unregister-events)
+         update-character-strength unregister-events)
 
 ;;; Functions for loading card information.
 (defn card-def
@@ -110,16 +110,16 @@
          (doseq [s [:challenger :contestant]]
            (if host
              (remove-from-host state side card)
-             (swap! state update-in (cons s (vec zone)) (fn [coll] (remove-once #(not= (:cid %) cid) coll)))))
-         (let [z (vec (cons :contestant (butlast zone)))]
-           (when (and (not keep-server-alive)
-                      (is-remote? z)
-                      (empty? (get-in @state (conj z :content)))
-                      (empty? (get-in @state (conj z :ices))))
-             (when-let [run (:run @state)]
-               (when (= (last (:server run)) (last z))
-                 (handle-end-run state side)))
-             (swap! state dissoc-in z)))
+             (swap! state update-in (cons s (vec zone)) (fn [coll] (remove-once #(not= (:cid %) cid) coll))))
+           (let [z (vec (cons s (butlast zone)))]
+             (when (and (not keep-server-alive)
+                        (is-remote? z)
+                        (empty? (get-in @state (conj z :content)))
+                        (empty? (get-in @state (conj z :characters))))
+               (when-let [run (:run @state)]
+                 (when (= (last (:server run)) (last z))
+                   (handle-end-run state side)))
+               (swap! state dissoc-in z))))
          (when-let [card-moved (:move-zone (card-def c))]
            (card-moved state side (make-eid state) moved-card card))
          (trigger-event state side :card-moved card moved-card)
@@ -149,7 +149,7 @@
                         card)]
      (update! state side (update-in updated-card [key] #(+ (or % 0) n)))
      (if (= key :advance-counter)
-       (do (when (and (ice? updated-card) (rezzed? updated-card)) (update-ice-strength state side updated-card))
+       (do (when (and (character? updated-card) (rezzed? updated-card)) (update-character-strength state side updated-card))
            (if-not placed
              (trigger-event state side :advance (get-card state updated-card))
              (trigger-event state side :advancement-placed (get-card state updated-card))))

@@ -135,21 +135,21 @@
      {:derezzed-events {:challenger-turn-ends contestant-rez-toast}
       :flags {:contestant-phase-12 (req true)}
       :events {:contestant-turn-begins ability
-               :rez {:req (req (and (ice? target) (pos? (:advance-counter card 0))))
+               :rez {:req (req (and (character? target) (pos? (:advance-counter card 0))))
                      :delayed-completion true
-                     :effect (req (let [ice (get-card state target)
-                                        icename (:title ice)]
+                     :effect (req (let [character (get-card state target)
+                                        charactername (:title character)]
                                     (show-wait-prompt state :challenger "Contestant to use Anson Rose")
                                     (continue-ability state side
                                       {:optional
-                                       {:prompt (msg "Move advancement tokens from Anson Rose to " icename "?")
+                                       {:prompt (msg "Move advancement tokens from Anson Rose to " charactername "?")
                                         :yes-ability {:prompt "Choose how many advancement tokens to remove from Anson Rose"
                                                       :choices {:number (req (:advance-counter card))}
                                                       :effect (effect (clear-wait-prompt :challenger)
-                                                                      (add-prop :contestant ice :advance-counter target {:placed true})
+                                                                      (add-prop :contestant character :advance-counter target {:placed true})
                                                                       (add-prop :contestant card :advance-counter (- target) {:placed true})
                                                                       (system-msg (str "uses Anson Rose to move " target " advancement tokens to "
-                                                                                       (card-str state ice))))}
+                                                                                       (card-str state character))))}
                                         :no-ability {:effect (effect (clear-wait-prompt :challenger))}}}
                                      card nil)))}}
       :abilities [ability]})
@@ -196,7 +196,7 @@
 
    "Brain-Taping Warehouse"
    {:events {:pre-rez
-             {:req (req (and (ice? target) (has-subtype? target "Bioroid")))
+             {:req (req (and (character? target) (has-subtype? target "Bioroid")))
               :effect (effect (rez-cost-bonus (- (:click challenger))))}}}
 
    "Broadcast Square"
@@ -321,15 +321,15 @@
                    (when (and (not-empty tokens) (not-empty (clojure.set/difference (set advanceable) (set tokens))))
                      true)))}
     :once :per-turn
-    :abilities [{:label "Move an advancement token between ICE"
-                 :choices {:req #(and (ice? %) (:advance-counter %))}
+    :abilities [{:label "Move an advancement token between Character"
+                 :choices {:req #(and (character? %) (:advance-counter %))}
                  :priority true
                  :effect (req (let [fr target]
                                 (resolve-ability
                                   state side
                                   {:priority true
                                    :prompt "Move to where?"
-                                   :choices {:req #(and (ice? %)
+                                   :choices {:req #(and (character? %)
                                                         (not= (:cid fr) (:cid %))
                                                         (can-be-advanced? %))}
                                    :effect (effect (add-prop :contestant target :advance-counter 1)
@@ -445,11 +445,11 @@
                  :effect (effect (as-agenda :contestant card 1)) }]}
 
    "Edge of World"
-   (letfn [(ice-count [state]
-             (count (get-in (:contestant @state) [:servers (last (:server (:run @state))) :ices])))]
-     (installed-access-trigger 3 {:msg (msg "do " (ice-count state) " brain damage")
+   (letfn [(character-count [state]
+             (count (get-in (:contestant @state) [:servers (last (:server (:run @state))) :characters])))]
+     (installed-access-trigger 3 {:msg (msg "do " (character-count state) " brain damage")
                                   :delayed-completion true
-                                  :effect (effect (damage eid :brain (ice-count state)
+                                  :effect (effect (damage eid :brain (character-count state)
                                                           {:card card}))}))
 
    "Elizabeth Mills"
@@ -561,7 +561,7 @@
                              :msg "do 1 meat damage"
                              :effect (effect (damage eid :meat 1 {:card card}))}}}
 
-   "Gene Splicer"
+   "Gene Splcharacterr"
    {:advanceable :always
     :access {:req (req (< 0 (:advance-counter (get-card state card) 0)))
              :msg (msg "do " (:advance-counter (get-card state card) 0) " net damage")
@@ -666,21 +666,21 @@
 
    "IT Department"
    {:abilities [{:counter-cost [:power 1]
-                 :label "Add strength to a rezzed ICE"
-                 :choices {:req #(and (ice? %) (:rezzed %))}
+                 :label "Add strength to a rezzed Character"
+                 :choices {:req #(and (character? %) (:rezzed %))}
                  :req (req (< 0 (get-in card [:counter :power] 0)))
-                 :msg (msg "add strength to a rezzed ICE")
+                 :msg (msg "add strength to a rezzed Character")
                  :effect (req (update! state side (update-in card [:it-targets (keyword (str (:cid target)))]
                                                              (fnil inc 0)))
-                              (update-ice-strength state side target))}
+                              (update-character-strength state side target))}
                 {:cost [:click 1]
                  :msg "add 1 counter"
                  :effect (effect (add-counter card :power 1))}]
     :events (let [it {:req (req (:it-targets card))
                       :effect (req (update! state side (dissoc card :it-targets))
-                                   (update-all-ice state side))}]
-              {:pre-ice-strength {:req (req (get-in card [:it-targets (keyword (str (:cid target)))]))
-                                  :effect (effect (ice-strength-bonus
+                                   (update-all-character state side))}]
+              {:pre-character-strength {:req (req (get-in card [:it-targets (keyword (str (:cid target)))]))
+                                  :effect (effect (character-strength-bonus
                                                     (* (get-in card [:it-targets (keyword (str (:cid target)))])
                                                        (inc (get-in card [:counter :power]))) target))}
                :challenger-turn-ends it :contestant-turn-ends it})}
@@ -747,10 +747,10 @@
    (campaign 6 2)
 
    "Levy University"
-   {:abilities [{:prompt "Choose an ICE"
+   {:abilities [{:prompt "Choose an Character"
                  :msg (msg "adds " (:title target) " to HQ")
-                 :choices (req (cancellable (filter ice? (:deck contestant)) :sorted))
-                 :label "Search R&D for a piece of ICE"
+                 :choices (req (cancellable (filter character? (:deck contestant)) :sorted))
+                 :label "Search R&D for a piece of Character"
                  :cost [:click 1 :credit 1]
                  :effect (effect (shuffle! :deck)
                                  (move target :hand))}]}
@@ -964,7 +964,7 @@
      {:events {:challenger-loss ability
                :challenger-prevent ability}})
 
-   "Net Police"
+   "Net Polcharacter"
    {:recurring (effect (set-prop card :rec-counter (:link challenger)))
     :effect (effect (set-prop card :rec-counter (:link challenger)))}
 
@@ -1130,20 +1130,20 @@
                              (as-agenda state :contestant (dissoc card :counter) 1)))} }}
 
    "Quarantine System"
-   (letfn [(rez-ice [cnt] {:prompt "Select an ICE to rez"
+   (letfn [(rez-character [cnt] {:prompt "Select an Character to rez"
                            :delayed-completion true
-                           :choices {:req #(and (ice? %) (not (rezzed? %)))}
+                           :choices {:req #(and (character? %) (not (rezzed? %)))}
                            :msg (msg "rez " (:title target))
                            :effect (req (let [agenda (last (:rfg contestant))
                                               ap (:agendapoints agenda 0)]
                                           (rez-cost-bonus state side (* ap -2))
                                           (rez state side target {:no-warning true})
-                                          (if (< cnt 3) (continue-ability state side (rez-ice (inc cnt)) card nil)
+                                          (if (< cnt 3) (continue-ability state side (rez-character (inc cnt)) card nil)
                                                         (effect-completed state side eid))))})]
-     {:abilities [{:label "Forfeit agenda to rez up to 3 ICE with a 2 [Credit] discount per agenda point"
+     {:abilities [{:label "Forfeit agenda to rez up to 3 Character with a 2 [Credit] discount per agenda point"
                    :req (req (pos? (count (:scored contestant))))
                    :cost [:forfeit]
-                   :effect (req (continue-ability state side (rez-ice 1) card nil))}]})
+                   :effect (req (continue-ability state side (rez-character 1) card nil))}]})
 
    "Raman Rai"
    {:abilities [{:once :per-turn
@@ -1165,7 +1165,7 @@
                                                                           (= (:zone %) [:discard]))}
                                                      :msg (msg "lose [Click], reveal " (:title hqcard) " from HQ, and swap it for " (:title target) " from Archives")
                                                      :effect (req (let [swappedcard (assoc hqcard :zone [:discard])
-                                                                        archndx (ice-index state target)
+                                                                        archndx (character-index state target)
                                                                         arch (get-in @state [:contestant :discard])
                                                                         newarch (apply conj (subvec arch 0 archndx) swappedcard (subvec arch archndx))]
                                                                      (swap! state assoc-in [:contestant :discard] newarch)
@@ -1251,13 +1251,13 @@
                             (fn [k ref old new]
                               (let [credit (get-in new [:contestant :credit])]
                                 (when (not= (get-in old [:contestant :credit]) credit)
-                                  (update-all-ice ref side)))))
-                 (update-all-ice state side))
-    :events {:pre-ice-strength {:req (req (and (ice? target)
+                                  (update-all-character ref side)))))
+                 (update-all-character state side))
+    :events {:pre-character-strength {:req (req (and (character? target)
                                                (>= (:credit contestant) 10)))
-                                :effect (effect (ice-strength-bonus (quot (:credit contestant) 5) target))}}
+                                :effect (effect (character-strength-bonus (quot (:credit contestant) 5) target))}}
     :leave-play (req (remove-watch state :sandburg)
-                     (update-all-ice state side))}
+                     (update-all-character state side))}
 
    "Sealed Vault"
    {:abilities [{:label "Store any number of [Credits] on Sealed Vault"
@@ -1280,9 +1280,9 @@
                  :effect (effect (gain :credit target) (trash card))}]}
 
    "Security Subcontract"
-   {:abilities [{:choices {:req #(and (ice? %) (rezzed? %))} :cost [:click 1]
+   {:abilities [{:choices {:req #(and (character? %) (rezzed? %))} :cost [:click 1]
                  :msg (msg "trash " (:title target) " to gain 4 [Credits]")
-                 :label "Trash a rezzed ICE to gain 4 [Credits]"
+                 :label "Trash a rezzed Character to gain 4 [Credits]"
                  :effect (effect (trash target) (gain :credit 4))}]}
 
    "Sensie Actors Union"
@@ -1308,7 +1308,7 @@
    {:derezzed-events {:challenger-turn-ends contestant-rez-toast}
     :abilities [ability]
     :events {:contestant-turn-begins ability
-             :contestant-install {:req (req (ice? target))
+             :contestant-install {:req (req (character? target))
                             :effect (effect (trash card)
                                             (system-msg "trashes Server Diagnostics"))}}})
 
@@ -1452,13 +1452,13 @@
                                  (contestant-install target nil))}]}
 
    "Tenma Line"
-   {:abilities [{:label "Swap 2 pieces of installed ICE"
+   {:abilities [{:label "Swap 2 pieces of installed Character"
                  :cost [:click 1]
-                 :prompt "Select two pieces of ICE to swap positions"
-                 :choices {:req #(and (installed? %) (ice? %)) :max 2}
+                 :prompt "Select two pieces of Character to swap positions"
+                 :choices {:req #(and (installed? %) (character? %)) :max 2}
                  :effect (req (when (= (count targets) 2)
-                                (swap-ice state side (first targets) (second targets))))
-                 :msg "swap the positions of two ICE"}]}
+                                (swap-character state side (first targets) (second targets))))
+                 :msg "swap the positions of two Character"}]}
 
    "Test Ground"
    {:implementation "Derez is manual"
@@ -1499,7 +1499,7 @@
                                                  (is-type? % "Asset"))
                                              (in-hand? %))}
                         :msg "swap it for an asset or agenda from HQ"
-                        :effect (req (let [tidx (ice-index state card)
+                        :effect (req (let [tidx (character-index state card)
                                            srvcont (get-in @state (cons :contestant (:zone card)))
                                            c (:advance-counter (get-card state card) 0)
                                            newcard (assoc target :zone (:zone card) :advance-counter c)
@@ -1549,9 +1549,9 @@
                    :effect (effect (as-agenda :challenger card 2))}}
 
    "Watchdog"
-   {:events {:pre-rez {:req (req (and (ice? target) (not (get-in @state [:per-turn (:cid card)]))))
+   {:events {:pre-rez {:req (req (and (character? target) (not (get-in @state [:per-turn (:cid card)]))))
                        :effect (effect (rez-cost-bonus (- (:tag challenger))))}
-             :rez {:req (req (and (ice? target) (not (get-in @state [:per-turn (:cid card)]))))
+             :rez {:req (req (and (character? target) (not (get-in @state [:per-turn (:cid card)]))))
                               :effect (req (swap! state assoc-in [:per-turn (:cid card)] true))}}}
 
    "Whampoa Reclamation"

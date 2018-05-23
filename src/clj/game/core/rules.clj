@@ -2,7 +2,7 @@
 
 (declare card-init card-str close-access-prompt enforce-msg gain-agenda-point get-agenda-points installed? is-type?
          in-contestant-scored? prevent-draw resolve-steal-events make-result say show-prompt system-msg trash-cards untrashable-while-rezzed?
-         update-all-ice win win-decked play-sfx can-run? untrashable-while-resources?)
+         update-all-character win win-decked play-sfx can-run? untrashable-while-resources?)
 
 ;;;; Functions for applying core MECCG game rules.
 
@@ -66,7 +66,7 @@
                      (lose state side :click (-> @state side :click))
                      (swap! state assoc-in [:contestant :register :terminal] true))))
              (trigger-event state side (if (= side :contestant) :play-operation :play-event) c))
-           ;; could not pay the card's price; mark the effect as being over.
+           ;; could not pay the card's prcharacter; mark the effect as being over.
            (effect-completed state side eid card))
          ;; card's req was not satisfied; mark the effect as being over.
          (effect-completed state side eid card))))))
@@ -480,12 +480,12 @@
   [state side]
   (trigger-event state side :pre-purge)
   (let [rig-cards (all-installed state :challenger)
-        hosted-on-ice (->> (get-in @state [:contestant :servers]) seq flatten (mapcat :ices) (mapcat :hosted))]
-    (doseq [card (concat rig-cards hosted-on-ice)]
+        hosted-on-character (->> (get-in @state [:contestant :servers]) seq flatten (mapcat :characters) (mapcat :hosted))]
+    (doseq [card (concat rig-cards hosted-on-character)]
       (when (or (has-subtype? card "Virus")
                 (contains? (:counter card) :virus))
         (add-counter state :challenger card :virus (- (get-in card [:counter :virus] 0)))))
-    (update-all-ice state side))
+    (update-all-character state side))
   (trigger-event state side :purge))
 
 (defn mill

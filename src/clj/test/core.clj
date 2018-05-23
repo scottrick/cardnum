@@ -66,16 +66,16 @@
                                   :ability ability :targets targets})))
 
 (defn card-subroutine
-  "Trigger a piece of ice's subroutine with the 0-based index."
+  "Trigger a piece of character's subroutine with the 0-based index."
   ([state side card ability] (card-subroutine state side card ability nil))
   ([state side card ability targets]
    (core/play-subroutine state side {:card (core/get-card state card)
                                      :subroutine ability :targets targets})))
 
-(defn get-ice
-  "Get installed ice protecting server by position."
+(defn get-character
+  "Get installed character protecting server by position."
   [state server pos]
-  (get-in @state [:contestant :servers server :ices pos]))
+  (get-in @state [:contestant :servers server :characters pos]))
 
 (defn get-content
   "Get card in a server by position. If no pos, get all cards in the server."
@@ -169,7 +169,7 @@
   (core/jack-out state :challenger nil))
 
 (defn run-empty-server
-  "Make a successful run on specified server, assumes no ice in place."
+  "Make a successful run on specified server, assumes no character in place."
   [state server]
   (run-on state server)
   (run-successful state))

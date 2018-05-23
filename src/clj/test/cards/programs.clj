@@ -24,7 +24,7 @@
     (is (= 6 (:credit (get-challenger))) "Gained 1 credit from each copy of Au Revoir")))
 
 (deftest crescentus
-  ;; Crescentus should only work on rezzed ice
+  ;; Crescentus should only work on rezzed character
   (do-game
     (new-game (default-contestant [(qty "Quandary" 1)])
               (default-challenger [(qty "Crescentus" 1)]))
@@ -33,17 +33,17 @@
     (play-from-hand state :challenger "Crescentus")
     (run-on state "HQ")
     (let [cres (get-in @state [:challenger :rig :program 0])
-          q (get-ice state :hq 0)]
+          q (get-character state :hq 0)]
       (card-ability state :challenger cres 0)
-      (is (not (nil? (get-in @state [:challenger :rig :program 0]))) "Crescentus could not be used because the ICE is not rezzed")
+      (is (not (nil? (get-in @state [:challenger :rig :program 0]))) "Crescentus could not be used because the Character is not rezzed")
       (core/rez state :contestant q)
       (is (get-in (refresh q) [:rezzed]) "Quandary is now rezzed")
       (card-ability state :challenger cres 0)
-      (is (nil? (get-in @state [:challenger :rig :program 0])) "Crescentus could be used because the ICE is rezzed")
+      (is (nil? (get-in @state [:challenger :rig :program 0])) "Crescentus could be used because the Character is rezzed")
       (is (not (get-in (refresh q) [:rezzed])) "Quandary is no longer rezzed"))))
 
 (deftest datasucker
-  ;; Datasucker - Reduce strength of encountered ICE
+  ;; Datasucker - Reduce strength of encountered Character
   (do-game
     (new-game (default-contestant [(qty "Fire Wall" 1)])
               (default-challenger [(qty "Datasucker" 1)]))
@@ -52,7 +52,7 @@
     (core/gain state :challenger :click 3)
     (play-from-hand state :challenger "Datasucker")
     (let [ds (get-in @state [:challenger :rig :program 0])
-          fw (get-ice state :remote1 0)]
+          fw (get-character state :remote1 0)]
       (run-empty-server state "Archives")
       (is (= 1 (get-counters (refresh ds) :virus)))
       (run-empty-server state "Archives")
@@ -69,7 +69,7 @@
       (is (= 4 (:current-strength (refresh fw))) "Fire Wall strength lowered by 1"))))
 
 (deftest datasucker-trashed
-  ;; Datasucker - does not affect next ice when current is trashed. Issue #1788.
+  ;; Datasucker - does not affect next character when current is trashed. Issue #1788.
   (do-game
     (new-game
       (default-contestant [(qty "Wraparound" 1) (qty "Spiderweb" 1)])
@@ -80,8 +80,8 @@
     (core/gain state :contestant :credit 10)
     (play-from-hand state :challenger "Datasucker")
     (let [sucker (get-program state 0)
-          spider (get-ice state :hq 0)
-          wrap (get-ice state :hq 1)]
+          spider (get-character state :hq 0)
+          wrap (get-character state :hq 1)]
       (core/add-counter state :challenger sucker :virus 2)
       (core/rez state :contestant spider)
       (core/rez state :contestant wrap)
@@ -107,13 +107,13 @@
     (play-from-hand state :contestant "Ice Wall" "R&D")
     (is (= 8 (:credit (get-contestant))) "Diwan did not charge extra for install on another server")
     (play-from-hand state :contestant "Ice Wall" "HQ")
-    (is (= 7 (:credit (get-contestant))) "Diwan charged 1cr to install ice protecting the named server")
+    (is (= 7 (:credit (get-contestant))) "Diwan charged 1cr to install character protecting the named server")
     (play-from-hand state :contestant "Crisium Grid" "HQ")
     (is (= 7 (:credit (get-contestant))) "Diwan didn't charge to install another upgrade in root of HQ")
     (take-credits state :contestant)
     (take-credits state :challenger)
     (play-from-hand state :contestant "Ice Wall" "HQ")
-    (is (= 5 (:credit (get-contestant))) "Diwan charged 1cr + 1cr to install a second ice protecting the named server")
+    (is (= 5 (:credit (get-contestant))) "Diwan charged 1cr + 1cr to install a second character protecting the named server")
     (core/gain state :contestant :click 1)
     (core/purge state :contestant)
     (play-from-hand state :contestant "Fire Wall" "HQ") ; 2cr cost from normal install cost
@@ -214,7 +214,7 @@
       (run-continue state)
       (card-ability state :challenger echo2 0)
       (prompt-choice :contestant "Rez")
-      (is (:rezzed (get-ice state :archives 0)) "Ice Wall rezzed")
+      (is (:rezzed (get-character state :archives 0)) "Ice Wall rezzed")
       (is (= 2 (count (:discard (get-challenger)))) "False Echo trashed"))))
 
 (deftest gravedigger
@@ -357,7 +357,7 @@
     (play-from-hand state :challenger "Lamprey")
     (is (= 3 (:credit (get-challenger))) "Challenger paid 3 credits to install Ixodidae and Lamprey")
     (run-on state :hq)
-    (let [s (get-ice state :hq 0)]
+    (let [s (get-character state :hq 0)]
       (core/rez state :contestant s)
       (card-subroutine state :contestant s 0)
       (is (prompt-is-card? :contestant s) "Contestant prompt is on Snowflake")
@@ -439,7 +439,7 @@
     (is (= 9 (core/hand-size state :challenger)) "Max hand size increased by 2 for each copy installed")))
 
 (deftest paintbrush
-  ;; Paintbrush - Give rezzed ICE a chosen subtype until the end of the next run
+  ;; Paintbrush - Give rezzed Character a chosen subtype until the end of the next run
   (do-game
     (new-game (default-contestant [(qty "Ice Wall" 1)])
               (default-challenger [(qty "Paintbrush" 1)]))
@@ -447,7 +447,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Paintbrush")
     (is (= 2 (:memory (get-challenger))))
-    (let [iwall (get-ice state :hq 0)
+    (let [iwall (get-character state :hq 0)
           pb (get-in @state [:challenger :rig :program 0])]
       (card-ability state :challenger pb 0)
       (prompt-select :challenger iwall)
@@ -479,7 +479,7 @@
     (new-game (default-contestant [(qty "Architect" 3) (qty "Hedge Fund" 3)])
               (default-challenger [(qty "Parasite" 3) (qty "Grimoire" 1)]))
     (play-from-hand state :contestant "Architect" "HQ")
-    (let [arch (get-ice state :hq 0)]
+    (let [arch (get-character state :hq 0)]
       (core/rez state :contestant arch)
       (take-credits state :contestant)
       (play-from-hand state :challenger "Grimoire")
@@ -503,7 +503,7 @@
               (default-challenger [(qty "Parasite" 3)]))
     (play-from-hand state :contestant "Ice Wall" "HQ")
     (play-from-hand state :contestant "Builder" "Archives")
-    (let [builder (get-ice state :archives 0)
+    (let [builder (get-character state :archives 0)
           _ (core/rez state :contestant builder)
           _ (take-credits state :contestant)
           _ (play-from-hand state :challenger "Parasite")
@@ -517,7 +517,7 @@
           orig-builder (refresh builder)
           _ (card-ability state :contestant builder 0)
           _ (prompt-choice :contestant "HQ")
-          moved-builder (get-ice state :hq 1)
+          moved-builder (get-character state :hq 1)
           _ (is (= (:current-strength orig-builder) (:current-strength moved-builder)) "Builder's state is maintained")
           orig-psite (dissoc (first (:hosted orig-builder)) :host)
           moved-psite (dissoc (first (:hosted moved-builder)) :host)
@@ -534,7 +534,7 @@
     (new-game (default-contestant [(qty "Wraparound" 3) (qty "Hedge Fund" 3)])
               (default-challenger [(qty "Parasite" 3) (qty "Sure Gamble" 3)]))
     (play-from-hand state :contestant "Wraparound" "HQ")
-    (let [wrap (get-ice state :hq 0)]
+    (let [wrap (get-character state :hq 0)]
       (core/rez state :contestant wrap)
       (take-credits state :contestant)
       (play-from-hand state :challenger "Parasite")
@@ -548,8 +548,8 @@
             "Parasite gained 1 virus counter at start of Challenger turn")
         (is (= 6 (:current-strength (refresh wrap))) "Wraparound reduced to 6 strength")))))
 
-(deftest parasite-hivemind-instant-ice-trash
-  ;; Parasite - Use Hivemind counters when installed; instantly trash ICE if counters >= ICE strength
+(deftest parasite-hivemind-instant-character-trash
+  ;; Parasite - Use Hivemind counters when installed; instantly trash Character if counters >= Character strength
   (do-game
     (new-game (default-contestant [(qty "Enigma" 3) (qty "Hedge Fund" 3)])
               (default-challenger [(qty "Parasite" 1)
@@ -557,7 +557,7 @@
                                (qty "Hivemind" 1)
                                (qty "Sure Gamble" 1)]))
     (play-from-hand state :contestant "Enigma" "HQ")
-    (let [enig (get-ice state :hq 0)]
+    (let [enig (get-character state :hq 0)]
       (core/rez state :contestant enig)
       (take-credits state :contestant)
       (play-from-hand state :challenger "Sure Gamble")
@@ -571,13 +571,13 @@
         (is (= 4 (:memory (get-challenger))))
         (is (= 2 (count (:discard (get-challenger)))) "Parasite trashed when Enigma was trashed")))))
 
-(deftest parasite-ice-trashed
-  ;; Parasite - Trashed along with host ICE when its strength has been reduced to 0
+(deftest parasite-character-trashed
+  ;; Parasite - Trashed along with host Character when its strength has been reduced to 0
   (do-game
     (new-game (default-contestant [(qty "Enigma" 3) (qty "Hedge Fund" 3)])
               (default-challenger [(qty "Parasite" 3) (qty "Grimoire" 1)]))
     (play-from-hand state :contestant "Enigma" "HQ")
-    (let [enig (get-ice state :hq 0)]
+    (let [enig (get-character state :hq 0)]
       (core/rez state :contestant enig)
       (take-credits state :contestant)
       (play-from-hand state :challenger "Grimoire")
@@ -868,33 +868,33 @@
       (is (= 5 (:credit (get-challenger))) "Sneakdoor switched to HQ and earned Security Testing credits"))))
 
 (deftest snitch
-  ;; Snitch - Only works on unrezzed ice
+  ;; Snitch - Only works on unrezzed character
   (do-game
     (new-game (default-contestant [(qty "Quandary" 2)])
               (default-challenger [(qty "Snitch" 1)]))
     (play-from-hand state :contestant "Quandary" "R&D")
     (play-from-hand state :contestant "Quandary" "HQ")
-    (let [hqice (get-ice state :hq 0)]
-      (core/rez state :contestant hqice))
+    (let [hqcharacter (get-character state :hq 0)]
+      (core/rez state :contestant hqcharacter))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Snitch")
     (let [snitch (get-in @state [:challenger :rig :program 0])]
-      ;; unrezzed ice scenario
+      ;; unrezzed character scenario
       (run-on state "R&D")
       (card-ability state :challenger snitch 0)
       (is (prompt-is-card? :challenger snitch) "Option to jack out")
       (prompt-choice :challenger "Yes")
-      ;; rezzed ice scenario
+      ;; rezzed character scenario
       (run-on state "HQ")
       (card-ability state :challenger snitch 0)
       (is (empty? (get-in @state [:challenger :prompt])) "No option to jack out")
-      ;; no ice scenario
+      ;; no character scenario
       (run-on state "Archives")
       (card-ability state :challenger snitch 0)
       (is (empty? (get-in @state [:challenger :prompt])) "No option to jack out"))))
 
 (deftest surfer
-  ;; Surfer - Swap position with ice before or after when encountering a Barrier ICE
+  ;; Surfer - Swap position with character before or after when encountering a Barrier Character
   (do-game
    (new-game (default-contestant [(qty "Ice Wall" 1) (qty "Quandary" 1)])
              (default-challenger [(qty "Surfer" 1)]))
@@ -903,15 +903,15 @@
    (take-credits state :contestant)
    (play-from-hand state :challenger "Surfer")
    (is (= 3 (:credit (get-challenger))) "Paid 2 credits to install Surfer")
-   (core/rez state :contestant (get-ice state :hq 1))
+   (core/rez state :contestant (get-character state :hq 1))
    (run-on state "HQ")
    (is (= 2 (get-in @state [:run :position])) "Starting run at position 2")
    (let [surf (get-in @state [:challenger :rig :program 0])]
      (card-ability state :challenger surf 0)
-     (prompt-select :challenger (get-ice state :hq 0))
+     (prompt-select :challenger (get-character state :hq 0))
      (is (= 1 (:credit (get-challenger))) "Paid 2 credits to use Surfer")
      (is (= 1 (get-in @state [:run :position])) "Now at next position (1)")
-     (is (= "Ice Wall" (:title (get-ice state :hq 0))) "Ice Wall now at position 1"))))
+     (is (= "Ice Wall" (:title (get-character state :hq 0))) "Ice Wall now at position 1"))))
 
 (deftest takobi
   ;; Takobi - 2 power counter to add +3 strength to a non-AI icebreaker for encounter
@@ -934,8 +934,8 @@
 
       (run-on state "HQ")
       (card-ability state :challenger tako 1)
-      (is (empty? (:prompt (get-challenger))) "No prompt for un-rezzed ice")
-      (core/rez state :contestant (get-ice state :hq 0))
+      (is (empty? (:prompt (get-challenger))) "No prompt for un-rezzed character")
+      (core/rez state :contestant (get-character state :hq 0))
       (card-ability state :challenger tako 1)
       (prompt-select :challenger (refresh faus))
       (is (not-empty (:prompt (get-challenger))) "Can't select AI breakers")
@@ -986,7 +986,7 @@
     (run-empty-server state "HQ")
     (prompt-choice :challenger "Yes")
     (prompt-choice :challenger "Barrier")
-    (prompt-select :challenger (get-ice state :rd 0))
+    (prompt-select :challenger (get-character state :rd 0))
     (is (= 1 (count (:discard (get-challenger)))) "Wari in heap")
     (is (not (empty? (get-in @state [:challenger :prompt]))) "Challenger is currently accessing Ice Wall")))
 

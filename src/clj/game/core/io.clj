@@ -1,6 +1,6 @@
 (in-ns 'game.core)
 
-(declare ice-index parse-command show-error-toast)
+(declare character-index parse-command show-error-toast)
 
 (defn say
   "Prints a message to the log as coming from the given username. The special user string
@@ -81,13 +81,13 @@
   ([state card {:keys [visible] :as args}]
   (str (if (card-is? card :side :contestant)
          ; Contestant card messages
-         (str (if (or (rezzed? card) visible) (:title card) (if (ice? card) "ICE" "a card"))
+         (str (if (or (rezzed? card) visible) (:title card) (if (character? card) "Character" "a card"))
               ; Hosted cards do not need "in server 1" messages, host has them
               (if-not (:host card)
-                (str (if (ice? card) " protecting " " in ")
+                (str (if (character? card) " protecting " " in ")
                      ;TODO add naming of scoring area of contestant/challenger
                      (zone->name (second (:zone card)))
-                     (if (ice? card) (str " at position " (ice-index state card))))))
+                     (if (character? card) (str " at position " (character-index state card))))))
          ; Challenger card messages
          (if (or (:facedown card) visible) "a facedown card" (:title card)))
        (if (:host card) (str " hosted on " (card-str state (:host card)))))))

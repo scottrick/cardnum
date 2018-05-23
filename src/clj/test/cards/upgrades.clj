@@ -7,7 +7,7 @@
 
 
 (deftest amazon-industrial-zone
-  ;; Amazon Industrial Zone - Immediately rez ICE installed over its server at 3 credit discount
+  ;; Amazon Industrial Zone - Immediately rez Character installed over its server at 3 credit discount
   (do-game
     (new-game (default-contestant [(qty "Spiderweb" 1) (qty "Amazon Industrial Zone" 1)])
               (default-challenger))
@@ -18,7 +18,7 @@
       (is (= 2 (:credit (get-contestant))))
       (play-from-hand state :contestant "Spiderweb" "Server 1")
       (prompt-choice :contestant "Yes") ; optional ability
-      (let [spid (get-ice state :remote1 0)]
+      (let [spid (get-character state :remote1 0)]
         (is (get-in (refresh spid) [:rezzed]) "Spiderweb rezzed")
         (is (= 1 (:credit (get-contestant))) "Paid only 1 credit to rez")))))
 
@@ -148,15 +148,15 @@
       (is (= 4 (count (:discard (get-challenger)))) "Challenger took 4 net damage - 2 from Fetal, 2 from Ben")
       (is (= 1 (count (:scored (get-challenger)))) "Scored agenda"))))
 
-(deftest bernice-mai
-  ;; Bernice Mai - successful and unsuccessful
+(deftest berncharacter-mai
+  ;; Berncharacter Mai - successful and unsuccessful
   (do-game
-    (new-game (default-contestant [(qty "Bernice Mai" 3) (qty "Hedge Fund" 3) (qty "Wall of Static" 3)])
+    (new-game (default-contestant [(qty "Berncharacter Mai" 3) (qty "Hedge Fund" 3) (qty "Wall of Static" 3)])
               (default-challenger))
-    (starting-hand state :contestant ["Bernice Mai" "Bernice Mai" "Bernice Mai"])
-    (play-from-hand state :contestant "Bernice Mai" "New remote")
-    (play-from-hand state :contestant "Bernice Mai" "New remote")
-    (play-from-hand state :contestant "Bernice Mai" "R&D")
+    (starting-hand state :contestant ["Berncharacter Mai" "Berncharacter Mai" "Berncharacter Mai"])
+    (play-from-hand state :contestant "Berncharacter Mai" "New remote")
+    (play-from-hand state :contestant "Berncharacter Mai" "New remote")
+    (play-from-hand state :contestant "Berncharacter Mai" "R&D")
     (core/rez state :contestant (get-content state :remote1 0))
     (take-credits state :contestant)
     (run-empty-server state :remote1)
@@ -164,26 +164,26 @@
     (prompt-choice :challenger 0)
     (prompt-choice :challenger "Yes")
     (is (= 1 (:tag (get-challenger))))
-    (is (= 2 (:credit (get-challenger))) "Challenger paid 3cr to trash Bernice")
+    (is (= 2 (:credit (get-challenger))) "Challenger paid 3cr to trash Berncharacter")
     (core/rez state :contestant (get-content state :remote2 0))
     (core/gain state :challenger :credit 20)
     (run-empty-server state :remote2)
     (prompt-choice :contestant 0)
     (prompt-choice :challenger 10)
-    (is (not (get-content state :remote2 0)) "Bernice auto-trashed from unsuccessful trace")
-    (is (not (:run @state)) "Run ended when Bernice was trashed from server")
+    (is (not (get-content state :remote2 0)) "Berncharacter auto-trashed from unsuccessful trace")
+    (is (not (:run @state)) "Run ended when Berncharacter was trashed from server")
     (core/rez state :contestant (get-content state :rd 0))
     (run-empty-server state :rd)
     (prompt-choice :contestant 0)
     (prompt-choice :challenger 10)
-    (is (:card (first (:prompt (get-challenger)))) "Accessing a card from R&D; not showing Bernice Mai as possible access")))
+    (is (:card (first (:prompt (get-challenger)))) "Accessing a card from R&D; not showing Berncharacter Mai as possible access")))
 
-(deftest bernice-mai-drt
-  ;; Bernice Mai - interaction with Dedicated Response Team
+(deftest berncharacter-mai-drt
+  ;; Berncharacter Mai - interaction with Dedicated Response Team
   (do-game
-    (new-game (default-contestant [(qty "Bernice Mai" 3) (qty "Dedicated Response Team" 1)])
+    (new-game (default-contestant [(qty "Berncharacter Mai" 3) (qty "Dedicated Response Team" 1)])
               (default-challenger))
-    (play-from-hand state :contestant "Bernice Mai" "New remote")
+    (play-from-hand state :contestant "Berncharacter Mai" "New remote")
     (play-from-hand state :contestant "Dedicated Response Team" "New remote")
     (core/rez state :contestant (get-content state :remote1 0))
     (core/rez state :contestant (get-content state :remote2 0))
@@ -193,7 +193,7 @@
     (prompt-choice :challenger 0)
     (prompt-choice :challenger "Yes")
     (is (= 1 (:tag (get-challenger))))
-    (is (= 2 (:credit (get-challenger))) "Challenger paid 3cr to trash Bernice")
+    (is (= 2 (:credit (get-challenger))) "Challenger paid 3cr to trash Berncharacter")
     (is (= 2 (count (:discard (get-challenger)))) "Challenger took 1 meat damage")))
 
 (deftest breaker-bay-grid
@@ -243,20 +243,20 @@
       (is (= 1 (:advance-counter (refresh pad))) "PAD Campaign advanced")
       (is (= 2 (count (:discard (get-contestant)))) "Calibration Testing trashed"))))
 
-(deftest caprice-nisei
-  ;; Caprice Nisei - Psi game for ETR after challenger passes last ice
+(deftest caprcharacter-nisei
+  ;; Caprcharacter Nisei - Psi game for ETR after challenger passes last character
   (do-game
-   (new-game (default-contestant [(qty "Caprice Nisei" 3) (qty "Quandary" 3)])
+   (new-game (default-contestant [(qty "Caprcharacter Nisei" 3) (qty "Quandary" 3)])
              (default-challenger))
-   (play-from-hand state :contestant "Caprice Nisei" "New remote")
+   (play-from-hand state :contestant "Caprcharacter Nisei" "New remote")
    (take-credits state :contestant)
-   (let [caprice (get-content state :remote1 0)]
-     ;; Check Caprice triggers properly on no ice (and rezzed)
-     (core/rez state :contestant caprice)
+   (let [caprcharacter (get-content state :remote1 0)]
+     ;; Check Caprcharacter triggers properly on no character (and rezzed)
+     (core/rez state :contestant caprcharacter)
      (run-on state "Server 1")
-     (is (prompt-is-card? :contestant caprice)
-         "Caprice prompt even with no ice, once challenger makes run")
-     (is (prompt-is-card? :challenger caprice) "Challenger has Caprice prompt")
+     (is (prompt-is-card? :contestant caprcharacter)
+         "Caprcharacter prompt even with no character, once challenger makes run")
+     (is (prompt-is-card? :challenger caprcharacter) "Challenger has Caprcharacter prompt")
      (prompt-choice :contestant "0 [Credits]")
      (prompt-choice :challenger "1 [Credits]")
      (take-credits state :challenger)
@@ -266,22 +266,22 @@
      (play-from-hand state :contestant "Quandary" "Server 1")
      (take-credits state :contestant)
 
-     ;; Check Caprice triggers properly on multiple ice
+     ;; Check Caprcharacter triggers properly on multiple character
      (run-on state "Server 1")
      (run-continue state)
-     (is (empty? (get-in @state [:contestant :prompt])) "Caprice not trigger on first ice")
-     (run-continue state) ; Caprice prompt after this
-     (is (prompt-is-card? :contestant caprice)
-         "Contestant has Caprice prompt (triggered automatically as challenger passed last ice)")
-     (is (prompt-is-card? :challenger caprice) "Challenger has Caprice prompt")
+     (is (empty? (get-in @state [:contestant :prompt])) "Caprcharacter not trigger on first character")
+     (run-continue state) ; Caprcharacter prompt after this
+     (is (prompt-is-card? :contestant caprcharacter)
+         "Contestant has Caprcharacter prompt (triggered automatically as challenger passed last character)")
+     (is (prompt-is-card? :challenger caprcharacter) "Challenger has Caprcharacter prompt")
      (prompt-choice :contestant "0 [Credits]")
      (prompt-choice :challenger "1 [Credits]")
-     (is (not (:run @state)) "Run ended by Caprice")
-     (is (empty? (get-in @state [:contestant :prompt])) "Caprice prompted cleared")
+     (is (not (:run @state)) "Run ended by Caprcharacter")
+     (is (empty? (get-in @state [:contestant :prompt])) "Caprcharacter prompted cleared")
 
-     ;; Check Caprice does not trigger on other servers
+     ;; Check Caprcharacter does not trigger on other servers
      (run-on state "HQ")
-     (is (empty? (get-in @state [:contestant :prompt])) "Caprice does not trigger on other servers"))))
+     (is (empty? (get-in @state [:contestant :prompt])) "Caprcharacter does not trigger on other servers"))))
 
 (deftest chilo-city-grid
   ;; ChiLo City Grid - Give 1 tag for successful traces during runs on its server
@@ -292,7 +292,7 @@
     (play-from-hand state :contestant "Caduceus" "Server 1")
     (take-credits state :contestant)
     (let [chilo (get-content state :remote1 0)
-          cad (get-ice state :remote1 0)]
+          cad (get-character state :remote1 0)]
       (run-on state "R&D")
       (core/rez state :contestant cad)
       (core/rez state :contestant chilo)
@@ -311,7 +311,7 @@
           "Challenger took 1 tag given from successful trace during run on ChiLo server"))))
 
 (deftest contestantorate-troubleshooter
-  ;; Contestantorate Troubleshooter - Pay X credits and trash to add X strength to a piece of rezzed ICE
+  ;; Contestantorate Troubleshooter - Pay X credits and trash to add X strength to a piece of rezzed Character
   (do-game
     (new-game (default-contestant [(qty "Quandary" 2) (qty "Contestantorate Troubleshooter" 1)])
               (default-challenger))
@@ -320,8 +320,8 @@
     (play-from-hand state :contestant "Quandary" "HQ")
     (play-from-hand state :contestant "Quandary" "HQ")
     (let [ct (get-content state :hq 0)
-          q1 (get-ice state :hq 0)
-          q2 (get-ice state :hq 1)]
+          q1 (get-character state :hq 0)
+          q2 (get-character state :hq 1)]
       (core/rez state :contestant q1)
       (is (= 8 (:credit (get-contestant))))
       (core/rez state :contestant ct)
@@ -461,7 +461,7 @@
           drt (get-content state :remote2 0)]
       (core/advance state :contestant {:card gb})
       (core/advance state :contestant {:card (refresh gb)})
-      (is (= 2 (:advance-counter (refresh gb))) "Ghost Branch advanced twice")
+      (is (= 2 (:advance-counter (refresh gb))) "Ghost Branch advanced twcharacter")
       (take-credits state :contestant)
       (run-on state "Server 1")
       (core/rez state :contestant drt)
@@ -508,8 +508,8 @@
     (run-on state "R&D")
     (is (:run @state))
     (let [helheim (get-content state :rd 0)
-          gutenberg (get-ice state :rd 0)
-          vanilla (get-ice state :rd 1)]
+          gutenberg (get-character state :rd 0)
+          vanilla (get-character state :rd 1)]
       (core/rez state :contestant helheim)
       (core/rez state :contestant gutenberg)
       (core/rez state :contestant vanilla)
@@ -544,7 +544,7 @@
     (is (= 1 (count (:discard (get-challenger)))) "1 net damage done for successful run on HQ")))
 
 (deftest jinja-city-grid
-  ;; Jinja City Grid - install drawn ice, lowering install cost by 4
+  ;; Jinja City Grid - install drawn character, lowering install cost by 4
   (do-game
     (new-game (default-contestant [(qty "Jinja City Grid" 1) (qty "Vanilla" 3) (qty "Ice Wall" 3)])
               (default-challenger))
@@ -555,12 +555,12 @@
     (dotimes [n 5]
       (core/click-draw state :contestant 1)
       (prompt-choice :contestant "Yes")
-      (is (= 4 (:credit (get-contestant))) "Not charged to install ice")
-      (is (= (inc n) (count (get-in @state [:contestant :servers :remote1 :ices]))) (str n " ICE protecting Remote1")))
+      (is (= 4 (:credit (get-contestant))) "Not charged to install character")
+      (is (= (inc n) (count (get-in @state [:contestant :servers :remote1 :characters]))) (str n " Character protecting Remote1")))
     (core/click-draw state :contestant 1)
     (prompt-choice :contestant "Yes")
-    (is (= 3 (:credit (get-contestant))) "Charged to install ice")
-    (is (= 6 (count (get-in @state [:contestant :servers :remote1 :ices]))) "6 ICE protecting Remote1")))
+    (is (= 3 (:credit (get-contestant))) "Charged to install character")
+    (is (= 6 (count (get-in @state [:contestant :servers :remote1 :characters]))) "6 Character protecting Remote1")))
 
 (deftest keegan-lane
   ;; Keegan Lane - Trash self and remove 1 Challenger tag to trash a program
@@ -622,7 +622,7 @@
     (core/gain state :challenger :credit 8)
     (play-from-hand state :challenger "Security Nexus")
     (let [mb (get-content state :hq 0)
-          en (get-ice state :hq 0)
+          en (get-character state :hq 0)
           sn (-> @state :challenger :rig :hardware first)]
       (run-on state "HQ")
       (core/rez state :contestant mb)
@@ -699,8 +699,8 @@
       (take-credits state :contestant)
       (take-credits state :challenger)
       (play-from-hand state :contestant "Ice Wall" "Server 1")
-      (core/advance state :contestant {:card (refresh (get-ice state :remote1 0))})
-      (is (= 2 (:credit (get-contestant))) "No credit gained from advancing ICE"))))
+      (core/advance state :contestant {:card (refresh (get-character state :remote1 0))})
+      (is (= 2 (:credit (get-contestant))) "No credit gained from advancing Character"))))
 
 (deftest off-the-grid
   ;; Off the Grid run ability - and interaction with RP
@@ -1026,15 +1026,15 @@
       (is (= 1 (count (:discard (get-contestant)))) "Ryon trashed"))))
 
 (deftest satellite-grid
-  ;; Satellite Grid - Add 1 fake advancement on all ICE protecting server
+  ;; Satellite Grid - Add 1 fake advancement on all Character protecting server
   (do-game
     (new-game (default-contestant [(qty "Satellite Grid" 1) (qty "Ice Wall" 2)])
               (default-challenger))
     (play-from-hand state :contestant "Satellite Grid" "HQ")
     (play-from-hand state :contestant "Ice Wall" "HQ")
     (play-from-hand state :contestant "Ice Wall" "R&D")
-    (let [iw1 (get-ice state :hq 0)
-          iw2 (get-ice state :rd 0)
+    (let [iw1 (get-character state :hq 0)
+          iw2 (get-character state :rd 0)
           sg (get-content state :hq 0)]
       (core/gain state :contestant :click 1)
       (advance state iw1)
@@ -1044,7 +1044,7 @@
       (is (= 1 (:advance-counter (refresh iw1))) "Only 1 real advancement token")
       (is (= 3 (:current-strength (refresh iw1))) "Satellite Grid counter boosting strength by 1")
       (core/rez state :contestant (refresh iw2))
-      (is (= 1 (:current-strength (refresh iw2))) "Satellite Grid not impacting ICE elsewhere")
+      (is (= 1 (:current-strength (refresh iw2))) "Satellite Grid not impacting Character elsewhere")
       (core/derez state :contestant sg)
       (is (= 2 (:current-strength (refresh iw1))) "Ice Wall strength boost only from real advancement"))))
 
@@ -1131,7 +1131,7 @@
     (play-from-hand state :contestant "Cyberdex Virus Suite" "Server 1")
     (let [scg1 (get-content state :remote1 0)
           cvs1 (get-content state :remote1 1)
-          wrap (get-ice state :remote1 0)]
+          wrap (get-character state :remote1 0)]
       (core/rez state :contestant scg1)
       (core/rez state :contestant cvs1)
       (is (= 15 (:credit (get-contestant))))
@@ -1145,13 +1145,13 @@
       (play-from-hand state :contestant "Cyberdex Virus Suite" "HQ")
       (let [scg2 (get-content state :hq 0)
             cvs2 (get-content state :hq 1)
-            enig (get-ice state :hq 0)]
+            enig (get-character state :hq 0)]
         (core/rez state :contestant scg2)
         (core/rez state :contestant cvs2)
         (is (empty? (:prompt (get-contestant))) "SCG didn't trigger, upgrades in root of same central aren't considered in server")
         (core/derez state :contestant (refresh wrap))
         (core/rez state :contestant enig)
-        (is (= (:cid scg2) (-> (get-contestant) :prompt first :card :cid)) "SCG did trigger for ICE protecting HQ")))))
+        (is (= (:cid scg2) (-> (get-contestant) :prompt first :card :cid)) "SCG did trigger for Character protecting HQ")))))
 
 (deftest tori-hanzo
   ;; Tori Hanzō - Pay to do 1 brain damage instead of net damage
@@ -1164,7 +1164,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Net Shield")
     (run-on state "HQ")
-    (let [pup (get-ice state :hq 0)
+    (let [pup (get-character state :hq 0)
           tori (get-content state :hq 0)
           nshld (get-in @state [:challenger :rig :program 0])]
       (core/rez state :contestant pup)
@@ -1242,7 +1242,7 @@
     (let [vg (get-content state :remote1 0)]
       (core/rez state :contestant vg)
       (card-ability state :contestant vg 0)
-      (card-ability state :contestant vg 0) ; only need the run to exist for test, just pretending the Challenger has broken all subs on 2 ice
+      (card-ability state :contestant vg 0) ; only need the run to exist for test, just pretending the Challenger has broken all subs on 2 character
       (is (= 3 (core/hand-size state :challenger)) "Challenger max hand size reduced by 2")
       (is (= 2 (get-in (refresh vg) [:times-used])) "Saved number of times Valley Grid used")
       (run-successful state)

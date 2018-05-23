@@ -6,7 +6,7 @@
   "Returns true if Genetics card should trigger - does not work with Adjusted Chronotype"
   [state side event]
   (or (first-event? state side event)
-      (and (has-flag? state side :persistent :genetics-trigger-twice)
+      (and (has-flag? state side :persistent :genetics-trigger-twcharacter)
            (second-event? state side event))))
 
 (defn- shard-constructor
@@ -17,7 +17,7 @@
                                                 (= (:server run) [target-server])
                                                 (zero? (:position run))
                                                 (not (:access @state))))]
-     {:implementation "Click Shard to install when last ICE is passed, but before hitting Successful Run button"
+     {:implementation "Click Shard to install when last Character is passed, but before hitting Successful Run button"
       :abilities [(merge {:effect (effect (trash card {:cause :ability-cost}) (effect-fn eid card target))
                           :msg message}
                          ability-options)]
@@ -56,7 +56,7 @@
                                           (let [click-losses (filter #(= :click %) (mapcat first (turn-events state side :challenger-loss)))]
                                             (or (empty? click-losses)
                                                 (and (= (count click-losses) 1)
-                                                     (has-flag? state side :persistent :genetics-trigger-twice))))))
+                                                     (has-flag? state side :persistent :genetics-trigger-twcharacter))))))
                            :msg "gain [Click]" :effect (effect (gain :challenger :click 1))}}}
 
    "Aeneas Informant"
@@ -308,11 +308,11 @@
                  :choices (req runnable-servers)
                  :msg (msg "make a run on " target)
                  :effect (effect (run target nil card))}
-                {:label "Pay credits equal to strength of approached rezzed ICE to bypass it"
+                {:label "Pay credits equal to strength of approached rezzed Character to bypass it"
                  :once :per-run
-                 :req (req (and (:run @state) (rezzed? current-ice)))
-                 :msg (msg "pay " (:current-strength current-ice) " [Credits] and bypass " (:title current-ice))
-                 :effect (effect (pay :challenger card :credit (:current-strength current-ice)))}]}
+                 :req (req (and (:run @state) (rezzed? current-character)))
+                 :msg (msg "pay " (:current-strength current-character) " [Credits] and bypass " (:title current-character))
+                 :effect (effect (pay :challenger card :credit (:current-strength current-character)))}]}
 
    "Chatterjee University"
    {:abilities [{:cost [:click 1]
@@ -362,7 +362,7 @@
 
    "Compromised Employee"
    {:recurring 1
-    :events {:rez {:req (req (ice? target))
+    :events {:rez {:req (req (character? target))
                    :msg "gain 1 [Credits]"
                    :effect (effect (gain :challenger :credit 1))}}}
 
@@ -484,15 +484,15 @@
                  :msg "force the Contestant to trash the top card of R&D"}]}
 
    "DDoS"
-   {:abilities [{:msg "prevent the contestant from rezzing the outermost piece of ice during a run on any server this turn"
+   {:abilities [{:msg "prevent the contestant from rezzing the outermost piece of character during a run on any server this turn"
                  :effect (effect
                            (register-turn-flag!
                              card :can-rez
                              (fn [state side card]
-                               (if (and (ice? card)
-                                        (= (count (get-in @state (concat [:contestant :servers] (:server (:run @state)) [:ices])))
-                                           (inc (ice-index state card))))
-                                 ((constantly false) (toast state :contestant "Cannot rez any outermost ICE due to DDoS." "warning"))
+                               (if (and (character? card)
+                                        (= (count (get-in @state (concat [:contestant :servers] (:server (:run @state)) [:characters])))
+                                           (inc (character-index state card))))
+                                 ((constantly false) (toast state :contestant "Cannot rez any outermost Character due to DDoS." "warning"))
                                  true)))
                            (trash card {:cause :ability-cost}))}]}
 
@@ -684,8 +684,8 @@
 
    "Gene Conditioning Shoppe"
    {:msg "make Genetics trigger a second time each turn"
-    :effect (effect (register-persistent-flag! card :genetics-trigger-twice (constantly true)))
-    :leave-play (effect (clear-persistent-flag! card :genetics-trigger-twice))}
+    :effect (effect (register-persistent-flag! card :genetics-trigger-twcharacter (constantly true)))
+    :leave-play (effect (clear-persistent-flag! card :genetics-trigger-twcharacter))}
 
    "Ghost Challenger"
    {:data {:counter {:credit 3}}
@@ -759,8 +759,8 @@
                              :effect (effect (gain :credit (get-agenda-points state :challenger target)))}}}
 
    "Hunting Grounds"
-   {:abilities [{:label "Prevent a \"when encountered\" ability on a piece of ICE"
-                 :msg "prevent a \"when encountered\" ability on a piece of ICE"
+   {:abilities [{:label "Prevent a \"when encountered\" ability on a piece of Character"
+                 :msg "prevent a \"when encountered\" ability on a piece of Character"
                  :once :per-turn}
                  {:label "[Trash]: Install the top 3 cards of your Stack facedown"
                   :msg "install the top 3 cards of their Stack facedown"
@@ -770,7 +770,7 @@
 
    "Ice Analyzer"
    {:implementation "Credit use restriction is not enforced"
-    :events {:rez {:req (req (ice? target))
+    :events {:rez {:req (req (character? target))
                    :msg "place 1 [Credits] on Ice Analyzer"
                    :effect (effect (add-counter :challenger card :credit 1))}}
     :abilities [{:counter-cost [:credit 1]
@@ -778,9 +778,9 @@
                  :msg "take 1 [Credits] to install programs"}]}
 
    "Ice Carver"
-   {:events {:pre-ice-strength
-             {:req (req (and (= (:cid target) (:cid current-ice)) (:rezzed target)))
-              :effect (effect (ice-strength-bonus -1 target))}}}
+   {:events {:pre-character-strength
+             {:req (req (and (= (:cid target) (:cid current-character)) (:rezzed target)))
+              :effect (effect (character-strength-bonus -1 target))}}}
 
    "Inside Man"
    {:recurring 2}
@@ -865,12 +865,12 @@
       :effect (effect (gain :credit 2))}}}
 
    "Kongamato"
-   {:abilities [{:label "[Trash]: Break the first subroutine on the encountered piece of ice"
-                 :req (req (and (:run @state) (rezzed? current-ice)))
+   {:abilities [{:label "[Trash]: Break the first subroutine on the encountered piece of character"
+                 :req (req (and (:run @state) (rezzed? current-character)))
                  :effect (effect (trash card {:cause :ability-cost})
                                  (system-msg :contestant
                                              (str "trashes Kongamato to break the first subroutine on "
-                                                  (:title current-ice))))}]}
+                                                  (:title current-character))))}]}
 
    "Laguna Velasco District"
    {:events {:challenger-click-draw {:msg "draw 1 card" :effect (effect (draw))}}}
@@ -974,9 +974,9 @@
    "Maxwell James"
    {:in-play [:link 1]
     :abilities [{:req (req (some #{:hq} (:successful-run challenger-reg)))
-                 :prompt "Choose a piece of ICE protecting a remote server"
-                 :choices {:req #(and (ice? %) (rezzed? %) (is-remote? (second (:zone %))))}
-                 :msg "derez a piece of ICE protecting a remote server"
+                 :prompt "Choose a piece of Character protecting a remote server"
+                 :choices {:req #(and (character? %) (rezzed? %) (is-remote? (second (:zone %))))}
+                 :msg "derez a piece of Character protecting a remote server"
                  :effect (effect (derez target)
                                  (trash card {:cause :ability-cost}))}]}
 
@@ -1049,8 +1049,8 @@
                                card nil))}}}
 
    "Network Exchange"
-   {:msg "increase the install cost of non-innermost ICE by 1"
-    :events {:pre-contestant-install {:req (req (is-type? target "ICE"))
+   {:msg "increase the install cost of non-innermost Character by 1"
+    :events {:pre-contestant-install {:req (req (is-type? target "Character"))
                                 :effect (req (when (pos? (count (:dest-zone (second targets))))
                                                (install-cost-bonus state :contestant [:credit 1])))}}}
 
@@ -1092,7 +1092,7 @@
     :events {:challenger-install {:req (req (= (:cid card) (:cid (:host target))))
                               :effect (effect (draw))}}}
 
-   "Officer Frank"
+   "Offcharacterr Frank"
    {:abilities [{:cost [:credit 1]
                  :req (req (some #(= :meat %) (map first (turn-events state :challenger :damage))))
                  :msg "force the Contestant to trash 2 random cards from HQ"
@@ -1767,7 +1767,7 @@
                  :effect (effect (draw 2))}]}
 
    "Xanadu"
-   {:events {:pre-rez-cost {:req (req (ice? target))
+   {:events {:pre-rez-cost {:req (req (character? target))
                             :effect (effect (rez-cost-bonus 1))}}}
 
    "Zona Sul Shipping"

@@ -2,20 +2,20 @@
 
 (declare is-scored?)
 
-(defn ice-boost-agenda [subtype]
-  (letfn [(count-ice [contestant]
+(defn character-boost-agenda [subtype]
+  (letfn [(count-character [contestant]
             (reduce (fn [c server]
                       (+ c (count (filter #(and (has-subtype? % subtype)
                                                 (rezzed? %))
-                                          (:ices server)))))
+                                          (:characters server)))))
                     0 (flatten (seq (:servers contestant)))))]
-    {:msg (msg "gain " (count-ice contestant) " [Credits]")
+    {:msg (msg "gain " (count-character contestant) " [Credits]")
      :interactive (req true)
-     :effect (effect (gain :credit (count-ice contestant))
-                     (update-all-ice))
-     :swapped {:effect (req (update-all-ice state side))}
-     :events {:pre-ice-strength {:req (req (has-subtype? target subtype))
-                                 :effect (effect (ice-strength-bonus 1 target))}}}))
+     :effect (effect (gain :credit (count-character contestant))
+                     (update-all-character))
+     :swapped {:effect (req (update-all-character state side))}
+     :events {:pre-character-strength {:req (req (has-subtype? target subtype))
+                                 :effect (effect (character-strength-bonus 1 target))}}}))
 
 (def cards-agendas
   {"15 Minutes"
@@ -33,9 +33,9 @@
    (letfn [(abt [n i]
              (if (pos? i)
                {:delayed-completion true
-                :prompt "Select a piece of ICE from the Temporary Zone to install"
+                :prompt "Select a piece of Character from the Temporary Zone to install"
                 :choices {:req #(and (= (:side %) "Contestant")
-                                     (ice? %)
+                                     (character? %)
                                      (= (:zone %) [:play-area]))}
                 :effect (req (when-completed (contestant-install state side target nil
                                                            {:no-install-cost true :install-state :rezzed-no-cost})
@@ -55,7 +55,7 @@
                 :cancel-effect (req (doseq [c (get-in @state [:contestant :play-area])]
                                       (system-msg state side "trashes a card")
                                       (trash state side c {:unpreventable true})))}
-               {:prompt "None of the cards are ice. Say goodbye!"
+               {:prompt "None of the cards are character. Say goodbye!"
                 :choices ["I have no regrets"]
                 :effect (req (doseq [c (get-in @state [:contestant :play-area])]
                                (system-msg state side "trashes a card")
@@ -68,7 +68,7 @@
                                                              {:contestant-shuffle-deck
                                                               {:effect (effect (update! (assoc card :shuffle-occurred true)))}}
                                                              card)
-                                            (let [n (count (filter ice? (take 3 (:deck contestant))))]
+                                            (let [n (count (filter character? (take 3 (:deck contestant))))]
                                               (doseq [c (take (min (count (:deck contestant)) 3) (:deck contestant))]
                                                 (move state side c :play-area))
                                               (continue-ability state side (abt 1 n) card nil)))}}})
@@ -223,7 +223,7 @@
    "Braintrust"
    {:effect (effect (add-counter card :agenda (quot (- (:advance-counter card) 3) 2)))
     :silent (req true)
-    :events {:pre-rez-cost {:req (req (ice? target))
+    :events {:pre-rez-cost {:req (req (character? target))
                             :effect (req (rez-cost-bonus state side (- (get-in card [:counter :agenda] 0))))}}}
 
    "Breaking News"
@@ -344,15 +344,15 @@
 
    "Eden Fragment"
    {:events {:pre-contestant-install
-               {:req (req (and (is-type? target "ICE")
+               {:req (req (and (is-type? target "Character")
                                (empty? (let [cards (map first (turn-events state side :contestant-install))]
-                                         (filter #(is-type? % "ICE") cards)))))
+                                         (filter #(is-type? % "Character") cards)))))
                 :effect (effect (ignore-install-cost true))}
              :contestant-install
-               {:req (req (and (is-type? target "ICE")
+               {:req (req (and (is-type? target "Character")
                                (empty? (let [cards (map first (turn-events state side :contestant-install))]
-                                         (filter #(is-type? % "ICE") cards)))))
-                :msg (msg "ignore the install cost of the first ICE this turn")}}}
+                                         (filter #(is-type? % "Character") cards)))))
+                :msg (msg "ignore the install cost of the first Character this turn")}}}
 
    "Efficiency Committee"
    {:silent (req true)
@@ -375,7 +375,7 @@
                  :msg "gain [Click][Click]"}]}
 
    "Encrypted Portals"
-   (ice-boost-agenda "Code Gate")
+   (character-boost-agenda "Code Gate")
 
    "Escalate Vitriol"
    {:abilities [{:label "Gain 1 [Credit] for each Challenger tag"
@@ -415,7 +415,7 @@
    {:silent (req true)
     :effect (effect (add-counter card :agenda 3))
     :abilities [{:counter-cost [:agenda 1]
-                 :choices {:req #(and (ice? %) (can-be-advanced? %))}
+                 :choices {:req #(and (character? %) (can-be-advanced? %))}
                  :req (req (< 0 (get-in card [:counter :agenda] 0)))
                  :msg (msg "place 1 advancement token on " (card-str state target))
                  :once :per-turn
@@ -553,11 +553,11 @@
              :effect (effect (gain :challenger :credit 4))}}
 
    "Improved Tracers"
-   {:effect (req (update-all-ice state side))
+   {:effect (req (update-all-character state side))
     :silent (req true)
-    :swapped {:effect (req (update-all-ice state side))}
-    :events {:pre-ice-strength {:req (req (has-subtype? target "Tracer"))
-                                :effect (effect (ice-strength-bonus 1 target))}
+    :swapped {:effect (req (update-all-character state side))}
+    :events {:pre-character-strength {:req (req (has-subtype? target "Tracer"))
+                                :effect (effect (character-strength-bonus 1 target))}
              :pre-init-trace {:req (req (has-subtype? target "Tracer"))
                               :effect (effect (init-trace-bonus 1))}}}
 
@@ -573,7 +573,7 @@
                                   (swap! state update-in [:prevent] dissoc :jack-out))))
                  :msg "prevent the Challenger from jacking out"}]}
 
-   "License Acquisition"
+   "Lcharacternse Acquisition"
    {:interactive (req true)
     :prompt "Select an asset or upgrade to install from Archives or HQ"
     :show-discard true
@@ -584,13 +584,13 @@
     :effect (effect (contestant-install eid target nil {:install-state :rezzed-no-cost}))}
 
    "Mandatory Seed Replacement"
-   (letfn [(msr [] {:prompt "Select two pieces of ICE to swap positions"
-                    :choices {:req #(and (installed? %) (ice? %)) :max 2}
+   (letfn [(msr [] {:prompt "Select two pieces of Character to swap positions"
+                    :choices {:req #(and (installed? %) (character? %)) :max 2}
                     :effect (req (if (= (count targets) 2)
-                                   (do (swap-ice state side (first targets) (second targets))
+                                   (do (swap-character state side (first targets) (second targets))
                                        (resolve-ability state side (msr) card nil))
-                                   (system-msg state :contestant (str "has finished rearranging ICE"))))})]
-     {:msg "rearrange any number of ICE"
+                                   (system-msg state :contestant (str "has finished rearranging Character"))))})]
+     {:msg "rearrange any number of Character"
       :effect (effect (resolve-ability (msr) card nil))})
 
    "Mandatory Upgrades"
@@ -655,7 +655,7 @@
                :prompt "Install a card from HQ in a new remote?"
                :yes-ability {:prompt "Select a card to install"
                              :choices {:req #(and (not (is-type? % "Operation"))
-                                                  (not (is-type? % "ICE"))
+                                                  (not (is-type? % "Character"))
                                                   (= (:side %) "Contestant")
                                                   (in-hand? %))}
                              :msg (msg "install a card from HQ" (when (>= (:advance-counter (get-card state card)) 5)
@@ -686,7 +686,7 @@
    "NEXT Wave 2"
    {:delayed-completion true
     :not-when-scored true
-    :effect (req (if (some #(and (rezzed? %) (ice? %) (has-subtype? % "NEXT")) (all-installed state :contestant))
+    :effect (req (if (some #(and (rezzed? %) (character? %) (has-subtype? % "NEXT")) (all-installed state :contestant))
                    (continue-ability state side
                      {:optional
                       {:prompt "Do 1 brain damage with NEXT Wave 2?"
@@ -746,7 +746,7 @@
 
    "Priority Requisition"
    {:interactive (req true)
-    :choices {:req #(and (ice? %) (not (rezzed? %)) (installed? %))}
+    :choices {:req #(and (character? %) (not (rezzed? %)) (installed? %))}
     :effect (effect (rez target {:ignore-cost :all-costs}))}
 
    "Private Security Force"
@@ -806,7 +806,7 @@
    {:silent (req true)
     :effect (effect (add-counter card :agenda (- (:advance-counter card) 2)))
     :abilities [{:counter-cost [:agenda 1]
-                 :msg "make a piece of ICE gain \"[Subroutine] Do 1 net damage\" after all its other subroutines for the remainder of the run"}]}
+                 :msg "make a piece of Character gain \"[Subroutine] Do 1 net damage\" after all its other subroutines for the remainder of the run"}]}
 
    "Project Vitruvius"
    {:silent (req true)
@@ -823,11 +823,11 @@
    "Project Wotan"
    {:silent (req true)
     :effect (effect (add-counter card :agenda 3))
-    :abilities [{:req (req (and (ice? current-ice)
-                                (rezzed? current-ice)
-                                (has-subtype? current-ice "Bioroid")))
+    :abilities [{:req (req (and (character? current-character)
+                                (rezzed? current-character)
+                                (has-subtype? current-character "Bioroid")))
                  :counter-cost [:agenda 1]
-                 :msg (str "make the approached piece of Bioroid ICE gain \"[Subroutine] End the run\""
+                 :msg (str "make the approached piece of Bioroid Character gain \"[Subroutine] End the run\""
                            "after all its other subroutines for the remainder of this run")}]}
 
    "Puppet Master"
@@ -1032,7 +1032,7 @@
                      (continue-ability state side (sft 1 max) card nil)))})
 
    "Superior Cyberwalls"
-   (ice-boost-agenda "Barrier")
+   (character-boost-agenda "Barrier")
 
    "TGTBT"
    {:access {:msg "give the Challenger 1 tag"
@@ -1081,8 +1081,8 @@
    "Unorthodox Predictions"
    {:implementation "Prevention of subroutine breaking is not enforced"
     :delayed-completion false
-    :prompt "Choose an ICE type for Unorthodox Predictions" :choices ["Sentry", "Code Gate", "Barrier"]
-    :msg (msg "prevent subroutines on " target " ICE from being broken until next turn.")}
+    :prompt "Choose an Character type for Unorthodox Predictions" :choices ["Sentry", "Code Gate", "Barrier"]
+    :msg (msg "prevent subroutines on " target " Character from being broken until next turn.")}
 
    "Utopia Fragment"
    {:events {:pre-steal-cost {:req (req (pos? (or (:advance-counter target) 0)))
