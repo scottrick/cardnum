@@ -117,14 +117,14 @@
                                                                 (damage state :challenger eid :meat 1 {:unboostable true}))))}}}
 
    "Calling in Favors"
-   {:msg (msg "gain " (count (filter #(and (has-subtype? % "Connection") (is-type? % "Resource"))
+   {:msg (msg "gain " (count (filter #(and (has-subtype? % "Connection") (is-type? % "Muthereff"))
                                      (all-installed state :challenger))) " [Credits]")
-    :effect (effect (gain :credit (count (filter #(and (has-subtype? % "Connection") (is-type? % "Resource"))
+    :effect (effect (gain :credit (count (filter #(and (has-subtype? % "Connection") (is-type? % "Muthereff"))
                                                  (all-installed state :challenger)))))}
 
    "Career Fair"
-   {:prompt "Select a resource to install from your Grip"
-    :choices {:req #(and (is-type? % "Resource")
+   {:prompt "Select a muthereff to install from your Grip"
+    :choices {:req #(and (is-type? % "Muthereff")
                          (in-hand? %))}
     :effect (effect (install-cost-bonus [:credit -3]) (challenger-install target))}
 
@@ -248,7 +248,7 @@
     :prompt "Select a card to install from your Grip"
     :choices {:req #(and (or (is-type? % "Hardware")
                              (is-type? % "Program")
-                             (is-type? % "Resource"))
+                             (is-type? % "Muthereff"))
                          (in-hand? %))}
     :effect (effect (install-cost-bonus [:credit -8])
                     (challenger-install target)
@@ -506,7 +506,7 @@
    {:effect (req (let [topcard (first (:deck challenger))
                        caninst (or (is-type? topcard "Hardware")
                                    (is-type? topcard "Program")
-                                   (is-type? topcard "Resource"))]
+                                   (is-type? topcard "Muthereff"))]
                    (if caninst
                      (resolve-ability
                        state side
@@ -1039,10 +1039,10 @@
                      (continue-ability state side (entrance-trash from) card nil)))})
 
    "Mars for Martians"
-   {:msg (msg "draw " (count (filter #(and (has-subtype? % "Clan") (is-type? % "Resource"))
+   {:msg (msg "draw " (count (filter #(and (has-subtype? % "Clan") (is-type? % "Muthereff"))
                                      (all-installed state :challenger)))
               " cards and gain " (:tag challenger) " [Credits]")
-    :effect (effect (draw (count (filter #(and (has-subtype? % "Clan") (is-type? % "Resource"))
+    :effect (effect (draw (count (filter #(and (has-subtype? % "Clan") (is-type? % "Muthereff"))
                                          (all-installed state :challenger))))
                     (gain :credit (:tag challenger)))}
 
@@ -1139,9 +1139,9 @@
     :msg "add it to their score area as an agenda worth 1 agenda point"}
 
    "On the Lam"
-   {:req (req (some #(is-type? % "Resource") (all-installed state :challenger)))
-    :prompt "Choose a resource to host On the Lam"
-    :choices {:req #(and (is-type? % "Resource")
+   {:req (req (some #(is-type? % "Muthereff") (all-installed state :challenger)))
+    :prompt "Choose a muthereff to host On the Lam"
+    :choices {:req #(and (is-type? % "Muthereff")
                          (installed? %))}
     :effect (effect (host target (assoc card :zone [:discard]))
                     (system-msg (str "hosts On the Lam on " (:title target))))

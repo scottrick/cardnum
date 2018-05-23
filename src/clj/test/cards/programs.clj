@@ -618,7 +618,7 @@
     (play-from-hand state :challenger "Virus Breeding Ground")
     (is (= 4 (:memory (get-challenger))))
     (let [prog (get-in @state [:challenger :rig :program 0])
-          vbg (get-in @state [:challenger :rig :resource 0])]
+          vbg (get-in @state [:challenger :rig :muthereff 0])]
       (card-ability state :challenger prog 0)
       (prompt-select :challenger (find-card "Hivemind" (:hand (get-challenger))))
       (is (= 4 (:memory (get-challenger))) "No memory used to host on Progenitor")
@@ -669,11 +669,11 @@
     (play-from-hand state :challenger "Fall Guy")
     (is (= 0 (count (:hand (get-challenger)))) "No cards in hand")
     ; No draw from Fall Guy trash as Reaver already fired this turn
-    (card-ability state :challenger (get-resource state 0) 1)
+    (card-ability state :challenger (get-muthereff state 0) 1)
     (is (= 0 (count (:hand (get-challenger)))) "No cards in hand")
     (take-credits state :challenger)
     ; Draw from Fall Guy trash on contestant turn
-    (card-ability state :challenger (get-resource state 0) 1)
+    (card-ability state :challenger (get-muthereff state 0) 1)
     (is (= 1 (count (:hand (get-challenger)))) "One card in hand")))
 
 (deftest reaver-fcc

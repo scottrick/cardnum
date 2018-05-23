@@ -29,7 +29,7 @@
                                          (handle-end-run state side)))))})))
 
 ;;; Card definitions
-(def cards-resources
+(def cards-muthereffs
   {"Aaron Marrón"
    (let [am {:effect (effect (add-counter card :power 2)
                              (system-msg :challenger (str "places 2 power counters on Aaron Marrón")))}]
@@ -567,9 +567,9 @@
                                                        (in-hand? %))}
                                   :effect (effect (move target :discard)
                                                   (trash-prevent (keyword type) 1))})]
-     {:prevent {:trash [:hardware :resource :program]}
+     {:prevent {:trash [:hardware :muthereff :program]}
       :abilities [(dummy-prevent "hardware")
-                  (dummy-prevent "resource")
+                  (dummy-prevent "muthereff")
                   (dummy-prevent "program")]})
 
    "Earthrise Hotel"
@@ -606,9 +606,9 @@
                               :req (req (genetics-trigger? state side :successful-run))}}}
 
    "Fall Guy"
-   {:prevent {:trash [:resource]}
-    :abilities [{:label "[Trash]: Prevent another installed resource from being trashed"
-                 :effect (effect (trash-prevent :resource 1) (trash card {:unpreventable true :cause :ability-cost}))}
+   {:prevent {:trash [:muthereff]}
+    :abilities [{:label "[Trash]: Prevent another installed muthereff from being trashed"
+                 :effect (effect (trash-prevent :muthereff 1) (trash card {:unpreventable true :cause :ability-cost}))}
                 {:label "[Trash]: Gain 2 [Credits]"
                  :effect (effect (trash card {:cause :ability-cost}) (gain :credit 2)) :msg "gain 2 [Credits]"}]}
 
@@ -811,7 +811,7 @@
    "Jarogniew Mercs"
    {:effect (effect (tag-challenger :challenger eid 1)
                     (add-counter card :power (-> @state :challenger :tag (+ 3))))
-    :flags {:untrashable-while-resources true}
+    :flags {:untrashable-while-muthereffs true}
     :prevent {:damage [:meat]}
     :abilities [{:label "Prevent 1 meat damage"
                  :counter-cost [:power 1]
@@ -1103,7 +1103,7 @@
    {:abilities [{:cost [:click 1]
                  :once :per-turn
                  :prompt "Choose card type"
-                 :choices ["Event" "Hardware" "Program" "Resource"]
+                 :choices ["Event" "Hardware" "Program" "Muthereff"]
                  :effect (req (let [c (first (get-in @state [:challenger :deck]))]
                                 (system-msg state side (str "spends [Click] to use Oracle May, names " target
                                                             " and reveals " (:title c)))
@@ -1327,7 +1327,7 @@
    {:prevent {:damage [:meat :net :brain]}
     :abilities [{:effect (req (doseq [c (concat (get-in challenger [:rig :hardware])
                                                 (filter #(not (has-subtype? % "Virtual"))
-                                                        (get-in challenger [:rig :resource]))
+                                                        (get-in challenger [:rig :muthereff]))
                                                 (:hand challenger))]
                                 (trash state side c {:cause :ability-cost}))
                               (lose state side :credit :all :tag :all :run-credit :all)
@@ -1636,9 +1636,9 @@
                                                                      (fn [coll]
                                                                        (remove-once #(not= (:cid %) (:cid target)) coll)))))))}]
    {:flags {:drip-economy true}  ; not technically drip economy, but has an interaction with Drug Dealer
-    :abilities [{:label "Host a resource or piece of hardware" :cost [:click 1]
+    :abilities [{:label "Host a muthereff or piece of hardware" :cost [:click 1]
                  :prompt "Select a card to host on The Supplier"
-                 :choices {:req #(and (#{"Resource" "Hardware"} (:type %))
+                 :choices {:req #(and (#{"Muthereff" "Hardware"} (:type %))
                                       (in-hand? %))}
                  :effect (effect (host card target)) :msg (msg "host " (:title target) "")}
                 ability]
@@ -1730,8 +1730,8 @@
                             :msg "gain 1 [Credits]"}}}
 
    "Wireless Net Pavilion"
-   {:effect (effect (trash-resource-bonus -2))
-    :leave-play (effect (trash-resource-bonus 2))}
+   {:effect (effect (trash-muthereff-bonus -2))
+    :leave-play (effect (trash-muthereff-bonus 2))}
 
    "Woman in the Red Dress"
    (let [ability {:msg (msg "reveal " (:title (first (:deck contestant))) " on the top of R&D")

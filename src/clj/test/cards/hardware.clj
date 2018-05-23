@@ -471,7 +471,7 @@
     (play-from-hand state :challenger "Obelus")
     (play-from-hand state :challenger "Hades Shard")
     (run-empty-server state "R&D")
-    (card-ability state :challenger (get-resource state 0) 0)
+    (card-ability state :challenger (get-muthereff state 0) 0)
     (prompt-choice :challenger "OK")
     (is (= 3 (count (:hand (get-challenger)))) "Obelus drew 3 cards")))
 
@@ -825,7 +825,7 @@
     (play-from-hand state :contestant "Hostile Takeover" "New remote")
     (score-agenda state :contestant (get-content state :remote1 0))
     ;; Gang Sign should trigger, without The Gauntlet pop-up
-    (let [gs (get-resource state 0)]
+    (let [gs (get-muthereff state 0)]
       (prompt-is-card? :challenger gs))
     ;; This will throw error if The Gauntlet triggers.
     (prompt-choice :challenger "Card from hand")))

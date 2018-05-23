@@ -83,7 +83,7 @@
                               :hand (zone :hand challenger-pool)
                               :discard [] :scored [] :rfg [] :play-area []
                               :servers {}
-                              :rig {:program [] :resource [] :hardware []}
+                              :rig {:program [] :muthereff [] :hardware []}
                               :toast []
                               :click 0 :credit 5 :run-credit 0 :memory 4 :link 0 :tag 0
                               :hand-size-base 8 :hand-size-modification 0

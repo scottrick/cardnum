@@ -169,7 +169,7 @@
    {:delayed-completion true
     :req (req (not-empty (all-installed state :challenger)))
     :prompt "Choose a card type"
-    :choices ["Resource" "Hardware" "Program"]
+    :choices ["Muthereff" "Hardware" "Program"]
     :effect (req (let [t target
                        num (count (filter #(is-type? % t) (all-installed state :challenger)))]
                    (show-wait-prompt state :contestant "Challenger to choose cards to trash")
@@ -445,20 +445,20 @@
 
    "Financial Collapse"
    {:delayed-completion true
-    :req (req (and (>= (:credit challenger) 6) (seq (filter #(is-type? % "Resource") (all-installed state :challenger)))))
-    :effect (req (let [rcount (count (filter #(is-type? % "Resource") (all-installed state :challenger)))]
+    :req (req (and (>= (:credit challenger) 6) (seq (filter #(is-type? % "Muthereff") (all-installed state :challenger)))))
+    :effect (req (let [rcount (count (filter #(is-type? % "Muthereff") (all-installed state :challenger)))]
                    (if (pos? rcount)
-                     (do (show-wait-prompt state :contestant "Challenger to trash a resource to prevent Financial Collapse")
+                     (do (show-wait-prompt state :contestant "Challenger to trash a muthereff to prevent Financial Collapse")
                          (continue-ability
                            state side
-                           {:prompt (msg "Trash a resource to prevent Financial Collapse?")
+                           {:prompt (msg "Trash a muthereff to prevent Financial Collapse?")
                             :choices ["Yes" "No"] :player :challenger
                             :delayed-completion true
                             :effect (final-effect (continue-ability
                                                     (if (= target "Yes")
                                                       {:player :challenger
-                                                       :prompt "Select a resource to trash"
-                                                       :choices {:req #(and (is-type? % "Resource") (installed? %))}
+                                                       :prompt "Select a muthereff to trash"
+                                                       :choices {:req #(and (is-type? % "Muthereff") (installed? %))}
                                                        :effect (req (trash state side target {:unpreventable true})
                                                                     (system-msg state :challenger
                                                                                 (str "trashes " (:title target)
@@ -480,7 +480,7 @@
             :choices {:req #(and (installed? %)
                                  (or (has-subtype? % "Virtual")
                                      (has-subtype? % "Link")))}
-            :msg "trash 1 virtual resource or link"
+            :msg "trash 1 virtual muthereff or link"
             :effect (effect (trash target) (system-msg (str "trashes " (:title target))))}}
 
    "Freelancer"
@@ -488,7 +488,7 @@
     :msg (msg "trash " (join ", " (map :title (sort-by :title targets))))
     :choices {:max 2
               :req #(and (installed? %)
-                         (is-type? % "Resource"))}
+                         (is-type? % "Muthereff"))}
     :effect (final-effect (trash-cards :challenger targets))}
 
    "Friends in High Places"
@@ -567,11 +567,11 @@
    {:msg "gain 9 [Credits]" :effect (effect (gain :credit 9))}
 
    "Hellion Alpha Test"
-   {:req (req (:installed-resource challenger-reg-last))
+   {:req (req (:installed-muthereff challenger-reg-last))
     :trace {:base 2
             :choices {:req #(and (installed? %)
-                                 (is-type? % "Resource"))}
-            :msg "add a Resource to the top of the Stack"
+                                 (is-type? % "Muthereff"))}
+            :msg "add a Muthereff to the top of the Stack"
             :effect (effect (move :challenger target :deck {:front true})
                             (system-msg (str "adds " (:title target) " to the top of the Stack")))
             :unsuccessful {:msg "take 1 bad publicity"
@@ -632,23 +632,23 @@
    "Invasion of Privacy"
    (letfn [(iop [x]
              {:delayed-completion true
-              :req (req (pos? (count (filter #(or (is-type? % "Resource")
+              :req (req (pos? (count (filter #(or (is-type? % "Muthereff")
                                                   (is-type? % "Event")) (:hand challenger)))))
-              :prompt "Choose a resource or event to trash"
+              :prompt "Choose a muthereff or event to trash"
               :msg (msg "trash " (:title target))
               :choices (req (cancellable
-                              (filter #(or (is-type? % "Resource")
+                              (filter #(or (is-type? % "Muthereff")
                                            (is-type? % "Event")) (:hand challenger)) :sorted))
               :effect (req (trash state side target)
                            (if (pos? x)
                              (continue-ability state side (iop (dec x)) card nil)
                              (effect-completed state side eid card)))})]
-     {:trace {:base 2 :msg "reveal the Challenger's Grip and trash up to X resources or events"
+     {:trace {:base 2 :msg "reveal the Challenger's Grip and trash up to X muthereffs or events"
               :effect (req (let [x (- target (second targets))]
                              (system-msg state :contestant
                                          (str "reveals the Challenger's Grip ( "
                                               (join ", " (map :title (sort-by :title (:hand challenger))))
-                                              " ) and can trash up to " x " resources or events"))
+                                              " ) and can trash up to " x " muthereffs or events"))
                              (continue-ability state side (iop (dec x)) card nil)))
               :unsuccessful {:msg "take 1 bad publicity" :effect (effect (gain :contestant :bad-publicity 1))}}})
 
@@ -1156,9 +1156,9 @@
                  (doseq [c (filter #(= target (:title %)) (:hand challenger))]
                    (trash state side c {:unpreventable true})))}
 
-   "Scarcity of Resources"
-   {:msg "increase the install cost of resources by 2"
-    :events {:pre-install {:req (req (and (is-type? target "Resource")
+   "Scarcity of Muthereffs"
+   {:msg "increase the install cost of muthereffs by 2"
+    :events {:pre-install {:req (req (and (is-type? target "Muthereff")
                                           (not (second targets)))) ; not facedown
                            :effect (effect (install-cost-bonus [:credit 2]))}}}
 
@@ -1396,22 +1396,22 @@
                :play-event gaincr}})
 
    "The All-Seeing I"
-   (let [trash-all-resources {:player :challenger
-                              :effect (req (doseq [resource (get-in challenger [:rig :resource])]
-                                             (trash state side resource)))
-                              :msg (msg "trash all resources")}]
+   (let [trash-all-muthereffs {:player :challenger
+                              :effect (req (doseq [muthereff (get-in challenger [:rig :muthereff])]
+                                             (trash state side muthereff)))
+                              :msg (msg "trash all muthereffs")}]
        {:req (req tagged)
         :delayed-completion true
         :effect (effect
                  (continue-ability
                    (if-not (zero? (:bad-publicity contestant)) ;; If contestant's bad-pub is 0
                      {:optional {:player :challenger
-                                 :prompt "Remove 1 bad publicity from the contestant to prevent all resources from being trashed?"
+                                 :prompt "Remove 1 bad publicity from the contestant to prevent all muthereffs from being trashed?"
                                  :yes-ability {:effect (effect (lose :contestant :bad-publicity 1))
                                                :player :contestant
-                                               :msg (msg "lose 1 bad publicity, preventing all resources from being trashed")}
-                                 :no-ability trash-all-resources}}
-                    trash-all-resources)
+                                               :msg (msg "lose 1 bad publicity, preventing all muthereffs from being trashed")}
+                                 :no-ability trash-all-muthereffs}}
+                    trash-all-muthereffs)
                   card targets))})
 
    "Threat Assessment"
@@ -1508,17 +1508,17 @@
    "Voter Intimidation"
    {:req (req (seq (:scored challenger)))
     :psi {:not-equal {:player :contestant
-                      :prompt "Select a resource to trash"
+                      :prompt "Select a muthereff to trash"
                       :choices {:req #(and (installed? %)
-                                           (is-type? % "Resource"))}
+                                           (is-type? % "Muthereff"))}
                       :msg (msg "trash " (:title target))
                       :effect (effect (trash target))}}}
 
    "Wake Up Call"
    {:req (req (:trashed-card challenger-reg-last))
-    :prompt "Select a piece of hardware or non-virtual resource"
+    :prompt "Select a piece of hardware or non-virtual muthereff"
     :choices {:req #(or (hardware? %)
-                        (and (resource? %) (not (has-subtype? % "Virtual"))))}
+                        (and (muthereff? %) (not (has-subtype? % "Virtual"))))}
     :delayed-completion true
     :effect (req (let [chosen target
                        wake card]

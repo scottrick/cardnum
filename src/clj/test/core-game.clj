@@ -35,14 +35,14 @@
     (play-from-hand state :challenger "Kati Jones")
     (play-from-hand state :challenger "Off-Campus Apartment")
     (play-from-hand state :challenger "Scheherazade")
-    (let [oca (get-in @state [:challenger :rig :resource 1])
+    (let [oca (get-in @state [:challenger :rig :muthereff 1])
           scheh (get-in @state [:challenger :rig :program 0])]
       (card-ability state :challenger scheh 0)
       (prompt-select :challenger (find-card "Hivemind" (:hand (get-challenger))))
       (is (= "Hivemind" (:title (first (:hosted (refresh scheh))))) "Hivemind hosted on Scheherazade")
       (play-from-hand state :challenger "Kati Jones")
       (is (= 1 (:click (get-challenger))) "Not charged a click")
-      (is (= 2 (count (get-in @state [:challenger :rig :resource]))) "2nd copy of Kati couldn't install")
+      (is (= 2 (count (get-in @state [:challenger :rig :muthereff]))) "2nd copy of Kati couldn't install")
       (card-ability state :challenger oca 0)
       (prompt-select :challenger (find-card "Kati Jones" (:hand (get-challenger))))
       (is (empty? (:hosted (refresh oca))) "2nd copy of Kati couldn't be hosted on OCA")
@@ -75,7 +75,7 @@
     (run-empty-server state "HQ")
     (prompt-choice :challenger "Steal")
     (is (= 2 (:agenda-point (get-challenger))))
-    (card-ability state :challenger (get-resource state 0) 0)
+    (card-ability state :challenger (get-muthereff state 0) 0)
     (prompt-select :challenger (get-scored state :challenger 0))
     (is (= 1 (:click (get-challenger))) "Didn't lose a click")
     (is (= 4 (:click-per-turn (get-challenger))) "Still have 4 clicks per turn")))
@@ -104,10 +104,10 @@
     (play-from-hand state :challenger "Off-Campus Apartment")
     (play-from-hand state :challenger "Compromised Employee")
     (let [iwall (get-character state :hq 0)
-          apt (get-in @state [:challenger :rig :resource 0])]
+          apt (get-in @state [:challenger :rig :muthereff 0])]
       (card-ability state :challenger apt 1) ; use Off-Campus option to host an installed card
       (prompt-select :challenger (find-card "Compromised Employee"
-                                        (get-in @state [:challenger :rig :resource])))
+                                        (get-in @state [:challenger :rig :muthereff])))
       (let [cehosted (first (:hosted (refresh apt)))]
         (card-ability state :challenger cehosted 0) ; take Comp Empl credit
         (is (= 4 (:credit (get-challenger))))
@@ -146,7 +146,7 @@
           jh2 (get-content state :remote2 0)
           corr (get-in @state [:challenger :rig :program 0])
           cchip (get-in @state [:challenger :rig :hardware 0])
-          pap (get-in @state [:challenger :rig :resource 0])]
+          pap (get-in @state [:challenger :rig :muthereff 0])]
       (core/rez state :contestant hqiwall0)
       (core/rez state :contestant jh1)
       (prompt-select :challenger (refresh hqiwall0))
@@ -283,7 +283,7 @@
       (play-from-hand state :challenger "Omni-drive")
       (take-credits state :contestant)
       (let [kn (get-in @state [:challenger :rig :program 0])
-            pw (get-in @state [:challenger :rig :resource 0])
+            pw (get-in @state [:challenger :rig :muthereff 0])
             od (get-in @state [:challenger :rig :hardware 0])
             co (find-card "Corroder" (:hand (get-challenger)))
             le (find-card "Leprechaun" (:hand (get-challenger)))]

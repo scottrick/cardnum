@@ -241,9 +241,9 @@
                    (system-msg state side (str "gains " bucks " [Credits] from CFC Excavation Contract"))))}
 
    "Character Assassination"
-   {:prompt "Select a resource to trash"
+   {:prompt "Select a muthereff to trash"
     :choices {:req #(and (installed? %)
-                         (is-type? % "Resource"))}
+                         (is-type? % "Muthereff"))}
     :msg (msg "trash " (:title target))
     :interactive (req true)
     :delayed-completion true
@@ -716,11 +716,11 @@
 
    "Paper Trail"
    {:trace {:base 6
-            :msg "trash all connection and job resources"
-            :effect (req (doseq [resource (filter #(or (has-subtype? % "Job")
+            :msg "trash all connection and job muthereffs"
+            :effect (req (doseq [muthereff (filter #(or (has-subtype? % "Job")
                                                        (has-subtype? % "Connection"))
                                                   (all-installed state :challenger))]
-                                   (trash state side resource)))}}
+                                   (trash state side muthereff)))}}
 
    "Personality Profiles"
    (let [pp {:req (req (pos? (count (:hand challenger))))
@@ -1116,7 +1116,7 @@
              :effect (effect (gain :contestant :bad-publicity 1))}}
 
    "Water Monopoly"
-   {:events {:pre-install {:req (req (and (is-type? target "Resource")
+   {:events {:pre-install {:req (req (and (is-type? target "Muthereff")
                                           (not (has-subtype? target "Virtual"))
                                           (not (second targets)))) ; not facedown
                            :effect (effect (install-cost-bonus [:credit 1]))}}}})

@@ -1134,7 +1134,7 @@
                         (om/build identity-view player)])]
         [:div.challenger-board {:class (if is-me "me" "opponent")}
          (when-not is-me centrals)
-         (for [zone [:program :hardware :resource :facedown]]
+         (for [zone [:program :hardware :muthereff :facedown]]
            [:div
             (for [c (zone (:rig player))]
               [:div.card-wrapper {:class (when (playable? c) "playable")}
@@ -1312,11 +1312,11 @@
               (when (= side :contestant)
                 (cond-button "Purge" (>= (:click me) 3) #(send-command "purge")))
               (when (= side :contestant)
-                (cond-button "Trash Resource" (and (pos? (:click me))
+                (cond-button "Trash Muthereff" (and (pos? (:click me))
                                                    (>= (:credit me) (- 2 (or (:trash-cost-bonus me) 0)))
                                                    (or (pos? (:tagged opponent))
                                                        (pos? (:tag opponent))))
-                             #(send-command "trash-resource")))
+                             #(send-command "trash-muthereff")))
               (cond-button "Draw" (and (pos? (:click me)) (not-empty (:deck me))) #(send-command "draw"))
               (cond-button "Gain Credit" (pos? (:click me)) #(send-command "credit"))]))]))))
 

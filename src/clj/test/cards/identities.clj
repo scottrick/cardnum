@@ -17,11 +17,11 @@
     (prompt-select :challenger (find-card "Neutralize All Threats" (get-in @state [:challenger :play-area])))
     (prompt-select :challenger (find-card "Safety First" (get-in @state [:challenger :play-area])))
     (prompt-select :challenger (find-card "Always Be Running" (get-in @state [:challenger :play-area])))
-    (is (= 3 (count (get-in @state [:challenger :rig :resource]))) "3 directives were installed")
+    (is (= 3 (count (get-in @state [:challenger :rig :muthereff]))) "3 directives were installed")
     (is (= 0 (count (get-in @state [:challenger :play-area]))) "The play area is empty")
-    (let [nat (find-card "Neutralize All Threats" (get-in @state [:challenger :rig :resource]))
-          sf (find-card "Safety First" (get-in @state [:challenger :rig :resource]))
-          abr (find-card "Always Be Running" (get-in @state [:challenger :rig :resource]))]
+    (let [nat (find-card "Neutralize All Threats" (get-in @state [:challenger :rig :muthereff]))
+          sf (find-card "Safety First" (get-in @state [:challenger :rig :muthereff]))
+          abr (find-card "Always Be Running" (get-in @state [:challenger :rig :muthereff]))]
       (is (and nat sf abr) "The chosen directives were installed"))))
 
 (deftest adam-palana
@@ -473,7 +473,7 @@
       (play-from-hand state :challenger "Data Dealer")
       (run-empty-server state "Server 1")
       (prompt-choice :challenger "Steal")
-      (let [dd (get-resource state 0)]
+      (let [dd (get-muthereff state 0)]
         (card-ability state :challenger dd 0)
         (prompt-select :challenger (get-in (get-challenger) [:scored 0]))
         (is (empty? (:prompt (get-contestant))) "No Jemison prompt for Challenger forfeit")
@@ -709,7 +709,7 @@
     ;; at Successful Run stage -- click Eden Shard to install
     (play-from-hand state :challenger "Eden Shard")
     (is (= 5 (:credit (get-challenger))) "Eden Shard install was free")
-    (is (= "Eden Shard" (:title (get-resource state 0))) "Eden Shard installed")
+    (is (= "Eden Shard" (:title (get-muthereff state 0))) "Eden Shard installed")
     (is (= "Identity" (-> (get-challenger) :prompt first :card :type)) "Fisk prompt showing")
     (prompt-choice :challenger "Yes")
     (is (not (:run @state)) "Run ended")
@@ -817,12 +817,12 @@
     (play-from-hand state :challenger "Wyldside")
     (take-credits state :challenger 3)
     (is (= 5 (:credit (get-challenger))) "Challenger has 5 credits at end of first turn")
-    (is (find-card "Wyldside" (get-in @state [:challenger :rig :resource])) "Wyldside was installed")
+    (is (find-card "Wyldside" (get-in @state [:challenger :rig :muthereff])) "Wyldside was installed")
     (take-credits state :contestant)
     (is (= 0 (:click (get-challenger))) "Challenger has 0 clicks")
     (is (:challenger-phase-12 @state) "Challenger is in Step 1.2")
     (let [maxx (get-in @state [:challenger :identity])
-          wyld (find-card "Wyldside" (get-in @state [:challenger :rig :resource]))]
+          wyld (find-card "Wyldside" (get-in @state [:challenger :rig :muthereff]))]
       (card-ability state :challenger maxx 0)
       (card-ability state :challenger wyld 0)
       (core/end-phase-12 state :challenger nil)
@@ -1280,16 +1280,16 @@
     (prompt-choice :challenger "Temüjin Contract")
     (prompt-select :challenger (get-content state :remote1 0))
     (prompt-choice :challenger "OK")
-    (is (= "HQ" (:server-target (get-resource state 0))) "Temujin still targeting HQ")
-    (is (= 16 (get-counters (get-resource state 0) :credit)) "16 cr on Temujin")
+    (is (= "HQ" (:server-target (get-muthereff state 0))) "Temujin still targeting HQ")
+    (is (= 16 (get-counters (get-muthereff state 0) :credit)) "16 cr on Temujin")
     (is (= 8 (:credit (get-challenger))) "Gained 4cr")
 
     ;; second run
     (run-empty-server state :hq)
     (prompt-choice :challenger "OK")
-    (is (= "HQ" (:server-target (get-resource state 0))) "Temujin still targeting HQ")
+    (is (= "HQ" (:server-target (get-muthereff state 0))) "Temujin still targeting HQ")
     (is (= 12 (:credit (get-challenger))) "Gained 4cr")
-    (is (= 12 (get-counters (get-resource state 0) :credit)) "12 cr on Temujin")))
+    (is (= 12 (get-counters (get-muthereff state 0) :credit)) "12 cr on Temujin")))
 
 (deftest spark-advertisements
   ;; Spark Agency - Rezzing advertisements

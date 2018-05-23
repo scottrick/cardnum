@@ -15,11 +15,11 @@
                                           (is-type? % "Hardware"))}
                      :effect (effect (trash target {:cause :subroutine}))})
 
-(def trash-resource-sub {:prompt "Select a resource to trash"
-                         :label "Trash a resource"
+(def trash-muthereff-sub {:prompt "Select a muthereff to trash"
+                         :label "Trash a muthereff"
                          :msg (msg "trash " (:title target))
                          :choices {:req #(and (installed? %)
-                                              (is-type? % "Resource"))}
+                                              (is-type? % "Muthereff"))}
                          :effect (effect (trash target {:cause :subroutine}))})
 
 (def trash-installed {:prompt "Select an installed card to trash"
@@ -147,4 +147,4 @@
 (load "cards/upgrades")
 
 (def cards (merge cards-agendas cards-assets cards-events cards-hardware cards-character cards-icebreakers cards-identities
-                  cards-operations cards-programs cards-resources cards-upgrades))
+                  cards-operations cards-programs cards-muthereffs cards-upgrades))

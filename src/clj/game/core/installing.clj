@@ -394,8 +394,8 @@
                    (when (and (is-type? card "Program") (neg? (get-in @state [:challenger :memory])))
                      (toast state :challenger "You have run out of memory units!"))
                    (handle-virus-counter-flag state side installed-card)
-                   (when (is-type? card "Resource")
-                     (swap! state assoc-in [:challenger :register :installed-resource] true))
+                   (when (is-type? card "Muthereff")
+                     (swap! state assoc-in [:challenger :register :installed-muthereff] true))
                    (when (has-subtype? c "Icebreaker")
                      (update-breaker-strength state side c))
                    (trigger-event-simult state side eid :challenger-install

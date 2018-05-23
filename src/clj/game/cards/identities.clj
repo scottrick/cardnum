@@ -172,7 +172,7 @@
 
    "Azmari EdTech: Shaping the Future"
    (let [choose-type {:prompt "Name a Challenger card type"
-                      :choices ["Event" "Resource" "Program" "Hardware"]
+                      :choices ["Event" "Muthereff" "Program" "Hardware"]
                       :effect (effect (update! (assoc card :az-target target))
                                       (system-msg (str "uses Azmari EdTech: Shaping the Future to name " target)))}
          check-type {:req (req (is-type? target (:az-target card)))
@@ -903,21 +903,21 @@
    {:effect (req (when (> (:turn @state) 1)
                    (if (:sync-front card)
                      (tag-remove-bonus state side -1)
-                     (trash-resource-bonus state side 2))))
+                     (trash-muthereff-bonus state side 2))))
     :events {:pre-first-turn {:req (req (= side :contestant))
                               :effect (effect (update! (assoc card :sync-front true)) (tag-remove-bonus -1))}}
     :abilities [{:cost [:click 1]
                  :effect (req (if (:sync-front card)
                                 (do (tag-remove-bonus state side 1)
-                                    (trash-resource-bonus state side 2)
+                                    (trash-muthereff-bonus state side 2)
                                     (update! state side (-> card (assoc :sync-front false) (assoc :code "sync"))))
                                 (do (tag-remove-bonus state side -1)
-                                    (trash-resource-bonus state side -2)
+                                    (trash-muthereff-bonus state side -2)
                                     (update! state side (-> card (assoc :sync-front true) (assoc :code "09001"))))))
                  :msg (msg "flip their ID")}]
     :leave-play (req (if (:sync-front card)
                        (tag-remove-bonus state side 1)
-                       (trash-resource-bonus state side -2)))}
+                       (trash-muthereff-bonus state side -2)))}
 
    "Synthetic Systems: The World Re-imagined"
    {:events {:pre-start-game {:effect draft-points-target}}

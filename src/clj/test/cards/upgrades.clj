@@ -803,12 +803,12 @@
     (play-from-hand state :challenger "Faerie")
     (let [pag (get-content state :remote1 0)
           fae (get-in @state [:challenger :rig :program 0])
-          tw (get-in @state [:challenger :rig :resource 0])]
+          tw (get-in @state [:challenger :rig :muthereff 0])]
       (run-on state "Server 1")
       (core/rez state :contestant pag)
       (is (:cannot-jack-out (get-in @state [:run])) "Jack out disabled for Challenger") ; UI button greyed out
       (core/trash state :challenger tw)
-      (is (:cannot-jack-out (get-in @state [:run])) "Resource trash didn't disable jack out prevention")
+      (is (:cannot-jack-out (get-in @state [:run])) "Muthereff trash didn't disable jack out prevention")
       (core/trash state :challenger fae)
       (is (nil? (:cannot-jack-out (get-in @state [:run]))) "Jack out enabled by program trash")
       (run-on state "Server 1")

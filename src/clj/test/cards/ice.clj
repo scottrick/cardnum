@@ -53,7 +53,7 @@
     (prompt-choice :challenger "Yes")
     (prompt-choice :contestant 0)
     (prompt-choice :challenger 0)
-    (prompt-select :contestant (get-resource state 0))
+    (prompt-select :contestant (get-muthereff state 0))
     (prompt-choice :challenger "OK")
     (is (not (:run @state)) "Run ended")))
 
@@ -873,7 +873,7 @@
       (play-from-hand state :challenger "Pawn")
       (play-from-hand state :challenger "Wasteland")
       (let [pawn (get-program state 0)
-            wast (get-resource state 0)]
+            wast (get-muthereff state 0)]
         (card-ability state :challenger (refresh pawn) 0)
         (prompt-select :challenger (refresh ti))
         (is (= 2 (count (:hosted (refresh ti)))) "2 cards on Tithonium")

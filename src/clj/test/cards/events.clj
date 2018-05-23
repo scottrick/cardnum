@@ -45,7 +45,7 @@
     (is (= 8 (:credit (get-contestant))) "Contestant has 8 credits")
     (play-from-hand state :challenger "New Angeles City Hall")
     (is (= 3 (:credit (get-challenger))) "Challenger has 3 credits")
-    (let [nach (get-in @state [:challenger :rig :resource 0])]
+    (let [nach (get-in @state [:challenger :rig :muthereff 0])]
       (play-run-event state (first (get-in @state [:challenger :hand])) :hq)
       (prompt-choice :challenger "Run ability")
       (is (= 4 (:credit (get-challenger))) "Challenger still has 4 credits due to BP")
@@ -366,7 +366,7 @@
     (play-from-hand state :challenger "Contestantorate Scandal")
     (is (empty? (:prompt (get-challenger))) "No BP taken, so no HQ access from Raymond")
     (play-from-hand state :challenger "Investigative Journalism")
-    (is (= "Investigative Journalism" (:title (get-in @state [:challenger :rig :resource 1]))) "IJ able to be installed")
+    (is (= "Investigative Journalism" (:title (get-in @state [:challenger :rig :muthereff 1]))) "IJ able to be installed")
     (run-on state "HQ")
     (is (= 1 (:run-credit (get-challenger))) "1 run credit from bad publicity")
     (run-jack-out state)
@@ -904,7 +904,7 @@
     (core/end-phase-12 state :challenger nil)
     (prompt-select :challenger (find-card "Neutralize All Threats" (:hand (get-challenger))))
     (play-from-hand state :challenger "Fan Site")
-    (let [fs (get-in @state [:challenger :rig :resource 0])
+    (let [fs (get-in @state [:challenger :rig :muthereff 0])
           nat (get-in @state [:challenger :rig :facedown 0])]
       (play-from-hand state :challenger "Independent Thinking")
       (prompt-select :challenger fs)
@@ -1168,7 +1168,7 @@
     (is (= 1 (count (:hand (get-challenger)))))
     (is (= 2 (:credit (get-challenger))))
     (play-from-hand state :challenger "Mars for Martians")
-    (is (= 3 (count (:hand (get-challenger)))) "3 clan resources, +3 cards but -1 for playing Mars for Martians")
+    (is (= 3 (count (:hand (get-challenger)))) "3 clan muthereffs, +3 cards but -1 for playing Mars for Martians")
     (is (= 7 (:credit (get-challenger))) "5 tags, +5 credits")))
 
 (deftest mobius
@@ -1208,7 +1208,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Modded")
     (prompt-select :challenger (find-card "Earthrise Hotel" (:hand (get-challenger))))
-    (is (empty? (get-in @state [:challenger :rig :resource])) "Can't install resources with Modded")
+    (is (empty? (get-in @state [:challenger :rig :muthereff])) "Can't install muthereffs with Modded")
     (prompt-select :challenger (find-card "HQ Interface" (:hand (get-challenger))))
     (is (= 1 (count (get-in @state [:challenger :rig :hardware]))) "Installed HQ Interface")
     (is (= 4 (:credit (get-challenger))) "Paid 1 credit instead of 4")
@@ -1752,7 +1752,7 @@
               (default-challenger [(qty "Security Testing" 1) (qty "Surge" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Security Testing")
-    (let [st (get-in @state [:challenger :rig :resource 0])]
+    (let [st (get-in @state [:challenger :rig :muthereff 0])]
       (play-from-hand state :challenger "Surge")
       (prompt-select :challenger st)
       (is (not (contains? st :counter)) "Surge does not fire on Security Testing"))))
@@ -1902,14 +1902,14 @@
     (is (= 7 (:credit (get-contestant))) "Contestant has 7 credits (play NAPD + 2 clicks for credit")
     (play-from-hand state :challenger "The Prcharacter of Freedom")
     (is (= 2 (count (get-in @state [:challenger :hand]))) "The Prcharacter of Freedom could not be played because no connection is installed")
-    (is (= 0 (count (get-in (get-challenger) [:rig :resource]))) "Kati Jones is not installed")
+    (is (= 0 (count (get-in (get-challenger) [:rig :muthereff]))) "Kati Jones is not installed")
     (play-from-hand state :challenger "Kati Jones")
-    (is (= 1 (count (get-in @state [:challenger :rig :resource]))) "Kati Jones was installed")
+    (is (= 1 (count (get-in @state [:challenger :rig :muthereff]))) "Kati Jones was installed")
     (play-from-hand state :challenger "The Prcharacter of Freedom")
     (is (= 0 (count (get-in @state [:challenger :hand]))) "The Prcharacter of Freedom can be played because a connection is in play")
-    (let [kj (find-card "Kati Jones" (:resource (:rig (get-challenger))))]
+    (let [kj (find-card "Kati Jones" (:muthereff (:rig (get-challenger))))]
       (prompt-choice :challenger kj)
-      (is (= 0 (count (get-in (get-challenger) [:rig :resource]))) "Kati Jones was trashed wth The Prcharacter of Freedom")
+      (is (= 0 (count (get-in (get-challenger) [:rig :muthereff]))) "Kati Jones was trashed wth The Prcharacter of Freedom")
       (is (= 1 (count (get-in (get-challenger) [:discard]))) "The Prcharacter of Freedom was removed from game, and only Kati Jones is in the discard"))
     (take-credits state :challenger)
     (let [napd (get-content state :remote1 0)]

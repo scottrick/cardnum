@@ -353,12 +353,12 @@
     :derezzed-events {:challenger-turn-ends contestant-rez-toast}
     ; not-empty doesn't work for the next line, because it does not return literal true; it returns the collection.
     ; flags need exact equality of value to work.
-    :flags {:contestant-phase-12 (req (and (pos? (count (filter #(card-is? % :type "Resource") (all-installed state :challenger))))
+    :flags {:contestant-phase-12 (req (and (pos? (count (filter #(card-is? % :type "Muthereff") (all-installed state :challenger))))
                                      (:rezzed card)))}
-    :abilities [{:label "Trash a resource"
-                 :prompt "Select a resource to trash with Contestantorate Town"
+    :abilities [{:label "Trash a muthereff"
+                 :prompt "Select a muthereff to trash with Contestantorate Town"
                  :once :per-turn
-                 :choices {:req #(is-type? % "Resource")}
+                 :choices {:req #(is-type? % "Muthereff")}
                  :msg (msg "trash " (:title target))
                  :effect (effect (trash target {:unpreventable true}))}]}
 
@@ -629,7 +629,7 @@
                          :once :per-turn
                          :req (req (seq (:hand challenger)))
                          :prompt "Choose a card type"
-                         :choices ["Event" "Hardware" "Program" "Resource"]
+                         :choices ["Event" "Hardware" "Program" "Muthereff"]
                          :msg (msg "reveal " (join ", " (map :title (:hand challenger))) " and trash a " target)
                          :effect (effect (resolve-ability (trash-ability target) card nil))}]
      {:additional-cost [:forfeit]

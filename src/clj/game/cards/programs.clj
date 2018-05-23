@@ -159,7 +159,7 @@
                         (resolve-ability state side
                                          {:prompt "Choose a card to install from your Grip"
                                           :choices {:req #(and (<= (:cost %) (get-in c [:counter :power] 0))
-                                                               (#{"Hardware" "Program" "Resource"} (:type %))
+                                                               (#{"Hardware" "Program" "Muthereff"} (:type %))
                                                                (in-hand? %))}
                                           :req (req (not (install-locked? state side)))
                                           :msg (msg "install " (:title target) " at no cost")

@@ -271,8 +271,8 @@
 (defn hardware? [card]
   (is-type? card "Hardware"))
 
-(defn resource? [card]
-  (is-type? card "Resource"))
+(defn muthereff? [card]
+  (is-type? card "Muthereff"))
 
 (defn rezzed? [card]
   (:rezzed card))
@@ -298,8 +298,8 @@
 (defn untrashable-while-rezzed? [card]
   (and (card-flag? card :untrashable-while-rezzed true) (rezzed? card)))
 
-(defn untrashable-while-resources? [card]
-  (and (card-flag? card :untrashable-while-resources true) (installed? card)))
+(defn untrashable-while-muthereffs? [card]
+  (and (card-flag? card :untrashable-while-muthereffs true) (installed? card)))
 
 (defn install-locked?
   "Checks if installing is locked"

@@ -1,12 +1,12 @@
 (in-ns 'game.core)
 
-(declare trash-program trash-hardware trash-resource-sub trash-installed)
+(declare trash-program trash-hardware trash-muthereff-sub trash-installed)
 
 ;;;; Helper functions specific for Character
 
 ;;; Challenger abilites for breaking subs
 (defn challenger-break
-  "Ability to break a subroutine by spending a resource (Bioroids, Negotiator, Turing etc)"
+  "Ability to break a subroutine by spending a muthereff (Bioroids, Negotiator, Turing etc)"
   [cost subs]
   (let [cost-str (build-cost-str [cost])
         subs-str (quantify subs "subroutine")]
@@ -538,17 +538,17 @@
                    :delayed-completion true
                    :msg (msg "give the Challenger " (if (> 3 (+ (:advance-counter card 0) (:extra-advance-counter card 0))) "1 tag" "2 tags"))
                    :effect (effect (tag-challenger :challenger eid (if (> 3 (+ (:advance-counter card 0) (:extra-advance-counter card 0))) 1 2)))}
-                  {:label "Trash 1 program (Trash 1 program and 1 resource)"
+                  {:label "Trash 1 program (Trash 1 program and 1 muthereff)"
                    :delayed-completion true
-                   :msg (msg "trash 1 program" (when (< 2 (+ (:advance-counter card 0) (:extra-advance-counter card 0))) " and 1 resource"))
+                   :msg (msg "trash 1 program" (when (< 2 (+ (:advance-counter card 0) (:extra-advance-counter card 0))) " and 1 muthereff"))
                    :effect (req (when-completed (resolve-ability state side trash-program card nil)
                                                 (if (> 3 (+ (:advance-counter card 0) (:extra-advance-counter card 0)))
                                                   (effect-completed state side eid)
                                                   (continue-ability state side
-                                                    {:prompt "Choose a resource to trash"
+                                                    {:prompt "Choose a muthereff to trash"
                                                      :msg (msg "trash " (:title target))
                                                      :choices {:req #(and (installed? %)
-                                                                          (is-type? % "Resource"))}
+                                                                          (is-type? % "Muthereff"))}
                                                      :cancel-effect (req (effect-completed state side eid))
                                                      :effect (effect (trash target {:cause :subroutine}))}
                                                    card nil))))}]
@@ -703,7 +703,7 @@
                    :choices {:req #(has-subtype? % "Console")}
                    :msg (msg "trash " (:title target))
                    :effect (effect (trash target))}
-                  {:msg "trash all virtual resources"
+                  {:msg "trash all virtual muthereffs"
                    :effect (req (doseq [c (filter #(has-subtype? % "Virtual") (all-installed state :challenger))]
                                   (trash state side c)))}]
     :challenger-abilities [(challenger-break [:click 1] 1)]}
@@ -1748,11 +1748,11 @@
     :cannot-host true
     :subroutines [trash-program
                   end-the-run
-                  {:label "Trash a resource"
+                  {:label "Trash a muthereff"
                    :msg (msg "trash " (:title target))
                    :delayed-completion true
                    :choices {:req #(and (installed? %)
-                                        (is-type? % "Resource"))}
+                                        (is-type? % "Muthereff"))}
                    :effect (effect (trash target {:reason :subroutine}))}]}
 
    "TL;DR"
