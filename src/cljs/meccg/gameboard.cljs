@@ -725,8 +725,7 @@
         (let [centrals ["Archives" "R&D" "HQ"]
               remotes (concat (remote-list remotes) ["New remote"])
               servers (case type
-                        ("Upgrade" "Character") (concat centrals remotes)
-                        ("Agenda" "Asset") remotes)]
+                        ("Agenda" "Asset" "Upgrade" "Character") remotes)]
           [:div.panel.blue-shade.servers-menu {:ref "servers"}
            (map (fn [label]
                   [:div {:on-click #(do (send-command "play" {:card @cursor :server label})
