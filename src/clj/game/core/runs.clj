@@ -128,9 +128,9 @@
                                           (system-msg state side (str "is forced to pay " trash-msg)))}
                             card nil)
           ;; Otherwise, show the option to pay to trash the card.
-          (when-not (and (is-type? card "Operation")
+          (when-not (and (is-type? card "Resource")
                          ;; Don't show the option if Edward Kim's auto-trash flag is true.
-                         (card-flag? card :can-trash-operation true))
+                         (card-flag? card :can-trash-resource true))
             ;; If card has already been trashed this access don't show option to pay to trash (eg. Ed Kim)
             (when-not (find-cid (:cid card) (get-in @state [:contestant :discard]))
               (continue-ability state :challenger
@@ -153,7 +153,7 @@
       (do (prompt! state :challenger c (str "You accessed " (:title c)) ["OK"] {:eid eid})
           ;; TODO: Trigger :no-trash after hit "OK" on access
           (when-not (find-cid (:cid c) (get-in @state [:contestant :discard]))
-            ;; Do not trigger :no-trash if card (operation) has already been trashed
+            ;; Do not trigger :no-trash if card (resource) has already been trashed
             (trigger-event state side :no-trash c))))
     (effect-completed state side eid)))
 

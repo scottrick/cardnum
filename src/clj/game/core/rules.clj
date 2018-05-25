@@ -8,7 +8,7 @@
 
 ;;; Playing cards.
 (defn play-instant
-  "Plays an Event or Operation."
+  "Plays an Event or Resource."
   ([state side card] (play-instant state side (make-eid state) card nil))
   ([state side eid? card?] (if (:eid eid?)
                              (play-instant state side eid? card? nil)
@@ -65,7 +65,7 @@
                    (when (has-subtype? card "Terminal")
                      (lose state side :click (-> @state side :click))
                      (swap! state assoc-in [:contestant :register :terminal] true))))
-             (trigger-event state side (if (= side :contestant) :play-operation :play-event) c))
+             (trigger-event state side (if (= side :contestant) :play-resource :play-event) c))
            ;; could not pay the card's prcharacter; mark the effect as being over.
            (effect-completed state side eid card))
          ;; card's req was not satisfied; mark the effect as being over.

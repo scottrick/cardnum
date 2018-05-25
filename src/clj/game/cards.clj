@@ -147,4 +147,4 @@
 (load "cards/upgrades")
 
 (def cards (merge cards-agendas cards-assets cards-events cards-hardware cards-character cards-icebreakers cards-identities
-                  cards-operations cards-programs cards-muthereffs cards-upgrades))
+                  cards-resources cards-programs cards-muthereffs cards-upgrades))

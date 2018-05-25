@@ -519,7 +519,7 @@
     :abilities [{:msg "avoid 1 tag" :effect (effect (tag-prevent 1) (trash card {:cause :ability-cost}))}]}
 
    "Donut Taganes"
-   {:msg "increase the play cost of operations and events by 1 [Credits]"
+   {:msg "increase the play cost of resources and events by 1 [Credits]"
     :events {:pre-play-instant
              {:effect (effect (play-cost-bonus [:credit 1]))}}}
 
@@ -1502,7 +1502,7 @@
                  :effect (effect (trash card {:cause :ability-cost})
                                  (draw (+ (:bad-publicity contestant) (:has-bad-pub contestant))))
                  :msg (msg "draw " (:bad-publicity contestant) " cards")}]
-    :events {:play-operation
+    :events {:play-resource
              {:req (req (or (has-subtype? target "Black Ops")
                             (has-subtype? target "Gray Ops")))
               :effect (req (show-wait-prompt state :contestant "Challenger to use Tallie Perrault")

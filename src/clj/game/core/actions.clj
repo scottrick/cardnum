@@ -13,7 +13,7 @@
   [state side {:keys [card server]}]
   (let [card (get-card state card)]
     (case (:type card)
-      ("Event" "Operation") (play-instant state side card {:extra-cost [:click 1]})
+      ("Event" "Resource") (play-instant state side card {:extra-cost [:click 0]})
       ("Hardware" "Muthereff" "Program") (challenger-install state side (make-eid state) card {:extra-cost [:click 0]})
       ("Character" "Upgrade" "Asset" "Agenda") (contestant-install state side card server {:extra-cost [:click 0] :action :contestant-click-install}))
     (trigger-event state side :play card)))

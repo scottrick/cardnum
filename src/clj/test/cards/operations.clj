@@ -299,7 +299,7 @@
     (is (= 7 (:credit (get-contestant))) "Gained 2 for double advanced character from Commercialization")))
 
 (deftest consulting-visit
-  ;; Consulting Visit - Only show single copies of operations contestant can afford as choices. Play chosen operation
+  ;; Consulting Visit - Only show single copies of resources contestant can afford as choices. Play chosen resource
   (do-game
     (new-game (default-contestant [(qty "Consulting Visit" 1)
                              (qty "Beanstalk Royalties" 2)
@@ -818,7 +818,7 @@
     (is (= 1 (:bad-publicity (get-contestant))))))
 
 (deftest ipo-terminal
-  ;; IPO - credits with Terminal operations
+  ;; IPO - credits with Terminal resources
   (do-game
     (new-game
       (default-contestant [(qty "IPO" 1)])
@@ -1150,7 +1150,7 @@
     (prompt-select :contestant (find-card "Hive" (:hand (get-contestant))))
     (prompt-select :contestant (find-card "IQ" (:hand (get-contestant))))
     (prompt-choice :contestant "Done")
-    (is (= 4 (count (:discard (get-contestant)))) "3 cards trashed plus operation played")
+    (is (= 4 (count (:discard (get-contestant)))) "3 cards trashed plus resource played")
     (is (= 11 (:credit (get-contestant))) "Gained 6 credits")
     (is (= 1 (:click (get-contestant))) "Spent 2 clicks")))
 
@@ -1198,7 +1198,7 @@
     (is (= "Flatline" (:reason @state)) "Win condition reports flatline")))
 
 (deftest subcontract-scorched
-  ;; Subcontract - Don't allow second operation until damage prevention completes
+  ;; Subcontract - Don't allow second resource until damage prevention completes
   (do-game
     (new-game (default-contestant [(qty "Scorched Earth" 2) (qty "Subcontract" 1)])
               (default-challenger [(qty "Plascrete Carapace" 1)]))
@@ -1211,10 +1211,10 @@
     (is (and (= 1 (count (:prompt (get-contestant)))) (= :waiting (-> (get-contestant) :prompt first :prompt-type)))
         "Contestant does not have Subcontract prompt until damage prevention completes")
     (prompt-choice :challenger "Done")
-    (is (not-empty (:prompt (get-contestant))) "Contestant can now play second Subcontract operation")))
+    (is (not-empty (:prompt (get-contestant))) "Contestant can now play second Subcontract resource")))
 
 (deftest subcontract-terminal
-  ;; Subcontract - interaction with Terminal operations
+  ;; Subcontract - interaction with Terminal resources
   (do-game
     (new-game
       (default-contestant [(qty "Hard-Hitting News" 2) (qty "Subcontract" 1)])

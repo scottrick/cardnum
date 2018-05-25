@@ -625,7 +625,7 @@
   "Returns true if the installed card should be drawn face down."
   [{:keys [side type facedown rezzed host] :as card}]
   (if (= side "Contestant")
-    (and (not= type "Operation")
+    (and (not= type "Resource")
          (not rezzed)
          (not= (:side host) "Challenger"))
     facedown))

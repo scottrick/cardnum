@@ -420,6 +420,6 @@
     (or (card-is? card :side :challenger)
         (and (:openhand (:contestant @state)) (in-hand? card))
         (and (or (installed? card) (:host card))
-             (or (is-type? card "Operation") (rezzed? card)))
+             (or (is-type? card "Resource") (rezzed? card)))
         (and (in-discard? card) (:seen card))
         (#{:scored :current} (last zone)))))

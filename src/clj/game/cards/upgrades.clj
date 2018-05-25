@@ -132,12 +132,12 @@
    "Bryan Stinson"
    {:abilities [{:cost [:click 1]
                  :req (req (and (< (:credit challenger) 6)
-                                (< 0 (count (filter #(and (is-type? % "Operation")
+                                (< 0 (count (filter #(and (is-type? % "Resource")
                                                           (has-subtype? % "Transaction")) (:discard contestant))))))
-                 :label "Play a transaction operation from Archives ignoring all costs and remove it from the game"
-                 :prompt "Choose a transaction operation to play"
+                 :label "Play a transaction resource from Archives ignoring all costs and remove it from the game"
+                 :prompt "Choose a transaction resource to play"
                  :msg (msg "play " (:title target) " from Archives ignoring all costs and remove it from the game")
-                 :choices (req (cancellable (filter #(and (is-type? % "Operation")
+                 :choices (req (cancellable (filter #(and (is-type? % "Resource")
                                                           (has-subtype? % "Transaction")) (:discard contestant)) :sorted))
                  :effect (effect (play-instant nil target {:ignore-cost true}) (move target :rfg))}]}
 

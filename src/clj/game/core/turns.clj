@@ -70,7 +70,7 @@
                               :deck-id contestant-deck-id
                               :hand (zone :hand contestant-pool)
                               :discard [] :scored [] :rfg [] :play-area []
-                              :servers {}
+                              :servers {:hq {} :rd {} :archives {}}
                               :click 0 :credit 5 :bad-publicity 0 :has-bad-pub 0
                               :toast []
                               :hand-size-base 8 :hand-size-modification 0
@@ -97,7 +97,7 @@
       (when-completed (trigger-event-sync state side :pre-start-game)
                       (let [side :challenger]
                         (when-completed (trigger-event-sync state side :pre-start-game)
-                                        (init-hands state)))))
+                                        nil))))
     @game-states))
 
 (defn server-card

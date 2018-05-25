@@ -70,7 +70,7 @@
                  :prompt "Select a non-agenda card to install from HQ"
                  :priority true
                  :req (req (not (:run @state)))
-                 :choices {:req #(and (not (is-type? % "Operation"))
+                 :choices {:req #(and (not (is-type? % "Resource"))
                                       (not (is-type? % "Agenda"))
                                       (= (:zone %) [:hand])
                                       (= (:side %) "Contestant"))}}]}
@@ -175,7 +175,7 @@
     :abilities [{:label "[Trash]: Install 1 card, paying all costs"
                  :req (req (= (:active-player @state) :contestant))
                  :prompt "Select a card in HQ to install"
-                 :choices {:req #(and (not (is-type? % "Operation"))
+                 :choices {:req #(and (not (is-type? % "Resource"))
                                       (in-hand? %)
                                       (= (:side %) "Contestant"))}
                  :effect (effect (trash card {:cause :ability-cost})
@@ -263,11 +263,11 @@
 
    "Clone Suffrage Movement"
    {:derezzed-events {:challenger-turn-ends contestant-rez-toast}
-    :flags {:contestant-phase-12 (req (and (some #(is-type? % "Operation") (:discard contestant))
+    :flags {:contestant-phase-12 (req (and (some #(is-type? % "Resource") (:discard contestant))
                                      unprotected))}
-    :abilities [{:label "Add 1 operation from Archives to HQ"
-                 :prompt "Select an operation in Archives to add to HQ" :show-discard true
-                 :choices {:req #(and (is-type? % "Operation")
+    :abilities [{:label "Add 1 resource from Archives to HQ"
+                 :prompt "Select an resource in Archives to add to HQ" :show-discard true
+                 :choices {:req #(and (is-type? % "Resource")
                                       (= (:zone %) [:discard]))}
                  :effect (effect (move target :hand)) :once :per-turn
                  :msg (msg "add " (if (:seen target) (:title target) "a facedown card") " to HQ")}]}
@@ -656,7 +656,7 @@
    (let [iuse {:req (req (not= (:faction target) (:faction (:identity contestant))))
                :msg "gain 1 [Credits]"
                :effect (effect (gain :credit 1))}]
-     {:events {:play-operation iuse :rez iuse}})
+     {:events {:play-resource iuse :rez iuse}})
 
    "Isabel McGuire"
    {:abilities [{:cost [:click 1] :label "Add an installed card to HQ"
@@ -758,19 +758,19 @@
    "Lily Lockwell"
    {:effect (effect (draw 3))
     :msg (msg "draw 3 cards")
-    :abilities [{:label "Remove a tag to search R&D for an operation"
-                 :prompt "Choose an operation to put on top of R&D"
+    :abilities [{:label "Remove a tag to search R&D for an resource"
+                 :prompt "Choose an resource to put on top of R&D"
                  :cost [:click 1]
-                 :choices (req (let [ops (filter #(is-type? % "Operation") (:deck contestant))]
-                                 (if (empty? ops) ["No Operation in R&D"] ops)))
+                 :choices (req (let [ops (filter #(is-type? % "Resource") (:deck contestant))]
+                                 (if (empty? ops) ["No Resource in R&D"] ops)))
                  :req (req (pos? (get-in @state [:challenger :tag])))
-                 :effect (req (if (not= target "No Operation found")
+                 :effect (req (if (not= target "No Resource found")
                                 (let [c (move state :contestant target :play-area)]
                                   (shuffle! state :contestant :deck)
                                   (move state :contestant c :deck {:front true})
                                   (system-msg state side (str "uses Lily Lockwell to put " (:title c) " on top of R&D")))
                                 (do (shuffle! state :contestant :deck)
-                                    (system-msg state side (str "uses Lily Lockwell, but did not find an Operation in R&D"))))
+                                    (system-msg state side (str "uses Lily Lockwell, but did not find an Resource in R&D"))))
                               (lose state :challenger :tag 1))}]}
 
    "Long-Term Investment"
@@ -884,12 +884,12 @@
                  :cost [:click 1]
                  :prompt "Choose an Alliance card to play or install"
                  :choices (req (cancellable (filter #(and (has-subtype? % "Alliance")
-                                                          (if (is-type? % "Operation")
+                                                          (if (is-type? % "Resource")
                                                             (<= (:cost %) (:credit contestant)) true)) (:deck contestant)) :sorted))
                  :msg (msg "reveal " (:title target) " from R&D and "
-                           (if (= (:type target) "Operation") "play " "install ") " it")
+                           (if (= (:type target) "Resource") "play " "install ") " it")
                  :effect (req (shuffle! state side :deck)
-                              (if (= (:type target) "Operation")
+                              (if (= (:type target) "Resource")
                                 (play-instant state side target)
                                 (contestant-install state side target nil nil)))}]}
 
@@ -1434,7 +1434,7 @@
                              :show-discard true
                              :interactive (req true)
                              :delayed-completion true
-                             :choices {:req #(and (not (is-type? % "Operation"))
+                             :choices {:req #(and (not (is-type? % "Resource"))
                                                   (= (:side %) "Contestant")
                                                   (#{[:hand] [:discard]} (:zone %)))}
                              :msg (msg (contestant-install-msg target))

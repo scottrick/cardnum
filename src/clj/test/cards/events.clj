@@ -255,7 +255,7 @@
    (core/gain state :challenger :click 1)
    (play-from-hand state :challenger "By Any Means")
    (run-empty-server state "HQ")
-   (is (= 1 (count (:discard (get-contestant)))) "Operation was trashed")
+   (is (= 1 (count (:discard (get-contestant)))) "Resource was trashed")
    (is (= 3 (count (:hand (get-challenger)))) "Took 1 meat damage")
    (run-empty-server state "R&D")
    (is (= 2 (count (:discard (get-contestant)))) "Character was trashed")

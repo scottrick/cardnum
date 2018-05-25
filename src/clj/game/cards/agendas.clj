@@ -321,7 +321,7 @@
              {:prompt "Select a card to install"
               :show-discard true
               :choices {:req #(and (= (:side %) "Contestant")
-                                   (not (is-type? % "Operation"))
+                                   (not (is-type? % "Resource"))
                                    (#{[:hand] [:discard]} (:zone %)))}
               :effect (req (contestant-install state side target server-name {:no-install-cost true})
                            (if (< n 2)
@@ -654,7 +654,7 @@
               {:req (req (= (:cid card) (:cid target)))
                :prompt "Install a card from HQ in a new remote?"
                :yes-ability {:prompt "Select a card to install"
-                             :choices {:req #(and (not (is-type? % "Operation"))
+                             :choices {:req #(and (not (is-type? % "Resource"))
                                                   (not (is-type? % "Character"))
                                                   (= (:side %) "Contestant")
                                                   (in-hand? %))}
@@ -1019,7 +1019,7 @@
                          :priority -1
                          :delayed-completion true
                          :choices {:req #(and (= (:side %) "Contestant")
-                                              (not (is-type? % "Operation"))
+                                              (not (is-type? % "Resource"))
                                               (in-hand? %))}
                          :effect (req (when-completed
                                         (contestant-install state side target nil {:no-install-cost true})
@@ -1028,7 +1028,7 @@
                                           (effect-completed state side eid card))))})]
      {:delayed-completion true
       :msg "install cards from HQ, ignoring all costs"
-      :effect (req (let [max (count (filter #(not (is-type? % "Operation")) (:hand contestant)))]
+      :effect (req (let [max (count (filter #(not (is-type? % "Resource")) (:hand contestant)))]
                      (continue-ability state side (sft 1 max) card nil)))})
 
    "Superior Cyberwalls"

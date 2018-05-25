@@ -199,7 +199,7 @@
       (is (not (empty? (:prompt (get-contestant)))) "Employee Strike out of play - Ability turned on correctly"))))
 
 (deftest edward-kim
-  ;; Edward Kim - Trash first operation accessed each turn, but not if first one was in Archives
+  ;; Edward Kim - Trash first resource accessed each turn, but not if first one was in Archives
   (do-game
     (new-game
       (default-contestant [(qty "Hedge Fund" 3) (qty "Restructure" 2) (qty "PAD Campaign" 1)])
@@ -209,14 +209,14 @@
     (take-credits state :contestant)
     (run-empty-server state "Archives")
     (run-empty-server state "HQ")
-    (is (= 2 (count (:discard (get-contestant)))) "No operation trashed from HQ; accessed one in Archives first")
+    (is (= 2 (count (:discard (get-contestant)))) "No resource trashed from HQ; accessed one in Archives first")
     (take-credits state :challenger)
     (core/move state :contestant (find-card "Hedge Fund" (:discard (get-contestant))) :hand)
     (is (= 1 (count (:discard (get-contestant)))))
     (take-credits state :contestant)
     (run-empty-server state "Archives")
     (run-empty-server state "HQ")
-    (is (= 2 (count (:discard (get-contestant)))) "1 operation trashed from HQ; accessed non-operation in Archives first")
+    (is (= 2 (count (:discard (get-contestant)))) "1 resource trashed from HQ; accessed non-resource in Archives first")
     (take-credits state :challenger)
     (play-from-hand state :contestant "Hedge Fund")
     (take-credits state :contestant)
@@ -227,10 +227,10 @@
       (run-successful state)
       (is (= 3 (count (:discard (get-contestant)))))
       (run-empty-server state "HQ")
-      (is (= 4 (count (:discard (get-contestant)))) "1 operation trashed from HQ; accessed non-operation in Archives first"))))
+      (is (= 4 (count (:discard (get-contestant)))) "1 resource trashed from HQ; accessed non-resource in Archives first"))))
 
 (deftest edward-kim-maw
-  ;; Edward Kim - Do not trigger maw on first Operation access (due to trash)
+  ;; Edward Kim - Do not trigger maw on first Resource access (due to trash)
   (do-game
     (new-game
       (default-contestant [(qty "Hedge Fund" 3) (qty "Restructure" 2)])
@@ -381,7 +381,7 @@
     (is (= 3 (:credit (get-contestant))) "Contestant not charged for Architects of Tomorrow rez of Eli 1.0")))
 
 (deftest haas-bioroid-asa-group
-  ;; Asa Group - don't allow installation of operations
+  ;; Asa Group - don't allow installation of resources
   (do-game
     (new-game
       (make-deck "Asa Group: Security Through Vigilance" [(qty "Pup" 1) (qty "BOOM!" 1) (qty "Urban Renewal" 1)])

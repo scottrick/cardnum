@@ -1,6 +1,6 @@
 (in-ns 'game.core)
 
-(def cards-operations
+(def cards-resources
   {"24/7 News Cycle"
    {:req (req (pos? (count (:scored contestant))))
     :delayed-completion true
@@ -19,9 +19,9 @@
 
    "Accelerated Diagnostics"
    (letfn [(ad [i n adcard]
-             {:prompt "Select an operation to play"
+             {:prompt "Select an resource to play"
               :choices {:req #(and (= (:side %) "Contestant")
-                                   (is-type? % "Operation")
+                                   (is-type? % "Resource")
                                    (= (:zone %) [:play-area]))}
               :msg (msg "play " (:title target))
               :delayed-completion true
@@ -30,8 +30,8 @@
                                              (continue-ability state side (ad (inc i) n adcard) adcard nil)
                                              (effect-completed state side eid))))})]
      {:delayed-completion true
-      :implementation "Contestant has to manually cards back to R&D to correctly play a draw operation"
-      :effect (req (let [n (count (filter #(is-type? % "Operation")
+      :implementation "Contestant has to manually cards back to R&D to correctly play a draw resource"
+      :effect (req (let [n (count (filter #(is-type? % "Resource")
                                           (take 3 (:deck contestant))))]
                      (continue-ability state side
                                        {:msg "look at the top 3 cards of R&D"
@@ -83,7 +83,8 @@
                                     :msg "add it to their score area as an agenda worth 1 agenda point"}}}
                     card nil)))}
 
-   "Anonymous Tip"
+   "Anonymous
+   Tip"
    {:msg "draw 3 cards"
     :effect (effect (draw 3))}
 
@@ -233,7 +234,7 @@
                                               ; find where the agenda ended up and host on it
                                               (let [agenda (some #(when (= (:cid %) (:cid agenda)) %)
                                                                  (all-installed state :contestant))]
-                                                ; the operation ends up in :discard when it is played; to host it,
+                                                ; the resource ends up in :discard when it is played; to host it,
                                                 ; we need (host) to look for it in discard.
                                                 (host state side agenda (assoc card :zone [:discard]
                                                                                     :seen true :installed true))
@@ -279,9 +280,9 @@
     :effect (final-effect (gain :credit (or (:advance-counter target) 0)))}
 
    "Consulting Visit"
-   {:prompt  "Choose an Operation from R&D to play"
+   {:prompt  "Choose an Resource from R&D to play"
     :choices (req (cancellable
-             (filter #(and (is-type? % "Operation")
+             (filter #(and (is-type? % "Resource")
                            (<= (:cost %) (:credit contestant)))
                       (:deck contestant))
              :sorted))
@@ -297,6 +298,10 @@
    "Cyberdex Trial"
    {:msg "purge virus counters"
     :effect (effect (purge))}
+
+   "Dark Tryst"
+   {:effect (effect (draw 3)
+                    (move (first (:play-area played)) :rfg))}
 
    "Dedication Ceremony"
    {:prompt "Select a faceup card"
@@ -497,7 +502,7 @@
                               :delayed-completion true
                               :show-discard true
                               :choices {:req #(and (= (:side %) "Contestant")
-                                                   (not (is-type? % "Operation"))
+                                                   (not (is-type? % "Resource"))
                                                    (in-discard? %))}
                               :effect (req (when-completed
                                              (contestant-install state side target nil nil)
@@ -623,7 +628,7 @@
    {:prompt "Select a card to install from Archives or HQ"
     :show-discard true
     :not-distinct true
-    :choices {:req #(and (not (is-type? % "Operation"))
+    :choices {:req #(and (not (is-type? % "Resource"))
                          (= (:side %) "Contestant")
                          (#{[:hand] [:discard]} (:zone %)))}
     :effect (final-effect (contestant-install target nil {:no-install-cost true}))
@@ -667,7 +672,7 @@
                     (continue-ability {:player :contestant
                                        :prompt "Select a card to install"
                                        :choices {:req #(and (= (:side %) "Contestant")
-                                                            (not (is-type? % "Operation"))
+                                                            (not (is-type? % "Resource"))
                                                             (in-hand? %))}
                                        :delayed-completion true
                                        :msg (msg (contestant-install-msg target))
@@ -953,7 +958,7 @@
              {:prompt "Select an agenda, asset, or upgrade to install"
               :choices (cons "None" cards)
               :delayed-completion true
-              :effect (req (if-not (or (= target "None") (character? target) (is-type? target "Operation"))
+              :effect (req (if-not (or (= target "None") (character? target) (is-type? target "Resource"))
                              (continue-ability state side (install-card target) card nil)
                              (system-msg state side "does not install an asset, agenda, or upgrade"))
                            (effect-completed state side eid card)
@@ -1047,7 +1052,7 @@
              {:prompt "Select a card to install with Replanting"
               :delayed-completion true
               :choices {:req #(and (= (:side %) "Contestant")
-                                   (not (is-type? % "Operation"))
+                                   (not (is-type? % "Resource"))
                                    (in-hand? %))}
               :effect (req (when-completed (contestant-install state side target nil {:no-install-cost true})
                                            (if (< n 2)
@@ -1068,7 +1073,7 @@
                                        :delayed-completion true
                                        :show-discard true
                                        :choices {:req #(and (= (:side %) "Contestant")
-                                                            (not (is-type? % "Operation"))
+                                                            (not (is-type? % "Resource"))
                                                             (in-discard? %))}
                                        :effect (req (when-completed
                                                       (contestant-install state side target nil {:install-state :rezzed})
@@ -1116,7 +1121,7 @@
     :effect (final-effect (move target :deck) (shuffle! :deck))}
 
    "Rolling Brownout"
-   {:msg "increase the play cost of operations and events by 1 [Credits]"
+   {:msg "increase the play cost of resources and events by 1 [Credits]"
     :events {:play-event {:once :per-turn
                           :msg "gain 1 [Credits]"
                           :effect (effect (gain :contestant :credit 1))}
@@ -1219,7 +1224,7 @@
                              :priority -1
                              :delayed-completion true
                              :choices {:req #(and (= (:side %) "Contestant")
-                                                  (not (is-type? % "Operation"))
+                                                  (not (is-type? % "Resource"))
                                                   (in-hand? %))}
                              :effect (req (when-completed
                                             (contestant-install state side target nil nil)
@@ -1306,9 +1311,9 @@
 
    "Subcontract"
    (letfn [(sc [i sccard]
-             {:prompt "Select an operation in HQ to play"
+             {:prompt "Select an resource in HQ to play"
               :choices {:req #(and (= (:side %) "Contestant")
-                                   (is-type? % "Operation")
+                                   (is-type? % "Resource")
                                    (in-hand? %))}
               :delayed-completion true
               :msg (msg "play " (:title target))
@@ -1495,7 +1500,7 @@
                  (draw state side 4)
                  (continue-ability state side
                    {:prompt "Choose a card in HQ to install"
-                    :choices {:req #(and (in-hand? %) (= (:side %) "Contestant") (not (is-type? % "Operation")))}
+                    :choices {:req #(and (in-hand? %) (= (:side %) "Contestant") (not (is-type? % "Resource")))}
                     :msg "gain 10 [Credits], draw 4 cards, and install 1 card from HQ"
                     :cancel-effect (req (effect-completed state side eid))
                     :effect (effect (contestant-install target nil))}
@@ -1546,6 +1551,14 @@
     :effect (effect (update! (assoc target :subroutines (cons (do-brain-damage 1) (:subroutines target))))
                     (host (get-card state target) (assoc card :zone [:discard] :seen true :condition true)))
     :leave-play (effect (update! (assoc (:host card) :subroutines (rest (:subroutines (:host card))))))}
+
+   "Whip"
+   {:choices {:req #(and (character? %) (rezzed? %))}
+    :msg (msg "give +2 strength to " (card-str state target))
+    :effect (final-effect (host target (assoc card :zone [:discard] :seen true :condition true))
+                          (update-character-strength (get-card state target)))
+    :events {:pre-character-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                      :effect (effect (character-strength-bonus 2 target))}}}
 
    "Witness Tampering"
    {:msg "remove 2 bad publicity"

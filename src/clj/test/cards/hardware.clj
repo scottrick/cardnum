@@ -338,7 +338,7 @@
 
 (deftest maw-card-seen
   ;; Check trashed card is trashed face-up if it's the card that is accessed, issue #2695
-  ;; Also checks Maw auto-trashes on Operation with no trash cost
+  ;; Also checks Maw auto-trashes on Resource with no trash cost
   (do-game
     (new-game (default-contestant [(qty "Hedge Fund" 1)])
               (default-challenger [(qty "Maw" 1)]))

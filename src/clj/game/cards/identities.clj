@@ -266,18 +266,18 @@
 
    "Edward Kim: Humanitys Hammer"
    {:events {:access {:once :per-turn
-                      :req (req (and (is-type? target "Operation")
-                                     (turn-flag? state side card :can-trash-operation)))
+                      :req (req (and (is-type? target "Resource")
+                                     (turn-flag? state side card :can-trash-resource)))
                       :effect (req (trash state side target)
                                    (swap! state assoc-in [:run :did-trash] true)
                                    (swap! state assoc-in [:challenger :register :trashed-card] true)
-                                   (register-turn-flag! state side card :can-trash-operation (constantly false)))
+                                   (register-turn-flag! state side card :can-trash-resource (constantly false)))
                       :msg (msg "trash " (:title target))}
              :successful-run-ends {:req (req (and (= (:server target) [:archives])
                                                   (nil? (:replace-access (:run-effect target)))
                                                   (not= (:max-access target) 0)
-                                                  (seq (filter #(is-type? % "Operation") (:discard contestant)))))
-                                   :effect (effect (register-turn-flag! card :can-trash-operation (constantly false)))}}}
+                                                  (seq (filter #(is-type? % "Resource") (:discard contestant)))))
+                                   :effect (effect (register-turn-flag! card :can-trash-resource (constantly false)))}}}
 
    "Ele \"Smoke\" Scovak: Cynosure of the Net"
    {:recurring 1}
@@ -995,7 +995,7 @@
                                 (system-msg state side "uses Weyland Consortium: Builder of Nations to do 1 meat damage")))}]}
 
    "Weyland Consortium: Building a Better World"
-   {:events {:play-operation {:msg "gain 1 [Credits]"
+   {:events {:play-resource {:msg "gain 1 [Credits]"
                               :effect (effect (gain :credit 1))
                               :req (req (has-subtype? target "Transaction"))}}}
 

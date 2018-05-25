@@ -1920,7 +1920,7 @@
           "Challenger has prompt to wait for Toshiyuki")
       (prompt-choice :contestant "Yes") ; choose to do a swap
       (prompt-select :contestant (find-card "Hedge Fund" (:hand (get-contestant))))
-      (is (= (refresh toshi) (get-content state :remote1 0)) "Toshiyuki still in remote; can't target an operation in hand")
+      (is (= (refresh toshi) (get-content state :remote1 0)) "Toshiyuki still in remote; can't target an resource in hand")
       (prompt-select :contestant (find-card "Project Junebug" (:hand (get-contestant))))
       (let [june (get-content state :remote1 0)]
         (is (= "Project Junebug" (:title (refresh june))) "Project Junebug swapped into Server 1")

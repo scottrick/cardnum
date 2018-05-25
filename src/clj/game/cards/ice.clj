@@ -272,7 +272,7 @@
                    :priority true
                    :activatemsg "uses Architect to look at the top 5 cards of R&D"
                    :req (req (and (not (string? target))
-                                  (not (is-type? target "Operation"))))
+                                  (not (is-type? target "Resource"))))
                    :not-distinct true
                    :choices (req (conj (take 5 (:deck contestant)) "No install"))
                    :effect (effect (system-msg (str "chooses the card in position "
@@ -283,7 +283,7 @@
                    :prompt "Select a card to install from Archives or HQ"
                    :show-discard true
                    :priority true
-                   :choices {:req #(and (not (is-type? % "Operation"))
+                   :choices {:req #(and (not (is-type? % "Resource"))
                                         (#{[:hand] [:discard]} (:zone %))
                                         (= (:side %) "Contestant"))}
                    :effect (effect (contestant-install target nil))
@@ -573,7 +573,7 @@
                    :prompt "Select a card to install from Archives"
                    :show-discard true
                    :priority true
-                   :choices {:req #(and (not (is-type? % "Operation"))
+                   :choices {:req #(and (not (is-type? % "Resource"))
                                         (= (:zone %) [:discard])
                                         (= (:side %) "Contestant"))}
                    :msg (msg (contestant-install-msg target))
@@ -1426,7 +1426,7 @@
    {:subroutines [{:label "Install a card from HQ, paying all costs"
                    :prompt "Choose a card in HQ to install"
                    :priority true
-                   :choices {:req #(and (not (is-type? % "Operation"))
+                   :choices {:req #(and (not (is-type? % "Resource"))
                                         (in-hand? %)
                                         (= (:side %) "Contestant"))}
                    :effect (effect (contestant-install target nil))

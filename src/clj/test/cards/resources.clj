@@ -444,7 +444,7 @@
     (is (= 0 (:tag (get-challenger))) "Tag avoided")))
 
 (deftest donut-taganes
-  ;; Donut Taganes - add 1 to play cost of Operations & Events when this is in play
+  ;; Donut Taganes - add 1 to play cost of Resources & Events when this is in play
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Donut Taganes" 1) (qty "Easy Mark" 1)]))
