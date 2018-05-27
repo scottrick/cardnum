@@ -83,8 +83,7 @@
                                     :msg "add it to their score area as an agenda worth 1 agenda point"}}}
                     card nil)))}
 
-   "Anonymous
-   Tip"
+   "Anonymous Tip"
    {:msg "draw 3 cards"
     :effect (effect (draw 3))}
 

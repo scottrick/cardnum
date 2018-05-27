@@ -535,12 +535,12 @@
                         "credit" (str (second c) " [" (capitalize (name (first c))) "]")
                         (clojure.string/join "" (repeat (second c) (str "[" (capitalize (name (first c))) "]"))))))) ": ")))
 
-(defn remote->num [server]
-  (-> server str (clojure.string/replace #":remote" "")))
+(defn remote->num [zone]
+  (-> zone str (clojure.string/split #":remote") last js/parseInt))
 
-(defn remote->name [server]
-  (let [num (remote->num server)]
-    (str "" num)))
+(defn remote->name [zone]
+  (let [num (remote->num zone)]
+    (str "Server " num)))
 
 (defn central->name [zone]
   "Converts a central zone keyword to a string."

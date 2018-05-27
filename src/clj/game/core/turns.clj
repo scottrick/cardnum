@@ -72,6 +72,7 @@
                               :discard [] :scored [] :rfg [] :play-area []
                               :servers {:hq {} :rd {} :archives {}}
                               :click 0 :credit 5 :bad-publicity 0 :has-bad-pub 0
+                              :rig {:program [] :muthereff [] :hardware []}
                               :toast []
                               :hand-size-base 8 :hand-size-modification 0
                               :agenda-point 0

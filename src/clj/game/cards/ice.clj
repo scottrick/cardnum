@@ -1448,7 +1448,10 @@
                              (swap! state update-in [:contestant :extra-click-temp] (fnil inc 0)))}]}
 
    "Orc Tracker"
-   {:subroutines [end-the-run]}
+   {:abilities [{:label "Move"
+                 :prompt "Choose a server" :choices (req servers)
+                 :msg (msg "move another party " target)
+                 :effect (effect (move card (conj (server->zone state target) :characters)))}]}
 
    "Orion"
    ;; TODO: wormhole subroutine
