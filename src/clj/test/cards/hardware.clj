@@ -76,7 +76,7 @@
    (play-from-hand state :challenger "Blackguard")
    (is (= 6 (:memory (get-challenger))) "Challenger has 6 MU")
    (play-from-hand state :challenger "Snitch")
-   (let [snitch (get-in @state [:challenger :rig :program 0])
+   (let [snitch (get-in @state [:challenger :rig :resource 0])
          iwall (get-character state :archives 0)]
      (run-on state :archives)
      (card-ability state :challenger snitch 0)
@@ -110,7 +110,7 @@
     (let [chip (get-in @state [:challenger :rig :hardware 0])]
       (card-ability state :challenger chip 0)
       (prompt-select :challenger (find-card "Datasucker" (:discard (get-challenger))))
-      (let [ds (get-in @state [:challenger :rig :program 0])]
+      (let [ds (get-in @state [:challenger :rig :resource 0])]
         (is (not (nil? ds)))
         (is (= (:title ds) "Datasucker"))))))
 
@@ -127,15 +127,15 @@
     (let [chip (get-in @state [:challenger :rig :hardware 0])]
       (card-ability state :challenger chip 0)
       (prompt-select :challenger (find-card "Magnum Opus" (:discard (get-challenger))))
-      (is (nil? (get-in @state [:challenger :rig :program 0])) "No program was installed"))
+      (is (nil? (get-in @state [:challenger :rig :resource 0])) "No resource was installed"))
     (let [chip (get-in @state [:challenger :rig :hardware 0])]
       (is (not (nil? chip)) "Clone Chip is still installed")
       (is (= (get-in @state [:challenger :click]) 3) "Challenger has 3 clicks left")
       (card-ability state :challenger chip 0)
       (prompt-select :challenger (find-card "Inti" (:discard (get-challenger))))
-      (let [inti (get-in @state [:challenger :rig :program 0])]
-        (is (not (nil? inti)) "Program was installed")
-        (is (= (:title inti) "Inti") "Program is Inti")
+      (let [inti (get-in @state [:challenger :rig :resource 0])]
+        (is (not (nil? inti)) "Resource was installed")
+        (is (= (:title inti) "Inti") "Resource is Inti")
         (is (= (get-in @state [:challenger :click]) 3) "Challenger has 3 clicks left")))))
 
 (deftest comet-event-play
@@ -284,7 +284,7 @@
         (is (empty? (get-in @state [:challenger :rig :hardware])) "Feedback Filter trashed")))))
 
 (deftest grimoire
-  ;; Grimoire - Gain 2 MU, add a free virus counter to installed virus programs
+  ;; Grimoire - Gain 2 MU, add a free virus counter to installed virus resources
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Grimoire" 1) (qty "Imp" 1)]))
@@ -292,7 +292,7 @@
     (play-from-hand state :challenger "Grimoire")
     (is (= 6 (:memory (get-challenger))) "Gained 2 MU")
     (play-from-hand state :challenger "Imp")
-    (let [imp (get-in @state [:challenger :rig :program 0])]
+    (let [imp (get-in @state [:challenger :rig :resource 0])]
       (is (= 3 (get-counters (refresh imp) :virus)) "Imp received an extra virus counter on install"))))
 
 (deftest llds-processor
@@ -305,8 +305,8 @@
     (play-from-hand state :challenger "Inti")
     (play-from-hand state :challenger "LLDS Processor")
     (play-from-hand state :challenger "Passport")
-    (let [inti (get-in @state [:challenger :rig :program 0])
-          pass (get-in @state [:challenger :rig :program 1])]
+    (let [inti (get-in @state [:challenger :rig :resource 0])
+          pass (get-in @state [:challenger :rig :resource 1])]
       (is (= 2 (:current-strength (refresh inti))) "Strength boosted by 1; 1 copy of LLDS when installed")
       (is (= 4 (:current-strength (refresh pass))) "Strength boosted by 2; 2 copies of LLDS when installed")
       (take-credits state :challenger)
@@ -338,7 +338,7 @@
 
 (deftest maw-card-seen
   ;; Check trashed card is trashed face-up if it's the card that is accessed, issue #2695
-  ;; Also checks Maw auto-trashes on Resource with no trash cost
+  ;; Also checks Maw auto-trashes on Operation with no trash cost
   (do-game
     (new-game (default-contestant [(qty "Hedge Fund" 1)])
               (default-challenger [(qty "Maw" 1)]))
@@ -426,7 +426,7 @@
     (starting-hand state :challenger ["Obelus" "Nerve Agent"])
     (core/gain state :challenger :credit 10 :click 3)
     (play-from-hand state :challenger "Nerve Agent")
-    (let [nerve (get-in @state [:challenger :rig :program 0])]
+    (let [nerve (get-in @state [:challenger :rig :resource 0])]
       (run-empty-server state :hq)
       (is (= 1 (get-counters (refresh nerve) :virus)) "1 virus counter on Nerve Agent")
       (prompt-choice :challenger "OK")
@@ -740,7 +740,7 @@
         (is (= 0 (count (:discard (get-contestant)))) "No Contestant cards trashed")
         (card-ability state :challenger chip 0)
         (prompt-select :challenger (find-card "Parasite" (:discard (get-challenger))))
-        (let [para (get-program state 0)]
+        (let [para (get-resource state 0)]
           (prompt-select :challenger ip)
           (is (= 0 (count (:discard (get-contestant)))) "IP Block Not Trashed")
           (is (= 1 (count (:hosted (refresh ip)))) "Parasite is hosted"))))))
@@ -840,8 +840,8 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Paricia")
     (play-from-hand state :challenger "Faerie")
-    (let [par (get-in @state [:challenger :rig :program 0])
-          fae (get-in @state [:challenger :rig :program 1])]
+    (let [par (get-in @state [:challenger :rig :resource 0])
+          fae (get-in @state [:challenger :rig :resource 1])]
       (is (= 2 (:current-strength (refresh fae))))
       (play-from-hand state :challenger "The Personal Touch")
       (prompt-select :challenger par)

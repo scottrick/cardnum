@@ -1,7 +1,7 @@
 (in-ns 'game.core)
 
 (declare active? all-installed cards card-init deactivate card-flag? get-card-hosted handle-end-run hardware? has-subtype? character?
-         make-eid program? register-events remove-from-host remove-icon reset-card muthereff? rezzed? trash trigger-event update-hosted!
+         make-eid resource? register-events remove-from-host remove-icon reset-card muthereff? rezzed? trash trigger-event update-hosted!
          update-character-strength unregister-events)
 
 ;;; Functions for loading card information.

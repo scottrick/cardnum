@@ -199,7 +199,7 @@
       (is (not (empty? (:prompt (get-contestant)))) "Employee Strike out of play - Ability turned on correctly"))))
 
 (deftest edward-kim
-  ;; Edward Kim - Trash first resource accessed each turn, but not if first one was in Archives
+  ;; Edward Kim - Trash first operation accessed each turn, but not if first one was in Archives
   (do-game
     (new-game
       (default-contestant [(qty "Hedge Fund" 3) (qty "Restructure" 2) (qty "PAD Campaign" 1)])
@@ -209,28 +209,28 @@
     (take-credits state :contestant)
     (run-empty-server state "Archives")
     (run-empty-server state "HQ")
-    (is (= 2 (count (:discard (get-contestant)))) "No resource trashed from HQ; accessed one in Archives first")
+    (is (= 2 (count (:discard (get-contestant)))) "No operation trashed from HQ; accessed one in Archives first")
     (take-credits state :challenger)
     (core/move state :contestant (find-card "Hedge Fund" (:discard (get-contestant))) :hand)
     (is (= 1 (count (:discard (get-contestant)))))
     (take-credits state :contestant)
     (run-empty-server state "Archives")
     (run-empty-server state "HQ")
-    (is (= 2 (count (:discard (get-contestant)))) "1 resource trashed from HQ; accessed non-resource in Archives first")
+    (is (= 2 (count (:discard (get-contestant)))) "1 operation trashed from HQ; accessed non-operation in Archives first")
     (take-credits state :challenger)
     (play-from-hand state :contestant "Hedge Fund")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Eater")
-    (let [eater (get-in @state [:challenger :rig :program 0])]
+    (let [eater (get-in @state [:challenger :rig :resource 0])]
       (run-on state "Archives")
       (card-ability state :challenger eater 0) ; pretend to break a sub so no cards in Archives will be accessed
       (run-successful state)
       (is (= 3 (count (:discard (get-contestant)))))
       (run-empty-server state "HQ")
-      (is (= 4 (count (:discard (get-contestant)))) "1 resource trashed from HQ; accessed non-resource in Archives first"))))
+      (is (= 4 (count (:discard (get-contestant)))) "1 operation trashed from HQ; accessed non-operation in Archives first"))))
 
 (deftest edward-kim-maw
-  ;; Edward Kim - Do not trigger maw on first Resource access (due to trash)
+  ;; Edward Kim - Do not trigger maw on first Operation access (due to trash)
   (do-game
     (new-game
       (default-contestant [(qty "Hedge Fund" 3) (qty "Restructure" 2)])
@@ -381,7 +381,7 @@
     (is (= 3 (:credit (get-contestant))) "Contestant not charged for Architects of Tomorrow rez of Eli 1.0")))
 
 (deftest haas-bioroid-asa-group
-  ;; Asa Group - don't allow installation of resources
+  ;; Asa Group - don't allow installation of operations
   (do-game
     (new-game
       (make-deck "Asa Group: Security Through Vigilance" [(qty "Pup" 1) (qty "BOOM!" 1) (qty "Urban Renewal" 1)])
@@ -646,7 +646,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Self-modifying Code")
     (play-from-hand state :challenger "Magnum Opus")
-    (is (= 0 (:credit (get-challenger))) "No Kate discount on second program install")))
+    (is (= 0 (:credit (get-challenger))) "No Kate discount on second resource install")))
 
 (deftest kate-mac-mccaffrey-discount-cant-afford
   ;; Kate 'Mac' McCaffrey - Can Only Afford With the Discount
@@ -657,7 +657,7 @@
     (core/lose state :challenger :credit 1)
     (is (= 4 (:credit (get-challenger))))
     (play-from-hand state :challenger "Magnum Opus")
-    (is (= 1 (count (get-in @state [:challenger :rig :program]))) "Magnum Opus installed")
+    (is (= 1 (count (get-in @state [:challenger :rig :resource]))) "Magnum Opus installed")
     (is (= 0 (:credit (get-challenger))) "Installed Magnum Opus for 4 credits")))
 
 (deftest ken-tenma-run-event-credit
@@ -689,7 +689,7 @@
              (= "Khan: Savvy Skiptracer" (-> (get-challenger) :prompt first :card :title)))
         "Only Khan prompt showing")
     (prompt-select :challenger (first (:hand (get-challenger))))
-    (is (find-card "Corroder" (-> (get-challenger) :rig :program)) "Corroder installed")
+    (is (find-card "Corroder" (-> (get-challenger) :rig :resource)) "Corroder installed")
     (is (= 4 (:credit (get-challenger))) "1cr discount from Khan")
     (is (= "Caprcharacter Nisei" (-> (get-challenger) :prompt first :card :title)) "Caprcharacter prompt showing")
     (prompt-choice :challenger "0 [Credits]")
@@ -979,7 +979,7 @@
     (let [chip (get-in @state [:challenger :rig :hardware 0])]
       (card-ability state :challenger chip 0)
       (prompt-select :challenger (find-card "Cache" (:discard (get-challenger))))
-      (let [ds (get-in @state [:challenger :rig :program 1])]
+      (let [ds (get-in @state [:challenger :rig :resource 1])]
         (is (not (nil? ds)))
         (is (= (:title ds) "Cache"))))
     (is (= 2 (count (:discard (get-contestant)))) "Playing virus via Clone Chip on contestant's turn should trigger Noise ability")
@@ -988,7 +988,7 @@
     (let [chip-2 (get-in @state [:challenger :rig :hardware 0])]
       (card-ability state :challenger chip-2 0)
       (prompt-select :challenger (find-card "Sharpshooter" (:discard (get-challenger))))
-      (let [ss (get-in @state [:challenger :rig :program 2])]
+      (let [ss (get-in @state [:challenger :rig :resource 2])]
         (is (not (nil? ss)))
         (is (= (:title ss) "Sharpshooter"))))
     (is (= 2 (count (:discard (get-contestant)))) "Playing non-virus via Clone Chip on contestant's turn should not trigger Noise ability")))
@@ -1114,7 +1114,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Medium")
     (let [omar (get-in @state [:challenger :identity])
-          medium (get-in @state [:challenger :rig :program 0])]
+          medium (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger omar 0)
       (run-successful state)
       (prompt-choice :challenger "R&D")
@@ -1129,7 +1129,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Nerve Agent")
     (let [omar (get-in @state [:challenger :identity])
-          nerve (get-in @state [:challenger :rig :program 0])]
+          nerve (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger omar 0)
       (run-successful state)
       (prompt-choice :challenger "HQ")
@@ -1226,7 +1226,7 @@
     (prompt-choice :contestant (find-card "The Maker's Eye" (:discard (get-challenger))))
     (is (= 1 (count (get-in @state [:challenger :rfg]))) "One card RFGed")
     (card-ability state :contestant (get-in @state [:contestant :identity]) 0)
-    (is (empty? (:prompt (get-contestant))) "Cannot use Skorpios twcharacter")))
+    (is (empty? (:prompt (get-contestant))) "Cannot use Skorpios twice")))
 
 (deftest silhouette-expose-trigger-before-access
   ;; Silhouette - Expose trigger ability resolves completely before access. Issue #2173.

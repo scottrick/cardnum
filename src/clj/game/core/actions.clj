@@ -13,8 +13,8 @@
   [state side {:keys [card server]}]
   (let [card (get-card state card)]
     (case (:type card)
-      ("Event" "Resource") (play-instant state side card {:extra-cost [:click 0]})
-      ("Hardware" "Muthereff" "Program") (challenger-install state side (make-eid state) card {:extra-cost [:click 0]})
+      ("Event" "Operation") (play-instant state side card {:extra-cost [:click 0]})
+      ("Hardware" "Muthereff" "Resource") (challenger-install state side (make-eid state) card {:extra-cost [:click 0]})
       ("Character" "Upgrade" "Asset" "Agenda") (contestant-install state side card server {:extra-cost [:click 0] :action :contestant-click-install}))
     (trigger-event state side :play card)))
 
@@ -295,7 +295,7 @@
      (if (or force (can-rez? state side card))
        (do
          (trigger-event state side :pre-rez card)
-         (if (or (#{"Asset" "Character" "Upgrade"} (:type card))
+         (if (or (#{"Asset" "Character" "Upgrade" "Resource"} (:type card))
                    (:install-rezzed (card-def card)))
            (do (trigger-event state side :pre-rez-cost card)
                (if (and altcost (can-pay? state side nil altcost)(not ignore-cost))
@@ -347,6 +347,19 @@
            (effect-completed state side eid))
          (swap! state update-in [:bonus] dissoc :cost))
        (effect-completed state side eid)))))
+
+(defn trott
+  "Derez a contestant card."
+  [state side card]
+  (let [card (get-card state card)]
+    (system-msg state side (str "derezzes " (:title card)))
+    (update! state :contestant (deactivate state :contestant card true))
+    (let [cdef (card-def card)]
+      (when-let [derez-effect (:derez-effect cdef)]
+        (resolve-ability state side derez-effect (get-card state card) nil))
+      (when-let [dre (:derezzed-events cdef)]
+        (register-events state side dre card)))
+    (trigger-event state side :derez card side)))
 
 (defn derez
   "Derez a contestant card."

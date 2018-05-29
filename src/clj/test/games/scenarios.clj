@@ -29,7 +29,7 @@
       (take-credits state :challenger)
       (is (= 6 (:credit (get-challenger))))
       (play-from-hand state :contestant "Neural EMP")
-      (let [ns (get-program state 0)
+      (let [ns (get-resource state 0)
             fg (first (:hosted (refresh apt)))]
         (card-ability state :challenger ns 0)
         (is (= 5 (:credit (get-challenger))) "Challenger paid 1c to survive Neural EMP")

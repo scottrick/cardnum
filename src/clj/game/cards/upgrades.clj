@@ -132,12 +132,12 @@
    "Bryan Stinson"
    {:abilities [{:cost [:click 1]
                  :req (req (and (< (:credit challenger) 6)
-                                (< 0 (count (filter #(and (is-type? % "Resource")
+                                (< 0 (count (filter #(and (is-type? % "Operation")
                                                           (has-subtype? % "Transaction")) (:discard contestant))))))
-                 :label "Play a transaction resource from Archives ignoring all costs and remove it from the game"
-                 :prompt "Choose a transaction resource to play"
+                 :label "Play a transaction operation from Archives ignoring all costs and remove it from the game"
+                 :prompt "Choose a transaction operation to play"
                  :msg (msg "play " (:title target) " from Archives ignoring all costs and remove it from the game")
-                 :choices (req (cancellable (filter #(and (is-type? % "Resource")
+                 :choices (req (cancellable (filter #(and (is-type? % "Operation")
                                                           (has-subtype? % "Transaction")) (:discard contestant)) :sorted))
                  :effect (effect (play-instant nil target {:ignore-cost true}) (move target :rfg))}]}
 
@@ -404,13 +404,13 @@
                                             (effect-completed state side eid))))}}})
 
    "Keegan Lane"
-   {:abilities [{:label "[Trash], remove a tag: Trash a program"
+   {:abilities [{:label "[Trash], remove a tag: Trash a resource"
                  :req (req (and this-server
                                 (pos? (get-in @state [:challenger :tag]))
-                                (not (empty? (filter #(is-type? % "Program")
+                                (not (empty? (filter #(is-type? % "Resource")
                                                      (all-installed state :challenger))))))
                  :msg (msg "remove 1 tag")
-                 :effect (req (resolve-ability state side trash-program card nil)
+                 :effect (req (resolve-ability state side trash-resource card nil)
                               (trash state side card {:cause :ability-cost})
                               (lose state :challenger :tag 1))}]}
 
@@ -616,13 +616,13 @@
                                     :req (req (and run (= (first (:server run)) :hq)))}]}
 
    "Port Anson Grid"
-   {:msg "prevent the Challenger from jacking out unless they trash an installed program"
+   {:msg "prevent the Challenger from jacking out unless they trash an installed resource"
     :effect (req (when this-server
                    (prevent-jack-out state side)))
     :events {:run {:req (req this-server)
-                   :msg "prevent the Challenger from jacking out unless they trash an installed program"
+                   :msg "prevent the Challenger from jacking out unless they trash an installed resource"
                    :effect (effect (prevent-jack-out))}
-             :challenger-trash {:req (req (and this-server (is-type? target "Program")))
+             :challenger-trash {:req (req (and this-server (is-type? target "Resource")))
                             :effect (req (swap! state update-in [:run] dissoc :cannot-jack-out))}}}
 
    "Prisec"

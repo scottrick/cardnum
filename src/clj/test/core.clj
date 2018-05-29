@@ -84,11 +84,11 @@
   ([state server pos]
    (get-in @state [:contestant :servers server :content pos])))
 
-(defn get-program
-  "Get non-hosted program by position."
-  ([state] (get-in @state [:challenger :rig :program]))
+(defn get-resource
+  "Get non-hosted resource by position."
+  ([state] (get-in @state [:challenger :rig :resource]))
   ([state pos]
-   (get-in @state [:challenger :rig :program pos])))
+   (get-in @state [:challenger :rig :resource pos])))
 
 (defn get-hardware
   "Get hardware by position."

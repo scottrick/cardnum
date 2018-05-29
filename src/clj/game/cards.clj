@@ -1,10 +1,10 @@
 (in-ns 'game.core)
 
-(def trash-program {:prompt "Select a program to trash"
-                    :label "Trash a program"
+(def trash-resource {:prompt "Select a resource to trash"
+                    :label "Trash a resource"
                     :msg (msg "trash " (:title target))
                     :choices {:req #(and (installed? %)
-                                         (is-type? % "Program"))}
+                                         (is-type? % "Resource"))}
                     :effect (effect (trash target {:cause :subroutine})
                                     (clear-wait-prompt :challenger))})
 
@@ -135,16 +135,18 @@
 
 ;; Load all card definitions into the current namespace.
 (load "cards/agendas")
+(load "cards/allies")
 (load "cards/assets")
+(load "cards/characters")
 (load "cards/events")
 (load "cards/hardware")
 (load "cards/ice")
 (load "cards/icebreakers")
 (load "cards/identities")
+(load "cards/items")
 (load "cards/operations")
-(load "cards/programs")
 (load "cards/resources")
 (load "cards/upgrades")
 
-(def cards (merge cards-agendas cards-assets cards-events cards-hardware cards-character cards-icebreakers cards-identities
-                  cards-resources cards-programs cards-muthereffs cards-upgrades))
+(def cards (merge cards-agendas cards-allies cards-assets cards-events cards-hardware cards-characters cards-ice cards-icebreakers cards-identities
+                  cards-items cards-operations cards-resources cards-upgrades))

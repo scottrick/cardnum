@@ -1,6 +1,6 @@
 (in-ns 'game.core)
 
-(declare trash-program trash-hardware trash-muthereff-sub trash-installed)
+(declare trash-resource trash-hardware trash-muthereff-sub trash-installed)
 
 ;;;; Helper functions specific for Character
 
@@ -200,7 +200,7 @@
 
 
 ;;;; Card definitions
-(def cards-character
+(def cards-ice
   {"Aiki"
    {:subroutines [(do-psi {:label "Challenger draws 2 cards"
                            :msg "make the Challenger draw 2 cards"
@@ -262,7 +262,7 @@
    "Archer"
    {:additional-cost [:forfeit]
     :subroutines [(gain-credits 2)
-                  trash-program
+                  trash-resource
                   end-the-run]}
 
    "Architect"
@@ -272,7 +272,7 @@
                    :priority true
                    :activatemsg "uses Architect to look at the top 5 cards of R&D"
                    :req (req (and (not (string? target))
-                                  (not (is-type? target "Resource"))))
+                                  (not (is-type? target "Operation"))))
                    :not-distinct true
                    :choices (req (conj (take 5 (:deck contestant)) "No install"))
                    :effect (effect (system-msg (str "chooses the card in position "
@@ -283,7 +283,7 @@
                    :prompt "Select a card to install from Archives or HQ"
                    :show-discard true
                    :priority true
-                   :choices {:req #(and (not (is-type? % "Resource"))
+                   :choices {:req #(and (not (is-type? % "Operation"))
                                         (#{[:hand] [:discard]} (:zone %))
                                         (= (:side %) "Contestant"))}
                    :effect (effect (contestant-install target nil))
@@ -296,7 +296,7 @@
 
    "Assassin"
    {:subroutines [(trace-ability 5 (do-net-damage 3))
-                  (trace-ability 4 trash-program)]}
+                  (trace-ability 4 trash-resource)]}
 
    "Asteroid Belt"
    (space-character end-the-run)
@@ -334,19 +334,19 @@
    {:subroutines [end-the-run]}
 
    "Bloodletter"
-   {:subroutines [{:label "Challenger trashes 1 program or top 2 cards of their Stack"
-                   :effect (req (if (empty? (filter #(is-type? % "Program") (all-installed state :challenger)))
+   {:subroutines [{:label "Challenger trashes 1 resource or top 2 cards of their Stack"
+                   :effect (req (if (empty? (filter #(is-type? % "Resource") (all-installed state :challenger)))
                                    (do (mill state :challenger 2)
                                        (system-msg state :challenger (str "trashes the top 2 cards of their Stack")))
                                    (do (show-wait-prompt state :contestant "Challenger to choose an option for Bloodletter")
                                        (resolve-ability state :challenger
-                                         {:prompt "Trash 1 program or trash top 2 cards of the Stack?"
-                                          :choices ["Trash 1 program" "Trash top 2 of Stack"]
+                                         {:prompt "Trash 1 resource or trash top 2 cards of the Stack?"
+                                          :choices ["Trash 1 resource" "Trash top 2 of Stack"]
                                           :effect (req (if (and (= target "Trash top 2 of Stack") (pos? (count (:deck challenger))))
                                                          (do (mill state :challenger 2)
                                                              (system-msg state :challenger (str "trashes the top 2 cards of their Stack"))
                                                              (clear-wait-prompt state :contestant))
-                                                         (resolve-ability state :challenger trash-program card nil)))}
+                                                         (resolve-ability state :challenger trash-resource card nil)))}
                                         card nil))))}]}
 
    "Bloom"
@@ -416,19 +416,19 @@
     :abilities [{:msg "gain 2 [Credits] if there is an installed AI"
                  :req (req (some #(has-subtype? % "AI") (all-installed state :challenger)))
                  :effect (effect (gain :credit 2))}]
-    :subroutines [(assoc trash-program :player :challenger
-                                       :msg "force the Challenger to trash 1 program"
-                                       :label "The Challenger trashes 1 program")
+    :subroutines [(assoc trash-resource :player :challenger
+                                       :msg "force the Challenger to trash 1 resource"
+                                       :label "The Challenger trashes 1 resource")
                   {:msg "gain 2 [Credits] and end the run"
                    :effect (effect (gain :credit 2)
                                    (end-run))}]}
 
 
    "Burke Bugs"
-   {:subroutines [(trace-ability 0 (assoc trash-program :not-distinct true
+   {:subroutines [(trace-ability 0 (assoc trash-resource :not-distinct true
                                                         :player :challenger
-                                                        :msg "force the Challenger to trash a program"
-                                                        :label "Force the Challenger to trash a program"))]}
+                                                        :msg "force the Challenger to trash a resource"
+                                                        :label "Force the Challenger to trash a resource"))]}
 
    "Caduceus"
    {:subroutines [(trace-ability 3 (gain-credits 3))
@@ -530,7 +530,7 @@
                                            (end-run))})]}
 
    "Cobra"
-   {:subroutines [trash-program (do-net-damage 2)]}
+   {:subroutines [trash-resource (do-net-damage 2)]}
 
    "Colossus"
    {:advanceable :always
@@ -538,10 +538,10 @@
                    :delayed-completion true
                    :msg (msg "give the Challenger " (if (> 3 (+ (:advance-counter card 0) (:extra-advance-counter card 0))) "1 tag" "2 tags"))
                    :effect (effect (tag-challenger :challenger eid (if (> 3 (+ (:advance-counter card 0) (:extra-advance-counter card 0))) 1 2)))}
-                  {:label "Trash 1 program (Trash 1 program and 1 muthereff)"
+                  {:label "Trash 1 resource (Trash 1 resource and 1 muthereff)"
                    :delayed-completion true
-                   :msg (msg "trash 1 program" (when (< 2 (+ (:advance-counter card 0) (:extra-advance-counter card 0))) " and 1 muthereff"))
-                   :effect (req (when-completed (resolve-ability state side trash-program card nil)
+                   :msg (msg "trash 1 resource" (when (< 2 (+ (:advance-counter card 0) (:extra-advance-counter card 0))) " and 1 muthereff"))
+                   :effect (req (when-completed (resolve-ability state side trash-resource card nil)
                                                 (if (> 3 (+ (:advance-counter card 0) (:extra-advance-counter card 0)))
                                                   (effect-completed state side eid)
                                                   (continue-ability state side
@@ -555,9 +555,9 @@
     :strength-bonus advance-counters}
 
    "Conundrum"
-   {:subroutines [(assoc trash-program :player :challenger
-                                       :msg "force the Challenger to trash 1 program"
-                                       :label "The Challenger trashes 1 program")
+   {:subroutines [(assoc trash-resource :player :challenger
+                                       :msg "force the Challenger to trash 1 resource"
+                                       :label "The Challenger trashes 1 resource")
                   {:msg "force the Challenger to lose 1 [Click] if able"
                    :effect (effect (lose :challenger :click 1))}
                   end-the-run]
@@ -573,7 +573,7 @@
                    :prompt "Select a card to install from Archives"
                    :show-discard true
                    :priority true
-                   :choices {:req #(and (not (is-type? % "Resource"))
+                   :choices {:req #(and (not (is-type? % "Operation"))
                                         (= (:zone %) [:discard])
                                         (= (:side %) "Contestant"))}
                    :msg (msg (contestant-install-msg target))
@@ -696,7 +696,7 @@
 
    "Enforcer 1.0"
    {:additional-cost [:forfeit]
-    :subroutines [trash-program
+    :subroutines [trash-resource
                   (do-brain-damage 1)
                   {:label "Trash a console"
                    :prompt "Select a console to trash"
@@ -816,7 +816,7 @@
 
    "Grim"
    {:effect take-bad-pub
-    :subroutines [trash-program]}
+    :subroutines [trash-resource]}
 
    "Guard"
    {:implementation "Prevent bypass is manual"
@@ -1030,7 +1030,7 @@
     :strength-bonus advance-counters}
 
    "Ichi 1.0"
-   {:subroutines [trash-program
+   {:subroutines [trash-resource
                   (trace-ability 1 {:label "Give the Challenger 1 tag and do 1 brain damage"
                                     :msg "give the Challenger 1 tag and do 1 brain damage"
                                     :delayed-completion true
@@ -1039,7 +1039,7 @@
     :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Ichi 2.0"
-   {:subroutines [trash-program
+   {:subroutines [trash-resource
                   (trace-ability 3 {:label "Give the Challenger 1 tag and do 1 brain damage"
                                     :msg "give the Challenger 1 tag and do 1 brain damage"
                                     :delayed-completion true
@@ -1142,7 +1142,7 @@
                                                      (trash state side card)))]}
 
    "Lancelot"
-   (grail-character trash-program)
+   (grail-character trash-resource)
 
    "Lieutenant of Morgul"
    {:subroutines [end-the-run]}
@@ -1181,7 +1181,7 @@
     :flags {:cannot-lower-strength true}}
 
    "Lycan"
-   (morph-character "Sentry" "Code Gate" trash-program)
+   (morph-character "Sentry" "Code Gate" trash-resource)
 
    "Macrophage"
    {:subroutines [(trace-ability 4 {:label "Purge virus counters"
@@ -1206,10 +1206,10 @@
     :effect (req (let [magnet card]
                    (continue-ability
                      state side
-                     {:req (req (some #(some (fn [h] (card-is? h :type "Program")) (:hosted %))
+                     {:req (req (some #(some (fn [h] (card-is? h :type "Resource")) (:hosted %))
                                       (remove-once #(not= (:cid %) (:cid magnet)) (all-installed state contestant))))
-                      :prompt "Select a Program to host on Magnet"
-                      :choices {:req #(and (card-is? % :type "Program")
+                      :prompt "Select a Resource to host on Magnet"
+                      :choices {:req #(and (card-is? % :type "Resource")
                                            (character? (:host %))
                                            (not= (:cid (:host %)) (:cid magnet)))}
                       :effect (req (let [hosted (host state side card target)]
@@ -1377,11 +1377,11 @@
     :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Nebula"
-   (space-character trash-program)
+   (space-character trash-resource)
 
    "Negotiator"
    {:subroutines [(gain-credits 2)
-                  trash-program]
+                  trash-resource]
     :challenger-abilities [(challenger-break [:credit 2] 1)]}
 
    "Nerine 2.0"
@@ -1420,13 +1420,13 @@
    {:subroutines [{:label "Do 1 net damage for each rezzed NEXT character"
                    :msg (msg "do " (next-character-count contestant) " net damage")
                    :effect (effect (damage eid :net (next-character-count contestant) {:card card}))}
-                  trash-program]}
+                  trash-resource]}
 
    "NEXT Opal"
    {:subroutines [{:label "Install a card from HQ, paying all costs"
                    :prompt "Choose a card in HQ to install"
                    :priority true
-                   :choices {:req #(and (not (is-type? % "Resource"))
+                   :choices {:req #(and (not (is-type? % "Operation"))
                                         (in-hand? %)
                                         (= (:side %) "Contestant"))}
                    :effect (effect (contestant-install target nil))
@@ -1447,22 +1447,16 @@
                              (lose state :challenger :click 1)
                              (swap! state update-in [:contestant :extra-click-temp] (fnil inc 0)))}]}
 
-   "Orc Tracker"
-   {:abilities [{:label "Move"
-                 :prompt "Choose a server" :choices (req servers)
-                 :msg (msg "move another party " target)
-                 :effect (effect (move card (conj (server->zone state target) :characters)))}]}
-
    "Orion"
    ;; TODO: wormhole subroutine
    (implementation-note "\"Resolve a subroutine...\" subroutine is not implemented"
-                        (space-character trash-program end-the-run))
+                        (space-character trash-resource end-the-run))
 
    "Owl"
    {:subroutines [{:choices {:req #(and (installed? %)
-                                        (is-type? % "Program"))}
-                   :label "Add installed program to the top of the Challenger's Stack"
-                   :msg "add an installed program to the top of the Challenger's Stack"
+                                        (is-type? % "Resource"))}
+                   :label "Add installed resource to the top of the Challenger's Stack"
+                   :msg "add an installed resource to the top of the Challenger's Stack"
                    :effect (effect (move :challenger target :deck {:front true})
                                    (system-msg (str "adds " (:title target) " to the top of the Challenger's Stack")))}]}
 
@@ -1526,10 +1520,10 @@
     :subroutines [(trace-ability 4 end-the-run)]}
 
    "Rototurret"
-   {:subroutines [trash-program end-the-run]}
+   {:subroutines [trash-resource end-the-run]}
 
    "Sagittarius"
-   (constellation-character trash-program)
+   (constellation-character trash-resource)
 
    "Salvage"
    {:advanceable :while-rezzed
@@ -1550,10 +1544,10 @@
                                                  :server (rest dest)))))}]}
 
    "Sapper"
-   {:subroutines [trash-program]
+   {:subroutines [trash-resource]
     :access {:delayed-completion true
              :req (req (and (not= (first (:zone card)) :discard)
-                            (some #(is-type? % "Program") (all-installed state :challenger))))
+                            (some #(is-type? % "Resource") (all-installed state :challenger))))
              :effect (effect (show-wait-prompt :contestant "Challenger to decide to break Sapper subroutine")
                              (continue-ability
                                :challenger {:optional
@@ -1561,7 +1555,7 @@
                                          :prompt "Allow Sapper subroutine to fire?"
                                          :priority 1
                                          :yes-ability {:effect (req (clear-wait-prompt state :contestant)
-                                                                    (show-wait-prompt state :challenger "Contestant to trash a program with Sapper")
+                                                                    (show-wait-prompt state :challenger "Contestant to trash a resource with Sapper")
                                                                     (play-subroutine state :contestant eid {:card card :subroutine 0}))}
                                          :no-ability {:effect (effect (clear-wait-prompt :contestant)
                                                                       (effect-completed eid))}}}
@@ -1603,19 +1597,19 @@
     :strength-bonus advance-counters}
 
    "Sherlock 1.0"
-   {:subroutines [{:label "Trace 4 - Add an installed program to the top of the Challenger's Stack"
+   {:subroutines [{:label "Trace 4 - Add an installed resource to the top of the Challenger's Stack"
                    :trace {:base 4
                            :choices {:req #(and (installed? %)
-                                                (is-type? % "Program"))}
+                                                (is-type? % "Resource"))}
                            :msg (msg "add " (:title target) " to the top of the Challenger's Stack")
                            :effect (effect (move :challenger target :deck {:front true}))}}]
     :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Sherlock 2.0"
-   {:subroutines [{:label "Trace 4 - Add an installed program to the bottom of the Challenger's Stack"
+   {:subroutines [{:label "Trace 4 - Add an installed resource to the bottom of the Challenger's Stack"
                    :trace {:base 4
                            :choices {:req #(and (installed? %)
-                                                (is-type? % "Program"))}
+                                                (is-type? % "Resource"))}
                            :msg     (msg "add " (:title target) " to the bottom of the Challenger's Stack")
                            :effect  (effect (move :challenger target :deck))}}
                   {:label  "Give the Challenger 1 tag"
@@ -1690,18 +1684,18 @@
     :advanceable :always
     :abilities [{:label "Gain subroutines"
                  :msg (msg "gain " (:advance-counter card 0) " subroutines")}]
-    :subroutines [trash-program]
+    :subroutines [trash-resource]
     :challenger-abilities [(challenger-break [:credit 3] 1)]}
 
    "Swordsman"
    {:implementation "AI restriction not implemented"
     :subroutines [(do-net-damage 1)
-                  {:prompt "Select an AI program to trash"
+                  {:prompt "Select an AI resource to trash"
                    :msg (msg "trash " (:title target))
-                   :label "Trash an AI program"
+                   :label "Trash an AI resource"
                    :effect (effect (trash target))
                    :choices {:req #(and (installed? %)
-                                        (is-type? % "Program")
+                                        (is-type? % "Resource")
                                         (has-subtype? % "AI"))}}]}
 
    "SYNC BRE"
@@ -1749,7 +1743,7 @@
    {:alternative-cost [:forfeit]
     :implementation "Does not handle UFAQ for Pawn or Blackguard interaction"
     :cannot-host true
-    :subroutines [trash-program
+    :subroutines [trash-resource
                   end-the-run
                   {:label "Trash a muthereff"
                    :msg (msg "trash " (:title target))
@@ -1857,8 +1851,8 @@
                   (trace-ability 2 give-tag)]}
 
    "Vikram 1.0"
-   {:implementation "Program prevention is not implemented"
-    :subroutines [{:msg "prevent the Challenger from using programs for the remainder of this run"}
+   {:implementation "Resource prevention is not implemented"
+    :subroutines [{:msg "prevent the Challenger from using resources for the remainder of this run"}
                   (trace-ability 4 (do-brain-damage 1))]
     :challenger-abilities [(challenger-break [:click 1] 1)]}
 
@@ -1928,9 +1922,9 @@
 
    "Wendigo"
    (implementation-note
-     "Program prevention is not implemented"
+     "Resource prevention is not implemented"
      (morph-character "Code Gate" "Barrier"
-                {:msg "prevent the Challenger from using a chosen program for the remainder of this run"}))
+                {:msg "prevent the Challenger from using a chosen resource for the remainder of this run"}))
 
    "Whirlpool"
    {:subroutines [{:msg "prevent the Challenger from jacking out"

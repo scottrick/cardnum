@@ -365,7 +365,7 @@
     ;; install cache and medium
     (play-from-hand state :challenger "Cache")
     (let [virus-counters (fn [card] (core/get-virus-counters state :challenger (refresh card)))
-          cache (find-card "Cache" (get-in @state [:challenger :rig :program]))
+          cache (find-card "Cache" (get-in @state [:challenger :rig :resource]))
           cvs (get-content state :hq 0)]
       (is (= 3 (virus-counters cache)))
       (play-from-hand state :challenger "Medium")
@@ -377,7 +377,7 @@
       ;; purged counters
       (is (zero? (virus-counters cache))
           "Cache has no counters")
-      (is (zero? (virus-counters (find-card "Medium" (get-in @state [:challenger :rig :program]))))
+      (is (zero? (virus-counters (find-card "Medium" (get-in @state [:challenger :rig :resource]))))
           "Medium has no counters"))))
 
 (deftest cyberdex-virus-suite-access
@@ -391,7 +391,7 @@
     ;; install cache and medium
     (play-from-hand state :challenger "Cache")
     (let [virus-counters (fn [card] (core/get-virus-counters state :challenger (refresh card)))
-          cache (find-card "Cache" (get-in @state [:challenger :rig :program]))
+          cache (find-card "Cache" (get-in @state [:challenger :rig :resource]))
           cvs (get-content state :remote1 0)]
       (is (= 3 (virus-counters cache)))
       (play-from-hand state :challenger "Medium")
@@ -403,7 +403,7 @@
       ;; purged counters
       (is (zero? (virus-counters cache))
           "Cache has no counters")
-      (is (zero? (virus-counters (find-card "Medium" (get-in @state [:challenger :rig :program]))))
+      (is (zero? (virus-counters (find-card "Medium" (get-in @state [:challenger :rig :resource]))))
           "Medium has no counters"))))
 
 (deftest cyberdex-virus-suite-archives-access
@@ -417,7 +417,7 @@
     ;; challenger's turn
     ;; install cache
     (play-from-hand state :challenger "Cache")
-    (let [cache (get-program state 0)]
+    (let [cache (get-resource state 0)]
       (is (= 3 (get-counters (refresh cache) :virus)))
       (run-empty-server state "Archives")
       (prompt-choice :challenger "Cyberdex Virus Suite")
@@ -461,7 +461,7 @@
           drt (get-content state :remote2 0)]
       (core/advance state :contestant {:card gb})
       (core/advance state :contestant {:card (refresh gb)})
-      (is (= 2 (:advance-counter (refresh gb))) "Ghost Branch advanced twcharacter")
+      (is (= 2 (:advance-counter (refresh gb))) "Ghost Branch advanced twice")
       (take-credits state :contestant)
       (run-on state "Server 1")
       (core/rez state :contestant drt)
@@ -563,7 +563,7 @@
     (is (= 6 (count (get-in @state [:contestant :servers :remote1 :characters]))) "6 Character protecting Remote1")))
 
 (deftest keegan-lane
-  ;; Keegan Lane - Trash self and remove 1 Challenger tag to trash a program
+  ;; Keegan Lane - Trash self and remove 1 Challenger tag to trash a resource
   (do-game
     (new-game (default-contestant [(qty "Keegan Lane" 1)])
               (default-challenger [(qty "Corroder" 1)]))
@@ -577,7 +577,7 @@
       (is (= 1 (count (get-content state :hq))) "Keegan didn't fire, Challenger has no tags")
       (core/gain state :challenger :tag 2)
       (card-ability state :contestant keeg 0)
-      (prompt-select :contestant (get-program state 0))
+      (prompt-select :contestant (get-resource state 0))
       (is (= 1 (:tag (get-challenger))) "1 tag removed")
       (is (= 1 (count (:discard (get-contestant)))) "Keegan trashed")
       (is (= 1 (count (:discard (get-challenger)))) "Corroder trashed"))))
@@ -669,7 +669,7 @@
     ;; Challenger not force to trash since Imp is installed
     (is (= 5 (:credit (get-challenger))) "Challenger not forced to trash MVT when Imp installed")
     (is (empty? (:discard (get-contestant))) "MVT is not force-trashed when Imp installed")
-    (let [imp (get-program state 0)]
+    (let [imp (get-resource state 0)]
       (card-ability state :challenger imp 0)
       (is (= "Mumbad Virtual Tour" (:title (first (:discard (get-contestant)))))
           "MVT trashed with Imp")
@@ -792,7 +792,7 @@
     (is (= 0 (count (:scored (get-challenger)))) "No stolen agendas")))
 
 (deftest port-anson-grid
-  ;; Port Anson Grid - Prevent the Challenger from jacking out until they trash a program
+  ;; Port Anson Grid - Prevent the Challenger from jacking out until they trash a resource
   (do-game
     (new-game (default-contestant [(qty "Port Anson Grid" 1) (qty "Data Raven" 1)])
               (default-challenger [(qty "Faerie" 1) (qty "Technical Writer" 1)]))
@@ -802,7 +802,7 @@
     (play-from-hand state :challenger "Technical Writer")
     (play-from-hand state :challenger "Faerie")
     (let [pag (get-content state :remote1 0)
-          fae (get-in @state [:challenger :rig :program 0])
+          fae (get-in @state [:challenger :rig :resource 0])
           tw (get-in @state [:challenger :rig :muthereff 0])]
       (run-on state "Server 1")
       (core/rez state :contestant pag)
@@ -810,7 +810,7 @@
       (core/trash state :challenger tw)
       (is (:cannot-jack-out (get-in @state [:run])) "Muthereff trash didn't disable jack out prevention")
       (core/trash state :challenger fae)
-      (is (nil? (:cannot-jack-out (get-in @state [:run]))) "Jack out enabled by program trash")
+      (is (nil? (:cannot-jack-out (get-in @state [:run]))) "Jack out enabled by resource trash")
       (run-on state "Server 1")
       (is (:cannot-jack-out (get-in @state [:run])) "Prevents jack out when upgrade is rezzed prior to run"))))
 
@@ -1058,8 +1058,8 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Self-modifying Code")
     (play-from-hand state :challenger "Self-modifying Code")
-    (let [smc1 (get-in @state [:challenger :rig :program 0])
-          smc2 (get-in @state [:challenger :rig :program 1])
+    (let [smc1 (get-in @state [:challenger :rig :resource 0])
+          smc2 (get-in @state [:challenger :rig :resource 1])
           sj (get-content state :hq 0)]
       (core/rez state :contestant sj)
       (run-on state "HQ")
@@ -1166,7 +1166,7 @@
     (run-on state "HQ")
     (let [pup (get-character state :hq 0)
           tori (get-content state :hq 0)
-          nshld (get-in @state [:challenger :rig :program 0])]
+          nshld (get-in @state [:challenger :rig :resource 0])]
       (core/rez state :contestant pup)
       (core/rez state :contestant tori)
       (card-subroutine state :contestant pup 0)

@@ -2,7 +2,7 @@
 
 (declare can-host?)
 
-(def cards-programs
+(def cards-resources
   {"Analog Dreamers"
    {:abilities [{:cost [:click 1]
                  :msg "make a run on R&D"
@@ -119,10 +119,10 @@
 
    "Customized Secretary"
    (letfn [(custsec-host [cards]
-             {:prompt "Choose a program to host on Customized Secretary"
+             {:prompt "Choose a resource to host on Customized Secretary"
               :choices (cons "None" cards)
               :delayed-completion true
-              :effect (req (if (or (= target "None") (not (is-type? target "Program")))
+              :effect (req (if (or (= target "None") (not (is-type? target "Resource")))
                              (do (clear-wait-prompt state :contestant)
                                  (shuffle! state side :deck)
                                  (system-msg state side (str "shuffles their Stack"))
@@ -134,11 +134,11 @@
      {:delayed-completion true
       :interactive (req (some #(card-flag? % :challenger-install-draw true) (all-active state :challenger)))
       :msg (msg "reveal the top 5 cards of their Stack: " (join ", " (map :title (take 5 (:deck challenger)))))
-      :effect (req (show-wait-prompt state :contestant "Challenger to host programs on Customized Secretary")
+      :effect (req (show-wait-prompt state :contestant "Challenger to host resources on Customized Secretary")
                    (let [from (take 5 (:deck challenger))]
                      (continue-ability state side (custsec-host from) card nil)))
       :abilities [{:cost [:click 1]
-                   :prompt "Choose a program hosted on Customized Secretary to install"
+                   :prompt "Choose a resource hosted on Customized Secretary to install"
                    :choices (req (cancellable (filter #(can-pay? state side nil :credit (:cost %))
                                                       (:hosted card))))
                    :msg (msg "install " (:title target))
@@ -159,7 +159,7 @@
                         (resolve-ability state side
                                          {:prompt "Choose a card to install from your Grip"
                                           :choices {:req #(and (<= (:cost %) (get-in c [:counter :power] 0))
-                                                               (#{"Hardware" "Program" "Muthereff"} (:type %))
+                                                               (#{"Hardware" "Resource" "Muthereff"} (:type %))
                                                                (in-hand? %))}
                                           :req (req (not (install-locked? state side)))
                                           :msg (msg "install " (:title target) " at no cost")
@@ -193,12 +193,12 @@
                                                                  (:title (first (:deck contestant)))) ["OK"] {}))}}}
 
    "Dhegdheer"
-   {:abilities [{:label "Install a program on Dhegdheer"
+   {:abilities [{:label "Install a resource on Dhegdheer"
                  :req (req (empty? (:hosted card)))
                  :effect (effect (resolve-ability
                                    {:cost [:click 1]
-                                    :prompt "Choose a program in your Grip to install on Dhegdheer"
-                                    :choices {:req #(and (is-type? % "Program")
+                                    :prompt "Choose a resource in your Grip to install on Dhegdheer"
+                                    :choices {:req #(and (is-type? % "Resource")
                                                          (challenger-can-install? state side % false)
                                                          (in-hand? %))}
                                     :msg (msg "host " (:title target) (when (-> target :cost pos?) ", lowering its cost by 1 [Credit]"))
@@ -208,10 +208,10 @@
                                                     (challenger-install target {:host-card card})
                                                     (update! (assoc (get-card state card) :dheg-prog (:cid target))))}
                                   card nil))}
-                {:label "Host an installed program on Dhegdheer"
+                {:label "Host an installed resource on Dhegdheer"
                  :req (req (empty? (:hosted card)))
-                 :prompt "Choose an installed program to host on Dhegdheer"
-                 :choices {:req #(and (is-type? % "Program")
+                 :prompt "Choose an installed resource to host on Dhegdheer"
+                 :choices {:req #(and (is-type? % "Resource")
                                       (installed? %))}
                  :msg (msg "host " (:title target) (when (-> target :cost pos?) ", lowering its cost by 1 [Credit]"))
                  :effect (effect (host card target)
@@ -236,21 +236,21 @@
                                 :effect (effect (install-cost-bonus [:credit 1]))}}}
 
    "Djinn"
-   {:abilities [{:label "Search your Stack for a virus program and add it to your Grip"
+   {:abilities [{:label "Search your Stack for a virus resource and add it to your Grip"
                  :prompt "Choose a Virus"
                  :msg (msg "add " (:title target) " to their Grip")
-                 :choices (req (cancellable (filter #(and (is-type? % "Program")
+                 :choices (req (cancellable (filter #(and (is-type? % "Resource")
                                                           (has-subtype? % "Virus"))
                                                     (:deck challenger)) :sorted))
                  :cost [:click 1 :credit 1]
                  :effect (effect (trigger-event :searched-stack nil)
                                  (shuffle! :deck)
                                  (move target :hand) )}
-                {:label "Install a non-Icebreaker program on Djinn"
+                {:label "Install a non-Icebreaker resource on Djinn"
                  :effect (effect (resolve-ability
                                    {:cost [:click 1]
-                                    :prompt "Choose a non-Icebreaker program in your Grip to install on Djinn"
-                                    :choices {:req #(and (is-type? % "Program")
+                                    :prompt "Choose a non-Icebreaker resource in your Grip to install on Djinn"
+                                    :choices {:req #(and (is-type? % "Resource")
                                                          (challenger-can-install? state side % false)
                                                          (not (has-subtype? % "Icebreaker"))
                                                          (in-hand? %))}
@@ -258,22 +258,22 @@
                                     :effect (effect (gain :memory (:memoryunits target))
                                                     (challenger-install target {:host-card card})
                                                     (update! (assoc (get-card state card)
-                                                                    :hosted-programs
-                                                                    (cons (:cid target) (:hosted-programs card)))))}
+                                                                    :hosted-resources
+                                                                    (cons (:cid target) (:hosted-resources card)))))}
                                   card nil))}
-                {:label "Host an installed non-Icebreaker program on Djinn"
-                 :prompt "Choose an installed non-Icebreaker program to host on Djinn"
-                 :choices {:req #(and (is-type? % "Program")
+                {:label "Host an installed non-Icebreaker resource on Djinn"
+                 :prompt "Choose an installed non-Icebreaker resource to host on Djinn"
+                 :choices {:req #(and (is-type? % "Resource")
                                       (not (has-subtype? % "Icebreaker"))
                                       (installed? %))}
                  :msg (msg "host " (:title target))
                  :effect (effect (host card target)
                                  (gain :memory (:memoryunits target))
                                  (update! (assoc (get-card state card)
-                                                 :hosted-programs (cons (:cid target) (:hosted-programs card)))))}]
-    :events {:card-moved {:req (req (some #{(:cid target)} (:hosted-programs card)))
+                                                 :hosted-resources (cons (:cid target) (:hosted-resources card)))))}]
+    :events {:card-moved {:req (req (some #{(:cid target)} (:hosted-resources card)))
                           :effect (effect (update! (assoc card
-                                                          :hosted-programs (remove #(= (:cid target) %) (:hosted-programs card))))
+                                                          :hosted-resources (remove #(= (:cid target) %) (:hosted-resources card))))
                                           (lose :memory (:memoryunits target)))}}}
 
    "Egret"
@@ -466,34 +466,34 @@
              :purge {:effect (effect (trash card))}}}
 
    "Leprechaun"
-   {:abilities [{:label "Install a program on Leprechaun"
+   {:abilities [{:label "Install a resource on Leprechaun"
                  :req (req (< (count (:hosted card)) 2))
                  :effect (effect (resolve-ability
                                    {:cost [:click 1]
-                                    :prompt "Choose a program in your Grip to install on Leprechaun"
-                                    :choices {:req #(and (is-type? % "Program")
+                                    :prompt "Choose a resource in your Grip to install on Leprechaun"
+                                    :choices {:req #(and (is-type? % "Resource")
                                                          (challenger-can-install? state side % false)
                                                          (in-hand? %))}
                                     :msg (msg "host " (:title target))
                                     :effect (effect (gain :memory (:memoryunits target))
                                                     (challenger-install target {:host-card card})
                                                     (update! (assoc (get-card state card)
-                                                                    :hosted-programs
-                                                                    (cons (:cid target) (:hosted-programs card)))))}
+                                                                    :hosted-resources
+                                                                    (cons (:cid target) (:hosted-resources card)))))}
                                   card nil))}
-                {:label "Host an installed program on Leprechaun"
+                {:label "Host an installed resource on Leprechaun"
                  :req (req (< (count (:hosted card)) 2))
-                 :prompt "Choose an installed program to host on Leprechaun"
-                 :choices {:req #(and (is-type? % "Program")
+                 :prompt "Choose an installed resource to host on Leprechaun"
+                 :choices {:req #(and (is-type? % "Resource")
                                       (installed? %))}
                  :msg (msg "host " (:title target))
                  :effect (effect (host card target)
                                  (gain :memory (:memoryunits target))
                                  (update! (assoc (get-card state card)
-                                                 :hosted-programs (cons (:cid target) (:hosted-programs card)))))}]
-    :events {:card-moved {:req (req (some #{(:cid target)} (:hosted-programs card)))
+                                                 :hosted-resources (cons (:cid target) (:hosted-resources card)))))}]
+    :events {:card-moved {:req (req (some #{(:cid target)} (:hosted-resources card)))
                           :effect (effect (update! (assoc card
-                                                          :hosted-programs (remove #(= (:cid target) %) (:hosted-programs card))))
+                                                          :hosted-resources (remove #(= (:cid target) %) (:hosted-resources card))))
                                           (lose :memory (:memoryunits target)))}}}
    "LLDS Energy Regulator"
    {:prevent {:trash [:hardware]}
@@ -637,7 +637,7 @@
                  :effect (req (let [this-pawn (:cid card)]
                                 (resolve-ability
                                   state side
-                                  {:prompt "Choose a Caïssa program to install from your Grip or Heap"
+                                  {:prompt "Choose a Caïssa resource to install from your Grip or Heap"
                                    :show-discard true
                                    :choices {:req #(and (has-subtype? % "Caïssa")
                                                         (not= (:cid %) this-pawn)
@@ -666,39 +666,39 @@
                               :effect (effect (add-counter card :virus 1))}}}
 
    "Progenitor"
-   {:abilities [{:label "Install a virus program on Progenitor"
+   {:abilities [{:label "Install a virus resource on Progenitor"
                  :req (req (empty? (:hosted card)))
                  :effect (effect (resolve-ability
                                    {:cost [:click 1]
-                                    :prompt "Choose a Virus program to install on Progenitor"
-                                    :choices {:req #(and (is-type? % "Program")
+                                    :prompt "Choose a Virus resource to install on Progenitor"
+                                    :choices {:req #(and (is-type? % "Resource")
                                                          (has-subtype? % "Virus")
                                                          (in-hand? %))}
                                     :msg (msg "host " (:title target))
                                     :effect (effect (gain :memory (:memoryunits target))
                                                     (challenger-install target {:host-card card})
                                                     (update! (assoc (get-card state card)
-                                                                    :hosted-programs
-                                                                    (cons (:cid target) (:hosted-programs card)))))}
+                                                                    :hosted-resources
+                                                                    (cons (:cid target) (:hosted-resources card)))))}
                                   card nil))}
                 {:label "Host an installed virus on Progenitor"
                  :req (req (empty? (:hosted card)))
-                 :prompt "Choose an installed virus program to host on Progenitor"
-                 :choices {:req #(and (is-type? % "Program")
+                 :prompt "Choose an installed virus resource to host on Progenitor"
+                 :choices {:req #(and (is-type? % "Resource")
                                       (has-subtype? % "Virus")
                                       (installed? %))}
                  :msg (msg "host " (:title target))
                  :effect (effect (host card target)
                                  (gain :memory (:memoryunits target))
                                  (update! (assoc (get-card state card)
-                                                 :hosted-programs (cons (:cid target) (:hosted-programs card)))))}]
+                                                 :hosted-resources (cons (:cid target) (:hosted-resources card)))))}]
     :events {:pre-purge {:effect (req (when-let [c (first (:hosted card))]
                                         (update! state side (assoc-in card [:special :numpurged] (get-in c [:counter :virus] 0)))))}
              :purge {:req (req (pos? (or (get-in card [:special :numpurged]) 0)))
                      :effect (req (when-let [c (first (:hosted card))]
                                     (add-counter state side c :virus 1)))}
-             :card-moved {:req (req (some #{(:cid target)} (:hosted-programs card)))
-                          :effect (effect (update! (assoc card :hosted-programs (remove #(= (:cid target) %) (:hosted-programs card))))
+             :card-moved {:req (req (some #{(:cid target)} (:hosted-resources card)))
+                          :effect (effect (update! (assoc card :hosted-resources (remove #(= (:cid target) %) (:hosted-resources card))))
                                           (lose :memory (:memoryunits target)))}}}
 
    "Reaver"
@@ -769,25 +769,25 @@
                  :once :per-turn
                  :req (req (not (install-locked? state side)))
                  :msg (msg "install " (:title target))
-                 :prompt "Choose a program to install from your grip"
-                 :choices {:req #(and (is-type? % "Program")
+                 :prompt "Choose a resource to install from your grip"
+                 :choices {:req #(and (is-type? % "Resource")
                                       (in-hand? %))}
                  :effect (effect (challenger-install target))}]}
 
    "Scheherazade"
-   {:abilities [{:label "Install and host a program from Grip"
+   {:abilities [{:label "Install and host a resource from Grip"
                  :effect (effect (resolve-ability
                                    {:cost [:click 1]
-                                    :prompt "Choose a program to install on Scheherazade from your grip"
-                                    :choices {:req #(and (is-type? % "Program")
+                                    :prompt "Choose a resource to install on Scheherazade from your grip"
+                                    :choices {:req #(and (is-type? % "Resource")
                                                          (challenger-can-install? state side % false)
                                                          (in-hand? %))}
                                     :msg (msg "host " (:title target) " and gain 1 [Credits]")
                                     :effect (effect (challenger-install target {:host-card card}) (gain :credit 1))}
                                   card nil))}
-                {:label "Host an installed program"
-                 :prompt "Choose a program to host on Scheherazade" :priority 2
-                 :choices {:req #(and (is-type? % "Program")
+                {:label "Host an installed resource"
+                 :prompt "Choose a resource to host on Scheherazade" :priority 2
+                 :choices {:req #(and (is-type? % "Resource")
                                       (installed? %))}
                  :msg (msg "host " (:title target) " and gain 1 [Credits]")
                  :effect (req (when (host state side card target)
@@ -797,13 +797,13 @@
    {:abilities [{:req (req (not (install-locked? state side)))
                  :effect (req (when-completed (trash state side card {:cause :ability-cost})
                                               (continue-ability state side
-                                                {:prompt "Choose a program to install"
+                                                {:prompt "Choose a resource to install"
                                                  :msg (req (if (not= target "No install")
                                                              (str "install " (:title target))
                                                              (str "shuffle their Stack")))
                                                  :priority true
                                                  :choices (req (cancellable
-                                                                 (conj (vec (sort-by :title (filter #(is-type? % "Program")
+                                                                 (conj (vec (sort-by :title (filter #(is-type? % "Resource")
                                                                                                     (:deck challenger))))
                                                                        "No install")))
                                                  :cost [:credit 2]
@@ -944,7 +944,7 @@
                              (continue-ability state side
                                                (expose-and-maybe-bounce target)
                                                card nil)))})
-           
+
            (expose-and-maybe-bounce [chosen-subtype]
              {:choices {:req #(and (character? %) (not (rezzed? %)))}
               :delayed-completion true

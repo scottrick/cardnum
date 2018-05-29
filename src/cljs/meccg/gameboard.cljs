@@ -256,7 +256,7 @@
                                         (send-command "play" {:card card :server "New remote"})
                                         (-> (om/get-node owner "servers") js/$ .toggle))
                    (send-command "play" {:card card}))
-          ("servers" "scored" "current" "onhost") (handle-abilities card owner)
+          ("rig" "current" "onhost" "play-area" "servers") (handle-abilities card owner)
           nil)
         ;; Contestant side
         (= side :contestant)
@@ -626,7 +626,6 @@
   [{:keys [side type facedown rezzed host] :as card}]
   (if (= side "Contestant")
     (and (not= type "Resource")
-         (not rezzed)
          (not= (:side host) "Challenger"))
     facedown))
 
@@ -1121,7 +1120,12 @@
                                 :run (when (= server-type "rd") run)})
          (om/build server-view {:server (:archives servers)
                                 :central-view (om/build discard-view player)
-                                :run (when (= server-type "archives") run)})]))))
+                                :run (when (= server-type "archives") run)})
+         (for [zone [:resource :hardware :muthereff :facedown]]
+           [:div
+            (for [c (zone (:rig player))]
+              [:div.card-wrapper {:class (when (playable? c) "playable")}
+               (om/build card-view c)])])]))))
 
 (defmethod decks-view "Challenger" [{:keys [player run]}]
   (om/component
@@ -1134,7 +1138,7 @@
                         (om/build identity-view player)])]
         [:div.challenger-board {:class (if is-me "me" "opponent")}
          (when-not is-me centrals)
-         (for [zone [:program :hardware :muthereff :facedown]]
+         (for [zone [:resource :hardware :muthereff :facedown]]
            [:div
             (for [c (zone (:rig player))]
               [:div.card-wrapper {:class (when (playable? c) "playable")}

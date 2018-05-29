@@ -65,13 +65,13 @@
 
    "Autoscripter"
    {:events {:challenger-install {:silent (req true)
-                              :req (req (and (is-type? target "Program")
+                              :req (req (and (is-type? target "Resource")
                                              (= (:active-player @state) :challenger)
-                                             ;; only trigger when played a programm from grip
+                                             ;; only trigger when played a resourcem from grip
                                              (some #{:hand} (:previous-zone target))
-                                             ;; check if didn't played a program from the grip this turn
+                                             ;; check if didn't played a resource from the grip this turn
                                              (empty? (let [cards (map first (turn-events state side :challenger-install))
-                                                           progs (filter #(is-type? % "Program") cards)]
+                                                           progs (filter #(is-type? % "Resource") cards)]
                                                           (filter #(some #{:hand} (:previous-zone %)) progs)))))
                               :msg "gain [Click]" :effect (effect (gain :click 1))}
              :unsuccessful-run {:effect (effect (trash card)
@@ -176,11 +176,11 @@
                                                    (lose state side :tag 1)))} card nil))}]}
 
    "Clone Chip"
-   {:abilities [{:prompt "Select a program to install from your Heap"
+   {:abilities [{:prompt "Select a resource to install from your Heap"
                  :priority true :show-discard true
                  :req (req (and (not (seq (get-in @state [:challenger :locked :discard])))
                                (not (install-locked? state side))))
-                 :choices {:req #(and (is-type? % "Program")
+                 :choices {:req #(and (is-type? % "Resource")
                                       (= (:zone %) [:discard]))}
                  :effect (req (when (>= (:credit challenger) (:cost target))
                                     (do (challenger-install state side target)
@@ -524,8 +524,8 @@
                                card nil))}}}
 
    "Monolith"
-   (let [mhelper (fn mh [n] {:prompt "Select a program to install"
-                             :choices {:req #(and (is-type? % "Program")
+   (let [mhelper (fn mh [n] {:prompt "Select a resource to install"
+                             :choices {:req #(and (is-type? % "Resource")
                                                   (in-hand? %))}
                              :effect (req (install-cost-bonus state side [:credit -4])
                                           (challenger-install state side target nil)
@@ -536,9 +536,9 @@
       :effect (effect (resolve-ability (mhelper 1) card nil))
       :abilities [{:msg (msg "prevent 1 brain or net damage by trashing " (:title target))
                    :priority 50
-                   :choices {:req #(and (is-type? % "Program")
+                   :choices {:req #(and (is-type? % "Resource")
                                         (in-hand? %))}
-                   :prompt "Choose a program to trash from your Grip"
+                   :prompt "Choose a resource to trash from your Grip"
                    :effect (effect (trash target)
                                    (damage-prevent :brain 1)
                                    (damage-prevent :net 1))}]})
@@ -557,13 +557,13 @@
                    :effect (effect (pump target 1 :all-run))}}}
 
    "NetChip"
-   {:abilities [{:label "Install a program on NetChip"
+   {:abilities [{:label "Install a resource on NetChip"
                  :req (req (empty? (:hosted card)))
                  :effect (req (let [n (count (filter #(= (:title %) (:title card)) (all-installed state :challenger)))]
                                 (resolve-ability state side
                                   {:cost [:click 1]
-                                   :prompt "Select a program in your Grip to install on NetChip"
-                                   :choices {:req #(and (is-type? % "Program")
+                                   :prompt "Select a resource in your Grip to install on NetChip"
+                                   :choices {:req #(and (is-type? % "Resource")
                                                         (challenger-can-install? state side % false)
                                                         (<= (:memoryunits %) n)
                                                         (in-hand? %))}
@@ -571,28 +571,28 @@
                                    :effect (effect (gain :memory (:memoryunits target))
                                                    (challenger-install target {:host-card card})
                                                    (update! (assoc (get-card state card)
-                                                                   :hosted-programs
-                                                                   (cons (:cid target) (:hosted-programs card)))))}
+                                                                   :hosted-resources
+                                                                   (cons (:cid target) (:hosted-resources card)))))}
                                  card nil)))}
-                {:label "Host an installed program on NetChip"
+                {:label "Host an installed resource on NetChip"
                  :req (req (empty? (:hosted card)))
                  :effect (req (let [n (count (filter #(= (:title %) (:title card)) (all-installed state :challenger)))]
                                 (resolve-ability state side
-                                  {:prompt "Select an installed program to host on NetChip"
-                                   :choices {:req #(and (is-type? % "Program")
+                                  {:prompt "Select an installed resource to host on NetChip"
+                                   :choices {:req #(and (is-type? % "Resource")
                                                         (<= (:memoryunits %) n)
                                                         (installed? %))}
                                    :msg (msg "host " (:title target))
                                    :effect (effect (host card target)
                                                    (gain :memory (:memoryunits target))
                                                    (update! (assoc (get-card state card)
-                                                                   :hosted-programs
-                                                                   (cons (:cid target) (:hosted-programs card)))))}
+                                                                   :hosted-resources
+                                                                   (cons (:cid target) (:hosted-resources card)))))}
                                  card nil)))}]
-    :events {:card-moved {:req (req (some #{(:cid target)} (:hosted-programs card)))
+    :events {:card-moved {:req (req (some #{(:cid target)} (:hosted-resources card)))
                           :effect (effect (update! (assoc card
-                                                          :hosted-programs
-                                                          (remove #(= (:cid target) %) (:hosted-programs card))))
+                                                          :hosted-resources
+                                                          (remove #(= (:cid target) %) (:hosted-resources card))))
                                           (lose :memory (:memoryunits target)))}}}
 
    "Obelus"
@@ -617,20 +617,20 @@
 
    "Omni-drive"
    {:recurring 1
-    :abilities [{:label "Install and host a program of 1[Memory Unit] or less on Omni-drive"
+    :abilities [{:label "Install and host a resource of 1[Memory Unit] or less on Omni-drive"
                  :req (req (empty? (:hosted card)))
                  :cost [:click 1]
-                 :prompt "Select a program of 1[Memory Unit] or less to install on Omni-drive from your grip"
-                 :choices {:req #(and (is-type? % "Program")
+                 :prompt "Select a resource of 1[Memory Unit] or less to install on Omni-drive from your grip"
+                 :choices {:req #(and (is-type? % "Resource")
                                       (<= (:memoryunits %) 1)
                                       (in-hand? %))}
                  :msg (msg "host " (:title target))
                  :effect (effect (gain :memory (:memoryunits target))
                                  (challenger-install target {:host-card card})
                                  (update! (assoc (get-card state card) :Omnidrive-prog (:cid target))))}
-                {:label "Host an installed program of 1[Memory Unit] or less on Omni-drive"
-                 :prompt "Select an installed program of 1[Memory Unit] or less to host on Omni-drive"
-                 :choices {:req #(and (is-type? % "Program")
+                {:label "Host an installed resource of 1[Memory Unit] or less on Omni-drive"
+                 :prompt "Select an installed resource of 1[Memory Unit] or less to host on Omni-drive"
+                 :choices {:req #(and (is-type? % "Resource")
                                       (<= (:memoryunits %) 1)
                                       (installed? %))}
                  :msg (msg "host " (:title target))
@@ -678,7 +678,7 @@
 
    "Q-Coherence Chip"
    {:in-play [:memory 1]
-    :events (let [e {:req (req (= (last (:zone target)) :program))
+    :events (let [e {:req (req (= (last (:zone target)) :resource))
                      :effect (effect (trash card)
                                      (system-msg (str "trashes Q-Coherence Chip")))}]
               {:challenger-trash e :contestant-trash e})}

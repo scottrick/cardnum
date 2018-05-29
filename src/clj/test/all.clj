@@ -9,7 +9,7 @@
             test.cards.icebreakers
             test.cards.identities
             test.cards.operations
-            test.cards.programs
+            test.cards.resources
             test.cards.resources
             test.cards.upgrades
             test.games.scenarios))

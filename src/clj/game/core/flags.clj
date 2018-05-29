@@ -265,8 +265,8 @@
 (defn character? [card]
   (is-type? card "Character"))
 
-(defn program? [card]
-  (is-type? card "Program"))
+(defn resource? [card]
+  (is-type? card "Resource"))
 
 (defn hardware? [card]
   (is-type? card "Hardware"))
@@ -420,6 +420,6 @@
     (or (card-is? card :side :challenger)
         (and (:openhand (:contestant @state)) (in-hand? card))
         (and (or (installed? card) (:host card))
-             (or (is-type? card "Resource") (rezzed? card)))
+             (or (is-type? card "Operation") (rezzed? card)))
         (and (in-discard? card) (:seen card))
         (#{:scored :current} (last zone)))))

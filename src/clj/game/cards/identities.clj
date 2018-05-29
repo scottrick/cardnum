@@ -172,7 +172,7 @@
 
    "Azmari EdTech: Shaping the Future"
    (let [choose-type {:prompt "Name a Challenger card type"
-                      :choices ["Event" "Muthereff" "Program" "Hardware"]
+                      :choices ["Event" "Muthereff" "Resource" "Hardware"]
                       :effect (effect (update! (assoc card :az-target target))
                                       (system-msg (str "uses Azmari EdTech: Shaping the Future to name " target)))}
          check-type {:req (req (is-type? target (:az-target card)))
@@ -266,28 +266,28 @@
 
    "Edward Kim: Humanitys Hammer"
    {:events {:access {:once :per-turn
-                      :req (req (and (is-type? target "Resource")
-                                     (turn-flag? state side card :can-trash-resource)))
+                      :req (req (and (is-type? target "Operation")
+                                     (turn-flag? state side card :can-trash-operation)))
                       :effect (req (trash state side target)
                                    (swap! state assoc-in [:run :did-trash] true)
                                    (swap! state assoc-in [:challenger :register :trashed-card] true)
-                                   (register-turn-flag! state side card :can-trash-resource (constantly false)))
+                                   (register-turn-flag! state side card :can-trash-operation (constantly false)))
                       :msg (msg "trash " (:title target))}
              :successful-run-ends {:req (req (and (= (:server target) [:archives])
                                                   (nil? (:replace-access (:run-effect target)))
                                                   (not= (:max-access target) 0)
-                                                  (seq (filter #(is-type? % "Resource") (:discard contestant)))))
-                                   :effect (effect (register-turn-flag! card :can-trash-resource (constantly false)))}}}
+                                                  (seq (filter #(is-type? % "Operation") (:discard contestant)))))
+                                   :effect (effect (register-turn-flag! card :can-trash-operation (constantly false)))}}}
 
    "Ele \"Smoke\" Scovak: Cynosure of the Net"
    {:recurring 1}
 
    "Exile: Streethawk"
    {:flags {:challenger-install-draw true}
-    :events {:challenger-install {:silent (req (not (and (is-type? target "Program")
+    :events {:challenger-install {:silent (req (not (and (is-type? target "Resource")
                                                      (some #{:discard} (:previous-zone target)))))
                               :delayed-completion true
-                              :req (req (and (is-type? target "Program")
+                              :req (req (and (is-type? target "Resource")
                                              (some #{:discard} (:previous-zone target))))
                               :msg (msg "draw a card")
                               :effect (req (draw state side eid 1 nil))}}}
@@ -529,14 +529,14 @@
                                 (update! state side (assoc (get-card state card) :biotech-used true))))}]}
 
    "Kabonesa Wu: Netspace Thrillseeker"
-   {:abilities [{:label "[:click] Install a non-virus program from your stack, lowering the cost by 1 [Credit]"
+   {:abilities [{:label "[:click] Install a non-virus resource from your stack, lowering the cost by 1 [Credit]"
                  :cost [:click 1]
-                 :prompt "Choose a program"
+                 :prompt "Choose a resource"
                  :choices (req (cancellable
-                                (filter #(and (is-type? % "Program")
+                                (filter #(and (is-type? % "Resource")
                                               (not (has-subtype? % "Virus")))
                                         (:deck challenger))))
-                 :msg (str "install a non-virus program from their stack, lowering the cost by 1 [Credit]")
+                 :msg (str "install a non-virus resource from their stack, lowering the cost by 1 [Credit]")
                  :effect (effect (trigger-event :searched-stack nil)
                                  (shuffle! :deck)
                                  (install-cost-bonus [:credit -1])
@@ -548,10 +548,10 @@
                                      :rfg))}}]}
 
    "Kate \"Mac\" McCaffrey: Digital Tinker"
-   {:events {:pre-install {:req (req (and (#{"Hardware" "Program"} (:type target))
+   {:events {:pre-install {:req (req (and (#{"Hardware" "Resource"} (:type target))
                                           (not (get-in @state [:per-turn (:cid card)]))))
                            :effect (effect (install-cost-bonus [:credit -1]))}
-             :challenger-install {:req (req (and (#{"Hardware" "Program"} (:type target))
+             :challenger-install {:req (req (and (#{"Hardware" "Resource"} (:type target))
                                              (not (get-in @state [:per-turn (:cid card)]))))
                               :silent (req true)
                               :msg (msg "reduce the install cost of " (:title target) " by 1 [Credits]")
@@ -995,7 +995,7 @@
                                 (system-msg state side "uses Weyland Consortium: Builder of Nations to do 1 meat damage")))}]}
 
    "Weyland Consortium: Building a Better World"
-   {:events {:play-resource {:msg "gain 1 [Credits]"
+   {:events {:play-operation {:msg "gain 1 [Credits]"
                               :effect (effect (gain :credit 1))
                               :req (req (has-subtype? target "Transaction"))}}}
 

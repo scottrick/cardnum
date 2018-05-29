@@ -113,7 +113,7 @@
                  :req (req (:run @state))
                  :msg "make the Challenger trash a card from their Grip to jack out or break subroutines for the remainder of the run"}]}
 
-   "AstroScript Pilot Program"
+   "AstroScript Pilot Resource"
    {:effect (effect (add-counter card :agenda 1))
     :silent (req true)
     :abilities [{:counter-cost [:agenda 1] :msg (msg "place 1 advancement token on "
@@ -140,7 +140,7 @@
                                                                   (clear-wait-prompt :challenger))} card nil)))}
                               card nil))}}
 
-   "Bacterial Programming"
+   "Bacterial Resourceming"
    (letfn [(hq-step [remaining to-trash to-hq]
              {:delayed-completion true
               :prompt "Select a card to move to HQ"
@@ -152,7 +152,7 @@
                                (doseq [h to-hq]
                                  (move state :contestant h :hand))
                                (continue-ability state :contestant (reorder-choice :contestant (vec remaining)) card nil)
-                               (system-msg state :contestant (str "uses Bacterial Programming to add " (count to-hq)
+                               (system-msg state :contestant (str "uses Bacterial Resourceming to add " (count to-hq)
                                                             " cards to HQ, discard " (count to-trash)
                                                             ", and arrange the top cards of R&D")))
                              (do
@@ -179,7 +179,7 @@
                                   :yes-ability {:delayed-completion true
                                                 :effect (req (let [c (take 7 (:deck contestant))]
                                                                (swap! state assoc-in [:run :shuffled-during-access :rd] true)
-                                                               (show-wait-prompt state :challenger "Contestant to use Bacterial Programming")
+                                                               (show-wait-prompt state :challenger "Contestant to use Bacterial Resourceming")
                                                                (continue-ability state :contestant (trash-step c `()) card nil)))}}}
                                 card nil))]
        {:effect arrange-rd
@@ -321,7 +321,7 @@
              {:prompt "Select a card to install"
               :show-discard true
               :choices {:req #(and (= (:side %) "Contestant")
-                                   (not (is-type? % "Resource"))
+                                   (not (is-type? % "Operation"))
                                    (#{[:hand] [:discard]} (:zone %)))}
               :effect (req (contestant-install state side target server-name {:no-install-cost true})
                            (if (< n 2)
@@ -654,7 +654,7 @@
               {:req (req (= (:cid card) (:cid target)))
                :prompt "Install a card from HQ in a new remote?"
                :yes-ability {:prompt "Select a card to install"
-                             :choices {:req #(and (not (is-type? % "Resource"))
+                             :choices {:req #(and (not (is-type? % "Operation"))
                                                   (not (is-type? % "Character"))
                                                   (= (:side %) "Contestant")
                                                   (in-hand? %))}
@@ -963,7 +963,7 @@
                                                                       (unregister-events card))}} card)))}]
       :events {:contestant-turn-ends nil :challenger-turn-ends nil}}
 
-   "Sentinel Defense Program"
+   "Sentinel Defense Resource"
    {:events {:pre-resolve-damage {:req (req (and (= target :brain) (> (last targets) 0)))
                                   :msg "do 1 net damage"
                                   :effect (effect (damage eid :net 1 {:card card}))}}}
@@ -1019,7 +1019,7 @@
                          :priority -1
                          :delayed-completion true
                          :choices {:req #(and (= (:side %) "Contestant")
-                                              (not (is-type? % "Resource"))
+                                              (not (is-type? % "Operation"))
                                               (in-hand? %))}
                          :effect (req (when-completed
                                         (contestant-install state side target nil {:no-install-cost true})
@@ -1028,7 +1028,7 @@
                                           (effect-completed state side eid card))))})]
      {:delayed-completion true
       :msg "install cards from HQ, ignoring all costs"
-      :effect (req (let [max (count (filter #(not (is-type? % "Resource")) (:hand contestant)))]
+      :effect (req (let [max (count (filter #(not (is-type? % "Operation")) (:hand contestant)))]
                      (continue-ability state side (sft 1 max) card nil)))})
 
    "Superior Cyberwalls"
@@ -1089,7 +1089,7 @@
                               :effect (req (let [counter (:advance-counter target)]
                                              (steal-cost-bonus state side [:credit (* 2 counter)])))}}}
 
-   "Veterans Program"
+   "Veterans Resource"
    {:interactive (req true)
     :msg "lose 2 bad publicity"
     :effect (effect (lose :bad-publicity 2))}

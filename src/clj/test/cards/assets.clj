@@ -29,18 +29,18 @@
       ;; Single advance AggSec
       (core/advance state :contestant {:card (refresh as)})
       (take-credits state :contestant)
-      ;; Run on AggSec with 3 programs
+      ;; Run on AggSec with 3 resources
       (play-from-hand state :challenger "Cache")
       (play-from-hand state :challenger "Cache")
       (play-from-hand state :challenger "Cache")
       (run-empty-server state "Server 1")
       (prompt-choice :contestant "Yes")
       (is (= 3 (get-in @state [:contestant :credit])))
-      ;; Contestant can trash one program
-      (prompt-select :contestant (get-in @state [:challenger :rig :program 1]))
+      ;; Contestant can trash one resource
+      (prompt-select :contestant (get-in @state [:challenger :rig :resource 1]))
       ;; There should be two Caches left
       (is (= 3 (get-in @state [:contestant :credit])))
-      (is (= 2 (count (get-in @state [:challenger :rig :program])))))))
+      (is (= 2 (count (get-in @state [:challenger :rig :resource])))))))
 
 (deftest alexa-belsky
   (do-game
@@ -147,8 +147,8 @@
       (core/rez state :contestant cap)
       (card-ability state :contestant cap 0)
       (card-ability state :contestant cap 0)
-      (is (= 0 (:click (get-contestant))) "Used twcharacter, spent 2 clicks")
-      (is (= 7 (:credit (get-contestant))) "Used twcharacter, gained 4 credits"))))
+      (is (= 0 (:click (get-contestant))) "Used twice, spent 2 clicks")
+      (is (= 7 (:credit (get-contestant))) "Used twice, gained 4 credits"))))
 
 (deftest chairman-hiro
   ;; Chairman Hiro - Reduce Challenger max hand size; add as 2 agenda points if Challenger trashes him
@@ -1807,7 +1807,7 @@
 (deftest team-sponsorship-one-window
   ;; Team Sponsorship - Score 5 points in one window
   (do-game
-    (new-game (default-contestant [(qty "AstroScript Pilot Program" 3)
+    (new-game (default-contestant [(qty "AstroScript Pilot Resource" 3)
                              (qty "Team Sponsorship" 1)
                              (qty "Breaking News" 1)
                              (qty "SanSan City Grid" 1)])
@@ -1815,13 +1815,13 @@
     (play-from-hand state :contestant "SanSan City Grid" "New remote")
     (core/gain state :contestant :credit 100 :click 5)
     (core/rez state :contestant (get-content state :remote1 0))
-    (play-from-hand state :contestant "AstroScript Pilot Program" "New remote")
+    (play-from-hand state :contestant "AstroScript Pilot Resource" "New remote")
     (score-agenda state :contestant (get-content state :remote2 0))
-    (play-from-hand state :contestant "AstroScript Pilot Program" "Server 1")
+    (play-from-hand state :contestant "AstroScript Pilot Resource" "Server 1")
     (play-from-hand state :contestant "Team Sponsorship" "New remote")
     (core/rez state :contestant (get-content state :remote3 0))
     (score-agenda state :contestant (get-content state :remote1 1))
-    (prompt-select :contestant (find-card "AstroScript Pilot Program" (:hand (get-contestant))))
+    (prompt-select :contestant (find-card "AstroScript Pilot Resource" (:hand (get-contestant))))
     (is (= 0 (get-counters (second (:scored (get-contestant))) :agenda)) "AstroScript not resolved yet")
     (prompt-choice :contestant "Server 1")
     (is (= 1 (get-counters (second (:scored (get-contestant))) :agenda)) "AstroScript resolved")
@@ -1920,7 +1920,7 @@
           "Challenger has prompt to wait for Toshiyuki")
       (prompt-choice :contestant "Yes") ; choose to do a swap
       (prompt-select :contestant (find-card "Hedge Fund" (:hand (get-contestant))))
-      (is (= (refresh toshi) (get-content state :remote1 0)) "Toshiyuki still in remote; can't target an resource in hand")
+      (is (= (refresh toshi) (get-content state :remote1 0)) "Toshiyuki still in remote; can't target an operation in hand")
       (prompt-select :contestant (find-card "Project Junebug" (:hand (get-contestant))))
       (let [june (get-content state :remote1 0)]
         (is (= "Project Junebug" (:title (refresh june))) "Project Junebug swapped into Server 1")

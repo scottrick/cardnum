@@ -342,7 +342,7 @@
       (is (= 4 (core/hand-size state :challenger))))))
 
 (deftest flare
-  ;; Flare - Trash 1 program, do 2 unpreventable meat damage, and end the run
+  ;; Flare - Trash 1 resource, do 2 unpreventable meat damage, and end the run
   (do-game
     (new-game (default-contestant [(qty "Flare" 1)])
               (default-challenger [(qty "Plascrete Carapace" 1) (qty "Clone Chip" 1) (qty "Cache" 3)]))
@@ -467,10 +467,10 @@
       (play-from-hand state :challenger "Gordian Blade")
       (run-on state "HQ")
       (card-subroutine state :contestant (refresh jua) 0)
-      (prompt-select :contestant (get-program state 0))
+      (prompt-select :contestant (get-resource state 0))
       (prompt-select :contestant (get-hardware state 0))
       (prompt-choice :challenger "Gordian Blade")
-      (is (nil? (get-program state 0)) "Card is uninstalled")
+      (is (nil? (get-resource state 0)) "Card is uninstalled")
       (is (= 1 (count (:deck (get-challenger)))) "Challenger puts card in deck"))))
 
 (deftest lockdown
@@ -755,7 +755,7 @@
       (is (= 1 (:tag (get-challenger))) "Trace succeeds with 0 advancements"))))
 
 (deftest sherlock
-  ;; Sherlock 1.0 - Trace to add an installed program to the top of Challenger's Stack
+  ;; Sherlock 1.0 - Trace to add an installed resource to the top of Challenger's Stack
   (do-game
     (new-game (default-contestant [(qty "Sherlock 1.0" 1)])
               (default-challenger [(qty "Gordian Blade" 3) (qty "Sure Gamble" 3)]))
@@ -767,8 +767,8 @@
     (card-subroutine state :contestant (get-character state :hq 0) 0)
     (prompt-choice :contestant 0)
     (prompt-choice :challenger 0)
-    (prompt-select :contestant (get-in @state [:challenger :rig :program 0]))
-    (is (empty? (get-in @state [:challenger :rig :program])) "Gordian uninstalled")
+    (prompt-select :contestant (get-in @state [:challenger :rig :resource 0]))
+    (is (empty? (get-in @state [:challenger :rig :resource])) "Gordian uninstalled")
     (is (= "Gordian Blade" (:title (first (:deck (get-challenger))))) "Gordian on top of Stack")))
 
 (deftest shiro
@@ -872,7 +872,7 @@
       (is (= 1 (count (:hosted (refresh ti)))) "1 card on Tithonium")
       (play-from-hand state :challenger "Pawn")
       (play-from-hand state :challenger "Wasteland")
-      (let [pawn (get-program state 0)
+      (let [pawn (get-resource state 0)
             wast (get-muthereff state 0)]
         (card-ability state :challenger (refresh pawn) 0)
         (prompt-select :challenger (refresh ti))

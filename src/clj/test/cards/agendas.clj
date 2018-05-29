@@ -57,7 +57,7 @@
 (deftest astro-script-token
   ;; AstroScript token placement
   (do-game
-    (new-game (default-contestant [(qty "AstroScript Pilot Program" 3) (qty "Ice Wall" 2)])
+    (new-game (default-contestant [(qty "AstroScript Pilot Resource" 3) (qty "Ice Wall" 2)])
               (default-challenger))
     (core/gain state :contestant :click 3)
     (letfn [(try-place [from to]
@@ -77,12 +77,12 @@
                   (str (:title from) " token was used on " (:title to) msg))
               (is (= 1 (:advance-counter (refresh to)))
                   (str "Advancement token placed on " (:title to) msg)))]
-      (play-from-hand state :contestant "AstroScript Pilot Program" "New remote")
+      (play-from-hand state :contestant "AstroScript Pilot Resource" "New remote")
       (score-agenda state :contestant (get-content state :remote1 0))
-      (play-from-hand state :contestant "AstroScript Pilot Program" "New remote")
+      (play-from-hand state :contestant "AstroScript Pilot Resource" "New remote")
       (let [scored-astro (get-in @state [:contestant :scored 0])
             installed-astro (get-content state :remote2 0)
-            hand-astro (find-card "AstroScript Pilot Program" (:hand get-contestant))]
+            hand-astro (find-card "AstroScript Pilot Resource" (:hand get-contestant))]
         (should-not-place scored-astro hand-astro " in hand")
         (should-place scored-astro installed-astro " that is installed")
         (core/advance state :contestant {:card (refresh installed-astro)})
@@ -633,7 +633,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Self-modifying Code")
     (play-from-hand state :challenger "Clone Chip")
-    (let [smc (get-in @state [:challenger :rig :program 0])]
+    (let [smc (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger smc 0)
       (prompt-choice :challenger (find-card "Corroder" (:deck (get-challenger))))
       (is (= 2 (count (:discard (get-challenger))))))
@@ -655,17 +655,17 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Self-modifying Code")
     (play-from-hand state :challenger "Clone Chip")
-    (let [smc (get-in @state [:challenger :rig :program 0])]
+    (let [smc (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger smc 0)
       (prompt-choice :challenger (find-card "Corroder" (:deck (get-challenger))))
-      (let [cor (get-in @state [:challenger :rig :program 0])]
+      (let [cor (get-in @state [:challenger :rig :resource 0])]
         (is (not (nil? cor)))
         (is (= (:title cor) "Corroder"))
         (is (= "Self-modifying Code" (:title (first (:discard (get-challenger))))))))
     (let [chip (get-in @state [:challenger :rig :hardware 0])]
       (card-ability state :challenger chip 0)
       (prompt-select :challenger (find-card "Self-modifying Code" (:discard (get-challenger))))
-      (let [smc (get-in @state [:challenger :rig :program 1])]
+      (let [smc (get-in @state [:challenger :rig :resource 1])]
         (is (not (nil? smc)))
         (is (= (:title smc) "Self-modifying Code"))
         (is (= "Clone Chip" (:title (first (:discard (get-challenger))))))))))
@@ -972,12 +972,12 @@
 
     (is (empty? (:prompt (get-contestant))) "Not prompted when out of money")))
 
-(deftest sentinel-defense-program
-  ;; Sentinel Defense Program - Doesn't fire if brain damage is prevented
+(deftest sentinel-defense-resource
+  ;; Sentinel Defense Resource - Doesn't fire if brain damage is prevented
   (do-game
-    (new-game (default-contestant [(qty "Sentinel Defense Program" 1) (qty "Viktor 1.0" 1)])
+    (new-game (default-contestant [(qty "Sentinel Defense Resource" 1) (qty "Viktor 1.0" 1)])
               (default-challenger [(qty "Feedback Filter" 1) (qty "Sure Gamble" 3)]))
-    (score-agenda state :contestant (find-card "Sentinel Defense Program" (:hand (get-contestant))))
+    (score-agenda state :contestant (find-card "Sentinel Defense Resource" (:hand (get-contestant))))
     (play-from-hand state :contestant "Viktor 1.0" "HQ")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Feedback Filter")
