@@ -89,4 +89,8 @@
            (register-events state side events c)))
        (when-let [hosted-gained (:hosted-gained cdef)]
          (hosted-gained state side (make-eid state) (get-card state card) [c]))
-       c))))
+       (if (and (is-type? c "Resource")
+                (card-is? c :side :contestant))
+         (rez state side c)
+         c)
+       ))))

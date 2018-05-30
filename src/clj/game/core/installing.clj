@@ -159,7 +159,7 @@
 (defn contestant-installable-type?
   "Is the card of an acceptable type to be installed in a server"
   [card]
-  (some? (#{"Asset" "Agenda" "Character" "Upgrade"} (:type card))))
+  (some? (#{"Asset" "Agenda" "Character" "Upgrade" "Resource"} (:type card))))
 
 (defn- contestant-install-asset-agenda
   "Forces the contestant to trash an existing asset or agenda if a second was just installed."

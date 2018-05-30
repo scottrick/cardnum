@@ -2,7 +2,7 @@
 
 (declare can-host?)
 
-(def cards-resources
+(def cards-items
   {"A Little Gold Ring"
    {:hosting {:req #(and (character? %) (rezzed? %))}
     :abilities [{:effect (req (let [r (get-card state card)]

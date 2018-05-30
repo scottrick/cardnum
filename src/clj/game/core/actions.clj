@@ -348,19 +348,6 @@
          (swap! state update-in [:bonus] dissoc :cost))
        (effect-completed state side eid)))))
 
-(defn trott
-  "Derez a contestant card."
-  [state side card]
-  (let [card (get-card state card)]
-    (system-msg state side (str "derezzes " (:title card)))
-    (update! state :contestant (deactivate state :contestant card true))
-    (let [cdef (card-def card)]
-      (when-let [derez-effect (:derez-effect cdef)]
-        (resolve-ability state side derez-effect (get-card state card) nil))
-      (when-let [dre (:derezzed-events cdef)]
-        (register-events state side dre card)))
-    (trigger-event state side :derez card side)))
-
 (defn derez
   "Derez a contestant card."
   [state side card]
