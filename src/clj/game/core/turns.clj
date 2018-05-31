@@ -83,7 +83,7 @@
                               :deck-id challenger-deck-id
                               :hand (zone :hand challenger-pool)
                               :discard [] :scored [] :rfg [] :play-area []
-                              :servers {}
+                              :servers {:hq {} :rd {} :archives {}}
                               :rig {:resource [] :muthereff [] :hardware []}
                               :toast []
                               :click 0 :credit 5 :run-credit 0 :memory 4 :link 0 :tag 0

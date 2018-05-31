@@ -313,7 +313,7 @@
 
          (and (= zone ["hand"])
               (or (not uniqueness) (not (in-play? card)))
-              (or (#{"Agenda" "Asset" "Upgrade" "Character"} type) (>= (:credit me) cost))
+              (or (#{"Agenda" "Asset" "Upgrade" "Character" "Resource"} type) (>= (:credit me) cost))
               (pos? (:click me))))))
 
 (defn spectator-view-hidden?
@@ -901,19 +901,6 @@
 
 (defmulti discard-view #(get-in % [:identity :side]))
 
-(defmethod discard-view "WhoKnew" [{:keys [discard] :as cursor} owner]
-  (om/component
-   (sab/html
-    [:div.blue-shade.discard
-     (drop-area :challenger "Heap" {:on-click #(-> (om/get-node owner "popup") js/$ .fadeToggle)})
-     (when-not (empty? discard)
-       (om/build card-view (last discard)))
-     (om/build label discard {:opts {:name "Heap"}})
-     [:div.panel.blue-shade.popup {:ref "popup" :class (if (= (:side @game-state) :challenger) "me" "opponent")}
-      [:div
-       [:a {:on-click #(close-popup % owner "popup" nil false false)} "Close"]]
-      (om/build-all card-view discard {:key :cid})]])))
-
 (defmethod discard-view "Challenger" [{:keys [discard servers] :as cursor} owner]
   (om/component
     (sab/html
@@ -1120,30 +1107,41 @@
                                 :run (when (= server-type "rd") run)})
          (om/build server-view {:server (:archives servers)
                                 :central-view (om/build discard-view player)
-                                :run (when (= server-type "archives") run)})
-         (for [zone [:resource :hardware :muthereff :facedown]]
-           [:div
-            (for [c (zone (:rig player))]
-              [:div.card-wrapper {:class (when (playable? c) "playable")}
-               (om/build card-view c)])])]))))
+                                :run (when (= server-type "archives") run)})]))))
 
 (defmethod decks-view "Challenger" [{:keys [player run]}]
   (om/component
     (sab/html
-      (let [is-me (= (:side @game-state) :challenger)
-            centrals (sab/html
-                       [:div.challenger-centrals
-                        (om/build discard-view player)
-                        (om/build deck-view player)
-                        (om/build identity-view player)])]
-        [:div.challenger-board {:class (if is-me "me" "opponent")}
-         (when-not is-me centrals)
+        [:div.challenger-board {:class (if (= (:side @game-state) :contestant) "opponent" "me")}
+         (om/build discard-view player)
+         (om/build deck-view player)
+         (om/build identity-view player)])))
+
+(defmulti event-view #(get-in % [:player :identity :side]))
+
+(defmethod event-view "Contestant" [{:keys [player run]}]
+  (om/component
+    (sab/html
+      (let [is-me (= (:side @game-state) :contestant)]
+        [:div.contestant-board {:class (if is-me "me" "opponent")}
          (for [zone [:resource :hardware :muthereff :facedown]]
            [:div
             (for [c (zone (:rig player))]
               [:div.card-wrapper {:class (when (playable? c) "playable")}
                (om/build card-view c)])])
-         (when is-me centrals)]))))
+         ]))))
+
+(defmethod event-view "Challenger" [{:keys [player run]}]
+  (om/component
+    (sab/html
+      (let [is-me (= (:side @game-state) :challenger)]
+        [:div.challenger-board {:class (if is-me "me" "opponent")}
+         (for [zone [:resource :hardware :muthereff :facedown]]
+           [:div
+            (for [c (zone (:rig player))]
+              [:div.card-wrapper {:class (when (playable? c) "playable")}
+               (om/build card-view c)])])
+         ]))))
 
 (defmulti board-view #(get-in % [:player :identity :side]))
 
@@ -1423,13 +1421,14 @@
 
             [:div.centralpane
              (om/build board-view {:player opponent :run run})
+             (om/build event-view {:player opponent :run run})
+             (om/build event-view {:player me :run run})
              (om/build board-view {:player me :run run})]
 
             [:div.leftpane
              [:div.opponent
               (om/build hand-view {:player opponent :remotes (get-remotes (:servers (if (= side :challenger) contestant challenger)))
                                    :popup (= side :spectator) :popup-direction "opponent"})]
-
 
              [:div.inner-leftpane
               [:div.left-inner-leftpane
