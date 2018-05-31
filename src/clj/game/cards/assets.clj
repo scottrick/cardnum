@@ -81,9 +81,9 @@
                       :effect
                       (req (let [agg (get-card state card)
                                  n (:advance-counter agg 0)
-                                 ab (-> trash-program
+                                 ab (-> trash-resource
                                         (assoc-in [:choices :max] n)
-                                        (assoc :prompt (msg "Choose " (quantify n "program") " to trash")
+                                        (assoc :prompt (msg "Choose " (quantify n "resource") " to trash")
                                                :delayed-completion true
                                                :effect (effect (trash-cards eid targets nil))
                                                :msg (msg "trash " (join ", " (map :title targets)))))]
@@ -353,12 +353,12 @@
     :derezzed-events {:challenger-turn-ends contestant-rez-toast}
     ; not-empty doesn't work for the next line, because it does not return literal true; it returns the collection.
     ; flags need exact equality of value to work.
-    :flags {:contestant-phase-12 (req (and (pos? (count (filter #(card-is? % :type "Resource") (all-installed state :challenger))))
+    :flags {:contestant-phase-12 (req (and (pos? (count (filter #(card-is? % :type "Muthereff") (all-installed state :challenger))))
                                      (:rezzed card)))}
-    :abilities [{:label "Trash a resource"
-                 :prompt "Select a resource to trash with Contestantorate Town"
+    :abilities [{:label "Trash a muthereff"
+                 :prompt "Select a muthereff to trash with Contestantorate Town"
                  :once :per-turn
-                 :choices {:req #(is-type? % "Resource")}
+                 :choices {:req #(is-type? % "Muthereff")}
                  :msg (msg "trash " (:title target))
                  :effect (effect (trash target {:unpreventable true}))}]}
 
@@ -629,7 +629,7 @@
                          :once :per-turn
                          :req (req (seq (:hand challenger)))
                          :prompt "Choose a card type"
-                         :choices ["Event" "Hardware" "Program" "Resource"]
+                         :choices ["Event" "Hazard" "Resource" "Muthereff"]
                          :msg (msg "reveal " (join ", " (map :title (:hand challenger))) " and trash a " target)
                          :effect (effect (resolve-ability (trash-ability target) card nil))}]
      {:additional-cost [:forfeit]
@@ -1334,9 +1334,9 @@
                                      (when (< 0 (:advance-counter shat 0))
                                        (continue-ability
                                          state side
-                                         (-> trash-hardware
+                                         (-> trash-hazard
                                              (assoc-in [:choices :max] (:advance-counter shat))
-                                             (assoc :prompt (msg "Select " (:advance-counter shat) " pieces of hardware to trash")
+                                             (assoc :prompt (msg "Select " (:advance-counter shat) " pieces of hazard to trash")
                                                     :effect (effect (trash-cards targets))
                                                     :msg (msg "trash " (join ", " (map :title targets)))))
                                         shat nil))))})

@@ -26,8 +26,8 @@
                   (and (= type :mill) (>= (- (count (get-in @state [side :deck])) amount) 0))
                   (and (= type :tag) (>= (- (get-in @state [:challenger :tag]) amount) 0))
                   (and (= type :character) (>= (- (count (filter (every-pred rezzed? character?) (all-installed state :contestant))) amount) 0))
-                  (and (= type :hardware) (>= (- (count (get-in @state [:challenger :rig :hardware])) amount) 0))
-                  (and (= type :program) (>= (- (count (get-in @state [:challenger :rig :program])) amount) 0))
+                  (and (= type :hazard) (>= (- (count (get-in @state [:challenger :rig :hazard])) amount) 0))
+                  (and (= type :resource) (>= (- (count (get-in @state [:challenger :rig :resource])) amount) 0))
                   (and (= type :connection) (>= (- (count (filter #(has-subtype? % "Connection")
                                                                   (all-installed state :challenger))) amount) 0))
                   (>= (- (or (get-in @state [side type]) -1 ) amount) 0))
@@ -81,8 +81,8 @@
                (swap! state assoc-in [side :register :spent-click] true)
                (deduce state side cost))
     :forfeit (pay-forfeit state side card (second cost))
-    :hardware (pay-trash state side card :hardware (second cost) (get-in @state [:challenger :rig :hardware]))
-    :program (pay-trash state side card :program (second cost) (get-in @state [:challenger :rig :program]))
+    :hazard (pay-trash state side card :hazard (second cost) (get-in @state [:challenger :rig :hazard]))
+    :resource (pay-trash state side card :resource (second cost) (get-in @state [:challenger :rig :resource]))
 
     ;; Connection
     :connection (pay-trash state side card :connection (second cost) (filter (fn [c] (has-subtype? c "Connection"))
@@ -128,11 +128,7 @@
   (swap! state update-in [:bonus :play-cost] #(merge-costs (concat % costs))))
 
 (defn play-cost [state side card all-cost]
-  (vec (map #(if (keyword? %) % (max % 0))
-            (-> (concat all-cost (get-in @state [:bonus :play-cost])
-                        (when-let [playfun (:play-cost-bonus (card-def card))]
-                          (playfun state side (make-eid state) card nil)))
-                merge-costs flatten))))
+  (int 0))
 
 (defn rez-cost-bonus [state side n]
   (swap! state update-in [:bonus :cost] (fnil #(+ % n) 0)))

@@ -33,10 +33,10 @@
   (= "Draft" (:setname identity)))
 
 (defn is-prof-prog?
-  "Check if ID is The Professor and card is a Program"
+  "Check if ID is The Professor and card is a Resource"
   [deck card]
   (and (= "03029" (get-in deck [:identity :code]))
-       (= "Program" (:type card))))
+       (= "Resource" (:type card))))
 
 (defn id-inf-limit
   "Returns influence limit of an identity or INFINITY in case of draft IDs."
@@ -524,7 +524,7 @@
     (if (zero? base-cost)
       0
       (cond
-        ;; The Professor: Keeper of Knowledge - discount influence cost of first copy of each program
+        ;; The Professor: Keeper of Knowledge - discount influence cost of first copy of each resource
         (is-prof-prog? deck (:card line))
         (- base-cost (get-in line [:card :factioncost]))
         ;; Check if the card is Alliance and fulfills its requirement
@@ -888,10 +888,14 @@
         (try (js/ga "send" "event" "deckbuilder" "save") (catch js/Error e))
         (go (let [new-id (get-in (<! (POST "/data/decks/" data :json)) [:json :_id])
                   new-deck (if (:_id deck) deck (assoc deck :_id new-id))
-                  all-decks (process-decks (:json (<! (GET (str "/data/decks")))))]
+                  all-decks (process-decks (:json (<! (GET (str "/data/decks")))))
+                  all-ctcks (process-ctcks (:json (<! (GET (str "/data/decks")))))
+                  all-chcks (process-chcks (:json (<! (GET (str "/data/decks")))))]
               (om/update! cursor :decks (conj decks new-deck))
               (om/set-state! owner :deck new-deck)
-              (load-decks all-decks)))))))
+              (load-decks all-decks)
+              (load-ctcks all-ctcks)
+              (load-chcks all-chcks)))))))
 
 (defn clear-deck-stats [cursor owner]
   (authenticated

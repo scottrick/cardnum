@@ -17,11 +17,11 @@
     (prompt-select :challenger (find-card "Neutralize All Threats" (get-in @state [:challenger :play-area])))
     (prompt-select :challenger (find-card "Safety First" (get-in @state [:challenger :play-area])))
     (prompt-select :challenger (find-card "Always Be Running" (get-in @state [:challenger :play-area])))
-    (is (= 3 (count (get-in @state [:challenger :rig :resource]))) "3 directives were installed")
+    (is (= 3 (count (get-in @state [:challenger :rig :muthereff]))) "3 directives were installed")
     (is (= 0 (count (get-in @state [:challenger :play-area]))) "The play area is empty")
-    (let [nat (find-card "Neutralize All Threats" (get-in @state [:challenger :rig :resource]))
-          sf (find-card "Safety First" (get-in @state [:challenger :rig :resource]))
-          abr (find-card "Always Be Running" (get-in @state [:challenger :rig :resource]))]
+    (let [nat (find-card "Neutralize All Threats" (get-in @state [:challenger :rig :muthereff]))
+          sf (find-card "Safety First" (get-in @state [:challenger :rig :muthereff]))
+          abr (find-card "Always Be Running" (get-in @state [:challenger :rig :muthereff]))]
       (is (and nat sf abr) "The chosen directives were installed"))))
 
 (deftest adam-palana
@@ -102,7 +102,7 @@
     (core/end-phase-12 state :challenger nil)
     (prompt-choice :challenger "Done") ; no facedown install on turn 1
     (play-from-hand state :challenger "Heartbeat")
-    (is (= 1 (count (get-in @state [:challenger :rig :hardware]))))
+    (is (= 1 (count (get-in @state [:challenger :rig :hazard]))))
     (take-credits state :challenger)
     (take-credits state :contestant)
     (core/end-phase-12 state :challenger nil)
@@ -221,7 +221,7 @@
     (play-from-hand state :contestant "Hedge Fund")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Eater")
-    (let [eater (get-in @state [:challenger :rig :program 0])]
+    (let [eater (get-in @state [:challenger :rig :resource 0])]
       (run-on state "Archives")
       (card-ability state :challenger eater 0) ; pretend to break a sub so no cards in Archives will be accessed
       (run-successful state)
@@ -256,7 +256,7 @@
     (starting-hand state :challenger ["Customized Secretary" "Clone Chip"])
     (trash-from-hand state :challenger "Customized Secretary")
     (play-from-hand state :challenger "Clone Chip")
-    (card-ability state :challenger (get-hardware state 0) 0)
+    (card-ability state :challenger (get-hazard state 0) 0)
     (prompt-select :challenger (find-card "Customized Secretary" (:discard (get-challenger))))
     ;; Make sure the simultaneous-resolution prompt is showing with 2 choices
     (is (= 2 (-> (get-challenger) :prompt first :choices count)) "Simultaneous-resolution prompt is showing")
@@ -473,7 +473,7 @@
       (play-from-hand state :challenger "Data Dealer")
       (run-empty-server state "Server 1")
       (prompt-choice :challenger "Steal")
-      (let [dd (get-resource state 0)]
+      (let [dd (get-muthereff state 0)]
         (card-ability state :challenger dd 0)
         (prompt-select :challenger (get-in (get-challenger) [:scored 0]))
         (is (empty? (:prompt (get-contestant))) "No Jemison prompt for Challenger forfeit")
@@ -646,7 +646,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Self-modifying Code")
     (play-from-hand state :challenger "Magnum Opus")
-    (is (= 0 (:credit (get-challenger))) "No Kate discount on second program install")))
+    (is (= 0 (:credit (get-challenger))) "No Kate discount on second resource install")))
 
 (deftest kate-mac-mccaffrey-discount-cant-afford
   ;; Kate 'Mac' McCaffrey - Can Only Afford With the Discount
@@ -657,7 +657,7 @@
     (core/lose state :challenger :credit 1)
     (is (= 4 (:credit (get-challenger))))
     (play-from-hand state :challenger "Magnum Opus")
-    (is (= 1 (count (get-in @state [:challenger :rig :program]))) "Magnum Opus installed")
+    (is (= 1 (count (get-in @state [:challenger :rig :resource]))) "Magnum Opus installed")
     (is (= 0 (:credit (get-challenger))) "Installed Magnum Opus for 4 credits")))
 
 (deftest ken-tenma-run-event-credit
@@ -689,7 +689,7 @@
              (= "Khan: Savvy Skiptracer" (-> (get-challenger) :prompt first :card :title)))
         "Only Khan prompt showing")
     (prompt-select :challenger (first (:hand (get-challenger))))
-    (is (find-card "Corroder" (-> (get-challenger) :rig :program)) "Corroder installed")
+    (is (find-card "Corroder" (-> (get-challenger) :rig :resource)) "Corroder installed")
     (is (= 4 (:credit (get-challenger))) "1cr discount from Khan")
     (is (= "Caprcharacter Nisei" (-> (get-challenger) :prompt first :card :title)) "Caprcharacter prompt showing")
     (prompt-choice :challenger "0 [Credits]")
@@ -709,7 +709,7 @@
     ;; at Successful Run stage -- click Eden Shard to install
     (play-from-hand state :challenger "Eden Shard")
     (is (= 5 (:credit (get-challenger))) "Eden Shard install was free")
-    (is (= "Eden Shard" (:title (get-resource state 0))) "Eden Shard installed")
+    (is (= "Eden Shard" (:title (get-muthereff state 0))) "Eden Shard installed")
     (is (= "Identity" (-> (get-challenger) :prompt first :card :type)) "Fisk prompt showing")
     (prompt-choice :challenger "Yes")
     (is (not (:run @state)) "Run ended")
@@ -817,12 +817,12 @@
     (play-from-hand state :challenger "Wyldside")
     (take-credits state :challenger 3)
     (is (= 5 (:credit (get-challenger))) "Challenger has 5 credits at end of first turn")
-    (is (find-card "Wyldside" (get-in @state [:challenger :rig :resource])) "Wyldside was installed")
+    (is (find-card "Wyldside" (get-in @state [:challenger :rig :muthereff])) "Wyldside was installed")
     (take-credits state :contestant)
     (is (= 0 (:click (get-challenger))) "Challenger has 0 clicks")
     (is (:challenger-phase-12 @state) "Challenger is in Step 1.2")
     (let [maxx (get-in @state [:challenger :identity])
-          wyld (find-card "Wyldside" (get-in @state [:challenger :rig :resource]))]
+          wyld (find-card "Wyldside" (get-in @state [:challenger :rig :muthereff]))]
       (card-ability state :challenger maxx 0)
       (card-ability state :challenger wyld 0)
       (core/end-phase-12 state :challenger nil)
@@ -976,19 +976,19 @@
     (trash-from-hand state :challenger "Sharpshooter")
     (take-credits state :challenger)
     ;; playing virus via Clone Chip on Contestant's turn should trigger Noise ability
-    (let [chip (get-in @state [:challenger :rig :hardware 0])]
+    (let [chip (get-in @state [:challenger :rig :hazard 0])]
       (card-ability state :challenger chip 0)
       (prompt-select :challenger (find-card "Cache" (:discard (get-challenger))))
-      (let [ds (get-in @state [:challenger :rig :program 1])]
+      (let [ds (get-in @state [:challenger :rig :resource 1])]
         (is (not (nil? ds)))
         (is (= (:title ds) "Cache"))))
     (is (= 2 (count (:discard (get-contestant)))) "Playing virus via Clone Chip on contestant's turn should trigger Noise ability")
     (is (= 2 (count (:deck (get-contestant)))) "Card trashed to Archives by Noise should come from R&D")
     ;; playing non-virus via Clone Chip on Contestant's turn should NOT trigger Noise ability
-    (let [chip-2 (get-in @state [:challenger :rig :hardware 0])]
+    (let [chip-2 (get-in @state [:challenger :rig :hazard 0])]
       (card-ability state :challenger chip-2 0)
       (prompt-select :challenger (find-card "Sharpshooter" (:discard (get-challenger))))
-      (let [ss (get-in @state [:challenger :rig :program 2])]
+      (let [ss (get-in @state [:challenger :rig :resource 2])]
         (is (not (nil? ss)))
         (is (= (:title ss) "Sharpshooter"))))
     (is (= 2 (count (:discard (get-contestant)))) "Playing non-virus via Clone Chip on contestant's turn should not trigger Noise ability")))
@@ -1114,7 +1114,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Medium")
     (let [omar (get-in @state [:challenger :identity])
-          medium (get-in @state [:challenger :rig :program 0])]
+          medium (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger omar 0)
       (run-successful state)
       (prompt-choice :challenger "R&D")
@@ -1129,7 +1129,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Nerve Agent")
     (let [omar (get-in @state [:challenger :identity])
-          nerve (get-in @state [:challenger :rig :program 0])]
+          nerve (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger omar 0)
       (run-successful state)
       (prompt-choice :challenger "HQ")
@@ -1226,7 +1226,7 @@
     (prompt-choice :contestant (find-card "The Maker's Eye" (:discard (get-challenger))))
     (is (= 1 (count (get-in @state [:challenger :rfg]))) "One card RFGed")
     (card-ability state :contestant (get-in @state [:contestant :identity]) 0)
-    (is (empty? (:prompt (get-contestant))) "Cannot use Skorpios twcharacter")))
+    (is (empty? (:prompt (get-contestant))) "Cannot use Skorpios twice")))
 
 (deftest silhouette-expose-trigger-before-access
   ;; Silhouette - Expose trigger ability resolves completely before access. Issue #2173.
@@ -1240,7 +1240,7 @@
     (play-from-hand state :challenger "Feedback Filter")
     (is (= 3 (:credit (get-challenger))) "Challenger has 3 credits")
     (let [psychic (get-content state :remote1 0)
-          ff (get-hardware state 0)]
+          ff (get-hazard state 0)]
       (run-empty-server state :hq)
       (is (:run @state) "On successful run trigger effects")
       (prompt-select :challenger psychic)
@@ -1280,16 +1280,16 @@
     (prompt-choice :challenger "Temüjin Contract")
     (prompt-select :challenger (get-content state :remote1 0))
     (prompt-choice :challenger "OK")
-    (is (= "HQ" (:server-target (get-resource state 0))) "Temujin still targeting HQ")
-    (is (= 16 (get-counters (get-resource state 0) :credit)) "16 cr on Temujin")
+    (is (= "HQ" (:server-target (get-muthereff state 0))) "Temujin still targeting HQ")
+    (is (= 16 (get-counters (get-muthereff state 0) :credit)) "16 cr on Temujin")
     (is (= 8 (:credit (get-challenger))) "Gained 4cr")
 
     ;; second run
     (run-empty-server state :hq)
     (prompt-choice :challenger "OK")
-    (is (= "HQ" (:server-target (get-resource state 0))) "Temujin still targeting HQ")
+    (is (= "HQ" (:server-target (get-muthereff state 0))) "Temujin still targeting HQ")
     (is (= 12 (:credit (get-challenger))) "Gained 4cr")
-    (is (= 12 (get-counters (get-resource state 0) :credit)) "12 cr on Temujin")))
+    (is (= 12 (get-counters (get-muthereff state 0) :credit)) "12 cr on Temujin")))
 
 (deftest spark-advertisements
   ;; Spark Agency - Rezzing advertisements

@@ -479,7 +479,7 @@
     (take-credits state :contestant)
 
     (is (= 4 (:click (get-challenger))) "Challenger has 2 clicks")
-    (let [sneakdoor (get-in @state [:challenger :rig :program 0])]
+    (let [sneakdoor (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger sneakdoor 0)
       (is (= 3 (:click (get-challenger)))
           "Challenger doesn't spend 1 additional click to run with a card ability")
@@ -560,7 +560,7 @@
 
     (core/gain state :challenger :credit 2)
     (play-from-hand state :challenger "Hades Shard")
-    (card-ability state :challenger (get-in @state [:challenger :rig :resource 0]) 0)
+    (card-ability state :challenger (get-in @state [:challenger :rig :muthereff 0]) 0)
     (prompt-choice :challenger "Steal")
     (prompt-choice :contestant "Yes")
     (prompt-select :contestant (find-card "Enhanced Login Protocol"
@@ -589,7 +589,7 @@
 
     (core/gain state :challenger :credit 2)
     (play-from-hand state :challenger "Hades Shard")
-    (card-ability state :challenger (get-in @state [:challenger :rig :resource 0]) 0)
+    (card-ability state :challenger (get-in @state [:challenger :rig :muthereff 0]) 0)
     (prompt-choice :challenger "Steal")
     (prompt-choice :contestant "Yes")
     (prompt-select :contestant (find-card "Enhanced Login Protocol"
@@ -1008,7 +1008,7 @@
     (is (= 7 (:credit (get-contestant))) "Gained 3 credits for 3 rezzed Character; unrezzed Character ignored")))
 
 (deftest power-shutdown
-  ;; Power Shutdown - Trash cards from R&D to force Challenger to trash a program or hardware
+  ;; Power Shutdown - Trash cards from R&D to force Challenger to trash a resource or hazard
   (do-game
     (new-game (default-contestant [(qty "Power Shutdown" 3) (qty "Hive" 3)])
               (default-challenger [(qty "Grimoire" 1) (qty "Cache" 1)]))
@@ -1026,9 +1026,9 @@
     (prompt-choice :contestant 2)
     (is (= 3 (count (:discard (get-contestant)))) "2 cards trashed from R&D")
     (is (= 1 (count (:deck (get-contestant)))) "1 card remaining in R&D")
-    (prompt-select :challenger (get-in @state [:challenger :rig :hardware 0])) ; try targeting Grimoire
+    (prompt-select :challenger (get-in @state [:challenger :rig :hazard 0])) ; try targeting Grimoire
     (is (empty? (:discard (get-challenger))) "Grimoire too expensive to be targeted")
-    (prompt-select :challenger (get-in @state [:challenger :rig :program 0]))
+    (prompt-select :challenger (get-in @state [:challenger :rig :resource 0]))
     (is (= 1 (count (:discard (get-challenger)))) "Cache trashed")))
 
 (deftest precognition
@@ -1230,27 +1230,27 @@
     (is (= 5 (:tag (get-challenger))) "Challenger has 5 tags")
     (is (empty? (:prompt (get-contestant))) "Contestant does not have a second Subcontract selection prompt")))
 
-(deftest self-growth-program
-  ;; Self-Growth Program - Add 2 installed cards to grip if challenger is tagged
+(deftest self-growth-resource
+  ;; Self-Growth Resource - Add 2 installed cards to grip if challenger is tagged
   (do-game
-    (new-game (default-contestant [(qty "Self-Growth Program" 1)])
+    (new-game (default-contestant [(qty "Self-Growth Resource" 1)])
               (default-challenger [(qty "Clone Chip" 1) (qty "Inti" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Clone Chip")
     (play-from-hand state :challenger "Inti")
     (take-credits state :challenger)
-    (play-from-hand state :contestant "Self-Growth Program")
-    (is (= 3 (:click (get-contestant))) "Self-Growth Program precondition not met; card not played")
+    (play-from-hand state :contestant "Self-Growth Resource")
+    (is (= 3 (:click (get-contestant))) "Self-Growth Resource precondition not met; card not played")
     (core/gain state :challenger :tag 1)
     (is (= 0 (count (:hand (get-challenger)))) "Challenger hand is empty")
-    (let [inti (get-in @state [:challenger :rig :program 0])
-          cc (get-in @state [:challenger :rig :hardware 0])]
-      (play-from-hand state :contestant "Self-Growth Program")
+    (let [inti (get-in @state [:challenger :rig :resource 0])
+          cc (get-in @state [:challenger :rig :hazard 0])]
+      (play-from-hand state :contestant "Self-Growth Resource")
       (prompt-select :contestant inti)
       (prompt-select :contestant cc))
     (is (= 2 (count (:hand (get-challenger)))) "2 cards returned to hand")
-    (is (= 0 (count (get-in @state [:challenger :rig :program]))) "No programs installed")
-    (is (= 0 (count (get-in @state [:challenger :rig :hardware]))) "No hardware installed")))
+    (is (= 0 (count (get-in @state [:challenger :rig :resource]))) "No resources installed")
+    (is (= 0 (count (get-in @state [:challenger :rig :hazard]))) "No hazard installed")))
 
 (deftest servcharacter-outage
   ;; Servcharacter Outage - First click run each turn costs a credit
@@ -1304,7 +1304,7 @@
     (take-credits state :challenger 1)
 
     (is (= 2 (:credit (get-challenger))) "Challenger has 2 credits")
-    (let [sneakdoor (get-in @state [:challenger :rig :program 0])]
+    (let [sneakdoor (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger sneakdoor 0)
       (is (= 1 (:credit (get-challenger)))
           "Challenger spends 1 additional credit to run with a card ability")
@@ -1370,7 +1370,7 @@
 
     (core/gain state :challenger :credit 3)
     (play-from-hand state :challenger "Hades Shard")
-    (card-ability state :challenger (get-in @state [:challenger :rig :resource 0]) 0)
+    (card-ability state :challenger (get-in @state [:challenger :rig :muthereff 0]) 0)
     (prompt-choice :challenger "Steal")
     (prompt-choice :contestant "Yes")
     (prompt-select :contestant (find-card "Servcharacter Outage" (:hand (get-contestant))))
@@ -1397,7 +1397,7 @@
 
     (core/gain state :challenger :credit 3)
     (play-from-hand state :challenger "Hades Shard")
-    (card-ability state :challenger (get-in @state [:challenger :rig :resource 0]) 0)
+    (card-ability state :challenger (get-in @state [:challenger :rig :muthereff 0]) 0)
     (prompt-choice :challenger "Steal")
     (prompt-choice :contestant "Yes")
     (prompt-select :contestant (find-card "Servcharacter Outage" (:hand (get-contestant))))
@@ -1503,7 +1503,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Cache")
     (play-from-hand state :challenger "Utopia Shard")
-    (let [utopia (get-in @state [:challenger :rig :resource 0])]
+    (let [utopia (get-in @state [:challenger :rig :muthereff 0])]
       (card-ability state :challenger utopia 0))
     (take-credits state :challenger)
     (prompt-choice :contestant "Yes")
@@ -1705,14 +1705,14 @@
 
     (is (= 0 (:tag (get-challenger))) "Challenger starts with 0 tags")
     (play-from-hand state :contestant "Threat Assessment")
-    (prompt-select :contestant (find-card "Desperado" (-> (get-challenger) :rig :hardware)))
+    (prompt-select :contestant (find-card "Desperado" (-> (get-challenger) :rig :hazard)))
     (prompt-choice :challenger "2 tags")
     (is (= 2 (:tag (get-challenger))) "Challenger took 2 tags")
-    (is (= 1 (count (-> (get-challenger) :rig :hardware))) "Didn't trash Desperado")
+    (is (= 1 (count (-> (get-challenger) :rig :hazard))) "Didn't trash Desperado")
     (is (= "Threat Assessment" (:title (first (:rfg (get-contestant))))) "Threat Assessment removed from game")
 
     (play-from-hand state :contestant "Threat Assessment")
-    (prompt-select :contestant (find-card "Corroder" (-> (get-challenger) :rig :program)))
+    (prompt-select :contestant (find-card "Corroder" (-> (get-challenger) :rig :resource)))
     (prompt-choice :challenger "Move Corroder")
     (is (= 2 (:tag (get-challenger))) "Challenger didn't take tags")
     (is (= "Corroder" (:title (first (:deck (get-challenger))))) "Moved Corroder to the deck")

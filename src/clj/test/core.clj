@@ -84,22 +84,22 @@
   ([state server pos]
    (get-in @state [:contestant :servers server :content pos])))
 
-(defn get-program
-  "Get non-hosted program by position."
-  ([state] (get-in @state [:challenger :rig :program]))
-  ([state pos]
-   (get-in @state [:challenger :rig :program pos])))
-
-(defn get-hardware
-  "Get hardware by position."
-  ([state] (get-in @state [:challenger :rig :hardware]))
-  ([state pos]
-   (get-in @state [:challenger :rig :hardware pos])))
-
 (defn get-resource
   "Get non-hosted resource by position."
+  ([state] (get-in @state [:challenger :rig :resource]))
+  ([state pos]
+   (get-in @state [:challenger :rig :resource pos])))
+
+(defn get-hazard
+  "Get hazard by position."
+  ([state] (get-in @state [:challenger :rig :hazard]))
+  ([state pos]
+   (get-in @state [:challenger :rig :hazard pos])))
+
+(defn get-muthereff
+  "Get non-hosted muthereff by position."
   [state pos]
-  (get-in @state [:challenger :rig :resource pos]))
+  (get-in @state [:challenger :rig :muthereff pos]))
 
 (defn get-scored
   "Get a card from the score area. Can find by name or index.
@@ -212,10 +212,10 @@
   [state side title]
   (core/trash state side (find-card title (get-in @state [side :hand]))))
 
-(defn trash-resource
+(defn trash-muthereff
   "Trash specified card from rig of the challenger"
   [state title]
-  (core/trash state :challenger (find-card title (get-in @state [:challenger :rig :resource]))))
+  (core/trash state :challenger (find-card title (get-in @state [:challenger :rig :muthereff]))))
 
 (defn starting-hand
   "Moves all cards in the player's hand to their draw pile, then moves the specified card names

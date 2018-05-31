@@ -113,7 +113,7 @@
                  :req (req (:run @state))
                  :msg "make the Challenger trash a card from their Grip to jack out or break subroutines for the remainder of the run"}]}
 
-   "AstroScript Pilot Program"
+   "AstroScript Pilot Resource"
    {:effect (effect (add-counter card :agenda 1))
     :silent (req true)
     :abilities [{:counter-cost [:agenda 1] :msg (msg "place 1 advancement token on "
@@ -140,7 +140,7 @@
                                                                   (clear-wait-prompt :challenger))} card nil)))}
                               card nil))}}
 
-   "Bacterial Programming"
+   "Bacterial Resourceming"
    (letfn [(hq-step [remaining to-trash to-hq]
              {:delayed-completion true
               :prompt "Select a card to move to HQ"
@@ -152,7 +152,7 @@
                                (doseq [h to-hq]
                                  (move state :contestant h :hand))
                                (continue-ability state :contestant (reorder-choice :contestant (vec remaining)) card nil)
-                               (system-msg state :contestant (str "uses Bacterial Programming to add " (count to-hq)
+                               (system-msg state :contestant (str "uses Bacterial Resourceming to add " (count to-hq)
                                                             " cards to HQ, discard " (count to-trash)
                                                             ", and arrange the top cards of R&D")))
                              (do
@@ -179,7 +179,7 @@
                                   :yes-ability {:delayed-completion true
                                                 :effect (req (let [c (take 7 (:deck contestant))]
                                                                (swap! state assoc-in [:run :shuffled-during-access :rd] true)
-                                                               (show-wait-prompt state :challenger "Contestant to use Bacterial Programming")
+                                                               (show-wait-prompt state :challenger "Contestant to use Bacterial Resourceming")
                                                                (continue-ability state :contestant (trash-step c `()) card nil)))}}}
                                 card nil))]
        {:effect arrange-rd
@@ -241,9 +241,9 @@
                    (system-msg state side (str "gains " bucks " [Credits] from CFC Excavation Contract"))))}
 
    "Character Assassination"
-   {:prompt "Select a resource to trash"
+   {:prompt "Select a muthereff to trash"
     :choices {:req #(and (installed? %)
-                         (is-type? % "Resource"))}
+                         (is-type? % "Muthereff"))}
     :msg (msg "trash " (:title target))
     :interactive (req true)
     :delayed-completion true
@@ -716,11 +716,11 @@
 
    "Paper Trail"
    {:trace {:base 6
-            :msg "trash all connection and job resources"
-            :effect (req (doseq [resource (filter #(or (has-subtype? % "Job")
+            :msg "trash all connection and job muthereffs"
+            :effect (req (doseq [muthereff (filter #(or (has-subtype? % "Job")
                                                        (has-subtype? % "Connection"))
                                                   (all-installed state :challenger))]
-                                   (trash state side resource)))}}
+                                   (trash state side muthereff)))}}
 
    "Personality Profiles"
    (let [pp {:req (req (pos? (count (:hand challenger))))
@@ -963,7 +963,7 @@
                                                                       (unregister-events card))}} card)))}]
       :events {:contestant-turn-ends nil :challenger-turn-ends nil}}
 
-   "Sentinel Defense Program"
+   "Sentinel Defense Resource"
    {:events {:pre-resolve-damage {:req (req (and (= target :brain) (> (last targets) 0)))
                                   :msg "do 1 net damage"
                                   :effect (effect (damage eid :net 1 {:card card}))}}}
@@ -1089,7 +1089,7 @@
                               :effect (req (let [counter (:advance-counter target)]
                                              (steal-cost-bonus state side [:credit (* 2 counter)])))}}}
 
-   "Veterans Program"
+   "Veterans Resource"
    {:interactive (req true)
     :msg "lose 2 bad publicity"
     :effect (effect (lose :bad-publicity 2))}
@@ -1116,7 +1116,7 @@
              :effect (effect (gain :contestant :bad-publicity 1))}}
 
    "Water Monopoly"
-   {:events {:pre-install {:req (req (and (is-type? target "Resource")
+   {:events {:pre-install {:req (req (and (is-type? target "Muthereff")
                                           (not (has-subtype? target "Virtual"))
                                           (not (second targets)))) ; not facedown
                            :effect (effect (install-cost-bonus [:credit 1]))}}}})

@@ -12,16 +12,16 @@
     (core/rez state :contestant (get-content state :rd 0))
     (is (not (:rezzed (get-content state :rd 0))) "Second Caprcharacter could not be rezzed")))
 
-(deftest challenger-install-program
-  ;; challenger-install - Program; ensure costs are paid
+(deftest challenger-install-resource
+  ;; challenger-install - Resource; ensure costs are paid
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Gordian Blade" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Gordian Blade")
-    (let [gord (get-in @state [:challenger :rig :program 0])]
-      (is (= (- 5 (:cost gord)) (:credit (get-challenger))) "Program cost was applied")
-      (is (= (- 4 (:memoryunits gord)) (:memory (get-challenger))) "Program MU was applied"))))
+    (let [gord (get-in @state [:challenger :rig :resource 0])]
+      (is (= (- 5 (:cost gord)) (:credit (get-challenger))) "Resource cost was applied")
+      (is (= (- 4 (:memoryunits gord)) (:memory (get-challenger))) "Resource MU was applied"))))
 
 (deftest challenger-installing-uniques
   ;; Installing a copy of an active unique Challenger card is prevented
@@ -35,35 +35,35 @@
     (play-from-hand state :challenger "Kati Jones")
     (play-from-hand state :challenger "Off-Campus Apartment")
     (play-from-hand state :challenger "Scheherazade")
-    (let [oca (get-in @state [:challenger :rig :resource 1])
-          scheh (get-in @state [:challenger :rig :program 0])]
+    (let [oca (get-in @state [:challenger :rig :muthereff 1])
+          scheh (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger scheh 0)
       (prompt-select :challenger (find-card "Hivemind" (:hand (get-challenger))))
       (is (= "Hivemind" (:title (first (:hosted (refresh scheh))))) "Hivemind hosted on Scheherazade")
       (play-from-hand state :challenger "Kati Jones")
       (is (= 1 (:click (get-challenger))) "Not charged a click")
-      (is (= 2 (count (get-in @state [:challenger :rig :resource]))) "2nd copy of Kati couldn't install")
+      (is (= 2 (count (get-in @state [:challenger :rig :muthereff]))) "2nd copy of Kati couldn't install")
       (card-ability state :challenger oca 0)
       (prompt-select :challenger (find-card "Kati Jones" (:hand (get-challenger))))
       (is (empty? (:hosted (refresh oca))) "2nd copy of Kati couldn't be hosted on OCA")
       (is (= 1 (:click (get-challenger))) "Not charged a click")
       (play-from-hand state :challenger "Hivemind")
-      (is (= 1 (count (get-in @state [:challenger :rig :program]))) "2nd copy of Hivemind couldn't install")
+      (is (= 1 (count (get-in @state [:challenger :rig :resource]))) "2nd copy of Hivemind couldn't install")
       (card-ability state :challenger scheh 0)
       (prompt-select :challenger (find-card "Hivemind" (:hand (get-challenger))))
       (is (= 1 (count (:hosted (refresh scheh)))) "2nd copy of Hivemind couldn't be hosted on Scheherazade")
       (is (= 1 (:click (get-challenger))) "Not charged a click"))))
 
-(deftest deactivate-program
-  ;; deactivate - Program; ensure MU are restored
+(deftest deactivate-resource
+  ;; deactivate - Resource; ensure MU are restored
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Gordian Blade" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Gordian Blade")
-    (let [gord (get-in @state [:challenger :rig :program 0])]
+    (let [gord (get-in @state [:challenger :rig :resource 0])]
       (core/trash state :challenger gord)
-      (is (= 4 (:memory (get-challenger))) "Trashing the program restored MU"))))
+      (is (= 4 (:memory (get-challenger))) "Trashing the resource restored MU"))))
 
 (deftest agenda-forfeit-challenger
   ;; forfeit - Don't deactivate agenda to trigger leave play effects if Challenger forfeits a stolen agenda
@@ -75,7 +75,7 @@
     (run-empty-server state "HQ")
     (prompt-choice :challenger "Steal")
     (is (= 2 (:agenda-point (get-challenger))))
-    (card-ability state :challenger (get-resource state 0) 0)
+    (card-ability state :challenger (get-muthereff state 0) 0)
     (prompt-select :challenger (get-scored state :challenger 0))
     (is (= 1 (:click (get-challenger))) "Didn't lose a click")
     (is (= 4 (:click-per-turn (get-challenger))) "Still have 4 clicks per turn")))
@@ -104,10 +104,10 @@
     (play-from-hand state :challenger "Off-Campus Apartment")
     (play-from-hand state :challenger "Compromised Employee")
     (let [iwall (get-character state :hq 0)
-          apt (get-in @state [:challenger :rig :resource 0])]
+          apt (get-in @state [:challenger :rig :muthereff 0])]
       (card-ability state :challenger apt 1) ; use Off-Campus option to host an installed card
       (prompt-select :challenger (find-card "Compromised Employee"
-                                        (get-in @state [:challenger :rig :resource])))
+                                        (get-in @state [:challenger :rig :muthereff])))
       (let [cehosted (first (:hosted (refresh apt)))]
         (card-ability state :challenger cehosted 0) ; take Comp Empl credit
         (is (= 4 (:credit (get-challenger))))
@@ -144,9 +144,9 @@
           rdiwall (get-character state :rd 0)
           jh1 (get-content state :remote1 0)
           jh2 (get-content state :remote2 0)
-          corr (get-in @state [:challenger :rig :program 0])
-          cchip (get-in @state [:challenger :rig :hardware 0])
-          pap (get-in @state [:challenger :rig :resource 0])]
+          corr (get-in @state [:challenger :rig :resource 0])
+          cchip (get-in @state [:challenger :rig :hazard 0])
+          pap (get-in @state [:challenger :rig :muthereff 0])]
       (core/rez state :contestant hqiwall0)
       (core/rez state :contestant jh1)
       (prompt-select :challenger (refresh hqiwall0))
@@ -211,7 +211,7 @@
     (take-credits state :contestant)
     (core/gain state :challenger :click 1)
     (play-from-hand state :challenger "Imp")
-    (let [imp (get-program state 0)]
+    (let [imp (get-resource state 0)]
       (run-empty-server state "HQ")
       (card-ability state :challenger imp 0)
       (is (= 1 (count (:discard (get-contestant)))) "Accessed Hedge Fund is trashed")
@@ -222,7 +222,7 @@
       (play-from-hand state :challenger "Scavenge")
       (prompt-select :challenger imp)
       (prompt-select :challenger (find-card "Imp" (:discard (get-challenger)))))
-    (let [imp (get-program state 0)]
+    (let [imp (get-resource state 0)]
       (is (= 2 (get-counters (refresh imp) :virus)) "Reinstalled Imp has 2 counters")
       (run-empty-server state "HQ")
       (card-ability state :challenger imp 0))
@@ -268,7 +268,7 @@
     (is (not (:seen (get-content state :remote2 0))) "New asset is unseen")))
 
 (deftest all-installed-challenger-test
-  ;; Tests all-installed for programs hosted on Character, nested hosted programs, and non-installed hosted programs
+  ;; Tests all-installed for resources hosted on Character, nested hosted resources, and non-installed hosted resources
   (do-game
     (new-game (default-contestant [(qty "Wraparound" 1)])
               (default-challenger [(qty "Omni-drive" 1) (qty "Personal Workshop" 1) (qty "Leprechaun" 1) (qty "Corroder" 1) (qty "Mimic" 1) (qty "Knight" 1)]))
@@ -282,9 +282,9 @@
       (play-from-hand state :challenger "Personal Workshop")
       (play-from-hand state :challenger "Omni-drive")
       (take-credits state :contestant)
-      (let [kn (get-in @state [:challenger :rig :program 0])
-            pw (get-in @state [:challenger :rig :resource 0])
-            od (get-in @state [:challenger :rig :hardware 0])
+      (let [kn (get-in @state [:challenger :rig :resource 0])
+            pw (get-in @state [:challenger :rig :muthereff 0])
+            od (get-in @state [:challenger :rig :hazard 0])
             co (find-card "Corroder" (:hand (get-challenger)))
             le (find-card "Leprechaun" (:hand (get-challenger)))]
         (card-ability state :challenger kn 0)
@@ -464,7 +464,7 @@
     (take-credits state :contestant)
     (core/gain state :challenger :credit 100)
     (play-from-hand state :challenger "Leprechaun")
-    (let [lep (get-program state 0)]
+    (let [lep (get-resource state 0)]
       (card-ability state :challenger lep 0)
       (prompt-select :challenger (find-card "Djinn" (:hand (get-challenger))))
       (let [djinn (first (:hosted (refresh lep)))]
@@ -494,7 +494,7 @@
     (play-from-hand state :challenger "Medium")
     (let [keegan (get-content state :rd 0)
           msg (get-content state :rd 1)
-          med (get-program state 0)]
+          med (get-resource state 0)]
       (core/command-counter state :challenger ["virus" 2])
       (prompt-select :challenger (refresh med))
       (run-empty-server state :rd)

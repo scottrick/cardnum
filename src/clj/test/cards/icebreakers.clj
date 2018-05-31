@@ -14,7 +14,7 @@
     (play-from-hand state :challenger "Atman")
     (prompt-choice :challenger 0)
     (is (= 3 (:memory (get-challenger))))
-    (let [atman (get-in @state [:challenger :rig :program 0])]
+    (let [atman (get-in @state [:challenger :rig :resource 0])]
       (is (= 0 (get-counters atman :power)) "0 power counters")
       (is (= 0 (:current-strength atman)) "0 current strength"))))
 
@@ -27,7 +27,7 @@
     (play-from-hand state :challenger "Atman")
     (prompt-choice :challenger 2)
     (is (= 3 (:memory (get-challenger))))
-    (let [atman (get-in @state [:challenger :rig :program 0])]
+    (let [atman (get-in @state [:challenger :rig :resource 0])]
       (is (= 2 (get-counters atman :power)) "2 power counters")
       (is (= 2 (:current-strength atman)) "2 current strength"))))
 
@@ -40,7 +40,7 @@
     (core/gain state :challenger :credit 10)
     (play-from-hand state :challenger "Baba Yaga")
     (play-from-hand state :challenger "Sharpshooter")
-    (let [baba (get-program state 0)
+    (let [baba (get-resource state 0)
           base-abicount (count (:abilities baba))]
       (card-ability state :challenger baba 0)
       (prompt-select :challenger (find-card "Faerie" (:hand (get-challenger))))
@@ -51,7 +51,7 @@
       (core/trash state :challenger (first (:hosted (refresh baba))))
       (is (= (inc base-abicount) (count (:abilities (refresh baba)))) "Baba Yaga lost 2 subroutines from trashed Faerie")
       (card-ability state :challenger baba 1)
-      (prompt-select :challenger (find-card "Sharpshooter" (:program (:rig (get-challenger)))))
+      (prompt-select :challenger (find-card "Sharpshooter" (:resource (:rig (get-challenger)))))
       (is (= 2 (count (:hosted (refresh baba)))) "Faerie and Sharpshooter hosted on Baba Yaga")
       (is (= 1 (:memory (get-challenger))) "1 MU left with 2 breakers on Baba Yaga")
       (is (= 4 (:credit (get-challenger))) "-5 from Baba, -1 from Sharpshooter played into Rig, -5 from Yog"))))
@@ -67,7 +67,7 @@
     (is (= 0 (count (:hand (get-challenger)))))
     ;; Install Chameleon on contestant turn
     (take-credits state :contestant 1)
-    (let [chip (get-in @state [:challenger :rig :hardware 0])]
+    (let [chip (get-in @state [:challenger :rig :hazard 0])]
       (card-ability state :challenger chip 0)
       (prompt-select :challenger (find-card "Chameleon" (:discard (get-challenger))))
       (prompt-choice :challenger "Sentry"))
@@ -86,12 +86,12 @@
     (is (= 3 (:credit (get-challenger))) "-2 from playing Chameleon")
     ;; Host the Chameleon on Scheherazade that was just played (as in Personal Workshop/Hayley ability scenarios)
     (play-from-hand state :challenger "Scheherazade")
-    (let [scheherazade (get-in @state [:challenger :rig :program 1])]
-      (card-ability state :challenger scheherazade 1) ; Host an installed program
-      (prompt-select :challenger (find-card "Chameleon" (:program (:rig (get-challenger)))))
+    (let [scheherazade (get-in @state [:challenger :rig :resource 1])]
+      (card-ability state :challenger scheherazade 1) ; Host an installed resource
+      (prompt-select :challenger (find-card "Chameleon" (:resource (:rig (get-challenger)))))
       (is (= 4 (:credit (get-challenger))) "+1 from hosting onto Scheherazade")
       ;; Install another Chameleon directly onto Scheherazade
-      (card-ability state :challenger scheherazade 0) ; Install and host a program from Grip
+      (card-ability state :challenger scheherazade 0) ; Install and host a resource from Grip
       (prompt-select :challenger (find-card "Chameleon" (:hand (get-challenger))))
       (prompt-choice :challenger "Code Gate")
       (is (= 2 (count (:hosted (refresh scheherazade)))) "2 Chameleons hosted on Scheherazade")
@@ -108,7 +108,7 @@
    (take-credits state :contestant)
    (play-from-hand state :challenger "Cerberus \"Rex\" H2")
    (is (= 2 (:credit (get-challenger))) "2 credits left after install")
-   (let [rex (get-in @state [:challenger :rig :program 0])]
+   (let [rex (get-in @state [:challenger :rig :resource 0])]
      (is (= 4 (get-counters rex :power)) "Start with 4 counters")
      ;; boost strength
      (card-ability state :challenger rex 1)
@@ -128,7 +128,7 @@
     (take-credits state :contestant)
     (core/gain state :challenger :credit 100)
     (play-from-hand state :challenger "Crypsis")
-    (let [crypsis (get-in @state [:challenger :rig :program 0])]
+    (let [crypsis (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger crypsis 2)
       (is (= 1 (get-in (refresh crypsis) [:counter :virus]))
           "Crypsis has 1 virus counter")
@@ -159,7 +159,7 @@
     (take-credits state :contestant)
 
     (play-from-hand state :challenger "Crypsis")
-    (let [crypsis (get-in @state [:challenger :rig :program 0])]
+    (let [crypsis (get-in @state [:challenger :rig :resource 0])]
       (run-on state "Archives")
       (card-ability state :challenger (refresh crypsis) 0) ; Match strength
       (card-ability state :challenger (refresh crypsis) 1) ; Break
@@ -187,7 +187,7 @@
     (play-from-hand state :challenger "Deus X")
     (run-empty-server state "Server 1")
     (prompt-choice :challenger "Yes")
-    (let [dx (get-program state 0)]
+    (let [dx (get-resource state 0)]
       (card-ability state :challenger dx 1)
       (prompt-choice :challenger "Done")
       (is (= 2 (count (:hand (get-challenger)))) "Deus X prevented one Hostile net damage"))))
@@ -204,7 +204,7 @@
     (play-from-hand state :challenger "Deus X")
     (run-empty-server state "Server 1")
     (prompt-choice :challenger "Access")
-    (let [dx (get-program state 0)]
+    (let [dx (get-resource state 0)]
       (card-ability state :challenger dx 1)
       (prompt-choice :challenger "Done")
       (prompt-choice :challenger "Yes")
@@ -220,7 +220,7 @@
     (play-from-hand state :contestant "Caduceus" "Archives")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Faerie")
-    (let [fae (get-program state 0)]
+    (let [fae (get-resource state 0)]
       (run-on state :archives)
       (core/rez state :contestant (get-character state :archives 0))
       (card-ability state :challenger fae 0)
@@ -235,7 +235,7 @@
               (default-challenger [(qty "Faust" 1) (qty "Sure Gamble" 3)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Faust")
-    (let [faust (get-in @state [:challenger :rig :program 0])]
+    (let [faust (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger faust 1)
       (prompt-card :challenger (first (:hand (get-challenger))))
       (is (= 4 (:current-strength (refresh faust))) "4 current strength")
@@ -256,17 +256,17 @@
     (play-from-hand state :challenger "Faust")
     (play-from-hand state :challenger "Fall Guy")
     (play-from-hand state :challenger "Sacrificial Construct")
-    (is (= 2 (count (get-in @state [:challenger :rig :resource]))) "Resources installed")
-    (let [faust (get-in @state [:challenger :rig :program 0])]
+    (is (= 2 (count (get-in @state [:challenger :rig :muthereff]))) "Muthereffs installed")
+    (let [faust (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger faust 1)
       (prompt-card :challenger (find-card "Astrolabe" (:hand (get-challenger))))
-      (is (empty? (:prompt (get-challenger))) "No trash-prevention prompt for hardware")
+      (is (empty? (:prompt (get-challenger))) "No trash-prevention prompt for hazard")
       (card-ability state :challenger faust 1)
       (prompt-card :challenger (find-card "Gordian Blade" (:hand (get-challenger))))
-      (is (empty? (:prompt (get-challenger))) "No trash-prevention prompt for program")
+      (is (empty? (:prompt (get-challenger))) "No trash-prevention prompt for resource")
       (card-ability state :challenger faust 1)
       (prompt-card :challenger (find-card "Armitage Codebusting" (:hand (get-challenger))))
-      (is (empty? (:prompt (get-challenger))) "No trash-prevention prompt for resource"))))
+      (is (empty? (:prompt (get-challenger))) "No trash-prevention prompt for muthereff"))))
 
 (deftest femme-counter
   ;; Femme Fatale counter test
@@ -280,7 +280,7 @@
     (play-from-hand state :challenger "Femme Fatale")
     (prompt-select :challenger iw)
     (is (:icon (refresh iw)) "Ice Wall has an icon")
-    (core/trash state :challenger (get-in @state [:challenger :rig :program 0]))
+    (core/trash state :challenger (get-in @state [:challenger :rig :resource 0]))
     (is (not (:icon (refresh iw))) "Ice Wall does not have an icon after Femme trashed")
     (play-from-hand state :challenger "Femme Fatale")
     (prompt-select :challenger iw)
@@ -296,7 +296,7 @@
     (play-from-hand state :contestant "Architect" "HQ")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Na'Not'K")
-    (let [nanotk (get-program state 0)
+    (let [nanotk (get-resource state 0)
           architect (get-character state :hq 0)]
       (is (= 1 (:current-strength (refresh nanotk))) "Default strength")
       (run-on state "HQ")
@@ -319,7 +319,7 @@
     (play-from-hand state :contestant "Crick" "Archives")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Na'Not'K")
-    (let [nanotk (get-program state 0)
+    (let [nanotk (get-resource state 0)
           susanoo (get-character state :hq 1)]
       (is (= 1 (:current-strength (refresh nanotk))) "Default strength")
       (run-on state "HQ")
@@ -342,7 +342,7 @@
     (is (= 6 (:memory (get-challenger))))
     (play-from-hand state :challenger "Overmind")
     (is (= 5 (:memory (get-challenger))))
-    (let [ov (get-in @state [:challenger :rig :program 0])]
+    (let [ov (get-in @state [:challenger :rig :resource 0])]
       (is (= 5 (get-counters (refresh ov) :power)) "Overmind has 5 counters"))))
 
 (deftest paperclip
@@ -399,7 +399,7 @@
     (is (= 1 (:link (get-challenger))) "1 link")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Shiv")
-    (let [shiv (get-program state 0)]
+    (let [shiv (get-resource state 0)]
       (is (= 1 (:current-strength (refresh shiv))) "1 installed breaker; 1 strength")
       (play-from-hand state :challenger "Inti")
       (is (= 2 (:current-strength (refresh shiv))) "2 installed breakers; 2 strength")
@@ -423,7 +423,7 @@
    (play-from-hand state :challenger "Snowball")
    (let [sp (get-character state :hq 1)
          fw (get-character state :hq 0)
-         snow (get-program state 0)]
+         snow (get-resource state 0)]
      (run-on state "HQ")
      (core/rez state :contestant sp)
      (core/rez state :contestant fw)
@@ -452,7 +452,7 @@
    (take-credits state :contestant)
    (play-from-hand state :challenger "Sure Gamble")
    (play-from-hand state :challenger "Study Guide")
-   (let [sg (get-program state 0)]
+   (let [sg (get-resource state 0)]
      (card-ability state :challenger sg 1)
      (is (= 4 (:credit (get-challenger))) "Paid 2c")
      (is (= 1 (get-counters (refresh sg) :power)) "Has 1 power counter")
@@ -472,7 +472,7 @@
    (play-from-hand state :challenger "Wyrm")
    (run-on state "HQ")
    (let [character-wall (get-character state :hq 0)
-         wyrm (get-in @state [:challenger :rig :program 0])]
+         wyrm (get-in @state [:challenger :rig :resource 0])]
      (core/rez state :contestant character-wall)
      (card-ability state :challenger wyrm 1)
      (is (= 0 (:current-strength (refresh character-wall))) "Strength of Ice Wall reduced to 0")
@@ -487,8 +487,8 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Yusuf")
     (play-from-hand state :challenger "Cache")
-    (let [yusuf (get-program state 0)
-          cache (get-program state 1)]
+    (let [yusuf (get-resource state 0)
+          cache (get-resource state 1)]
       (run-empty-server state "Archives")
       (is (= 1 (get-in (refresh yusuf) [:counter :virus])) "Yusuf has 1 virus counter")
       (is (= 3 (:current-strength (refresh yusuf))) "Initial Yusuf strength")

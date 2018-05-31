@@ -53,7 +53,7 @@
    "ability" core/play-ability
    "challenger-ability" core/play-challenger-ability
    "subroutine" core/play-subroutine
-   "trash-resource" core/trash-resource
+   "trash-muthereff" core/trash-muthereff
    "dynamic-ability" core/play-dynamic-ability
    "toast" core/toast
    "view-deck" core/view-deck
@@ -98,7 +98,7 @@
       (update-in [:discard] #(private-card-vector state :challenger %))
       (update-in [:deck] #(private-card-vector state :challenger %))
       (update-in [:rig :facedown] #(private-card-vector state :challenger %))
-      (update-in [:rig :resource] #(private-card-vector state :challenger %))))
+      (update-in [:rig :muthereff] #(private-card-vector state :challenger %))))
 
 (defn- make-private-contestant [state]
   (let [zones (concat [[:hand]] [[:discard]] [[:deck]]

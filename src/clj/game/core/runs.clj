@@ -14,7 +14,7 @@
   ([state side server run-effect card] (run state side (make-eid state) server run-effect card))
   ([state side eid server run-effect card]
    (when (can-run? state :challenger)
-     (let [s [(if (keyword? server) server (last (server->zone state server nil)))]
+     (let [s [(if (keyword? server) server (last (server->zone state server)))]
            characters (get-in @state (concat [:contestant :servers] s [:characters]))
            n (count characters)]
        ;; s is a keyword for the server, like :hq or :remote1
@@ -506,9 +506,9 @@
                       (map (fn [_] (str "Facedown card in Archives")) (facedown-cards already-accessed)))
      :effect (req (cond
                     (.endsWith target "inactive cards")
-                    ;; Interaction with Bacterial Programming. If we have X accesses remaining and <= X inactive cards
+                    ;; Interaction with Bacterial Resourceming. If we have X accesses remaining and <= X inactive cards
                     ;; in Archives, we don't have to access the remaining active cards.  This only happens if you choose
-                    ;; to access at least one of the facedown cards added to Archives by Bacterial Programming.
+                    ;; to access at least one of the facedown cards added to Archives by Bacterial Resourceming.
                     (do (system-msg state side "accesses the remaining inactive cards in Archives")
                         (effect-completed state side eid))
 

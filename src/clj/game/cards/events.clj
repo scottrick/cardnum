@@ -53,13 +53,13 @@
                                     (remove #(= '(:onhost) (:zone %)))
                                     (sort-by #(vec (:zone %)))
                                     (reverse))]
-                   ; Trash hosted cards first so they don't get trashed twcharacter
+                   ; Trash hosted cards first so they don't get trashed twice
                    (doseq [c onhost]
                      (trash state side c))
                    (doseq [c allcontestant]
                      (trash state side (get-card state c))))
 
-                 ;; do hosted cards first so they don't get trashed twcharacter
+                 ;; do hosted cards first so they don't get trashed twice
                  (doseq [c (all-installed state :challenger)]
                    (when (or (= ["onhost"] (get c :zone)) (= '(:onhost) (get c :zone)))
                      (move state side c [:rig :facedown])
@@ -117,14 +117,14 @@
                                                                 (damage state :challenger eid :meat 1 {:unboostable true}))))}}}
 
    "Calling in Favors"
-   {:msg (msg "gain " (count (filter #(and (has-subtype? % "Connection") (is-type? % "Resource"))
+   {:msg (msg "gain " (count (filter #(and (has-subtype? % "Connection") (is-type? % "Muthereff"))
                                      (all-installed state :challenger))) " [Credits]")
-    :effect (effect (gain :credit (count (filter #(and (has-subtype? % "Connection") (is-type? % "Resource"))
+    :effect (effect (gain :credit (count (filter #(and (has-subtype? % "Connection") (is-type? % "Muthereff"))
                                                  (all-installed state :challenger)))))}
 
    "Career Fair"
-   {:prompt "Select a resource to install from your Grip"
-    :choices {:req #(and (is-type? % "Resource")
+   {:prompt "Select a muthereff to install from your Grip"
+    :choices {:req #(and (is-type? % "Muthereff")
                          (in-hand? %))}
     :effect (effect (install-cost-bonus [:credit -3]) (challenger-install target))}
 
@@ -179,9 +179,9 @@
     :effect (effect (run :rd
                          {:replace-access
                           {:delayed-completion true
-                           :prompt "Choose a program to install"
+                           :prompt "Choose a resource to install"
                            :msg (msg "install " (:title target) " and take 1 tag")
-                           :choices (req (filter #(is-type? % "Program") (:deck challenger)))
+                           :choices (req (filter #(is-type? % "Resource") (:deck challenger)))
                            :effect (effect (trigger-event :searched-stack nil)
                                            (shuffle! :deck)
                                            (install-cost-bonus [:credit (* -3 (count (get-in contestant [:servers :rd :characters])))])
@@ -189,8 +189,8 @@
                                            (tag-challenger eid 1) )}} card))}
 
    "Cold Read"
-   (let [end-effect {:prompt "Choose a program that was used during the run to trash "
-                     :choices {:req #(card-is? % :type "Program")}
+   (let [end-effect {:prompt "Choose a resource that was used during the run to trash "
+                     :choices {:req #(card-is? % :type "Resource")}
                      :msg (msg "trash " (:title target))
                      :effect (effect (trash target {:unpreventable true}))}]
      {:delayed-completion true
@@ -246,9 +246,9 @@
    "Credit Kiting"
    {:req (req (some #{:hq :rd :archives} (:successful-run challenger-reg)))
     :prompt "Select a card to install from your Grip"
-    :choices {:req #(and (or (is-type? % "Hardware")
-                             (is-type? % "Program")
-                             (is-type? % "Resource"))
+    :choices {:req #(and (or (is-type? % "Hazard")
+                             (is-type? % "Resource")
+                             (is-type? % "Muthereff"))
                          (in-hand? %))}
     :effect (effect (install-cost-bonus [:credit -8])
                     (challenger-install target)
@@ -365,16 +365,16 @@
       :effect (effect (continue-ability (choice all) card nil))})
 
    "Dianas Hunt"
-   {:implementation "One program per encounter not enforced"
+   {:implementation "One resource per encounter not enforced"
     :prompt "Choose a server"
-    :msg "make a run and install a program on encounter with each Character"
+    :msg "make a run and install a resource on encounter with each Character"
     :choices (req runnable-servers)
     :delayed-completion true
-    :abilities [{:label "Install a program using Diana's Hunt?"
+    :abilities [{:label "Install a resource using Diana's Hunt?"
                  :delayed-completion true
                  :effect (effect (resolve-ability
-                                   {:prompt "Choose a program in your Grip to install"
-                                    :choices {:req #(and (is-type? % "Program")
+                                   {:prompt "Choose a resource in your Grip to install"
+                                    :choices {:req #(and (is-type? % "Resource")
                                                          (challenger-can-install? state side % false)
                                                          (in-hand? %))}
                                     :msg (msg "install " (:title target))
@@ -382,7 +382,7 @@
                                                  (swap! state update :diana #(conj % target)))}
                                    card nil))}]
     :effect (effect (run target nil card)
-                    (prompt! card (str "Click Diana's Hunt in the Temporary Zone to install a Program") ["OK"] {})
+                    (prompt! card (str "Click Diana's Hunt in the Temporary Zone to install a Resource") ["OK"] {})
                     (resolve-ability
                       {:effect (req (let [c (move state side (last (:discard challenger)) :play-area)]
                                       (card-init state side c {:resolve-effect false})
@@ -441,11 +441,11 @@
    "Emergent Creativity"
    (letfn [(ec [trash-cost to-trash]
              {:delayed-completion true
-             :prompt "Choose a hardware or program to install"
+             :prompt "Choose a hazard or resource to install"
              :msg (msg "trash " (if (empty? to-trash) "no cards" (join ", " (map :title to-trash)))
                        " and install " (:title target) " lowering the cost by " trash-cost)
-             :choices (req (cancellable (filter #(or (is-type? % "Program")
-                                                     (is-type? % "Hardware"))
+             :choices (req (cancellable (filter #(or (is-type? % "Resource")
+                                                     (is-type? % "Hazard"))
                                                 (:deck challenger)) :sorted))
              :effect (req (trigger-event state side :searched-stack nil)
                           (shuffle! state side :deck)
@@ -454,9 +454,9 @@
                           (install-cost-bonus state side [:credit (- trash-cost)])
                           (challenger-install state side target)
                           (effect-completed state side eid card))})]
-   {:prompt "Choose Hardware and Programs to trash from your Grip"
-    :choices {:req #(and (or (is-type? % "Hardware")
-                             (is-type? % "Program"))
+   {:prompt "Choose Hazard and Resources to trash from your Grip"
+    :choices {:req #(and (or (is-type? % "Hazard")
+                             (is-type? % "Resource"))
                          (in-hand? %))
               :max (req (count (:hand challenger)))}
     :cancel-effect (effect (resolve-ability (ec 0 []) card nil))
@@ -504,9 +504,9 @@
 
    "Eureka!"
    {:effect (req (let [topcard (first (:deck challenger))
-                       caninst (or (is-type? topcard "Hardware")
-                                   (is-type? topcard "Program")
-                                   (is-type? topcard "Resource"))]
+                       caninst (or (is-type? topcard "Hazard")
+                                   (is-type? topcard "Resource")
+                                   (is-type? topcard "Muthereff"))]
                    (if caninst
                      (resolve-ability
                        state side
@@ -660,8 +660,8 @@
                                             (join ", " (map :title topten))) ["OK"] {})
            (continue-ability
              state side
-             {:prompt "Install a program?"
-              :choices (conj (vec (sort-by :title (filter #(and (is-type? % "Program")
+             {:prompt "Install a resource?"
+              :choices (conj (vec (sort-by :title (filter #(and (is-type? % "Resource")
                                                                 (can-pay? state side nil
                                                                           (modified-install-cost state side % [:credit -5])))
                                                           topten))) "No install")
@@ -690,7 +690,7 @@
 
    "Freelance Coding Contract"
    {:choices {:max 5
-              :req #(and (is-type? % "Program")
+              :req #(and (is-type? % "Resource")
                          (in-hand? %))}
     :msg (msg "trash " (join ", " (map :title targets)) " and gain "
               (* 2 (count targets)) " [Credits]")
@@ -859,7 +859,7 @@
 
    "Inject"
    {:effect (req (doseq [c (take 4 (get-in @state [:challenger :deck]))]
-                   (if (is-type? c "Program")
+                   (if (is-type? c "Resource")
                      (do (trash state side c {:unpreventable true})
                          (gain state side :credit 1)
                          (system-msg state side (str "trashes " (:title c) " and gains 1 [Credits]")))
@@ -939,9 +939,9 @@
    {:prompt "Choose a server"
     :choices (req runnable-servers)
     :delayed-completion true
-    :msg (msg "make a run on " target (when (< (count (filter #(is-type? % "Program") (all-installed state :challenger))) 4)
+    :msg (msg "make a run on " target (when (< (count (filter #(is-type? % "Resource") (all-installed state :challenger))) 4)
                                         ", adding +2 strength to all icebreakers"))
-    :effect (req (when (< (count (filter #(is-type? % "Program") (all-installed state :challenger))) 4)
+    :effect (req (when (< (count (filter #(is-type? % "Resource") (all-installed state :challenger))) 4)
                    (doseq [c (filter #(has-subtype? % "Icebreaker") (all-installed state :challenger))]
                      (pump state side c 2 :all-run)))
                  (game.core/run state side (make-eid state) target nil card))}
@@ -1039,16 +1039,16 @@
                      (continue-ability state side (entrance-trash from) card nil)))})
 
    "Mars for Martians"
-   {:msg (msg "draw " (count (filter #(and (has-subtype? % "Clan") (is-type? % "Resource"))
+   {:msg (msg "draw " (count (filter #(and (has-subtype? % "Clan") (is-type? % "Muthereff"))
                                      (all-installed state :challenger)))
               " cards and gain " (:tag challenger) " [Credits]")
-    :effect (effect (draw (count (filter #(and (has-subtype? % "Clan") (is-type? % "Resource"))
+    :effect (effect (draw (count (filter #(and (has-subtype? % "Clan") (is-type? % "Muthereff"))
                                          (all-installed state :challenger))))
                     (gain :credit (:tag challenger)))}
 
    "Mass Install"
-   (let [mhelper (fn mi [n] {:prompt "Select a program to install"
-                             :choices {:req #(and (is-type? % "Program")
+   (let [mhelper (fn mi [n] {:prompt "Select a resource to install"
+                             :choices {:req #(and (is-type? % "Resource")
                                                   (in-hand? %))}
                              :effect (req (challenger-install state side target)
                                             (when (< n 3)
@@ -1114,9 +1114,9 @@
                                                                             (update! (assoc card :run-again true)))}}}}}
 
    "Modded"
-   {:prompt "Select a program or piece of hardware to install from your Grip"
-    :choices {:req #(and (or (is-type? % "Hardware")
-                             (is-type? % "Program"))
+   {:prompt "Select a resource or piece of hazard to install from your Grip"
+    :choices {:req #(and (or (is-type? % "Hazard")
+                             (is-type? % "Resource"))
                          (in-hand? %))}
     :effect (effect (install-cost-bonus [:credit -3]) (challenger-install target))}
 
@@ -1139,9 +1139,9 @@
     :msg "add it to their score area as an agenda worth 1 agenda point"}
 
    "On the Lam"
-   {:req (req (some #(is-type? % "Resource") (all-installed state :challenger)))
-    :prompt "Choose a resource to host On the Lam"
-    :choices {:req #(and (is-type? % "Resource")
+   {:req (req (some #(is-type? % "Muthereff") (all-installed state :challenger)))
+    :prompt "Choose a muthereff to host On the Lam"
+    :choices {:req #(and (is-type? % "Muthereff")
                          (installed? %))}
     :effect (effect (host target (assoc card :zone [:discard]))
                     (system-msg (str "hosts On the Lam on " (:title target))))
@@ -1369,9 +1369,9 @@
     :effect (effect (run :archives
                       {:req (req (= target :archives))
                        :replace-access
-                       {:prompt "Choose a program to install"
+                       {:prompt "Choose a resource to install"
                         :msg (msg "install " (:title target))
-                        :choices (req (filter #(is-type? % "Program") (:discard challenger)))
+                        :choices (req (filter #(is-type? % "Resource") (:discard challenger)))
                         :effect (effect (challenger-install target {:no-cost true}))}} card))}
 
    "Rigged Results"
@@ -1466,16 +1466,16 @@
                                    (expose state side eid card2))))}
 
    "Scavenge"
-   {:prompt "Select an installed program to trash"
-    :choices {:req #(and (is-type? % "Program")
+   {:prompt "Select an installed resource to trash"
+    :choices {:req #(and (is-type? % "Resource")
                          (installed? %))}
     :effect (req (let [trashed target tcost (- (:cost trashed)) st state si side]
                    (trash state side trashed)
                    (resolve-ability
                      state side
-                     {:prompt "Select a program to install from your Grip or Heap"
+                     {:prompt "Select a resource to install from your Grip or Heap"
                       :show-discard true
-                      :choices {:req #(and (is-type? % "Program")
+                      :choices {:req #(and (is-type? % "Resource")
                                            (#{[:hand] [:discard]} (:zone %))
                                            (can-pay? st si nil (modified-install-cost st si % [:credit tcost])))}
                       :effect (effect (install-cost-bonus [:credit (- (:cost trashed))])
@@ -1622,13 +1622,13 @@
                         (unregister-events state side card)))})
 
    "Test Run"
-   {:prompt "Install a program from your Stack or Heap?"
+   {:prompt "Install a resource from your Stack or Heap?"
     :choices (cancellable ["Stack" "Heap"])
-    :msg (msg "install a program from their " target)
+    :msg (msg "install a resource from their " target)
     :effect (effect (resolve-ability
-                      {:prompt "Choose a program to install"
+                      {:prompt "Choose a resource to install"
                        :choices (req (cancellable
-                                       (filter #(is-type? % "Program")
+                                       (filter #(is-type? % "Resource")
                                                ((if (= target "Heap") :discard :deck) challenger))))
                        :effect (effect (trigger-event :searched-stack nil)
                                        (shuffle! :deck)
@@ -1706,12 +1706,12 @@
     :events {:challenger-turn-ends nil}}
 
    "Trade-In"
-   {:additional-cost [:hardware 1]
+   {:additional-cost [:hazard 1]
     :effect (effect (register-events (:events (card-def card)) (assoc card :zone '(:discard))))
     :events {:challenger-trash {:effect (effect (gain :credit (quot (:cost target) 2))
                                             (system-msg (str "trashes " (:title target) " and gains " (quot (:cost target) 2) " [Credits]"))
-                                            (continue-ability {:prompt "Choose a Hardware to add to your Grip from your Stack"
-                                                               :choices (req (filter #(is-type? % "Hardware")
+                                            (continue-ability {:prompt "Choose a Hazard to add to your Grip from your Stack"
+                                                               :choices (req (filter #(is-type? % "Hazard")
                                                                                      (:deck challenger)))
                                                                :msg (msg "add " (:title target) " to their Grip")
                                                                :effect (effect (trigger-event :searched-stack nil)
@@ -1729,7 +1729,7 @@
    "Uninstall"
    {:choices {:req #(and (installed? %)
                          (not (facedown? %))
-                         (#{"Program" "Hardware"} (:type %)))}
+                         (#{"Resource" "Hazard"} (:type %)))}
     :msg (msg "move " (:title target) " to their Grip")
     :effect (effect (move target :hand))}
 

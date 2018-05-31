@@ -256,7 +256,7 @@
                                         (send-command "play" {:card card :server "New remote"})
                                         (-> (om/get-node owner "servers") js/$ .toggle))
                    (send-command "play" {:card card}))
-          ("servers" "scored" "current" "onhost") (handle-abilities card owner)
+          ("rig" "current" "onhost" "play-area" "servers") (handle-abilities card owner)
           nil)
         ;; Contestant side
         (= side :contestant)
@@ -313,7 +313,7 @@
 
          (and (= zone ["hand"])
               (or (not uniqueness) (not (in-play? card)))
-              (or (#{"Agenda" "Asset" "Upgrade" "Character"} type) (>= (:credit me) cost))
+              (or (#{"Agenda" "Asset" "Upgrade" "Character" "Resource"} type) (>= (:credit me) cost))
               (pos? (:click me))))))
 
 (defn spectator-view-hidden?
@@ -535,12 +535,12 @@
                         "credit" (str (second c) " [" (capitalize (name (first c))) "]")
                         (clojure.string/join "" (repeat (second c) (str "[" (capitalize (name (first c))) "]"))))))) ": ")))
 
-(defn remote->num [server]
-  (-> server str (clojure.string/replace #":remote" "")))
+(defn remote->num [zone]
+  (-> zone str (clojure.string/split #":remote") last js/parseInt))
 
-(defn remote->name [server]
-  (let [num (remote->num server)]
-    (str "" num)))
+(defn remote->name [zone]
+  (let [num (remote->num zone)]
+    (str "Server " num)))
 
 (defn central->name [zone]
   "Converts a central zone keyword to a string."
@@ -625,8 +625,7 @@
   "Returns true if the installed card should be drawn face down."
   [{:keys [side type facedown rezzed host] :as card}]
   (if (= side "Contestant")
-    (and (not= type "Operation")
-         (not rezzed)
+    (and (not= type "Resource")
          (not= (:side host) "Challenger"))
     facedown))
 
@@ -902,19 +901,6 @@
 
 (defmulti discard-view #(get-in % [:identity :side]))
 
-(defmethod discard-view "WhoKnew" [{:keys [discard] :as cursor} owner]
-  (om/component
-   (sab/html
-    [:div.blue-shade.discard
-     (drop-area :challenger "Heap" {:on-click #(-> (om/get-node owner "popup") js/$ .fadeToggle)})
-     (when-not (empty? discard)
-       (om/build card-view (last discard)))
-     (om/build label discard {:opts {:name "Heap"}})
-     [:div.panel.blue-shade.popup {:ref "popup" :class (if (= (:side @game-state) :challenger) "me" "opponent")}
-      [:div
-       [:a {:on-click #(close-popup % owner "popup" nil false false)} "Close"]]
-      (om/build-all card-view discard {:key :cid})]])))
-
 (defmethod discard-view "Challenger" [{:keys [discard servers] :as cursor} owner]
   (om/component
     (sab/html
@@ -1126,20 +1112,36 @@
 (defmethod decks-view "Challenger" [{:keys [player run]}]
   (om/component
     (sab/html
-      (let [is-me (= (:side @game-state) :challenger)
-            centrals (sab/html
-                       [:div.challenger-centrals
-                        (om/build discard-view player)
-                        (om/build deck-view player)
-                        (om/build identity-view player)])]
-        [:div.challenger-board {:class (if is-me "me" "opponent")}
-         (when-not is-me centrals)
-         (for [zone [:program :hardware :resource :facedown]]
+        [:div.challenger-board {:class (if (= (:side @game-state) :contestant) "opponent" "me")}
+         (om/build identity-view player)
+         (om/build deck-view player)
+         (om/build discard-view player)])))
+
+(defmulti event-view #(get-in % [:player :identity :side]))
+
+(defmethod event-view "Contestant" [{:keys [player run]}]
+  (om/component
+    (sab/html
+      (let [is-me (= (:side @game-state) :contestant)]
+        [:div.contestant-rig {:class (if is-me "me" "opponent")}
+         (for [zone [:resource :hazard :muthereff :facedown]]
            [:div
             (for [c (zone (:rig player))]
               [:div.card-wrapper {:class (when (playable? c) "playable")}
                (om/build card-view c)])])
-         (when is-me centrals)]))))
+         ]))))
+
+(defmethod event-view "Challenger" [{:keys [player run]}]
+  (om/component
+    (sab/html
+      (let [is-me (= (:side @game-state) :challenger)]
+        [:div.challenger-rig {:class (if is-me "me" "opponent")}
+         (for [zone [:resource :hazard :muthereff :facedown]]
+           [:div
+            (for [c (zone (:rig player))]
+              [:div.card-wrapper {:class (when (playable? c) "playable")}
+               (om/build card-view c)])])
+         ]))))
 
 (defmulti board-view #(get-in % [:player :identity :side]))
 
@@ -1312,11 +1314,11 @@
               (when (= side :contestant)
                 (cond-button "Purge" (>= (:click me) 3) #(send-command "purge")))
               (when (= side :contestant)
-                (cond-button "Trash Resource" (and (pos? (:click me))
+                (cond-button "Trash Muthereff" (and (pos? (:click me))
                                                    (>= (:credit me) (- 2 (or (:trash-cost-bonus me) 0)))
                                                    (or (pos? (:tagged opponent))
                                                        (pos? (:tag opponent))))
-                             #(send-command "trash-resource")))
+                             #(send-command "trash-muthereff")))
               (cond-button "Draw" (and (pos? (:click me)) (not-empty (:deck me))) #(send-command "draw"))
               (cond-button "Gain Credit" (pos? (:click me)) #(send-command "credit"))]))]))))
 
@@ -1419,13 +1421,14 @@
 
             [:div.centralpane
              (om/build board-view {:player opponent :run run})
+             (om/build event-view {:player opponent :run run})
+             (om/build event-view {:player me :run run})
              (om/build board-view {:player me :run run})]
 
             [:div.leftpane
              [:div.opponent
               (om/build hand-view {:player opponent :remotes (get-remotes (:servers (if (= side :challenger) contestant challenger)))
                                    :popup (= side :spectator) :popup-direction "opponent"})]
-
 
              [:div.inner-leftpane
               [:div.left-inner-leftpane

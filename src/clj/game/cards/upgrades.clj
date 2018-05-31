@@ -404,13 +404,13 @@
                                             (effect-completed state side eid))))}}})
 
    "Keegan Lane"
-   {:abilities [{:label "[Trash], remove a tag: Trash a program"
+   {:abilities [{:label "[Trash], remove a tag: Trash a resource"
                  :req (req (and this-server
                                 (pos? (get-in @state [:challenger :tag]))
-                                (not (empty? (filter #(is-type? % "Program")
+                                (not (empty? (filter #(is-type? % "Resource")
                                                      (all-installed state :challenger))))))
                  :msg (msg "remove 1 tag")
-                 :effect (req (resolve-ability state side trash-program card nil)
+                 :effect (req (resolve-ability state side trash-resource card nil)
                               (trash state side card {:cause :ability-cost})
                               (lose state :challenger :tag 1))}]}
 
@@ -616,13 +616,13 @@
                                     :req (req (and run (= (first (:server run)) :hq)))}]}
 
    "Port Anson Grid"
-   {:msg "prevent the Challenger from jacking out unless they trash an installed program"
+   {:msg "prevent the Challenger from jacking out unless they trash an installed resource"
     :effect (req (when this-server
                    (prevent-jack-out state side)))
     :events {:run {:req (req this-server)
-                   :msg "prevent the Challenger from jacking out unless they trash an installed program"
+                   :msg "prevent the Challenger from jacking out unless they trash an installed resource"
                    :effect (effect (prevent-jack-out))}
-             :challenger-trash {:req (req (and this-server (is-type? target "Program")))
+             :challenger-trash {:req (req (and this-server (is-type? target "Resource")))
                             :effect (req (swap! state update-in [:run] dissoc :cannot-jack-out))}}}
 
    "Prisec"

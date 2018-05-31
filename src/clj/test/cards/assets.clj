@@ -29,18 +29,18 @@
       ;; Single advance AggSec
       (core/advance state :contestant {:card (refresh as)})
       (take-credits state :contestant)
-      ;; Run on AggSec with 3 programs
+      ;; Run on AggSec with 3 resources
       (play-from-hand state :challenger "Cache")
       (play-from-hand state :challenger "Cache")
       (play-from-hand state :challenger "Cache")
       (run-empty-server state "Server 1")
       (prompt-choice :contestant "Yes")
       (is (= 3 (get-in @state [:contestant :credit])))
-      ;; Contestant can trash one program
-      (prompt-select :contestant (get-in @state [:challenger :rig :program 1]))
+      ;; Contestant can trash one resource
+      (prompt-select :contestant (get-in @state [:challenger :rig :resource 1]))
       ;; There should be two Caches left
       (is (= 3 (get-in @state [:contestant :credit])))
-      (is (= 2 (count (get-in @state [:challenger :rig :program])))))))
+      (is (= 2 (count (get-in @state [:challenger :rig :resource])))))))
 
 (deftest alexa-belsky
   (do-game
@@ -105,7 +105,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Feedback Filter")
     (take-credits state :challenger)
-    (let [filter (get-hardware state 0)]
+    (let [filter (get-hazard state 0)]
       (is (= 1 (count (:prompt (get-challenger)))) "Challenger has a single damage prevention prompt")
       (card-ability state :challenger filter 0)
       (prompt-choice :challenger "Done")
@@ -147,8 +147,8 @@
       (core/rez state :contestant cap)
       (card-ability state :contestant cap 0)
       (card-ability state :contestant cap 0)
-      (is (= 0 (:click (get-contestant))) "Used twcharacter, spent 2 clicks")
-      (is (= 7 (:credit (get-contestant))) "Used twcharacter, gained 4 credits"))))
+      (is (= 0 (:click (get-contestant))) "Used twice, spent 2 clicks")
+      (is (= 7 (:credit (get-contestant))) "Used twice, gained 4 credits"))))
 
 (deftest chairman-hiro
   ;; Chairman Hiro - Reduce Challenger max hand size; add as 2 agenda points if Challenger trashes him
@@ -418,7 +418,7 @@
     (play-from-hand state :challenger "Earthrise Hotel")
     (take-credits state :challenger)
     (let [liz (get-content state :remote1 0)
-          hotel (get-in @state [:challenger :rig :resource 0])]
+          hotel (get-in @state [:challenger :rig :muthereff 0])]
       (core/rez state :contestant liz)
       (is (= 0 (:bad-publicity (get-contestant))) "1 bad publicity removed")
       (card-ability state :contestant liz 0)
@@ -701,7 +701,7 @@
       (take-credits state :challenger)
       (core/move state :challenger (find-card "Sure Gamble" (:hand (get-challenger))) :deck)
       (core/move state :challenger (find-card "Sure Gamble" (:hand (get-challenger))) :deck)
-      (let [hopper (get-in @state [:challenger :rig :hardware 0])]
+      (let [hopper (get-in @state [:challenger :rig :hazard 0])]
         (card-ability state :challenger hopper 0)
         (is (= 3 (count (:hand (get-challenger)))) "Able to draw 3 cards during Contestant's turn")
         (core/derez state :contestant (refresh gp))
@@ -749,7 +749,7 @@
     (core/rez state :contestant (get-content state :remote1 0))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Mr. Li")
-    (let [mrli (get-in @state [:challenger :rig :resource 0])]
+    (let [mrli (get-in @state [:challenger :rig :muthereff 0])]
       (is (= 0 (count (:hand (get-challenger)))))
       ;use Mr. Li with 2 draws allowed
       (card-ability state :challenger mrli 0)
@@ -964,16 +964,16 @@
     (is (= 1 (:click (get-contestant))))
     (take-credits state :contestant)
     (take-credits state :challenger)
-    ;; trash 3 resources
+    ;; trash 3 muthereffs
     (core/gain state :challenger :tag 1)
-    (core/trash-resource state :contestant nil)
-    (prompt-select :contestant (get-resource state 0))
+    (core/trash-muthereff state :contestant nil)
+    (prompt-select :contestant (get-muthereff state 0))
     (is (= 1 (count (:discard (get-challenger)))))
-    (core/trash-resource state :contestant nil)
-    (prompt-select :contestant (get-resource state 0))
+    (core/trash-muthereff state :contestant nil)
+    (prompt-select :contestant (get-muthereff state 0))
     (is (= 2 (count (:discard (get-challenger)))))
-    (core/trash-resource state :contestant nil)
-    (prompt-select :contestant (get-resource state 0))
+    (core/trash-muthereff state :contestant nil)
+    (prompt-select :contestant (get-muthereff state 0))
     (is (= 3 (count (:discard (get-challenger)))))
     (is (= 1 (:click (get-contestant))))))
 
@@ -1118,7 +1118,7 @@
     (take-credits state :challenger)
     (let [gb (get-content state :remote1 0)
           net (get-content state :remote2 0)
-          nach (get-in @state [:challenger :rig :resource 0])]
+          nach (get-in @state [:challenger :rig :muthereff 0])]
       (core/rez state :contestant (refresh net))
       (core/advance state :contestant {:card (refresh gb)})
       (is (= 1 (get-in (refresh gb) [:advance-counter])))
@@ -1807,7 +1807,7 @@
 (deftest team-sponsorship-one-window
   ;; Team Sponsorship - Score 5 points in one window
   (do-game
-    (new-game (default-contestant [(qty "AstroScript Pilot Program" 3)
+    (new-game (default-contestant [(qty "AstroScript Pilot Resource" 3)
                              (qty "Team Sponsorship" 1)
                              (qty "Breaking News" 1)
                              (qty "SanSan City Grid" 1)])
@@ -1815,13 +1815,13 @@
     (play-from-hand state :contestant "SanSan City Grid" "New remote")
     (core/gain state :contestant :credit 100 :click 5)
     (core/rez state :contestant (get-content state :remote1 0))
-    (play-from-hand state :contestant "AstroScript Pilot Program" "New remote")
+    (play-from-hand state :contestant "AstroScript Pilot Resource" "New remote")
     (score-agenda state :contestant (get-content state :remote2 0))
-    (play-from-hand state :contestant "AstroScript Pilot Program" "Server 1")
+    (play-from-hand state :contestant "AstroScript Pilot Resource" "Server 1")
     (play-from-hand state :contestant "Team Sponsorship" "New remote")
     (core/rez state :contestant (get-content state :remote3 0))
     (score-agenda state :contestant (get-content state :remote1 1))
-    (prompt-select :contestant (find-card "AstroScript Pilot Program" (:hand (get-contestant))))
+    (prompt-select :contestant (find-card "AstroScript Pilot Resource" (:hand (get-contestant))))
     (is (= 0 (get-counters (second (:scored (get-contestant))) :agenda)) "AstroScript not resolved yet")
     (prompt-choice :contestant "Server 1")
     (is (= 1 (get-counters (second (:scored (get-contestant))) :agenda)) "AstroScript resolved")
@@ -1875,7 +1875,7 @@
     (is (= 3 (count (:scored (get-challenger)))) "News Team added to Challenger score area")
     (is (= -3 (:agenda-point (get-challenger))) "Challenger has -3 agenda points")
 
-    (card-ability state :challenger (get-resource state 0) 0)
+    (card-ability state :challenger (get-muthereff state 0) 0)
     (prompt-choice :challenger (->> @state :challenger :prompt first :choices first))
     (prompt-select :challenger (first (:scored (get-challenger))))
     (is (= 2 (count (:scored (get-challenger)))) "Fan Site removed from Challenger score area")

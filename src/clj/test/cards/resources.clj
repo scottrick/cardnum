@@ -90,13 +90,13 @@
     (play-from-hand state :challenger "Aesop's Pawnshop")
     (play-from-hand state :challenger "Cache")
     (let [orig-credits (:credit (get-challenger))
-          ap (get-in @state [:challenger :rig :resource 0])
-          cache (get-in @state [:challenger :rig :program 0])]
+          ap (get-in @state [:challenger :rig :muthereff 0])
+          cache (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger ap 0)
       (prompt-select :challenger cache)
       (card-ability state :challenger ap 0)
       (prompt-select :challenger ap)
-      (let [ap (get-in @state [:challenger :rig :resource 0])
+      (let [ap (get-in @state [:challenger :rig :muthereff 0])
             cache (get-in @state [:challenger :discard 0])]
         (is (= (+ 3 orig-credits) (:credit (get-challenger))) "Should have only gained 3 credits")
         (is (not= cache nil) "Cache should be in Heap")
@@ -110,7 +110,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "All-nighter")
     (is (= 3 (:click (get-challenger))))
-    (card-ability state :challenger (get-resource state 0) 0)
+    (card-ability state :challenger (get-muthereff state 0) 0)
     (is (= 4 (:click (get-challenger))) "Spent 1 click; gained 2 clicks")
     (is (= 1 (count (:discard (get-challenger)))) "All-nighter is trashed")))
 
@@ -130,7 +130,7 @@
     (is (= "Bank Job" (:title (:card (first (get-in @state [:challenger :prompt])))))
         "Bank Job prompt active")
     (prompt-choice :challenger 8)
-    (is (empty? (get-in @state [:challenger :rig :resource])) "Bank Job trashed after all credits taken")
+    (is (empty? (get-in @state [:challenger :rig :muthereff])) "Bank Job trashed after all credits taken")
     (is (= 1 (count (:discard (get-challenger)))))))
 
 (deftest bank-job-multiple-copies
@@ -145,8 +145,8 @@
     (prompt-choice :challenger "Run ability")
     (prompt-choice :challenger 4)
     (play-from-hand state :challenger "Bank Job")
-    (let [bj1 (get-resource state 0)
-          bj2 (get-resource state 1)]
+    (let [bj1 (get-muthereff state 0)
+          bj2 (get-muthereff state 1)]
       (is (= 4 (get-counters (refresh bj1) :credit)) "4 credits remaining on 1st copy")
       (run-empty-server state "Server 1")
       (prompt-choice :challenger "Run ability")
@@ -183,7 +183,7 @@
     (starting-hand state :challenger ["Street Peddler" "Bazaar" "Spy Camera" "Spy Camera" "Spy Camera"])
     (play-from-hand state :challenger "Bazaar")
     (play-from-hand state :challenger "Street Peddler")
-    (let [peddler (get-resource state 1)]
+    (let [peddler (get-muthereff state 1)]
       (card-ability state :challenger peddler 0)
       (prompt-card :challenger (first (:hosted peddler)))
       (is (empty? (:prompt (get-challenger))) "No Bazaar prompt from install off Peddler"))))
@@ -233,7 +233,7 @@
     (is (= 8 (core/hand-size state :challenger)) "Challenger hand size boosted by Brain Cage")
     (take-credits state :challenger)
     (core/gain state :challenger :tag 2)
-    (core/trash state :challenger (get-hardware state 0))
+    (core/trash state :challenger (get-hazard state 0))
     (play-from-hand state :contestant "Traffic Accident")
     (is (= 3 (count (:discard (get-challenger)))) "Conventional meat damage not prevented by Parlor")))
 
@@ -247,7 +247,7 @@
     (play-from-hand state :contestant "Launch Campaign" "New remote")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Compromised Employee")
-    (let [ce (get-resource state 0)]
+    (let [ce (get-muthereff state 0)]
       (is (= 1 (:rec-counter (refresh ce))) "Has 1 recurring credit")
       (core/rez state :contestant (get-character state :hq 0))
       (is (= 4 (:credit (get-challenger))) "Gained 1c from Character rez")
@@ -265,7 +265,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Councilman")
     (let [jesus (get-content state :remote1 0)
-          judas (get-resource state 0)]
+          judas (get-muthereff state 0)]
       (core/rez state :contestant jesus)
       ;; Challenger triggers Councilman
       (card-ability state :challenger judas 0)
@@ -287,7 +287,7 @@
     (core/gain state :challenger :tag 2)
     (play-from-hand state :challenger "Counter Surveillance")
     (-> @state :challenger :credit (= 4) (is "Challenger has 4 credits"))
-    (let [cs (get-in @state [:challenger :rig :resource 0])]
+    (let [cs (get-in @state [:challenger :rig :muthereff 0])]
       (card-ability state :challenger cs 0)
       (prompt-choice :challenger "HQ")
       (run-successful state)
@@ -314,7 +314,7 @@
     (play-from-hand state :challenger "Counter Surveillance")
     (play-from-hand state :challenger "Obelus")
     (-> (get-challenger) :credit (= 2) (is "Challenger has 2 credits")) ; Challenger has enough credits to pay for CS
-    (let [cs (get-in @state [:challenger :rig :resource 0])]
+    (let [cs (get-in @state [:challenger :rig :muthereff 0])]
       (card-ability state :challenger cs 0)
       (prompt-choice :challenger "HQ")
       (run-successful state)
@@ -341,7 +341,7 @@
     (play-from-hand state :challenger "Councilman")
     (take-credits state :challenger)
     (let [jesus (get-content state :remote1 0)
-          judas (get-resource state 0)]
+          judas (get-muthereff state 0)]
       (core/rez state :contestant jesus)
       ;; Challenger triggers Councilman
       (card-ability state :challenger judas 0)
@@ -360,7 +360,7 @@
               (default-challenger [(qty "Daily Casts" 3)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Daily Casts")
-    (let [dc (get-in @state [:challenger :rig :resource 0])]
+    (let [dc (get-in @state [:challenger :rig :muthereff 0])]
       ;; Number of credits
       (is (= 8 (get-counters dc :credit)))
       (is (= 2 (get-in @state [:challenger :credit])))
@@ -379,7 +379,7 @@
       (is (= 19 (get-in @state [:challenger :credit])))
       (take-credits state :challenger)
       (take-credits state :contestant)
-      (is (nil? (get-in @state [:challenger :rig :resource 0]))))))
+      (is (nil? (get-in @state [:challenger :rig :muthereff 0]))))))
 
 (deftest data-folding
   ;; Data Folding - Gain 1c at start of turn if 2+ unused MU
@@ -408,7 +408,7 @@
     (play-from-hand state :contestant "Ice Wall" "HQ")
     (take-credits state :contestant)
     (play-from-hand state :challenger "DDoS")
-    (let [ddos (get-in @state [:challenger :rig :resource 0])
+    (let [ddos (get-in @state [:challenger :rig :muthereff 0])
           iwall (get-character state :hq 1)]
       (card-ability state :challenger ddos 0)
       (is (= (:title ddos) (get-in @state [:challenger :discard 0 :title])))
@@ -439,7 +439,7 @@
     (prompt-choice :contestant 0)
     (prompt-choice :challenger 0)
     (is (= 1 (count (:prompt (get-challenger)))) "Challenger prompted to avoid tag")
-    (card-ability state :challenger (get-resource state 0) 0)
+    (card-ability state :challenger (get-muthereff state 0) 0)
     (is (= 1 (count (:discard (get-challenger)))) "Decoy trashed")
     (is (= 0 (:tag (get-challenger))) "Tag avoided")))
 
@@ -471,7 +471,7 @@
     (play-from-hand state :challenger "Eden Shard")
     (is (= 5 (:credit (get-challenger))) "Eden Shard installed for 0c")
     (is (not (:run @state)) "Run is over")
-    (card-ability state :challenger (get-resource state 0) 0)
+    (card-ability state :challenger (get-muthereff state 0) 0)
     (is (= 3 (count (:hand (get-contestant)))) "Contestant drew 2 cards")
     (is (= 1 (count (:discard (get-challenger)))) "Eden Shard trashed")))
 
@@ -485,7 +485,7 @@
     (is (= 1 (count (:hand (get-contestant)))))
     (run-empty-server state :rd)
     (play-from-hand state :challenger "Eden Shard")
-    (is (not (get-resource state 0)) "Eden Shard not installed")
+    (is (not (get-muthereff state 0)) "Eden Shard not installed")
     (is (= 1 (count (:hand (get-challenger)))) "Eden Shard not installed")))
 
 (deftest fan-site
@@ -541,7 +541,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Data Dealer")
     (let [credits (:credit (get-challenger))]
-      (card-ability state :challenger (get-resource state 0) 0)
+      (card-ability state :challenger (get-muthereff state 0) 0)
       (prompt-select :challenger (get-scored state :challenger 0))
       (is (= 0 (count (:scored (get-challenger)))) "Fan Site successfully forfeit to Data Dealer")
       (is (= (+ credits 9) (:credit (get-challenger))) "Gained 9 credits from Data Dealer"))))
@@ -570,7 +570,7 @@
     (play-from-hand state :contestant "Project Vitruvius" "New remote")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Film Critic")
-    (let [fc (first (get-in @state [:challenger :rig :resource]))]
+    (let [fc (first (get-in @state [:challenger :rig :muthereff]))]
       (run-empty-server state "Server 1")
       (card-ability state :challenger fc 0)
       (is (= 1 (count (:hosted (refresh fc)))) "Agenda hosted on FC")
@@ -587,7 +587,7 @@
               (default-challenger [(qty "Film Critic" 1) (qty "Sure Gamble" 3)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Film Critic")
-    (let [fc (first (get-in @state [:challenger :rig :resource]))]
+    (let [fc (first (get-in @state [:challenger :rig :muthereff]))]
       (run-empty-server state "HQ")
       ;; should not have taken damage yet
       (is (= 3 (count (:hand (get-challenger)))) "No damage dealt yet")
@@ -608,13 +608,13 @@
     (core/rez state :contestant (get-content state :remote1 0))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Film Critic")
-    (let [fc (first (get-in @state [:challenger :rig :resource]))]
+    (let [fc (first (get-in @state [:challenger :rig :muthereff]))]
       (run-empty-server state :remote2)
       (card-ability state :challenger fc 0)
       (is (= 1 (count (:hosted (refresh fc)))) "Agenda hosted on FC")
       (take-credits state :challenger)
       (core/gain state :contestant :credit 10)
-      (core/trash-resource state :contestant nil)
+      (core/trash-muthereff state :contestant nil)
       (prompt-select :contestant fc)
       (is (= 1 (count (:discard (get-challenger)))) "FC trashed")
       (is (= 1 (count (:discard (get-contestant)))) "Agenda trashed")
@@ -649,21 +649,21 @@
       (prompt-choice :challenger "Steal"))))
 
 (deftest gene-conditioning-shoppe
-  ;; Gene Conditioning Shoppe - set :genetics-trigger-twcharacter flag
+  ;; Gene Conditioning Shoppe - set :genetics-trigger-twice flag
   (do-game
    (new-game (default-contestant [(qty "Hedge Fund" 3)])
              (default-challenger [(qty "Gene Conditioning Shoppe" 1)
                               (qty "Adjusted Chronotype" 1)]))
    (take-credits state :contestant)
    (play-from-hand state :challenger "Adjusted Chronotype")
-   (is (not (core/has-flag? state :challenger :persistent :genetics-trigger-twcharacter)))
+   (is (not (core/has-flag? state :challenger :persistent :genetics-trigger-twice)))
    (play-from-hand state :challenger "Gene Conditioning Shoppe")
-   (is (core/has-flag? state :challenger :persistent :genetics-trigger-twcharacter))
-   (core/trash state :challenger (get-in @state [:challenger :rig :resource 1]))
-   (is (not (core/has-flag? state :challenger :persistent :genetics-trigger-twcharacter)))))
+   (is (core/has-flag? state :challenger :persistent :genetics-trigger-twice))
+   (core/trash state :challenger (get-in @state [:challenger :rig :muthereff 1]))
+   (is (not (core/has-flag? state :challenger :persistent :genetics-trigger-twice)))))
 
 (deftest gene-conditioning-shoppe-redundancy
-  ;; Gene Conditioning Shoppe - set :genetics-trigger-twcharacter flag - ensure redundant copies work
+  ;; Gene Conditioning Shoppe - set :genetics-trigger-twice flag - ensure redundant copies work
   (do-game
    (new-game (default-contestant [(qty "Hedge Fund" 3)])
              (default-challenger [(qty "Gene Conditioning Shoppe" 2)
@@ -672,17 +672,17 @@
    (take-credits state :challenger)
    (take-credits state :contestant)
    (play-from-hand state :challenger "Adjusted Chronotype")
-   (let [adjusted-chronotype (get-in @state [:challenger :rig :resource 0])]
-     (is (not (core/has-flag? state :challenger :persistent :genetics-trigger-twcharacter)))
+   (let [adjusted-chronotype (get-in @state [:challenger :rig :muthereff 0])]
+     (is (not (core/has-flag? state :challenger :persistent :genetics-trigger-twice)))
      (play-from-hand state :challenger "Gene Conditioning Shoppe")
      (play-from-hand state :challenger "Gene Conditioning Shoppe")
-     (let [gcs1 (get-in @state [:challenger :rig :resource 1])
-           gcs2 (get-in @state [:challenger :rig :resource 2])]
-       (is (core/has-flag? state :challenger :persistent :genetics-trigger-twcharacter))
+     (let [gcs1 (get-in @state [:challenger :rig :muthereff 1])
+           gcs2 (get-in @state [:challenger :rig :muthereff 2])]
+       (is (core/has-flag? state :challenger :persistent :genetics-trigger-twice))
        (core/trash state :challenger gcs1)
-       (is (core/has-flag? state :challenger :persistent :genetics-trigger-twcharacter))
+       (is (core/has-flag? state :challenger :persistent :genetics-trigger-twice))
        (core/trash state :challenger gcs2)
-       (is (not (core/has-flag? state :challenger :persistent :genetics-trigger-twcharacter)))))))
+       (is (not (core/has-flag? state :challenger :persistent :genetics-trigger-twice)))))))
 
 (deftest globalsec-security-clearance
   ;; Globalsec Security Clearance - Ability, click lost on use
@@ -696,7 +696,7 @@
     (starting-hand state :contestant ["Hedge Fund"]) ; Hedge Fund on top
     (take-credits state :contestant)
     (is (:challenger-phase-12 @state) "Challenger in Step 1.2")
-    (let [gsec (-> (get-challenger) :rig :resource first)]
+    (let [gsec (-> (get-challenger) :rig :muthereff first)]
       (card-ability state :challenger gsec 0)
       (is (pos? (.indexOf (-> (get-challenger) :prompt first :msg) "Hedge Fund")) "GSec revealed Hedge Fund")
       (core/end-phase-12 state :challenger nil)
@@ -752,12 +752,12 @@
               (default-challenger [(qty "Investigative Journalism" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Investigative Journalism")
-    (is (empty? (get-in @state [:challenger :rig :resource])) "Contestant has no bad pub, couldn't install")
+    (is (empty? (get-in @state [:challenger :rig :muthereff])) "Contestant has no bad pub, couldn't install")
     (core/gain state :contestant :bad-publicity 1)
     (play-from-hand state :challenger "Investigative Journalism")
     (take-credits state :challenger)
     (take-credits state :contestant)
-    (card-ability state :challenger (get-resource state 0) 0)
+    (card-ability state :challenger (get-muthereff state 0) 0)
     (is (= 0 (:click (get-challenger))) "Spent 4 clicks")
     (is (= 1 (count (:discard (get-challenger)))) "IJ is trashed")
     (is (= 2 (:bad-publicity (get-contestant))) "Contestant took 1 bad publicity")))
@@ -799,7 +799,7 @@
     (take-credits state :contestant)
     (is (= 0 (:click (get-challenger))) "Challenger has 0 clicks")
     (is (:challenger-phase-12 @state) "Challenger is in Step 1.2")
-    (card-ability state :challenger (get-in @state [:challenger :rig :resource 0]) 0)
+    (card-ability state :challenger (get-in @state [:challenger :rig :muthereff 0]) 0)
     (is (= 1 (:click (get-challenger))) "Gained extra click from Joshua")
     (core/end-phase-12 state :challenger nil)
     (is (= 5 (:click (get-challenger))) "Gained normal clicks as well")
@@ -814,7 +814,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Kati Jones")
     (is (= 3 (:credit (get-challenger))))
-    (let [kati (get-in @state [:challenger :rig :resource 0])]
+    (let [kati (get-in @state [:challenger :rig :muthereff 0])]
       (card-ability state :challenger kati 0)
       (is (= 2 (:click (get-challenger))))
       (is (= 3 (get-counters (refresh kati) :credit)) "Store 3cr on Kati")
@@ -861,22 +861,22 @@
     (is (= 2 (count (:discard (get-challenger)))) "Second Lewi trashed due to no credits")))
 
 (deftest london-library
-  ;; Install non-virus programs on London library. Includes #325/409
+  ;; Install non-virus resources on London library. Includes #325/409
   (do-game
     (new-game (default-contestant) (default-challenger [(qty "London Library" 1) (qty "Darwin" 1) (qty "Study Guide" 1)
                                               (qty "Chameleon" 1) (qty "Femme Fatale" 1)]))
     (take-credits state :contestant)
     (core/gain state :challenger :click 2)
     (play-from-hand state :challenger "London Library")
-    (let [lib (get-in @state [:challenger :rig :resource 0])]
-      (is (= 0 (count (:hosted (refresh lib)))) "0 programs hosted")
-      (card-ability state :challenger lib 0) ; Install a non-virus program on London Library
+    (let [lib (get-in @state [:challenger :rig :muthereff 0])]
+      (is (= 0 (count (:hosted (refresh lib)))) "0 resources hosted")
+      (card-ability state :challenger lib 0) ; Install a non-virus resource on London Library
       (prompt-select :challenger (find-card "Femme Fatale" (:hand (get-challenger))))
       (prompt-choice :challenger "Done") ; Cancel out of Femme's bypass
-      (is (= 1 (count (:hosted (refresh lib)))) "1 program hosted")
+      (is (= 1 (count (:hosted (refresh lib)))) "1 resource hosted")
       (card-ability state :challenger lib 0)
       (prompt-select :challenger (find-card "Study Guide" (:hand (get-challenger))))
-      (is (= 2 (count (:hosted (refresh lib)))) "2 programs hosted")
+      (is (= 2 (count (:hosted (refresh lib)))) "2 resources hosted")
       (let [sg (second (:hosted (refresh lib)))]
         (is (= 0 (:current-strength (refresh sg))) "Study Guide at 0 strength")
         (card-ability state :challenger sg 1) ; Place 1 power counter
@@ -884,24 +884,24 @@
       (card-ability state :challenger lib 0)
       (prompt-select :challenger (find-card "Chameleon" (:hand (get-challenger))))
       (prompt-choice :challenger "Sentry")
-      (is (= 3 (count (:hosted (refresh lib)))) "3 programs hosted")
+      (is (= 3 (count (:hosted (refresh lib)))) "3 resources hosted")
       (is (= 2 (:click (get-challenger))) "At 2 clicks")
       (card-ability state :challenger lib 0)
       (prompt-select :challenger (find-card "Darwin" (:hand (get-challenger)))) ; Darwin is a virus
-      (is (= 3 (count (:hosted (refresh lib)))) "Still 3 programs hosted")
+      (is (= 3 (count (:hosted (refresh lib)))) "Still 3 resources hosted")
       (is (= 2 (:click (get-challenger))) "Failed Darwin didn't use a click")
       (is (= 1 (count (:hand (get-challenger)))))
-      (card-ability state :challenger lib 1) ; Add a program hosted on London Library to your Grip
+      (card-ability state :challenger lib 1) ; Add a resource hosted on London Library to your Grip
       (prompt-card :challenger nil)
       (prompt-select :challenger (find-card "Study Guide" (:hosted (refresh lib))))
       (is (= 2 (count (:hand (get-challenger)))) "Return Study Guide to hand")
-      (is (= 2 (count (:hosted (refresh lib)))) "2 programs hosted")
+      (is (= 2 (count (:hosted (refresh lib)))) "2 resources hosted")
       (card-ability state :challenger lib 0)
       (prompt-select :challenger (find-card "Study Guide" (:hand (get-challenger))))
-      (is (= 3 (count (:hosted (refresh lib)))) "3 programs hosted")
+      (is (= 3 (count (:hosted (refresh lib)))) "3 resources hosted")
       (is (= 0 (count (:discard (get-challenger)))) "Nothing in archives yet")
       (take-credits state :challenger)
-      (is (= 0 (count (:hosted (refresh lib)))) "All programs trashed when turn ends")
+      (is (= 0 (count (:hosted (refresh lib)))) "All resources trashed when turn ends")
       (is (= 2 (count (:hand (get-challenger)))) "Darwin never got played, Chameleon returned to hand")
       (is (= 2 (count (:discard (get-challenger)))) "Femme Fatale and Study Guide trashed"))))
 
@@ -922,7 +922,7 @@
       (prompt-select :contestant (refresh iw))
       (is (not (:rezzed (refresh iw))) "Ice Wall derezzed")
       (is (= 2 (count (:hand (get-challenger)))) "2 cards in Challenger's hand")
-      (let [muer (get-in @state [:challenger :rig :resource 0])]
+      (let [muer (get-in @state [:challenger :rig :muthereff 0])]
         (card-ability state :challenger muer 0)
         (is (= 3 (count (:hand (get-challenger)))) "Challenger drew a card from Muertos")
         (prompt-select :contestant toll)
@@ -947,7 +947,7 @@
       (prompt-select :contestant (refresh iw))
       (is (not (:rezzed (refresh iw))) "Ice Wall derezzed")
       (is (= 2 (count (:hand (get-challenger)))) "2 cards in Challenger's hand")
-      (let [muer (get-in @state [:challenger :rig :resource 0])]
+      (let [muer (get-in @state [:challenger :rig :muthereff 0])]
         (card-ability state :challenger muer 0)
         (is (= 3 (count (:hand (get-challenger)))) "Challenger drew a card from Muertos")
         (prompt-select :contestant toll)
@@ -964,9 +964,9 @@
     (play-from-hand state :challenger "Silencer")
     (play-from-hand state :challenger "Net Mercur")
     (play-from-hand state :challenger "Ghost Challenger")
-    (let [sil (get-hardware state 0)
-          nm (get-resource state 0)
-          gr (get-resource state 1)]
+    (let [sil (get-hazard state 0)
+          nm (get-muthereff state 0)
+          gr (get-muthereff state 1)]
       (card-ability state :challenger gr 0)
       (is (empty? (:prompt (get-challenger))) "No Net Mercur prompt from stealth spent outside of run")
       (run-on state :hq)
@@ -1043,7 +1043,7 @@
     (play-from-hand state :contestant "Breaking News" "New remote")
     (take-credits state :contestant 2)
     (play-from-hand state :challenger "New Angeles City Hall")
-    (let [nach (get-in @state [:challenger :rig :resource 0])]
+    (let [nach (get-in @state [:challenger :rig :muthereff 0])]
       (run-empty-server state "Archives")
       (take-credits state :challenger)
       (is (= 6 (:credit (get-challenger))))
@@ -1058,7 +1058,7 @@
       (run-empty-server state "Server 1")
       (prompt-choice :challenger "Steal")
       (is (= 1 (:agenda-point (get-challenger))))
-      (is (empty? (get-in @state [:challenger :rig :resource])) "NACH trashed by agenda steal"))))
+      (is (empty? (get-in @state [:challenger :rig :muthereff])) "NACH trashed by agenda steal"))))
 
 (deftest new-angeles-city-hall-siphon
   ;; New Angeles City Hall - don't gain Siphon credits until opportunity to avoid tags has passed
@@ -1069,7 +1069,7 @@
     (play-from-hand state :challenger "New Angeles City Hall")
     (play-run-event state (first (:hand (get-challenger))) :hq)
     (prompt-choice :challenger "Run ability")
-    (let [nach (get-in @state [:challenger :rig :resource 0])]
+    (let [nach (get-in @state [:challenger :rig :muthereff 0])]
       (is (= 4 (:credit (get-challenger))) "Have not gained Account Siphon credits until tag avoidance window closes")
       (card-ability state :challenger nach 0)
       (card-ability state :challenger nach 0)
@@ -1087,7 +1087,7 @@
     (take-credits state :contestant)
     (starting-hand state :challenger ["Street Peddler" "Off-Campus Apartment" "Underworld Contact"])
     (play-from-hand state :challenger "Off-Campus Apartment")
-    (let [oca (get-resource state 0)]
+    (let [oca (get-muthereff state 0)]
       (card-ability state :challenger oca 0)
       (prompt-select :challenger (find-card "Underworld Contact" (:hand (get-challenger))))
       (is (= 2 (count (:hand (get-challenger)))) "Drew a card from OCA")
@@ -1107,7 +1107,7 @@
     (starting-hand state :challenger ["Street Peddler" "Street Peddler" "Off-Campus Apartment"])
     (core/move state :challenger (find-card "Street Peddler" (:hand (get-challenger))) :deck {:front true})
     (play-from-hand state :challenger "Off-Campus Apartment")
-    (let [oca (get-resource state 0)]
+    (let [oca (get-muthereff state 0)]
       (card-ability state :challenger oca 0)
       (prompt-select :challenger (find-card "Street Peddler" (:hand (get-challenger))))
       (prompt-choice :challenger "Street Peddler")
@@ -1115,12 +1115,12 @@
         (card-ability state :challenger ped1 0)
         (prompt-card :challenger (-> (get-challenger) :prompt first :choices second)) ; choose Street Peddler
         (card-ability state :challenger (refresh oca) 1)
-        (prompt-select :challenger (get-resource state 1))
+        (prompt-select :challenger (get-muthereff state 1))
         (let [ped2 (first (:hosted (refresh oca)))]
           (card-ability state :challenger ped2 0)
           (prompt-card :challenger (-> (get-challenger) :prompt first :choices first)) ; choose Spy Camera
           ;; the fact that we got this far means the bug is fixed
-          (is (= 1 (count (get-hardware state))) "Spy Camera installed"))))))
+          (is (= 1 (count (get-hazard state))) "Spy Camera installed"))))))
 
 (deftest offcharacterr-frank
   ;; Offcharacterr Frank - meat damage to trash 2 from HQ
@@ -1131,11 +1131,11 @@
    (take-credits state :contestant)
    (starting-hand state :challenger ["Offcharacterr Frank" "Skulljack" "Respirocytes" "Respirocytes" "Respirocytes" "Respirocytes"])
    (play-from-hand state :challenger "Offcharacterr Frank")
-   (card-ability state :challenger (get-resource state 0) 0)
+   (card-ability state :challenger (get-muthereff state 0) 0)
    (is (= 0 (count (:discard (get-contestant)))) "Nothing discarded from HQ")
    (play-from-hand state :challenger "Skulljack")
    (is (= 3 (count (:hand (get-challenger)))) "Took 1 brain damage")
-   (card-ability state :challenger (get-resource state 0) 0)
+   (card-ability state :challenger (get-muthereff state 0) 0)
    (is (= 0 (count (:discard (get-contestant)))) "Nothing discarded from HQ")
    (let [sm (get-character state :archives 0)]
      (run-on state :archives)
@@ -1143,11 +1143,11 @@
      (card-subroutine state :contestant sm 0)
      (run-jack-out state))
    (is (= 2 (count (:hand (get-challenger)))) "Took 1 net damage")
-   (card-ability state :challenger (get-resource state 0) 0)
+   (card-ability state :challenger (get-muthereff state 0) 0)
    (is (= 0 (count (:discard (get-contestant)))) "Nothing discarded from HQ")
    (play-from-hand state :challenger "Respirocytes")
    (is (= 0 (count (:hand (get-challenger)))) "Took 1 meat damage")
-   (card-ability state :challenger (get-resource state 0) 0)
+   (card-ability state :challenger (get-muthereff state 0) 0)
    (is (= 2 (count (:discard (get-contestant)))) "Two cards trashed from HQ")))
 
 (deftest paige-piper-frantic-coding
@@ -1165,7 +1165,7 @@
     (play-from-hand state :challenger "Frantic Coding")
     (prompt-choice :challenger "OK")
     (prompt-card :challenger (find-card "Gordian Blade" (:deck (get-challenger))))
-    (is (= 1 (count (get-program state))) "Installed Gordian Blade")
+    (is (= 1 (count (get-resource state))) "Installed Gordian Blade")
     (prompt-choice :challenger "Yes")
     (prompt-choice :challenger "0")
     (is (= 1 (count (:discard (get-challenger)))) "Paige Piper intervention stopped Frantic Coding from trashing 9 cards")
@@ -1174,7 +1174,7 @@
     (play-from-hand state :challenger "Frantic Coding")
     (prompt-choice :challenger "OK")
     (prompt-card :challenger (find-card "Ninja" (:deck (get-challenger))))
-    (is (= 2 (count (get-program state))) "Installed Ninja")
+    (is (= 2 (count (get-resource state))) "Installed Ninja")
     (is (= 11 (count (:discard (get-challenger)))) "11 cards in heap")
     (is (= 2 (:credit (get-challenger))) "No charge to install Ninja")))
 
@@ -1186,7 +1186,7 @@
     (play-from-hand state :contestant "Jackson Howard" "New remote")
     (take-credits state :contestant 2)
     (play-from-hand state :challenger "Patron")
-    (let [p (get-in @state [:challenger :rig :resource 0])]
+    (let [p (get-in @state [:challenger :rig :muthereff 0])]
       (take-credits state :challenger 3)
       (take-credits state :contestant)
       (prompt-choice :challenger "Server 1")
@@ -1214,8 +1214,8 @@
     (play-from-hand state :challenger "Patron")
     (play-from-hand state :challenger "Jak Sinclair")
     (take-credits state :challenger)
-    (let [p (get-resource state 0)
-          j (get-resource state 1)]
+    (let [p (get-muthereff state 0)
+          j (get-muthereff state 1)]
       (take-credits state :contestant)
       (is (:challenger-phase-12 @state) "Challenger in Step 1.2")
       (card-ability state :challenger p 0)
@@ -1235,7 +1235,7 @@
                                (qty "Shiv" 2)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Professional Contacts")
-    (let [proco (get-in @state [:challenger :rig :resource 0])]
+    (let [proco (get-in @state [:challenger :rig :muthereff 0])]
       (card-ability state :challenger proco 0)
       (is (= 2 (:click (get-challenger))) "Spent 1 click")
       (is (= 1 (:credit (get-challenger))) "Gained 1 credit")
@@ -1273,14 +1273,14 @@
     (is (= "Diesel" (:title (second (rest (:deck (get-challenger)))))))
     (is (= "Corroder" (:title (second (rest (rest (:deck (get-challenger))))))))
     (is (= "Patron" (:title (second (rest (rest (rest (:deck (get-challenger)))))))))
-    (core/trash state :challenger (get-resource state 0))
+    (core/trash state :challenger (get-muthereff state 0))
     (is (last-log-contains? state "Sure Gamble, Desperado, Diesel")
         "Rolodex did log trashed card names")
     (is (= 4 (count (:discard (get-challenger)))) "Rolodex mills 3 cards when trashed")
     (is (= "Corroder" (:title (first (:deck (get-challenger))))))))
 
 (deftest sacrificial-construct
-  ;; Sacrificial Construct - Trash to prevent trash of installed program or hardware
+  ;; Sacrificial Construct - Trash to prevent trash of installed resource or hazard
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Sacrificial Construct" 2) (qty "Cache" 1)
@@ -1293,16 +1293,16 @@
     (play-from-hand state :challenger "Motivation")
     (play-from-hand state :challenger "Astrolabe")
     (take-credits state :challenger)
-    (core/trash state :challenger (get-resource state 2))
-    (is (empty? (:prompt (get-challenger))) "Sac Con not prompting to prevent resource trash")
-    (core/trash state :challenger (get-program state 0))
-    (card-ability state :challenger (get-resource state 0) 0)
+    (core/trash state :challenger (get-muthereff state 2))
+    (is (empty? (:prompt (get-challenger))) "Sac Con not prompting to prevent muthereff trash")
+    (core/trash state :challenger (get-resource state 0))
+    (card-ability state :challenger (get-muthereff state 0) 0)
     (is (= 2 (count (:discard (get-challenger)))) "Sac Con trashed")
-    (is (= 1 (count (get-in @state [:challenger :rig :program]))) "Cache still installed")
-    (core/trash state :challenger (get-hardware state 0))
-    (card-ability state :challenger (get-resource state 0) 0)
+    (is (= 1 (count (get-in @state [:challenger :rig :resource]))) "Cache still installed")
+    (core/trash state :challenger (get-hazard state 0))
+    (card-ability state :challenger (get-muthereff state 0) 0)
     (is (= 3 (count (:discard (get-challenger)))) "Sac Con trashed")
-    (is (= 1 (count (get-in @state [:challenger :rig :hardware]))) "Astrolabe still installed")))
+    (is (= 1 (count (get-in @state [:challenger :rig :hazard]))) "Astrolabe still installed")))
 
 (deftest safety-first
   ;; Safety First - Reduce hand size by 2, draw 1 at turn end if below maximum
@@ -1340,8 +1340,8 @@
     (let [ts1 (get-content state :remote1 0)
           hostile2 (get-content state :remote2 0)
           th3 (get-content state :remote3 0)
-          salsette1 (get-resource state 0)
-          salsette2 (get-resource state 1)]
+          salsette1 (get-muthereff state 0)
+          salsette2 (get-muthereff state 1)]
       (is (= 3 (count (:hand (get-challenger)))) "Challenger started this part with three cards in hand")
       (core/rez state :contestant hostile2)
       (run-empty-server state "Server 1")
@@ -1380,7 +1380,7 @@
     (prompt-choice :challenger "Yes")
     (take-credits state :challenger)
     (take-credits state :contestant)
-    (let [salsette1 (get-resource state 0)
+    (let [salsette1 (get-muthereff state 0)
           hostile2 (get-content state :remote2 0)]
       (card-ability state :challenger salsette1 1)
       (prompt-select :challenger (find-card "Hostile Infrastructure" (:discard (get-contestant))))
@@ -1394,7 +1394,7 @@
     (play-from-hand state :contestant "Jackson Howard" "New remote")
     (take-credits state :contestant 2)
     (play-from-hand state :challenger "Security Testing")
-    (let [st (get-in @state [:challenger :rig :resource 0])]
+    (let [st (get-in @state [:challenger :rig :muthereff 0])]
       (take-credits state :challenger 3)
       (take-credits state :contestant)
       (prompt-choice :challenger "Server 1")
@@ -1453,7 +1453,7 @@
     (play-from-hand state :challenger "Stim Dealer")
     (take-credits state :challenger)
     (take-credits state :contestant)
-    (let [sd (get-resource state 0)]
+    (let [sd (get-muthereff state 0)]
       (is (= 1 (get-counters (refresh sd) :power)) "Gained 1 counter")
       (is (= 5 (:click (get-challenger))) "Gained 1 click")
       (take-credits state :challenger)
@@ -1478,11 +1478,11 @@
     (take-credits state :contestant)
     (starting-hand state :challenger ["Street Peddler" "Sure Gamble"])
     (play-from-hand state :challenger "Street Peddler")
-    (let [sp (get-in @state [:challenger :rig :resource 0])]
+    (let [sp (get-in @state [:challenger :rig :muthereff 0])]
       (is (= 3 (count (:hosted sp))) "Street Peddler is hosting 3 cards")
       (card-ability state :challenger sp 0)
       (prompt-card :challenger (find-card "Gordian Blade" (:hosted sp))) ; choose to install Gordian
-      (is (= "Gordian Blade" (:title (get-in @state [:challenger :rig :program 0])))
+      (is (= "Gordian Blade" (:title (get-in @state [:challenger :rig :resource 0])))
           "Gordian Blade was installed")
       (is (= 3 (:memory (get-challenger))) "Gordian cost 1 mu"))))
 
@@ -1494,13 +1494,13 @@
     (take-credits state :contestant)
     (starting-hand state :challenger ["Street Peddler"])
     (play-from-hand state :challenger "Street Peddler")
-    (let [sp (get-in @state [:challenger :rig :resource 0])]
+    (let [sp (get-in @state [:challenger :rig :muthereff 0])]
       (card-ability state :challenger sp 0)
       (core/lose state :challenger :credit 3)
       (is (= 2 (count (:choices (first (:prompt (get-challenger))))))
           "1 card and 1 cancel option on Street Peddler")
       (prompt-card :challenger (find-card "Gordian Blade" (:hosted sp))) ; choose to install Gordian
-      (is (zero? (count (get-in @state [:challenger :rig :program])))
+      (is (zero? (count (get-in @state [:challenger :rig :resource])))
           "Gordian Blade was not installed")
       (is (and (:installed (refresh sp)) (= 3 (count (:hosted (refresh sp))))
                "Street Peddler still installed with 3 hosted cards")))))
@@ -1515,19 +1515,19 @@
     (take-credits state :contestant)
     (starting-hand state :challenger ["Street Peddler"])
     (play-from-hand state :challenger "Street Peddler")
-    (let [sp (get-in @state [:challenger :rig :resource 0])]
+    (let [sp (get-in @state [:challenger :rig :muthereff 0])]
       ;; should still be able to afford Gordian w/ Kate discount
       (core/lose state :challenger :credit 3)
       (card-ability state :challenger sp 0)
       (is (= 2 (count (:choices (first (:prompt (get-challenger))))))
           "Only 1 choice (plus Cancel) to install off Peddler")
       (prompt-card :challenger (find-card "Gordian Blade" (:hosted sp))) ; choose to install Gordian
-      (is (= "Gordian Blade" (:title (get-in @state [:challenger :rig :program 0])))
+      (is (= "Gordian Blade" (:title (get-in @state [:challenger :rig :resource 0])))
           "Gordian Blade was installed")
       (is (= 3 (:memory (get-challenger))) "Gordian cost 1 mu"))))
 
 (deftest street-peddler-memory-units
-  ;; Street Peddler - Programs Should Cost Memory. Issue #708
+  ;; Street Peddler - Resources Should Cost Memory. Issue #708
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Street Peddler" 1) (qty "Corroder" 3)]))
@@ -1535,11 +1535,11 @@
     (starting-hand state :challenger ["Street Peddler"])
     (play-from-hand state :challenger "Street Peddler")
     (is (= 4 (:memory (get-challenger))) "No memory cost for hosting on Street Peddler")
-    (let [sp (get-in @state [:challenger :rig :resource 0])]
+    (let [sp (get-in @state [:challenger :rig :muthereff 0])]
       (is (= "Corroder" (:title (first (:hosted sp)))) "Street Peddler is hosting Corroder")
       (card-ability state :challenger sp 0)
       (prompt-card :challenger (first (:hosted sp))) ; choose to install Gordian
-      (is (= "Corroder" (:title (get-in @state [:challenger :rig :program 0])))
+      (is (= "Corroder" (:title (get-in @state [:challenger :rig :resource 0])))
           "Corroder was installed")
       (is (= 3 (:memory (get-challenger))) "Corroder cost 1 mu"))))
 
@@ -1556,7 +1556,7 @@
     (play-from-hand state :challenger "Street Peddler")
     (core/gain state :challenger :agenda-point 1)
     (let [jh (get-content state :remote1 0)
-          sp (get-in @state [:challenger :rig :resource 0])]
+          sp (get-in @state [:challenger :rig :muthereff 0])]
       (core/rez state :contestant jh)
       (card-ability state :challenger sp 0)
       (prompt-card :challenger (find-card "Street Peddler" (:hosted sp))) ; choose to another Peddler
@@ -1564,14 +1564,14 @@
       (is (= 4 (:memory (get-challenger))) "Challenger has 4 MU"))))
 
 (deftest street-peddler-in-play-effects
-  ;; Street Peddler - Trashing hardware should not reduce :in-play values
+  ;; Street Peddler - Trashing hazard should not reduce :in-play values
   (do-game
    (new-game (default-contestant)
              (default-challenger [(qty "Street Peddler" 1) (qty "HQ Interface" 3)]))
    (take-credits state :contestant)
    (starting-hand state :challenger ["Street Peddler"])
    (play-from-hand state :challenger "Street Peddler")
-   (let [sp (get-in @state [:challenger :rig :resource 0])]
+   (let [sp (get-in @state [:challenger :rig :muthereff 0])]
      (card-ability state :challenger sp 0)
      (prompt-card :challenger (first (:hosted sp))) ; choose to install HQ Interface
      (is (= 2 (:hq-access (get-challenger)))
@@ -1588,7 +1588,7 @@
     (core/lose state :challenger :credit 4) ; go down to 1 credit
     (is (= 1 (:credit (get-challenger))) "Challenger has 1 credit")
     (play-from-hand state :challenger "Street Peddler")
-    (let [sp (get-in @state [:challenger :rig :resource 0])
+    (let [sp (get-in @state [:challenger :rig :muthereff 0])
           pu (get-character state :hq 0)]
       (core/rez state :contestant pu)
       (card-ability state :challenger sp 0)
@@ -1608,11 +1608,11 @@
     (take-credits state :contestant)
     (starting-hand state :challenger ["Street Peddler"])
     (play-from-hand state :challenger "Street Peddler")
-    (let [sp (get-in @state [:challenger :rig :resource 0])]
+    (let [sp (get-in @state [:challenger :rig :muthereff 0])]
       (is (= 1 (count (:hosted sp))) "Street Peddler is hosting 1 card")
       (card-ability state :challenger sp 0)
       (prompt-card :challenger (find-card "Tech Trader" (:hosted sp))) ; choose to install Tech Trader
-      (is (= "Tech Trader" (:title (get-in @state [:challenger :rig :resource 0])))
+      (is (= "Tech Trader" (:title (get-in @state [:challenger :rig :muthereff 0])))
           "Tech Trader was installed")
       (is (= 5 (:credit (get-challenger))) "Did not gain 1cr from Tech Trader ability"))))
 
@@ -1628,10 +1628,10 @@
     (take-credits state :contestant)
     (starting-hand state :challenger ["Street Peddler" "Sure Gamble"])
     (play-from-hand state :challenger "Street Peddler")
-    (let [street-peddler (get-in @state [:challenger :rig :resource 0])]
+    (let [street-peddler (get-in @state [:challenger :rig :muthereff 0])]
       (is (= 3 (count (:hosted street-peddler))) "Street Peddler is hosting 3 cards")
       (card-ability state :challenger street-peddler 0)
-      (trash-resource state "Street Peddler")
+      (trash-muthereff state "Street Peddler")
       (is (zero? (count (get-in @state [:challenger :prompt])))))))
 
 (deftest symmetrical-visage
@@ -1719,7 +1719,7 @@
      (is (= 3 (count (:hand (get-challenger)))) "1 card drawn when receiving damage (2nd time)"))))
 
 (deftest technical-writer
-  ;; Technical Writer - Gain 1c per program/hardware install; click/trash to take all credits
+  ;; Technical Writer - Gain 1c per resource/hazard install; click/trash to take all credits
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Technical Writer" 1) (qty "Faerie" 2)
@@ -1727,7 +1727,7 @@
     (take-credits state :contestant)
     (core/gain state :challenger :click 2)
     (play-from-hand state :challenger "Technical Writer")
-    (let [tw (get-resource state 0)]
+    (let [tw (get-muthereff state 0)]
       (play-from-hand state :challenger "Faerie")
       (is (= 1 (get-counters (refresh tw) :credit)) "Tech Writer gained 1c")
       (play-from-hand state :challenger "Faerie")
@@ -1735,7 +1735,7 @@
       (play-from-hand state :challenger "Vigil")
       (is (= 3 (get-counters (refresh tw) :credit)) "Tech Writer gained 1c")
       (play-from-hand state :challenger "Same Old Thing")
-      (is (= 3 (get-counters (refresh tw) :credit)) "No credit gained for resource install")
+      (is (= 3 (get-counters (refresh tw) :credit)) "No credit gained for muthereff install")
       (card-ability state :challenger tw 0)
       (is (= 6 (:credit (get-challenger))) "Gained 3 credits")
       (is (= 0 (:click (get-challenger))) "Spent 1 click")
@@ -1750,8 +1750,8 @@
     (play-from-hand state :challenger "The Helpful AI")
     (is (= 1 (:link (get-challenger))) "Gained 1 link")
     (play-from-hand state :challenger "Corroder")
-    (let [corr (get-program state 0)]
-      (card-ability state :challenger (get-resource state 0) 0)
+    (let [corr (get-resource state 0)]
+      (card-ability state :challenger (get-muthereff state 0) 0)
       (prompt-select :challenger corr)
       (is (= 4 (:current-strength (refresh corr))) "Corroder has +2 strength")
       (is (= 1 (count (:discard (get-challenger)))) "Helpful AI trashed")
@@ -1796,7 +1796,7 @@
                                (qty "Hedge Fund" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "The Supplier")
-    (let [ts (get-in @state [:challenger :rig :resource 0])]
+    (let [ts (get-in @state [:challenger :rig :muthereff 0])]
       (card-ability state :challenger ts 0)
       (prompt-select :challenger (find-card "Plascrete Carapace" (:hand (get-challenger))))
       (card-ability state :challenger ts 0)
@@ -1824,7 +1824,7 @@
                           (qty "Hedge Fund" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "The Supplier")
-    (let [ts (get-in @state [:challenger :rig :resource 0])]
+    (let [ts (get-in @state [:challenger :rig :muthereff 0])]
       (card-ability state :challenger ts 0)
       (prompt-select :challenger (find-card "Plascrete Carapace" (:hand (get-challenger))))
       (core/lose state :challenger :credit (:credit (get-challenger)))
@@ -1832,7 +1832,7 @@
       (take-credits state :contestant)
       (prompt-select :challenger (find-card "Plascrete Carapace" (:hosted (refresh ts))))
       (is (= 0 (:credit (get-challenger))) "Kate discount applied")
-      (is (= 1 (count (get-in @state [:challenger :rig :resource]))) "Plascrete installed"))))
+      (is (= 1 (count (get-in @state [:challenger :rig :muthereff]))) "Plascrete installed"))))
 
 (deftest the-supplier-trashed
   ;; Issue #2358 Brain chip mem is deducted when it is hosted and Supplier is trashed
@@ -1844,7 +1844,7 @@
     (take-credits state :contestant)
     (is (= 4 (:memory (get-challenger))) "Challenger has 4 MU")
     (play-from-hand state :challenger "The Supplier")
-    (let [ts (get-resource state 0)]
+    (let [ts (get-muthereff state 0)]
       (card-ability state :challenger ts 0)
       (prompt-select :challenger (find-card "Brain Chip" (:hand (get-challenger))))
       (is (= 4 (:memory (get-challenger))) "Challenger has 4 MU")
@@ -1852,8 +1852,8 @@
       (prompt-choice :challenger "Steal")
       (take-credits state :challenger)
       (core/gain state :challenger :tag 1)
-      (core/trash-resource state :contestant nil)
-      (prompt-select :contestant (get-resource state 0))
+      (core/trash-muthereff state :contestant nil)
+      (prompt-select :contestant (get-muthereff state 0))
       (is (= 2 (count (:discard (get-challenger)))))
       (is (= 4 (:memory (get-challenger))) "Challenger has 4 MU"))))
 
@@ -1868,7 +1868,7 @@
     (play-from-hand state :challenger "Fall Guy")
     (is (= 4 (:credit (get-challenger))))
 
-    (let [fall (get-in @state [:challenger :rig :resource 1])]
+    (let [fall (get-in @state [:challenger :rig :muthereff 1])]
       (card-ability state :challenger fall 1)
       (is (= 7 (:credit (get-challenger)))))))
 
@@ -1887,7 +1887,7 @@
     (is (= 7 (:agenda-point (get-contestant))))
     (is (not (:winner @state)) "No registered Contestant win")
     (take-credits state :contestant)
-    (let [bf (get-resource state 0)]
+    (let [bf (get-muthereff state 0)]
       (is (= 1 (get-in (refresh bf) [:counter :power])) "1 power counter on The Black File")
       (take-credits state :challenger)
       (take-credits state :contestant)
@@ -1931,7 +1931,7 @@
     (is (= 5 (:credit (get-challenger))) "Gained 4cr")
     (run-empty-server state "Archives")
     (is (= 9 (:credit (get-challenger))) "Gained 4cr")
-    (is (= 12 (get-counters (get-resource state 0) :credit)) "Temjin has 12 credits remaining")))
+    (is (= 12 (get-counters (get-muthereff state 0) :credit)) "Temjin has 12 credits remaining")))
 
 (deftest tri-maf-contact
   ;; Tri-maf Contact - Click for 2c once per turn; take 3 meat dmg when trashed
@@ -1940,7 +1940,7 @@
               (default-challenger [(qty "Tri-maf Contact" 1) (qty "Cache" 3) (qty "Shiv" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Tri-maf Contact")
-    (let [tmc (get-resource state 0)]
+    (let [tmc (get-muthereff state 0)]
       (card-ability state :challenger tmc 0)
       (is (= 5 (:credit (get-challenger))) "Gained 2c")
       (is (= 2 (:click (get-challenger))) "Spent 1 click")
@@ -1951,8 +1951,8 @@
       (play-from-hand state :challenger "Tri-maf Contact")
       (core/gain state :challenger :tag 1)
       (take-credits state :challenger)
-      (core/trash-resource state :contestant nil)
-      (prompt-select :contestant (get-resource state 0))
+      (core/trash-muthereff state :contestant nil)
+      (prompt-select :contestant (get-muthereff state 0))
       (is (= 4 (count (:discard (get-challenger)))) "Took 3 meat damage"))))
 
 (deftest virus-breeding-ground-gain
@@ -1962,7 +1962,7 @@
               (default-challenger [(qty "Virus Breeding Ground" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Virus Breeding Ground")
-    (let [vbg (get-in @state [:challenger :rig :resource 0])]
+    (let [vbg (get-in @state [:challenger :rig :muthereff 0])]
       (is (zero? (get-counters vbg :virus)) "Virus Breeding Ground starts with 0 counters")
       (take-credits state :challenger 3)
       (take-credits state :contestant)
@@ -1980,8 +1980,8 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Virus Breeding Ground")
     (play-from-hand state :challenger "Hivemind")
-    (let [hive (get-in @state [:challenger :rig :program 0])
-          vbg (get-in @state [:challenger :rig :resource 0])]
+    (let [hive (get-in @state [:challenger :rig :resource 0])
+          vbg (get-in @state [:challenger :rig :muthereff 0])]
       (is (= 1 (get-counters hive :virus)) "Hivemind starts with 1 counter")
       (is (zero? (get-counters vbg :virus)) "Virus Breeding Ground starts with 0 counters")
       (take-credits state :challenger 3)
@@ -2009,21 +2009,21 @@
     (prompt-choice :challenger "Yes") ; Trash PAD campaign
     (is (= 0 (:credit (get-challenger))) "Gained nothing from Wasteland on contestant trash")
     ; trash from hand first which should not trigger #2291
-    (let [faust (get-in @state [:challenger :rig :program 0])]
+    (let [faust (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger faust 1)
       (prompt-card :challenger (first (:hand (get-challenger)))))
     (is (= 0 (:credit (get-challenger))) "Gained nothing from Wasteland")
     (play-from-hand state :challenger "Fall Guy")
     (play-from-hand state :challenger "Fall Guy")
     (play-from-hand state :challenger "Fall Guy")
-    (card-ability state :challenger (get-resource state 1) 1)
+    (card-ability state :challenger (get-muthereff state 1) 1)
     (is (= 1 (count (:discard (get-challenger)))) "Fall Guy trashed")
     (is (= 3 (:credit (get-challenger))) "Gained 2c from Fall Guy and 1c from Wasteland")
     (take-credits state :challenger)
-    (card-ability state :challenger (get-resource state 1) 1)
+    (card-ability state :challenger (get-muthereff state 1) 1)
     (is (= 2 (count (:discard (get-challenger)))) "Fall Guy trashed")
     (is (= 6 (:credit (get-challenger))) "Gained 2c from Fall Guy and 1c from Wasteland")
-    (card-ability state :challenger (get-resource state 1) 1)
+    (card-ability state :challenger (get-muthereff state 1) 1)
     (is (= 3 (count (:discard (get-challenger)))) "Fall Guy trashed")
     (is (= 8 (:credit (get-challenger))) "Gained 2c from Fall Guy but no credits from Wasteland")))
 
@@ -2054,7 +2054,7 @@
               (default-challenger [(qty "Zona Sul Shipping" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Zona Sul Shipping")
-    (let [zss (get-resource state 0)]
+    (let [zss (get-muthereff state 0)]
       (take-credits state :challenger)
       (take-credits state :contestant)
       (is (= 1 (get-counters (refresh zss) :credit)) "Zona Sul holds 1c")

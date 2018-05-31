@@ -25,15 +25,15 @@
       (zones->sorted-names (get-zones @state)))
     ["New remote"]))
 
-(defn server->zone [state server party-head]
+(defn server->zone [state server]
   (if (sequential? server)
     (vec (cons :servers server))
     (case server
       "HQ" [:servers :hq]
       "R&D" [:servers :rd]
       "Archives" [:servers :archives]
-      "New remote" [:servers (keyword (str "remote" (make-rid state) " " (:title party-head)))]
-      [:servers (->> server (str "remote") keyword)])))
+      "New remote" [:servers (keyword (str "remote" (make-rid state)))]
+      [:servers (->> (split server #" ") last (str "remote") keyword)])))
 
 (defn same-server? [card1 card2]
   "True if the two cards are IN or PROTECTING the same server."
@@ -66,7 +66,7 @@
   but not including 'inactive hosting' like Personal Workshop."
   [state side]
   (if (= side :challenger)
-    (let [top-level-cards (flatten (for [t [:program :hardware :resource]] (get-in @state [:challenger :rig t])))
+    (let [top-level-cards (flatten (for [t [:resource :hazard :muthereff]] (get-in @state [:challenger :rig t])))
           hosted-on-character (->> (:contestant @state) :servers seq flatten (mapcat :characters) (mapcat :hosted))]
       (loop [unchecked (concat top-level-cards (filter #(= (:side %) "Challenger") hosted-on-character)) installed ()]
         (if (empty? unchecked)

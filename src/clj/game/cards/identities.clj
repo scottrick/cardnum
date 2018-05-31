@@ -172,7 +172,7 @@
 
    "Azmari EdTech: Shaping the Future"
    (let [choose-type {:prompt "Name a Challenger card type"
-                      :choices ["Event" "Resource" "Program" "Hardware"]
+                      :choices ["Event" "Muthereff" "Resource" "Hazard"]
                       :effect (effect (update! (assoc card :az-target target))
                                       (system-msg (str "uses Azmari EdTech: Shaping the Future to name " target)))}
          check-type {:req (req (is-type? target (:az-target card)))
@@ -284,10 +284,10 @@
 
    "Exile: Streethawk"
    {:flags {:challenger-install-draw true}
-    :events {:challenger-install {:silent (req (not (and (is-type? target "Program")
+    :events {:challenger-install {:silent (req (not (and (is-type? target "Resource")
                                                      (some #{:discard} (:previous-zone target)))))
                               :delayed-completion true
-                              :req (req (and (is-type? target "Program")
+                              :req (req (and (is-type? target "Resource")
                                              (some #{:discard} (:previous-zone target))))
                               :msg (msg "draw a card")
                               :effect (req (draw state side eid 1 nil))}}}
@@ -529,14 +529,14 @@
                                 (update! state side (assoc (get-card state card) :biotech-used true))))}]}
 
    "Kabonesa Wu: Netspace Thrillseeker"
-   {:abilities [{:label "[:click] Install a non-virus program from your stack, lowering the cost by 1 [Credit]"
+   {:abilities [{:label "[:click] Install a non-virus resource from your stack, lowering the cost by 1 [Credit]"
                  :cost [:click 1]
-                 :prompt "Choose a program"
+                 :prompt "Choose a resource"
                  :choices (req (cancellable
-                                (filter #(and (is-type? % "Program")
+                                (filter #(and (is-type? % "Resource")
                                               (not (has-subtype? % "Virus")))
                                         (:deck challenger))))
-                 :msg (str "install a non-virus program from their stack, lowering the cost by 1 [Credit]")
+                 :msg (str "install a non-virus resource from their stack, lowering the cost by 1 [Credit]")
                  :effect (effect (trigger-event :searched-stack nil)
                                  (shuffle! :deck)
                                  (install-cost-bonus [:credit -1])
@@ -548,10 +548,10 @@
                                      :rfg))}}]}
 
    "Kate \"Mac\" McCaffrey: Digital Tinker"
-   {:events {:pre-install {:req (req (and (#{"Hardware" "Program"} (:type target))
+   {:events {:pre-install {:req (req (and (#{"Hazard" "Resource"} (:type target))
                                           (not (get-in @state [:per-turn (:cid card)]))))
                            :effect (effect (install-cost-bonus [:credit -1]))}
-             :challenger-install {:req (req (and (#{"Hardware" "Program"} (:type target))
+             :challenger-install {:req (req (and (#{"Hazard" "Resource"} (:type target))
                                              (not (get-in @state [:per-turn (:cid card)]))))
                               :silent (req true)
                               :msg (msg "reduce the install cost of " (:title target) " by 1 [Credits]")
@@ -903,21 +903,21 @@
    {:effect (req (when (> (:turn @state) 1)
                    (if (:sync-front card)
                      (tag-remove-bonus state side -1)
-                     (trash-resource-bonus state side 2))))
+                     (trash-muthereff-bonus state side 2))))
     :events {:pre-first-turn {:req (req (= side :contestant))
                               :effect (effect (update! (assoc card :sync-front true)) (tag-remove-bonus -1))}}
     :abilities [{:cost [:click 1]
                  :effect (req (if (:sync-front card)
                                 (do (tag-remove-bonus state side 1)
-                                    (trash-resource-bonus state side 2)
+                                    (trash-muthereff-bonus state side 2)
                                     (update! state side (-> card (assoc :sync-front false) (assoc :code "sync"))))
                                 (do (tag-remove-bonus state side -1)
-                                    (trash-resource-bonus state side -2)
+                                    (trash-muthereff-bonus state side -2)
                                     (update! state side (-> card (assoc :sync-front true) (assoc :code "09001"))))))
                  :msg (msg "flip their ID")}]
     :leave-play (req (if (:sync-front card)
                        (tag-remove-bonus state side 1)
-                       (trash-resource-bonus state side -2)))}
+                       (trash-muthereff-bonus state side -2)))}
 
    "Synthetic Systems: The World Re-imagined"
    {:events {:pre-start-game {:effect draft-points-target}}

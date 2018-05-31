@@ -13,8 +13,8 @@
   [state side {:keys [card server]}]
   (let [card (get-card state card)]
     (case (:type card)
-      ("Event" "Operation") (play-instant state side card {:extra-cost [:click 1]})
-      ("Hardware" "Resource" "Program") (challenger-install state side (make-eid state) card {:extra-cost [:click 0]})
+      ("Event" "Operation") (play-instant state side card {:extra-cost [:click 0]})
+      ("Hazard" "Muthereff" "Resource") (challenger-install state side (make-eid state) card {:extra-cost [:click 0]})
       ("Character" "Upgrade" "Asset" "Agenda") (contestant-install state side card server {:extra-cost [:click 0] :action :contestant-click-install}))
     (trigger-event state side :play card)))
 
@@ -254,18 +254,18 @@
        (resolve-ability state side eid sub card targets)))))
 
 ;;; Contestant actions
-(defn trash-resource
-  "Click to trash a resource."
+(defn trash-muthereff
+  "Click to trash a muthereff."
   [state side args]
   (let [trash-cost (max 0 (- 2 (or (get-in @state [:contestant :trash-cost-bonus]) 0)))]
-    (when-let [cost-str (pay state side nil :click 1 :credit trash-cost {:action :contestant-trash-resource})]
+    (when-let [cost-str (pay state side nil :click 1 :credit trash-cost {:action :contestant-trash-muthereff})]
       (resolve-ability state side
-                       {:prompt  "Choose a resource to trash"
+                       {:prompt  "Choose a muthereff to trash"
                         :choices {:req (fn [card]
-                                         (if (and (seq (filter (fn [c] (untrashable-while-resources? c)) (all-installed state :challenger)))
-                                                  (> (count (filter #(is-type? % "Resource") (all-installed state :challenger))) 1))
-                                           (and (is-type? card "Resource") (not (untrashable-while-resources? card)))
-                                           (is-type? card "Resource")))}
+                                         (if (and (seq (filter (fn [c] (untrashable-while-muthereffs? c)) (all-installed state :challenger)))
+                                                  (> (count (filter #(is-type? % "Muthereff") (all-installed state :challenger))) 1))
+                                           (and (is-type? card "Muthereff") (not (untrashable-while-muthereffs? card)))
+                                           (is-type? card "Muthereff")))}
                         :cancel-effect (effect (gain :credit trash-cost :click 1))
                         :effect  (effect (trash target)
                                          (system-msg (str (build-spend-msg cost-str "trash")
@@ -295,7 +295,7 @@
      (if (or force (can-rez? state side card))
        (do
          (trigger-event state side :pre-rez card)
-         (if (or (#{"Asset" "Character" "Upgrade"} (:type card))
+         (if (or (#{"Asset" "Character" "Upgrade" "Resource"} (:type card))
                    (:install-rezzed (card-def card)))
            (do (trigger-event state side :pre-rez-cost card)
                (if (and altcost (can-pay? state side nil altcost)(not ignore-cost))

@@ -159,7 +159,7 @@
 (defn contestant-installable-type?
   "Is the card of an acceptable type to be installed in a server"
   [card]
-  (some? (#{"Asset" "Agenda" "Character" "Upgrade"} (:type card))))
+  (some? (#{"Asset" "Agenda" "Character" "Upgrade" "Resource"} (:type card))))
 
 (defn- contestant-install-asset-agenda
   "Forces the contestant to trash an existing asset or agenda if a second was just installed."
@@ -220,7 +220,7 @@
      (let [cdef (card-def card)
            slot (if host-card
                   (:zone host-card)
-                  (conj (server->zone state server card) (if (character? card) :characters :content)))
+                  (conj (server->zone state server) (if (character? card) :characters :content)))
            dest-zone (get-in @state (cons :contestant slot))]
        ;; trigger :pre-contestant-install before computing install costs so that
        ;; event handlers may adjust the cost.
@@ -376,7 +376,7 @@
                           :delayed-completion true
                           :effect (effect (challenger-install eid card (assoc params :host-card target)))}
                          card nil)
-       (do (trigger-event state side :pre-install card facedown)
+       (do (trigger-event state "Challenger" :pre-install card facedown)
            (let [cost (challenger-get-cost state side card params)]
              (if (challenger-can-install? state side card facedown)
                (if-let [cost-str (pay state side card cost)]
@@ -391,11 +391,11 @@
                                                                  :init-data true}))]
                    (challenger-install-message state side (:title card) cost-str params)
                    (play-sfx state side "install-challenger")
-                   (when (and (is-type? card "Program") (neg? (get-in @state [:challenger :memory])))
+                   (when (and (is-type? card "Resource") (neg? (get-in @state [:challenger :memory])))
                      (toast state :challenger "You have run out of memory units!"))
                    (handle-virus-counter-flag state side installed-card)
-                   (when (is-type? card "Resource")
-                     (swap! state assoc-in [:challenger :register :installed-resource] true))
+                   (when (is-type? card "Muthereff")
+                     (swap! state assoc-in [:challenger :register :installed-muthereff] true))
                    (when (has-subtype? c "Icebreaker")
                      (update-breaker-strength state side c))
                    (trigger-event-simult state side eid :challenger-install

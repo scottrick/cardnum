@@ -45,7 +45,7 @@
     (is (= 8 (:credit (get-contestant))) "Contestant has 8 credits")
     (play-from-hand state :challenger "New Angeles City Hall")
     (is (= 3 (:credit (get-challenger))) "Challenger has 3 credits")
-    (let [nach (get-in @state [:challenger :rig :resource 0])]
+    (let [nach (get-in @state [:challenger :rig :muthereff 0])]
       (play-run-event state (first (get-in @state [:challenger :hand])) :hq)
       (prompt-choice :challenger "Run ability")
       (is (= 4 (:credit (get-challenger))) "Challenger still has 4 credits due to BP")
@@ -109,7 +109,7 @@
     (take-credits state :contestant)
     (core/gain state :challenger :click 3)
     (play-from-hand state :challenger "Scheherazade")
-    (let [scheherazade (get-in @state [:challenger :rig :program 0])]
+    (let [scheherazade (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger scheherazade 0)
       (prompt-select :challenger (find-card "Corroder" (:hand (get-challenger))))
       (is (= 3 (:memory (get-challenger))) "Memory at 3 (-1 from Corroder)"))
@@ -331,7 +331,7 @@
 
 (deftest cold-read
   ;; Make a run, and place 4 on this card, which you may use only during this run.
-  ;; When this run ends, trash 1 program (cannot be prevented) used during this run.
+  ;; When this run ends, trash 1 resource (cannot be prevented) used during this run.
   (do-game
     (new-game (default-contestant [(qty "Blacklist" 3)])
               (default-challenger [(qty "Imp" 1) (qty "Cold Read" 2)]))
@@ -343,8 +343,8 @@
       (prompt-choice :challenger "HQ")
       (is (= 4 (:rec-counter (find-card "Cold Read" (get-in @state [:challenger :play-area])))) "Cold Read has 4 counters")
       (run-successful state)
-      (card-ability state :challenger (get-program state 0) 0)
-      (prompt-select :challenger (get-program state 0))
+      (card-ability state :challenger (get-resource state 0) 0)
+      (prompt-select :challenger (get-resource state 0))
       (is (= 2 (count (:discard (get-challenger)))) "Imp and Cold Read in discard")
       ; Cold Read works when Blacklist rezzed - #2378
       (core/rez state :contestant bl)
@@ -366,7 +366,7 @@
     (play-from-hand state :challenger "Contestantorate Scandal")
     (is (empty? (:prompt (get-challenger))) "No BP taken, so no HQ access from Raymond")
     (play-from-hand state :challenger "Investigative Journalism")
-    (is (= "Investigative Journalism" (:title (get-in @state [:challenger :rig :resource 1]))) "IJ able to be installed")
+    (is (= "Investigative Journalism" (:title (get-in @state [:challenger :rig :muthereff 1]))) "IJ able to be installed")
     (run-on state "HQ")
     (is (= 1 (:run-credit (get-challenger))) "1 run credit from bad publicity")
     (run-jack-out state)
@@ -589,7 +589,7 @@
     (is (= 4 (:click (get-challenger))) "Early Bird gains click")))
 
 (deftest emergent-creativity
-  ;; Emergent Creativty - Double, discard programs/hardware from grip, install from heap
+  ;; Emergent Creativty - Double, discard resources/hazard from grip, install from heap
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Emergent Creativity" 1) (qty "Paperclip" 1)
@@ -676,7 +676,7 @@
     (is (= 13 (:credit (get-challenger))))))
 
 (deftest eureka!
-  ;; Eureka! - Install the program but trash the event
+  ;; Eureka! - Install the resource but trash the event
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Eureka!" 2) (qty "Torch" 1) (qty "Sure Gamble" 1)]))
@@ -686,7 +686,7 @@
     (play-from-hand state :challenger "Eureka!")
     (prompt-choice :challenger "Yes")
     (is (= 3 (:credit (get-challenger))))
-    (is (= 1 (count (get-in @state [:challenger :rig :program]))))
+    (is (= 1 (count (get-in @state [:challenger :rig :resource]))))
     (core/move state :challenger (find-card "Sure Gamble" (:hand (get-challenger))) :deck)
     (play-from-hand state :challenger "Eureka!")
     (is (= 0 (:credit (get-challenger))))
@@ -762,7 +762,7 @@
       (is (= 8 (:credit (get-challenger))) "A prevented expose does not"))))
 
 (deftest frantic-coding-install
-  ;; Frantic Coding - Install 1 program, other 9 cards are trashed
+  ;; Frantic Coding - Install 1 resource, other 9 cards are trashed
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Frantic Coding" 1) (qty "Torch" 1) (qty "Corroder" 1)
@@ -778,7 +778,7 @@
       (is (= 2 (:credit (get-challenger))))
       (is (= 1 (count (:discard (get-challenger)))))
       (prompt-choice :challenger (find-card "Magnum Opus" (:deck (get-challenger))))
-      (is (= 1 (count (get-in @state [:challenger :rig :program]))))
+      (is (= 1 (count (get-in @state [:challenger :rig :resource]))))
       (is (= 2 (:credit (get-challenger))) "Magnum Opus installed for free")
       (is (= 10 (count (:discard (get-challenger))))))))
 
@@ -798,7 +798,7 @@
       (is (= (list "Corroder" "Magnum Opus" nil) (prompt-names)) "No Torch in list because can't afford")
       (is (= 1 (count (:discard (get-challenger)))))
       (prompt-choice :challenger "No install")
-      (is (= 0 (count (get-in @state [:challenger :rig :program]))))
+      (is (= 0 (count (get-in @state [:challenger :rig :resource]))))
       (is (= 11 (count (:discard (get-challenger))))))))
 
 (deftest freedom-through-equality
@@ -829,7 +829,7 @@
     (is (= 5 (:agenda-point (get-challenger))) "Freedom Through Equality for 1 agenda point")))
 
 (deftest freelance-coding-contract
-  ;; Freelance Coding Contract - Gain 2 credits per program trashed from Grip
+  ;; Freelance Coding Contract - Gain 2 credits per resource trashed from Grip
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Freelance Coding Contract" 1)
@@ -842,9 +842,9 @@
     (prompt-select :challenger (find-card "Paricia" (:hand (get-challenger))))
     (prompt-select :challenger (find-card "Inti" (:hand (get-challenger))))
     (prompt-choice :challenger "Done")
-    (is (= 3 (count (filter #(= (:type %) "Program") (:discard (get-challenger)))))
-        "3 programs in Heap")
-    (is (= 11 (:credit (get-challenger))) "Gained 6 credits from 3 trashed programs")))
+    (is (= 3 (count (filter #(= (:type %) "Resource") (:discard (get-challenger)))))
+        "3 resources in Heap")
+    (is (= 11 (:credit (get-challenger))) "Gained 6 credits from 3 trashed resources")))
 
 (deftest game-day
   ;; Game Day - draw until at handsize
@@ -904,7 +904,7 @@
     (core/end-phase-12 state :challenger nil)
     (prompt-select :challenger (find-card "Neutralize All Threats" (:hand (get-challenger))))
     (play-from-hand state :challenger "Fan Site")
-    (let [fs (get-in @state [:challenger :rig :resource 0])
+    (let [fs (get-in @state [:challenger :rig :muthereff 0])
           nat (get-in @state [:challenger :rig :facedown 0])]
       (play-from-hand state :challenger "Independent Thinking")
       (prompt-select :challenger fs)
@@ -970,7 +970,7 @@
     ;; the cards are selected randomly :(
     (letfn [(prevent-snare [existing-dmg]
               (prompt-choice :contestant "Yes")
-              (card-ability state :challenger (get-program state 0) 1)
+              (card-ability state :challenger (get-resource state 0) 1)
               (prompt-choice :challenger "Done")
               (is (= (inc existing-dmg) (count (:discard (get-challenger)))) "Damage from Snare! prevented")
               (prompt-choice :challenger "Yes")
@@ -981,7 +981,7 @@
               (is (= (+ 2 existing-dmg) (count (:discard (get-challenger)))) "Damage from Hostile Inf not prevented"))
             (allow-pad [existing-dmg]
               (prompt-choice :challenger "Yes")
-              (card-ability state :challenger (get-program state 0) 1)
+              (card-ability state :challenger (get-resource state 0) 1)
               (prompt-choice :challenger "Done")
               (is (= (inc existing-dmg) (count (:discard (get-challenger)))) "Challenger prevented damage from Hostile Inf"))]
       (if (= :waiting (-> (get-challenger) :prompt first :prompt-type)) ; hit the snare
@@ -1002,7 +1002,7 @@
     (is (= 1 (count (:scored (get-challenger)))) "Challenger stole agenda")))
 
 (deftest inject
-  ;; Inject - Draw 4 cards from Stack and gain 1 credit per trashed program
+  ;; Inject - Draw 4 cards from Stack and gain 1 credit per trashed resource
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Inject" 1) (qty "Imp" 2) (qty "Sure Gamble" 2)]))
@@ -1013,11 +1013,11 @@
     (core/move state :challenger (find-card "Sure Gamble" (:hand (get-challenger))) :deck)
     (is (= 4 (count (:deck (get-challenger)))))
     (play-from-hand state :challenger "Inject")
-    (is (= 2 (count (:hand (get-challenger)))) "2 non-programs kept in Grip")
-    (is (= 2 (count (filter #(= (:type %) "Program") (:discard (get-challenger)))))
-        "2 programs in Heap")
+    (is (= 2 (count (:hand (get-challenger)))) "2 non-resources kept in Grip")
+    (is (= 2 (count (filter #(= (:type %) "Resource") (:discard (get-challenger)))))
+        "2 resources in Heap")
     (is (= 6 (:credit (get-challenger)))
-        "Paid 1 credit to play Inject, gained 2 credits from trashed programs")))
+        "Paid 1 credit to play Inject, gained 2 credits from trashed resources")))
 
 (deftest injection-attack
   ;; Injection Attack
@@ -1029,14 +1029,14 @@
     (play-from-hand state :challenger "Corroder")
     (play-from-hand state :challenger "Injection Attack")
     (prompt-choice :challenger "Archives")
-    (is (= 2 (:current-strength (get-program state 0))) "Corroder at 2 strength")
-    (prompt-select :challenger (get-program state 0))
-    (is (= 4 (:current-strength (get-program state 0))) "Corroder at 4 strength")
+    (is (= 2 (:current-strength (get-resource state 0))) "Corroder at 2 strength")
+    (prompt-select :challenger (get-resource state 0))
+    (is (= 4 (:current-strength (get-resource state 0))) "Corroder at 4 strength")
     (run-continue state)
-    (is (= 4 (:current-strength (get-program state 0))) "Corroder at 4 strength")
+    (is (= 4 (:current-strength (get-resource state 0))) "Corroder at 4 strength")
     (run-continue state)
     (run-successful state)
-    (is (= 2 (:current-strength (get-program state 0))) "Corroder reset to 2 strength")))
+    (is (= 2 (:current-strength (get-resource state 0))) "Corroder reset to 2 strength")))
 
 (deftest interdiction
   ;; Contestant cannot rez non-character cards during challenger's turn
@@ -1168,7 +1168,7 @@
     (is (= 1 (count (:hand (get-challenger)))))
     (is (= 2 (:credit (get-challenger))))
     (play-from-hand state :challenger "Mars for Martians")
-    (is (= 3 (count (:hand (get-challenger)))) "3 clan resources, +3 cards but -1 for playing Mars for Martians")
+    (is (= 3 (count (:hand (get-challenger)))) "3 clan muthereffs, +3 cards but -1 for playing Mars for Martians")
     (is (= 7 (:credit (get-challenger))) "5 tags, +5 credits")))
 
 (deftest mobius
@@ -1198,7 +1198,7 @@
     (is (empty? (:prompt (get-challenger))) "No option to run again on unsuccessful run")))
 
 (deftest modded
-  ;; Modded - Install a program or piece of hardware at a 3 credit discount
+  ;; Modded - Install a resource or piece of hazard at a 3 credit discount
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Modded" 2)
@@ -1208,13 +1208,13 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Modded")
     (prompt-select :challenger (find-card "Earthrise Hotel" (:hand (get-challenger))))
-    (is (empty? (get-in @state [:challenger :rig :resource])) "Can't install resources with Modded")
+    (is (empty? (get-in @state [:challenger :rig :muthereff])) "Can't install muthereffs with Modded")
     (prompt-select :challenger (find-card "HQ Interface" (:hand (get-challenger))))
-    (is (= 1 (count (get-in @state [:challenger :rig :hardware]))) "Installed HQ Interface")
+    (is (= 1 (count (get-in @state [:challenger :rig :hazard]))) "Installed HQ Interface")
     (is (= 4 (:credit (get-challenger))) "Paid 1 credit instead of 4")
     (play-from-hand state :challenger "Modded")
     (prompt-select :challenger (find-card "Nerve Agent" (:hand (get-challenger))))
-    (is (= 1 (count (get-in @state [:challenger :rig :program]))) "Installed Nerve Agent")
+    (is (= 1 (count (get-in @state [:challenger :rig :resource]))) "Installed Nerve Agent")
     (is (= 4 (:credit (get-challenger))) "Paid 0 credits")))
 
 (deftest noble-path
@@ -1319,7 +1319,7 @@
     (play-from-hand state :challenger "Turntable")
     (run-empty-server state "HQ")
     (prompt-choice :challenger "Steal")
-    (let [tt (get-in @state [:challenger :rig :hardware 0])]
+    (let [tt (get-in @state [:challenger :rig :hazard 0])]
       (prompt-choice :challenger "Yes")
       (prompt-select :challenger (find-card "Breaking News" (:scored (get-contestant))))
       (is (= 1 (:agenda-point (get-contestant))))
@@ -1385,8 +1385,8 @@
     (play-from-hand state :challenger "Corroder")
     (play-from-hand state :challenger "Atman")
     (prompt-choice :challenger 0)
-    (let [atman (get-in @state [:challenger :rig :program 1])
-          corr (get-in @state [:challenger :rig :program 0])]
+    (let [atman (get-in @state [:challenger :rig :resource 1])
+          corr (get-in @state [:challenger :rig :resource 0])]
       (is (= 0 (:current-strength (refresh atman))) "Atman 0 current strength")
       (is (= 2 (:current-strength (refresh corr))) "Corroder 2 current strength")
       (play-from-hand state :challenger "Pushing the Envelope")
@@ -1471,7 +1471,7 @@
       (is (changes-credits (get-challenger) -4
         (play-from-hand state :challenger "Magnum Opus")))))
 
-  (deftest-pending rebirth-kate-twcharacter
+  (deftest-pending rebirth-kate-twice
     ;; Rebirth - Kate's discount does not after rebirth if something already installed
     (do-game
       (new-game (default-contestant) (default-challenger ["Akamatsu Mem Chip" "Rebirth" "Clone Chip"]) {:start-as :challenger})
@@ -1547,7 +1547,7 @@
     (is (= 3 (:credit (get-challenger))) "Rigged results spends credits")))
 
 (deftest retrieval-run
-  ;; Retrieval Run - Run Archives successfully and install a program from Heap for free
+  ;; Retrieval Run - Run Archives successfully and install a resource from Heap for free
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Retrieval Run" 1) (qty "Morning Star" 1)]))
@@ -1559,7 +1559,7 @@
     (prompt-choice :challenger "Run ability")
     (let [ms (first (:discard (get-challenger)))]
       (prompt-choice :challenger ms)
-      (is (= "Morning Star" (:title (first (get-in @state [:challenger :rig :program]))))
+      (is (= "Morning Star" (:title (first (get-in @state [:challenger :rig :resource]))))
           "Morning Star installed")
       (is (= 2 (:credit (get-challenger))) "Morning Star installed at no cost")
       (is (= 2 (:memory (get-challenger))) "Morning Star uses 2 memory"))))
@@ -1739,7 +1739,7 @@
               (default-challenger [(qty "Imp" 1) (qty "Surge" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Imp")
-    (let [imp (get-in @state [:challenger :rig :program 0])]
+    (let [imp (get-in @state [:challenger :rig :resource 0])]
       (is (= 2 (get-counters imp :virus)) "Imp has 2 counters after install")
       (play-from-hand state :challenger "Surge")
       (prompt-select :challenger imp)
@@ -1752,7 +1752,7 @@
               (default-challenger [(qty "Security Testing" 1) (qty "Surge" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Security Testing")
-    (let [st (get-in @state [:challenger :rig :resource 0])]
+    (let [st (get-in @state [:challenger :rig :muthereff 0])]
       (play-from-hand state :challenger "Surge")
       (prompt-select :challenger st)
       (is (not (contains? st :counter)) "Surge does not fire on Security Testing"))))
@@ -1764,7 +1764,7 @@
               (default-challenger [(qty "Imp" 1) (qty "Surge" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Imp")
-    (let [imp (get-in @state [:challenger :rig :program 0])]
+    (let [imp (get-in @state [:challenger :rig :resource 0])]
       (is (= 2 (get-counters imp :virus)) "Imp has 2 counters after install")
       (take-credits state :challenger 3)
       (take-credits state :contestant)
@@ -1780,7 +1780,7 @@
               (default-challenger [(qty "Gorman Drip v1" 1) (qty "Surge" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Gorman Drip v1")
-    (let [gd (get-in @state [:challenger :rig :program 0])]
+    (let [gd (get-in @state [:challenger :rig :resource 0])]
       (is (= 0 (get-counters gd :virus)) "Gorman Drip starts without counters")
       (take-credits state :challenger 3)
       (take-credits state :contestant)
@@ -1815,7 +1815,7 @@
     (is (= 7 (:credit (get-contestant))) "2nd card drawn cost 1cr - System Outage active")))
 
 (deftest test-run
-  ;; Test Run - Programs hosted after install get returned to Stack. Issue #1081
+  ;; Test Run - Resources hosted after install get returned to Stack. Issue #1081
   (do-game
     (new-game (default-contestant [(qty "Wraparound" 1)])
               (default-challenger [(qty "Test Run" 2) (qty "Morning Star" 1)
@@ -1832,8 +1832,8 @@
         (play-from-hand state :challenger "Test Run")
         (prompt-choice :challenger "Heap")
         (prompt-choice :challenger ms)
-        (let [lep (get-in @state [:challenger :rig :program 0])
-              ms (get-in @state [:challenger :rig :program 1])]
+        (let [lep (get-in @state [:challenger :rig :resource 0])
+              ms (get-in @state [:challenger :rig :resource 1])]
           (card-ability state :challenger lep 1)
           (prompt-select :challenger ms)
           (is (= "Morning Star" (:title (first (:hosted (refresh lep))))) "Morning Star hosted on Lep")
@@ -1844,7 +1844,7 @@
             (play-from-hand state :challenger "Test Run")
             (prompt-choice :challenger "Heap")
             (prompt-choice :challenger kn)
-            (let [kn (get-in @state [:challenger :rig :program 1])]
+            (let [kn (get-in @state [:challenger :rig :resource 1])]
               (card-ability state :challenger kn 0)
               (prompt-select :challenger wrap)
               (is (= "Knight" (:title (first (:hosted (refresh wrap))))) "Knight hosted on Wraparound")
@@ -1852,7 +1852,7 @@
               (is (= "Knight" (:title (first (:deck (get-challenger))))) "Knight returned to Stack from host Character"))))))))
 
 (deftest test-run-scavenge
-  ;; Test Run - Make sure program remains installed if Scavenged
+  ;; Test Run - Make sure resource remains installed if Scavenged
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Test Run" 1) (qty "Morning Star" 1)
@@ -1863,14 +1863,14 @@
     (let [ms (find-card "Morning Star" (:discard (get-challenger)))]
       (prompt-choice :challenger "Heap")
       (prompt-choice :challenger ms)
-      (is (= 2 (:credit (get-challenger))) "Program installed for free")
-      (let [ms (get-in @state [:challenger :rig :program 0])]
+      (is (= 2 (:credit (get-challenger))) "Resource installed for free")
+      (let [ms (get-in @state [:challenger :rig :resource 0])]
         (play-from-hand state :challenger "Scavenge")
         (prompt-select :challenger ms)
         (prompt-select :challenger (find-card "Morning Star" (:discard (get-challenger))))
         (take-credits state :challenger)
         (is (empty? (:deck (get-challenger))) "Morning Star not returned to Stack")
-        (is (= "Morning Star" (:title (get-in @state [:challenger :rig :program 0]))) "Morning Star still installed")))))
+        (is (= "Morning Star" (:title (get-in @state [:challenger :rig :resource 0]))) "Morning Star still installed")))))
 
 (deftest makers-eye
   (do-game
@@ -1902,14 +1902,14 @@
     (is (= 7 (:credit (get-contestant))) "Contestant has 7 credits (play NAPD + 2 clicks for credit")
     (play-from-hand state :challenger "The Prcharacter of Freedom")
     (is (= 2 (count (get-in @state [:challenger :hand]))) "The Prcharacter of Freedom could not be played because no connection is installed")
-    (is (= 0 (count (get-in (get-challenger) [:rig :resource]))) "Kati Jones is not installed")
+    (is (= 0 (count (get-in (get-challenger) [:rig :muthereff]))) "Kati Jones is not installed")
     (play-from-hand state :challenger "Kati Jones")
-    (is (= 1 (count (get-in @state [:challenger :rig :resource]))) "Kati Jones was installed")
+    (is (= 1 (count (get-in @state [:challenger :rig :muthereff]))) "Kati Jones was installed")
     (play-from-hand state :challenger "The Prcharacter of Freedom")
     (is (= 0 (count (get-in @state [:challenger :hand]))) "The Prcharacter of Freedom can be played because a connection is in play")
-    (let [kj (find-card "Kati Jones" (:resource (:rig (get-challenger))))]
+    (let [kj (find-card "Kati Jones" (:muthereff (:rig (get-challenger))))]
       (prompt-choice :challenger kj)
-      (is (= 0 (count (get-in (get-challenger) [:rig :resource]))) "Kati Jones was trashed wth The Prcharacter of Freedom")
+      (is (= 0 (count (get-in (get-challenger) [:rig :muthereff]))) "Kati Jones was trashed wth The Prcharacter of Freedom")
       (is (= 1 (count (get-in (get-challenger) [:discard]))) "The Prcharacter of Freedom was removed from game, and only Kati Jones is in the discard"))
     (take-credits state :challenger)
     (let [napd (get-content state :remote1 0)]
@@ -1986,7 +1986,7 @@
     (new-game (default-contestant) (default-challenger [(qty "Surge" 1) (qty "Imp" 1) (qty "Crypsis" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Imp")
-    (let [imp (get-in @state [:challenger :rig :program 0])]
+    (let [imp (get-in @state [:challenger :rig :resource 0])]
       (is (get-in imp [:added-virus-counter]) "Counter flag was not set on Imp"))))
 
 (deftest virus-counter-flag-on-add-prop
@@ -1996,7 +1996,7 @@
               (default-challenger [(qty "Crypsis" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Crypsis")
-    (let [crypsis (get-in @state [:challenger :rig :program 0])]
+    (let [crypsis (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger crypsis 2) ;click to add a virus counter
       (is (= 1 (get-counters (refresh crypsis) :virus)) "Crypsis added a virus token")
       (is (get-in (refresh crypsis) [:added-virus-counter])
@@ -2009,7 +2009,7 @@
               (default-challenger [(qty "Crypsis" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Crypsis")
-    (let [crypsis (get-in @state [:challenger :rig :program 0])]
+    (let [crypsis (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger crypsis 2) ; click to add a virus counter
       (take-credits state :challenger 2)
       (take-credits state :contestant 1)

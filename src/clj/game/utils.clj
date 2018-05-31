@@ -22,13 +22,7 @@
   "This combines costs from a number of sources in the game into a single cost per type
   Damage is not merged as it needs to be invidual.  Needs augmention more than net-damage appears"
   [costs]
-  (let [fc (partition 2 (flatten (clean-forfeit costs)))
-        jc (filter #(not= :net-damage (first %)) fc)
-        dc (filter #(= :net-damage (first %)) fc)]
-    (vec (map vec (concat
-      (reduce #(let [k (first %2) value (last %2)]
-                    (assoc %1 k (+ (or (k %1) 0) value)))
-                 {} jc) dc)))))
+  {})
 
 (defn remove-once [pred coll]
   (let [[head tail] (split-with pred coll)]
@@ -81,7 +75,7 @@
                        :click (reduce str (for [i (range value)] "[Click]"))
                        :net-damage (str value " net damage")
                        :mill (str value " card mill")
-                       :hardware (str value " installed hardware")
+                       :hazard (str value " installed hazard")
                        (str value (str key)))) (partition 2 (flatten costs)))))
 
 (defn vdissoc [v n]
@@ -255,7 +249,7 @@
     nil))
 
 (defn type->rig-zone
-  "Converts a challenger's card type to a vector zone, e.g. 'Program' -> [:rig :program]"
+  "Converts a challenger's card type to a vector zone, e.g. 'Resource' -> [:rig :resource]"
   [type]
   (vec [:rig (-> type .toLowerCase keyword)]))
 

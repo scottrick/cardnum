@@ -4,12 +4,12 @@
             test.cards.agendas
             test.cards.assets
             test.cards.events
-            test.cards.hardware
+            test.cards.hazard
             test.cards.character
             test.cards.icebreakers
             test.cards.identities
             test.cards.operations
-            test.cards.programs
+            test.cards.resources
             test.cards.resources
             test.cards.upgrades
             test.games.scenarios))

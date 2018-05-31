@@ -123,20 +123,20 @@
                    {:abilities [(break-sub 1 1 "Character")
                                 (strength-pump 1 1)
                                 {:req (req (seq (filter #(has-subtype? % "Deva") (:hand challenger))))
-                                 :label "Swap with a deva program from your Grip" :cost [:credit 2]
-                                 :prompt (str "Select a deva program in your Grip to swap with " name)
+                                 :label "Swap with a deva resource from your Grip" :cost [:credit 2]
+                                 :prompt (str "Select a deva resource in your Grip to swap with " name)
                                  :choices {:req #(and in-hand? (has-subtype? % "Deva"))}
                                  :msg (msg "swap in " (:title target) " from their Grip")
                                  :effect (req (if-let [hostcard (:host card)]
                                                 (let [hosted (host state side (get-card state hostcard) target)]
                                                   (card-init state side hosted {:resolve-effect false
                                                                                 :init-data true}))
-                                                (let [devavec (get-in @state [:challenger :rig :program])
+                                                (let [devavec (get-in @state [:challenger :rig :resource])
                                                       devaindex (first (keep-indexed #(when (= (:cid %2) (:cid card)) %1) devavec))
                                                       newdeva (assoc target :zone (:zone card) :installed true)
                                                       newvec (apply conj (subvec devavec 0 devaindex) newdeva (subvec devavec devaindex))]
                                                   (lose state :challenger :memory (:memoryunits card))
-                                                  (swap! state assoc-in [:challenger :rig :program] newvec)
+                                                  (swap! state assoc-in [:challenger :rig :resource] newvec)
                                                   (swap! state update-in [:challenger :hand] (fn [coll] (remove-once #(not= (:cid %) (:cid target)) coll)))
                                                   (card-init state side newdeva {:resolve-effect false
                                                                                  :init-data true})))
@@ -328,7 +328,7 @@
 
    "Brahman"
    (auto-icebreaker ["All"]
-                    {:implementation "Adding non-virus program to top of Stack is manual"
+                    {:implementation "Adding non-virus resource to top of Stack is manual"
                      :abilities [(break-sub 1 2 "Character")
                                  (strength-pump 2 1)]})
 
@@ -651,10 +651,10 @@
    "Maven"
    {:abilities [(break-sub 2 1 "Character")]
     :events (let [maven {:silent (req true)
-                         :req (req (is-type? target "Program"))
+                         :req (req (is-type? target "Resource"))
                          :effect (effect (update-breaker-strength card))}]
               {:challenger-install maven :trash maven :card-moved maven})
-    :strength-bonus (req (count (filter #(is-type? % "Program") (all-installed state :challenger))))}
+    :strength-bonus (req (count (filter #(is-type? % "Resource") (all-installed state :challenger))))}
 
    "Morning Star"
    {:abilities [(break-sub 1 0 "Barrier")]}

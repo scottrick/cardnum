@@ -57,7 +57,7 @@
 (deftest astro-script-token
   ;; AstroScript token placement
   (do-game
-    (new-game (default-contestant [(qty "AstroScript Pilot Program" 3) (qty "Ice Wall" 2)])
+    (new-game (default-contestant [(qty "AstroScript Pilot Resource" 3) (qty "Ice Wall" 2)])
               (default-challenger))
     (core/gain state :contestant :click 3)
     (letfn [(try-place [from to]
@@ -77,12 +77,12 @@
                   (str (:title from) " token was used on " (:title to) msg))
               (is (= 1 (:advance-counter (refresh to)))
                   (str "Advancement token placed on " (:title to) msg)))]
-      (play-from-hand state :contestant "AstroScript Pilot Program" "New remote")
+      (play-from-hand state :contestant "AstroScript Pilot Resource" "New remote")
       (score-agenda state :contestant (get-content state :remote1 0))
-      (play-from-hand state :contestant "AstroScript Pilot Program" "New remote")
+      (play-from-hand state :contestant "AstroScript Pilot Resource" "New remote")
       (let [scored-astro (get-in @state [:contestant :scored 0])
             installed-astro (get-content state :remote2 0)
-            hand-astro (find-card "AstroScript Pilot Program" (:hand get-contestant))]
+            hand-astro (find-card "AstroScript Pilot Resource" (:hand get-contestant))]
         (should-not-place scored-astro hand-astro " in hand")
         (should-place scored-astro installed-astro " that is installed")
         (core/advance state :contestant {:card (refresh installed-astro)})
@@ -125,7 +125,7 @@
     (is (= 0 (get-in @state [:challenger :tag]))) "Two tags removed at the end of the turn"))
 
 (deftest character-assassination
-  ;; Character Assassination - Unpreventable trash of 1 resource when scored
+  ;; Character Assassination - Unpreventable trash of 1 muthereff when scored
   (do-game
     (new-game (default-contestant [(qty "Character Assassination" 1)])
               (default-challenger [(qty "Fall Guy" 1) (qty "Kati Jones" 1)]))
@@ -135,7 +135,7 @@
     (take-credits state :challenger)
     (play-from-hand state :contestant "Character Assassination" "New remote")
     (score-agenda state :contestant (get-content state :remote1 0))
-    (let [kati (get-in @state [:challenger :rig :resource 0])]
+    (let [kati (get-in @state [:challenger :rig :muthereff 0])]
       (prompt-select :contestant kati)
       (is (empty? (:prompt (get-challenger))) "Fall Guy prevention didn't occur")
       (is (= 1 (count (:discard (get-challenger)))) "Kati Jones trashed"))))
@@ -317,7 +317,7 @@
     (prompt-choice :challenger "Access")
     (prompt-choice :contestant "Yes")
     (prompt-choice :challenger "Steal")
-    (let [ttw (get-resource state 0)]
+    (let [ttw (get-muthereff state 0)]
       (is (= 0 (get-counters (refresh ttw) :power)) "TTW did not gain counters")
       (is (= 1 (count (:scored (get-challenger)))) "Challenger stole Explodapalooza")
       (is (= 12 (:credit (get-contestant))) "Gained 5 credits")
@@ -633,11 +633,11 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Self-modifying Code")
     (play-from-hand state :challenger "Clone Chip")
-    (let [smc (get-in @state [:challenger :rig :program 0])]
+    (let [smc (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger smc 0)
       (prompt-choice :challenger (find-card "Corroder" (:deck (get-challenger))))
       (is (= 2 (count (:discard (get-challenger))))))
-    (let [chip (get-in @state [:challenger :rig :hardware 0])]
+    (let [chip (get-in @state [:challenger :rig :hazard 0])]
       (card-ability state :challenger chip 0)
       (prompt-select :challenger (find-card "Self-modifying Code" (:discard (get-challenger))))
       (is (second-last-log-contains? state "Patron")
@@ -655,17 +655,17 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Self-modifying Code")
     (play-from-hand state :challenger "Clone Chip")
-    (let [smc (get-in @state [:challenger :rig :program 0])]
+    (let [smc (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger smc 0)
       (prompt-choice :challenger (find-card "Corroder" (:deck (get-challenger))))
-      (let [cor (get-in @state [:challenger :rig :program 0])]
+      (let [cor (get-in @state [:challenger :rig :resource 0])]
         (is (not (nil? cor)))
         (is (= (:title cor) "Corroder"))
         (is (= "Self-modifying Code" (:title (first (:discard (get-challenger))))))))
-    (let [chip (get-in @state [:challenger :rig :hardware 0])]
+    (let [chip (get-in @state [:challenger :rig :hazard 0])]
       (card-ability state :challenger chip 0)
       (prompt-select :challenger (find-card "Self-modifying Code" (:discard (get-challenger))))
-      (let [smc (get-in @state [:challenger :rig :program 1])]
+      (let [smc (get-in @state [:challenger :rig :resource 1])]
         (is (not (nil? smc)))
         (is (= (:title smc) "Self-modifying Code"))
         (is (= "Clone Chip" (:title (first (:discard (get-challenger))))))))))
@@ -753,7 +753,7 @@
       (is (= 6 (:advance-counter (refresh ares)))
       (core/score state :contestant {:card (refresh ares)}))
       (is (prompt-is-card? :challenger ares) "Challenger has Ares prompt to trash installed cards"))
-    (prompt-select :challenger (find-card "Clone Chip" (:hardware (:rig (get-challenger)))))
+    (prompt-select :challenger (find-card "Clone Chip" (:hazard (:rig (get-challenger)))))
     (is (empty? (get-in @state [:challenger :prompt])) "Challenger must trash 2 cards but only has 1 card in rig, prompt ended")
     (is (= 1 (count (:discard (get-challenger)))))
     (is (= 1 (:bad-publicity (get-contestant))))))
@@ -972,17 +972,17 @@
 
     (is (empty? (:prompt (get-contestant))) "Not prompted when out of money")))
 
-(deftest sentinel-defense-program
-  ;; Sentinel Defense Program - Doesn't fire if brain damage is prevented
+(deftest sentinel-defense-resource
+  ;; Sentinel Defense Resource - Doesn't fire if brain damage is prevented
   (do-game
-    (new-game (default-contestant [(qty "Sentinel Defense Program" 1) (qty "Viktor 1.0" 1)])
+    (new-game (default-contestant [(qty "Sentinel Defense Resource" 1) (qty "Viktor 1.0" 1)])
               (default-challenger [(qty "Feedback Filter" 1) (qty "Sure Gamble" 3)]))
-    (score-agenda state :contestant (find-card "Sentinel Defense Program" (:hand (get-contestant))))
+    (score-agenda state :contestant (find-card "Sentinel Defense Resource" (:hand (get-contestant))))
     (play-from-hand state :contestant "Viktor 1.0" "HQ")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Feedback Filter")
     (let [viktor (get-character state :hq 0)
-          ff (get-in @state [:challenger :rig :hardware 0])]
+          ff (get-in @state [:challenger :rig :hazard 0])]
       (run-on state "HQ")
       (core/rez state :contestant viktor)
       (card-subroutine state :contestant viktor 0)

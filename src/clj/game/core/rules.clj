@@ -2,7 +2,7 @@
 
 (declare card-init card-str close-access-prompt enforce-msg gain-agenda-point get-agenda-points installed? is-type?
          in-contestant-scored? prevent-draw resolve-steal-events make-result say show-prompt system-msg trash-cards untrashable-while-rezzed?
-         update-all-character win win-decked play-sfx can-run? untrashable-while-resources?)
+         update-all-character win win-decked play-sfx can-run? untrashable-while-muthereffs?)
 
 ;;;; Functions for applying core MECCG game rules.
 
@@ -297,8 +297,8 @@
 
 
 ;;; Trashing
-(defn trash-resource-bonus
-  "Applies a cost increase of n to trashing a resource with the click action. (SYNC.)"
+(defn trash-muthereff-bonus
+  "Applies a cost increase of n to trashing a muthereff with the click action. (SYNC.)"
   [state side n]
   (swap! state update-in [:contestant :trash-cost-bonus] (fnil #(+ % n) 0)))
 
@@ -342,9 +342,9 @@
            (effect-completed state side eid))
 
        (and (= side :contestant)
-            (untrashable-while-resources? card)
-            (> (count (filter #(is-type? % "Resource") (all-installed state :challenger))) 1))
-       (do (enforce-msg state card "cannot be trashed while there are other resources installed")
+            (untrashable-while-muthereffs? card)
+            (> (count (filter #(is-type? % "Muthereff") (all-installed state :challenger))) 1))
+       (do (enforce-msg state card "cannot be trashed while there are other muthereffs installed")
            (effect-completed state side eid))
 
        ;; Card is not enforced untrashable
