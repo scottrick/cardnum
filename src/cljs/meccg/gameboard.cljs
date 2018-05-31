@@ -1113,9 +1113,9 @@
   (om/component
     (sab/html
         [:div.challenger-board {:class (if (= (:side @game-state) :contestant) "opponent" "me")}
-         (om/build discard-view player)
+         (om/build identity-view player)
          (om/build deck-view player)
-         (om/build identity-view player)])))
+         (om/build discard-view player)])))
 
 (defmulti event-view #(get-in % [:player :identity :side]))
 
@@ -1123,8 +1123,8 @@
   (om/component
     (sab/html
       (let [is-me (= (:side @game-state) :contestant)]
-        [:div.contestant-board {:class (if is-me "me" "opponent")}
-         (for [zone [:resource :hardware :muthereff :facedown]]
+        [:div.contestant-rig {:class (if is-me "me" "opponent")}
+         (for [zone [:resource :hazard :muthereff :facedown]]
            [:div
             (for [c (zone (:rig player))]
               [:div.card-wrapper {:class (when (playable? c) "playable")}
@@ -1135,8 +1135,8 @@
   (om/component
     (sab/html
       (let [is-me (= (:side @game-state) :challenger)]
-        [:div.challenger-board {:class (if is-me "me" "opponent")}
-         (for [zone [:resource :hardware :muthereff :facedown]]
+        [:div.challenger-rig {:class (if is-me "me" "opponent")}
+         (for [zone [:resource :hazard :muthereff :facedown]]
            [:div
             (for [c (zone (:rig player))]
               [:div.card-wrapper {:class (when (playable? c) "playable")}

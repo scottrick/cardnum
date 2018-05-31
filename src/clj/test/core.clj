@@ -90,11 +90,11 @@
   ([state pos]
    (get-in @state [:challenger :rig :resource pos])))
 
-(defn get-hardware
-  "Get hardware by position."
-  ([state] (get-in @state [:challenger :rig :hardware]))
+(defn get-hazard
+  "Get hazard by position."
+  ([state] (get-in @state [:challenger :rig :hazard]))
   ([state pos]
-   (get-in @state [:challenger :rig :hardware pos])))
+   (get-in @state [:challenger :rig :hazard pos])))
 
 (defn get-muthereff
   "Get non-hosted muthereff by position."

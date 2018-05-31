@@ -105,7 +105,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Feedback Filter")
     (take-credits state :challenger)
-    (let [filter (get-hardware state 0)]
+    (let [filter (get-hazard state 0)]
       (is (= 1 (count (:prompt (get-challenger)))) "Challenger has a single damage prevention prompt")
       (card-ability state :challenger filter 0)
       (prompt-choice :challenger "Done")
@@ -701,7 +701,7 @@
       (take-credits state :challenger)
       (core/move state :challenger (find-card "Sure Gamble" (:hand (get-challenger))) :deck)
       (core/move state :challenger (find-card "Sure Gamble" (:hand (get-challenger))) :deck)
-      (let [hopper (get-in @state [:challenger :rig :hardware 0])]
+      (let [hopper (get-in @state [:challenger :rig :hazard 0])]
         (card-ability state :challenger hopper 0)
         (is (= 3 (count (:hand (get-challenger)))) "Able to draw 3 cards during Contestant's turn")
         (core/derez state :contestant (refresh gp))

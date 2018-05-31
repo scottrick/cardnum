@@ -1,6 +1,6 @@
 (in-ns 'game.core)
 
-(declare trash-resource trash-hardware trash-muthereff-sub trash-installed)
+(declare trash-resource trash-hazard trash-muthereff-sub trash-installed)
 
 (def cards-characters
   {"Orc Tracker"

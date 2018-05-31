@@ -67,7 +67,7 @@
     (is (= 0 (count (:hand (get-challenger)))))
     ;; Install Chameleon on contestant turn
     (take-credits state :contestant 1)
-    (let [chip (get-in @state [:challenger :rig :hardware 0])]
+    (let [chip (get-in @state [:challenger :rig :hazard 0])]
       (card-ability state :challenger chip 0)
       (prompt-select :challenger (find-card "Chameleon" (:discard (get-challenger))))
       (prompt-choice :challenger "Sentry"))
@@ -260,7 +260,7 @@
     (let [faust (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger faust 1)
       (prompt-card :challenger (find-card "Astrolabe" (:hand (get-challenger))))
-      (is (empty? (:prompt (get-challenger))) "No trash-prevention prompt for hardware")
+      (is (empty? (:prompt (get-challenger))) "No trash-prevention prompt for hazard")
       (card-ability state :challenger faust 1)
       (prompt-card :challenger (find-card "Gordian Blade" (:hand (get-challenger))))
       (is (empty? (:prompt (get-challenger))) "No trash-prevention prompt for resource")

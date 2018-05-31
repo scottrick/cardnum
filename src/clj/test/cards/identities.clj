@@ -102,7 +102,7 @@
     (core/end-phase-12 state :challenger nil)
     (prompt-choice :challenger "Done") ; no facedown install on turn 1
     (play-from-hand state :challenger "Heartbeat")
-    (is (= 1 (count (get-in @state [:challenger :rig :hardware]))))
+    (is (= 1 (count (get-in @state [:challenger :rig :hazard]))))
     (take-credits state :challenger)
     (take-credits state :contestant)
     (core/end-phase-12 state :challenger nil)
@@ -256,7 +256,7 @@
     (starting-hand state :challenger ["Customized Secretary" "Clone Chip"])
     (trash-from-hand state :challenger "Customized Secretary")
     (play-from-hand state :challenger "Clone Chip")
-    (card-ability state :challenger (get-hardware state 0) 0)
+    (card-ability state :challenger (get-hazard state 0) 0)
     (prompt-select :challenger (find-card "Customized Secretary" (:discard (get-challenger))))
     ;; Make sure the simultaneous-resolution prompt is showing with 2 choices
     (is (= 2 (-> (get-challenger) :prompt first :choices count)) "Simultaneous-resolution prompt is showing")
@@ -976,7 +976,7 @@
     (trash-from-hand state :challenger "Sharpshooter")
     (take-credits state :challenger)
     ;; playing virus via Clone Chip on Contestant's turn should trigger Noise ability
-    (let [chip (get-in @state [:challenger :rig :hardware 0])]
+    (let [chip (get-in @state [:challenger :rig :hazard 0])]
       (card-ability state :challenger chip 0)
       (prompt-select :challenger (find-card "Cache" (:discard (get-challenger))))
       (let [ds (get-in @state [:challenger :rig :resource 1])]
@@ -985,7 +985,7 @@
     (is (= 2 (count (:discard (get-contestant)))) "Playing virus via Clone Chip on contestant's turn should trigger Noise ability")
     (is (= 2 (count (:deck (get-contestant)))) "Card trashed to Archives by Noise should come from R&D")
     ;; playing non-virus via Clone Chip on Contestant's turn should NOT trigger Noise ability
-    (let [chip-2 (get-in @state [:challenger :rig :hardware 0])]
+    (let [chip-2 (get-in @state [:challenger :rig :hazard 0])]
       (card-ability state :challenger chip-2 0)
       (prompt-select :challenger (find-card "Sharpshooter" (:discard (get-challenger))))
       (let [ss (get-in @state [:challenger :rig :resource 2])]
@@ -1240,7 +1240,7 @@
     (play-from-hand state :challenger "Feedback Filter")
     (is (= 3 (:credit (get-challenger))) "Challenger has 3 credits")
     (let [psychic (get-content state :remote1 0)
-          ff (get-hardware state 0)]
+          ff (get-hazard state 0)]
       (run-empty-server state :hq)
       (is (:run @state) "On successful run trigger effects")
       (prompt-select :challenger psychic)

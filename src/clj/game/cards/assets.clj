@@ -629,7 +629,7 @@
                          :once :per-turn
                          :req (req (seq (:hand challenger)))
                          :prompt "Choose a card type"
-                         :choices ["Event" "Hardware" "Resource" "Muthereff"]
+                         :choices ["Event" "Hazard" "Resource" "Muthereff"]
                          :msg (msg "reveal " (join ", " (map :title (:hand challenger))) " and trash a " target)
                          :effect (effect (resolve-ability (trash-ability target) card nil))}]
      {:additional-cost [:forfeit]
@@ -1334,9 +1334,9 @@
                                      (when (< 0 (:advance-counter shat 0))
                                        (continue-ability
                                          state side
-                                         (-> trash-hardware
+                                         (-> trash-hazard
                                              (assoc-in [:choices :max] (:advance-counter shat))
-                                             (assoc :prompt (msg "Select " (:advance-counter shat) " pieces of hardware to trash")
+                                             (assoc :prompt (msg "Select " (:advance-counter shat) " pieces of hazard to trash")
                                                     :effect (effect (trash-cards targets))
                                                     :msg (msg "trash " (join ", " (map :title targets)))))
                                         shat nil))))})

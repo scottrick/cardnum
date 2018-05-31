@@ -623,7 +623,7 @@
     (play-from-hand state :challenger "Security Nexus")
     (let [mb (get-content state :hq 0)
           en (get-character state :hq 0)
-          sn (-> @state :challenger :rig :hardware first)]
+          sn (-> @state :challenger :rig :hazard first)]
       (run-on state "HQ")
       (core/rez state :contestant mb)
       (core/rez state :contestant en)

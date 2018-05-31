@@ -4,7 +4,7 @@
             test.cards.agendas
             test.cards.assets
             test.cards.events
-            test.cards.hardware
+            test.cards.hazard
             test.cards.character
             test.cards.icebreakers
             test.cards.identities

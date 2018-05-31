@@ -71,7 +71,7 @@
                               :hand (zone :hand contestant-pool)
                               :discard [] :scored [] :rfg [] :play-area []
                               :servers {:hq {} :rd {} :archives {}}
-                              :rig {:resource [] :muthereff [] :hardware []}
+                              :rig {:resource [] :muthereff [] :hazard []}
                               :click 0 :credit 5 :bad-publicity 0 :has-bad-pub 0
                               :toast []
                               :hand-size-base 8 :hand-size-modification 0
@@ -84,7 +84,7 @@
                               :hand (zone :hand challenger-pool)
                               :discard [] :scored [] :rfg [] :play-area []
                               :servers {:hq {} :rd {} :archives {}}
-                              :rig {:resource [] :muthereff [] :hardware []}
+                              :rig {:resource [] :muthereff [] :hazard []}
                               :toast []
                               :click 0 :credit 5 :run-credit 0 :memory 4 :link 0 :tag 0
                               :hand-size-base 8 :hand-size-modification 0
@@ -98,8 +98,7 @@
       (when-completed (trigger-event-sync state side :pre-start-game)
                       (let [side :challenger]
                         (when-completed (trigger-event-sync state side :pre-start-game)
-                                        nil))))
-    @game-states))
+                                        nil)))) @game-states))
 
 (defn server-card
   ([title] (@all-cards title))

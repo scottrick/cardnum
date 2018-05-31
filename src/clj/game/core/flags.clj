@@ -268,8 +268,8 @@
 (defn resource? [card]
   (is-type? card "Resource"))
 
-(defn hardware? [card]
-  (is-type? card "Hardware"))
+(defn hazard? [card]
+  (is-type? card "Hazard"))
 
 (defn muthereff? [card]
   (is-type? card "Muthereff"))

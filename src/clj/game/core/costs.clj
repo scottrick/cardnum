@@ -26,7 +26,7 @@
                   (and (= type :mill) (>= (- (count (get-in @state [side :deck])) amount) 0))
                   (and (= type :tag) (>= (- (get-in @state [:challenger :tag]) amount) 0))
                   (and (= type :character) (>= (- (count (filter (every-pred rezzed? character?) (all-installed state :contestant))) amount) 0))
-                  (and (= type :hardware) (>= (- (count (get-in @state [:challenger :rig :hardware])) amount) 0))
+                  (and (= type :hazard) (>= (- (count (get-in @state [:challenger :rig :hazard])) amount) 0))
                   (and (= type :resource) (>= (- (count (get-in @state [:challenger :rig :resource])) amount) 0))
                   (and (= type :connection) (>= (- (count (filter #(has-subtype? % "Connection")
                                                                   (all-installed state :challenger))) amount) 0))
@@ -81,7 +81,7 @@
                (swap! state assoc-in [side :register :spent-click] true)
                (deduce state side cost))
     :forfeit (pay-forfeit state side card (second cost))
-    :hardware (pay-trash state side card :hardware (second cost) (get-in @state [:challenger :rig :hardware]))
+    :hazard (pay-trash state side card :hazard (second cost) (get-in @state [:challenger :rig :hazard]))
     :resource (pay-trash state side card :resource (second cost) (get-in @state [:challenger :rig :resource]))
 
     ;; Connection

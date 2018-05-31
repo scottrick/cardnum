@@ -8,11 +8,11 @@
                     :effect (effect (trash target {:cause :subroutine})
                                     (clear-wait-prompt :challenger))})
 
-(def trash-hardware {:prompt "Select a piece of hardware to trash"
-                     :label "Trash a piece of hardware"
+(def trash-hazard {:prompt "Select a piece of hazard to trash"
+                     :label "Trash a piece of hazard"
                      :msg (msg "trash " (:title target))
                      :choices {:req #(and (installed? %)
-                                          (is-type? % "Hardware"))}
+                                          (is-type? % "Hazard"))}
                      :effect (effect (trash target {:cause :subroutine}))})
 
 (def trash-muthereff-sub {:prompt "Select a muthereff to trash"
@@ -139,7 +139,7 @@
 (load "cards/assets")
 (load "cards/characters")
 (load "cards/events")
-(load "cards/hardware")
+(load "cards/hazards")
 (load "cards/ice")
 (load "cards/icebreakers")
 (load "cards/identities")
@@ -148,5 +148,5 @@
 (load "cards/resources")
 (load "cards/upgrades")
 
-(def cards (merge cards-agendas cards-allies cards-assets cards-events cards-hardware cards-characters cards-ice cards-icebreakers cards-identities
+(def cards (merge cards-agendas cards-allies cards-assets cards-events cards-hazards cards-characters cards-ice cards-icebreakers cards-identities
                   cards-items cards-operations cards-resources cards-upgrades))

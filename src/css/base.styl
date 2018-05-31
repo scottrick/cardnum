@@ -1698,6 +1698,15 @@ nav ul
     min-width: 90px
     overflow: auto
 
+    .contestant-rig, .challenger-rig
+      flex(1)
+      display-flex()
+      flex-direction(row)
+      justify-content(flex-end)
+
+      .card-wrapper
+        margin: 3px 6px
+
     .contestant-board, .challenger-board
       flex(1)
       display-flex()
@@ -1866,6 +1875,13 @@ nav ul
 
           .run-card
             transform(initial)
+
+    .contestant-rig.opponent, .challenger-rig.opponent
+      transform(initial)
+
+      .card-wrapper
+        transform(rotate(0deg), translateY(100%))
+        margin: 3px 6px
 
 .rightpane
     position: relative

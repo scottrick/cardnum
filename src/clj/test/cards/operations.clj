@@ -1008,7 +1008,7 @@
     (is (= 7 (:credit (get-contestant))) "Gained 3 credits for 3 rezzed Character; unrezzed Character ignored")))
 
 (deftest power-shutdown
-  ;; Power Shutdown - Trash cards from R&D to force Challenger to trash a resource or hardware
+  ;; Power Shutdown - Trash cards from R&D to force Challenger to trash a resource or hazard
   (do-game
     (new-game (default-contestant [(qty "Power Shutdown" 3) (qty "Hive" 3)])
               (default-challenger [(qty "Grimoire" 1) (qty "Cache" 1)]))
@@ -1026,7 +1026,7 @@
     (prompt-choice :contestant 2)
     (is (= 3 (count (:discard (get-contestant)))) "2 cards trashed from R&D")
     (is (= 1 (count (:deck (get-contestant)))) "1 card remaining in R&D")
-    (prompt-select :challenger (get-in @state [:challenger :rig :hardware 0])) ; try targeting Grimoire
+    (prompt-select :challenger (get-in @state [:challenger :rig :hazard 0])) ; try targeting Grimoire
     (is (empty? (:discard (get-challenger))) "Grimoire too expensive to be targeted")
     (prompt-select :challenger (get-in @state [:challenger :rig :resource 0]))
     (is (= 1 (count (:discard (get-challenger)))) "Cache trashed")))
@@ -1244,13 +1244,13 @@
     (core/gain state :challenger :tag 1)
     (is (= 0 (count (:hand (get-challenger)))) "Challenger hand is empty")
     (let [inti (get-in @state [:challenger :rig :resource 0])
-          cc (get-in @state [:challenger :rig :hardware 0])]
+          cc (get-in @state [:challenger :rig :hazard 0])]
       (play-from-hand state :contestant "Self-Growth Resource")
       (prompt-select :contestant inti)
       (prompt-select :contestant cc))
     (is (= 2 (count (:hand (get-challenger)))) "2 cards returned to hand")
     (is (= 0 (count (get-in @state [:challenger :rig :resource]))) "No resources installed")
-    (is (= 0 (count (get-in @state [:challenger :rig :hardware]))) "No hardware installed")))
+    (is (= 0 (count (get-in @state [:challenger :rig :hazard]))) "No hazard installed")))
 
 (deftest servcharacter-outage
   ;; Servcharacter Outage - First click run each turn costs a credit
@@ -1705,10 +1705,10 @@
 
     (is (= 0 (:tag (get-challenger))) "Challenger starts with 0 tags")
     (play-from-hand state :contestant "Threat Assessment")
-    (prompt-select :contestant (find-card "Desperado" (-> (get-challenger) :rig :hardware)))
+    (prompt-select :contestant (find-card "Desperado" (-> (get-challenger) :rig :hazard)))
     (prompt-choice :challenger "2 tags")
     (is (= 2 (:tag (get-challenger))) "Challenger took 2 tags")
-    (is (= 1 (count (-> (get-challenger) :rig :hardware))) "Didn't trash Desperado")
+    (is (= 1 (count (-> (get-challenger) :rig :hazard))) "Didn't trash Desperado")
     (is (= "Threat Assessment" (:title (first (:rfg (get-contestant))))) "Threat Assessment removed from game")
 
     (play-from-hand state :contestant "Threat Assessment")

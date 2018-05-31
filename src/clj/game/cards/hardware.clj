@@ -764,12 +764,12 @@
 
    "Replicator"
    {:events {:challenger-install
-             {:interactive (req (and (is-type? target "Hardware")
+             {:interactive (req (and (is-type? target "Hazard")
                                      (some #(= (:title %) (:title target)) (:deck challenger))))
-              :silent (req (not (and (is-type? target "Hardware")
+              :silent (req (not (and (is-type? target "Hazard")
                                      (some #(= (:title %) (:title target)) (:deck challenger)))))
               :optional {:prompt "Use Replicator to add a copy?"
-                         :req (req (and (is-type? target "Hardware") (some #(= (:title %) (:title target)) (:deck challenger))))
+                         :req (req (and (is-type? target "Hazard") (some #(= (:title %) (:title target)) (:deck challenger))))
                          :yes-ability {:msg (msg "add a copy of " (:title target) " to their Grip")
                                        :effect (effect (trigger-event :searched-stack nil)
                                                        (shuffle! :deck)

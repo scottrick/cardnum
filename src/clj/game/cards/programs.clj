@@ -159,7 +159,7 @@
                         (resolve-ability state side
                                          {:prompt "Choose a card to install from your Grip"
                                           :choices {:req #(and (<= (:cost %) (get-in c [:counter :power] 0))
-                                                               (#{"Hardware" "Resource" "Muthereff"} (:type %))
+                                                               (#{"Hazard" "Resource" "Muthereff"} (:type %))
                                                                (in-hand? %))}
                                           :req (req (not (install-locked? state side)))
                                           :msg (msg "install " (:title target) " at no cost")
@@ -496,13 +496,13 @@
                                                           :hosted-resources (remove #(= (:cid target) %) (:hosted-resources card))))
                                           (lose :memory (:memoryunits target)))}}}
    "LLDS Energy Regulator"
-   {:prevent {:trash [:hardware]}
+   {:prevent {:trash [:hazard]}
     :abilities [{:cost [:credit 3]
-                 :msg "prevent a hardware from being trashed"
-                 :effect (effect (trash-prevent :hardware 1))}
-                {:label "[Trash]: Prevent a hardware from being trashed"
-                 :msg "prevent a hardware from being trashed"
-                 :effect (effect (trash-prevent :hardware 1)
+                 :msg "prevent a hazard from being trashed"
+                 :effect (effect (trash-prevent :hazard 1))}
+                {:label "[Trash]: Prevent a hazard from being trashed"
+                 :msg "prevent a hazard from being trashed"
+                 :effect (effect (trash-prevent :hazard 1)
                                  (trash card {:cause :ability-cost}))}]}
 
    "Magnum Opus"

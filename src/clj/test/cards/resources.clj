@@ -233,7 +233,7 @@
     (is (= 8 (core/hand-size state :challenger)) "Challenger hand size boosted by Brain Cage")
     (take-credits state :challenger)
     (core/gain state :challenger :tag 2)
-    (core/trash state :challenger (get-hardware state 0))
+    (core/trash state :challenger (get-hazard state 0))
     (play-from-hand state :contestant "Traffic Accident")
     (is (= 3 (count (:discard (get-challenger)))) "Conventional meat damage not prevented by Parlor")))
 
@@ -964,7 +964,7 @@
     (play-from-hand state :challenger "Silencer")
     (play-from-hand state :challenger "Net Mercur")
     (play-from-hand state :challenger "Ghost Challenger")
-    (let [sil (get-hardware state 0)
+    (let [sil (get-hazard state 0)
           nm (get-muthereff state 0)
           gr (get-muthereff state 1)]
       (card-ability state :challenger gr 0)
@@ -1120,7 +1120,7 @@
           (card-ability state :challenger ped2 0)
           (prompt-card :challenger (-> (get-challenger) :prompt first :choices first)) ; choose Spy Camera
           ;; the fact that we got this far means the bug is fixed
-          (is (= 1 (count (get-hardware state))) "Spy Camera installed"))))))
+          (is (= 1 (count (get-hazard state))) "Spy Camera installed"))))))
 
 (deftest offcharacterr-frank
   ;; Offcharacterr Frank - meat damage to trash 2 from HQ
@@ -1280,7 +1280,7 @@
     (is (= "Corroder" (:title (first (:deck (get-challenger))))))))
 
 (deftest sacrificial-construct
-  ;; Sacrificial Construct - Trash to prevent trash of installed resource or hardware
+  ;; Sacrificial Construct - Trash to prevent trash of installed resource or hazard
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Sacrificial Construct" 2) (qty "Cache" 1)
@@ -1299,10 +1299,10 @@
     (card-ability state :challenger (get-muthereff state 0) 0)
     (is (= 2 (count (:discard (get-challenger)))) "Sac Con trashed")
     (is (= 1 (count (get-in @state [:challenger :rig :resource]))) "Cache still installed")
-    (core/trash state :challenger (get-hardware state 0))
+    (core/trash state :challenger (get-hazard state 0))
     (card-ability state :challenger (get-muthereff state 0) 0)
     (is (= 3 (count (:discard (get-challenger)))) "Sac Con trashed")
-    (is (= 1 (count (get-in @state [:challenger :rig :hardware]))) "Astrolabe still installed")))
+    (is (= 1 (count (get-in @state [:challenger :rig :hazard]))) "Astrolabe still installed")))
 
 (deftest safety-first
   ;; Safety First - Reduce hand size by 2, draw 1 at turn end if below maximum
@@ -1564,7 +1564,7 @@
       (is (= 4 (:memory (get-challenger))) "Challenger has 4 MU"))))
 
 (deftest street-peddler-in-play-effects
-  ;; Street Peddler - Trashing hardware should not reduce :in-play values
+  ;; Street Peddler - Trashing hazard should not reduce :in-play values
   (do-game
    (new-game (default-contestant)
              (default-challenger [(qty "Street Peddler" 1) (qty "HQ Interface" 3)]))
@@ -1719,7 +1719,7 @@
      (is (= 3 (count (:hand (get-challenger)))) "1 card drawn when receiving damage (2nd time)"))))
 
 (deftest technical-writer
-  ;; Technical Writer - Gain 1c per resource/hardware install; click/trash to take all credits
+  ;; Technical Writer - Gain 1c per resource/hazard install; click/trash to take all credits
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Technical Writer" 1) (qty "Faerie" 2)

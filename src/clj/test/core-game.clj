@@ -145,7 +145,7 @@
           jh1 (get-content state :remote1 0)
           jh2 (get-content state :remote2 0)
           corr (get-in @state [:challenger :rig :resource 0])
-          cchip (get-in @state [:challenger :rig :hardware 0])
+          cchip (get-in @state [:challenger :rig :hazard 0])
           pap (get-in @state [:challenger :rig :muthereff 0])]
       (core/rez state :contestant hqiwall0)
       (core/rez state :contestant jh1)
@@ -284,7 +284,7 @@
       (take-credits state :contestant)
       (let [kn (get-in @state [:challenger :rig :resource 0])
             pw (get-in @state [:challenger :rig :muthereff 0])
-            od (get-in @state [:challenger :rig :hardware 0])
+            od (get-in @state [:challenger :rig :hazard 0])
             co (find-card "Corroder" (:hand (get-challenger)))
             le (find-card "Leprechaun" (:hand (get-challenger)))]
         (card-ability state :challenger kn 0)

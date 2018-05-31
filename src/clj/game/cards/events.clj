@@ -246,7 +246,7 @@
    "Credit Kiting"
    {:req (req (some #{:hq :rd :archives} (:successful-run challenger-reg)))
     :prompt "Select a card to install from your Grip"
-    :choices {:req #(and (or (is-type? % "Hardware")
+    :choices {:req #(and (or (is-type? % "Hazard")
                              (is-type? % "Resource")
                              (is-type? % "Muthereff"))
                          (in-hand? %))}
@@ -441,11 +441,11 @@
    "Emergent Creativity"
    (letfn [(ec [trash-cost to-trash]
              {:delayed-completion true
-             :prompt "Choose a hardware or resource to install"
+             :prompt "Choose a hazard or resource to install"
              :msg (msg "trash " (if (empty? to-trash) "no cards" (join ", " (map :title to-trash)))
                        " and install " (:title target) " lowering the cost by " trash-cost)
              :choices (req (cancellable (filter #(or (is-type? % "Resource")
-                                                     (is-type? % "Hardware"))
+                                                     (is-type? % "Hazard"))
                                                 (:deck challenger)) :sorted))
              :effect (req (trigger-event state side :searched-stack nil)
                           (shuffle! state side :deck)
@@ -454,8 +454,8 @@
                           (install-cost-bonus state side [:credit (- trash-cost)])
                           (challenger-install state side target)
                           (effect-completed state side eid card))})]
-   {:prompt "Choose Hardware and Resources to trash from your Grip"
-    :choices {:req #(and (or (is-type? % "Hardware")
+   {:prompt "Choose Hazard and Resources to trash from your Grip"
+    :choices {:req #(and (or (is-type? % "Hazard")
                              (is-type? % "Resource"))
                          (in-hand? %))
               :max (req (count (:hand challenger)))}
@@ -504,7 +504,7 @@
 
    "Eureka!"
    {:effect (req (let [topcard (first (:deck challenger))
-                       caninst (or (is-type? topcard "Hardware")
+                       caninst (or (is-type? topcard "Hazard")
                                    (is-type? topcard "Resource")
                                    (is-type? topcard "Muthereff"))]
                    (if caninst
@@ -1114,8 +1114,8 @@
                                                                             (update! (assoc card :run-again true)))}}}}}
 
    "Modded"
-   {:prompt "Select a resource or piece of hardware to install from your Grip"
-    :choices {:req #(and (or (is-type? % "Hardware")
+   {:prompt "Select a resource or piece of hazard to install from your Grip"
+    :choices {:req #(and (or (is-type? % "Hazard")
                              (is-type? % "Resource"))
                          (in-hand? %))}
     :effect (effect (install-cost-bonus [:credit -3]) (challenger-install target))}
@@ -1706,12 +1706,12 @@
     :events {:challenger-turn-ends nil}}
 
    "Trade-In"
-   {:additional-cost [:hardware 1]
+   {:additional-cost [:hazard 1]
     :effect (effect (register-events (:events (card-def card)) (assoc card :zone '(:discard))))
     :events {:challenger-trash {:effect (effect (gain :credit (quot (:cost target) 2))
                                             (system-msg (str "trashes " (:title target) " and gains " (quot (:cost target) 2) " [Credits]"))
-                                            (continue-ability {:prompt "Choose a Hardware to add to your Grip from your Stack"
-                                                               :choices (req (filter #(is-type? % "Hardware")
+                                            (continue-ability {:prompt "Choose a Hazard to add to your Grip from your Stack"
+                                                               :choices (req (filter #(is-type? % "Hazard")
                                                                                      (:deck challenger)))
                                                                :msg (msg "add " (:title target) " to their Grip")
                                                                :effect (effect (trigger-event :searched-stack nil)
@@ -1729,7 +1729,7 @@
    "Uninstall"
    {:choices {:req #(and (installed? %)
                          (not (facedown? %))
-                         (#{"Resource" "Hardware"} (:type %)))}
+                         (#{"Resource" "Hazard"} (:type %)))}
     :msg (msg "move " (:title target) " to their Grip")
     :effect (effect (move target :hand))}
 

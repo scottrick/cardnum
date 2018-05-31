@@ -589,7 +589,7 @@
     (is (= 4 (:click (get-challenger))) "Early Bird gains click")))
 
 (deftest emergent-creativity
-  ;; Emergent Creativty - Double, discard resources/hardware from grip, install from heap
+  ;; Emergent Creativty - Double, discard resources/hazard from grip, install from heap
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Emergent Creativity" 1) (qty "Paperclip" 1)
@@ -1198,7 +1198,7 @@
     (is (empty? (:prompt (get-challenger))) "No option to run again on unsuccessful run")))
 
 (deftest modded
-  ;; Modded - Install a resource or piece of hardware at a 3 credit discount
+  ;; Modded - Install a resource or piece of hazard at a 3 credit discount
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Modded" 2)
@@ -1210,7 +1210,7 @@
     (prompt-select :challenger (find-card "Earthrise Hotel" (:hand (get-challenger))))
     (is (empty? (get-in @state [:challenger :rig :muthereff])) "Can't install muthereffs with Modded")
     (prompt-select :challenger (find-card "HQ Interface" (:hand (get-challenger))))
-    (is (= 1 (count (get-in @state [:challenger :rig :hardware]))) "Installed HQ Interface")
+    (is (= 1 (count (get-in @state [:challenger :rig :hazard]))) "Installed HQ Interface")
     (is (= 4 (:credit (get-challenger))) "Paid 1 credit instead of 4")
     (play-from-hand state :challenger "Modded")
     (prompt-select :challenger (find-card "Nerve Agent" (:hand (get-challenger))))
@@ -1319,7 +1319,7 @@
     (play-from-hand state :challenger "Turntable")
     (run-empty-server state "HQ")
     (prompt-choice :challenger "Steal")
-    (let [tt (get-in @state [:challenger :rig :hardware 0])]
+    (let [tt (get-in @state [:challenger :rig :hazard 0])]
       (prompt-choice :challenger "Yes")
       (prompt-select :challenger (find-card "Breaking News" (:scored (get-contestant))))
       (is (= 1 (:agenda-point (get-contestant))))

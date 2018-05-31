@@ -637,7 +637,7 @@
       (card-ability state :challenger smc 0)
       (prompt-choice :challenger (find-card "Corroder" (:deck (get-challenger))))
       (is (= 2 (count (:discard (get-challenger))))))
-    (let [chip (get-in @state [:challenger :rig :hardware 0])]
+    (let [chip (get-in @state [:challenger :rig :hazard 0])]
       (card-ability state :challenger chip 0)
       (prompt-select :challenger (find-card "Self-modifying Code" (:discard (get-challenger))))
       (is (second-last-log-contains? state "Patron")
@@ -662,7 +662,7 @@
         (is (not (nil? cor)))
         (is (= (:title cor) "Corroder"))
         (is (= "Self-modifying Code" (:title (first (:discard (get-challenger))))))))
-    (let [chip (get-in @state [:challenger :rig :hardware 0])]
+    (let [chip (get-in @state [:challenger :rig :hazard 0])]
       (card-ability state :challenger chip 0)
       (prompt-select :challenger (find-card "Self-modifying Code" (:discard (get-challenger))))
       (let [smc (get-in @state [:challenger :rig :resource 1])]
@@ -753,7 +753,7 @@
       (is (= 6 (:advance-counter (refresh ares)))
       (core/score state :contestant {:card (refresh ares)}))
       (is (prompt-is-card? :challenger ares) "Challenger has Ares prompt to trash installed cards"))
-    (prompt-select :challenger (find-card "Clone Chip" (:hardware (:rig (get-challenger)))))
+    (prompt-select :challenger (find-card "Clone Chip" (:hazard (:rig (get-challenger)))))
     (is (empty? (get-in @state [:challenger :prompt])) "Challenger must trash 2 cards but only has 1 card in rig, prompt ended")
     (is (= 1 (count (:discard (get-challenger)))))
     (is (= 1 (:bad-publicity (get-contestant))))))
@@ -982,7 +982,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Feedback Filter")
     (let [viktor (get-character state :hq 0)
-          ff (get-in @state [:challenger :rig :hardware 0])]
+          ff (get-in @state [:challenger :rig :hazard 0])]
       (run-on state "HQ")
       (core/rez state :contestant viktor)
       (card-subroutine state :contestant viktor 0)

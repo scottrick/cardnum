@@ -169,7 +169,7 @@
    {:delayed-completion true
     :req (req (not-empty (all-installed state :challenger)))
     :prompt "Choose a card type"
-    :choices ["Muthereff" "Hardware" "Resource"]
+    :choices ["Muthereff" "Hazard" "Resource"]
     :effect (req (let [t target
                        num (count (filter #(is-type? % t) (all-installed state :challenger)))]
                    (show-wait-prompt state :contestant "Challenger to choose cards to trash")
@@ -867,28 +867,28 @@
    "Power Grid Overload"
    {:req (req (:made-run challenger-reg-last))
     :trace {:base 2
-            :msg "trash 1 piece of hardware"
+            :msg "trash 1 piece of hazard"
             :delayed-completion true
             :effect (req (let [max-cost (- target (second targets))]
                            (continue-ability state side
-                                             {:choices {:req #(and (is-type? % "Hardware")
+                                             {:choices {:req #(and (is-type? % "Hazard")
                                                                    (<= (:cost %) max-cost))}
                                               :msg (msg "trash " (:title target))
                                               :effect (effect (trash target))}
                                              card nil))
-                         (system-msg state :contestant (str "trashes 1 piece of hardware with install cost less than or equal to " (- target (second targets)))))}}
+                         (system-msg state :contestant (str "trashes 1 piece of hazard with install cost less than or equal to " (- target (second targets)))))}}
 
    "Power Shutdown"
    {:req (req (:made-run challenger-reg-last))
     :prompt "Trash how many cards from the top R&D?"
-    :choices {:number (req (apply max (map :cost (filter #(or (= "Resource" (:type %)) (= "Hardware" (:type %))) (all-installed state :challenger)))))}
+    :choices {:number (req (apply max (map :cost (filter #(or (= "Resource" (:type %)) (= "Hazard" (:type %))) (all-installed state :challenger)))))}
     :msg (msg "trash " target " cards from the top of R&D")
     :delayed-completion true
     :effect (req (mill state :contestant target)
                  (let [n target]
                    (continue-ability state :challenger
-                                     {:prompt "Select a Resource or piece of Hardware to trash"
-                                      :choices {:req #(and (#{"Hardware" "Resource"} (:type %))
+                                     {:prompt "Select a Resource or piece of Hazard to trash"
+                                      :choices {:req #(and (#{"Hazard" "Resource"} (:type %))
                                                            (<= (:cost %) n))}
                                       :msg (msg "trash " (:title target))
                                       :effect (effect (trash target))}
@@ -1520,8 +1520,8 @@
 
    "Wake Up Call"
    {:req (req (:trashed-card challenger-reg-last))
-    :prompt "Select a piece of hardware or non-virtual muthereff"
-    :choices {:req #(or (hardware? %)
+    :prompt "Select a piece of hazard or non-virtual muthereff"
+    :choices {:req #(or (hazard? %)
                         (and (muthereff? %) (not (has-subtype? % "Virtual"))))}
     :delayed-completion true
     :effect (req (let [chosen target

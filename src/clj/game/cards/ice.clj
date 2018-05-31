@@ -1,6 +1,6 @@
 (in-ns 'game.core)
 
-(declare trash-resource trash-hardware trash-muthereff-sub trash-installed)
+(declare trash-resource trash-hazard trash-muthereff-sub trash-installed)
 
 ;;;; Helper functions specific for Character
 
@@ -785,13 +785,13 @@
     :strength-bonus advance-counters}
 
    "Flare"
-   {:subroutines [(trace-ability 6 {:label "Trash 1 hardware, do 2 meat damage, and end the run"
-                                    :msg "trash 1 hardware, do 2 meat damage, and end the run"
+   {:subroutines [(trace-ability 6 {:label "Trash 1 hazard, do 2 meat damage, and end the run"
+                                    :msg "trash 1 hazard, do 2 meat damage, and end the run"
                                     :delayed-completion true
                                     :effect (effect (continue-ability
-                                                     {:prompt "Select a piece of hardware to trash"
-                                                      :label "Trash a piece of hardware"
-                                                      :choices {:req #(is-type? % "Hardware")}
+                                                     {:prompt "Select a piece of hazard to trash"
+                                                      :label "Trash a piece of hazard"
+                                                      :choices {:req #(is-type? % "Hazard")}
                                                       :msg (msg "trash " (:title target))
                                                       :effect (req (when-completed
                                                                      (trash state side target {:cause :subroutine})
@@ -1132,7 +1132,7 @@
     :subroutines [(do-net-damage 1)]}
 
    "Lab Dog"
-   {:subroutines [(assoc trash-hardware :label "Force the Challenger to trash an installed piece of hardware"
+   {:subroutines [(assoc trash-hazard :label "Force the Challenger to trash an installed piece of hazard"
                                         :player :challenger
                                         :msg (msg "force the Challenger to trash " (:title target))
                                         :effect (req (trash state side target)
@@ -1719,7 +1719,7 @@
                    :effect (effect (move target :deck {:front true}))}]}
 
    "Taurus"
-   (constellation-character trash-hardware)
+   (constellation-character trash-hazard)
 
    "The Grimburgoth"
    {:subroutines [end-the-run]}
@@ -1979,6 +1979,6 @@
 
    "Zed 2.0"
    {:implementation "Restriction on having spent [click] is not implemented"
-    :subroutines [trash-hardware
+    :subroutines [trash-hazard
                   (do-brain-damage 2)]
     :challenger-abilities [(challenger-break [:click 2] 2)]}})
