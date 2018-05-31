@@ -52,6 +52,6 @@
       " from "
       [:a {:href "http://www.flaticon.com" :title "Flaticon" :target "_blank"} "www.flaticon.com"]
       " is licensed under "
-      [:a {:href "http://creativecommons.org/licenses/by/3.0/" :title "Creative Commons BY 3.0" :target "_blank"} "CC BY 3.0"]]])))
+      [:a {:href "http://creativecommons.org/lcharacternses/by/3.0/" :title "Creative Commons BY 3.0" :target "_blank"} "CC BY 3.0"]]])))
 
 (om/root about app-state {:target (. js/document (getElementById "about"))})

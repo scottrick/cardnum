@@ -190,7 +190,7 @@
 
            [:section
             [:h3  "Game board background"]
-            (for [option [{:name "The Root"        :ref "lobby-bg"}
+            (for [option [{:name "The Root"        :ref "lobby2-bg"}
                           {:name "Freelancer"      :ref "freelancer-bg"}
                           {:name "Mushin No Shin"  :ref "mushin-no-shin-bg"}
                           {:name "Traffic Jam"     :ref "traffic-jam-bg"}

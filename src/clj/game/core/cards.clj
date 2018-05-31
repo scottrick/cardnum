@@ -1,8 +1,8 @@
 (in-ns 'game.core)
 
-(declare active? all-installed cards card-init deactivate card-flag? get-card-hosted handle-end-run hardware? has-subtype? ice?
-         make-eid program? register-events remove-from-host remove-icon reset-card resource? rezzed? trash trigger-event update-hosted!
-         update-ice-strength unregister-events)
+(declare active? all-installed cards card-init deactivate card-flag? get-card-hosted handle-end-run hazard? has-subtype? character?
+         make-eid resource? register-events remove-from-host remove-icon reset-card muthereff? rezzed? trash trigger-event update-hosted!
+         update-character-strength unregister-events)
 
 ;;; Functions for loading card information.
 (defn card-def
@@ -19,10 +19,10 @@
 (defn get-scoring-owner
   "Returns the owner of the scoring area the card is in"
   [state {:keys [cid] :as card}]
-   (if (find-cid cid (get-in @state [:corp :scored]))
-      :corp
-      (if (find-cid cid (get-in @state [:runner :scored]))
-        :runner
+   (if (find-cid cid (get-in @state [:contestant :scored]))
+      :contestant
+      (if (find-cid cid (get-in @state [:challenger :scored]))
+        :challenger
         nil)))
 
 (defn get-card
@@ -37,7 +37,7 @@
         (some #(when (= cid (:cid %)) %)
               (let [zones (map to-keyword zone)]
                 (if (= (first zones) :scored)
-                  (into (get-in @state [:corp :scored]) (get-in @state [:runner :scored]))
+                  (into (get-in @state [:contestant :scored]) (get-in @state [:challenger :scored]))
                   (get-in @state (cons (to-keyword side) zones))))))
       card)))
 
@@ -64,8 +64,8 @@
          target-zone (if (vector? to) (first to) to)
          same-zone? (= src-zone target-zone)]
      (when (and card (or host
-                         (some #(when (= cid (:cid %)) %) (get-in @state (cons :runner (vec zone))))
-                         (some #(when (= cid (:cid %)) %) (get-in @state (cons :corp (vec zone)))))
+                         (some #(when (= cid (:cid %)) %) (get-in @state (cons :challenger (vec zone))))
+                         (some #(when (= cid (:cid %)) %) (get-in @state (cons :contestant (vec zone)))))
                 (or (empty? (get-in @state [side :locked (-> card :zone first)]))
                     force))
        (trigger-event state side :pre-card-moved card src-zone target-zone)
@@ -90,7 +90,7 @@
              hosted (seq (flatten (map
                       (if same-zone? update-hosted trash-hosted)
                       (:hosted card))))
-             c (if (and (= side :corp) (= (first dest) :discard) (rezzed? card))
+             c (if (and (= side :contestant) (= (first dest) :discard) (rezzed? card))
                  (assoc card :seen true) card)
              c (if (and (or installed host (#{:servers :scored :current} (first zone)))
                         (#{:hand :deck :discard :rfg} (first dest))
@@ -100,26 +100,26 @@
              moved-card (assoc c :zone dest :host nil :hosted hosted :previous-zone (:zone c))
              moved-card (if (and (:facedown moved-card) (:installed moved-card))
                           (deactivate state side moved-card) moved-card)
-             moved-card (if (and (= side :corp) (#{:hand :deck} (first dest)))
+             moved-card (if (and (= side :contestant) (#{:hand :deck} (first dest)))
                           (dissoc moved-card :seen) moved-card)
              moved-card (if (and (= (first (:zone moved-card)) :scored) (card-flag? moved-card :has-abilities-when-stolen true))
                           (merge moved-card {:abilities (:abilities (card-def moved-card))}) moved-card)]
          (if front
            (swap! state update-in (cons side dest) #(cons moved-card (vec %)))
            (swap! state update-in (cons side dest) #(conj (vec %) moved-card)))
-         (doseq [s [:runner :corp]]
+         (doseq [s [:challenger :contestant]]
            (if host
              (remove-from-host state side card)
-             (swap! state update-in (cons s (vec zone)) (fn [coll] (remove-once #(not= (:cid %) cid) coll)))))
-         (let [z (vec (cons :corp (butlast zone)))]
-           (when (and (not keep-server-alive)
-                      (is-remote? z)
-                      (empty? (get-in @state (conj z :content)))
-                      (empty? (get-in @state (conj z :ices))))
-             (when-let [run (:run @state)]
-               (when (= (last (:server run)) (last z))
-                 (handle-end-run state side)))
-             (swap! state dissoc-in z)))
+             (swap! state update-in (cons s (vec zone)) (fn [coll] (remove-once #(not= (:cid %) cid) coll))))
+           (let [z (vec (cons s (butlast zone)))]
+             (when (and (not keep-server-alive)
+                        (is-remote? z)
+                        (empty? (get-in @state (conj z :content)))
+                        (empty? (get-in @state (conj z :characters))))
+               (when-let [run (:run @state)]
+                 (when (= (last (:server run)) (last z))
+                   (handle-end-run state side)))
+               (swap! state dissoc-in z))))
          (when-let [card-moved (:move-zone (card-def c))]
            (card-moved state side (make-eid state) moved-card card))
          (trigger-event state side :card-moved card moved-card)
@@ -149,7 +149,7 @@
                         card)]
      (update! state side (update-in updated-card [key] #(+ (or % 0) n)))
      (if (= key :advance-counter)
-       (do (when (and (ice? updated-card) (rezzed? updated-card)) (update-ice-strength state side updated-card))
+       (do (when (and (character? updated-card) (rezzed? updated-card)) (update-character-strength state side updated-card))
            (if-not placed
              (trigger-event state side :advance (get-card state updated-card))
              (trigger-event state side :advancement-placed (get-card state updated-card))))
@@ -194,14 +194,14 @@
 (defn get-virus-counters
   "Calculate the number of virus countes on the given card, taking Hivemind into account."
   [state side card]
-  (let [hiveminds (filter #(= (:title %) "Hivemind") (all-installed state :runner))]
+  (let [hiveminds (filter #(= (:title %) "Hivemind") (all-installed state :challenger))]
     (reduce + (map #(get-in % [:counter :virus] 0) (cons card hiveminds)))))
 
 (defn card->server
   "Returns the server map that this card is installed in or protecting."
   [state card]
   (let [z (:zone card)]
-    (get-in @state [:corp :servers (second z)])))
+    (get-in @state [:contestant :servers (second z)])))
 
 (defn disable-identity
   "Disables the side's identity"
