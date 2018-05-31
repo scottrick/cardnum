@@ -888,10 +888,14 @@
         (try (js/ga "send" "event" "deckbuilder" "save") (catch js/Error e))
         (go (let [new-id (get-in (<! (POST "/data/decks/" data :json)) [:json :_id])
                   new-deck (if (:_id deck) deck (assoc deck :_id new-id))
-                  all-decks (process-decks (:json (<! (GET (str "/data/decks")))))]
+                  all-decks (process-decks (:json (<! (GET (str "/data/decks")))))
+                  all-ctcks (process-ctcks (:json (<! (GET (str "/data/decks")))))
+                  all-chcks (process-chcks (:json (<! (GET (str "/data/decks")))))]
               (om/update! cursor :decks (conj decks new-deck))
               (om/set-state! owner :deck new-deck)
-              (load-decks all-decks)))))))
+              (load-decks all-decks)
+              (load-ctcks all-ctcks)
+              (load-chcks all-chcks)))))))
 
 (defn clear-deck-stats [cursor owner]
   (authenticated
