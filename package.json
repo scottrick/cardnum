@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "coffee server.coffee",
-    "postinstall": "bower install",
+    "postinstall": "bower --allow-root install",
     "fetch": "cd data/ && coffee fetch.coffee",
     "promo": "cd data/ && mongo meccg --eval \"db.altarts.drop()\" && mongoimport --db=meccg --collection=altarts --file=promo.json --jsonArray && coffee add_art.coffee",
     "rotate": "cd data/ && coffee rotate.coffee",
