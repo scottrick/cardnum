@@ -201,26 +201,34 @@
       (.play (sfx-key soundbank)))
     (play-sfx (rest sfx) soundbank)))
 
-(defn action-list [{:keys [type zone rezzed advanceable advance-counter advancementcost current-cost] :as card}]
+(defn action-list [{:keys [type Secondary zone rezzed tapped advanceable advance-counter advancementcost current-cost] :as card}]
   (-> []
-      (#(if (or (and (= type "Agenda")
-                     (#{"servers" "onhost"} (first zone)))
-                (= advanceable "always")
-                (and rezzed
-                     (= advanceable "while-rezzed"))
-                (and (not rezzed)
-                     (= advanceable "while-unrezzed")))
-          (cons "advance" %) %))
-      (#(if (and (= type "Agenda") (>= advance-counter current-cost))
-          (cons "score" %) %))
+      (#(if (and (and (= type "Character")
+                      (#{"servers" "onhost"} (first zone)))
+                 rezzed
+                 (not tapped))
+          (cons "tap" %) %))
+      (#(if (and (and (= type "Character")
+                      (#{"servers" "onhost"} (first zone)))
+                 tapped)
+          (cons "untap" %) %))
+      (#(if (and (and (= type "Resource")
+                      (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Special Item"])
+                      (#{"servers" "onhost"} (first zone)))
+                 (not tapped))
+          (cons "tap" %) %))
+      (#(if (and (and (= type "Resource")
+                      (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Special Item"])
+                      (#{"servers" "onhost"} (first zone)))
+                 tapped)
+          (cons "untap" %) %))
       (#(if (#{"Asset" "Character" "Upgrade"} type)
-          (if-not rezzed (cons "rez" %) (cons "derez" %))
-          %))))
+          (if-not rezzed (cons "rez" %) %)
+          ))))
 
 (defn handle-abilities [{:keys [abilities facedown side type] :as card} owner]
   (let [actions (action-list card)
         c (+ (count actions) (count abilities))]
-    (when-not (and (= side "Challenger") facedown)
       (cond
         ;; Open panel
         (or (> c 1)
@@ -232,7 +240,7 @@
         (= c 1)
         (if (= (count abilities) 1)
           (send-command "ability" {:card card :ability 0})
-          (send-command (first actions) {:card card}))))))
+          (send-command (first actions) {:card card})))))
 
 (defn handle-card-click [{:keys [type zone root] :as card} owner]
   (let [side (:side @game-state)]
@@ -269,7 +277,7 @@
                                         (send-command "play" {:card card :server "New remote"})
                                         (-> (om/get-node owner "servers") js/$ .toggle))
                    (send-command "play" {:card card}))
-          ("servers" "scored" "current" "onhost") (handle-abilities card owner)
+          ("rig" "servers" "scored" "current" "onhost") (handle-abilities card owner)
           nil)))))
 
 (defn in-play? [card]
@@ -463,6 +471,9 @@
             [:form {:on-submit #(send-msg % owner)
                     :on-input #(send-typing % owner)}
              [:input {:ref "msg-input" :placeholder "Say something" :accessKey "l"}]]))]))))
+
+(defn tap [card]
+  (-> card (.addlass "tapped")))
 
 (defn handle-dragstart [e cursor]
   (-> e .-target js/$ (.addClass "dragged"))
@@ -666,7 +677,7 @@
        [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])])))
 
 (defn card-view [{:keys [zone fullCode type abilities counter advance-counter advancementcost current-cost subtype
-                         advanceable rezzed strength current-strength title remotes selected hosted
+                         advanceable rezzed tapped strength current-strength title remotes selected hosted
                          side rec-counter facedown server-target subtype-target icon new challenger-abilities subroutines]
                   :as cursor}
                  owner {:keys [flipped] :as opts}]
@@ -786,9 +797,9 @@
            [:div {:on-click #(send-command "advance" {:card @cursor})} "Advance"]
            [:div {:on-click #(send-command "rez" {:card @cursor})} "Rez"]]))]
      (when (pos? (count hosted))
-       [:div.hosted
         (for [card hosted]
-          (om/build card-view card {:opts {:flipped (face-down? card)}}))])])))
+          [:div.hosted {:class (when (:tapped card) "tapped")}
+          (om/build card-view card {:opts {:flipped (face-down? card)}})]))])))
 
 (defn drop-area [side server hmap]
   (merge hmap {:on-drop #(handle-drop % server)
@@ -1069,7 +1080,7 @@
           (when-let [run-card (:card (:run-effect run))]
             [:div.run-card (om/build card-img run-card)])
           (for [character (reverse characters)]
-            [:div.character {:class (when (not-empty (:hosted character)) "host")}
+            [:div.character {:class (when (:tapped character) "tapped")}
              (om/build card-view character {:opts {:flipped (not (:rezzed character))}})
              (when (and current-character (= (:cid current-character) (:cid character)))
                run-arrow)])

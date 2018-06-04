@@ -361,6 +361,20 @@
         (register-events state side dre card)))
     (trigger-event state side :derez card side)))
 
+(defn tap
+  "Tap a card."
+  [state side card]
+  (let [card (get-card state card)]
+    (system-msg state side (str "taps " (:title card)))
+    (update! state side (assoc card :tapped true))))
+
+(defn untap
+  "Untap a card."
+  [state side card]
+  (let [card (get-card state card)]
+    (system-msg state side (str "untaps " (:title card)))
+    (update! state side (dissoc card :tapped))))
+
 (defn advance
   "Advance a contestant card that can be advanced.
    If you pass in a truthy value as the 4th parameter, it will advance at no cost (for the card Success)."
