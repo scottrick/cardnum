@@ -205,6 +205,10 @@
   (-> []
       (#(if (and (and (= type "Character")
                       (#{"servers" "onhost"} (first zone)))
+                 (not rezzed))
+          (cons "rez" %) %))
+      (#(if (and (and (= type "Character")
+                      (#{"servers" "onhost"} (first zone)))
                  rezzed
                  (not tapped))
           (cons "tap" %) %))
@@ -221,10 +225,7 @@
                       (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Special Item"])
                       (#{"servers" "onhost"} (first zone)))
                  tapped)
-          (cons "untap" %) %))
-      (#(if (#{"Asset" "Character" "Upgrade"} type)
-          (if-not rezzed (cons "rez" %) %)
-          ))))
+          (cons "untap" %) %))))
 
 (defn handle-abilities [{:keys [abilities facedown side type] :as card} owner]
   (let [actions (action-list card)
@@ -277,7 +278,7 @@
                                         (send-command "play" {:card card :server "New remote"})
                                         (-> (om/get-node owner "servers") js/$ .toggle))
                    (send-command "play" {:card card}))
-          ("rig" "servers" "scored" "current" "onhost") (handle-abilities card owner)
+          ("rig" "servers" "scored" "play-area" "current" "onhost") (handle-abilities card owner)
           nil)))))
 
 (defn in-play? [card]
@@ -471,9 +472,6 @@
             [:form {:on-submit #(send-msg % owner)
                     :on-input #(send-typing % owner)}
              [:input {:ref "msg-input" :placeholder "Say something" :accessKey "l"}]]))]))))
-
-(defn tap [card]
-  (-> card (.addlass "tapped")))
 
 (defn handle-dragstart [e cursor]
   (-> e .-target js/$ (.addClass "dragged"))
