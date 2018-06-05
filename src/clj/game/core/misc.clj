@@ -5,6 +5,9 @@
 (defn get-zones [state]
   (keys (get-in state [:contestant :servers])))
 
+(defn get-zones-challenger [state]
+  (keys (get-in state [:challenger :servers])))
+
 (defn get-remote-zones [state]
   (filter is-remote? (get-zones state)))
 
