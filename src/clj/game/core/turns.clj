@@ -1,6 +1,6 @@
 (in-ns 'game.core)
 
-(declare all-active card-flag-fn? clear-turn-register! clear-wait-prompt create-pool create-deck hand-size keep-hand mulligan
+(declare all-active card-flag-fn? clear-turn-register! clear-wait-prompt create-pool create-deck hand-size keep-hand interrupt mulligan
          show-wait-prompt turn-message)
 
 (def game-states (atom {}))
@@ -30,16 +30,15 @@
 (defn- init-hands [state]
   ;;(draw state :contestant 8 {:suppress-event true})
   ;;(draw state :challenger 8 {:suppress-event true})
-  (when (and (-> @state :contestant :identity :title)
-             (-> @state :challenger :identity :title))
-    (show-wait-prompt state :challenger "Contestant to keep hand or mulligan"))
   (doseq [side [:contestant :challenger]]
     (when (-> @state side :identity :title)
       (show-prompt state side nil "Keep hand?"
-                   ["Keep" "Mulligan"]
+                   ["Keep" "Mulligan" "Interrupt"]
                    #(if (= % "Keep")
                       (keep-hand state side nil)
-                      (mulligan state side nil))))))
+                      (if (= % "Mulligan")
+                        (mulligan state side nil)
+                        (interrupt state side nil)))))))
 
 (defn init-game
   "Initializes a new game with the given players vector."
@@ -98,7 +97,7 @@
       (when-completed (trigger-event-sync state side :pre-start-game)
                       (let [side :challenger]
                         (when-completed (trigger-event-sync state side :pre-start-game)
-                                        nil)))) @game-states))
+                                        (init-hands state))))) @game-states))
 
 (defn server-card
   ([title] (@all-cards title))
@@ -155,6 +154,19 @@
   [eid result]
   (assoc eid :result result))
 
+(defn interrupt
+  "Mulligan starting hand."
+  [state side args]
+  ;;  (swap! state assoc-in [side :keep] true) ;; was true
+  (system-msg state side "interrupts for placement")
+  (show-prompt state side nil "Keep hand?"
+               ["Keep" "Mulligan" "Interrupt"]
+               #(if (= % "Keep")
+                  (keep-hand state side nil)
+                  (if (= % "Mulligan")
+                    (mulligan state side nil)
+                    (interrupt state side nil)))))
+
 (defn mulligan
   "Mulligan starting hand."
   [state side args]
@@ -167,10 +179,12 @@
 ;;  (swap! state assoc-in [side :keep] true) ;; was true
   (system-msg state side "takes a mulligan")
   (show-prompt state side nil "Keep hand?"
-               ["Keep" "Mulligan"]
+               ["Keep" "Mulligan" "Interrupt"]
                #(if (= % "Keep")
                   (keep-hand state side nil)
-                  (mulligan state side nil))))
+                  (if (= % "Mulligan")
+                    (mulligan state side nil)
+                    (interrupt state side nil)))))
   ;;(trigger-event state side :pre-first-turn)
   ;;(when (and (= side :contestant) (-> @state :challenger :identity :title))
     ;;(clear-wait-prompt state :challenger)

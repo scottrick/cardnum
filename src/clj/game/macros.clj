@@ -56,7 +56,9 @@
                             (and (= (first r) (first s))
                                  (= (last r) (last s))))
             'played '(if (= (:side card) "Contestant") (:contestant @state) (:challenger @state))
-            'versus '(if (= (:side card) "Contestant") (:challenger @state) (:contestant @state))]
+            'versus '(if (= (:side card) "Contestant") (:challenger @state) (:contestant @state))
+            'served '(zones->sorted-names
+                       (if (= (:side card) "Contestant") (get-zones @state) (get-zones-challenger @state)))]
        ~@expr)))
 
 (defmacro msg [& expr]

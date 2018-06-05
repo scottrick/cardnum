@@ -6,7 +6,7 @@ services:
     volumes:
       - .:/meccg
     command: |
-      sh -c "npm install
+      sh -c "npm install --unsafe-perm=true
              ./node_modules/.bin/bower --allow-root install"
 
   fetch-cards:
@@ -15,8 +15,8 @@ services:
       - .:/meccg
     links:
       - mongo
-    environment: 
-      OPENSHIFT_MONGODB_DB_HOST: mongo 
+    environment:
+      OPENSHIFT_MONGODB_DB_HOST: mongo
     command: npm run fetch
 
   mongo:
