@@ -183,6 +183,9 @@
 (defn command-roll [state side value]
   (system-msg state side (str "rolls a " value " sided die and rolls a " (inc (rand-int value)))))
 
+(defn basic-roll [state side]
+  (system-msg state side (str "rolls a roll-" (inc (rand-int 6)) "roll-" (inc (rand-int 6)))))
+
 (defn command-close-prompt [state side]
   (when-let [fprompt (-> @state side :prompt first)]
     (swap! state update-in [side :prompt] rest)
@@ -252,6 +255,7 @@
           "/facedown"   #(when (= %2 :challenger)
                            (command-facedown %1 %2))
           "/roll"       #(command-roll %1 %2 value)
+          "/r"          #(basic-roll %1 %2)
           "/tag"        #(swap! %1 assoc-in [%2 :tag] (max 0 value))
           "/take-brain" #(when (= %2 :challenger) (damage %1 %2 :brain (max 0 value)))
           "/take-meat"  #(when (= %2 :challenger) (damage %1 %2 :meat  (max 0 value)))

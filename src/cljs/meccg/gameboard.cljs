@@ -344,6 +344,18 @@
     [(.substring item 1 (.indexOf item ci-seperator))
      (.substring item (inc (.indexOf item ci-seperator)) (dec (count item)))]))
 
+(defn create-face [text symbol class]
+  (.replace text (apply str symbol) (str "<img src='" class "'style=\"width:16px;height:16px;\"></img>")))
+
+(defn add-faces [card-text]
+  (-> (if (nil? card-text) "" card-text)
+      (create-face "roll-1" "img/dice1.png")
+      (create-face "roll-2" "img/dice2.png")
+      (create-face "roll-3" "img/dice3.png")
+      (create-face "roll-4" "img/dice4.png")
+      (create-face "roll-5" "img/dice5.png")
+      (create-face "roll-6" "img/dice6.png")))
+
 (defn create-span-impl [item]
   (if (= "[hr]" item)
     [:hr]
@@ -353,7 +365,9 @@
         [:span {:class (str "anr-icon " class)}]
         (if-let [[title fullCode] (extract-card-info item)]
           [:span {:class "fake-link" :id fullCode} title]
-          [:span item])))))
+          (if (boolean (re-find #"roll-" item))
+            [:span {:dangerouslySetInnerHTML #js {:__html (add-faces (add-faces item))}}]
+            [:span item]))))))
 
 (defn get-non-alt-art [[title cards]]
   {:title title :fullCode (:fullCode (first cards))})
