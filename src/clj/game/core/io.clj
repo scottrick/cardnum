@@ -99,6 +99,7 @@
          [:hand] (if (= side "Challenger") "Grip" "HQ")
          [:discard] (if (= side "Challenger") "Heap" "Archives")
          [:deck] (if (= side "Challenger") "Stack" "R&D")
+         [:sideboard] (if (= side "Challenger") "Ch-board" "Co-board")
          [:rig _] "Rig"
          [:servers :hq _] "the root of HQ"
          [:servers :rd _] "the root of R&D"
