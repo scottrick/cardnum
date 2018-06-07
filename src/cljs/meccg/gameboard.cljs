@@ -649,7 +649,7 @@
   [{:keys [side type facedown rezzed host] :as card}]
   (if (= side "Contestant")
     (and (not= type "Resource")
-         (not= (:side host) "Challenger"))
+         (not= type "Hazard"))
     facedown))
 
 (defn card-zoom [card owner]
