@@ -99,6 +99,9 @@
         ("Stack" "R&D")
         (do (move state s (dissoc c :seen :rezzed) :deck {:front true :force true})
             (system-msg state side (str "moves " label from-str " to the top of " server)))
+        ("Ch-board" "Co-board")
+        (do (move state s (dissoc c :seen :rezzed) :deck {:front true :force true})
+            (system-msg state side (str "moves " label from-str " to the top of " server)))
         nil))))
 
 (defn concede [state side args]
@@ -499,3 +502,15 @@
   [state side args]
   (system-msg state side "stops looking at their deck")
   (swap! state update-in [side] dissoc :view-deck))
+
+(defn view-sideboard
+  "Allows the player to view their deck by making the cards in the deck public."
+  [state side args]
+  (system-msg state side "looks at their sideboard")
+  (swap! state assoc-in [side :view-sideboard] true))
+
+(defn close-sideboard
+  "Closes the deck view and makes cards in deck private again."
+  [state side args]
+  (system-msg state side "stops looking at their sideboard")
+  (swap! state update-in [side] dissoc :view-sideboard))

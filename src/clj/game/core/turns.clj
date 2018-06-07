@@ -1,6 +1,6 @@
 (in-ns 'game.core)
 
-(declare all-active card-flag-fn? clear-turn-register! clear-wait-prompt create-pool create-deck hand-size keep-hand interrupt mulligan
+(declare all-active card-flag-fn? clear-turn-register! clear-wait-prompt create-pool create-deck create-board hand-size keep-hand interrupt mulligan
          show-wait-prompt turn-message)
 
 (def game-states (atom {}))
@@ -49,6 +49,8 @@
         challenger-pool (create-pool (:deck challenger) (:user challenger))
         contestant-deck (create-deck (:deck contestant) (:user contestant))
         challenger-deck (create-deck (:deck challenger) (:user challenger))
+        contestant-board (create-board (:deck contestant) (:user contestant))
+        challenger-board (create-board (:deck challenger) (:user challenger))
         contestant-deck-id (get-in contestant [:deck :_id])
         challenger-deck-id (get-in challenger [:deck :_id])
         contestant-options (get-in contestant [:options])
@@ -68,6 +70,7 @@
                               :deck (zone :deck contestant-deck)
                               :deck-id contestant-deck-id
                               :hand (zone :hand contestant-pool)
+                              :sideboard (zone :sideboard contestant-board)
                               :discard [] :scored [] :rfg [] :play-area []
                               :servers {:hq {} :rd {} :archives {}}
                               :rig {:resource [] :muthereff [] :hazard []}
@@ -81,6 +84,7 @@
                               :deck (zone :deck challenger-deck)
                               :deck-id challenger-deck-id
                               :hand (zone :hand challenger-pool)
+                              :sideboard (zone :sideboard challenger-board)
                               :discard [] :scored [] :rfg [] :play-area []
                               :servers {:hq {} :rd {} :archives {}}
                               :rig {:resource [] :muthereff [] :hazard []}
@@ -123,11 +127,11 @@
   ([deck] (create-pool deck nil))
   ([deck user]
    (mapcat #(map (fn [card]
-                            (let [server-card (or (server-card (:title card) user) card)
-                                  c (assoc (make-card server-card) :art (:art card))]
-                              (if-let [init (:init (card-def c))] (merge c init) c)))
-                          (repeat (:qty %) (assoc (:card %) :art (:art %))))
-                    (vec (:pool deck)))))
+                   (let [server-card (or (server-card (:title card) user) card)
+                         c (assoc (make-card server-card) :art (:art card))]
+                     (if-let [init (:init (card-def c))] (merge c init) c)))
+                 (repeat (:qty %) (assoc (:card %) :art (:art %))))
+           (vec (:pool deck)))))
 
 (defn create-deck
   "Creates a shuffled draw deck (R&D/Stack) from the given list of cards.
@@ -140,6 +144,18 @@
                               (if-let [init (:init (card-def c))] (merge c init) c)))
                           (repeat (:qty %) (assoc (:card %) :art (:art %))))
                     (shuffle (vec (:cards deck)))))))
+
+(defn create-board
+  "Creates a shuffled draw deck (R&D/Stack) from the given list of cards.
+  Loads card data from server-side @all-cards map if available."
+  ([deck] (create-board deck nil))
+  ([deck user]
+   (mapcat #(map (fn [card]
+                   (let [server-card (or (server-card (:title card) user) card)
+                         c (assoc (make-card server-card) :art (:art card))]
+                     (if-let [init (:init (card-def c))] (merge c init) c)))
+                 (repeat (:qty %) (assoc (:card %) :art (:art %))))
+           (vec (:sideboard deck)))))
 
 (defn make-rid
   "Returns a progressively-increasing integer to identify a new remote server."

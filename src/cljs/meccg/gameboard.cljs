@@ -344,6 +344,18 @@
     [(.substring item 1 (.indexOf item ci-seperator))
      (.substring item (inc (.indexOf item ci-seperator)) (dec (count item)))]))
 
+(defn create-face [text symbol class]
+  (.replace text (apply str symbol) (str "<img src='" class "'style=\"width:16px;height:16px;\"></img>")))
+
+(defn add-faces [card-text]
+  (-> (if (nil? card-text) "" card-text)
+      (create-face "roll-1" "img/dice1.png")
+      (create-face "roll-2" "img/dice2.png")
+      (create-face "roll-3" "img/dice3.png")
+      (create-face "roll-4" "img/dice4.png")
+      (create-face "roll-5" "img/dice5.png")
+      (create-face "roll-6" "img/dice6.png")))
+
 (defn create-span-impl [item]
   (if (= "[hr]" item)
     [:hr]
@@ -353,7 +365,9 @@
         [:span {:class (str "anr-icon " class)}]
         (if-let [[title fullCode] (extract-card-info item)]
           [:span {:class "fake-link" :id fullCode} title]
-          [:span item])))))
+          (if (boolean (re-find #"roll-" item))
+            [:span {:dangerouslySetInnerHTML #js {:__html (add-faces (add-faces item))}}]
+            [:span item]))))))
 
 (defn get-non-alt-art [[title cards]]
   {:title title :fullCode (:fullCode (first cards))})
@@ -873,13 +887,18 @@
   (-> (om/get-node owner (str ref "-menu")) js/$ .fadeOut)
   (send-command "view-deck"))
 
+(defn show-sideboard [event owner ref]
+  (-> (om/get-node owner (str ref "-content")) js/$ .fadeIn)
+  (-> (om/get-node owner (str ref "-menu")) js/$ .fadeOut)
+  (send-command "view-sideboard"))
+
 (defn identity-view [player owner]
   (om/component
    (sab/html
     [:div.blue-shade.identity
      (facedown-card "Locations")])))
 
-(defn deck-view [{:keys [identity deck] :as cursor} owner]
+(defn deck-view [{:keys [identity deck sideboard] :as cursor} owner]
   (om/component
    (sab/html
     (let [is-challenger (= "Challenger" (:side identity))
@@ -887,7 +906,10 @@
           name (if is-challenger "Stack" "R&D")
           ref (if is-challenger "stack" "rd")
           menu-ref (str ref "-menu")
-          content-ref (str ref "-content")]
+          content-ref (str ref "-content")
+          sbref (if is-challenger "Ch-board" "Co-board")
+          sbmenu-ref (str sbref "-menu")
+          sbcontent-ref (str sbref "-content")]
       [:div.blue-shade.deck
        (drop-area (:side @game-state) name
                   {:on-click #(-> (om/get-node owner menu-ref) js/$ .toggle)})
@@ -898,7 +920,13 @@
          [:div.panel.blue-shade.menu {:ref menu-ref}
           [:div {:on-click #(do (send-command "shuffle")
                                 (-> (om/get-node owner menu-ref) js/$ .fadeOut))} "Shuffle"]
-          [:div {:on-click #(show-deck % owner ref)} "Show"]])
+          [:div {:on-click #(show-deck % owner ref)} "Show"]
+          [:div {:on-click #(show-sideboard % owner sbref)} "Sideboard"
+           [:div.panel.blue-shade.popup {:ref sbcontent-ref}
+            [:div
+             [:a {:on-click #(close-popup % owner sbcontent-ref "stops looking at their sideboard" false true)}
+              "Close"]]
+            (om/build-all card-view sideboard {:key :cid})]]])
        (when (= (:side @game-state) side)
          [:div.panel.blue-shade.popup {:ref content-ref}
           [:div

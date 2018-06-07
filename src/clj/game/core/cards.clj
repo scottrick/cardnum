@@ -191,6 +191,15 @@
       (swap! state assoc-in [side p] []))))
 
 ;;; Misc card functions
+(defn set-hand-aside
+  [state side & args]
+  (let [player (side @state)
+        zones (filter #(not (seq (get-in @state [side :locked %]))) args)
+        temp (reduce concat (:play-area player) (for [p zones] (zone :play-area (p player))))]
+    (swap! state assoc-in [side :play-area] temp)
+    (doseq [p zones]
+      (swap! state assoc-in [side p] []))))
+
 (defn get-virus-counters
   "Calculate the number of virus countes on the given card, taking Hivemind into account."
   [state side card]

@@ -3,7 +3,14 @@
 (declare can-host?)
 
 (def cards-resources
-  {"New Closeness to His Kin"
+  {"Dark Tryst"
+   {:abilities [{:label "Resolve"
+                 :effect (req (let [r (get-card state card)
+                                    old-host (:host r)]
+                                (resolve-ability state side
+                                                 {:msg (msg "to draw 3 cards.")
+                                                  :effect (effect (draw 3) (move card :rfg))} card nil)))}]}
+   "New Closeness to His Kin"
    {:abilities [{:effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side

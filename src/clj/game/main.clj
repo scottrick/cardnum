@@ -59,7 +59,9 @@
    "dynamic-ability" core/play-dynamic-ability
    "toast" core/toast
    "view-deck" core/view-deck
-   "close-deck" core/close-deck})
+   "view-sideboard" core/view-sideboard
+   "close-deck" core/close-deck
+   "close-sideboard" core/close-sideboard})
 
 (defn convert [args]
   (try
@@ -99,11 +101,12 @@
       (update-in [:hand] #(private-card-vector state :challenger %))
       (update-in [:discard] #(private-card-vector state :challenger %))
       (update-in [:deck] #(private-card-vector state :challenger %))
+      (update-in [:sideboard] #(private-card-vector state :challenger %))
       (update-in [:rig :facedown] #(private-card-vector state :challenger %))
       (update-in [:rig :muthereff] #(private-card-vector state :challenger %))))
 
 (defn- make-private-contestant [state]
-  (let [zones (concat [[:hand]] [[:discard]] [[:deck]]
+  (let [zones (concat [[:hand]] [[:discard]] [[:deck] [:sideboard]]
                       (for [server (keys (:servers (:contestant @state)))] [:servers server :characters])
                       (for [server (keys (:servers (:contestant @state)))] [:servers server :content]))]
     (loop [s (:contestant @state)
@@ -117,6 +120,11 @@
     deck
     (private-card-vector state side deck)))
 
+(defn- make-private-sideboard [state side sideboard]
+  (if (:view-sideboard (side @state))
+    sideboard
+    (private-card-vector state side sideboard)))
+
 (defn- private-states [state]
   "Generates privatized states for the Contestant, Challenger and any spectators from the base state.
   If `:spectatorhands` is on, all information is passed on to spectators as well."
@@ -124,13 +132,16 @@
   (let [contestant-private (make-private-contestant state)
         challenger-private (make-private-challenger state)
         contestant-deck (update-in (:contestant @state) [:deck] #(make-private-deck state :contestant %))
-        challenger-deck (update-in (:challenger @state) [:deck] #(make-private-deck state :challenger %))]
+        challenger-deck (update-in (:challenger @state) [:deck] #(make-private-deck state :challenger %))
+        contestant-sideboard (update-in (:contestant @state) [:sideboard] #(make-private-sideboard state :contestant %))
+        challenger-sideboard (update-in (:challenger @state) [:sideboard] #(make-private-sideboard state :challenger %))]
     [(assoc @state :challenger challenger-private
-                   :contestant contestant-deck)
+                   :contestant contestant-deck :contestant contestant-sideboard)
      (assoc @state :contestant contestant-private
-                   :challenger challenger-deck)
+                   :challenger challenger-deck :challenger challenger-sideboard)
      (if (get-in @state [:options :spectatorhands])
-       (assoc @state :contestant contestant-deck :challenger challenger-deck)
+       (assoc @state :contestant contestant-deck :contestant contestant-sideboard
+                     :challenger challenger-deck :challenger challenger-sideboard)
        (assoc @state :contestant contestant-private :challenger challenger-private))]))
 
 (defn- reset-all-cards
