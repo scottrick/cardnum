@@ -869,7 +869,7 @@
          (drop-area (:side @game-state) name {:class (when (> size 6) "squeeze")})
          [:div
           (build-hand-card-view player remotes "card-wrapper")]
-         (om/build label (:hand player) {:opts {:name name}})]
+         (om/build label (:hand player) {:opts {:name "Hand"}})]
         (when popup
           [:div.panel.blue-shade.hand-expand
            {:on-click #(-> (om/get-node owner "hand-popup") js/$ .fadeToggle)}
@@ -907,24 +907,24 @@
           ref (if is-challenger "stack" "rd")
           menu-ref (str ref "-menu")
           content-ref (str ref "-content")
-          sbref (if is-challenger "Ch-board" "Co-board")
-          sbmenu-ref (str sbref "-menu")
-          sbcontent-ref (str sbref "-content")]
+          sb-ref (if is-challenger "Ch-board" "Co-board")
+          sb-menu-ref (str sb-ref "-menu")
+          sb-content-ref (str sb-ref "-content")]
       [:div.blue-shade.deck
        (drop-area (:side @game-state) name
                   {:on-click #(-> (om/get-node owner menu-ref) js/$ .toggle)})
        (when (pos? (count deck))
          (facedown-card (:side identity) ["bg"] nil))
-       (om/build label deck {:opts {:name name}})
+       (om/build label deck {:opts {:name "Play"}})
        (when (= (:side @game-state) side)
          [:div.panel.blue-shade.menu {:ref menu-ref}
           [:div {:on-click #(do (send-command "shuffle")
                                 (-> (om/get-node owner menu-ref) js/$ .fadeOut))} "Shuffle"]
           [:div {:on-click #(show-deck % owner ref)} "Show"]
-          [:div {:on-click #(show-sideboard % owner sbref)} "Sideboard"
-           [:div.panel.blue-shade.popup {:ref sbcontent-ref}
+          [:div {:on-click #(show-sideboard % owner sb-ref)} "Sideboard"
+           [:div.panel.blue-shade.popup {:ref sb-content-ref}
             [:div
-             [:a {:on-click #(close-popup % owner sbcontent-ref "stops looking at their sideboard" false true)}
+             [:a {:on-click #(close-popup % owner sb-content-ref "stops looking at their sideboard" false true)}
               "Close"]]
             (om/build-all card-view sideboard {:key :cid})]]])
        (when (= (:side @game-state) side)
@@ -953,7 +953,7 @@
 
          (when-not (empty? discard) (draw-card (last discard)))
 
-         (om/build label discard {:opts {:name "Discard Pile"
+         (om/build label discard {:opts {:name "Discard"
                                          :fn (fn [cursor] (let [total (count cursor)
                                                                 face-up (count (filter faceup? cursor))]
                                                             ;; use non-breaking space to keep counts on same line.
@@ -982,7 +982,7 @@
 
        (when-not (empty? discard) (draw-card (last discard)))
 
-       (om/build label discard {:opts {:name "Discard Pile"
+       (om/build label discard {:opts {:name "Discard"
                                        :fn (fn [cursor] (let [total (count cursor)
                                                               face-up (count (filter faceup? cursor))]
                                                           ;; use non-breaking space to keep counts on same line.
@@ -1127,6 +1127,52 @@
              (when (and (not central-view) is-first)
                (om/build label content {:opts opts}))]))]]))))
 
+(defn location-view [{:keys [identity deck sideboard] :as cursor} owner]
+  (om/component
+    (sab/html
+      (let [is-challenger (= "Challenger" (:side identity))
+            side (if is-challenger :challenger :contestant)
+            name (if is-challenger "Location" "Location")
+            ref (if is-challenger "location2" "location1")
+            menu-ref (str ref "-menu")
+            content-ref (str ref "-content")
+            map-ref (if is-challenger "Ch-board" "Co-board")
+            map-menu-ref (str map-ref "-menu")
+            map-content-ref (str map-ref "-content")]
+        [:div.blue-shade.deck
+         (drop-area (:side @game-state) name
+                    {:on-click #(-> (om/get-node owner menu-ref) js/$ .toggle)})
+         (facedown-card "Locations")
+         (om/build label deck {:opts {:name name}})
+         (when (= (:side @game-state) side)
+           [:div.panel.blue-shade.menu {:ref menu-ref}
+            [:div {:on-click #(show-sideboard % owner map-ref)} "Show map"
+             [:div.panel.blue-shade.popup {:ref map-content-ref}
+              [:div
+               [:a {:on-click #(close-popup % owner map-content-ref "stops looking at the map" false true)}
+                "Close"]]
+
+
+
+              (om/build-all card-view sideboard {:key :cid})
+
+
+
+
+
+
+              ]]
+            [:div {:on-click #(show-deck % owner ref)} "Region"]])
+         (when (= (:side @game-state) side)
+           [:div.panel.blue-shade.popup {:ref content-ref}
+            [:div
+             [:a {:on-click #(close-popup % owner content-ref "stops at a region" false true)}
+              "Close"]
+             [:a {:on-click #(close-popup % owner content-ref "stops looking at their deck" true true)}
+              "Close & Shuffle"]]
+            (om/build-all card-view deck {:key :cid})])]))))
+
+
 (defmulti decks-view #(get-in % [:player :identity :side]))
 
 (defmethod decks-view "Contestant" [{:keys [player run]}]
@@ -1137,7 +1183,7 @@
             server-type (first s)]
         [:div.contestant-board {:class (if (= (:side @game-state) :challenger) "opponent" "me")}
          (om/build server-view {:server (:hq servers)
-                                :central-view (om/build identity-view player)
+                                :central-view (om/build location-view player)
                                 :run (when (= server-type "hq") run)})
          (om/build server-view {:server (:rd servers)
                                 :central-view (om/build deck-view player)
@@ -1150,7 +1196,7 @@
   (om/component
     (sab/html
         [:div.challenger-board {:class (if (= (:side @game-state) :contestant) "opponent" "me")}
-         (om/build identity-view player)
+         (om/build location-view player)
          (om/build deck-view player)
          (om/build discard-view player)])))
 
