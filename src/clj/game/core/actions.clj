@@ -514,3 +514,15 @@
   [state side args]
   (system-msg state side "stops looking at their sideboard")
   (swap! state update-in [side] dissoc :view-sideboard))
+
+(defn view-locations
+  "Allows the player to view their deck by making the cards in the deck public."
+  [state side args]
+  (system-msg state side "looks at their locations")
+  (swap! state assoc-in [side :view-locations] true))
+
+(defn close-locations
+  "Closes the deck view and makes cards in deck private again."
+  [state side args]
+  (system-msg state side "stops looking at their locations")
+  (swap! state update-in [side] dissoc :view-locations))

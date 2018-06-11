@@ -59,9 +59,11 @@
    "dynamic-ability" core/play-dynamic-ability
    "toast" core/toast
    "view-deck" core/view-deck
-   "view-sideboard" core/view-sideboard
    "close-deck" core/close-deck
-   "close-sideboard" core/close-sideboard})
+   "view-sideboard" core/view-sideboard
+   "close-sideboard" core/close-sideboard
+   "view-locations" core/view-locations
+   "close-locations" core/close-locations})
 
 (defn convert [args]
   (try
@@ -125,6 +127,11 @@
     sideboard
     (private-card-vector state side sideboard)))
 
+(defn- make-private-locations [state side locations]
+  (if (:view-locations (side @state))
+    locations
+    (private-card-vector state side locations)))
+
 (defn- private-states [state]
   "Generates privatized states for the Contestant, Challenger and any spectators from the base state.
   If `:spectatorhands` is on, all information is passed on to spectators as well."
@@ -134,14 +141,16 @@
         contestant-deck (update-in (:contestant @state) [:deck] #(make-private-deck state :contestant %))
         challenger-deck (update-in (:challenger @state) [:deck] #(make-private-deck state :challenger %))
         contestant-sideboard (update-in (:contestant @state) [:sideboard] #(make-private-sideboard state :contestant %))
-        challenger-sideboard (update-in (:challenger @state) [:sideboard] #(make-private-sideboard state :challenger %))]
+        challenger-sideboard (update-in (:challenger @state) [:sideboard] #(make-private-sideboard state :challenger %))
+        contestant-locations (update-in (:contestant @state) [:locations] #(make-private-locations state :contestant %))
+        challenger-locations (update-in (:challenger @state) [:locations] #(make-private-locations state :challenger %))]
     [(assoc @state :challenger challenger-private
-                   :contestant contestant-deck :contestant contestant-sideboard)
+                   :contestant contestant-deck :contestant contestant-sideboard :contestant contestant-locations)
      (assoc @state :contestant contestant-private
-                   :challenger challenger-deck :challenger challenger-sideboard)
+                   :challenger challenger-deck :challenger challenger-sideboard :challenger challenger-locations)
      (if (get-in @state [:options :spectatorhands])
-       (assoc @state :contestant contestant-deck :contestant contestant-sideboard
-                     :challenger challenger-deck :challenger challenger-sideboard)
+       (assoc @state :contestant contestant-deck :contestant contestant-sideboard :contestant contestant-locations
+                     :challenger challenger-deck :challenger challenger-sideboard :challenger challenger-locations)
        (assoc @state :contestant contestant-private :challenger challenger-private))]))
 
 (defn- reset-all-cards
