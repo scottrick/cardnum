@@ -892,10 +892,10 @@
   (-> (om/get-node owner (str ref "-menu")) js/$ .fadeOut)
   (send-command "view-sideboard"))
 
-(defn show-locations [event owner ref]
+(defn show-sites [event owner ref]
   (-> (om/get-node owner (str ref "-content")) js/$ .fadeIn)
   (-> (om/get-node owner (str ref "-menu")) js/$ .fadeOut)
-  (send-command "view-locations"))
+  (send-command "view-sites"))
 
 (defn identity-view [player owner]
   (om/component
@@ -1168,7 +1168,7 @@
        ]
       ]
      ]
-    [:g {:on-click #(show-locations % owner ref)} [:path {:className "st0" :d "M500.5,272.5c-0.3-0.7-0.9-0.3-1-1.4c-1.4,0.6-2.2-0.6-3.2-1.1c-0.5-0.2-1.3-0.3-1.7-0.5h-1.3c0,0-0.4-0.2-0.5-0.2V269c-0.8,0-1.7-0.1-2.5-0.1c-0.1,0.1-2.3,0.8-2.5,0.8c-0.1,0.3-0.4,0.7-0.5,1.1c-0.7,2.5,0.2,4.5,1.8,5.2c0.6,0.2,1,0,1.7,0.2c0.8,0.3,1.6,1,2.3,1.3c0.8,0.4,1.5,0.3,2.3,0.7c0.4,0.2,0.5,0.8,0.8,1.1c0.2,0,0.3,0.1,0.5,0.1c0.9,0.6,0.6,1.2,2,1.7c0.2-0.2,0.2-0.2,0.5-0.2c-0.1-0.6-0.3-1.3-0.4-2c0.5-0.5,0.8-1.1,1.4-1.4c0-0.7-0.1-1.7,0.2-2.2L500.5,272.5L500.5,272.5z"}]
+    [:g {:on-click #(show-sites % owner ref)} [:path {:className "st0" :d "M500.5,272.5c-0.3-0.7-0.9-0.3-1-1.4c-1.4,0.6-2.2-0.6-3.2-1.1c-0.5-0.2-1.3-0.3-1.7-0.5h-1.3c0,0-0.4-0.2-0.5-0.2V269c-0.8,0-1.7-0.1-2.5-0.1c-0.1,0.1-2.3,0.8-2.5,0.8c-0.1,0.3-0.4,0.7-0.5,1.1c-0.7,2.5,0.2,4.5,1.8,5.2c0.6,0.2,1,0,1.7,0.2c0.8,0.3,1.6,1,2.3,1.3c0.8,0.4,1.5,0.3,2.3,0.7c0.4,0.2,0.5,0.8,0.8,1.1c0.2,0,0.3,0.1,0.5,0.1c0.9,0.6,0.6,1.2,2,1.7c0.2-0.2,0.2-0.2,0.5-0.2c-0.1-0.6-0.3-1.3-0.4-2c0.5-0.5,0.8-1.1,1.4-1.4c0-0.7-0.1-1.7,0.2-2.2L500.5,272.5L500.5,272.5z"}]
        ]
     [:g {:id "Gorgoroth"}
      [:a {:id "Regiones_x2F_Gorgoroth.html"}
@@ -1202,29 +1202,55 @@
    ]
   )
 
-(defn filter-cards [filter-value field cards]
-    (filter #(= (field %) filter-value) cards))
-
-(defn location-view [{:keys [identity deck sideboard locations ctrds] :as cursor} owner]
+(defn sites-view [{:keys [identity sites] :as cursor} owner]
   (om/component
     (sab/html
       (let [is-challenger (= "Challenger" (:side identity))
             side (if is-challenger :challenger :contestant)
-            name (if is-challenger "Location" "Locations")
-            ref (if is-challenger "location2" "locations")
+            name (if is-challenger "Stack" "R&D")
+            ref (if is-challenger "stack" "rd")
             menu-ref (str ref "-menu")
             content-ref (str ref "-content")
-            map-ref (if is-challenger "Ch-board" "Co-board")
+            sb-ref (if is-challenger "Ch-sites" "Co-sites")
+            sb-menu-ref (str sb-ref "-menu")
+            sb-content-ref (str sb-ref "-content")]
+        [:div.blue-shade.deck
+         (drop-area (:side @game-state) name
+                    {:on-click #(-> (om/get-node owner menu-ref) js/$ .toggle)})
+         (when (pos? (count sites))
+           (facedown-card "Locations"))
+         (om/build label sites {:opts {:name "Sites"}})
+         (when (= (:side @game-state) side)
+           [:div.panel.blue-shade.menu {:ref menu-ref}
+            [:div {:on-click #(show-sites % owner ref)} "Sites"]])
+         (when (= (:side @game-state) side)
+           [:div.panel.blue-shade.popup {:ref content-ref}
+            [:div
+             (general-map owner ref)
+             [:a {:on-click #(close-popup % owner content-ref "stops looking at their deck" false true)}
+              "Close"]]
+            (om/build-all card-view sites {:key :cid})])]))))
+
+(defn sites-view2 [{:keys [identity sites] :as cursor} owner]
+  (om/component
+    (sab/html
+      (let [is-challenger (= "Challenger" (:side identity))
+            side (if is-challenger :challenger :contestant)
+            name (if is-challenger "Sites2" "Sites")
+            ref (if is-challenger "Ch-sites" "Co-sites")
+            menu-ref (str ref "-menu")
+            content-ref (str ref "-content")
+            map-ref (if is-challenger "Sites2" "Sites")
             map-menu-ref (str map-ref "-menu")
             map-content-ref (str map-ref "-content")]
         [:div.blue-shade.deck
          (drop-area (:side @game-state) name
                     {:on-click #(-> (om/get-node owner menu-ref) js/$ .toggle)})
          (facedown-card "Locations")
-         (om/build label deck {:opts {:name name}})
+         (om/build label sites {:opts {:name name}})
          (when (= (:side @game-state) side)
            [:div.panel.blue-shade.menu {:ref menu-ref}
-            [:div {:on-click #(show-sideboard % owner map-ref)} "Show map"
+            [:div {:on-click #(show-sites % owner map-ref)} "Sites"
              [:div.panel.blue-shade.popup {:ref map-content-ref}
               [:div
 
@@ -1233,16 +1259,13 @@
 
                [:a {:on-click #(close-popup % owner map-content-ref "stops looking at the map" false true)}
                 "Close"]]
-              ]]
-            [:div {:on-click #(show-deck % owner ref)} "Region"]])
+              ]]])
          (when (= (:side @game-state) side)
            [:div.panel.blue-shade.popup {:ref content-ref}
             [:div
              [:a {:on-click #(close-popup % owner content-ref "stops at a region" false true)}
-              "Close"]
-             [:a {:on-click #(close-popup % owner content-ref "stops looking at their deck" true true)}
-              "Close & Shuffle"]]
-            (om/build-all card-view deck {:key :cid})])]))))
+              "Close"]]
+            (om/build-all card-view sites {:key :cid})])]))))
 
 
 (defmulti decks-view #(get-in % [:player :identity :side]))
@@ -1255,7 +1278,7 @@
             server-type (first s)]
         [:div.contestant-board {:class (if (= (:side @game-state) :challenger) "opponent" "me")}
          (om/build server-view {:server (:hq servers)
-                                :central-view (om/build location-view player)
+                                :central-view (om/build sites-view player)
                                 :run (when (= server-type "hq") run)})
          (om/build server-view {:server (:rd servers)
                                 :central-view (om/build deck-view player)
@@ -1268,7 +1291,7 @@
   (om/component
     (sab/html
         [:div.challenger-board {:class (if (= (:side @game-state) :contestant) "opponent" "me")}
-         (om/build location-view player)
+         (om/build sites-view player)
          (om/build deck-view player)
          (om/build discard-view player)])))
 
