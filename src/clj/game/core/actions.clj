@@ -517,12 +517,14 @@
 
 (defn view-sites
   "Allows the player to view their deck by making the cards in the deck public."
-  [state side args]
+  [state side region]
   (system-msg state side "looks at their sites")
+  (swap! state assoc-in [side :cut-region] region)
   (swap! state assoc-in [side :view-sites] true))
 
 (defn close-sites
   "Closes the deck view and makes cards in deck private again."
-  [state side args]
+  [state side]
   (system-msg state side "stops looking at their sites")
+  (swap! state update-in [side] dissoc :cut-region)
   (swap! state update-in [side] dissoc :view-sites))

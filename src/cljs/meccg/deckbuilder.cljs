@@ -7,7 +7,7 @@
             [meccg.appstate :refer [app-state]]
             [meccg.auth :refer [authenticated] :as auth]
             [meccg.cardbrowser :refer [cards-channel ctrds-channel chrds-channel image-url card-view show-alt-art? filter-title expand-alts] :as cb]
-            [meccg.sites :refer [all-regions]]
+            [meccg.sites :refer [all-regions all-wizard-sites all-minion-sites all-fallen-sites all-balrog-sites all-elf-sites all-dwarf-sites all-dual-sites]]
             [meccg.account :refer [load-alt-arts]]
             [meccg.ajax :refer [POST GET]]
             [goog.string :as gstring]
@@ -315,7 +315,6 @@
 (defn process-ctcks
   "Process the raw deck from the database into a more useful format"
   [decks]
-  (do
   (for [deck decks]
     (let [identity (ctrse-identity (:identity deck))
           resources (lookup-deck "Contestant" (:resources deck))
@@ -327,21 +326,18 @@
           joined (into (:resources deck) (:hazards deck))
           combed (into (:characters deck) joined)
           cards (lookup-deck "Contestant" combed)
-          all-regions-store all-regions
-          regions (parse-deck-string "Contestant" all-regions-store)
-          wizard-sites (lookup-deck "Contestant" (:wizard-sites deck))
-          minion-sites (lookup-deck "Contestant" (:minion-sites deck))
-          balrog-sites (lookup-deck "Contestant" (:balrog-sites deck))
-          fallen-sites (lookup-deck "Contestant" (:fallen-sites deck))
-          elf-sites (lookup-deck "Contestant" (:elf-sites deck))
-          dwarf-sites (lookup-deck "Contestant" (:dwarf-sites deck))
-          sites (lookup-deck "Contestant" (:sites deck))]
+          dual-sites (parse-deck-string "Contestant" all-dual-sites)
+          dwarf-sites (into dual-sites (parse-deck-string "Contestant" all-dwarf-sites))
+          elf-sites (into dwarf-sites (parse-deck-string "Contestant" all-elf-sites))
+          fallen-sites (into elf-sites (parse-deck-string "Contestant" all-fallen-sites))
+          balrog-sites (into fallen-sites (parse-deck-string "Contestant" all-balrog-sites))
+          minion-sites (into balrog-sites (parse-deck-string "Contestant" all-minion-sites))
+          wizard-sites (into minion-sites (parse-deck-string "Contestant" all-wizard-sites))
+          regions (into wizard-sites (parse-deck-string "Contestant" all-regions))]
       (assoc deck :resources resources :hazards hazards :sideboard sideboard
                   :characters characters :pool pool :fwsb fwsb :cards cards
-                  :regions regions :wizard-sites wizard-sites :minion-sites minion-sites
-                  :balrog-sites balrog-sites :fallen-sites fallen-sites
-                  :elf-sites elf-sites :dwarf-sites dwarf-sites :sites regions
-                  :identity identity)))))
+                  :sites regions
+                  :identity identity))))
 
 (defn process-chcks
   "Process the raw deck from the database into a more useful format"
@@ -356,9 +352,18 @@
           fwsb (lookup-deck "Challenger" (:fwsb deck))
           joined (into (:resources deck) (:hazards deck))
           combed (into (:characters deck) joined)
-          cards (lookup-deck "Challenger" combed)]
+          cards (lookup-deck "Challenger" combed)
+          dual-sites (parse-deck-string "Challenger" all-dual-sites)
+          dwarf-sites (into dual-sites (parse-deck-string "Challenger" all-dwarf-sites))
+          elf-sites (into dwarf-sites (parse-deck-string "Challenger" all-elf-sites))
+          fallen-sites (into elf-sites (parse-deck-string "Challenger" all-fallen-sites))
+          balrog-sites (into fallen-sites (parse-deck-string "Challenger" all-balrog-sites))
+          minion-sites (into balrog-sites (parse-deck-string "Challenger" all-minion-sites))
+          wizard-sites (into minion-sites (parse-deck-string "Challenger" all-wizard-sites))
+          regions (into wizard-sites (parse-deck-string "Challenger" all-regions))]
       (assoc deck :resources resources :hazards hazards :sideboard sideboard
                   :characters characters :pool pool :fwsb fwsb :cards cards
+                  :sites regions
                   :identity identity))))
 
 (defn distinct-by [f coll]

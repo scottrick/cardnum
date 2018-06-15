@@ -129,9 +129,12 @@
     (private-card-vector state side sideboard)))
 
 (defn- make-private-sites [state side sites]
-  (if (:view-sites (side @state))
-    sites
-    (private-card-vector state side sites)))
+  (let [sorted (if (:cut-region (side @state))
+                 (filter #(= (:Region %) (:cut-region (side @state))) sites)
+                 sites)]
+    (if (:view-sites (side @state))
+      sorted
+      (private-card-vector state side sorted))))
 
 (defn- private-states [state]
   "Generates privatized states for the Contestant, Challenger and any spectators from the base state.
