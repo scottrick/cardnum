@@ -59,9 +59,11 @@
    "dynamic-ability" core/play-dynamic-ability
    "toast" core/toast
    "view-deck" core/view-deck
-   "view-sideboard" core/view-sideboard
    "close-deck" core/close-deck
-   "close-sideboard" core/close-sideboard})
+   "view-sideboard" core/view-sideboard
+   "close-sideboard" core/close-sideboard
+   "view-sites" core/view-sites
+   "close-sites" core/close-sites})
 
 (defn convert [args]
   (try
@@ -102,6 +104,7 @@
       (update-in [:discard] #(private-card-vector state :challenger %))
       (update-in [:deck] #(private-card-vector state :challenger %))
       (update-in [:sideboard] #(private-card-vector state :challenger %))
+      (update-in [:sites] #(private-card-vector state :challenger %))
       (update-in [:rig :facedown] #(private-card-vector state :challenger %))
       (update-in [:rig :muthereff] #(private-card-vector state :challenger %))))
 
@@ -125,6 +128,14 @@
     sideboard
     (private-card-vector state side sideboard)))
 
+(defn- make-private-sites [state side sites]
+  (let [sorted (if (:cut-region (side @state))
+                 (filter #(= (:Region %) (:cut-region (side @state))) sites)
+                 sites)]
+    (if (:view-sites (side @state))
+      sorted
+      (private-card-vector state side sorted))))
+
 (defn- private-states [state]
   "Generates privatized states for the Contestant, Challenger and any spectators from the base state.
   If `:spectatorhands` is on, all information is passed on to spectators as well."
@@ -134,14 +145,16 @@
         contestant-deck (update-in (:contestant @state) [:deck] #(make-private-deck state :contestant %))
         challenger-deck (update-in (:challenger @state) [:deck] #(make-private-deck state :challenger %))
         contestant-sideboard (update-in (:contestant @state) [:sideboard] #(make-private-sideboard state :contestant %))
-        challenger-sideboard (update-in (:challenger @state) [:sideboard] #(make-private-sideboard state :challenger %))]
+        challenger-sideboard (update-in (:challenger @state) [:sideboard] #(make-private-sideboard state :challenger %))
+        contestant-sites (update-in (:contestant @state) [:sites] #(make-private-sites state :contestant %))
+        challenger-sites (update-in (:challenger @state) [:sites] #(make-private-sites state :challenger %))]
     [(assoc @state :challenger challenger-private
-                   :contestant contestant-deck :contestant contestant-sideboard)
+                   :contestant contestant-deck :contestant contestant-sideboard :contestant contestant-sites)
      (assoc @state :contestant contestant-private
-                   :challenger challenger-deck :challenger challenger-sideboard)
+                   :challenger challenger-deck :challenger challenger-sideboard :challenger challenger-sites)
      (if (get-in @state [:options :spectatorhands])
-       (assoc @state :contestant contestant-deck :contestant contestant-sideboard
-                     :challenger challenger-deck :challenger challenger-sideboard)
+       (assoc @state :contestant contestant-deck :contestant contestant-sideboard :contestant contestant-sites
+                     :challenger challenger-deck :challenger challenger-sideboard :challenger challenger-sites)
        (assoc @state :contestant contestant-private :challenger challenger-private))]))
 
 (defn- reset-all-cards

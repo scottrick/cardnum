@@ -1,6 +1,6 @@
 (in-ns 'game.core)
 
-(declare all-active card-flag-fn? clear-turn-register! clear-wait-prompt create-pool create-deck create-board hand-size keep-hand interrupt mulligan
+(declare all-active card-flag-fn? clear-turn-register! clear-wait-prompt create-pool create-deck create-board create-sites hand-size keep-hand interrupt mulligan
          show-wait-prompt turn-message)
 
 (def game-states (atom {}))
@@ -51,6 +51,8 @@
         challenger-deck (create-deck (:deck challenger) (:user challenger))
         contestant-board (create-board (:deck contestant) (:user contestant))
         challenger-board (create-board (:deck challenger) (:user challenger))
+        contestant-sites (create-sites (:deck contestant) (:user contestant))
+        challenger-sites (create-sites (:deck challenger) (:user challenger))
         contestant-deck-id (get-in contestant [:deck :_id])
         challenger-deck-id (get-in challenger [:deck :_id])
         contestant-options (get-in contestant [:options])
@@ -71,6 +73,7 @@
                               :deck-id contestant-deck-id
                               :hand (zone :hand contestant-pool)
                               :sideboard (zone :sideboard contestant-board)
+                              :sites (zone :sites contestant-sites)
                               :discard [] :scored [] :rfg [] :play-area []
                               :servers {:hq {} :rd {} :archives {}}
                               :rig {:resource [] :muthereff [] :hazard []}
@@ -85,6 +88,7 @@
                               :deck-id challenger-deck-id
                               :hand (zone :hand challenger-pool)
                               :sideboard (zone :sideboard challenger-board)
+                              :sites (zone :sites challenger-sites)
                               :discard [] :scored [] :rfg [] :play-area []
                               :servers {:hq {} :rd {} :archives {}}
                               :rig {:resource [] :muthereff [] :hazard []}
@@ -104,9 +108,9 @@
                                         (init-hands state))))) @game-states))
 
 (defn server-card
-  ([title] (@all-cards title))
-  ([title user]
-   (@all-cards title)))
+  ([ImageName] (@all-cards ImageName))
+  ([ImageName user]
+   (@all-cards ImageName)))
 
 (defn make-card
   "Makes or remakes (with current cid) a proper card from an @all-cards card"
@@ -119,7 +123,7 @@
 (defn reset-card
   "Resets a card back to its original state overlaid with any play-state data"
   ([state side card]
-   (update! state side (merge card (make-card (get @all-cards (:title card)) (:cid card))))))
+   (update! state side (merge card (make-card (get @all-cards (:ImageName card)) (:cid card))))))
 
 (defn create-pool
   "Creates a the character pool for the character draft from the pool
@@ -127,7 +131,7 @@
   ([deck] (create-pool deck nil))
   ([deck user]
    (mapcat #(map (fn [card]
-                   (let [server-card (or (server-card (:title card) user) card)
+                   (let [server-card (or (server-card (:ImageName card) user) card)
                          c (assoc (make-card server-card) :art (:art card))]
                      (if-let [init (:init (card-def c))] (merge c init) c)))
                  (repeat (:qty %) (assoc (:card %) :art (:art %))))
@@ -139,7 +143,7 @@
   ([deck] (create-deck deck nil))
   ([deck user]
    (shuffle (mapcat #(map (fn [card]
-                            (let [server-card (or (server-card (:title card) user) card)
+                            (let [server-card (or (server-card (:ImageName card) user) card)
                                   c (assoc (make-card server-card) :art (:art card))]
                               (if-let [init (:init (card-def c))] (merge c init) c)))
                           (repeat (:qty %) (assoc (:card %) :art (:art %))))
@@ -151,11 +155,23 @@
   ([deck] (create-board deck nil))
   ([deck user]
    (mapcat #(map (fn [card]
-                   (let [server-card (or (server-card (:title card) user) card)
+                   (let [server-card (or (server-card (:ImageName card) user) card)
                          c (assoc (make-card server-card) :art (:art card))]
                      (if-let [init (:init (card-def c))] (merge c init) c)))
                  (repeat (:qty %) (assoc (:card %) :art (:art %))))
            (vec (:sideboard deck)))))
+
+(defn create-sites
+  "Creates a shuffled draw deck (R&D/Stack) from the given list of cards.
+  Loads card data from server-side @all-cards map if available."
+  ([deck] (create-sites deck nil))
+  ([deck user]
+   (mapcat #(map (fn [card]
+                   (let [server-card (or (server-card (:ImageName card) user) card)
+                         c (assoc (make-card server-card) :art (:art card))]
+                     (if-let [init (:init (card-def c))] (merge c init) c)))
+                 (repeat (:qty %) (assoc (:card %) :art (:art %))))
+           (vec (:sites deck)))))
 
 (defn make-rid
   "Returns a progressively-increasing integer to identify a new remote server."
