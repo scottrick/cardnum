@@ -134,7 +134,7 @@
   (swap! state update-in [:bonus :cost] (fnil #(+ % n) 0)))
 
 (defn rez-cost [state side {:keys [cost] :as card}]
-  (0)
+  0)
 
 (defn run-cost-bonus [state side n]
   (swap! state update-in [:bonus :run-cost] #(merge-costs (concat % n))))
