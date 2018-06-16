@@ -131,7 +131,7 @@
 (defn- make-private-sites [state side sites]
   (let [sorted (if (:cut-region (side @state))
                  (filter #(= (:Region %) (:cut-region (side @state))) sites)
-                 sites)]
+                 nil)]
     (if (:view-sites (side @state))
       sorted
       (private-card-vector state side sorted))))
