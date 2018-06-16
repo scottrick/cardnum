@@ -918,26 +918,24 @@
   (-> (om/get-node owner (str ref "-content")) js/$ .fadeIn)
   (-> (om/get-node owner (str ref "-menu")) js/$ .fadeOut))
 
-(defn identity-view [player owner]
-  (om/component
-   (sab/html
-    [:div.blue-shade.identity
-     (facedown-card "Locations")])))
-
 (defn deck-view [{:keys [identity deck sideboard] :as cursor} owner]
   (om/component
    (sab/html
     (let [is-challenger (= "Challenger" (:side identity))
           side (if is-challenger :challenger :contestant)
           name (if is-challenger "Stack" "R&D")
-          ref (if is-challenger "stack" "rd")
+          ref (if is-challenger "Ch-menu" "Ch-menu")
           menu-ref (str ref "-menu")
           content-ref (str ref "-content")
-          sb-ref (if is-challenger "Ch-board" "Co-board")
-          sb-menu-ref (str sb-ref "-menu")
-          sb-content-ref (str sb-ref "-content")]
+          deck-name (if is-challenger "Stack" "R&D")
+          deck-ref (if is-challenger "stack" "rd")
+          deck-menu-ref (str deck-ref "-menu")
+          deck-content-ref (str deck-ref "-content")
+          side-ref (if is-challenger "Ch-board" "Co-board")
+          side-menu-ref (str side-ref "-menu")
+          side-content-ref (str side-ref "-content")]
       [:div.blue-shade.deck
-       (drop-area (:side @game-state) name
+       (drop-area (:side @game-state) deck-name
                   {:on-click #(-> (om/get-node owner menu-ref) js/$ .toggle)})
        (when (pos? (count deck))
          (facedown-card (:side identity) ["bg"] nil))
@@ -946,21 +944,23 @@
          [:div.panel.blue-shade.menu {:ref menu-ref}
           [:div {:on-click #(do (send-command "shuffle")
                                 (-> (om/get-node owner menu-ref) js/$ .fadeOut))} "Shuffle"]
-          [:div {:on-click #(show-deck % owner ref)} "Show"]
-          [:div {:on-click #(show-sideboard % owner sb-ref)} "Sideboard"
-           [:div.panel.blue-shade.popup {:ref sb-content-ref}
-            [:div
-             [:a {:on-click #(close-popup % owner sb-content-ref "stops looking at their sideboard" false false true)}
-              "Close"]]
-            (om/build-all card-view sideboard {:key :cid})]]])
+          [:div {:on-click #(show-deck % owner deck-ref)} "Show Deck"]
+          [:div {:on-click #(show-sideboard % owner side-ref)} "Sideboard"]])
        (when (= (:side @game-state) side)
-         [:div.panel.blue-shade.popup {:ref content-ref}
+         [:div.panel.blue-shade.popup {:ref deck-content-ref}
           [:div
-           [:a {:on-click #(close-popup % owner content-ref "stops looking at their deck" false false true)}
+           [:a {:on-click #(close-popup % owner deck-content-ref "stops looking at their deck" false false true)}
             "Close"]
-           [:a {:on-click #(close-popup % owner content-ref "stops looking at their deck" true false true)}
+           [:a {:on-click #(close-popup % owner deck-content-ref "stops looking at their deck" true false true)}
             "Close & Shuffle"]]
-          (om/build-all card-view deck {:key :cid})])]))))
+          (om/build-all card-view deck {:key :cid})])
+       (when (= (:side @game-state) side)
+         [:div.panel.blue-shade.popup {:ref side-content-ref}
+          [:div
+           [:a {:on-click #(close-popup % owner side-content-ref "stops looking at their sideboard" false false true)}
+            "Close"](om/build-all card-view sideboard {:key :cid})]
+          ]
+         )]))))
 
 (defmulti discard-view #(get-in % [:identity :side]))
 
@@ -1272,7 +1272,6 @@
     ]
    ]
   )
-
 
 (defn sites-view [{:keys [identity sites] :as cursor} owner]
   (om/component
