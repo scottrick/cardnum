@@ -113,7 +113,7 @@
   (trigger-event state side :pre-trash c)
   (if (not= (:zone c) [:discard]) ; if not accessing in Archives
     (if-let [trash-cost (trash-cost state side c)]
-      ;; The card has a trash cost (Asset, Upgrade)
+      ;; The card has a trash cost (Site, Region)
       (let [card (assoc c :seen true)
             name (:title card)
             trash-msg (str trash-cost " [Credits] to trash " name " from " (name-zone :contestant (:zone card)))]
@@ -338,7 +338,7 @@
 
 (defn access-helper-hq-or-rd [state zone label amount select-fn title-fn already-accessed]
   "Shows a prompt to access card(s) from the given zone.
-  zone: :rd or :hq, for finding Upgrades to access.
+  zone: :rd or :hq, for finding Regions to access.
   label: a string label to describe what is being accessed, e.g., 'Card from deck' -- 'deck' being the label.
   amount: how many accesses the challenger has remaining.
   select-fn: a function taking the already-accessed set as argument, and returning the next card to access
@@ -350,21 +350,21 @@
   (let [get-root-content (fn [state]
                            (filter #(not (contains? already-accessed %)) (get-in @state [:contestant :servers zone :content])))
         server-name (central->name zone)
-        unrezzed-upgrade (str "Unrezzed upgrade in " server-name)
+        unrezzed-region (str "Unrezzed region in " server-name)
         card-from (str "Card from " label)]
     {:delayed-completion true
      :prompt "Select a card to access."
      :choices (concat (when (pos? amount) [card-from])
-                      (map #(if (rezzed? %) (:title %) unrezzed-upgrade)
+                      (map #(if (rezzed? %) (:title %) unrezzed-region)
                            (get-root-content state)))
      :effect (req (cond
-                    (= target unrezzed-upgrade)
-                    ;; accessing an unrezzed upgrade
+                    (= target unrezzed-region)
+                    ;; accessing an unrezzed region
                     (let [from-root (get-root-content state)
                           unrezzed (filter #(and (= (last (:zone %)) :content) (not (:rezzed %)))
                                            from-root)]
                       (if (= 1 (count unrezzed))
-                        ;; only one unrezzed upgrade; access it and continue
+                        ;; only one unrezzed region; access it and continue
                         (when-completed (handle-access state side unrezzed)
                                         (if (or (pos? amount) (< 1 (count from-root)))
                                           (continue-ability
@@ -373,11 +373,11 @@
                                                                     (conj already-accessed (first unrezzed)))
                                             card nil)
                                           (effect-completed state side eid)))
-                        ;; more than one unrezzed upgrade. allow user to select with mouse.
+                        ;; more than one unrezzed region. allow user to select with mouse.
                         (continue-ability
                           state side
                           {:delayed-completion true
-                           :prompt (str "Choose an upgrade in " server-name " to access.")
+                           :prompt (str "Choose an region in " server-name " to access.")
                            :choices {:req #(and (= (second (:zone %)) zone)
                                                 (complement already-accessed))}
                            :effect (req (when-completed (handle-access state side [target])
@@ -400,14 +400,14 @@
                                             (access-helper-hq-or-rd state zone label (dec amount) select-fn title-fn
                                                                     (if (-> @state :run :shuffled-during-access zone)
                                                                       ;; if the zone was shuffled because of the access,
-                                                                      ;; the challenger "starts over" excepting any upgrades that were accessed
+                                                                      ;; the challenger "starts over" excepting any regions that were accessed
                                                                       (do (swap! state update-in [:run :shuffled-during-access] dissoc zone)
                                                                           (set (filter #(= :servers (first (:zone %)))
                                                                                        already-accessed)))
                                                                       (conj already-accessed accessed)))
                                             card nil)
                                           (effect-completed state side eid)))))
-                    ;; accessing a rezzed upgrade
+                    ;; accessing a rezzed region
                     :else
                     (let [accessed (some #(when (= (:title %) target) %) (get-root-content state))]
                       (when-completed (handle-access state side [accessed])
@@ -502,7 +502,7 @@
      :choices (concat (when (<= amount (count (filter (complement already-accessed) (get-archives-inactive state))))
                         [(str "Access " amount " inactive cards")])
                       (map :title (faceup-accessible already-accessed))
-                      (map #(if (rezzed? %) (:title %) "Unrezzed upgrade in Archives") (root-content already-accessed))
+                      (map #(if (rezzed? %) (:title %) "Unrezzed region in Archives") (root-content already-accessed))
                       (map (fn [_] (str "Facedown card in Archives")) (facedown-cards already-accessed)))
      :effect (req (cond
                     (.endsWith target "inactive cards")
@@ -521,22 +521,22 @@
                                         (next-access state side eid already-accessed card)
                                         (effect-completed state side eid))))
 
-                    (= target "Unrezzed upgrade in Archives")
-                    ;; accessing an unrezzed upgrade
+                    (= target "Unrezzed region in Archives")
+                    ;; accessing an unrezzed region
                     (let [unrezzed (filter #(and (= (last (:zone %)) :content) (not (:rezzed %)))
                                            (root-content already-accessed))]
                       (if (= 1 (count unrezzed))
-                        ;; only one unrezzed upgrade; access it and continue
+                        ;; only one unrezzed region; access it and continue
                         (let [already-accessed (conj already-accessed (first unrezzed))]
                           (when-completed (handle-access state side unrezzed)
                                           (if (must-continue? already-accessed)
                                             (next-access state side eid already-accessed card)
                                             (effect-completed state side eid))))
-                        ;; more than one unrezzed upgrade. allow user to select with mouse.
+                        ;; more than one unrezzed region. allow user to select with mouse.
                         (continue-ability
                           state side
                           {:delayed-completion true
-                           :prompt "Choose an upgrade in Archives to access."
+                           :prompt "Choose an region in Archives to access."
                            :choices {:req #(and (= (second (:zone %)) :archives)
                                                 (not (already-accessed %)))}
                            :effect (req (let [already-accessed (conj already-accessed target)]
@@ -547,7 +547,7 @@
                           card nil)))
 
                     :else
-                    ;; accessing a rezzed upgrade, or a card in archives
+                    ;; accessing a rezzed region, or a card in archives
                     (let [accessed (some #(when (= (:title %) target) %)
                                          (concat (faceup-accessible already-accessed) (root-content already-accessed)))
                           already-accessed (conj already-accessed accessed)]

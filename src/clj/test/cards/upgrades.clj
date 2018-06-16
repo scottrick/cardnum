@@ -1,4 +1,4 @@
-(ns test.cards.upgrades
+(ns test.cards.regions
   (:require [game.core :as core]
             [test.core :refer :all]
             [test.utils :refer :all]
@@ -812,7 +812,7 @@
       (core/trash state :challenger fae)
       (is (nil? (:cannot-jack-out (get-in @state [:run]))) "Jack out enabled by resource trash")
       (run-on state "Server 1")
-      (is (:cannot-jack-out (get-in @state [:run])) "Prevents jack out when upgrade is rezzed prior to run"))))
+      (is (:cannot-jack-out (get-in @state [:run])) "Prevents jack out when region is rezzed prior to run"))))
 
 (deftest prisec
   ;; Prisec - Pay 2 credits to give challenger 1 tag and do 1 meat damage, only when installed
@@ -833,7 +833,7 @@
     (is (not (:prompt @state)) "Prisec does not trigger from HQ")))
 
 (deftest prisec-dedicated-response-team
-  ;; Multiple unrezzed upgrades in Archives interaction with DRT.
+  ;; Multiple unrezzed regions in Archives interaction with DRT.
   (do-game
     (new-game (default-contestant [(qty "Prisec" 2) (qty "Dedicated Response Team" 1)])
               (default-challenger [(qty "Sure Gamble" 3) (qty "Diesel" 3)]))
@@ -846,12 +846,12 @@
 
     (run-empty-server state :archives)
     (is (:run @state) "Run still active")
-    (prompt-choice :challenger "Unrezzed upgrade in Archives")
+    (prompt-choice :challenger "Unrezzed region in Archives")
     (prompt-select :challenger (get-content state :archives 0))
     (prompt-choice :contestant "Yes") ; contestant pay for PriSec
     (prompt-choice :challenger "No") ; challenger don't pay to trash
     (is (:run @state) "Run still active")
-    (prompt-choice :challenger "Unrezzed upgrade in Archives")
+    (prompt-choice :challenger "Unrezzed region in Archives")
     (prompt-choice :contestant "Yes") ; contestant pay for PriSec
     (prompt-choice :challenger "No") ; challenger don't pay to trash
     (is (not (:run @state)) "Run ended")
@@ -1135,7 +1135,7 @@
       (core/rez state :contestant scg1)
       (core/rez state :contestant cvs1)
       (is (= 15 (:credit (get-contestant))))
-      (is (= (:cid scg1) (-> (get-contestant) :prompt first :card :cid)) "Surat City Grid triggered from upgrade in same remote")
+      (is (= (:cid scg1) (-> (get-contestant) :prompt first :card :cid)) "Surat City Grid triggered from region in same remote")
       (prompt-choice :contestant "Yes")
       (prompt-select :contestant wrap)
       (is (get-in (refresh wrap) [:rezzed]) "Wraparound is rezzed")
@@ -1148,7 +1148,7 @@
             enig (get-character state :hq 0)]
         (core/rez state :contestant scg2)
         (core/rez state :contestant cvs2)
-        (is (empty? (:prompt (get-contestant))) "SCG didn't trigger, upgrades in root of same central aren't considered in server")
+        (is (empty? (:prompt (get-contestant))) "SCG didn't trigger, regions in root of same central aren't considered in server")
         (core/derez state :contestant (refresh wrap))
         (core/rez state :contestant enig)
         (is (= (:cid scg2) (-> (get-contestant) :prompt first :card :cid)) "SCG did trigger for Character protecting HQ")))))

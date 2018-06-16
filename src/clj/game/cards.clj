@@ -149,4 +149,4 @@
 (load "cards/upgrades")
 
 (def cards (merge cards-agendas cards-allies cards-assets cards-events cards-hazards cards-characters cards-ice cards-icebreakers cards-identities
-                  cards-items cards-operations cards-resources cards-upgrades))
+                  cards-items cards-operations cards-resources cards-regions))

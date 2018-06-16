@@ -456,7 +456,7 @@
                              (qty "Hedge Fund" 3)])
               (default-challenger [(qty "Demolition Run" 1)]))
     (core/move state :contestant (find-card "False Lead" (:hand (get-contestant))) :deck) ; put False Lead back in R&D
-    (play-from-hand state :contestant "Shell Contestantoration" "R&D") ; install upgrade with a trash cost in root of R&D
+    (play-from-hand state :contestant "Shell Contestantoration" "R&D") ; install region with a trash cost in root of R&D
     (take-credits state :contestant 2) ; pass to challenger's turn by taking credits
     (play-from-hand state :challenger "Demolition Run")
     (is (= 3 (:credit (get-challenger))) "Paid 2 credits for the event")
@@ -465,7 +465,7 @@
     (prompt-choice :challenger "OK") ; dismiss instructional prompt for Demolition Run
     (run-successful state)
     (let [demo (get-in @state [:challenger :play-area 0])] ; Demolition Run "hack" is to put it out in the play area
-      (prompt-choice :challenger "Unrezzed upgrade in R&D")
+      (prompt-choice :challenger "Unrezzed region in R&D")
       (card-ability state :challenger demo 0)
       (is (= 3 (:credit (get-challenger))) "Trashed Shell Contestantoration at no cost")
       (prompt-choice :challenger "Card from deck")
@@ -524,7 +524,7 @@
     (is (= 6 (:credit (get-challenger))) "Run unsuccessful; gained no credits")))
 
 (deftest drive-by
-  ;; Drive By - Expose card in remote server and trash if asset or upgrade
+  ;; Drive By - Expose card in remote server and trash if site or region
   (do-game
     (new-game (default-contestant [(qty "Eve Campaign" 2)
                              (qty "Product Placement" 1)
@@ -544,7 +544,7 @@
       (play-from-hand state :challenger "Drive By")
       (prompt-select :challenger pp)
       (is (= 1 (count (get-in @state [:contestant :servers :hq :content])))
-          "Upgrades in root of central servers can't be targeted")
+          "Regions in root of central servers can't be targeted")
       (prompt-select :challenger (refresh eve1))
       (is (= 1 (count (get-in @state [:contestant :servers :remote1 :content])))
           "Rezzed cards can't be targeted")
@@ -714,20 +714,20 @@
           pp2 (get-content state :remote3 1)]
       (core/rez state :contestant eve1)
       (play-from-hand state :challenger "Falsified Credentials")
-      (prompt-choice :challenger "Asset")
+      (prompt-choice :challenger "Site")
       (prompt-select :challenger (refresh eve1))
       (is (= 4 (:credit (get-challenger)))
           "Rezzed cards can't be targeted")
       (prompt-select :challenger eve2)
       (is (= 3 (:click (get-challenger))) "Spent 1 click")
-      (is (= 9 (:credit (get-challenger))) "Gained 5 creds for guessing asset correctly")
+      (is (= 9 (:credit (get-challenger))) "Gained 5 creds for guessing site correctly")
       (play-from-hand state :challenger "Falsified Credentials")
-      (prompt-choice :challenger "Upgrade")
+      (prompt-choice :challenger "Region")
       (prompt-select :challenger pp1)
       (is (= 8 (:credit (get-challenger))) "Can't target cards in centrals")
       (prompt-select :challenger pp2)
       (is (= 13 (:credit (get-challenger)))
-          "Gained 5 creds for guessing upgrade correctly, even if server contains non-upgrade as well")
+          "Gained 5 creds for guessing region correctly, even if server contains non-region as well")
       (core/rez state :contestant pp2)
       (play-from-hand state :challenger "Falsified Credentials")
       (prompt-choice :challenger "Agenda")

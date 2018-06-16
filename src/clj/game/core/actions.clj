@@ -15,7 +15,7 @@
     (case (:type card)
       ("Event" "Operation") (play-instant state side card {:extra-cost [:click 0]})
       ("Hazard" "Muthereff" "Resource") (challenger-install state side (make-eid state) card {:extra-cost [:click 0]})
-      ("Character" "Upgrade" "Asset" "Agenda") (contestant-install state side card server {:extra-cost [:click 0] :action :contestant-click-install}))
+      ("Character" "Region" "Site" "Agenda") (contestant-install state side card server {:extra-cost [:click 0] :action :contestant-click-install}))
     (trigger-event state side :play card)))
 
 (defn shuffle-deck
@@ -298,7 +298,7 @@
      (if (or force (can-rez? state side card))
        (do
          (trigger-event state side :pre-rez card)
-         (if (or (#{"Asset" "Character" "Upgrade" "Resource"} (:type card))
+         (if (or (#{"Site" "Character" "Region" "Resource"} (:type card))
                    (:install-rezzed (card-def card)))
            (do (trigger-event state side :pre-rez-cost card)
                (if (and altcost (can-pay? state side nil altcost)(not ignore-cost))

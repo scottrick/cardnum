@@ -2,7 +2,7 @@
 
 (declare expose-prevent)
 
-;;; Asset-specific helpers
+;;; Site-specific helpers
 (defn installed-access-trigger
   "Effect for triggering ambush on access.
   Ability is what happends upon access. If cost is specified Contestant needs to pay that to trigger."

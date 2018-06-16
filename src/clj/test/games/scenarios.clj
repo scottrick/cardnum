@@ -48,7 +48,7 @@
         (is (= (:title (last (:discard (get-challenger)))) "Fall Guy") "Fall Guy trashed")))))
 
 (deftest hb-glacier
-  "HB Glacier econ and server protection with upgrades - Ash, Caprcharacter, Breaker Bay Grid, positional character strength boost"
+  "HB Glacier econ and server protection with regions - Ash, Caprcharacter, Breaker Bay Grid, positional character strength boost"
   (do-game
     (new-game (make-deck "Haas-Bioroid: Engineering the Future"
                          [(qty "Adonis Campaign" 1)

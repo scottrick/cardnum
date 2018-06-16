@@ -134,12 +134,7 @@
   (swap! state update-in [:bonus :cost] (fnil #(+ % n) 0)))
 
 (defn rez-cost [state side {:keys [cost] :as card}]
-  (when-not (nil? cost)
-    (-> (if-let [rezfun (:rez-cost-bonus (card-def card))]
-          (+ cost (rezfun state side (make-eid state) card nil))
-          cost)
-        (+ (or (get-in @state [:bonus :cost]) 0))
-        (max 0))))
+  (0)
 
 (defn run-cost-bonus [state side n]
   (swap! state update-in [:bonus :run-cost] #(merge-costs (concat % n))))

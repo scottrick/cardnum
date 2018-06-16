@@ -254,6 +254,12 @@
                                                           (move %1 %2 c :rfg)))
                                            :choices {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/rfg command"} nil)
+          "/score"      #(resolve-ability %1 %2
+                                          {:prompt "Select a card to score"
+                                           :effect (req (let [c  target]
+                                                          (move %1 %2 c :scored)))
+                                           :choices {:req (fn [t] true)}}
+                                          {:title "/score command"} nil)
           "/facedown"   #(when (= %2 :challenger)
                            (command-facedown %1 %2))
           "/roll"       #(command-roll %1 %2 value)

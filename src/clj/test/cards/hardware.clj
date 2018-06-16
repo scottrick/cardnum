@@ -903,25 +903,25 @@
         (is (= 2 (:agenda-point (get-challenger))) "Took Project Vitruvius from Contestant")
         (is (= 0 (:agenda-point (get-contestant))) "Swapped Domestic Sleepers to Contestant")))))
 
-(deftest turntable-mandatory-upgrades
-  ;; Turntable - Swap a Mandatory Upgrades away from the Contestant reduces Contestant clicks per turn
-  ;;           - Contestant doesn't gain a click on the Challenger's turn when it receives a Mandatory Upgrades
+(deftest turntable-mandatory-regions
+  ;; Turntable - Swap a Mandatory Regions away from the Contestant reduces Contestant clicks per turn
+  ;;           - Contestant doesn't gain a click on the Challenger's turn when it receives a Mandatory Regions
   (do-game
-    (new-game (default-contestant [(qty "Mandatory Upgrades" 2) (qty "Project Vitruvius" 1)])
+    (new-game (default-contestant [(qty "Mandatory Regions" 2) (qty "Project Vitruvius" 1)])
               (default-challenger [(qty "Turntable" 1)]))
-    (score-agenda state :contestant (find-card "Mandatory Upgrades" (:hand (get-contestant))))
+    (score-agenda state :contestant (find-card "Mandatory Regions" (:hand (get-contestant))))
     (is (= 4 (:click-per-turn (get-contestant))) "Up to 4 clicks per turn")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Turntable")
     (let [tt (get-in @state [:challenger :rig :hazard 0])]
-      ;; steal Project Vitruvius and swap for Mandatory Upgrades
+      ;; steal Project Vitruvius and swap for Mandatory Regions
       (core/steal state :challenger (find-card "Project Vitruvius" (:hand (get-contestant))))
       (is (prompt-is-card? :challenger tt))
       (prompt-choice :challenger "Yes")
-      (prompt-select :challenger (find-card "Mandatory Upgrades" (:scored (get-contestant))))
+      (prompt-select :challenger (find-card "Mandatory Regions" (:scored (get-contestant))))
       (is (= 3 (:click-per-turn (get-contestant))) "Back down to 3 clicks per turn")
-      ;; steal second Mandatory Upgrades and swap for Project Vitruvius
-      (core/steal state :challenger (find-card "Mandatory Upgrades" (:hand (get-contestant))))
+      ;; steal second Mandatory Regions and swap for Project Vitruvius
+      (core/steal state :challenger (find-card "Mandatory Regions" (:hand (get-contestant))))
       (is (prompt-is-card? :challenger tt))
       (prompt-choice :challenger "Yes")
       (prompt-select :challenger (find-card "Project Vitruvius" (:scored (get-contestant))))

@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             test.core
             test.cards.agendas
-            test.cards.assets
+            test.cards.sites
             test.cards.events
             test.cards.hazard
             test.cards.character
@@ -11,7 +11,7 @@
             test.cards.operations
             test.cards.resources
             test.cards.resources
-            test.cards.upgrades
+            test.cards.regions
             test.games.scenarios))
 
 (deftest all-tests
