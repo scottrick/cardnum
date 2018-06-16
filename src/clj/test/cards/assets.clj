@@ -1,4 +1,4 @@
-(ns test.cards.assets
+(ns test.cards.sites
   (:require [game.core :as core]
             [test.core :refer :all]
             [test.utils :refer :all]
@@ -549,7 +549,7 @@
         (is (= 2 (count (:hosted (refresh fir)))) "Interns installed onto FIR")))))
 
 (deftest full-immersion-recstudio-sandburg
-  ;; Full Immmersion RecStudio - hosting an asset with events does not double-register events. Issue #1827.
+  ;; Full Immmersion RecStudio - hosting an site with events does not double-register events. Issue #1827.
   (do-game
     (new-game
       (default-contestant [(qty "Full Immersion RecStudio" 1) (qty "Sandburg" 1) (qty "Vanilla" 1)
@@ -1905,7 +1905,7 @@
       (is (= 3 (:rec-counter (refresh root))) "Recurring credits were refilled before Step 1.2 window"))))
 
 (deftest toshiyuki-sakai
-  ;; Toshiyuki Sakai - Swap with an asset/agenda from HQ; Challenger can choose to access new card or not
+  ;; Toshiyuki Sakai - Swap with an site/agenda from HQ; Challenger can choose to access new card or not
   (do-game
     (new-game (default-contestant [(qty "Toshiyuki Sakai" 1) (qty "Project Junebug" 1) (qty "Hedge Fund" 1)])
               (default-challenger [(qty "Sure Gamble" 3) (qty "Easy Mark" 2)]))

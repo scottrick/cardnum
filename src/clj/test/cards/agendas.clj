@@ -207,7 +207,7 @@
     (is (accessing state "Hedge Fund") "Challenger accessing Hedge Fund")
     (prompt-choice :challenger "OK")
     ;; test for #2376
-    (prompt-choice :challenger "Unrezzed upgrade in HQ")
+    (prompt-choice :challenger "Unrezzed region in HQ")
     (is (accessing state "Caprcharacter Nisei") "Challenger accessing Caprcharacter")
     (prompt-choice :challenger "No")
     (is (not (:run @state)) "Run completed")

@@ -254,7 +254,7 @@
       (core/rez state :contestant (get-character state :rd 0))
       (is (= 5 (:credit (get-challenger))) "Gained 1c from Character rez")
       (core/rez state :contestant (get-content state :remote1 0))
-      (is (= 5 (:credit (get-challenger))) "Asset rezzed, no credit gained"))))
+      (is (= 5 (:credit (get-challenger))) "Site rezzed, no credit gained"))))
 
 (deftest councilman
   ;; Councilman reverses the rezz and prevents re-rezz
@@ -636,7 +636,7 @@
     (score-agenda state :contestant (get-content state :remote1 0))
     (prompt-choice :challenger "Gang Sign") ; simultaneous effect resolution
     (let [gs1 (-> (get-challenger) :prompt first)]
-      (is (= (:choices gs1) ["Card from hand"]) "Gang Sign does not let Challenger access upgrade in HQ root")
+      (is (= (:choices gs1) ["Card from hand"]) "Gang Sign does not let Challenger access region in HQ root")
       (prompt-choice :challenger "Card from hand")
       (prompt-choice :challenger "Steal")
       (is (= (:card gs1) (-> (get-challenger) :prompt first :card)) "Second access from first Gang Sign triggered")

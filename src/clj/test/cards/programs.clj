@@ -109,7 +109,7 @@
     (play-from-hand state :contestant "Ice Wall" "HQ")
     (is (= 7 (:credit (get-contestant))) "Diwan charged 1cr to install character protecting the named server")
     (play-from-hand state :contestant "Crisium Grid" "HQ")
-    (is (= 7 (:credit (get-contestant))) "Diwan didn't charge to install another upgrade in root of HQ")
+    (is (= 7 (:credit (get-contestant))) "Diwan didn't charge to install another region in root of HQ")
     (take-credits state :contestant)
     (take-credits state :challenger)
     (play-from-hand state :contestant "Ice Wall" "HQ")

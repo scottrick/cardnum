@@ -119,14 +119,14 @@
 (defn- contestant-can-install-reason
   "Checks if the specified card can be installed.
    Returns true if there are no problems
-   Returns :region if Region check fails
+   Returns :region if Narly check fails
    Returns :character if Character check fails
    !! NB: This should only be used in a check with `true?` as all return values are truthy"
   [state side card dest-zone]
   (cond
-    ;; Region check
-    (and (has-subtype? card "Region")
-         (some #(has-subtype? % "Region") dest-zone))
+    ;; Narly check
+    (and (has-subtype? card "Narly")
+         (some #(has-subtype? % "Narly") dest-zone))
     :region
     ;; Character install prevented by Unscheduled Maintenance
     (and (character? card)
@@ -159,13 +159,13 @@
 (defn contestant-installable-type?
   "Is the card of an acceptable type to be installed in a server"
   [card]
-  (some? (#{"Asset" "Agenda" "Character" "Upgrade" "Resource"} (:type card))))
+  (some? (#{"Site" "Agenda" "Character" "Region" "Resource"} (:type card))))
 
-(defn- contestant-install-asset-agenda
-  "Forces the contestant to trash an existing asset or agenda if a second was just installed."
+(defn- contestant-install-site-agenda
+  "Forces the contestant to trash an existing site or agenda if a second was just installed."
   [state side eid card dest-zone server]
-  (let [prev-card (some #(when (#{"Asset" "Agenda"} (:type %)) %) dest-zone)]
-    (if (and (#{"Asset" "Agenda"} (:type card))
+  (let [prev-card (some #(when (#{"Hazard"} (:type %)) %) dest-zone)]
+    (if (and (#{"Hazard"} (:type card))
              prev-card
              (not (:host card)))
       (resolve-ability state side eid {:prompt (str "The " (:title prev-card) " in " server " will now be trashed.")
@@ -250,8 +250,8 @@
                      (when (is-type? c "Agenda")
                        (update-advancement-cost state side moved-card))
 
-                     ;; Check to see if a second agenda/asset was installed.
-                     (when-completed (contestant-install-asset-agenda state side moved-card dest-zone server)
+                     ;; Check to see if a second agenda/site was installed.
+                     (when-completed (contestant-install-site-agenda state side moved-card dest-zone server)
                                      (do (cond
                                            ;; Ignore all costs. Pass eid to rez.
                                            (= install-state :rezzed-no-cost)

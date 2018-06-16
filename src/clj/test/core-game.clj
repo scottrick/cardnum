@@ -68,7 +68,7 @@
 (deftest agenda-forfeit-challenger
   ;; forfeit - Don't deactivate agenda to trigger leave play effects if Challenger forfeits a stolen agenda
   (do-game
-    (new-game (default-contestant [(qty "Mandatory Upgrades" 1)])
+    (new-game (default-contestant [(qty "Mandatory Regions" 1)])
               (default-challenger [(qty "Data Dealer" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Data Dealer")
@@ -83,9 +83,9 @@
 (deftest agenda-forfeit-contestant
   ;; forfeit - Deactivate agenda to trigger leave play effects if Contestant forfeits a scored agenda
   (do-game
-    (new-game (default-contestant [(qty "Mandatory Upgrades" 1) (qty "Contestantorate Town" 1)])
+    (new-game (default-contestant [(qty "Mandatory Regions" 1) (qty "Contestantorate Town" 1)])
               (default-challenger))
-    (play-from-hand state :contestant "Mandatory Upgrades" "New remote")
+    (play-from-hand state :contestant "Mandatory Regions" "New remote")
     (score-agenda state :contestant (get-content state :remote1 0))
     (is (= 4 (:click-per-turn (get-contestant))) "Up to 4 clicks per turn")
     (play-from-hand state :contestant "Contestantorate Town" "New remote")
@@ -229,7 +229,7 @@
     (is (= 2 (count (:discard (get-contestant)))) "Hedge Fund trashed, reinstalled Imp used on same turn")))
 
 (deftest trash-seen-and-unseen
-  ;; Trash installed assets that are both seen and unseen by challenger
+  ;; Trash installed sites that are both seen and unseen by challenger
   (do-game
     (new-game (default-contestant [(qty "PAD Campaign" 3)])
               (default-challenger))
@@ -238,34 +238,34 @@
     (take-credits state :contestant 1)
     (run-empty-server state "Server 1")
     (prompt-choice :challenger "No")
-    ;; run and trash the second asset
+    ;; run and trash the second site
     (run-empty-server state "Server 2")
     (prompt-choice :challenger "Yes")
     (take-credits state :challenger 2)
     (play-from-hand state :contestant "PAD Campaign" "Server 1")
     (prompt-choice :contestant "OK")
-    (is (= 2 (count (:discard (get-contestant)))) "Trashed existing asset")
-    (is (:seen (first (get-in @state [:contestant :discard]))) "Asset trashed by challenger is Seen")
+    (is (= 2 (count (:discard (get-contestant)))) "Trashed existing site")
+    (is (:seen (first (get-in @state [:contestant :discard]))) "Site trashed by challenger is Seen")
     (is (not (:seen (second (get-in @state [:contestant :discard]))))
-        "Asset trashed by contestant is Unseen")
-    (is (not (:seen (get-content state :remote1 0))) "New asset is unseen")))
+        "Site trashed by contestant is Unseen")
+    (is (not (:seen (get-content state :remote1 0))) "New site is unseen")))
 
-(deftest reinstall-seen-asset
+(deftest reinstall-seen-site
   ;; Install a faceup card in Archives, make sure it is not :seen
   (do-game
     (new-game (default-contestant [(qty "PAD Campaign" 1) (qty "Interns" 1)])
               (default-challenger))
     (play-from-hand state :contestant "PAD Campaign" "New remote")
     (take-credits state :contestant 2)
-    ;; run and trash the asset
+    ;; run and trash the site
     (run-empty-server state "Server 1")
     (prompt-choice :challenger "Yes")
-    (is (:seen (first (get-in @state [:contestant :discard]))) "Asset trashed by challenger is Seen")
+    (is (:seen (first (get-in @state [:contestant :discard]))) "Site trashed by challenger is Seen")
     (take-credits state :challenger 3)
     (play-from-hand state :contestant "Interns")
     (prompt-select :contestant (first (get-in @state [:contestant :discard])))
     (prompt-choice :contestant "New remote")
-    (is (not (:seen (get-content state :remote2 0))) "New asset is unseen")))
+    (is (not (:seen (get-content state :remote2 0))) "New site is unseen")))
 
 (deftest all-installed-challenger-test
   ;; Tests all-installed for resources hosted on Character, nested hosted resources, and non-installed hosted resources
@@ -332,7 +332,7 @@
                              (qty "Public Support" 2)
                              (qty "Oaktown Renovation" 1)])
               (default-challenger))
-    ;; Turn 1 Contestant, install oaktown and assets
+    ;; Turn 1 Contestant, install oaktown and sites
     (core/gain state :contestant :click 4)
     (play-from-hand state :contestant "Adonis Campaign" "New remote")
     (play-from-hand state :contestant "Public Support" "New remote")
@@ -477,7 +477,7 @@
           (is (= 0 (get-counters (refresh imp) :virus)) "Imp counters purged"))))))
 
 (deftest multi-access-rd
-  ;; multi-access of R&D sees all cards and upgrades
+  ;; multi-access of R&D sees all cards and regions
   (do-game
     (new-game (default-contestant [(qty "Keegan Lane" 1) (qty "Midway Station Grid" 1)
                              (qty "Sweeps Week" 1) (qty "Manhunt" 1)
@@ -502,7 +502,7 @@
       (prompt-choice :challenger "Card from deck")
       (is (= "Hedge Fund" (-> (get-challenger) :prompt first :card :title)))
       (prompt-choice :challenger "OK")
-      (prompt-choice :challenger "Unrezzed upgrade in R&D")
+      (prompt-choice :challenger "Unrezzed region in R&D")
       (is (= "Keegan Lane" (-> (get-challenger) :prompt first :card :title)))
       (prompt-choice :challenger "No")
       (prompt-choice :challenger "Card from deck")

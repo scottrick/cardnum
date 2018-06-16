@@ -390,7 +390,7 @@
     (prompt-select :contestant (find-card "BOOM!" (:hand (get-contestant))))
     (is (empty? (get-content state :remote1)) "Asa Group installed an event in a server")
     (prompt-select :contestant (find-card "Urban Renewal" (:hand (get-contestant))))
-    (is (= "Urban Renewal" (:title (get-content state :remote1 0))) "Asa Group can install an asset in a remote")))
+    (is (= "Urban Renewal" (:title (get-content state :remote1 0))) "Asa Group can install an site in a remote")))
 
 (deftest haas-bioroid-engineering-the-future-employee-strike
   ;; EtF - interaction with Employee Strike
@@ -759,8 +759,8 @@
     (prompt-select :challenger (get-content state :remote1 0))
     (is (not (:run @state)) "Run is over")))
 
-(deftest leela-upgrades
-  ;; Leela Patel - upgrades returned to hand in the middle of a run do not break the run. Issue #2008.
+(deftest leela-regions
+  ;; Leela Patel - regions returned to hand in the middle of a run do not break the run. Issue #2008.
   (do-game
     (new-game (default-contestant [(qty "Crisium Grid" 3) (qty "Project Atlas" 3) (qty "Shock!" 1)])
               (make-deck "Leela Patel: Trained Pragmatist" [(qty "Sure Gamble" 1)]))
@@ -775,20 +775,20 @@
     (prompt-choice :challenger "Card from hand")
     (prompt-choice :challenger "Steal")
     (prompt-select :challenger (get-content state :hq 0))
-    (is (not (get-content state :hq 0)) "Upgrade returned to hand")
+    (is (not (get-content state :hq 0)) "Region returned to hand")
     (is (not (:run @state)) "Run ended, no more accesses")
     (run-empty-server state "R&D")
     (prompt-choice :challenger "Card from deck")
     (prompt-choice :challenger "Steal")
     (prompt-select :challenger (get-content state :rd 0))
-    (is (not (get-content state :rd 0)) "Upgrade returned to hand")
+    (is (not (get-content state :rd 0)) "Region returned to hand")
     (is (not (:run @state)) "Run ended, no more accesses")
     (run-empty-server state "Archives")
     (prompt-choice :challenger "Shock!")
     (prompt-choice :challenger "Project Atlas")
     (prompt-choice :challenger "Steal")
     (prompt-select :challenger (get-content state :archives 0))
-    (is (not (get-content state :archives 0)) "Upgrade returned to hand")
+    (is (not (get-content state :archives 0)) "Region returned to hand")
     (is (not (:run @state)) "Run ended, no more accesses")))
 
 (deftest maxx

@@ -1867,6 +1867,19 @@ nav ul
           transform(rotate(180deg))
           display-flex()
 
+          .server-card.tapped
+            transform(rotate(-90deg))
+
+            .abilities
+              top: 0
+              bottom: auto
+              transform(rotate(90deg) translateY(-100%))
+              transform-origin(0 0)
+
+          .server-card
+            margin: -7px 0
+            cursor: pointer
+
     .contestant-board.opponent, .challenger-board.opponent
       transform(initial)
 

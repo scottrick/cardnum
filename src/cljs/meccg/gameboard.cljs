@@ -203,16 +203,16 @@
 
 (defn action-list [{:keys [type Secondary zone rezzed tapped advanceable advance-counter advancementcost current-cost] :as card}]
   (-> []
-      (#(if (and (and (= type "Character")
+      (#(if (and (and (#{"Character" "Site" "Region"} type)
                       (#{"servers" "onhost"} (first zone)))
                  (not rezzed))
           (cons "rez" %) %))
-      (#(if (and (and (= type "Character")
+      (#(if (and (and (#{"Character" "Site" "Region"} type)
                       (#{"servers" "onhost"} (first zone)))
                  rezzed
                  (not tapped))
           (cons "tap" %) %))
-      (#(if (and (and (= type "Character")
+      (#(if (and (and (#{"Character" "Site" "Region"} type)
                       (#{"servers" "onhost"} (first zone)))
                  tapped)
           (cons "untap" %) %))
@@ -258,10 +258,10 @@
         (= side :challenger)
         (case (first zone)
           "hand" (case type
-                   ("Upgrade" "Character") (if root
+                   ("Region" "Character") (if root
                                        (send-command "play" {:card card :server root})
                                        (-> (om/get-node owner "servers") js/$ .toggle))
-                   ("Agenda" "Asset") (if (< (count (get-in @game-state [:challenger :servers])) 4)
+                   ("Agenda" "Site") (if (< (count (get-in @game-state [:challenger :servers])) 4)
                                         (send-command "play" {:card card :server "New remote"})
                                         (-> (om/get-node owner "servers") js/$ .toggle))
                    (send-command "play" {:card card}))
@@ -271,10 +271,10 @@
         (= side :contestant)
         (case (first zone)
           "hand" (case type
-                   ("Upgrade" "Character") (if root
+                   ("Region" "Character") (if root
                                        (send-command "play" {:card card :server root})
                                        (-> (om/get-node owner "servers") js/$ .toggle))
-                   ("Agenda" "Asset") (if (< (count (get-in @game-state [:contestant :servers])) 4)
+                   ("Agenda" "Site") (if (< (count (get-in @game-state [:contestant :servers])) 4)
                                         (send-command "play" {:card card :server "New remote"})
                                         (-> (om/get-node owner "servers") js/$ .toggle))
                    (send-command "play" {:card card}))
@@ -322,7 +322,7 @@
 
          (and (= zone ["hand"])
               (or (not uniqueness) (not (in-play? card)))
-              (or (#{"Agenda" "Asset" "Upgrade" "Character" "Resource"} type) (>= (:credit me) cost))
+              (or (#{"Agenda" "Site" "Region" "Character" "Resource"} type) (>= (:credit me) cost))
               (pos? (:click me))))))
 
 (defn spectator-view-hidden?
@@ -700,9 +700,9 @@
 
 (defn card-view [{:keys [zone fullCode type abilities counter advance-counter advancementcost current-cost subtype
                          advanceable rezzed tapped strength current-strength title remotes selected hosted
-                         side rec-counter facedown server-target subtype-target icon new challenger-abilities subroutines]
+                         side rec-counter facedown  server-target subtype-target icon new challenger-abilities subroutines]
                   :as cursor}
-                 owner {:keys [flipped] :as opts}]
+                 owner {:keys [flipped location] :as opts}]
   (om/component
    (sab/html
     [:div.card-frame
@@ -725,7 +725,9 @@
                                        (spectator-view-hidden?)
                                        (= (:side @game-state) (keyword (.toLowerCase side))))
                 alt-str (if facedown-but-known (str "Facedown " title) nil)]
-            (facedown-card side ["bg"] alt-str))
+            (if location
+              (facedown-card "Locations")
+              (facedown-card side ["bg"] alt-str)))
           [:div
            [:span.cardname title]
            [:img.card.bg {:src url :alt title :onError #(-> % .-target js/$ .hide)}]]))
@@ -753,11 +755,11 @@
                            (join " - "))
                       subtype-target)]
           [:div.darkbg.subtype-target {:class colour-type} label]))
-      (when (and (= zone ["hand"]) (#{"Agenda" "Asset" "Character" "Upgrade"} type))
+      (when (and (= zone ["hand"]) (#{"Agenda" "Site" "Character" "Region"} type))
         (let [centrals ["Archives" "R&D" "HQ"]
               remotes (concat (remote-list remotes) ["New remote"])
               servers (case type
-                        ("Agenda" "Asset" "Upgrade" "Character") remotes)]
+                        ("Agenda" "Site" "Region" "Character") remotes)]
           [:div.panel.blue-shade.servers-menu {:ref "servers"}
            (map (fn [label]
                   [:div {:on-click #(do (send-command "play" {:card @cursor :server label})
@@ -1144,12 +1146,8 @@
         (when (not-empty content)
           (for [card content
                 :let [is-first (= card (first content))]]
-            [:div.server-card {:class (str (when central-view "central ")
-                                           (when (or central-view
-                                                     (and (< 1 (count content))
-                                                          (not is-first)))
-                                             "shift"))}
-             (om/build card-view card {:opts {:flipped (not (:rezzed card))}})
+            [:div.server-card {:class (when (:tapped card) "tapped")}
+             (om/build card-view card {:opts {:flipped (not (:rezzed card)) :location true}})
              (when (and (not central-view) is-first)
                (om/build label content {:opts opts}))]))]]))))
 

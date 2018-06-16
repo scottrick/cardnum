@@ -481,7 +481,7 @@
     "10038"                                                 ; PAD Factory
     (= 3 (card-count (filter #(= "PAD Campaign" (:title (:card %))) cards)))
     "10076"                                                 ; Mumbad Virtual Tour
-    (<= 7 (card-count (filter #(= "Asset" (:type (:card %))) cards)))
+    (<= 7 (card-count (filter #(= "Site" (:type (:card %))) cards)))
     ;; Not an alliance card
     false))
 

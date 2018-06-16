@@ -703,23 +703,23 @@
       (card-ability state :contestant fifm 0))
     (is (= "15 Minutes" (:title (first (:deck (get-contestant))))))))
 
-(deftest exchange-of-information-mandatory-upgrades
-  ;; Exchange of Information - Swapping a Mandatory Upgrades gives the Contestant an additional click per turn. #1687
+(deftest exchange-of-information-mandatory-regions
+  ;; Exchange of Information - Swapping a Mandatory Regions gives the Contestant an additional click per turn. #1687
   (do-game
-    (new-game (default-contestant [(qty "Exchange of Information" 2) (qty "Mandatory Upgrades" 1)
+    (new-game (default-contestant [(qty "Exchange of Information" 2) (qty "Mandatory Regions" 1)
                              (qty "Global Food Initiative" 1)])
               (default-challenger))
     (score-agenda state :contestant (find-card "Global Food Initiative" (:hand (get-contestant))))
     (take-credits state :contestant)
     (core/gain state :challenger :tag 1)
-    (core/steal state :challenger (find-card "Mandatory Upgrades" (:hand (get-contestant))))
+    (core/steal state :challenger (find-card "Mandatory Regions" (:hand (get-contestant))))
     (take-credits state :challenger)
     (is (= 3 (:agenda-point (get-contestant))))
     (is (= 2 (:agenda-point (get-challenger))))
     (is (= 3 (:click (get-contestant))))
     (is (= 3 (:click-per-turn (get-contestant))))
     (play-from-hand state :contestant "Exchange of Information")
-    (prompt-select :contestant (find-card "Mandatory Upgrades" (:scored (get-challenger))))
+    (prompt-select :contestant (find-card "Mandatory Regions" (:scored (get-challenger))))
     (prompt-select :contestant (find-card "Global Food Initiative" (:scored (get-contestant))))
     (is (= 2 (:agenda-point (get-contestant))))
     (is (= 2 (:agenda-point (get-challenger))))
@@ -731,7 +731,7 @@
     (is (= 4 (:click-per-turn (get-contestant))))
     (play-from-hand state :contestant "Exchange of Information")
     (prompt-select :contestant (find-card "Global Food Initiative" (:scored (get-challenger))))
-    (prompt-select :contestant (find-card "Mandatory Upgrades" (:scored (get-contestant))))
+    (prompt-select :contestant (find-card "Mandatory Regions" (:scored (get-contestant))))
     (is (= 3 (:agenda-point (get-contestant))))
     (is (= 2 (:agenda-point (get-challenger))))
     (is (= 2 (:click (get-contestant))))
@@ -1089,19 +1089,19 @@
       (is (= 4 (:advance-counter (refresh pj))) "Junebug has 4 advancements"))))
 
 (deftest psychokinesis
-  ;; Pyschokinesis - Terminal Event (end the turn); Look at R&D, install an Asset, Agenda, or Upgrade in a Remote Server
+  ;; Pyschokinesis - Terminal Event (end the turn); Look at R&D, install an Site, Agenda, or Region in a Remote Server
   (do-game
     (new-game (default-contestant [(qty "Psychokinesis" 3) (qty "Caprcharacter Nisei" 1) (qty "Adonis Campaign" 1)
                               (qty "Global Food Initiative" 1)])
               (default-challenger))
     (starting-hand state :contestant ["Psychokinesis","Psychokinesis","Psychokinesis"])
-    ;; Test installing an Upgrade
+    ;; Test installing an Region
     (play-from-hand state :contestant "Psychokinesis")
     (prompt-choice :contestant (find-card "Caprcharacter Nisei" (:deck (get-contestant))))
     (prompt-choice :contestant "New remote")
     (is (= "Caprcharacter Nisei" (:title (get-content state :remote1 0)))
       "Caprcharacter Nisei installed by Psychokinesis")
-    ;; Test installing an Asset
+    ;; Test installing an Site
     (core/gain state :contestant :click 1)
     (play-from-hand state :contestant "Psychokinesis")
     (prompt-choice :contestant (find-card "Adonis Campaign" (:deck (get-contestant))))

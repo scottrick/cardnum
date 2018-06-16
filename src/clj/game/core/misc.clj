@@ -23,7 +23,7 @@
 
 (defn server-list [state card]
   (concat
-    (if (#{"Asset" "Agenda"} (:type card))
+    (if (#{"Site" "Agenda"} (:type card))
       (get-remote-names @state)
       (zones->sorted-names (get-zones @state)))
     ["New remote"]))
@@ -59,10 +59,10 @@
          (is-remote? (second zone1)) ; cards in centrals are in the server's root, not in the server.
          (= :content (last zone1)))))
 
-(defn from-same-server? [upgrade target]
-  "True if the upgrade is in the root of the server that the target is in."
+(defn from-same-server? [region target]
+  "True if the region is in the root of the server that the target is in."
   (= (central->zone (:zone target))
-     (butlast (get-nested-zone upgrade))))
+     (butlast (get-nested-zone region))))
 
 (defn all-installed
   "Returns a vector of all installed cards for the given side, including those hosted on other cards,
