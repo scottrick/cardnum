@@ -369,8 +369,7 @@
   [state side card]
   (let [card (get-card state card)]
     (system-msg state side (str "taps " (:title card)))
-    (update! state side (dissoc card :wounded))
-    (update! state side (assoc card :tapped true))))
+    (update! state side (assoc card :tapped true :wounded false))))
 
 (defn untap
   "Untap a card."
@@ -384,7 +383,6 @@
   [state side card]
   (let [card (get-card state card)]
     (system-msg state side (str "wounds " (:title card)))
-    (update! state side (dissoc card :tapped))
     (update! state side (assoc card :wounded true))))
 
 (defn advance

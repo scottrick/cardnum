@@ -214,7 +214,7 @@
       (#(if (and (and (#{"Character" "Site" "Region"} type)
                       (#{"servers" "onhost"} (first zone)))
                  rezzed
-                 (not (or tapped wounded)))
+                 (or (not tapped) wounded))
           (cons "tap" %) %))
       (#(if (and (and (#{"Character" "Site" "Region"} type)
                       (#{"servers" "onhost"} (first zone)))
@@ -1138,7 +1138,7 @@
           (when-let [run-card (:card (:run-effect run))]
             [:div.run-card (om/build card-img run-card)])
           (for [character (reverse characters)]
-            [:div.character {:class (if (:tapped character)
+            [:div.character {:class (if (and (:tapped character) (not (:wounded character)))
                                       "tapped"
                                       (if (:wounded character)
                                         "wounded"
