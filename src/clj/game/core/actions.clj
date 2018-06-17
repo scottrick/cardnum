@@ -369,6 +369,7 @@
   [state side card]
   (let [card (get-card state card)]
     (system-msg state side (str "taps " (:title card)))
+    (update! state side (dissoc card :wounded))
     (update! state side (assoc card :tapped true))))
 
 (defn untap
@@ -376,7 +377,15 @@
   [state side card]
   (let [card (get-card state card)]
     (system-msg state side (str "untaps " (:title card)))
-    (update! state side (dissoc card :tapped))))
+    (update! state side (dissoc card :wounded :tapped))))
+
+(defn wound
+  "Wounds character."
+  [state side card]
+  (let [card (get-card state card)]
+    (system-msg state side (str "wounds " (:title card)))
+    (update! state side (dissoc card :tapped))
+    (update! state side (assoc card :wounded true))))
 
 (defn advance
   "Advance a contestant card that can be advanced.

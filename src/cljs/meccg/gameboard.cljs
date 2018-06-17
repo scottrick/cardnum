@@ -201,20 +201,24 @@
       (.play (sfx-key soundbank)))
     (play-sfx (rest sfx) soundbank)))
 
-(defn action-list [{:keys [type Secondary zone rezzed tapped advanceable advance-counter advancementcost current-cost] :as card}]
+(defn action-list [{:keys [type Secondary zone rezzed tapped wounded advanceable advance-counter advancementcost current-cost] :as card}]
   (-> []
       (#(if (and (and (#{"Character" "Site" "Region"} type)
                       (#{"servers" "onhost"} (first zone)))
                  (not rezzed))
           (cons "rez" %) %))
+      (#(if (and (and (#{"Character"} type)
+                 (#{"servers" "onhost"} (first zone)))
+                 (and rezzed (not wounded)))
+          (cons "wound" %) %))
       (#(if (and (and (#{"Character" "Site" "Region"} type)
                       (#{"servers" "onhost"} (first zone)))
                  rezzed
-                 (not tapped))
+                 (not (or tapped wounded)))
           (cons "tap" %) %))
       (#(if (and (and (#{"Character" "Site" "Region"} type)
                       (#{"servers" "onhost"} (first zone)))
-                 tapped)
+                 (or tapped wounded))
           (cons "untap" %) %))
       (#(if (and (and (= type "Resource")
                       (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Special Item"])
@@ -1134,7 +1138,11 @@
           (when-let [run-card (:card (:run-effect run))]
             [:div.run-card (om/build card-img run-card)])
           (for [character (reverse characters)]
-            [:div.character {:class (when (:tapped character) "tapped")}
+            [:div.character {:class (if (:tapped character)
+                                      "tapped"
+                                      (if (:wounded character)
+                                        "wounded"
+                                        nil))}
              (om/build card-view character {:opts {:flipped (not (:rezzed character))}})
              (when (and current-character (= (:cid current-character) (:cid character)))
                run-arrow)])

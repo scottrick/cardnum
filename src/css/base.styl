@@ -1773,11 +1773,22 @@ nav ul
                 transform(translateX(-50%))
                 border-bottom: 22px solid transparent-orange
 
+          .character.wounded
+            transform(rotate(0deg))
+
+            .abilities
+              top: 0
+              right 25
+              bottom: auto
+              transform(rotate(180deg) translateY(-100%))
+              transform-origin(0 0)
+
           .character.tapped
             transform(rotate(90deg))
 
             .abilities
               top: 0
+              right 25
               bottom: auto
               transform(rotate(90deg) translateY(-100%))
               transform-origin(0 0)
@@ -1849,7 +1860,7 @@ nav ul
 
           .abilities, .challenger-abilities, .contestant-abilities
             left: 0%
-            margin: -1px 6px
+            margin: -1px 25px
 
           .abilities
             top: 0

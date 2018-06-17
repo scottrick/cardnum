@@ -1563,4 +1563,14 @@
       (load-decks decks)
       (>! cards-channel cards)))
 
+(go (let [ctrds (<! ctrds-channel)
+          ctcks (process-ctcks (:json (<! (GET (str "/data/decks")))))]
+      (load-ctcks ctcks)
+      (>! ctrds-channel ctrds)))
+
+(go (let [chrds (<! chrds-channel)
+          chcks (process-chcks (:json (<! (GET (str "/data/decks")))))]
+      (load-chcks chcks)
+      (>! chrds-channel chrds)))
+
 (om/root deck-builder app-state {:target (. js/document (getElementById "deckbuilder"))})
