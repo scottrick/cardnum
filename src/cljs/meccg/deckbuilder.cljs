@@ -882,7 +882,9 @@
                   all-chcks (process-chcks (:json (<! (GET (str "/data/decks")))))]
               (om/update! cursor :decks (conj decks new-deck))
               (om/set-state! owner :deck new-deck)
-              (load-decks all-decks)))))))
+              (load-decks all-decks)
+              (load-ctcks all-ctcks)
+              (load-chcks all-chcks)))))))
 
 (defn clear-deck-stats [cursor owner]
   (authenticated
@@ -1560,15 +1562,5 @@
           decks (process-decks (:json (<! (GET (str "/data/decks")))))]
       (load-decks decks)
       (>! cards-channel cards)))
-
-(go (let [ctrds (<! ctrds-channel)
-          ctcks (process-ctcks (:json (<! (GET (str "/data/decks")))))]
-      (load-ctcks ctcks)
-      (>! ctrds-channel ctrds)))
-
-(go (let [chrds (<! chrds-channel)
-          chcks (process-chcks (:json (<! (GET (str "/data/decks")))))]
-      (load-chcks chcks)
-      (>! chrds-channel chrds)))
 
 (om/root deck-builder app-state {:target (. js/document (getElementById "deckbuilder"))})
