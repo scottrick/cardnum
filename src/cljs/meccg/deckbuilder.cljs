@@ -684,11 +684,6 @@
   (and (every? #(released? sets (:card %)) (:cards deck))
        (released? sets (:identity deck))))
 
-(defn handle-region-load [owner]
-  (let [text all-regions
-        cards (parse-deck-string nil text)]
-    (om/set-state! owner [:deck :regions] cards)))
-
 (defn edit-deck [owner]
   (let [deck (om/get-state owner :deck)]
     (om/set-state! owner :old-deck deck)
@@ -715,7 +710,7 @@
     (om/set-state! owner :resource-edit text)
     (om/set-state! owner [:deck :resources] cards)))
 
-(defn handle-hazard-edit [owner]`
+(defn handle-hazard-edit [owner]
   (let [text (.-value (om/get-node owner "hazard-edit"))
         cards (parse-deck-string nil text)]
     (om/set-state! owner :hazard-edit text)
@@ -788,6 +783,18 @@
   (om/set-state! owner :delete false)
   (-> owner (om/get-node "viewport") js/$ (.removeClass "delete")))
 
+(defn ready-for-game
+  []
+  (go (let [ctrds (<! ctrds-channel)
+            ctcks (process-ctcks (:json (<! (GET (str "/data/decks")))))]
+        (load-ctcks ctcks)
+        (>! ctrds-channel ctrds)))
+
+  (go (let [chrds (<! chrds-channel)
+            chcks (process-chcks (:json (<! (GET (str "/data/decks")))))]
+        (load-chcks chcks)
+        (>! chrds-channel chrds))))
+
 (defn handle-delete [cursor owner]
   (authenticated
    (fn [user]
@@ -797,6 +804,7 @@
        (do
          (om/transact! cursor :decks (fn [ds] (remove #(= deck %) ds)))
          (om/set-state! owner :deck (first (sort-by :date > (:decks @cursor))))
+         (ready-for-game)
          (end-delete owner))))))
 
 (defn new-deck [alignment owner]
@@ -869,7 +877,9 @@
         (try (js/ga "send" "event" "deckbuilder" "save") (catch js/Error e))
         (go (let [new-id (get-in (<! (POST "/data/decks/" data :json)) [:json :_id])
                   new-deck (if (:_id deck) deck (assoc deck :_id new-id))
-                  all-decks (process-decks (:json (<! (GET (str "/data/decks")))))]
+                  all-decks (process-decks (:json (<! (GET (str "/data/decks")))))
+                  all-ctcks (process-ctcks (:json (<! (GET (str "/data/decks")))))
+                  all-chcks (process-chcks (:json (<! (GET (str "/data/decks")))))]
               (om/update! cursor :decks (conj decks new-deck))
               (om/set-state! owner :deck new-deck)
               (load-decks all-decks)))))))
@@ -1545,8 +1555,6 @@
              [:textarea.txtbot {:ref "fwsb-edit" :value (:fwsb-edit state)
                                 :on-change #(handle-fwsb-edit owner)}]
              ]]]]]))))
-
-
 
 (go (let [cards (<! cards-channel)
           decks (process-decks (:json (<! (GET (str "/data/decks")))))]
