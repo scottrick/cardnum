@@ -224,12 +224,12 @@
                       (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Special Item"])
                       (#{"servers" "onhost"} (first zone)))
                  (not tapped))
-          (cons "tap" %) %))
+          (cons "fix-tap" %) %))
       (#(if (and (and (= type "Resource")
                       (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Special Item"])
                       (#{"servers" "onhost"} (first zone)))
                  tapped)
-          (cons "untap" %) %))))
+          (cons "fix-tap" %) %))))
 
 (defn handle-abilities [{:keys [abilities facedown side type] :as card} owner]
   (let [actions (action-list card)
