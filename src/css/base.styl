@@ -260,11 +260,11 @@ span.small
     box-shadow(none)
     border-color: orange
 
-.rotated
+.rotated-old
   color: white
   background-color: grey
   border-color: orangered
-  opacity: 0.5
+  opacity: 1.0
   box-shadow(none)
   cursor: auto
 
@@ -1477,7 +1477,7 @@ nav ul
     display: none
     position: absolute
     z-index: 30
-    width: 150px
+    width: 120px
     font-size: 12px
     line-height: 16px
 
@@ -1778,20 +1778,17 @@ nav ul
 
             .abilities
               top: 0
-              right 25
+              right: 25
               bottom: auto
               transform(rotate(180deg) translateY(-100%))
               transform-origin(0 0)
 
           .character.tapped
-            transform(rotate(90deg))
+            transform(rotate(-90deg))
 
             .abilities
-              top: 0
-              right 25
-              bottom: auto
-              transform(rotate(90deg) translateY(-100%))
               transform-origin(0 0)
+              transform(rotate(-90deg) translateX(-25%))
 
           .character
             margin: -7px 0
@@ -1806,6 +1803,29 @@ nav ul
               bottom: 42px
               left: 57px
               transform: rotate(-90deg)
+
+          .hosted.rotated
+            transform(rotate(-90deg))
+            margin-top: -49px
+            flex-direction(column)
+
+            .card-frame
+              margin-left: 0
+
+              &:not(:first-child)
+                margin-top: -42px
+
+              .counters
+                transform(rotate(-90deg))
+
+              .abilities, .challenger-abilities, .contestant-abilities
+                top: 0
+                bottom: auto
+                transform(rotate(90deg) translateY(-50%))
+                transform-origin(0 0)
+
+          .hosted.inverted
+            transform(rotate(180deg))
 
           .hosted.tapped
             transform(rotate(90deg))
@@ -1824,6 +1844,7 @@ nav ul
               .abilities, .challenger-abilities, .contestant-abilities
                 top: 0
                 bottom: auto
+                transform(rotate(-90deg))
                 transform-origin(0 0)
 
           .hosted

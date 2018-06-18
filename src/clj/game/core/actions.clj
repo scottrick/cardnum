@@ -364,23 +364,26 @@
         (register-events state side dre card)))
     (trigger-event state side :derez card side)))
 
+(defn rotate
+  "Rotate a card."
+  [state side card]
+  (let [card (get-card state card)]
+    (system-msg state side (str "rotates " (:title card)))
+    (update! state side (assoc card :rotated true))))
+
 (defn tap
   "Tap a card."
   [state side card]
   (let [card (get-card state card)]
-    (if (= "Resource" (:type card))
-      (system-msg state side (str "fixes the tapping on " (:title card)))
-      (system-msg state side (str "taps " (:title card))))
+    (system-msg state side (str "taps " (:title card)))
     (update! state side (assoc card :tapped true :wounded false))))
 
 (defn untap
   "Untap a card."
   [state side card]
   (let [card (get-card state card)]
-    (if (= "Resource" (:type card))
-      (system-msg state side (str "fixes the tapping on " (:title card)))
-      (system-msg state side (str "untaps " (:title card))))
-    (update! state side (dissoc card :tapped :wounded))))
+    (system-msg state side (str "untaps " (:title card)))
+    (update! state side (dissoc card :tapped :wounded :inverted :rotated))))
 
 (defn wound
   "Wounds character."
@@ -388,6 +391,13 @@
   (let [card (get-card state card)]
     (system-msg state side (str "wounds " (:title card)))
     (update! state side (assoc card :wounded true))))
+
+(defn invert
+  "Inverts a resource."
+  [state side card]
+  (let [card (get-card state card)]
+    (system-msg state side (str "inverts " (:title card)))
+    (update! state side (assoc card :inverted true))))
 
 (defn fix-tap
   [state side card]
