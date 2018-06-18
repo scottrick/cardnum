@@ -364,19 +364,46 @@
         (register-events state side dre card)))
     (trigger-event state side :derez card side)))
 
+(defn rotate
+  "Rotate a card."
+  [state side card]
+  (let [card (get-card state card)]
+    (system-msg state side (str "rotates " (:title card)))
+    (update! state side (assoc card :rotated true))))
+
 (defn tap
   "Tap a card."
   [state side card]
   (let [card (get-card state card)]
     (system-msg state side (str "taps " (:title card)))
-    (update! state side (assoc card :tapped true))))
+    (update! state side (assoc card :tapped true :wounded false))))
 
 (defn untap
   "Untap a card."
   [state side card]
   (let [card (get-card state card)]
     (system-msg state side (str "untaps " (:title card)))
-    (update! state side (dissoc card :tapped))))
+    (update! state side (dissoc card :tapped :wounded :inverted :rotated))))
+
+(defn wound
+  "Wounds character."
+  [state side card]
+  (let [card (get-card state card)]
+    (system-msg state side (str "wounds " (:title card)))
+    (update! state side (assoc card :wounded true))))
+
+(defn invert
+  "Inverts a resource."
+  [state side card]
+  (let [card (get-card state card)]
+    (system-msg state side (str "inverts " (:title card)))
+    (update! state side (assoc card :inverted true))))
+
+(defn fix-tap
+  [state side card]
+  (if (:tapped card)
+    (untap state side card)
+    (tap state side card)))
 
 (defn advance
   "Advance a contestant card that can be advanced.

@@ -41,6 +41,10 @@
    "derez" #(core/derez %1 %2 (:card %3))
    "tap" #(core/tap %1 %2 (:card %3))
    "untap" #(core/untap %1 %2 (:card %3))
+   "wound" #(core/wound %1 %2 (:card %3))
+   "invert" #(core/invert %1 %2 (:card %3))
+   "rotate" #(core/rotate %1 %2 (:card %3))
+   "fix-tap" #(core/fix-tap %1 %2 (:card %3))
    "run" core/click-run
    "no-action" core/no-action
    "contestant-phase-43" core/contestant-phase-43

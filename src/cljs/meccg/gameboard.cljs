@@ -201,30 +201,44 @@
       (.play (sfx-key soundbank)))
     (play-sfx (rest sfx) soundbank)))
 
-(defn action-list [{:keys [type Secondary zone rezzed tapped advanceable advance-counter advancementcost current-cost] :as card}]
+(defn action-list [{:keys [type Secondary zone rezzed tapped wounded rotated inverted advanceable advance-counter advancementcost current-cost] :as card}]
   (-> []
       (#(if (and (and (#{"Character" "Site" "Region"} type)
                       (#{"servers" "onhost"} (first zone)))
                  (not rezzed))
           (cons "rez" %) %))
+      (#(if (and (and (#{"Character"} type)
+                 (#{"servers" "onhost"} (first zone)))
+                 (and rezzed (not wounded)))
+          (cons "wound" %) %))
       (#(if (and (and (#{"Character" "Site" "Region"} type)
                       (#{"servers" "onhost"} (first zone)))
                  rezzed
-                 (not tapped))
+                 (or (not tapped) wounded))
           (cons "tap" %) %))
       (#(if (and (and (#{"Character" "Site" "Region"} type)
                       (#{"servers" "onhost"} (first zone)))
-                 tapped)
+                 (or tapped wounded))
           (cons "untap" %) %))
+      (#(if (and (and (= type "Resource")
+                 (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Special Item"])
+                 (#{"servers" "onhost"} (first zone)))
+                 (and (not rotated) (or (not tapped) inverted)))
+          (cons "rotate" %) %))
       (#(if (and (and (= type "Resource")
                       (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Special Item"])
                       (#{"servers" "onhost"} (first zone)))
-                 (not tapped))
+                 (and (not inverted) (not rotated) tapped))
+          (cons "invert" %) %))
+      (#(if (and (and (= type "Resource")
+                      (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Special Item"])
+                      (#{"servers" "onhost"} (first zone)))
+                 (and (not tapped) (not rotated)))
           (cons "tap" %) %))
       (#(if (and (and (= type "Resource")
                       (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Special Item"])
                       (#{"servers" "onhost"} (first zone)))
-                 tapped)
+                 (or tapped rotated))
           (cons "untap" %) %))))
 
 (defn handle-abilities [{:keys [abilities facedown side type] :as card} owner]
@@ -699,7 +713,7 @@
        [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])])))
 
 (defn card-view [{:keys [zone fullCode type abilities counter advance-counter advancementcost current-cost subtype
-                         advanceable rezzed tapped strength current-strength title remotes selected hosted
+                         advanceable rezzed tapped rotated strength current-strength title remotes selected hosted
                          side rec-counter facedown  server-target subtype-target icon new challenger-abilities subroutines]
                   :as cursor}
                  owner {:keys [flipped location] :as opts}]
@@ -822,7 +836,13 @@
            [:div {:on-click #(send-command "rez" {:card @cursor})} "Rez"]]))]
      (when (pos? (count hosted))
         (for [card hosted]
-          [:div.hosted {:class (when (:tapped card) "tapped")}
+          [:div.hosted {:class (if (and (:tapped card) (not (:inverted card)))
+                                 "tapped"
+                                 (if (and (:inverted card) (not (:rotated card)))
+                                   "inverted"
+                                   (if (:rotated card)
+                                     "rotated"
+                                     nil)))}
           (om/build card-view card {:opts {:flipped (face-down? card)}})]))])))
 
 (defn drop-area [side server hmap]
@@ -1134,7 +1154,11 @@
           (when-let [run-card (:card (:run-effect run))]
             [:div.run-card (om/build card-img run-card)])
           (for [character (reverse characters)]
-            [:div.character {:class (when (:tapped character) "tapped")}
+            [:div.character {:class (if (and (:tapped character) (not (:wounded character)))
+                                      "tapped"
+                                      (if (:wounded character)
+                                        "wounded"
+                                        nil))}
              (om/build card-view character {:opts {:flipped (not (:rezzed character))}})
              (when (and current-character (= (:cid current-character) (:cid character)))
                run-arrow)])
