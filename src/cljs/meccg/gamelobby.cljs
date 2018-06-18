@@ -429,9 +429,7 @@
                      (if (every? :deck players)
                        [:button {:on-click #(send {:action "start" :gameid (:gameid @app-state)})} "Start"]
                        [:button {:class "disabled"} "Start"]))
-                   [:button {:on-click #(leave-lobby cursor owner)} "Leave"]
-                   (when (= (-> players first :user) user)
-                     [:button {:on-click #(send {:action "swap" :gameid gameid})} "Swap sides"])]
+                   [:button {:on-click #(leave-lobby cursor owner)} "Leave"]]
                   [:div.content
                    [:h2 (:title game)]
                    (when-not (every? :deck players)
