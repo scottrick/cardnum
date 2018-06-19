@@ -882,9 +882,10 @@
                   all-chcks (process-chcks (:json (<! (GET (str "/data/decks")))))]
               (om/update! cursor :decks (conj decks new-deck))
               (om/set-state! owner :deck new-deck)
-              (load-decks all-decks)
               (load-ctcks all-ctcks)
-              (load-chcks all-chcks)))))))
+              (load-chcks all-chcks)
+              (load-decks all-decks)
+              ))))))
 
 (defn clear-deck-stats [cursor owner]
   (authenticated

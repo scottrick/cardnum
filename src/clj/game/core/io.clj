@@ -100,7 +100,7 @@
          [:discard] (if (= side "Challenger") "Heap" "Archives")
          [:deck] (if (= side "Challenger") "Stack" "R&D")
          [:sideboard] (if (= side "Challenger") "Ch-board" "Co-board")
-         [:sites] (if (= side "Challenger") "Ch-sites" "Co-sites")
+         [:sites] (if (= side "Challenger") "Sites2" "Sites")
          [:rig _] "Rig"
          [:servers :hq _] "the root of HQ"
          [:servers :rd _] "the root of R&D"
@@ -238,6 +238,18 @@
                                                           (move %1 %2 c :hand)))
                                            :choices {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/move-hand command"} nil)
+          "/move-site"  #(resolve-ability %1 %2
+                                          {:prompt "Select a site to move to your sites"
+                                           :effect (req (let [c (deactivate %1 %2 target)]
+                                                          (move %1 %2 c :sites)))
+                                           :choices {:req (fn [t] (card-is? t :side %2))}}
+                                          {:title "/move-site command"} nil)
+          "/move-sb"  #(resolve-ability %1 %2
+                                          {:prompt "Select a site to move to your sideboard"
+                                           :effect (req (let [c (deactivate %1 %2 target)]
+                                                          (move %1 %2 c :sideboard)))
+                                           :choices {:req (fn [t] (card-is? t :side %2))}}
+                                          {:title "/move-sb command"} nil)
           "/psi"        #(when (= %2 :contestant) (psi-game %1 %2
                                                       {:title "/psi command" :side %2}
                                                       {:equal  {:msg "resolve equal bets effect"}

@@ -99,8 +99,8 @@
         ("Stack" "R&D")
         (do (move state s (dissoc c :seen :rezzed) :deck {:front true :force true})
             (system-msg state side (str "moves " label from-str " to the top of " server)))
-        ("Ch-board" "Co-board")
-        (do (move state s (dissoc c :seen :rezzed) :deck {:front true :force true})
+        ("Sites2" "Sites")
+        (do (move state s (dissoc c :seen :rezzed) :sites {:front true :force true})
             (system-msg state side (str "moves " label from-str " to the top of " server)))
         nil))))
 
@@ -551,7 +551,7 @@
 
 (defn close-sites
   "Closes the deck view and makes cards in deck private again."
-  [state side]
+  [state side args]
   (system-msg state side "stops looking at their sites")
   (swap! state update-in [side] dissoc :cut-region)
   (swap! state update-in [side] dissoc :view-sites))

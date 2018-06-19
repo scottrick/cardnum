@@ -34,6 +34,18 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Orders from Lugbúrz"
+   {:abilities [{:effect (req (let [r (get-card state card)
+                                    hosted? (character? (:host r))]
+                                (resolve-ability state side
+                                                 {:prompt (if hosted?
+                                                            (msg "Move to your hand to re-assign company")
+                                                            (msg "Place this card with a company"))
+                                                  :choices {:req #(if (not hosted?)
+                                                                    (and (character? %)
+                                                                         (can-host? %)))}
+                                                  :msg (msg "host it on " (card-str state target))
+                                                  :effect (effect (host target card))} card nil)))}]}
    "Thrall to the Voice"
    {:abilities [{:effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
