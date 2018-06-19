@@ -6,7 +6,7 @@
             [clojure.string :refer [split split-lines join escape] :as s]
             [meccg.appstate :refer [app-state]]
             [meccg.auth :refer [authenticated] :as auth]
-            [meccg.cardbrowser :refer [cards-channel ctrds-channel chrds-channel image-url card-view show-alt-art? filter-title expand-alts] :as cb]
+            [meccg.cardbrowser :refer [cards-channel image-url card-view show-alt-art? filter-title expand-alts] :as cb]
             [meccg.sites :refer [all-regions all-wizard-sites all-minion-sites all-fallen-sites all-balrog-sites all-elf-sites all-dwarf-sites all-dual-sites]]
             [meccg.account :refer [load-alt-arts]]
             [meccg.ajax :refer [POST GET]]
@@ -67,14 +67,10 @@
 
 (defn lookup
   "Lookup the card title (query) looking at all cards on specified alignment"
-  [side card]
+  [card]
   (let [q (.toLowerCase (:title card))
         id (:id card)
-        cards (if (= side nil)
-                (:cards @app-state)
-                (if (= side "Contestant")
-                  (:ctrds @app-state)
-                  (:chrds @app-state)))
+        cards (:cards @app-state)
         exact-matches (filter-exact-title q cards)]
     (cond (and id
                (first (filter #(= id (:code %)) cards)))
@@ -110,48 +106,6 @@
                     (<= i (count (:title card))) (recur (inc i) (filter-title subquery matches))
                     :else card))))))
 
-(defn identity-ctokup
-  "Lookup the card title (query) looking at all cards on specified alignment"
-  [alignment card]
-  (let [q (.toLowerCase (:title card))
-        id (:id card)
-        cards (filter #(= (:alignment %) alignment)
-                      (:ctrds @app-state))
-        exact-matches (filter-exact-title q cards)]
-    (cond (and id
-               (first (filter #(= id (:code %)) cards)))
-          (let [id-matches (filter #(= id (:code %)) cards)]
-            (first (filter-exact-title q id-matches)))
-          (not-empty exact-matches) (take-best-card exact-matches)
-          :else
-          (loop [i 2 matches cards]
-            (let [subquery (subs q 0 i)]
-              (cond (zero? (count matches)) card
-                    (or (= (count matches) 1) (identical-cards? matches)) (take-best-card matches)
-                    (<= i (count (:title card))) (recur (inc i) (filter-title subquery matches))
-                    :else card))))))
-
-(defn identity-chokup
-  "Lookup the card title (query) looking at all cards on specified alignment"
-  [alignment card]
-  (let [q (.toLowerCase (:title card))
-        id (:id card)
-        cards (filter #(= (:alignment %) alignment)
-                      (:chrds @app-state))
-        exact-matches (filter-exact-title q cards)]
-    (cond (and id
-               (first (filter #(= id (:code %)) cards)))
-          (let [id-matches (filter #(= id (:code %)) cards)]
-            (first (filter-exact-title q id-matches)))
-          (not-empty exact-matches) (take-best-card exact-matches)
-          :else
-          (loop [i 2 matches cards]
-            (let [subquery (subs q 0 i)]
-              (cond (zero? (count matches)) card
-                    (or (= (count matches) 1) (identical-cards? matches)) (take-best-card matches)
-                    (<= i (count (:title card))) (recur (inc i) (filter-title subquery matches))
-                    :else card))))))
-
 (defn- build-identity-name
   [title setname art]
   (let [set-title (if setname (str title " (" setname ")") title)]
@@ -163,18 +117,6 @@
   "Parse an id to the corresponding card map"
   [{:keys [alignment title art setname]}]
   (let [card (identity-lookup alignment {:title title})]
-    (assoc card :art art :display-name (build-identity-name title setname art))))
-
-(defn ctrse-identity
-  "Parse an id to the corresponding card map"
-  [{:keys [alignment title art setname]}]
-  (let [card (identity-ctokup alignment {:title title})]
-    (assoc card :art art :display-name (build-identity-name title setname art))))
-
-(defn chrse-identity
-  "Parse an id to the corresponding card map"
-  [{:keys [alignment title art setname]}]
-  (let [card (identity-chokup alignment {:title title})]
     (assoc card :art art :display-name (build-identity-name title setname art))))
 
 (defn add-params-to-card
@@ -240,16 +182,16 @@
 
 (defn lookup-deck
   "Takes a list of {:qty n :card title} and looks up each title and replaces it with the corresponding cardmap"
-  [side card-list]
+  [card-list]
   (let [card-list (collate-deck card-list)]
     ;; lookup each card and replace title with cardmap
-    (map #(assoc % :card (lookup side (assoc % :title (:card %)))) card-list)))
+    (map #(assoc % :card (lookup (assoc % :title (:card %)))) card-list)))
 
 (defn parse-deck-string
   "Parses a string containing the decklist and returns a list of lines {:qty :card}"
-  [side deck-string]
+  [deck-string]
   (let [raw-deck-list (deck-string->list deck-string)]
-    (lookup-deck side raw-deck-list)))
+    (lookup-deck raw-deck-list)))
 
 (defn faction-label
   "Returns faction of a card as a lowercase label"
@@ -275,92 +217,28 @@
   (put! select-channel (first (sort-by :date > decks)))
   (swap! app-state assoc :decks-loaded true))
 
-(defn load-ctcks [decks]
-  (swap! app-state assoc :ctcks decks)
-  (put! select-channel (first (sort-by :date > decks)))
-  (swap! app-state assoc :ctcks-loaded true))
-
-(defn load-chcks [decks]
-  (swap! app-state assoc :chcks decks)
-  (put! select-channel (first (sort-by :date > decks)))
-  (swap! app-state assoc :chcks-loaded true))
-
 (defn process-decks
   "Process the raw deck from the database into a more useful format"
   [decks]
   (for [deck decks]
     (let [identity (parse-identity (:identity deck))
-          resources (lookup-deck nil (:resources deck))
-          hazards (lookup-deck nil (:hazards deck))
-          sideboard (lookup-deck nil (:sideboard deck))
-          characters (lookup-deck nil (:characters deck))
-          pool (lookup-deck nil (:pool deck))
-          fwsb (lookup-deck nil (:fwsb deck))
-          cards (str "")
-          regions (str "")
-          wizard-sites (str "")
-          minion-sites (str "")
-          balrog-sites (str "")
-          fallen-sites (str "")
-          elf-sites (str "")
-          dwarf-sites (str "")
-          sites (str "")]
-      (assoc deck :resources resources :hazards hazards :sideboard sideboard
-                  :characters characters :pool pool :fwsb fwsb :cards cards
-                  :regions regions :wizard-sites wizard-sites :minion-sites minion-sites
-                  :balrog-sites balrog-sites :fallen-sites fallen-sites
-                  :elf-sites elf-sites :dwarf-sites dwarf-sites :sites sites
-                  :identity identity))))
-
-(defn process-ctcks
-  "Process the raw deck from the database into a more useful format"
-  [decks]
-  (for [deck decks]
-    (let [identity (ctrse-identity (:identity deck))
-          resources (lookup-deck "Contestant" (:resources deck))
-          hazards (lookup-deck "Contestant" (:hazards deck))
-          sideboard (lookup-deck "Contestant" (:sideboard deck))
-          characters (lookup-deck "Contestant" (:characters deck))
-          pool (lookup-deck "Contestant" (:pool deck))
-          fwsb (lookup-deck "Contestant" (:fwsb deck))
+          resources (lookup-deck (:resources deck))
+          hazards (lookup-deck (:hazards deck))
+          sideboard (lookup-deck (:sideboard deck))
+          characters (lookup-deck (:characters deck))
+          pool (lookup-deck (:pool deck))
+          fwsb (lookup-deck (:fwsb deck))
           joined (into (:resources deck) (:hazards deck))
           combed (into (:characters deck) joined)
-          cards (lookup-deck "Contestant" combed)
-          dual-sites (parse-deck-string "Contestant" all-dual-sites)
-          dwarf-sites (into dual-sites (parse-deck-string "Contestant" all-dwarf-sites))
-          elf-sites (into dwarf-sites (parse-deck-string "Contestant" all-elf-sites))
-          fallen-sites (into elf-sites (parse-deck-string "Contestant" all-fallen-sites))
-          balrog-sites (into fallen-sites (parse-deck-string "Contestant" all-balrog-sites))
-          minion-sites (into balrog-sites (parse-deck-string "Contestant" all-minion-sites))
-          wizard-sites (into minion-sites (parse-deck-string "Contestant" all-wizard-sites))
-          regions (into wizard-sites (parse-deck-string "Contestant" all-regions))]
-      (assoc deck :resources resources :hazards hazards :sideboard sideboard
-                  :characters characters :pool pool :fwsb fwsb :cards cards
-                  :sites regions
-                  :identity identity))))
-
-(defn process-chcks
-  "Process the raw deck from the database into a more useful format"
-  [decks]
-  (for [deck decks]
-    (let [identity (chrse-identity (:identity deck))
-          resources (lookup-deck "Challenger" (:resources deck))
-          hazards (lookup-deck "Challenger" (:hazards deck))
-          sideboard (lookup-deck "Challenger" (:sideboard deck))
-          characters (lookup-deck "Challenger" (:characters deck))
-          pool (lookup-deck "Challenger" (:pool deck))
-          fwsb (lookup-deck "Challenger" (:fwsb deck))
-          joined (into (:resources deck) (:hazards deck))
-          combed (into (:characters deck) joined)
-          cards (lookup-deck "Challenger" combed)
-          dual-sites (parse-deck-string "Challenger" all-dual-sites)
-          dwarf-sites (into dual-sites (parse-deck-string "Challenger" all-dwarf-sites))
-          elf-sites (into dwarf-sites (parse-deck-string "Challenger" all-elf-sites))
-          fallen-sites (into elf-sites (parse-deck-string "Challenger" all-fallen-sites))
-          balrog-sites (into fallen-sites (parse-deck-string "Challenger" all-balrog-sites))
-          minion-sites (into balrog-sites (parse-deck-string "Challenger" all-minion-sites))
-          wizard-sites (into minion-sites (parse-deck-string "Challenger" all-wizard-sites))
-          regions (into wizard-sites (parse-deck-string "Challenger" all-regions))]
+          cards (lookup-deck combed)
+          dual-sites (parse-deck-string all-dual-sites)
+          dwarf-sites (into dual-sites (parse-deck-string all-dwarf-sites))
+          elf-sites (into dwarf-sites (parse-deck-string all-elf-sites))
+          fallen-sites (into elf-sites (parse-deck-string all-fallen-sites))
+          balrog-sites (into fallen-sites (parse-deck-string all-balrog-sites))
+          minion-sites (into balrog-sites (parse-deck-string all-minion-sites))
+          wizard-sites (into minion-sites (parse-deck-string all-wizard-sites))
+          regions (into wizard-sites (parse-deck-string all-regions))]
       (assoc deck :resources resources :hazards hazards :sideboard sideboard
                   :characters characters :pool pool :fwsb fwsb :cards cards
                   :sites regions
@@ -706,37 +584,37 @@
 
 (defn handle-resource-edit [owner]
   (let [text (.-value (om/get-node owner "resource-edit"))
-        cards (parse-deck-string nil text)]
+        cards (parse-deck-string text)]
     (om/set-state! owner :resource-edit text)
     (om/set-state! owner [:deck :resources] cards)))
 
 (defn handle-hazard-edit [owner]
   (let [text (.-value (om/get-node owner "hazard-edit"))
-        cards (parse-deck-string nil text)]
+        cards (parse-deck-string text)]
     (om/set-state! owner :hazard-edit text)
     (om/set-state! owner [:deck :hazards] cards)))
 
 (defn handle-character-edit [owner]
   (let [text (.-value (om/get-node owner "character-edit"))
-        cards (parse-deck-string nil text)]
+        cards (parse-deck-string text)]
     (om/set-state! owner :character-edit text)
     (om/set-state! owner [:deck :characters] cards)))
 
 (defn handle-pool-edit [owner]
   (let [text (.-value (om/get-node owner "pool-edit"))
-        cards (parse-deck-string nil text)]
+        cards (parse-deck-string text)]
     (om/set-state! owner :pool-edit text)
     (om/set-state! owner [:deck :pool] cards)))
 
 (defn handle-sideboard-edit [owner]
   (let [text (.-value (om/get-node owner "sideboard-edit"))
-        cards (parse-deck-string nil text)]
+        cards (parse-deck-string text)]
     (om/set-state! owner :sideboard-edit text)
     (om/set-state! owner [:deck :sideboard] cards)))
 
 (defn handle-fwsb-edit [owner]
   (let [text (.-value (om/get-node owner "fwsb-edit"))
-        cards (parse-deck-string nil text)]
+        cards (parse-deck-string text)]
     (om/set-state! owner :fwsb-edit text)
     (om/set-state! owner [:deck :fwsb] cards)))
 
@@ -783,18 +661,6 @@
   (om/set-state! owner :delete false)
   (-> owner (om/get-node "viewport") js/$ (.removeClass "delete")))
 
-(defn ready-for-game
-  []
-  (go (let [ctrds (<! ctrds-channel)
-            ctcks (process-ctcks (:json (<! (GET (str "/data/decks")))))]
-        (load-ctcks ctcks)
-        (>! ctrds-channel ctrds)))
-
-  (go (let [chrds (<! chrds-channel)
-            chcks (process-chcks (:json (<! (GET (str "/data/decks")))))]
-        (load-chcks chcks)
-        (>! chrds-channel chrds))))
-
 (defn handle-delete [cursor owner]
   (authenticated
    (fn [user]
@@ -804,7 +670,6 @@
        (do
          (om/transact! cursor :decks (fn [ds] (remove #(= deck %) ds)))
          (om/set-state! owner :deck (first (sort-by :date > (:decks @cursor))))
-         (ready-for-game)
          (end-delete owner))))))
 
 (defn new-deck [alignment owner]
@@ -859,35 +724,26 @@
                      (if (contains? card :art)
                        (conj card-id {:art (:art card)})
                        card-id)))
-            cards (for [card (:cards deck) :when (get-in card [:card :title])]
-                    (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
-                          card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
-                      (if (contains? card :art)
-                        (conj card-id {:art (:art card)})
-                        card-id)))
             ;; only include keys that are relevant
-            identity (select-keys (:identity deck) [:title :side :alignment :code])
+            identity (select-keys (:identity deck) [:title :alignment :code])
             identity-art (if (contains? (:identity deck) :art)
                            (do
                              (conj identity {:art (:art (:identity deck))}))
                            identity)
             data (assoc deck :resources resources :hazards hazards :sideboard sideboard
-                             :characters characters :pool pool :fwsb fwsb :cards cards
+                             :characters characters :pool pool :fwsb fwsb
                              :identity identity-art)]
         (try (js/ga "send" "event" "deckbuilder" "save") (catch js/Error e))
         (go (let [new-id (get-in (<! (POST "/data/decks/" data :json)) [:json :_id])
                   new-deck (if (:_id deck) deck (assoc deck :_id new-id))
-                  all-decks (process-decks (:json (<! (GET (str "/data/decks")))))
-                  all-ctcks (process-ctcks (:json (<! (GET (str "/data/decks")))))
-                  all-chcks (process-chcks (:json (<! (GET (str "/data/decks")))))]
+                  all-decks (process-decks (:json (<! (GET (str "/data/decks")))))]
               (om/update! cursor :decks (conj decks new-deck))
               (om/set-state! owner :deck new-deck)
-              (load-ctcks all-ctcks)
-              (load-chcks all-chcks)
               (load-decks all-decks)
               ))))))
 
 (defn clear-deck-stats [cursor owner]
+  "Might need work clearing EVERYTHING"
   (authenticated
     (fn [user]
       (let [deck (dissoc (om/get-state owner :deck) :stats)
@@ -906,7 +762,7 @@
                    {:qty (:qty card) :card (get-in card [:card :title])})
             cards (for [card (:cards deck) :when (get-in card [:card :title])]
                     {:qty (:qty card) :card (get-in card [:card :title])})            ;; only include keys that are relevant, currently title and alignment, includes code for future-proofing
-            identity (select-keys (:identity deck) [:title :side :alignment :code])
+            identity (select-keys (:identity deck) [:title :alignment :code])
             data (assoc deck :resources resources :hazards hazards :sideboard sideboard
                              :characters characters :pool pool :fwsb fwsb :cards cards
                              :identity identity)]
@@ -1055,7 +911,7 @@
   (.preventDefault event)
   (let [qty (js/parseInt (om/get-state owner :quantity))
         card (nth (om/get-state owner :matches) (om/get-state owner :selected))
-        best-card (lookup (:alignment card) card)]
+        best-card (lookup card)]
     (if (js/isNaN qty)
       (om/set-state! owner :quantity 3)
       (let [max-qty (or (:limited best-card) 3)
@@ -1563,15 +1419,5 @@
           decks (process-decks (:json (<! (GET (str "/data/decks")))))]
       (load-decks decks)
       (>! cards-channel cards)))
-
-(go (let [ctrds (<! ctrds-channel)
-          ctcks (process-ctcks (:json (<! (GET (str "/data/decks")))))]
-      (load-ctcks ctcks)
-      (>! ctrds-channel ctrds)))
-
-(go (let [chrds (<! chrds-channel)
-          chcks (process-chcks (:json (<! (GET (str "/data/decks")))))]
-      (load-chcks chcks)
-      (>! chrds-channel chrds)))
 
 (om/root deck-builder app-state {:target (. js/document (getElementById "deckbuilder"))})

@@ -8,8 +8,6 @@
             [meccg.ajax :refer [GET]]))
 
 (def cards-channel (chan))
-(def ctrds-channel (chan))
-(def chrds-channel (chan))
 (def pub-chan (chan))
 (def notif-chan (pub pub-chan :topic))
 
@@ -21,16 +19,6 @@
       (swap! app-state assoc :cards cards)
       (swap! app-state assoc :cards-loaded true)
       (put! cards-channel cards)))
-
-(go (let [ctrds (sort-by :title (:json (<! (GET "/data/ctrds"))))]
-      (swap! app-state assoc :ctrds ctrds)
-      (swap! app-state assoc :ctrds-loaded true)
-      (put! ctrds-channel ctrds)))
-
-(go (let [chrds (sort-by :title (:json (<! (GET "/data/chrds"))))]
-      (swap! app-state assoc :chrds chrds)
-      (swap! app-state assoc :chrds-loaded true)
-      (put! chrds-channel chrds)))
 
 (defn make-span [text symbol class]
   (.replace text (apply str symbol) (str "<img src='" class "'style=\"width:16px;height:16px;\"></img>")))

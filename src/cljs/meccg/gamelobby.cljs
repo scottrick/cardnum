@@ -10,7 +10,7 @@
             [meccg.gameboard :refer [init-game game-state toast launch-game]]
             [meccg.cardbrowser :refer [image-url] :as cb]
             [meccg.stats :refer [notnum->zero]]
-            [meccg.deckbuilder :refer [deck-status-span deck-status-label process-decks load-decks process-ctcks load-ctcks process-chcks load-chcks num->percent]]))
+            [meccg.deckbuilder :refer [deck-status-span deck-status-label process-decks load-decks num->percent]]))
 
 (def socket-channel (chan))
 (def socket (.connect js/io (str js/iourl "/lobby")))
@@ -139,7 +139,7 @@
       (aset input "value" "")
       (.focus input))))
 
-(defn deckselect-modal [{:keys [gameid games ctcks chcks sets user]} owner opts]
+(defn deckselect-modal [{:keys [gameid games decks sets user]} owner opts]
   (om/component
    (sab/html
     [:div.modal.fade#deck-select
@@ -150,8 +150,7 @@
              alignment (:alignment (some #(when (= (:user %) user) %) players))
              side (:side (some #(when (= (:user %) user) %) players))]
          [:div {:data-dismiss "modal"}
-          (if (= side "Challenger")
-            (for [deck (sort-by :date > (filter #(= (get-in % [:identity :alignment]) alignment) chcks))]
+            (for [deck (sort-by :date > (filter #(= (get-in % [:identity :alignment]) alignment) decks))]
               [:div.deckline {:on-click #(send {:action "deck" :gameid (:gameid @app-state) :deck deck})}
                [:img {:src (image-url (:identity deck))
                       :alt (get-in deck [:identity :title] "")}]
@@ -160,16 +159,6 @@
                [:div.float-right (-> (:date deck) js/Date. js/moment (.format "MMM Do YYYY"))]
                [:p (get-in deck [:identity :title])]
                ])
-            (for [deck (sort-by :date > (filter #(= (get-in % [:identity :alignment]) alignment) ctcks))]
-              [:div.deckline {:on-click #(send {:action "deck" :gameid (:gameid @app-state) :deck deck})}
-               [:img {:src (image-url (:identity deck))
-                      :alt (get-in deck [:identity :title] "")}]
-               [:div.float-right (deck-status-span sets deck)]
-               [:h4 (:name deck)]
-               [:div.float-right (-> (:date deck) js/Date. js/moment (.format "MMM Do YYYY"))]
-               [:p (get-in deck [:identity :title])]
-               ])
-            )
           ])]]])))
 
 (defn faction-icon

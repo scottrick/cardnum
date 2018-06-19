@@ -45,22 +45,22 @@
   [{:keys [players gameid spectatorhands room] :as game}]
   (let [contestant (some #(when (= (:side %) "Contestant") %) players)
         challenger (some #(when (= (:side %) "Challenger") %) players)
-        contestant-pool (create-pool (:deck contestant) (:user contestant))
-        challenger-pool (create-pool (:deck challenger) (:user challenger))
-        contestant-deck (create-deck (:deck contestant) (:user contestant))
-        challenger-deck (create-deck (:deck challenger) (:user challenger))
-        contestant-board (create-board (:deck contestant) (:user contestant))
-        challenger-board (create-board (:deck challenger) (:user challenger))
-        contestant-sites (create-sites (:deck contestant) (:user contestant))
-        challenger-sites (create-sites (:deck challenger) (:user challenger))
+        contestant-pool (create-pool "Contestant" (:deck contestant) (:user contestant))
+        challenger-pool (create-pool "Challenger" (:deck challenger) (:user challenger))
+        contestant-deck (create-deck "Contestant" (:deck contestant) (:user contestant))
+        challenger-deck (create-deck "Challenger" (:deck challenger) (:user challenger))
+        contestant-board (create-board "Contestant" (:deck contestant) (:user contestant))
+        challenger-board (create-board "Challenger" (:deck challenger) (:user challenger))
+        contestant-sites (create-sites "Contestant" (:deck contestant) (:user contestant))
+        challenger-sites (create-sites "Challenger" (:deck challenger) (:user challenger))
         contestant-deck-id (get-in contestant [:deck :_id])
         challenger-deck-id (get-in challenger [:deck :_id])
         contestant-options (get-in contestant [:options])
         challenger-options (get-in challenger [:options])
-        contestant-identity (assoc (or (get-in contestant [:deck :identity]) {:side "Contestant" :type "Identity"}) :cid (make-cid))
-        contestant-identity (assoc contestant-identity :implementation (card-implemented contestant-identity))
+        contestant-identity (assoc (or (get-in contestant [:deck :identity]) {:type "Identity"}) :cid (make-cid))
+        contestant-identity (assoc contestant-identity :side "Contestant" :implementation (card-implemented contestant-identity))
         challenger-identity (assoc (or (get-in challenger [:deck :identity]) {:side "Challenger" :type "Identity"}) :cid (make-cid))
-        challenger-identity (assoc challenger-identity :implementation (card-implemented challenger-identity))
+        challenger-identity (assoc challenger-identity :side "Challenger" :implementation (card-implemented challenger-identity))
         state (atom
                 {:gameid gameid :log [] :active-player :challenger :end-turn true
                  :room room
@@ -134,11 +134,11 @@
 (defn create-pool
   "Creates a the character pool for the character draft from the pool
   section of the deck.  These will be loaded into the hand"
-  ([deck] (create-pool deck nil))
-  ([deck user]
+  ([side deck] (create-pool side deck nil))
+  ([side deck user]
    (mapcat #(map (fn [card]
                    (let [server-card (or (server-card (:ImageName card) user) card)
-                         c (assoc (make-card server-card) :art (:art card))]
+                         c (assoc (make-card server-card) :side side :art (:art card))]
                      (if-let [init (:init (card-def c))] (merge c init) c)))
                  (repeat (:qty %) (assoc (:card %) :art (:art %))))
            (vec (:pool deck)))))
@@ -146,11 +146,11 @@
 (defn create-deck
   "Creates a shuffled draw deck (R&D/Stack) from the given list of cards.
   Loads card data from server-side @all-cards map if available."
-  ([deck] (create-deck deck nil))
-  ([deck user]
+  ([side deck] (create-deck side deck nil))
+  ([side deck user]
    (shuffle (mapcat #(map (fn [card]
                             (let [server-card (or (server-card (:ImageName card) user) card)
-                                  c (assoc (make-card server-card) :art (:art card))]
+                                  c (assoc (make-card server-card) :side side :art (:art card))]
                               (if-let [init (:init (card-def c))] (merge c init) c)))
                           (repeat (:qty %) (assoc (:card %) :art (:art %))))
                     (shuffle (vec (:cards deck)))))))
@@ -158,11 +158,11 @@
 (defn create-board
   "Creates a shuffled draw deck (R&D/Stack) from the given list of cards.
   Loads card data from server-side @all-cards map if available."
-  ([deck] (create-board deck nil))
-  ([deck user]
+  ([side deck] (create-board side deck nil))
+  ([side deck user]
    (mapcat #(map (fn [card]
                    (let [server-card (or (server-card (:ImageName card) user) card)
-                         c (assoc (make-card server-card) :art (:art card))]
+                         c (assoc (make-card server-card) :side side :art (:art card))]
                      (if-let [init (:init (card-def c))] (merge c init) c)))
                  (repeat (:qty %) (assoc (:card %) :art (:art %))))
            (vec (:sideboard deck)))))
@@ -170,11 +170,11 @@
 (defn create-sites
   "Creates a shuffled draw deck (R&D/Stack) from the given list of cards.
   Loads card data from server-side @all-cards map if available."
-  ([deck] (create-sites deck nil))
-  ([deck user]
+  ([side deck] (create-sites side deck nil))
+  ([side deck user]
    (mapcat #(map (fn [card]
                    (let [server-card (or (server-card (:ImageName card) user) card)
-                         c (assoc (make-card server-card) :art (:art card))]
+                         c (assoc (make-card server-card) :side side :art (:art card))]
                      (if-let [init (:init (card-def c))] (merge c init) c)))
                  (repeat (:qty %) (assoc (:card %) :art (:art %))))
            (vec (:sites deck)))))
