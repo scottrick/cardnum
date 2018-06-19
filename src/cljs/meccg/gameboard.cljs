@@ -1081,6 +1081,13 @@
                       cards)
          (om/build label cards {:opts {:name name}})])))))
 
+(defn score [cursor owner opts]
+  (om/component
+    (sab/html
+      (let [fn (or (:fn opts) count)]
+        [:div.header {:class "darkbg"}
+         (str (:name opts))]))))
+
 (defn scored-view [{:keys [scored] :as cursor}]
   (om/component
    (sab/html
@@ -1090,7 +1097,7 @@
                       [:div.card-wrapper {:style {:left (* (/ 128 (dec size)) i)}}
                        [:div (om/build card-view card)]])
                     scored)
-       (om/build label scored {:opts {:name "Marshalling Point Pile"}})]))))
+       (om/build score scored {:opts {:name "Marshalling Point Pile"}})]))))
 
 (defn controls [key]
   (sab/html
@@ -1100,44 +1107,41 @@
 
 (defmulti stats-view #(get-in % [:identity :side]))
 
-(defmethod stats-view "Challenger" [{:keys [user click credit run-credit memory link tag
-                                        brain-damage agenda-point tagged hand-size-base
-                                        hand-size-modification active]} owner]
+(defmethod stats-view "Challenger" [{:keys [user free_gi char_mp ally_mp item_mp fact_mp kill_mp misc_mp
+                                            total_mp hand-size-base hand-size-modification active]} owner]
   (om/component
    (sab/html
     (let [me? (= (:side @game-state) :challenger)]
       [:div.panel.blue-shade.stats {:class (when active "active-player")}
        [:h4.ellipsis (om/build avatar user {:opts {:size 22}}) (:username user)]
-       [:div (str click " Click" (if (not= click 1) "s" "")) (when me? (controls :click))]
-       [:div (str credit " Credit" (if (not= credit 1) "s" "")
-                  (when (pos? run-credit)
-                    (str " (" run-credit " for run)")))
-        (when me? (controls :credit))]
-       [:div (str memory " Memory Unit" (if (not= memory 1) "s" "")) (when (neg? memory) [:div.warning "!"]) (when me? (controls :memory))]
-       [:div (str link " Link Strength") (when me? (controls :link))]
-       [:div (str agenda-point " Agenda Point" (when (not= agenda-point 1) "s"))
-        (when me? (controls :agenda-point))]
-       [:div (str tag " Tag" (if (not= tag 1) "s" "")) (when (or (pos? tag) (pos? tagged)) [:div.warning "!"]) (when me? (controls :tag))]
-       [:div (str brain-damage " Brain Damage")
-        (when me? (controls :brain-damage))]
+       [:div (str free_gi " Free G.I.") (when me? (controls :free_gi))]
+       [:div (str total_mp " Total MP" (if (not= total_mp 1) "s" "")) (when me? (controls :total_mp))]
+       [:div (str char_mp " Character MP" (if (not= char_mp 1) "s" "")) (when me? (controls :char_mp))]
+       [:div (str ally_mp " Ally MP" (if (not= ally_mp 1) "s" "")) (when me? (controls :ally_mp))]
+       [:div (str item_mp " Item MP" (if (not= item_mp 1) "s" "")) (when me? (controls :item_mp))]
+       [:div (str fact_mp " Faction MP" (if (not= fact_mp 1) "s" "")) (when me? (controls :fact_mp))]
+       [:div (str kill_mp " Kill MP" (if (not= kill_mp 1) "s" "")) (when me? (controls :kill_mp))]
+       [:div (str misc_mp " Misc MP" (if (not= misc_mp 1) "s" "")) (when me? (controls :misc_mp))]
        [:div (str (+ hand-size-base hand-size-modification) " Max hand size")
         (when me? (controls :hand-size-modification))]]))))
 
-(defmethod stats-view "Contestant" [{:keys [user click credit agenda-point bad-publicity has-bad-pub
-                                      hand-size-base hand-size-modification active]} owner]
+(defmethod stats-view "Contestant" [{:keys [user free_gi char_mp ally_mp item_mp fact_mp kill_mp misc_mp
+                                            total_mp hand-size-base hand-size-modification active]} owner]
   (om/component
-   (sab/html
-    (let [me? (= (:side @game-state) :contestant)]
-      [:div.panel.blue-shade.stats {:class (when active "active-player")}
-       [:h4.ellipsis (om/build avatar user {:opts {:size 22}}) (:username user)]
-       [:div (str click " Click" (if (not= click 1) "s" "")) (when me? (controls :click))]
-       [:div (str credit " Credit" (if (not= credit 1) "s" "")) (when me? (controls :credit))]
-       [:div (str agenda-point " Agenda Point" (when (not= agenda-point 1) "s"))
-        (when me? (controls :agenda-point))]
-       [:div (str (+ bad-publicity has-bad-pub) " Bad Publicity")
-        (when me? (controls :bad-publicity))]
-       [:div (str (+ hand-size-base hand-size-modification) " Max hand size")
-        (when me? (controls :hand-size-modification))]]))))
+    (sab/html
+      (let [me? (= (:side @game-state) :contestant)]
+        [:div.panel.blue-shade.stats {:class (when active "active-player")}
+         [:h4.ellipsis (om/build avatar user {:opts {:size 22}}) (:username user)]
+         [:div (str free_gi " Free G.I.") (when me? (controls :free_gi))]
+         [:div (str total_mp " Total MP" (if (not= total_mp 1) "s" "")) (when me? (controls :total_mp))]
+         [:div (str char_mp " Character MP" (if (not= char_mp 1) "s" "")) (when me? (controls :char_mp))]
+         [:div (str ally_mp " Ally MP" (if (not= ally_mp 1) "s" "")) (when me? (controls :ally_mp))]
+         [:div (str item_mp " Item MP" (if (not= item_mp 1) "s" "")) (when me? (controls :item_mp))]
+         [:div (str fact_mp " Faction MP" (if (not= fact_mp 1) "s" "")) (when me? (controls :fact_mp))]
+         [:div (str kill_mp " Kill MP" (if (not= kill_mp 1) "s" "")) (when me? (controls :kill_mp))]
+         [:div (str misc_mp " Misc MP" (if (not= misc_mp 1) "s" "")) (when me? (controls :misc_mp))]
+         [:div (str (+ hand-size-base hand-size-modification) " Max hand size")
+          (when me? (controls :hand-size-modification))]]))))
 
 (defn server-view [{:keys [server central-view run] :as cursor} owner opts]
   (om/component
@@ -1317,7 +1321,7 @@
          (drop-area (:side @game-state) map-name
                     {:on-click #(-> (om/get-node owner map-menu-ref) js/$ .toggle)})
          (facedown-card "Locations")
-         (om/build label sites {:opts {:name map-name}})
+         (om/build label sites {:opts {:name "Sites"}})
          (when (= (:side @game-state) side)
            [:div.panel.blue-shade.menu {:ref map-menu-ref}
             [:div {:on-click #(show-map % owner reg-ref)} "Regions"]
