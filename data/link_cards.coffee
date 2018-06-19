@@ -43,6 +43,24 @@ get_cards = (callback) ->
     , []
     callback(null, 0)
 
+get_chrds = (callback) ->
+  db.collection('chrds').find().toArray (err, chrds) ->
+    throw(err) if err
+    card_count = chrds.reduce (acc, card) ->
+      if acc[card.title]
+        acc[card.title] += 1
+      else
+        acc[card.title] = 1
+      acc
+    , {}
+    names = Object.keys(card_count)
+    duplicate_titles = names.reduce (acc, card) ->
+      if card_count[card] > 1
+        acc.push card
+      acc
+    , []
+    callback(null, 0)
+
 zip = () ->
   lengthArray = (arr.length for arr in arguments)
   length = Math.min(lengthArray...)
@@ -77,4 +95,32 @@ link_cards = (callback) ->
     throw(err) if err
     callback(null, 0)
 
-async.series [get_cycles, get_cards, link_cards, () -> db.close()]
+link_chrds = (callback) ->
+  console.log("Found " + duplicate_titles.length + " duplicated cards")
+  async.each duplicate_titles, (title, inner_callback) ->
+    db.collection('chrds').find({title: title}).toArray (err, matches) ->
+      throw(err) if err
+      matches = matches.sort (a, b) ->
+        cycleMap[b.cycle_code].position - cycleMap[a.cycle_code].position
+
+      sorted_matches = matches.slice 0
+      matches.shift()
+      tuples = zip(sorted_matches, matches)
+
+      async.each tuples, ([new_card, old_card], tuple_callback) ->
+        console.log("Card: " + new_card.title + ": " + new_card.setname + ", " + old_card.setname)
+        db.collection('chrds').update {code: new_card.code}, {'$set': {replaces: old_card.code}},
+          (err, result) ->
+            throw(err) if err
+            db.collection('chrds').update {code: old_card.code}, {'$set': {replaced_by: new_card.code}},
+              (err, result) ->
+                throw(err) if err
+                tuple_callback()
+      , (tuple_err) ->
+        throw(tuple_err) if tuple_err
+        inner_callback()
+  , (err) ->
+    throw(err) if err
+    callback(null, 0)
+
+async.series [get_cycles, get_cards, link_cards, get_chrds, link_chrds, () -> db.close()]

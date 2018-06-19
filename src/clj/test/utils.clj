@@ -31,10 +31,10 @@
   {:identity identity
    :deck (map #(if (string? %) (qty % 1) %) deck)})
 
-(defn default-corp
-  ([] (default-corp [(qty "Hedge Fund" 3)]))
+(defn default-contestant
+  ([] (default-contestant [(qty "Hedge Fund" 3)]))
   ([deck] (make-deck "Custom Biotics: Engineered for Success" deck)))
 
-(defn default-runner
-  ([] (default-runner [(qty "Sure Gamble" 3)]))
+(defn default-challenger
+  ([] (default-challenger [(qty "Sure Gamble" 3)]))
   ([deck] (make-deck "The Professor: Keeper of Knowledge" deck)))

@@ -1,6 +1,6 @@
 (in-ns 'game.core)
 
-(declare ice-index parse-command show-error-toast)
+(declare character-index parse-command show-error-toast)
 
 (defn say
   "Prints a message to the log as coming from the given username. The special user string
@@ -79,16 +79,16 @@
   in/protecting a server, facedown, or hosted."
   ([state card] (card-str state card nil))
   ([state card {:keys [visible] :as args}]
-  (str (if (card-is? card :side :corp)
-         ; Corp card messages
-         (str (if (or (rezzed? card) visible) (:title card) (if (ice? card) "ICE" "a card"))
+  (str (if (card-is? card :side :contestant)
+         ; Contestant card messages
+         (str (if (or (rezzed? card) visible) (:title card) (if (character? card) "Character" "a card"))
               ; Hosted cards do not need "in server 1" messages, host has them
               (if-not (:host card)
-                (str (if (ice? card) " protecting " " in ")
-                     ;TODO add naming of scoring area of corp/runner
+                (str (if (character? card) " protecting " " in ")
+                     ;TODO add naming of scoring area of contestant/challenger
                      (zone->name (second (:zone card)))
-                     (if (ice? card) (str " at position " (ice-index state card))))))
-         ; Runner card messages
+                     (if (character? card) (str " at position " (character-index state card))))))
+         ; Challenger card messages
          (if (or (:facedown card) visible) "a facedown card" (:title card)))
        (if (:host card) (str " hosted on " (card-str state (:host card)))))))
 
@@ -96,9 +96,11 @@
   "Gets a string representation for the given zone."
   [side zone]
   (match (vec zone)
-         [:hand] (if (= side "Runner") "Grip" "HQ")
-         [:discard] (if (= side "Runner") "Heap" "Archives")
-         [:deck] (if (= side "Runner") "Stack" "R&D")
+         [:hand] (if (= side "Challenger") "Grip" "HQ")
+         [:discard] (if (= side "Challenger") "Heap" "Archives")
+         [:deck] (if (= side "Challenger") "Stack" "R&D")
+         [:sideboard] (if (= side "Challenger") "Ch-board" "Co-board")
+         [:sites] (if (= side "Challenger") "Sites2" "Sites")
          [:rig _] "Rig"
          [:servers :hq _] "the root of HQ"
          [:servers :rd _] "the root of R&D"
@@ -127,7 +129,7 @@
                         c-type (cond (= 1 (count existing)) (first (keys existing))
                                      (can-be-advanced? target) :advance-counter
                                      (and (is-type? target "Agenda") (is-scored? target)) :agenda
-                                     (and (card-is? target :side :runner) (has-subtype? target "Virus")) :virus)
+                                     (and (card-is? target :side :challenger) (has-subtype? target "Virus")) :virus)
                         advance (= :advance-counter c-type)]
                     (cond advance (set-adv-counter state side target value)
                           (not c-type) (toast state side (str "Could not infer what counter type you mean. Please specify one manually, by typing "
@@ -143,9 +145,9 @@
 (defn command-facedown [state side]
   (resolve-ability state side
                    {:prompt "Select a card to install facedown"
-                    :choices {:req #(and (= (:side %) "Runner")
+                    :choices {:req #(and (= (:side %) "Challenger")
                                          (in-hand? %))}
-                    :effect (effect (runner-install target {:facedown true}))}
+                    :effect (effect (challenger-install target {:facedown true}))}
                    {:title "/faceup command"} nil))
 
 (defn command-counter [state side args]
@@ -174,7 +176,7 @@
   (resolve-ability state side
     {:optional {:prompt "Rez all cards and turn cards in archives faceup?"
                 :yes-ability {:effect (req
-                                        (swap! state update-in [:corp :discard] #(map (fn [c] (assoc c :seen true)) %))
+                                        (swap! state update-in [:contestant :discard] #(map (fn [c] (assoc c :seen true)) %))
                                         (doseq [c (all-installed state side)]
                                           (when-not (:rezzed c)
                                             (rez state side c {:ignore-cost :all-costs :force true}))))}}}
@@ -182,6 +184,9 @@
 
 (defn command-roll [state side value]
   (system-msg state side (str "rolls a " value " sided die and rolls a " (inc (rand-int value)))))
+
+(defn basic-roll [state side]
+  (system-msg state side (str "rolls a roll-" (inc (rand-int 6)) "roll-" (inc (rand-int 6)))))
 
 (defn command-close-prompt [state side]
   (when-let [fprompt (-> @state side :prompt first)]
@@ -216,10 +221,10 @@
           "/discard"    #(toast %1 %2 "/discard number takes the format #n")
           "/discard-random" #(move %1 %2 (rand-nth (get-in @%1 [%2 :hand])) :discard)
           "/draw"       #(draw %1 %2 (max 0 value))
-          "/end-run"    #(when (= %2 :corp) (end-run %1 %2))
+          "/end-run"    #(when (= %2 :contestant) (end-run %1 %2))
           "/error"      #(show-error-toast %1 %2)
           "/handsize"   #(swap! %1 assoc-in [%2 :hand-size-modification] (- (max 0 value) (:hand-size-base %2)))
-          "/jack-out"   #(when (= %2 :runner) (jack-out %1 %2 nil))
+          "/jack-out"   #(when (= %2 :challenger) (jack-out %1 %2 nil))
           "/link"       #(swap! %1 assoc-in [%2 :link] (max 0 value))
           "/memory"     #(swap! %1 assoc-in [%2 :memory] value)
           "/move-bottom"  #(resolve-ability %1 %2
@@ -233,45 +238,64 @@
                                                           (move %1 %2 c :hand)))
                                            :choices {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/move-hand command"} nil)
-          "/psi"        #(when (= %2 :corp) (psi-game %1 %2
+          "/move-site"  #(resolve-ability %1 %2
+                                          {:prompt "Select a site to move to your sites"
+                                           :effect (req (let [c (deactivate %1 %2 target)]
+                                                          (move %1 %2 c :sites)))
+                                           :choices {:req (fn [t] (card-is? t :side %2))}}
+                                          {:title "/move-site command"} nil)
+          "/move-sb"  #(resolve-ability %1 %2
+                                          {:prompt "Select a site to move to your sideboard"
+                                           :effect (req (let [c (deactivate %1 %2 target)]
+                                                          (move %1 %2 c :sideboard)))
+                                           :choices {:req (fn [t] (card-is? t :side %2))}}
+                                          {:title "/move-sb command"} nil)
+          "/psi"        #(when (= %2 :contestant) (psi-game %1 %2
                                                       {:title "/psi command" :side %2}
                                                       {:equal  {:msg "resolve equal bets effect"}
                                                        :not-equal {:msg "resolve unequal bets effect"}}))
-          "/rez"        #(when (= %2 :corp)
+          "/rez"        #(when (= %2 :contestant)
                            (resolve-ability %1 %2
                                             {:effect (effect (rez target {:ignore-cost :all-costs :force true}))
                                              :choices {:req (fn [t] (card-is? t :side %2))}}
                                             {:title "/rez command"} nil))
-          "/rez-all"    #(when (= %2 :corp) (command-rezall %1 %2 value))
+          "/rez-all"    #(when (= %2 :contestant) (command-rezall %1 %2 value))
           "/rfg"        #(resolve-ability %1 %2
                                           {:prompt "Select a card to remove from the game"
                                            :effect (req (let [c (deactivate %1 %2 target)]
                                                           (move %1 %2 c :rfg)))
                                            :choices {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/rfg command"} nil)
-          "/facedown"   #(when (= %2 :runner)
+          "/score"      #(resolve-ability %1 %2
+                                          {:prompt "Select a card to score"
+                                           :effect (req (let [c  target]
+                                                          (move %1 %2 c :scored)))
+                                           :choices {:req (fn [t] true)}}
+                                          {:title "/score command"} nil)
+          "/facedown"   #(when (= %2 :challenger)
                            (command-facedown %1 %2))
           "/roll"       #(command-roll %1 %2 value)
+          "/r"          #(basic-roll %1 %2)
           "/tag"        #(swap! %1 assoc-in [%2 :tag] (max 0 value))
-          "/take-brain" #(when (= %2 :runner) (damage %1 %2 :brain (max 0 value)))
-          "/take-meat"  #(when (= %2 :runner) (damage %1 %2 :meat  (max 0 value)))
-          "/take-net"   #(when (= %2 :runner) (damage %1 %2 :net   (max 0 value)))
-          "/trace"      #(when (= %2 :corp) (corp-trace-prompt %1
+          "/take-brain" #(when (= %2 :challenger) (damage %1 %2 :brain (max 0 value)))
+          "/take-meat"  #(when (= %2 :challenger) (damage %1 %2 :meat  (max 0 value)))
+          "/take-net"   #(when (= %2 :challenger) (damage %1 %2 :net   (max 0 value)))
+          "/trace"      #(when (= %2 :contestant) (contestant-trace-prompt %1
                                                                {:title "/trace command" :side %2}
                                                                {:base (max 0 value)
                                                                 :msg "resolve successful trace effect"}))
           nil)))))
 
-(defn corp-install-msg
+(defn contestant-install-msg
   "Gets a message describing where a card has been installed from. Example: Interns. "
   [card]
-  (str "install " (if (:seen card) (:title card) "an unseen card") " from " (name-zone :corp (:zone card))))
+  (str "install " (if (:seen card) (:title card) "an unseen card") " from " (name-zone :contestant (:zone card))))
 
 (defn turn-message
   "Prints a message for the start or end of a turn, summarizing credits and cards in hand."
   [state side start-of-turn]
   (let [pre (if start-of-turn "started" "is ending")
-        hand (if (= side :runner) "their Grip" "HQ")
+        hand (if (= side :challenger) "their Grip" "HQ")
         cards (count (get-in @state [side :hand]))
         credits (get-in @state [side :credit])
         text (str pre " their turn " (:turn @state) " with " credits " [Credit] and " cards " cards in " hand)]

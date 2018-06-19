@@ -40,7 +40,7 @@ lobbyUpdate = false
 lobbyUpdates = {"create" : {}, "update" : {}, "delete" : {}}
 
 swapSide = (side) ->
-  if side is "Corp" then "Runner" else "Corp"
+  if side is "Contestant" then "Challenger" else "Contestant"
 
 refreshLobby = (type, gameid) ->
   lobbyUpdate = true
@@ -87,7 +87,7 @@ removePlayer = (socket) ->
 rejoinGame = (socket, gameid, user, options) ->
   game = games[gameid]
   if game and game.started and game.players.length < 2
-    side = if game.players.length is 1 then swapSide(game.players[0].side) else "Corp"
+    side = if game.players.length is 1 then swapSide(game.players[0].side) else "Contestant"
     user.id = socket.id
     game.players.push(user)
     # Replace the game end player list with the new list
@@ -98,11 +98,11 @@ rejoinGame = (socket, gameid, user, options) ->
     refreshLobby("update", gameid)
     requester.send(JSON.stringify({action: "finaluser-del", gameid: socket.gameid}))
 
-joinGame = (socket, gameid, options) ->
+joinGame = (socket, gameid, options, alignment) ->
   game = games[gameid]
   if game and game.players.length < 2
-    side = if game.players.length is 1 then swapSide(game.players[0].side) else "Corp"
-    game.players.push({user: socket.request.user, id: socket.id, side: side, options: options})
+    side = if game.players.length is 1 then swapSide(game.players[0].side) else "Contestant"
+    game.players.push({user: socket.request.user, id: socket.id, side: side, alignment: alignment, options: options})
     socket.join(gameid)
     socket.gameid = gameid
     socket.emit("meccg", {type: "game", gameid: gameid})
@@ -190,11 +190,11 @@ inc_game_start = (user, side, room) ->
     deckID = user['deck-id']
     inc_deck(deckID, "stats.games-started") if deckID
 
-inc_corp_game_start = (user, room) ->
-  inc_game_start(user, "corp", room)
+inc_contestant_game_start = (user, room) ->
+  inc_game_start(user, "contestant", room)
 
-inc_runner_game_start = (user, room) ->
-  inc_game_start(user, "runner", room)
+inc_challenger_game_start = (user, room) ->
+  inc_game_start(user, "challenger", room)
 
 # ZeroMQ
 clojure_hostname = process.env['CLOJURE_HOST'] || "127.0.0.1"
@@ -204,6 +204,10 @@ requester.on 'connect', (fd, ep) ->
   requester_connected = true
   db.collection("cards").find().sort(_id: 1).toArray (err, data) ->
     requester.send(JSON.stringify({action: "initialize", cards: data}))
+  db.collection("ctrds").find().sort(_id: 1).toArray (err, data) ->
+    requester.send(JSON.stringify({action: "initialize", ctrds: data}))
+  db.collection("chrds").find().sort(_id: 1).toArray (err, data) ->
+    requester.send(JSON.stringify({action: "initialize", chrds: data}))
 
 requester.on 'close', (fd,ep) ->
   requester_connected = false
@@ -214,20 +218,20 @@ requester.monitor(500, 0)
 requester.connect("tcp://#{clojure_hostname}:1043")
 
 sendGameResponse = (game, response) ->
-  diffs = response.runnerdiff
+  diffs = response.challengerdiff
 
   for player in game.players
     socket = io.sockets.connected[player.id]
-    if player.side is "Corp"
+    if player.side is "Contestant"
       # The response will either have a diff or a state. we don't actually send both,
       # whichever is null will not be sent over the socket.
       lobby.to(player.id).emit("meccg", {type: response.action,\
-                                             diff: response.corpdiff, \
-                                             state: response.corpstate})
-    else if player.side is "Runner"
+                                             diff: response.contestantdiff, \
+                                             state: response.contestantstate})
+    else if player.side is "Challenger"
       lobby.to(player.id).emit("meccg", {type: response.action, \
-                                             diff: response.runnerdiff, \
-                                             state: response.runnerstate})
+                                             diff: response.challengerdiff, \
+                                             state: response.challengerstate})
   for spect in game.spectators
     lobby.to(spect.id).emit("meccg", {type: response.action,\
                                           diff: response.spectdiff, \
@@ -242,16 +246,14 @@ requester.on 'message', (data) ->
         reason: response.state.reason
         endDate: response.state["end-time"]
         turn: response.state.turn
-        runnerAgenda: response.state.runner["agenda-point"]
-        corpAgenda: response.state.corp["agenda-point"]
       }
       db.collection('gamestats').update {gameid: response.gameid}, {$set: g}, (err) ->
         throw err if err
 
-      if response.state.corp.user and response.state.runner.user # have two users in the game
+      if response.state.contestant.user and response.state.challenger.user # have two users in the game
         room = response.state.room
-        inc_corp_game_start(response.state.corp, room)
-        inc_runner_game_start(response.state.runner, room)
+        inc_contestant_game_start(response.state.contestant, room)
+        inc_challenger_game_start(response.state.challenger, room)
         if response.state.winner # and someone won
           inc_game_win(response.state[response.state.winner], room)
           inc_game_loss(response.state[response.state.loser], room)
@@ -313,7 +315,7 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
           mutespectators: false
           password: if msg.password then crypto.createHash('md5').update(msg.password).digest('hex') else ""
           room: msg.room
-          players: [{user: socket.request.user, id: socket.id, side: msg.side, options: msg.options}]
+          players: [{user: socket.request.user, id: socket.id, side: msg.side, alignment: msg.alignment, options: msg.options}]
           spectators: []
         games[gameid] = game
         socket.join(gameid)
@@ -355,7 +357,8 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
 
         if not game.password or game.password.length is 0 or (msg.password and crypto.createHash('md5').update(msg.password).digest('hex') is game.password)
           fn("join ok")
-          joinGame(socket, msg.gameid, msg.options)
+          if msg.alignment == null then msg.alignment = "Hero"
+          joinGame(socket, msg.gameid, msg.options, msg.alignment)
           socket.broadcast.to(msg.gameid).emit 'meccg',
             type: "say"
             user: "__system__"
@@ -431,7 +434,7 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
       when "reconnect"
         game = games[msg.gameid]
         if game and game.started
-          joinGame(socket, msg.gameid, null)
+          joinGame(socket, msg.gameid, null, msg.alignment)
           requester.send(JSON.stringify({action: "notification", gameid: socket.gameid, text: "#{getUsername(socket)} reconnected."}))
 
       when "say"
@@ -477,17 +480,17 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
           game = games[socket.gameid]
           if game
             if game.players.length is 2
-              corp = if game.players[0].side is "Corp" then game.players[0] else game.players[1]
-              runner = if game.players[0].side is "Runner" then game.players[0] else game.players[1]
+              contestant = if game.players[0].side is "Contestant" then game.players[0] else game.players[1]
+              challenger = if game.players[0].side is "Challenger" then game.players[0] else game.players[1]
               g = {
                 gameid: socket.gameid
                 startDate: (new Date()).toISOString()
                 title: game.title
                 room: game.room
-                corp: corp.user.username
-                runner: runner.user.username
-                corpIdentity: if corp.deck then corp.deck.identity.title else null
-                runnerIdentity: if runner.deck then runner.deck.identity.title else null
+                contestant: contestant.user.username
+                challenger: challenger.user.username
+                contestantIdentity: if contestant.deck then contestant.deck.identity.title else null
+                challengerIdentity: if challenger.deck then challenger.deck.identity.title else null
               }
               db.collection('gamestats').insert g, (err, data) ->
                 console.log(err) if err
@@ -535,11 +538,8 @@ app.set 'port', 1042
 app.set 'ipaddr', "0.0.0.0"
 app.use methodOverride() # provide PUT DELETE
 app.use cookieParser()
-app.use bodyParser.urlencoded(extended: false)
-app.use (req, res, next) ->
-  bodyParser.json() req, res, (err) ->
-    if err then console.log(err)
-    next()
+app.use(bodyParser.json({limit: '50mb'}))
+app.use(bodyParser.urlencoded({limit: '50mb', extended: true}))
 app.use session
   secret: config.salt
   saveUninitialized: false
@@ -895,6 +895,12 @@ app.get '/admin/init', (req, res) ->
   if req.user and req.user.isadmin
     db.collection("cards").find().sort(_id: 1).toArray (err, data) ->
       requester.send(JSON.stringify({action: "initialize", cards: data}))
+      res.status(200).send({result: "ok"})
+    db.collection("ctrds").find().sort(_id: 1).toArray (err, data) ->
+      requester.send(JSON.stringify({action: "initialize", ctrds: data}))
+      res.status(200).send({result: "ok"})
+    db.collection("chrds").find().sort(_id: 1).toArray (err, data) ->
+      requester.send(JSON.stringify({action: "initialize", chrds: data}))
       res.status(200).send({result: "ok"})
   else
     res.status(401).send({message: 'Unauthorized'})

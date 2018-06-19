@@ -3,7 +3,7 @@
 (def app-state
   (atom {:active-page "/"
          :user (js->clj js/user :keywordize-keys true)
-         :options (merge {:background "lobby-bg"
+         :options (merge {:background "lobby2-bg"
                           :show-alt-art true
                           :deckstats "always"
                           :gamestats "always"
@@ -14,8 +14,12 @@
                          (:options (js->clj js/user :keywordize-keys true)))
 
          :cards [] :cards-loaded false
+         :ctrds [] :ctrds-loaded false
+         :chrds [] :chrds-loaded false
          :sets [] :mwl [] :cycles []
          :decks [] :decks-loaded false
+         :ctcks [] :ctcks-loaded false
+         :chcks [] :chcks-loaded false
          :stats (:stats (js->clj js/user :keywordize-keys true))
          :games [] :gameid nil :messages []
          :channels {:general []}

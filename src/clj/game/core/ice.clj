@@ -3,41 +3,41 @@
 (declare card-flag?)
 
 ;;; Ice strength functions
-(defn ice-strength-bonus
-  "Increase the strength of the given ice by n. Negative values cause a decrease."
-  [state side n ice]
-  ;; apply the strength bonus if the bonus is positive, or if the ice doesn't have the "can't lower strength" flag
-  (when (or (pos? n) (not (card-flag? ice :cannot-lower-strength true)))
-    (swap! state update-in [:bonus :ice-strength] (fnil #(+ % n) 0))))
+(defn character-strength-bonus
+  "Increase the strength of the given character by n. Negative values cause a decrease."
+  [state side n character]
+  ;; apply the strength bonus if the bonus is positive, or if the character doesn't have the "can't lower strength" flag
+  (when (or (pos? n) (not (card-flag? character :cannot-lower-strength true)))
+    (swap! state update-in [:bonus :character-strength] (fnil #(+ % n) 0))))
 
-(defn ice-strength
-  "Gets the modified strength of the given ice."
+(defn character-strength
+  "Gets the modified strength of the given character."
   [state side {:keys [strength] :as card}]
   (+ (if-let [strfun (:strength-bonus (card-def card))]
        (+ strength (strfun state side (make-eid state) card nil))
        strength)
-     (or (get-in @state [:bonus :ice-strength]) 0)))
+     (or (get-in @state [:bonus :character-strength]) 0)))
 
-(defn update-ice-strength
-  "Updates the given ice's strength by triggering strength events and updating the card."
-  [state side ice]
-  (let [ice (get-card state ice) oldstren (or (:current-strength ice) (:strength ice))]
-    (when (:rezzed ice)
-      (swap! state update-in [:bonus] dissoc :ice-strength)
-      (trigger-event state side :pre-ice-strength ice)
-      (update! state side (assoc ice :current-strength (ice-strength state side ice)))
-      (trigger-event state side :ice-strength-changed (get-card state ice) oldstren))))
+(defn update-character-strength
+  "Updates the given character's strength by triggering strength events and updating the card."
+  [state side character]
+  (let [character (get-card state character) oldstren (or (:current-strength character) (:strength character))]
+    (when (:rezzed character)
+      (swap! state update-in [:bonus] dissoc :character-strength)
+      (trigger-event state side :pre-character-strength character)
+      (update! state side (assoc character :current-strength (character-strength state side character)))
+      (trigger-event state side :character-strength-changed (get-card state character) oldstren))))
 
-(defn update-ice-in-server
-  "Updates all ice in the given server's :ices field."
+(defn update-character-in-server
+  "Updates all character in the given server's :characters field."
   [state side server]
-  (doseq [ice (:ices server)] (update-ice-strength state side ice) ))
+  (doseq [character (:characters server)] (update-character-strength state side character) ))
 
-(defn update-all-ice
-  "Updates all installed ice."
+(defn update-all-character
+  "Updates all installed character."
   [state side]
-  (doseq [server (get-in @state [:corp :servers])]
-    (update-ice-in-server state side (second server))))
+  (doseq [server (get-in @state [:contestant :servers])]
+    (update-character-in-server state side (second server))))
 
 
 ;;; Icebreaker functions.
@@ -80,8 +80,8 @@
    (trigger-event state side :pump-breaker n card)))
 
 ;;; Others
-(defn ice-index
-  "Get the zero-based index of the given ice in its server's list of ice, where index 0
-  is the innermost ice."
-  [state ice]
-  (first (keep-indexed #(when (= (:cid %2) (:cid ice)) %1) (get-in @state (cons :corp (:zone ice))))))
+(defn character-index
+  "Get the zero-based index of the given character in its server's list of character, where index 0
+  is the innermost character."
+  [state character]
+  (first (keep-indexed #(when (= (:cid %2) (:cid character)) %1) (get-in @state (cons :contestant (:zone character))))))

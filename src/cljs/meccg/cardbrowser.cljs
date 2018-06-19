@@ -8,6 +8,8 @@
             [meccg.ajax :refer [GET]]))
 
 (def cards-channel (chan))
+(def ctrds-channel (chan))
+(def chrds-channel (chan))
 (def pub-chan (chan))
 (def notif-chan (pub pub-chan :topic))
 
@@ -19,6 +21,16 @@
       (swap! app-state assoc :cards cards)
       (swap! app-state assoc :cards-loaded true)
       (put! cards-channel cards)))
+
+(go (let [ctrds (sort-by :title (:json (<! (GET "/data/ctrds"))))]
+      (swap! app-state assoc :ctrds ctrds)
+      (swap! app-state assoc :ctrds-loaded true)
+      (put! ctrds-channel ctrds)))
+
+(go (let [chrds (sort-by :title (:json (<! (GET "/data/chrds"))))]
+      (swap! app-state assoc :chrds chrds)
+      (swap! app-state assoc :chrds-loaded true)
+      (put! chrds-channel chrds)))
 
 (defn make-span [text symbol class]
   (.replace text (apply str symbol) (str "<img src='" class "'style=\"width:16px;height:16px;\"></img>")))
@@ -165,20 +177,10 @@
                                           ""
                                           (str ": " (:Secondary card)))]
     [:pre {:dangerouslySetInnerHTML #js {:__html
-                                         (add-symbols
-                                           (add-symbols
-                                             (add-symbols
-                                               (add-symbols
-                                                 (add-symbols
-                                                   (add-symbols
-                                                     (add-symbols
-                                                       (add-symbols
-                                                         (add-symbols
-                                                           (add-symbols
-                                                             (add-symbols
-                                                               (add-symbols
-                                                                 (:text card)))))))))))))}}]]
-   ])
+                                         (loop [new-text (:text card)]
+                                           (if (= new-text (add-symbols new-text))
+                                             new-text
+                                             (recur (add-symbols new-text))))}}]]])
 
 (defn card-view [card owner]
   (reify
@@ -266,7 +268,7 @@
     "Primary" (juxt #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:setname %))
                     #((into {} (map-indexed (fn [i e] [e i]) primary-order)) (:primary %)))
     "Alignment" (juxt #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:setname %))
-                      #((into {} (map-indexed (fn [i e] [e i]) (concat general-alignments ["Neutral"]))) (:side %)))))
+                      #((into {} (map-indexed (fn [i e] [e i]) (concat general-alignments ["Neutral"]))) (:alignment %)))))
 
 (defn selected-set-name [state]
   (-> (:set-filter state)
@@ -280,7 +282,7 @@
       (om/update-state! owner :page inc))))
 
 (defn handle-search [e owner]
-  (doseq [filter [:set-filter :secondary-filter :sort-filter :side-filter]]
+  (doseq [filter [:set-filter :secondary-filter :sort-filter :alignment-filter]]
     (om/set-state! owner filter "All"))
   (om/set-state! owner :search-query (.. e -target -value)))
 
@@ -292,7 +294,7 @@
        :sort-field "Set"
        :set-filter "All"
        :primary-filter "All"
-       :side-filter "All"
+       :alignment-filter "All"
        :secondary-filter "All"
        :page 1
        :filter-ch (chan)
@@ -338,7 +340,7 @@
                                                   (sort-by (juxt :position)
                                                            sets))]
                           ["Primary" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
-                          ["Alignment" :side-filter (alignments (:primary-filter state))]
+                          ["Alignment" :alignment-filter (alignments (:primary-filter state))]
                           ["Secondary" :secondary-filter (secondaries (:primary-filter state))]]]
               [:div
                [:h4 (first filter)]
@@ -361,7 +363,7 @@
                                         (filter #(list-sets (:position %)) (:cards cursor))))]
                           (->> cards
                                (filter-cards (:primary-filter state) :type)
-                               (filter-cards (:side-filter state) :side)
+                               (filter-cards (:alignment-filter state) :alignment)
                                (filter-cards (:secondary-filter state) :Secondary)
                                (filter-title (:search-query state))
                                (sort-by (sort-field (:sort-field state)))

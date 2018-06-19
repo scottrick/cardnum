@@ -22,13 +22,7 @@
   "This combines costs from a number of sources in the game into a single cost per type
   Damage is not merged as it needs to be invidual.  Needs augmention more than net-damage appears"
   [costs]
-  (let [fc (partition 2 (flatten (clean-forfeit costs)))
-        jc (filter #(not= :net-damage (first %)) fc)
-        dc (filter #(= :net-damage (first %)) fc)]
-    (vec (map vec (concat
-      (reduce #(let [k (first %2) value (last %2)]
-                    (assoc %1 k (+ (or (k %1) 0) value)))
-                 {} jc) dc)))))
+  {})
 
 (defn remove-once [pred coll]
   (let [[head tail] (split-with pred coll)]
@@ -73,7 +67,7 @@
   (str (Character/toUpperCase (first string)) (subs string 1)))
 
 (defn costs-to-symbol
-  "Used during steal to print runner prompt for payment"
+  "Used during steal to print challenger prompt for payment"
   [costs]
   (join ", " (map #(let [key (first %) value (last %)]
                      (case key
@@ -81,7 +75,7 @@
                        :click (reduce str (for [i (range value)] "[Click]"))
                        :net-damage (str value " net damage")
                        :mill (str value " card mill")
-                       :hardware (str value " installed hardware")
+                       :hazard (str value " installed hazard")
                        (str value (str key)))) (partition 2 (flatten costs)))))
 
 (defn vdissoc [v n]
@@ -127,8 +121,8 @@
   "Returns true if player has spent at least one click"
   [side state]
   (case side
-    :runner (contains? (into {} (get @state :turn-events)) :runner-spent-click)
-    :corp   (contains? (into {} (get @state :turn-events)) :corp-spent-click)))
+    :challenger (contains? (into {} (get @state :turn-events)) :challenger-spent-click)
+    :contestant   (contains? (into {} (get @state :turn-events)) :contestant-spent-click)))
 
 (defn used-this-turn?
   "Returns true if a card has been used this turn"
@@ -173,17 +167,17 @@
      (str "spends " cost-str " to " verb " "))))
 
 (defn other-side [side]
-  (cond (= side :corp) :runner
-        (= side :runner) :corp))
+  (cond (= side :contestant) :challenger
+        (= side :challenger) :contestant))
 
 (defn side-str
   "Converts kw into str. If str is passed same str is returned."
   [side]
   (cond
-    (= side :corp) "Corp"
-    (= side "Corp") "Corp"
-    (= side :runner) "Runner"
-    (= side "Runner") "Runner"))
+    (= side :contestant) "Contestant"
+    (= side "Contestant") "Contestant"
+    (= side :challenger) "Challenger"
+    (= side "Challenger") "Challenger"))
 
 (defn same-side?
   "Checks if two supplied sides are the same side. Accepts both keyword and str."
@@ -255,7 +249,7 @@
     nil))
 
 (defn type->rig-zone
-  "Converts a runner's card type to a vector zone, e.g. 'Program' -> [:rig :program]"
+  "Converts a challenger's card type to a vector zone, e.g. 'Resource' -> [:rig :resource]"
   [type]
   (vec [:rig (-> type .toLowerCase keyword)]))
 
