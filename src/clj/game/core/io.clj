@@ -145,10 +145,9 @@
 (defn command-facedown [state side]
   (resolve-ability state side
                    {:prompt "Select a card to install facedown"
-                    :choices {:req #(and (= (:side %) "Challenger")
-                                         (in-hand? %))}
+                    :choices {:req #(in-hand? %)}
                     :effect (effect (challenger-install target {:facedown true}))}
-                   {:title "/faceup command"} nil))
+                   {:title "/facedown command"} nil))
 
 (defn command-counter [state side args]
   (if (= 1 (count args))
@@ -250,6 +249,9 @@
                                                           (move %1 %2 c :sideboard)))
                                            :choices {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/move-sb command"} nil)
+          "/re-deck"  #(resolve-ability %1 %2
+                                        {:effect (effect (shuffle-into-deck {} :discard))}
+                                        {:title "/re-deck command"} nil)
           "/psi"        #(when (= %2 :contestant) (psi-game %1 %2
                                                       {:title "/psi command" :side %2}
                                                       {:equal  {:msg "resolve equal bets effect"}
@@ -272,8 +274,7 @@
                                                           (move %1 %2 c :scored)))
                                            :choices {:req (fn [t] true)}}
                                           {:title "/score command"} nil)
-          "/facedown"   #(when (= %2 :challenger)
-                           (command-facedown %1 %2))
+          "/facedown"   #(command-facedown %1 %2)
           "/roll"       #(command-roll %1 %2 value)
           "/r"          #(basic-roll %1 %2)
           "/tag"        #(swap! %1 assoc-in [%2 :tag] (max 0 value))

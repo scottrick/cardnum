@@ -43,41 +43,30 @@
              :content [:p "To use a command, type it in chatbox and press Enter. Some of the commands will bring up a prompt "
                        "requiring you to select something. List of available commands:"
                        [:ul
-                        [:li [:code "/adv-counter n"] " - set advancement counters on a card to n (player's own cards only). Deprecated in favor of " [:code "/counter ad n"]]
-                        [:li [:code "/bp n"] " - Set your bad publicity to n"]
                         [:li [:code "/card-info"] " - display debug info about a card (player's own cards only)"]
                         [:li [:code "/clear-win"] " - requests game to clear the current win state.  Requires both players to request it"]
-                        [:li [:code "/click n"] " - Set your clicks to n"]
                         [:li [:code "/close-prompt"] " - close an active prompt and show the next waiting prompt, or the core click actions"]
                         [:li [:code "/counter n"] " - set counters on a card to n (player's own cards only). Attempts to infer the type of counter to place. If the inference fails, you must use the next command to specify the counter type."]
                         [:li [:code "/counter type n"] " - set the specified counter type on a card to n (player's own cards only). Type must be " [:code "agenda"] ", " [:code "advance"] ", " [:code "credit"] ", " [:code "power"] ", or " [:code "virus"] ". Can be abbreviated as " [:code "ag"] ", "  [:code "ad"] ", "  [:code "c"] ", "  [:code "p"] ", or " [:code "v"] " respectively."]
-                        [:li [:code "/credit n"] " - Set your credits to n"]
                         [:li [:code "/deck #n"] " - Put card number n from your hand on top of your deck"]
                         [:li [:code "/discard #n"] " - Discard card number n from your hand"]
                         [:li [:code "/discard-random"] " - Discard a random card from your hand"]
                         [:li [:code "/draw n"] " - Draw n cards"]
-                        [:li [:code "/end-run"] " - End the run (Contestant only)"]
                         [:li [:code "/handsize n"] " - Set your handsize to n"]
-                        [:li [:code "/jack-out"] " - Jack out (Challenger only)"]
-                        [:li [:code "/link n"] " - Set your link to n"]
-                        [:li [:code "/memory n"] " - Set your memory to n"]
                         [:li [:code "/move-bottom"] " - Pick a card in your hand to put on the bottom of your deck"]
                         [:li [:code "/move-hand"] " - Pick a card from your play-area to put into your hand"]
-                        [:li [:code "/psi"] " - Start a Psi game (Contestant only)"]
+                        [:li [:code "/move-site"] " - Pick a card from your play-area to put into your site deck"]
+                        [:li [:code "/move-sb"] " - Pick a card from your play-area to put into your sideboard"]
+                        [:li [:code "/re-deck"] " - Use this to move all cards from your discard back to your deck"]
                         [:li [:code "/rez"] " - Select a card to rez, ignoring all costs (Contestant only)"]
-                        [:li [:code "/rez-all"] " - Rez all cards, ignoring all costs and flip cards in archives faceup (Contestant only). For revealing your servers at the end of a game."]
                         [:li [:code "/rfg"] " - Select a card to remove from the game"]
                         [:li [:code "/facedown"] " - Select a card to install facedown in your rig (Challenger only)"]
                         [:li [:code "/roll n"] " - Roll an n-sided die"]
-                        [:li [:code "/tag n"] " - Set your tags to n"]
-                        [:li [:code "/take-brain n"] " - Take n brain damage (Challenger only)"]
-                        [:li [:code "/take-meat n"] " - Take n meat damage (Challenger only)"]
-                        [:li [:code "/take-net n"] " - Take n net damage (Challenger only)"]
-                        [:li [:code "/trace n"] " - Start a trace with base strength n (Contestant only)"]]]}
+                        [:li [:code "/r"] " - Roll 2d6"]]]}
             {:id "documentation"
              :title "Is there more documentation on how to use Cardnum.net?"
              :content [:p "Read the "
-                       [:a {:href "https://github.com/mtgred/meccg/wiki/Cardnum.net-Guide" :target "_blank"}
+                       [:a {:href "https://github.com/rezwits/meccg/wiki/Cardnum.net-Guide" :target "_blank"}
                         "Cardnum.net Guide"] " on the GitHub wiki."]}
             )}
     {:id "beginners"
