@@ -852,11 +852,12 @@
                :on-drag-over #(.preventDefault %)
                :data-server server}))
 
-(defn close-popup [event owner ref msg shuffle? sites? deck?]
+(defn close-popup [event owner ref msg shuffle? sites? board? deck?]
   (-> (om/get-node owner ref) js/$ .fadeOut)
   (cond
     shuffle? (send-command "shuffle" {:close "true"})
     sites? (send-command "close-sites")
+    board? (send-command "close-sideboard")
     deck? (send-command "close-deck")
     msg (send-command "system-msg" {:msg msg}))
   (.stopPropagation event))
@@ -910,7 +911,7 @@
        (when popup
          [:div.panel.blue-shade.popup {:ref "hand-popup" :class popup-direction}
           [:div
-           [:a {:on-click #(close-popup % owner "hand-popup" nil false false false)} "Close"]
+           [:a {:on-click #(close-popup % owner "hand-popup" nil false false false false)} "Close"]
            [:label (str size " card" (when (not= 1 size) "s") ".")]
            (build-hand-card-view player remotes "card-popup-wrapper")
            ]])]))))
@@ -971,15 +972,15 @@
        (when (= (:side @game-state) side)
          [:div.panel.blue-shade.popup {:ref deck-content-ref}
           [:div
-           [:a {:on-click #(close-popup % owner deck-content-ref "stops looking at their deck" false false true)}
+           [:a {:on-click #(close-popup % owner deck-content-ref "stops looking at their deck" false false false true)}
             "Close"]
-           [:a {:on-click #(close-popup % owner deck-content-ref "stops looking at their deck" true false true)}
+           [:a {:on-click #(close-popup % owner deck-content-ref "stops looking at their deck" true false false true)}
             "Close & Shuffle"]]
           (om/build-all card-view deck {:key :cid})])
        (when (= (:side @game-state) side)
          [:div.panel.blue-shade.popup {:ref side-content-ref}
           [:div
-           [:a {:on-click #(close-popup % owner side-content-ref "stops looking at their sideboard" false false true)}
+           [:a {:on-click #(close-popup % owner side-content-ref "stops looking at their sideboard" false false true false)}
             "Close"](om/build-all card-view sideboard {:key :cid})]
           ]
          )]))))
@@ -1009,7 +1010,7 @@
 
          [:div.panel.blue-shade.popup {:ref "popup" :class (if (= (:side @game-state) :contestant) "opponent" "me")}
           [:div
-           [:a {:on-click #(close-popup % owner "popup" nil false false false)} "Close"]
+           [:a {:on-click #(close-popup % owner "popup" nil false false false false)} "Close"]
            [:label (let [total (count discard)
                          face-up (count (filter faceup? discard))]
                      (str total " cards, " (- total face-up) " face-down."))]]
@@ -1038,7 +1039,7 @@
 
        [:div.panel.blue-shade.popup {:ref "popup" :class (if (= (:side @game-state) :challenger) "opponent" "me")}
         [:div
-         [:a {:on-click #(close-popup % owner "popup" nil false false false)} "Close"]
+         [:a {:on-click #(close-popup % owner "popup" nil false false false false)} "Close"]
          [:label (let [total (count discard)
                        face-up (count (filter faceup? discard))]
                    (str total " cards, " (- total face-up) " face-down."))]]
@@ -1060,7 +1061,7 @@
          (when popup
            [:div.panel.blue-shade.popup {:ref "rfg-popup" :class "opponent"}
             [:div
-             [:a {:on-click #(close-popup % owner "rfg-popup" nil false false false)} "Close"]
+             [:a {:on-click #(close-popup % owner "rfg-popup" nil false false false false)} "Close"]
              [:label (str size " card" (when (not= 1 size) "s") ".")]]
             (for [c cards] (om/build card-view c))])])))))
 
@@ -1313,7 +1314,7 @@
             reg-menu-ref (str reg-ref "-menu")
             reg-content-ref (str reg-ref "-content")]
         [:div.blue-shade.deck
-         (drop-area (:side @game-state) name
+         (drop-area (:side @game-state) map-name
                     {:on-click #(-> (om/get-node owner map-menu-ref) js/$ .toggle)})
          (facedown-card "Locations")
          (om/build label sites {:opts {:name map-name}})
@@ -1326,18 +1327,18 @@
            [:div.panel.blue-shade.popup {:ref reg-content-ref}
             [:div
              (general-map owner reg-ref map-menu-ref)
-             [:a {:on-click #(close-popup % owner reg-content-ref "stops looking at the map" false true true)}
+             [:a {:on-click #(close-popup % owner reg-content-ref "stops looking at the map" false true false false)}
               "Close"]]
             ])
            [:div.panel.blue-shade.popup {:ref map-content-ref}
             [:div
              (general-map owner site-ref map-menu-ref)
-             [:a {:on-click #(close-popup % owner map-content-ref "stops looking at the map" false true true)}
+             [:a {:on-click #(close-popup % owner map-content-ref "stops looking at the map" false true false false)}
               "Close"]]
             ]
            [:div.panel.blue-shade.popup {:ref site-content-ref}
             [:div
-             [:a {:on-click #(close-popup % owner site-content-ref "stops at a region" false true true)}
+             [:a {:on-click #(close-popup % owner site-content-ref "stops at a region" false true false false)}
               "Close"]]
             (om/build-all card-view sites {:key :cid})
             ]

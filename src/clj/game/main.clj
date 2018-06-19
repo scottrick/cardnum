@@ -113,7 +113,7 @@
       (update-in [:rig :muthereff] #(private-card-vector state :challenger %))))
 
 (defn- make-private-contestant [state]
-  (let [zones (concat [[:hand]] [[:discard]] [[:deck] [:sideboard]]
+  (let [zones (concat [[:hand]] [[:discard]] [[:deck]] [[:sideboard]] [[:sites]]
                       (for [server (keys (:servers (:contestant @state)))] [:servers server :characters])
                       (for [server (keys (:servers (:contestant @state)))] [:servers server :content]))]
     (loop [s (:contestant @state)
