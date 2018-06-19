@@ -192,13 +192,13 @@
     (core/gain state :contestant :click 1)
     (play-from-hand state :contestant "Hunter" "HQ")
     (let [hunter (get-character state :hq 0)]
-      (core/rez state :contestant hunter)
+      (core/reveal state :contestant hunter)
       (is (= 4 (:current-strength (refresh hunter))))
       (play-from-hand state :contestant "Casting Call")
       (prompt-select :contestant (find-card "Improved Tracers" (:hand (get-contestant))))
       (prompt-choice :contestant "New remote")
       (let [imptrac (get-content state :remote1 0)]
-        (is (get-in (refresh imptrac) [:rezzed]) "Improved Tracers is faceup")
+        (is (get-in (refresh imptrac) [:revealed]) "Improved Tracers is faceup")
         (is (= 4 (:current-strength (refresh hunter))) "Hunter hasn't gained strength")
         (play-from-hand state :contestant "Casting Call")
         (prompt-select :contestant (find-card "Oaktown Renovation" (:hand (get-contestant))))
@@ -357,7 +357,7 @@
     (take-credits state :contestant)
     (run-on state :hq)
     (let [vik (get-character state :hq 0)]
-      (core/rez state :contestant vik)
+      (core/reveal state :contestant vik)
       (card-subroutine state :contestant vik 0)
       (is (= 2 (count (:discard (get-challenger)))) "2 cards lost to brain damage")
       (is (= 2 (:brain-damage (get-challenger))) "Brainchips dealt 1 additional brain dmg")
@@ -838,8 +838,8 @@
     (play-from-hand state :contestant "Vanilla" "HQ")
     (play-from-hand state :contestant "Lotus Field" "R&D")
     (play-from-hand state :contestant "Lag Time")
-    (core/rez state :contestant (get-character state :hq 0))
-    (core/rez state :contestant (get-character state :rd 0))
+    (core/reveal state :contestant (get-character state :hq 0))
+    (core/reveal state :contestant (get-character state :rd 0))
     (is (= 1 (:current-strength (get-character state :hq 0))) "Vanilla at 1 strength")
 	(is (= 5 (:current-strength (get-character state :rd 0))) "Lotus Field at 5 strength")))
 
@@ -912,7 +912,7 @@
       (is (= 6 (:tag (get-challenger))) "Challenger took 6 tags"))))
 
 (deftest mushin-no-shin
-  ;; Mushin No Shin - Add 3 advancements to a card; prevent rez/score of that card the rest of the turn
+  ;; Mushin No Shin - Add 3 advancements to a card; prevent reveal/score of that card the rest of the turn
   (do-game
     (new-game (default-contestant [(qty "Mushin No Shin" 2) (qty "Ronin" 1) (qty "Profiteering" 1)])
               (default-challenger))
@@ -920,12 +920,12 @@
     (prompt-select :contestant (find-card "Ronin" (:hand (get-contestant))))
     (let [ronin (get-content state :remote1 0)]
       (is (= 3 (:advance-counter (refresh ronin))) "3 advancements placed on Ronin")
-      (core/rez state :contestant (refresh ronin))
-      (is (not (get-in (refresh ronin) [:rezzed])) "Ronin did not rez")
+      (core/reveal state :contestant (refresh ronin))
+      (is (not (get-in (refresh ronin) [:revealed])) "Ronin did not reveal")
       (take-credits state :contestant)
       (take-credits state :challenger)
-      (core/rez state :contestant (refresh ronin))
-      (is (get-in (refresh ronin) [:rezzed]) "Ronin now rezzed")
+      (core/reveal state :contestant (refresh ronin))
+      (is (get-in (refresh ronin) [:revealed]) "Ronin now revealed")
       (play-from-hand state :contestant "Mushin No Shin")
       (prompt-select :contestant (find-card "Profiteering" (:hand (get-contestant))))
       (let [prof (get-content state :remote2 0)]
@@ -952,7 +952,7 @@
     (is (= 1 (count (:discard (get-challenger)))) "Challenger took 1 net damage")))
 
 (deftest oversight-ai
-  ;; Oversight AI - Rez a piece of Character ignoring all costs
+  ;; Oversight AI - Reveal a piece of Character ignoring all costs
   (do-game
     (new-game (default-contestant [(qty "Oversight AI" 1) (qty "Archer" 1)])
               (default-challenger))
@@ -960,8 +960,8 @@
     (let [archer (get-character state :rd 0)]
       (play-from-hand state :contestant "Oversight AI")
       (prompt-select :contestant archer)
-      (is (get-in (refresh archer) [:rezzed]))
-      (is (= 4 (:credit (get-contestant))) "Archer rezzed at no credit cost")
+      (is (get-in (refresh archer) [:revealed]))
+      (is (= 4 (:credit (get-contestant))) "Archer revealed at no credit cost")
       (is (= "Oversight AI" (:title (first (:hosted (refresh archer)))))
           "Archer hosting OAI as a condition"))))
 
@@ -971,7 +971,7 @@
     (new-game (default-contestant [(qty "Patch" 1) (qty "Vanilla" 1)])
               (default-challenger))
     (play-from-hand state :contestant "Vanilla" "HQ")
-    (core/rez state :contestant (get-character state :hq 0))
+    (core/reveal state :contestant (get-character state :hq 0))
     (play-from-hand state :contestant "Patch")
     (prompt-select :contestant (get-character state :hq 0))
     (is (= 2 (:current-strength (get-character state :hq 0))) "Vanilla at 2 strength")))
@@ -992,7 +992,7 @@
     (is (= 9 (:credit (get-contestant))) "Gained 1 credit from successful run")))
 
 (deftest peak-efficiency
-  ;; Peak Efficiency - Gain 1 credit for each rezzed Character
+  ;; Peak Efficiency - Gain 1 credit for each revealed Character
   (do-game
     (new-game (default-contestant [(qty "Peak Efficiency" 1) (qty "Paper Wall" 3) (qty "Wraparound" 1)])
               (default-challenger))
@@ -1001,11 +1001,11 @@
     (play-from-hand state :contestant "Paper Wall" "R&D")
     (play-from-hand state :contestant "Paper Wall" "New remote")
     (play-from-hand state :contestant "Wraparound" "New remote")
-    (core/rez state :contestant (get-character state :hq 0))
-    (core/rez state :contestant (get-character state :rd 0))
-    (core/rez state :contestant (get-character state :remote1 0))
+    (core/reveal state :contestant (get-character state :hq 0))
+    (core/reveal state :contestant (get-character state :rd 0))
+    (core/reveal state :contestant (get-character state :remote1 0))
     (play-from-hand state :contestant "Peak Efficiency")
-    (is (= 7 (:credit (get-contestant))) "Gained 3 credits for 3 rezzed Character; unrezzed Character ignored")))
+    (is (= 7 (:credit (get-contestant))) "Gained 3 credits for 3 revealed Character; unrevealed Character ignored")))
 
 (deftest power-shutdown
   ;; Power Shutdown - Trash cards from R&D to force Challenger to trash a resource or hazard
@@ -1475,7 +1475,7 @@
     (play-from-hand state :contestant "Quandary" "HQ")
     (play-from-hand state :contestant "Sub Boost")
     (let [qu (get-character state :hq 0)]
-      (core/rez state :contestant qu)
+      (core/reveal state :contestant qu)
       (prompt-select :contestant qu)
       (is (core/has-subtype? (refresh qu) "Code Gate") "Quandary has Code Gate")
       (is (core/has-subtype? (refresh qu) "Barrier") "Quandary Character Barrier"))))
@@ -1552,7 +1552,7 @@
     (play-from-hand state :contestant "Jackson Howard" "New remote")
     (take-credits state :contestant)
     (let [jhow (get-content state :remote1 0)]
-      (core/rez state :contestant jhow)
+      (core/reveal state :contestant jhow)
       (card-ability state :contestant jhow 1)
       (prompt-select :contestant (find-card "Subliminal Messaging" (:discard (get-contestant))))
       (prompt-choice :contestant "Done")
@@ -1776,13 +1776,13 @@
           vanilla (get-character state :hq 0)]
       (play-from-hand state :contestant "Wetwork Refit")
       (is (not-any? #{"Eli 1.0"} (get-in @state [:contestant :prompt :choices]))
-          "Unrezzed Eli 1.0 is not a choice to host Wetwork Refit")
+          "Unrevealed Eli 1.0 is not a choice to host Wetwork Refit")
       (prompt-choice :contestant "Done")
 
       (take-credits state :contestant)
       (take-credits state :challenger)
-      (core/rez state :contestant (refresh eli))
-      (core/rez state :contestant (refresh vanilla))
+      (core/reveal state :contestant (refresh eli))
+      (core/reveal state :contestant (refresh vanilla))
 
       (play-from-hand state :contestant "Wetwork Refit")
       (prompt-select :contestant (refresh eli))

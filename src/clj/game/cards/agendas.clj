@@ -6,7 +6,7 @@
   (letfn [(count-character [contestant]
             (reduce (fn [c server]
                       (+ c (count (filter #(and (has-subtype? % subtype)
-                                                (rezzed? %))
+                                                (revealed? %))
                                           (:characters server)))))
                     0 (flatten (seq (:servers contestant)))))]
     {:msg (msg "gain " (count-character contestant) " [Credits]")

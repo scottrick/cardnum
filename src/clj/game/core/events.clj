@@ -17,9 +17,9 @@
   "Removes all event handlers defined for the given card."
   [state side card]
   (let [cdef (card-def card)]
-    ;; Combine normal events and derezzed events. Any merge conflicts should not matter
+    ;; Combine normal events and hidden events. Any merge conflicts should not matter
     ;; as they should cause all relevant events to be removed anyway.
-    (doseq [e (merge (:events cdef) (:derezzed-events cdef))]
+    (doseq [e (merge (:events cdef) (:hidden-events cdef))]
       (swap! state update-in [:events (first e)]
              #(remove (fn [effect] (= (get-in effect [:card :cid]) (:cid card))) %))))
   (unregister-suppress state side card))

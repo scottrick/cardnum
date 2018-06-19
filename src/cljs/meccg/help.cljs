@@ -58,7 +58,7 @@
                         [:li [:code "/move-site"] " - Pick a card from your play-area to put into your site deck"]
                         [:li [:code "/move-sb"] " - Pick a card from your play-area to put into your sideboard"]
                         [:li [:code "/re-deck"] " - Use this to move all cards from your discard back to your deck"]
-                        [:li [:code "/rez"] " - Select a card to rez, ignoring all costs (Contestant only)"]
+                        [:li [:code "/reveal"] " - Select a card to reveal, ignoring all costs (Contestant only)"]
                         [:li [:code "/rfg"] " - Select a card to remove from the game"]
                         [:li [:code "/facedown"] " - Select a card to install facedown in your rig (Challenger only)"]
                         [:li [:code "/roll n"] " - Roll an n-sided die"]

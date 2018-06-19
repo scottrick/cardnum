@@ -97,7 +97,7 @@
           :equal     eq-ability}}))
 
 (def take-bad-pub
-  "Bad pub on rez effect."
+  "Bad pub on reveal effect."
   (effect (gain :bad-publicity 1)
           (system-msg (str "takes 1 bad publicity from " (:title card)))))
 
@@ -107,8 +107,8 @@
   "Number of advancement counters - for advanceable Character."
   (req (+ (:advance-counter card 0) (:extra-advance-counter card 0))))
 
-(def space-character-rez-bonus
-  "Amount of rez reduction for the Space Character."
+(def space-character-reveal-bonus
+  "Amount of reveal reduction for the Space Character."
   (req (* -3 (+ (:advance-counter card 0) (:extra-advance-counter card 0)))))
 
 (defn space-character
@@ -116,7 +116,7 @@
   [& abilities]
   {:advanceable :always
    :subroutines (vec abilities)
-   :rez-cost-bonus space-character-rez-bonus})
+   :reveal-cost-bonus space-character-reveal-bonus})
 
 
 ;;; For Grail Character
@@ -152,11 +152,11 @@
 
 ;;; For NEXT Character
 (defn next-character-count
-  "Counts number of rezzed NEXT Character - for use with NEXT Bronze and NEXT Gold"
+  "Counts number of revealed NEXT Character - for use with NEXT Bronze and NEXT Gold"
   [contestant]
   (let [servers (flatten (seq (:servers contestant)))
-        rezzed-next? #(and (rezzed? %) (has-subtype? % "NEXT"))]
-    (reduce (fn [c server] (+ c (count (filter rezzed-next? (:characters server))))) 0 servers)))
+        revealed-next? #(and (revealed? %) (has-subtype? % "NEXT"))]
+    (reduce (fn [c server] (+ c (count (filter revealed-next? (:characters server))))) 0 servers)))
 
 
 ;;; For Morph Character

@@ -7,10 +7,10 @@
        (swap! state assoc-in [:contestant :agenda-point-req] 6)))
 
 (defn- has-most-faction?
-  "Checks if the faction has a plurality of rezzed / installed cards"
+  "Checks if the faction has a plurality of revealed / installed cards"
   [state side fc]
   (let [card-list (if (= side :contestant)
-                    (filter :rezzed (all-installed state :contestant))
+                    (filter :revealed (all-installed state :contestant))
                     (all-installed state :challenger))
         faction-freq (frequencies (map :faction card-list))
         reducer (fn [{:keys [max-count] :as acc} faction count]

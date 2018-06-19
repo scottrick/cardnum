@@ -1,7 +1,7 @@
 (in-ns 'game.core)
 
 (declare card-init card-str close-access-prompt enforce-msg gain-agenda-point get-agenda-points installed? is-type?
-         in-contestant-scored? prevent-draw resolve-steal-events make-result say show-prompt system-msg trash-cards untrashable-while-rezzed?
+         in-contestant-scored? prevent-draw resolve-steal-events make-result say show-prompt system-msg trash-cards untrashable-while-revealed?
          update-all-character win win-decked play-sfx can-run? untrashable-while-muthereffs?)
 
 ;;;; Functions for applying core MECCG game rules.
@@ -315,7 +315,7 @@
     (when-let [trash-effect (:trash-effect cdef)]
       (when (and (not disabled) (or (and (= (:side card) "Challenger")
                                          (:installed card))
-                                    (and (:rezzed card) (not host-trashed))
+                                    (and (:revealed card) (not host-trashed))
                                     (and (:when-inactive trash-effect) (not host-trashed))))
         (resolve-ability state side trash-effect moved-card (cons cause targets))))
     (swap! state update-in [:per-turn] dissoc (:cid moved-card))
@@ -337,7 +337,7 @@
    (if (not (some #{:discard} zone))
      (cond
 
-       (untrashable-while-rezzed? card)
+       (untrashable-while-revealed? card)
        (do (enforce-msg state card "cannot be trashed while installed")
            (effect-completed state side eid))
 

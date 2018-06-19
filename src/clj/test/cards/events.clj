@@ -134,7 +134,7 @@
       (default-challenger  [(qty "Apocalypse" 1)]))
     (play-from-hand state :contestant "Full Immersion RecStudio" "New remote")
     (let [fir (get-content state :remote1 0)]
-      (core/rez state :contestant fir)
+      (core/reveal state :contestant fir)
       (card-ability state :contestant fir 0)
       (prompt-select :contestant (find-card "Sandburg" (:hand (get-contestant))))
       (card-ability state :contestant fir 0)
@@ -195,11 +195,11 @@
           "No meat damage dealt by Tri-maf's leave play effect"))))
 
 (deftest blackmail
-  ;; Prevent rezzing of character for one run
+  ;; Prevent revealing of character for one run
   (do-game
     (new-game
       (default-contestant [(qty "Ice Wall" 3)])
-      (make-deck "Valencia Estevez: The Angel of Cayambe" [(qty "Blackmail" 3)]))
+      (make-deck "Valencia Esteveveal: The Angel of Cayambe" [(qty "Blackmail" 3)]))
     (is (= 1 (get-in @state [:contestant :bad-publicity])) "Contestant has 1 bad-publicity")
     (play-from-hand state :contestant "Ice Wall" "HQ")
     (play-from-hand state :contestant "Ice Wall" "HQ")
@@ -208,29 +208,29 @@
     (prompt-choice :challenger "HQ")
     (let [iwall1 (get-character state :hq 0)
           iwall2 (get-character state :hq 1)]
-      (core/rez state :contestant iwall1)
-      (is (not (get-in (refresh iwall1) [:rezzed])) "First Ice Wall is not rezzed")
+      (core/reveal state :contestant iwall1)
+      (is (not (get-in (refresh iwall1) [:revealed])) "First Ice Wall is not revealed")
       (run-continue state)
-      (core/rez state :contestant iwall2)
-      (is (not (get-in (refresh iwall2) [:rezzed])) "Second Ice Wall is not rezzed")
+      (core/reveal state :contestant iwall2)
+      (is (not (get-in (refresh iwall2) [:revealed])) "Second Ice Wall is not revealed")
       (core/jack-out state :challenger nil)
-      ;; Do another run, where the character should rez
+      ;; Do another run, where the character should reveal
       (run-on state "HQ")
-      (core/rez state :contestant iwall1)
-      (is (get-in (refresh iwall1) [:rezzed]) "First Ice Wall is rezzed"))))
+      (core/reveal state :contestant iwall1)
+      (is (get-in (refresh iwall1) [:revealed]) "First Ice Wall is revealed"))))
 
 (deftest blackmail-tmi-interaction
-  ;; Regression test for a rezzed tmi breaking game state on a blackmail run
+  ;; Regression test for a revealed tmi breaking game state on a blackmail run
   (do-game
     (new-game (default-contestant [(qty "TMI" 3)])
-              (make-deck "Valencia Estevez: The Angel of Cayambe" [(qty "Blackmail" 3)]))
+              (make-deck "Valencia Esteveveal: The Angel of Cayambe" [(qty "Blackmail" 3)]))
     (is (= 1 (get-in @state [:contestant :bad-publicity])) "Contestant has 1 bad-publicity")
     (play-from-hand state :contestant "TMI" "HQ")
     (let [tmi (get-character state :hq 0)]
-      (core/rez state :contestant tmi)
+      (core/reveal state :contestant tmi)
       (prompt-choice :contestant 0)
       (prompt-choice :challenger 0)
-      (is (get-in (refresh tmi) [:rezzed]) "TMI is rezzed")
+      (is (get-in (refresh tmi) [:revealed]) "TMI is revealed")
       (take-credits state :contestant)
       (play-from-hand state :challenger "Blackmail")
       (prompt-choice :challenger "HQ")
@@ -346,8 +346,8 @@
       (card-ability state :challenger (get-resource state 0) 0)
       (prompt-select :challenger (get-resource state 0))
       (is (= 2 (count (:discard (get-challenger)))) "Imp and Cold Read in discard")
-      ; Cold Read works when Blacklist rezzed - #2378
-      (core/rez state :contestant bl)
+      ; Cold Read works when Blacklist revealed - #2378
+      (core/reveal state :contestant bl)
       (play-from-hand state :challenger "Cold Read")
       (prompt-choice :challenger "HQ")
       (is (= 4 (:rec-counter (find-card "Cold Read" (get-in @state [:challenger :play-area])))) "Cold Read has 4 counters")
@@ -373,7 +373,7 @@
     (play-from-hand state :challenger "Activist Support")
     (take-credits state :challenger)
     (let [em (get-content state :remote1 0)]
-      (core/rez state :contestant em)
+      (core/reveal state :contestant em)
       (is (= 1 (:has-bad-pub (get-contestant))) "Contestant still has BP")
       (take-credits state :contestant)
       (is (= 0 (:bad-publicity (get-contestant))) "Contestant has BP, didn't take 1 from Activist Support"))))
@@ -465,7 +465,7 @@
     (prompt-choice :challenger "OK") ; dismiss instructional prompt for Demolition Run
     (run-successful state)
     (let [demo (get-in @state [:challenger :play-area 0])] ; Demolition Run "hack" is to put it out in the play area
-      (prompt-choice :challenger "Unrezzed region in R&D")
+      (prompt-choice :challenger "Unrevealed region in R&D")
       (card-ability state :challenger demo 0)
       (is (= 3 (:credit (get-challenger))) "Trashed Shell Contestantoration at no cost")
       (prompt-choice :challenger "Card from deck")
@@ -540,14 +540,14 @@
           eve2 (get-content state :remote2 0)
           atl (get-content state :remote3 0)
           pp (get-content state :hq 0)]
-      (core/rez state :contestant eve1)
+      (core/reveal state :contestant eve1)
       (play-from-hand state :challenger "Drive By")
       (prompt-select :challenger pp)
       (is (= 1 (count (get-in @state [:contestant :servers :hq :content])))
           "Regions in root of central servers can't be targeted")
       (prompt-select :challenger (refresh eve1))
       (is (= 1 (count (get-in @state [:contestant :servers :remote1 :content])))
-          "Rezzed cards can't be targeted")
+          "Revealed cards can't be targeted")
       (prompt-select :challenger eve2)
       (is (= 2 (:click (get-challenger))) "Spent 2 clicks")
       (is (and (= 1 (count (:discard (get-contestant))))
@@ -613,7 +613,7 @@
     (new-game (make-deck "Blue Sun: Powering the Future" [(qty "Ice Wall" 1)])
               (default-challenger [(qty "Employee Strike" 1) (qty "Scrubbed" 1)]))
     (play-from-hand state :contestant "Ice Wall" "HQ")
-    (core/rez state :contestant (get-character state :hq 0))
+    (core/reveal state :contestant (get-character state :hq 0))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Employee Strike")
     (take-credits state :challenger)
@@ -712,12 +712,12 @@
           atl (get-content state :remote3 0)
           pp1 (get-content state :hq 0)
           pp2 (get-content state :remote3 1)]
-      (core/rez state :contestant eve1)
+      (core/reveal state :contestant eve1)
       (play-from-hand state :challenger "Falsified Credentials")
       (prompt-choice :challenger "Site")
       (prompt-select :challenger (refresh eve1))
       (is (= 4 (:credit (get-challenger)))
-          "Rezzed cards can't be targeted")
+          "Revealed cards can't be targeted")
       (prompt-select :challenger eve2)
       (is (= 3 (:click (get-challenger))) "Spent 1 click")
       (is (= 9 (:credit (get-challenger))) "Gained 5 creds for guessing site correctly")
@@ -728,12 +728,12 @@
       (prompt-select :challenger pp2)
       (is (= 13 (:credit (get-challenger)))
           "Gained 5 creds for guessing region correctly, even if server contains non-region as well")
-      (core/rez state :contestant pp2)
+      (core/reveal state :contestant pp2)
       (play-from-hand state :challenger "Falsified Credentials")
       (prompt-choice :challenger "Agenda")
       (prompt-select :challenger atl)
       (is (= 17 (:credit (get-challenger)))
-          "Gained 5 credits for guessing agenda correctly, even with rezzed card in server"))))
+          "Gained 5 credits for guessing agenda correctly, even with revealed card in server"))))
 
 (deftest falsified-credentials-zaibatsu-loyalty
   ;; If Falsified Credentials fails to expose, it grants no credits.
@@ -747,7 +747,7 @@
     (take-credits state :contestant)
     (let [atl (get-content state :remote1 0)
           zaibatsu (get-content state :remote2 0)]
-      (core/rez state :contestant zaibatsu)
+      (core/reveal state :contestant zaibatsu)
       (play-from-hand state :challenger "Falsified Credentials")
       (prompt-choice :challenger "Agenda")
       (prompt-select :challenger atl)
@@ -879,12 +879,12 @@
     (play-from-hand state :contestant "Jackson Howard" "New remote")
     (let [jeeves (get-content state :remote1 0)
           jackson (get-content state :remote2 0)]
-      (core/rez state :contestant jeeves)
-      (is (= 0 (count (:discard (get-contestant)))) "Nothing discarded to rez Jeeves - Hacktivist not active")
+      (core/reveal state :contestant jeeves)
+      (is (= 0 (count (:discard (get-contestant)))) "Nothing discarded to reveal Jeeves - Hacktivist not active")
       (take-credits state :contestant)
       (play-from-hand state :challenger "Hacktivist Meeting")
-      (core/rez state :contestant jackson)
-      (is (= 1 (count (:discard (get-contestant)))) "Card discarded to rez Jackson - Hacktivist active"))))
+      (core/reveal state :contestant jackson)
+      (is (= 1 (count (:discard (get-contestant)))) "Card discarded to reveal Jackson - Hacktivist active"))))
 
 (deftest independent-thinking
   ;; Independent Thinking - Trash 2 installed cards, including a facedown directive, and draw 2 cards
@@ -955,7 +955,7 @@
     (play-from-hand state :contestant "Hostile Infrastructure" "New remote")
 
     (core/gain state :contestant :credit 10)
-    (core/rez state :contestant (get-content state :remote1 0))
+    (core/reveal state :contestant (get-content state :remote1 0))
     (core/gain state :challenger :credit 10)
     (take-credits state :contestant)
     (play-from-hand state :challenger "Deus X")
@@ -1039,7 +1039,7 @@
     (is (= 2 (:current-strength (get-resource state 0))) "Corroder reset to 2 strength")))
 
 (deftest interdiction
-  ;; Contestant cannot rez non-character cards during challenger's turn
+  ;; Contestant cannot reveal non-character cards during challenger's turn
   (do-game
     (new-game (default-contestant [(qty "Jeeves Model Bioroids" 1) (qty "Jackson Howard" 1)])
               (default-challenger [(qty "Street Peddler" 1)
@@ -1051,11 +1051,11 @@
     (play-from-hand state :challenger "Street Peddler")
     (let [jeeves (get-content state :remote1 0)
           jackson (get-content state :remote2 0)]
-      (core/rez state :contestant jeeves)
-      (is (get-in (refresh jeeves) [:rezzed]) "Jeeves is rezzed.  Interdiction not active when on Peddler")
+      (core/reveal state :contestant jeeves)
+      (is (get-in (refresh jeeves) [:revealed]) "Jeeves is revealed.  Interdiction not active when on Peddler")
       (play-from-hand state :challenger "Interdiction")
-      (core/rez state :contestant jackson)
-      (is (not (get-in (refresh jackson) [:rezzed])) "Jackson is not rezzed"))))
+      (core/reveal state :contestant jackson)
+      (is (not (get-in (refresh jackson) [:revealed])) "Jackson is not revealed"))))
 
 (deftest ive-had-worse
   ;; I've Had Worse - Draw 3 cards when lost to net/meat damage; don't trigger if flatlined
@@ -1066,7 +1066,7 @@
     (core/gain state :contestant :credit 5)
     (starting-hand state :challenger ["I've Had Worse"])
     (play-from-hand state :contestant "Pup" "HQ")
-    (core/rez state :contestant (get-character state :hq 0))
+    (core/reveal state :contestant (get-character state :hq 0))
     (card-subroutine state :contestant (get-character state :hq 0) 0)
     (is (= 1 (count (:discard (get-challenger)))))
     (is (= 3 (count (:hand (get-challenger)))) "I've Had Worse triggered and drew 3 cards")
@@ -1498,7 +1498,7 @@
       (is (= 6 (:credit (get-challenger))) "Took a Whizzard credit")
 
       (is (changes-credits (get-contestant) -1
-        (core/rez state :contestant (get-character state :rd 0)))
+        (core/reveal state :contestant (get-character state :rd 0)))
         "Reina is no longer active")))
 
   (deftest rebirth-lose-link
@@ -1565,7 +1565,7 @@
       (is (= 2 (:memory (get-challenger))) "Morning Star uses 2 memory"))))
 
 (deftest rumor-mill
-  ;; Rumor Mill - interactions with rez effects, additional costs, general event handlers, and trash-effects
+  ;; Rumor Mill - interactions with reveal effects, additional costs, general event handlers, and trash-effects
   (do-game
     (new-game
       (default-contestant [(qty "Project Atlas" 2)
@@ -1586,8 +1586,8 @@
     (play-from-hand state :contestant "Ibrahim Salem" "New remote")
     (play-from-hand state :contestant "Oberth Protocol" "New remote")
     (core/move state :contestant (find-card "Director Haas" (:hand (get-contestant))) :deck)
-    (core/rez state :contestant (get-content state :remote2 0))
-    (core/rez state :contestant (get-content state :remote3 0))
+    (core/reveal state :contestant (get-content state :remote2 0))
+    (core/reveal state :contestant (get-content state :remote3 0))
     (score-agenda state :contestant (get-content state :remote5 0))
     (take-credits state :contestant)
     (core/gain state :challenger :credit 100 :click 100)
@@ -1596,21 +1596,21 @@
 
     (play-from-hand state :challenger "Rumor Mill")
 
-    ;; Additional costs to rez should NOT be applied
-    (core/rez state :contestant (get-content state :remote6 0))
-    (is (= 1 (count (:scored (get-contestant)))) "No agenda was auto-forfeit to rez Ibrahim Salem")
+    ;; Additional costs to reveal should NOT be applied
+    (core/reveal state :contestant (get-content state :remote6 0))
+    (is (= 1 (count (:scored (get-contestant)))) "No agenda was auto-forfeit to reveal Ibrahim Salem")
 
     ;; In-play effects
     (is (= 0 (:hand-size-modification (get-contestant))) "Contestant has original hand size")
     (is (= 0 (:hand-size-modification (get-challenger))) "Challenger has original hand size")
 
-    ;; "When you rez" effects should not apply
-    (core/rez state :contestant (get-content state :remote4 0))
+    ;; "When you reveal" effects should not apply
+    (core/reveal state :contestant (get-content state :remote4 0))
     (is (= 1 (:bad-publicity (get-contestant))) "Contestant still has 1 bad publicity")
 
     ;; Run events (Caprcharacter)
-    ;; Make sure Rumor Mill applies even if card is rezzed after RM is put in play.
-    (core/rez state :contestant (get-content state :remote1 0))
+    ;; Make sure Rumor Mill applies even if card is revealed after RM is put in play.
+    (core/reveal state :contestant (get-content state :remote1 0))
     (run-on state :remote1)
     (run-continue state)
     (is (empty? (:prompt (get-contestant))) "Caprcharacter prompt is not showing")
@@ -1632,13 +1632,13 @@
     (is (= 4 (:hand-size-modification (get-contestant))) "Contestant has +4 hand size")
     (is (= 0 (:hand-size-modification (get-challenger))) "Challenger has +0 hand size")
 
-    ;; Additional costs to rez should now be applied again
-    (core/rez state :contestant (get-content state :remote7 0))
+    ;; Additional costs to reveal should now be applied again
+    (core/reveal state :contestant (get-content state :remote7 0))
     (prompt-select :contestant (get-in (get-contestant) [:scored 0]))
-    (is (zero? (count (:scored (get-contestant)))) "Agenda was auto-forfeit to rez Oberth")
+    (is (zero? (count (:scored (get-contestant)))) "Agenda was auto-forfeit to reveal Oberth")
 
-    (core/derez state :contestant (get-content state :remote4 0))
-    (core/rez state :contestant (get-content state :remote4 0))
+    (core/hide state :contestant (get-content state :remote4 0))
+    (core/reveal state :contestant (get-content state :remote4 0))
     (is (= 0 (:bad-publicity (get-contestant))) "Contestant has 0 bad publicity")
     (card-ability state :contestant (get-content state :remote4 0) 0) ; Elizabeth Mills, should show a prompt
     (is (:prompt (get-contestant)) "Elizabeth Mills ability allowed")))
@@ -1655,7 +1655,7 @@
     (take-credits state :challenger)
     (play-from-hand state :contestant "Jeeves Model Bioroids" "New remote")
     (let [jeeves (get-content state :remote1 0)]
-      (core/rez state :contestant jeeves)
+      (core/reveal state :contestant jeeves)
       (card-ability state :contestant jeeves 0)
       (is (= 3 (:click (get-contestant))) "Contestant has 3 clicks - Jeeves working ok"))))
 
@@ -1670,7 +1670,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Street Peddler")
     (let [turing (get-character state :hq 0)]
-      (core/rez state :contestant turing)
+      (core/reveal state :contestant turing)
       (is (= 2 (:current-strength (refresh turing))))
       (run-on state "HQ")
       (run-continue state)
@@ -1822,7 +1822,7 @@
                                (qty "Knight" 1) (qty "Leprechaun" 1)]))
     (play-from-hand state :contestant "Wraparound" "HQ")
     (let [wrap (get-character state :hq 0)]
-      (core/rez state :contestant wrap)
+      (core/reveal state :contestant wrap)
       (take-credits state :contestant)
       (core/gain state :challenger :credit 5)
       (core/move state :challenger (find-card "Morning Star" (:hand (get-challenger))) :discard)
@@ -1937,7 +1937,7 @@
       (is (core/has-subtype? (refresh iwall) "Barrier") "Ice Wall has Barrier")
       (is (core/has-subtype? (refresh iwall) "Code Gate") "Ice Wall has Code Gate")
       (is (core/has-subtype? (refresh iwall) "Sentry") "Ice Wall has Sentry")
-      (core/rez state :contestant iwall)
+      (core/reveal state :contestant iwall)
       (is (core/has-subtype? (refresh iwall) "Barrier") "Ice Wall has Barrier")
       (is (core/has-subtype? (refresh iwall) "Code Gate") "Ice Wall has Code Gate")
       (is (core/has-subtype? (refresh iwall) "Sentry") "Ice Wall has Sentry")

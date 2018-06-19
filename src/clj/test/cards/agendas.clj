@@ -98,7 +98,7 @@
         (should-place token-astro installed-character-wall " that is installed")))))
 
 (deftest braintrust
-  ;; Braintrust - Discount Character rez by 1 for every 2 over-advancements when scored
+  ;; Braintrust - Discount Character reveal by 1 for every 2 over-advancements when scored
   (do-game
     (new-game (default-contestant [(qty "Braintrust" 1) (qty "Ichi 1.0" 1)])
               (default-challenger))
@@ -110,8 +110,8 @@
         (is (= 2 (get-counters (refresh scored-bt) :agenda))
             "Scored w/ 4 over-advancements; 2 agenda counters")
         (play-from-hand state :contestant "Ichi 1.0" "HQ")
-        (core/rez state :contestant (get-character state :hq 0))
-        (is (= 2 (:credit (get-contestant))) "2c discount to rez Ichi")))))
+        (core/reveal state :contestant (get-character state :hq 0))
+        (is (= 2 (:credit (get-contestant))) "2c discount to reveal Ichi")))))
 
 (deftest breaking-news
   ;; Test scoring breaking news
@@ -207,7 +207,7 @@
     (is (accessing state "Hedge Fund") "Challenger accessing Hedge Fund")
     (prompt-choice :challenger "OK")
     ;; test for #2376
-    (prompt-choice :challenger "Unrezzed region in HQ")
+    (prompt-choice :challenger "Unrevealed region in HQ")
     (is (accessing state "Caprcharacter Nisei") "Challenger accessing Caprcharacter")
     (prompt-choice :challenger "No")
     (is (not (:run @state)) "Run completed")
@@ -592,7 +592,7 @@
     (core/gain state :contestant :click 3)
     (play-from-hand state :contestant "Oaktown Renovation" "New remote")
     (let [oak (get-content state :remote1 0)]
-      (is (get-in (refresh oak) [:rezzed]) "Oaktown installed face up")
+      (is (get-in (refresh oak) [:revealed]) "Oaktown installed face up")
       (core/advance state :contestant {:card (refresh oak)})
       (is (= 6 (:credit (get-contestant))) "Spent 1 credit to advance, gained 2 credits from Oaktown")
       (play-from-hand state :contestant "Shipment from SanSan")
@@ -984,7 +984,7 @@
     (let [viktor (get-character state :hq 0)
           ff (get-in @state [:challenger :rig :hazard 0])]
       (run-on state "HQ")
-      (core/rez state :contestant viktor)
+      (core/reveal state :contestant viktor)
       (card-subroutine state :contestant viktor 0)
       (prompt-choice :challenger "Done") ;don't prevent the brain damage
       (is (= 1 (count (:discard (get-challenger)))))
@@ -1010,7 +1010,7 @@
     (let [tg1 (get-content state :remote1 0)
           ohg (get-content state :remote1 1)]
       (run-on state "Server 1")
-      (core/rez state :contestant ohg)
+      (core/reveal state :contestant ohg)
       (run-successful state)
       (prompt-select :challenger tg1)
       ;; Accesses TGTBT but can't steal

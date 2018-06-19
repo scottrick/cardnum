@@ -38,7 +38,7 @@
   (swap! state update-in [:stack flag-type flag] #(conj % {:card card :condition condition})))
 
 (defn- check-flag?
-  "Flag condition will ask for permission to do something, e.g. :can-rez, :can-advance
+  "Flag condition will ask for permission to do something, e.g. :can-reveal, :can-advance
   If allowed, return true, if not allowed, return false. Therefore check for any false conditions.
   Returns true if no flags are present."
   [state side card flag-type flag]
@@ -89,7 +89,7 @@
 ;;; Run flag - cleared at end of run
 (defn register-run-flag!
   "Registers a flag for the current run only. The flag gets cleared in end-run.
-  Example: Blackmail flags the inability to rez character."
+  Example: Blackmail flags the inability to reveal character."
   [state side card flag condition]
   (register-flag! state side card :current-run flag condition))
 
@@ -260,7 +260,7 @@
 (defn can-host?
   "Checks if the specified card is able to host other cards"
   [card]
-  (or (not (rezzed? card)) (not (:cannot-host (card-def card)))))
+  (or (not (revealed? card)) (not (:cannot-host (card-def card)))))
 
 (defn character? [card]
   (is-type? card "Character"))
@@ -274,11 +274,11 @@
 (defn muthereff? [card]
   (is-type? card "Muthereff"))
 
-(defn rezzed? [card]
-  (:rezzed card))
+(defn revealed? [card]
+  (:revealed card))
 
 (defn faceup? [card]
-  (or (:seen card) (:rezzed card)))
+  (or (:seen card) (:revealed card)))
 
 (defn installed? [card]
   (or (:installed card) (= :servers (first (:zone card)))))
@@ -290,13 +290,13 @@
       (= zone [:current])
       (and (card-is? card :side :contestant)
            (installed? card)
-           (rezzed? card))
+           (revealed? card))
       (and (card-is? card :side :challenger)
            (installed? card)
            (not (facedown? card)))))
 
-(defn untrashable-while-rezzed? [card]
-  (and (card-flag? card :untrashable-while-rezzed true) (rezzed? card)))
+(defn untrashable-while-revealed? [card]
+  (and (card-flag? card :untrashable-while-revealed true) (revealed? card)))
 
 (defn untrashable-while-muthereffs? [card]
   (and (card-flag? card :untrashable-while-muthereffs true) (installed? card)))
@@ -306,35 +306,35 @@
   [state side]
   (seq (get-in @state [side :lock-install])))
 
-(defn- can-rez-reason
-  "Checks if the contestant can rez the card.
+(defn- can-reveal-reason
+  "Checks if the contestant can reveal the card.
   Returns true if so, otherwise the reason:
   :side card is not on :contestant side
-  :run-flag run flag prevents rez
-  :turn-flag turn flag prevents rez
+  :run-flag run flag prevents reveal
+  :turn-flag turn flag prevents reveal
   :unique fails unique check
-  :req does not meet rez requirement"
+  :req does not meet reveal requirement"
   [state side card]
   (let [uniqueness (:uniqueness card)
-        req (:rez-req (card-def card))]
+        req (:reveal-req (card-def card))]
     (cond
       ;; Card on same side?
       (not (same-side? side (:side card))) :side
       ;; No flag restrictions?
-      (not (run-flag? state side card :can-rez)) :run-flag
-      (not (turn-flag? state side card :can-rez)) :turn-flag
+      (not (run-flag? state side card :can-reveal)) :run-flag
+      (not (turn-flag? state side card :can-reveal)) :turn-flag
       ;; Uniqueness check
-      (and uniqueness (some #(and (:rezzed %) (= (:code card) (:code %))) (all-installed state :contestant))) :unique
-      ;; Rez req check
+      (and uniqueness (some #(and (:revealed %) (= (:code card) (:code %))) (all-installed state :contestant))) :unique
+      ;; Reveal req check
       (and req (not (req state side (make-eid state) card nil))) :req
       ;; No problems - return true
       :default true)))
 
-(defn can-rez?
-  "Checks if the card can be rezzed. Toasts the reason if not."
-  ([state side card] (can-rez? state side card nil))
+(defn can-reveal?
+  "Checks if the card can be revealed. Toasts the reason if not."
+  ([state side card] (can-reveal? state side card nil))
   ([state side card {:keys [ignore-unique] :as args}]
-   (let [reason (can-rez-reason state side card)
+   (let [reason (can-reveal-reason state side card)
          reason-toast #(do (toast state side %) false)
          title (:title card)]
      (case reason
@@ -347,10 +347,10 @@
        :turn-flag false
        ;; Uniqueness
        :unique (or ignore-unique
-                   (reason-toast (str "Cannot rez a second copy of " title " since it is unique. Please trash the other"
+                   (reason-toast (str "Cannot reveal a second copy of " title " since it is unique. Please trash the other"
                                       " copy first")))
-       ;; Rez requirement
-       :req (reason-toast (str "Rez requirements for " title " are not fulfilled"))))))
+       ;; Reveal requirement
+       :req (reason-toast (str "Reveal requirements for " title " are not fulfilled"))))))
 
 (defn can-steal?
   "Checks if the challenger can steal agendas"
@@ -396,11 +396,11 @@
   [card]
   (or (card-is? card :advanceable :always)
       ;; e.g. Tyrant, Woodcutter
-      (and (card-is? card :advanceable :while-rezzed)
-           (rezzed? card))
+      (and (card-is? card :advanceable :while-revealed)
+           (revealed? card))
       ;; e.g. Haas Arcology AI
-      (and (card-is? card :advanceable :while-unrezzed)
-           (not (rezzed? card)))
+      (and (card-is? card :advanceable :while-unrevealed)
+           (not (revealed? card)))
       (and (is-type? card "Agenda")
            (installed? card))))
 
@@ -414,12 +414,12 @@
         (and (or (installed? card) (:host card)) (not (facedown? card)))
         (#{:scored :discard :current} (last zone)))
     ;; public contestant cards: in hand and :openhand;
-    ;; or installed and rezzed;
+    ;; or installed and revealed;
     ;; or in :discard and :seen
     ;; or scored or current
     (or (card-is? card :side :challenger)
         (and (:openhand (:contestant @state)) (in-hand? card))
         (and (or (installed? card) (:host card))
-             (or (is-type? card "Operation") (rezzed? card)))
+             (or (is-type? card "Operation") (revealed? card)))
         (and (in-discard? card) (:seen card))
         (#{:scored :current} (last zone)))))

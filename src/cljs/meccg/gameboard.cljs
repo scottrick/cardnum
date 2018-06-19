@@ -201,19 +201,19 @@
       (.play (sfx-key soundbank)))
     (play-sfx (rest sfx) soundbank)))
 
-(defn action-list [{:keys [type Secondary zone rezzed tapped wounded rotated inverted advanceable advance-counter advancementcost current-cost] :as card}]
+(defn action-list [{:keys [type Secondary zone revealed tapped wounded rotated inverted advanceable advance-counter advancementcost current-cost] :as card}]
   (-> []
       (#(if (and (and (#{"Character" "Site" "Region"} type)
                       (#{"servers" "onhost"} (first zone)))
-                 (not rezzed))
-          (cons "rez" %) %))
+                 (not revealed))
+          (cons "reveal" %) %))
       (#(if (and (and (#{"Character"} type)
                  (#{"servers" "onhost"} (first zone)))
-                 (and rezzed (not wounded)))
+                 (and revealed (not wounded)))
           (cons "wound" %) %))
       (#(if (and (and (#{"Character" "Site" "Region"} type)
                       (#{"servers" "onhost"} (first zone)))
-                 rezzed
+                 revealed
                  (or (not tapped) wounded))
           (cons "tap" %) %))
       (#(if (and (and (#{"Character" "Site" "Region"} type)
@@ -247,7 +247,7 @@
       (cond
         ;; Open panel
         (or (> c 1)
-            (some #{"derez" "advance"} actions)
+            (some #{"hide" "advance"} actions)
             (and (= type "Character")
                  (not (:run @game-state))))  ; Horrible hack to check if currently in a run
         (-> (om/get-node owner "abilities") js/$ .toggle)
@@ -670,7 +670,7 @@
 
 (defn face-down?
   "Returns true if the installed card should be drawn face down."
-  [{:keys [side type facedown rezzed host] :as card}]
+  [{:keys [side type facedown revealed host] :as card}]
   (if (= side "Contestant")
     (and (not= type "Resource")
          (not= type "Hazard"))
@@ -713,7 +713,7 @@
        [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])])))
 
 (defn card-view [{:keys [zone fullCode type abilities counter advance-counter advancementcost current-cost subtype
-                         advanceable rezzed tapped rotated strength current-strength title remotes selected hosted
+                         advanceable revealed tapped rotated strength current-strength title remotes selected hosted
                          side rec-counter facedown  server-target subtype-target icon new challenger-abilities subroutines]
                   :as cursor}
                  owner {:keys [flipped location] :as opts}]
@@ -801,7 +801,7 @@
       (let [actions (action-list cursor)
             dynabi-count (count (filter :dynamic abilities))]
         (when (or (> (+ (count actions) (count abilities) (count subroutines)) 1)
-                  (some #{"derez" "advance"} actions)
+                  (some #{"hide" "advance"} actions)
                   (= type "Character"))
           [:div.panel.blue-shade.abilities {:ref "abilities"}
            (map (fn [action]
@@ -830,10 +830,10 @@
           [:div.panel.blue-shade.menu.abilities {:ref "agenda"}
            [:div {:on-click #(send-command "advance" {:card @cursor})} "Advance"]
            [:div {:on-click #(send-command "score" {:card @cursor})} "Score"]]
-          (or (= advanceable "always") (and rezzed (= advanceable "rezzed-only")))
+          (or (= advanceable "always") (and revealed (= advanceable "revealed-only")))
           [:div.panel.blue-shade.menu.abilities {:ref "advance"}
            [:div {:on-click #(send-command "advance" {:card @cursor})} "Advance"]
-           [:div {:on-click #(send-command "rez" {:card @cursor})} "Rez"]]))]
+           [:div {:on-click #(send-command "reveal" {:card @cursor})} "Reveal"]]))]
      (when (pos? (count hosted))
         (for [card hosted]
           [:div.hosted {:class (if (and (:tapped card) (not (:inverted card)))
@@ -900,7 +900,7 @@
       [:div.hand-container
        [:div.hand-controls
         [:div.panel.blue-shade.hand
-         (drop-area (:side @game-state) name {:class (when (> size 6) "squeeze")})
+         (drop-area (:side @game-state) name {:class (when (> size 6) "squeeveale")})
          [:div
           (build-hand-card-view player remotes "card-wrapper")]
          (om/build label (:hand player) {:opts {:name "Hand"}})]
@@ -990,7 +990,7 @@
 (defmethod discard-view "Challenger" [{:keys [discard servers] :as cursor} owner]
   (om/component
     (sab/html
-      (let [faceup? #(or (:seen %) (:rezzed %))
+      (let [faceup? #(or (:seen %) (:revealed %))
             draw-card #(if (faceup? %)
                          (om/build card-view %)
                          (if (or (= (:side @game-state) :challenger)
@@ -1019,7 +1019,7 @@
 (defmethod discard-view "Contestant" [{:keys [discard servers] :as cursor} owner]
   (om/component
    (sab/html
-    (let [faceup? #(or (:seen %) (:rezzed %))
+    (let [faceup? #(or (:seen %) (:revealed %))
           draw-card #(if (faceup? %)
                        (om/build card-view %)
                        (if (or (= (:side @game-state) :contestant)
@@ -1050,7 +1050,7 @@
    (sab/html
     (when-not (empty? cards)
       (let [size (count cards)]
-        [:div.panel.blue-shade.rfg {:class (when (> size 2) "squeeze")
+        [:div.panel.blue-shade.rfg {:class (when (> size 2) "squeeveale")
                                     :on-click (when popup #(-> (om/get-node owner "rfg-popup") js/$ .fadeToggle))}
          (map-indexed (fn [i card]
                         [:div.card-wrapper {:style {:left (* (/ 128 size) i)}}
@@ -1072,7 +1072,7 @@
           size (count cards)
           side (get-in player [:identity :side])]
       (when-not (empty? cards)
-        [:div.panel.blue-shade.rfg {:class (when (> size 2) "squeeze")}
+        [:div.panel.blue-shade.rfg {:class (when (> size 2) "squeeveale")}
          (map-indexed (fn [i card]
                         [:div.card-wrapper {:style {:left (* (/ 128 size) i)}}
                          (if (= (:user player) (:user @app-state))
@@ -1092,7 +1092,7 @@
   (om/component
    (sab/html
     (let [size (count scored)]
-      [:div.panel.blue-shade.scored.squeeze
+      [:div.panel.blue-shade.scored.squeeveale
        (map-indexed (fn [i card]
                       [:div.card-wrapper {:style {:left (* (/ 128 (dec size)) i)}}
                        [:div (om/build card-view card)]])
@@ -1164,7 +1164,7 @@
                                       (if (:wounded character)
                                         "wounded"
                                         nil))}
-             (om/build card-view character {:opts {:flipped (not (:rezzed character))}})
+             (om/build card-view character {:opts {:flipped (not (:revealed character))}})
              (when (and current-character (= (:cid current-character) (:cid character)))
                run-arrow)])
           (when (and run (not current-character))
@@ -1176,7 +1176,7 @@
           (for [card content
                 :let [is-first (= card (first content))]]
             [:div.server-card {:class (when (:tapped card) "tapped")}
-             (om/build card-view card {:opts {:flipped (not (:rezzed card)) :location true}})
+             (om/build card-view card {:opts {:flipped (not (:revealed card)) :location true}})
              (when (and (not central-view) is-first)
                (om/build label content {:opts opts}))]))]]))))
 
@@ -1615,8 +1615,8 @@
                           (audio-sfx "install-contestant")
                           (audio-sfx "install-challenger")
                           (audio-sfx "play-instant")
-                          (audio-sfx "rez-character")
-                          (audio-sfx "rez-other")
+                          (audio-sfx "reveal-character")
+                          (audio-sfx "reveal-other")
                           (audio-sfx "run-successful")
                           (audio-sfx "run-unsuccessful")
                           (audio-sfx "virus-purge")))}))

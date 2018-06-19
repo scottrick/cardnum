@@ -30,10 +30,10 @@
                                            (= (:side %) "Challenger"))}
                       :effect (effect (trash target {:cause :subroutine}))})
 
-(def contestant-rez-toast
+(def contestant-reveal-toast
   "Effect to be placed with `:challenger-turn-ends` to remind players of 'when turn begins'
   triggers"
-  {:effect (req (toast state :contestant "Reminder: You have unrezzed cards with \"when turn begins\" abilities." "info"))})
+  {:effect (req (toast state :contestant "Reminder: You have unrevealed cards with \"when turn begins\" abilities." "info"))})
 
 (declare reorder-final) ; forward reference since reorder-choice and reorder-final are mutually recursive
 

@@ -7,20 +7,20 @@
 
 
 (deftest amazon-industrial-zone
-  ;; Amazon Industrial Zone - Immediately rez Character installed over its server at 3 credit discount
+  ;; Amazon Industrial Zone - Immediately reveal Character installed over its server at 3 credit discount
   (do-game
     (new-game (default-contestant [(qty "Spiderweb" 1) (qty "Amazon Industrial Zone" 1)])
               (default-challenger))
     (take-credits state :contestant 1)
     (play-from-hand state :contestant "Amazon Industrial Zone" "New remote")
     (let [aiz (get-content state :remote1 0)]
-      (core/rez state :contestant aiz)
+      (core/reveal state :contestant aiz)
       (is (= 2 (:credit (get-contestant))))
       (play-from-hand state :contestant "Spiderweb" "Server 1")
       (prompt-choice :contestant "Yes") ; optional ability
       (let [spid (get-character state :remote1 0)]
-        (is (get-in (refresh spid) [:rezzed]) "Spiderweb rezzed")
-        (is (= 1 (:credit (get-contestant))) "Paid only 1 credit to rez")))))
+        (is (get-in (refresh spid) [:revealed]) "Spiderweb revealed")
+        (is (= 1 (:credit (get-contestant))) "Paid only 1 credit to reveal")))))
 
 (deftest ben-musashi
   ;; Ben Musashi - pay 2 net damage to steal from this server
@@ -32,7 +32,7 @@
     (take-credits state :contestant 1)
     (let [bm (get-content state :remote1 0)
           hok (get-content state :remote1 1)]
-      (core/rez state :contestant bm)
+      (core/reveal state :contestant bm)
       (run-empty-server state "Server 1")
       ;; challenger now chooses which to access.
       (prompt-select :challenger hok)
@@ -59,7 +59,7 @@
     (play-from-hand state :contestant "Ben Musashi" "R&D")
     (take-credits state :contestant)
     (let [bm (get-content state :rd 0)]
-      (core/rez state :contestant bm)
+      (core/reveal state :contestant bm)
       (run-empty-server state "R&D")
       ;; challenger now chooses which to access.
       (prompt-choice :challenger "Card from deck")
@@ -88,7 +88,7 @@
     (core/gain state :challenger :credit 1)
     (let [bm (get-content state :remote1 0)
           hok (get-content state :remote1 1)]
-      (core/rez state :contestant bm)
+      (core/reveal state :contestant bm)
       (run-empty-server state "Server 1")
       ;; challenger now chooses which to access.
       (prompt-select :challenger bm)
@@ -109,7 +109,7 @@
     (take-credits state :contestant)
     (let [bm (get-content state :remote1 0)
           op (get-content state :remote1 1)]
-      (core/rez state :contestant bm)
+      (core/reveal state :contestant bm)
       (run-empty-server state "Server 1")
       ;; challenger now chooses which to access.
       (prompt-select :challenger op)
@@ -133,7 +133,7 @@
     (take-credits state :contestant)
     (let [bm (get-content state :remote1 0)
           fai (get-content state :remote1 1)]
-      (core/rez state :contestant bm)
+      (core/reveal state :contestant bm)
       (run-empty-server state "Server 1")
       ;; challenger now chooses which to access.
       (prompt-select :challenger fai)
@@ -157,7 +157,7 @@
     (play-from-hand state :contestant "Berncharacter Mai" "New remote")
     (play-from-hand state :contestant "Berncharacter Mai" "New remote")
     (play-from-hand state :contestant "Berncharacter Mai" "R&D")
-    (core/rez state :contestant (get-content state :remote1 0))
+    (core/reveal state :contestant (get-content state :remote1 0))
     (take-credits state :contestant)
     (run-empty-server state :remote1)
     (prompt-choice :contestant 0)
@@ -165,14 +165,14 @@
     (prompt-choice :challenger "Yes")
     (is (= 1 (:tag (get-challenger))))
     (is (= 2 (:credit (get-challenger))) "Challenger paid 3cr to trash Berncharacter")
-    (core/rez state :contestant (get-content state :remote2 0))
+    (core/reveal state :contestant (get-content state :remote2 0))
     (core/gain state :challenger :credit 20)
     (run-empty-server state :remote2)
     (prompt-choice :contestant 0)
     (prompt-choice :challenger 10)
     (is (not (get-content state :remote2 0)) "Berncharacter auto-trashed from unsuccessful trace")
     (is (not (:run @state)) "Run ended when Berncharacter was trashed from server")
-    (core/rez state :contestant (get-content state :rd 0))
+    (core/reveal state :contestant (get-content state :rd 0))
     (run-empty-server state :rd)
     (prompt-choice :contestant 0)
     (prompt-choice :challenger 10)
@@ -185,8 +185,8 @@
               (default-challenger))
     (play-from-hand state :contestant "Berncharacter Mai" "New remote")
     (play-from-hand state :contestant "Dedicated Response Team" "New remote")
-    (core/rez state :contestant (get-content state :remote1 0))
-    (core/rez state :contestant (get-content state :remote2 0))
+    (core/reveal state :contestant (get-content state :remote1 0))
+    (core/reveal state :contestant (get-content state :remote2 0))
     (take-credits state :contestant)
     (run-empty-server state :remote1)
     (prompt-choice :contestant 0)
@@ -197,7 +197,7 @@
     (is (= 2 (count (:discard (get-challenger)))) "Challenger took 1 meat damage")))
 
 (deftest breaker-bay-grid
-  ;; Breaker Bay Grid - Reduce rez cost of other cards in this server by 5 credits
+  ;; Breaker Bay Grid - Reduce reveal cost of other cards in this server by 5 credits
   (do-game
    (new-game (default-contestant [(qty "Breaker Bay Grid" 2) (qty "The Root" 1) (qty "Strongbox" 1)])
              (default-challenger))
@@ -206,16 +206,16 @@
    (play-from-hand state :contestant "The Root" "Server 1")
    (let [bbg1 (get-content state :remote1 0)
          root (get-content state :remote1 1)]
-     (core/rez state :contestant bbg1)
-     (core/rez state :contestant root)
-     (is (= 4 (:credit (get-contestant))) "Paid only 1 to rez The Root")
+     (core/reveal state :contestant bbg1)
+     (core/reveal state :contestant root)
+     (is (= 4 (:credit (get-contestant))) "Paid only 1 to reveal The Root")
      (play-from-hand state :contestant "Breaker Bay Grid" "R&D")
      (play-from-hand state :contestant "Strongbox" "R&D")
      (let [bbg2 (get-content state :rd 0)
            sbox (get-content state :rd 1)]
-       (core/rez state :contestant bbg2)
-       (core/rez state :contestant sbox)
-       (is (= 1 (:credit (get-contestant))) "Paid full 3 credits to rez Strongbox")))))
+       (core/reveal state :contestant bbg2)
+       (core/reveal state :contestant sbox)
+       (is (= 1 (:credit (get-contestant))) "Paid full 3 credits to reveal Strongbox")))))
 
 (deftest calibration-testing
   ;; Calibration Testing - advanceable / non-advanceable
@@ -228,7 +228,7 @@
     (play-from-hand state :contestant "Project Junebug" "Server 1")
     (let [ct (get-content state :remote1 0)
           pj (get-content state :remote1 1)]
-      (core/rez state :contestant ct)
+      (core/reveal state :contestant ct)
       (card-ability state :contestant ct 0)
       (prompt-select :contestant pj)
       (is (= 1 (:advance-counter (refresh pj))) "Project Junebug advanced")
@@ -237,7 +237,7 @@
     (play-from-hand state :contestant "PAD Campaign" "Server 2")
     (let [ct (get-content state :remote2 0)
           pad (get-content state :remote2 1)]
-      (core/rez state :contestant ct)
+      (core/reveal state :contestant ct)
       (card-ability state :contestant ct 0)
       (prompt-select :contestant pad)
       (is (= 1 (:advance-counter (refresh pad))) "PAD Campaign advanced")
@@ -251,8 +251,8 @@
    (play-from-hand state :contestant "Caprcharacter Nisei" "New remote")
    (take-credits state :contestant)
    (let [caprcharacter (get-content state :remote1 0)]
-     ;; Check Caprcharacter triggers properly on no character (and rezzed)
-     (core/rez state :contestant caprcharacter)
+     ;; Check Caprcharacter triggers properly on no character (and revealed)
+     (core/reveal state :contestant caprcharacter)
      (run-on state "Server 1")
      (is (prompt-is-card? :contestant caprcharacter)
          "Caprcharacter prompt even with no character, once challenger makes run")
@@ -294,8 +294,8 @@
     (let [chilo (get-content state :remote1 0)
           cad (get-character state :remote1 0)]
       (run-on state "R&D")
-      (core/rez state :contestant cad)
-      (core/rez state :contestant chilo)
+      (core/reveal state :contestant cad)
+      (core/reveal state :contestant chilo)
       (card-subroutine state :contestant cad 0)
       (prompt-choice :contestant 0)
       (prompt-choice :challenger 0)
@@ -311,7 +311,7 @@
           "Challenger took 1 tag given from successful trace during run on ChiLo server"))))
 
 (deftest contestantorate-troubleshooter
-  ;; Contestantorate Troubleshooter - Pay X credits and trash to add X strength to a piece of rezzed Character
+  ;; Contestantorate Troubleshooter - Pay X credits and trash to add X strength to a piece of revealed Character
   (do-game
     (new-game (default-contestant [(qty "Quandary" 2) (qty "Contestantorate Troubleshooter" 1)])
               (default-challenger))
@@ -322,13 +322,13 @@
     (let [ct (get-content state :hq 0)
           q1 (get-character state :hq 0)
           q2 (get-character state :hq 1)]
-      (core/rez state :contestant q1)
+      (core/reveal state :contestant q1)
       (is (= 8 (:credit (get-contestant))))
-      (core/rez state :contestant ct)
+      (core/reveal state :contestant ct)
       (card-ability state :contestant ct 0)
       (prompt-choice :contestant 5)
       (prompt-select :contestant q2)
-      (is (nil? (:current-strength (refresh q2))) "Outer Quandary unrezzed; can't be targeted")
+      (is (nil? (:current-strength (refresh q2))) "Outer Quandary unrevealed; can't be targeted")
       (prompt-select :contestant q1)
       (is (= 5 (:current-strength (refresh q1))) "Inner Quandary boosted to 5 strength")
       (is (empty? (get-content state :hq))
@@ -343,7 +343,7 @@
     (new-game (default-contestant [(qty "Crisium Grid" 2)])
               (default-challenger [(qty "Desperado" 1) (qty "Temüjin Contract" 1)]))
     (play-from-hand state :contestant "Crisium Grid" "HQ")
-    (core/rez state :contestant (get-content state :hq 0))
+    (core/reveal state :contestant (get-content state :hq 0))
     (take-credits state :contestant)
     (is (= 4 (:credit (get-contestant))) "Contestant has 4 credits")
     (core/gain state :challenger :credit 4)
@@ -370,7 +370,7 @@
       (is (= 3 (virus-counters cache)))
       (play-from-hand state :challenger "Medium")
       (take-credits state :challenger 2)
-      (core/rez state :contestant cvs)
+      (core/reveal state :contestant cvs)
       (card-ability state :contestant cvs 0)
       ;; nothing in hq content
       (is (empty? (get-content state :hq)) "CVS was trashed")
@@ -464,7 +464,7 @@
       (is (= 2 (:advance-counter (refresh gb))) "Ghost Branch advanced twice")
       (take-credits state :contestant)
       (run-on state "Server 1")
-      (core/rez state :contestant drt)
+      (core/reveal state :contestant drt)
       (run-successful state)
       (is (prompt-is-type? :challenger :waiting) "Challenger has prompt to wait for Ghost Branch")
       (prompt-choice :contestant "Yes")
@@ -479,7 +479,7 @@
               (default-challenger))
     (play-from-hand state :contestant "Georgia Emelyov" "New remote")
     (let [geo (get-content state :remote1 0)]
-      (core/rez state :contestant geo)
+      (core/reveal state :contestant geo)
       (take-credits state :contestant)
       (run-on state "Server 1")
       (run-jack-out state)
@@ -510,9 +510,9 @@
     (let [helheim (get-content state :rd 0)
           gutenberg (get-character state :rd 0)
           vanilla (get-character state :rd 1)]
-      (core/rez state :contestant helheim)
-      (core/rez state :contestant gutenberg)
-      (core/rez state :contestant vanilla)
+      (core/reveal state :contestant helheim)
+      (core/reveal state :contestant gutenberg)
+      (core/reveal state :contestant vanilla)
       (is (= 6 (:current-strength (refresh gutenberg))))
       (is (= 0 (:current-strength (refresh vanilla))))
       (card-ability state :contestant helheim 0)
@@ -537,7 +537,7 @@
               (default-challenger))
     (play-from-hand state :contestant "Hokusai Grid" "HQ")
     (take-credits state :contestant)
-    (core/rez state :contestant (get-content state :hq 0))
+    (core/reveal state :contestant (get-content state :hq 0))
     (run-empty-server state :rd)
     (is (empty? (:discard (get-challenger))) "No net damage done for successful run on R&D")
     (run-empty-server state :hq)
@@ -551,7 +551,7 @@
     (starting-hand state :contestant ["Jinja City Grid"])
     (core/gain state :contestant :click 6)
     (play-from-hand state :contestant "Jinja City Grid" "New remote")
-    (core/rez state :contestant (get-content state :remote1 0))
+    (core/reveal state :contestant (get-content state :remote1 0))
     (dotimes [n 5]
       (core/click-draw state :contestant 1)
       (prompt-choice :contestant "Yes")
@@ -572,7 +572,7 @@
     (play-from-hand state :challenger "Corroder")
     (run-on state :hq)
     (let [keeg (get-content state :hq 0)]
-      (core/rez state :contestant keeg)
+      (core/reveal state :contestant keeg)
       (card-ability state :contestant keeg 0)
       (is (= 1 (count (get-content state :hq))) "Keegan didn't fire, Challenger has no tags")
       (core/gain state :challenger :tag 2)
@@ -590,7 +590,7 @@
     (starting-hand state :challenger [])
     (is (= 3 (:click (get-contestant))) "Contestant has 3 clicks")
     (play-from-hand state :contestant "Manta Grid" "HQ")
-    (core/rez state :contestant (get-content state :hq 0))
+    (core/reveal state :contestant (get-content state :hq 0))
     (take-credits state :contestant)
     (core/click-draw state :challenger nil)
     (core/click-draw state :challenger nil)
@@ -625,8 +625,8 @@
           en (get-character state :hq 0)
           sn (-> @state :challenger :rig :hazard first)]
       (run-on state "HQ")
-      (core/rez state :contestant mb)
-      (core/rez state :contestant en)
+      (core/reveal state :contestant mb)
+      (core/reveal state :contestant en)
       (card-ability state :contestant mb 0)
       (card-ability state :challenger sn 0)
       ;; both prompts should be on Batty
@@ -686,7 +686,7 @@
     (core/gain state :contestant :click 2)
     (play-from-hand state :contestant "NeoTokyo Grid" "New remote")
     (play-from-hand state :contestant "Nisei MK II" "Server 1")
-    (core/rez state :contestant (get-content state :remote1 0))
+    (core/reveal state :contestant (get-content state :remote1 0))
     (let [nis (get-content state :remote1 1)]
       (play-from-hand state :contestant "Shipment from SanSan")
       (prompt-choice :contestant "2")
@@ -713,7 +713,7 @@
    (play-from-hand state :contestant "Mental Health Clinic" "Server 1")
    (let [otg (get-content state :remote1 0)]
      (take-credits state :contestant)
-     (core/rez state :contestant (refresh otg))
+     (core/reveal state :contestant (refresh otg))
      (is (not (core/can-run-server? state "Server 1")) "Challenger can only run on centrals")
      (run-empty-server state "R&D")
      (is (not (core/can-run-server? state "Server 1")) "Challenger cannot run on Off the Grid")
@@ -735,7 +735,7 @@
     (let [ohg (get-content state :remote1 0)
           hok (get-content state :remote1 1)]
       (run-on state "Server 1")
-      (core/rez state :contestant ohg)
+      (core/reveal state :contestant ohg)
       (run-successful state)
       ;; challenger now chooses which to access.
       (prompt-select :challenger hok)
@@ -759,7 +759,7 @@
     (take-credits state :contestant 2)
     (let [ohg (get-content state :hq 0)]
       (run-on state "HQ")
-      (core/rez state :contestant ohg)
+      (core/reveal state :contestant ohg)
       (run-successful state)
       ;; challenger now chooses which to access.
       (prompt-choice :challenger "Card from hand")
@@ -783,7 +783,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Gang Sign")
     (take-credits state :challenger)
-    (core/rez state :contestant (get-content state :hq 0))
+    (core/reveal state :contestant (get-content state :hq 0))
     (score-agenda state :contestant (get-content state :remote1 0))
     ;; Gang sign fires
     (prompt-choice :challenger "Card from hand")
@@ -805,14 +805,14 @@
           fae (get-in @state [:challenger :rig :resource 0])
           tw (get-in @state [:challenger :rig :muthereff 0])]
       (run-on state "Server 1")
-      (core/rez state :contestant pag)
+      (core/reveal state :contestant pag)
       (is (:cannot-jack-out (get-in @state [:run])) "Jack out disabled for Challenger") ; UI button greyed out
       (core/trash state :challenger tw)
       (is (:cannot-jack-out (get-in @state [:run])) "Muthereff trash didn't disable jack out prevention")
       (core/trash state :challenger fae)
       (is (nil? (:cannot-jack-out (get-in @state [:run]))) "Jack out enabled by resource trash")
       (run-on state "Server 1")
-      (is (:cannot-jack-out (get-in @state [:run])) "Prevents jack out when region is rezzed prior to run"))))
+      (is (:cannot-jack-out (get-in @state [:run])) "Prevents jack out when region is revealed prior to run"))))
 
 (deftest prisec
   ;; Prisec - Pay 2 credits to give challenger 1 tag and do 1 meat damage, only when installed
@@ -833,7 +833,7 @@
     (is (not (:prompt @state)) "Prisec does not trigger from HQ")))
 
 (deftest prisec-dedicated-response-team
-  ;; Multiple unrezzed regions in Archives interaction with DRT.
+  ;; Multiple unrevealed regions in Archives interaction with DRT.
   (do-game
     (new-game (default-contestant [(qty "Prisec" 2) (qty "Dedicated Response Team" 1)])
               (default-challenger [(qty "Sure Gamble" 3) (qty "Diesel" 3)]))
@@ -841,17 +841,17 @@
     (play-from-hand state :contestant "Prisec" "Archives")
     (play-from-hand state :contestant "Prisec" "Archives")
     (core/gain state :contestant :click 1 :credit 14)
-    (core/rez state :contestant (get-content state :remote1 0))
+    (core/reveal state :contestant (get-content state :remote1 0))
     (take-credits state :contestant)
 
     (run-empty-server state :archives)
     (is (:run @state) "Run still active")
-    (prompt-choice :challenger "Unrezzed region in Archives")
+    (prompt-choice :challenger "Unrevealed region in Archives")
     (prompt-select :challenger (get-content state :archives 0))
     (prompt-choice :contestant "Yes") ; contestant pay for PriSec
     (prompt-choice :challenger "No") ; challenger don't pay to trash
     (is (:run @state) "Run still active")
-    (prompt-choice :challenger "Unrezzed region in Archives")
+    (prompt-choice :challenger "Unrevealed region in Archives")
     (prompt-choice :contestant "Yes") ; contestant pay for PriSec
     (prompt-choice :challenger "No") ; challenger don't pay to trash
     (is (not (:run @state)) "Run ended")
@@ -884,7 +884,7 @@
 
     (let [rh (get-content state :remote1 0)
           hok (get-content state :remote1 1)]
-      (core/rez state :contestant rh)
+      (core/reveal state :contestant rh)
       (run-empty-server state "Server 1")
       ;; challenger now chooses which to access.
       (prompt-select :challenger hok)
@@ -913,7 +913,7 @@
     (core/gain state :challenger :credit 1)
     (let [rh (get-content state :remote1 0)
           hok (get-content state :remote1 1)]
-      (core/rez state :contestant rh)
+      (core/reveal state :contestant rh)
       (run-empty-server state "Server 1")
       ;; challenger now chooses which to access.
       (prompt-select :challenger rh)
@@ -948,7 +948,7 @@
     (take-credits state :contestant 1)
 
     (let [rh (get-content state :remote1 0)]
-      (core/rez state :contestant rh)
+      (core/reveal state :contestant rh)
       (run-empty-server state "Server 2")
       ;; access is automatic
       (prompt-choice :challenger "Steal")
@@ -963,7 +963,7 @@
     (play-from-hand state :contestant "Ruhr Valley" "HQ")
     (take-credits state :contestant)
     (let [ruhr (get-content state :hq 0)]
-      (core/rez state :contestant ruhr)
+      (core/reveal state :contestant ruhr)
       (is (= 4 (:click (get-challenger))))
       (run-on state :hq)
       (run-jack-out state)
@@ -992,7 +992,7 @@
     (play-from-hand state :contestant "Ruhr Valley" "HQ")
     (take-credits state :contestant)
     (let [ruhr (get-content state :hq 0)]
-      (core/rez state :contestant ruhr)
+      (core/reveal state :contestant ruhr)
       (is (= 4 (:click (get-challenger))))
       (run-on state :rd)
       (run-jack-out state)
@@ -1012,7 +1012,7 @@
     (take-credits state :contestant)
     (let [ryon (get-content state :hq 0)]
       (run-on state :hq)
-      (core/rez state :contestant ryon)
+      (core/reveal state :contestant ryon)
       (card-ability state :contestant ryon 0)
       (is (= 3 (:click (get-challenger))))
       (is (= 0 (:brain-damage (get-challenger))))
@@ -1038,14 +1038,14 @@
           sg (get-content state :hq 0)]
       (core/gain state :contestant :click 1)
       (advance state iw1)
-      (core/rez state :contestant sg)
-      (core/rez state :contestant (refresh iw1))
+      (core/reveal state :contestant sg)
+      (core/reveal state :contestant (refresh iw1))
       (is (= 1 (:extra-advance-counter (refresh iw1))) "1 fake advancement token")
       (is (= 1 (:advance-counter (refresh iw1))) "Only 1 real advancement token")
       (is (= 3 (:current-strength (refresh iw1))) "Satellite Grid counter boosting strength by 1")
-      (core/rez state :contestant (refresh iw2))
+      (core/reveal state :contestant (refresh iw2))
       (is (= 1 (:current-strength (refresh iw2))) "Satellite Grid not impacting Character elsewhere")
-      (core/derez state :contestant sg)
+      (core/hide state :contestant sg)
       (is (= 2 (:current-strength (refresh iw1))) "Ice Wall strength boost only from real advancement"))))
 
 (deftest signal-jamming
@@ -1061,7 +1061,7 @@
     (let [smc1 (get-in @state [:challenger :rig :resource 0])
           smc2 (get-in @state [:challenger :rig :resource 1])
           sj (get-content state :hq 0)]
-      (core/rez state :contestant sj)
+      (core/reveal state :contestant sj)
       (run-on state "HQ")
       (run-continue state)
       (card-ability state :contestant sj 0)
@@ -1082,7 +1082,7 @@
 
     (let [sb (get-content state :remote1 0)
           hok (get-content state :remote1 1)]
-      (core/rez state :contestant sb)
+      (core/reveal state :contestant sb)
       (run-empty-server state "Server 1")
       (prompt-select :challenger hok)
       (is (= "House of Knives" (:title (:card (first (:prompt (get-challenger))))))
@@ -1110,7 +1110,7 @@
     (core/gain state :challenger :credit 1)
     (let [sb (get-content state :remote1 0)
           hok (get-content state :remote1 1)]
-      (core/rez state :contestant sb)
+      (core/reveal state :contestant sb)
       (run-empty-server state "Server 1")
       (prompt-select :challenger sb)
       (prompt-choice :challenger "Yes") ; pay to trash
@@ -1120,7 +1120,7 @@
       (is (= 1 (count (:scored (get-challenger)))) "1 scored agenda"))))
 
 (deftest surat-city-grid
-  ;; Surat City Grid - Trigger on rez of a card in/protecting same server to rez another card at 2c discount
+  ;; Surat City Grid - Trigger on reveal of a card in/protecting same server to reveal another card at 2c discount
   (do-game
     (new-game (default-contestant [(qty "Surat City Grid" 2) (qty "Cyberdex Virus Suite" 2)
                              (qty "Enigma" 1) (qty "Wraparound" 1)])
@@ -1132,25 +1132,25 @@
     (let [scg1 (get-content state :remote1 0)
           cvs1 (get-content state :remote1 1)
           wrap (get-character state :remote1 0)]
-      (core/rez state :contestant scg1)
-      (core/rez state :contestant cvs1)
+      (core/reveal state :contestant scg1)
+      (core/reveal state :contestant cvs1)
       (is (= 15 (:credit (get-contestant))))
       (is (= (:cid scg1) (-> (get-contestant) :prompt first :card :cid)) "Surat City Grid triggered from region in same remote")
       (prompt-choice :contestant "Yes")
       (prompt-select :contestant wrap)
-      (is (get-in (refresh wrap) [:rezzed]) "Wraparound is rezzed")
-      (is (= 15 (:credit (get-contestant))) "Wraparound rezzed for free with 2c discount from SCG")
+      (is (get-in (refresh wrap) [:revealed]) "Wraparound is revealed")
+      (is (= 15 (:credit (get-contestant))) "Wraparound revealed for free with 2c discount from SCG")
       (play-from-hand state :contestant "Surat City Grid" "HQ")
       (play-from-hand state :contestant "Enigma" "HQ")
       (play-from-hand state :contestant "Cyberdex Virus Suite" "HQ")
       (let [scg2 (get-content state :hq 0)
             cvs2 (get-content state :hq 1)
             enig (get-character state :hq 0)]
-        (core/rez state :contestant scg2)
-        (core/rez state :contestant cvs2)
+        (core/reveal state :contestant scg2)
+        (core/reveal state :contestant cvs2)
         (is (empty? (:prompt (get-contestant))) "SCG didn't trigger, regions in root of same central aren't considered in server")
-        (core/derez state :contestant (refresh wrap))
-        (core/rez state :contestant enig)
+        (core/hide state :contestant (refresh wrap))
+        (core/reveal state :contestant enig)
         (is (= (:cid scg2) (-> (get-contestant) :prompt first :card :cid)) "SCG did trigger for Character protecting HQ")))))
 
 (deftest tori-hanzo
@@ -1167,8 +1167,8 @@
     (let [pup (get-character state :hq 0)
           tori (get-content state :hq 0)
           nshld (get-in @state [:challenger :rig :resource 0])]
-      (core/rez state :contestant pup)
-      (core/rez state :contestant tori)
+      (core/reveal state :contestant pup)
+      (core/reveal state :contestant tori)
       (card-subroutine state :contestant pup 0)
       (card-ability state :challenger nshld 0)
       (prompt-choice :challenger "Done")
@@ -1196,8 +1196,8 @@
     (run-on state "Archives")
     (let [hg (get-content state :archives 0)
           tori (get-content state :archives 1)]
-      (core/rez state :contestant hg)
-      (core/rez state :contestant tori)
+      (core/reveal state :contestant hg)
+      (core/reveal state :contestant tori)
       (run-successful state)
       (prompt-choice :contestant "No") ; Tori prompt to pay 2c to replace 1 net with 1 brain
       (is (= 1 (count (:discard (get-challenger)))) "1 net damage suffered")
@@ -1225,7 +1225,7 @@
     (play-from-hand state :contestant "Underway Grid" "New remote")
     (play-from-hand state :contestant "Eve Campaign" "Server 1")
     (take-credits state :contestant)
-    (core/rez state :contestant (get-content state :remote1 0))
+    (core/reveal state :contestant (get-content state :remote1 0))
     (let [eve1 (get-content state :remote1 1)]
       (play-from-hand state :challenger "Drive By")
       (prompt-select :challenger eve1)
@@ -1240,7 +1240,7 @@
     (take-credits state :contestant 2)
     (run-on state "Server 1")
     (let [vg (get-content state :remote1 0)]
-      (core/rez state :contestant vg)
+      (core/reveal state :contestant vg)
       (card-ability state :contestant vg 0)
       (card-ability state :contestant vg 0) ; only need the run to exist for test, just pretending the Challenger has broken all subs on 2 character
       (is (= 3 (core/hand-size state :challenger)) "Challenger max hand size reduced by 2")

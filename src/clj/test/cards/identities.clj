@@ -155,7 +155,7 @@
     (take-credits state :contestant)
     (run-on state :hq)
     (let [pup (get-character state :hq 0)]
-      (core/rez state :contestant pup)
+      (core/reveal state :contestant pup)
       (card-subroutine state :contestant pup 0)
       (prompt-choice :contestant "Yes")
       (let [imp (find-card "Imp" (:hand (get-challenger)))]
@@ -185,7 +185,7 @@
     (play-from-hand state :challenger "Employee Strike")
     (run-on state :hq)
     (let [pup (get-character state :hq 0)]
-      (core/rez state :contestant pup)
+      (core/reveal state :contestant pup)
       (card-subroutine state :contestant pup 0)
       (is (empty? (:prompt (get-contestant))) "No choice because of Employee Strike")
       (card-subroutine state :contestant pup 0)
@@ -315,7 +315,7 @@
   (do-game
     (new-game
       (make-deck "GRNDL: Power Unleashed" [(qty "Hedge Fund" 3)])
-      (make-deck "Valencia Estevez: The Angel of Cayambe" [(qty "Sure Gamble" 3)]))
+      (make-deck "Valencia Esteveveal: The Angel of Cayambe" [(qty "Sure Gamble" 3)]))
     (is (= 10 (:credit (get-contestant))) "GRNDL starts with 10 credits")
     (is (= 1 (:bad-publicity (get-contestant))) "GRNDL starts with 1 bad publicity")))
 
@@ -361,7 +361,7 @@
     (is (= 2 (:agenda-point (get-challenger))) "Third steal prevented")))
 
 (deftest haas-bioroid-architects-of-tomorrow
-  ;; Architects of Tomorrow - prompt to rez after passing bioroid
+  ;; Architects of Tomorrow - prompt to reveal after passing bioroid
   (do-game
     (new-game
       (make-deck "Haas-Bioroid: Architects of Tomorrow" [(qty "Eli 1.0" 2) (qty "Pup" 1)])
@@ -372,13 +372,13 @@
     (play-from-hand state :contestant "Eli 1.0" "HQ")
     (take-credits state :contestant)
     (run-on state "Archives")
-    (core/rez state :contestant (get-character state :archives 1))
+    (core/reveal state :contestant (get-character state :archives 1))
     (run-continue state)
-    (core/rez state :contestant (get-character state :archives 0))
-    (is (= 3 (:credit (get-contestant))) "Contestant has 3 credits after rezzing Eli 1.0")
+    (core/reveal state :contestant (get-character state :archives 0))
+    (is (= 3 (:credit (get-contestant))) "Contestant has 3 credits after revealing Eli 1.0")
     (run-continue state)
     (prompt-select :contestant (get-character state :hq 0))
-    (is (= 3 (:credit (get-contestant))) "Contestant not charged for Architects of Tomorrow rez of Eli 1.0")))
+    (is (= 3 (:credit (get-contestant))) "Contestant not charged for Architects of Tomorrow reveal of Eli 1.0")))
 
 (deftest haas-bioroid-asa-group
   ;; Asa Group - don't allow installation of operations
@@ -420,7 +420,7 @@
       (default-challenger))
     (play-from-hand state :contestant "Eli 1.0" "Archives")
     (let [eli (get-character state :archives 0)]
-      (core/rez state :contestant eli)
+      (core/reveal state :contestant eli)
       (is (= 5 (:current-strength (refresh eli))) "Eli 1.0 at 5 strength"))))
 
 (deftest iain-stirling-credits
@@ -452,7 +452,7 @@
     (trash-from-hand state :contestant "Hedge Fund")
     (trash-from-hand state :contestant "Hedge Fund")
     (let [pad (get-content state :remote1 0)]
-      (core/rez state :contestant pad)
+      (core/reveal state :contestant pad)
       (take-credits state :contestant)
       (run-empty-server state "Server 1")
       (is (= 8 (core/trash-cost state :challenger (refresh pad)))))))
@@ -480,7 +480,7 @@
         (take-credits state :challenger)
         (play-from-hand state :contestant "Global Food Initiative" "New remote")
         (score-agenda state :contestant (get-content state :remote2 0))
-        (core/rez state :contestant enf)
+        (core/reveal state :contestant enf)
         (prompt-select :contestant (get-in (get-contestant) [:scored 0]))
         (prompt-select :contestant iwall)
         (is (= 4 (:advance-counter (refresh iwall))) "Jemison placed 4 advancements")))))
@@ -493,7 +493,7 @@
     (play-from-hand state :contestant "Data Raven" "Archives")
     (take-credits state :contestant)
     (let [dr (-> @state :contestant :servers :archives :characters first)]
-      (core/rez state :contestant dr)
+      (core/reveal state :contestant dr)
       (core/click-run state :challenger {:server "Archives"})
       (card-ability state :contestant dr 0)
       (is (= 0 (:tag (get-challenger))) "Jesminder avoided first tag during the run")
@@ -680,7 +680,7 @@
       (make-deck "Khan: Savvy Skiptracer" [(qty "Corroder" 1)]))
     (play-from-hand state :contestant "Eli 1.0" "Archives")
     (play-from-hand state :contestant "Caprcharacter Nisei" "Archives")
-    (core/rez state :contestant (get-content state :archives 0))
+    (core/reveal state :contestant (get-content state :archives 0))
     (take-credits state :contestant)
     (run-on state "Archives")
     (run-continue state)
@@ -842,7 +842,7 @@
     (run-on state "HQ")
     (let [iwall (get-character state :hq 0)
           nasir (get-in @state [:challenger :identity])]
-      (core/rez state :contestant iwall)
+      (core/reveal state :contestant iwall)
       (is (= 5 (:credit (get-challenger))) "Nasir Ability does not trigger automatically")
       (card-ability state :challenger nasir 0)
       (is (= 1 (:credit (get-challenger))) "Credits at 1 after Nasir ability trigger"))))
@@ -861,7 +861,7 @@
     (run-on state "HQ")
     (let [iwall (get-in @state [:contestant :servers :hq :characters 0])
           nasir (get-in @state [:challenger :identity])]
-      (core/rez state :contestant iwall)
+      (core/reveal state :contestant iwall)
       (is (= 3 (:credit (get-challenger))) "Pay 3 to install Xanadu")
       (card-ability state :challenger nasir 0)
       (is (= 2 (:credit (get-challenger))) "Gain 1 more credit due to Xanadu"))))
@@ -898,7 +898,7 @@
       (default-challenger))
     (play-from-hand state :contestant "Launch Campaign" "New remote")
     (play-from-hand state :contestant "Dedicated Response Team" "New remote")
-    (core/rez state :contestant (get-content state :remote2 0))
+    (core/reveal state :contestant (get-content state :remote2 0))
     (take-credits state :contestant)
     (run-empty-server state "Server 1")
     (prompt-choice :challenger "Yes")
@@ -939,14 +939,14 @@
     (let [s1 (get-in @state [:contestant :servers :hq :characters 0])
           s2 (get-in @state [:contestant :servers :hq :characters 1])]
       (run-on state "HQ")
-      (core/rez state :contestant s2)
+      (core/reveal state :contestant s2)
       (is (= 4 (:credit (get-contestant))))
       (card-subroutine state :contestant s2 0)
       (prompt-choice :contestant "0 [Credits]")
       (prompt-choice :challenger "0 [Credits]")
       (is (= 5 (:credit (get-contestant))) "Gained 1 credit from psi game")
       (core/no-action state :contestant nil)
-      (core/rez state :contestant s1)
+      (core/reveal state :contestant s1)
       (is (= 4 (:credit (get-contestant))))
       (card-subroutine state :contestant s1 0)
       (prompt-choice :contestant "0 [Credits]")
@@ -1007,13 +1007,13 @@
           wrap1 (get-character state :hq 0)
           wrap2 (get-character state :hq 1)]
       (card-ability state :challenger null 0)
-      (is (empty? (:prompt (get-challenger))) "Ability won't work on unrezzed Character")
-      (core/rez state :contestant wrap2)
+      (is (empty? (:prompt (get-challenger))) "Ability won't work on unrevealed Character")
+      (core/reveal state :contestant wrap2)
       (card-ability state :challenger null 0)
       (prompt-select :challenger (find-card "Sure Gamble" (:hand (get-challenger))))
       (is (= 5 (:current-strength (refresh wrap2))) "Wraparound reduced to 5 strength")
       (run-continue state)
-      (core/rez state :contestant wrap1)
+      (core/reveal state :contestant wrap1)
       (card-ability state :challenger null 0)
       (is (empty? (:prompt (get-challenger))) "Ability already used this turn")
       (run-jack-out state)
@@ -1032,8 +1032,8 @@
     (let [null (get-in @state [:challenger :identity])
           spider (get-character state :hq 0)
           wrap (get-character state :hq 1)]
-      (core/rez state :contestant spider)
-      (core/rez state :contestant wrap)
+      (core/reveal state :contestant spider)
+      (core/reveal state :contestant wrap)
       (play-from-hand state :challenger "Parasite")
       (prompt-select :challenger (refresh spider))
       (run-on state "HQ")
@@ -1079,7 +1079,7 @@
     (take-credits state :contestant)
     (let [omar (get-in @state [:challenger :identity])
           ash (get-content state :hq 0)]
-      (core/rez state :contestant ash)
+      (core/reveal state :contestant ash)
       (card-ability state :challenger omar 0)
       (run-successful state)
       (prompt-choice :challenger "HQ")
@@ -1098,7 +1098,7 @@
     (take-credits state :contestant)
     (let [omar (get-in @state [:challenger :identity])
           cr (get-content state :archives 0)]
-      (core/rez state :contestant cr)
+      (core/reveal state :contestant cr)
       (card-ability state :challenger omar 0)
       (run-successful state)
       (is (= (:cid cr) (-> (get-challenger) :prompt first :card :cid)))
@@ -1147,7 +1147,7 @@
     (let [q (get-in @state [:challenger :identity])
           iwall (get-character state :hq 0)
           qdef (core/card-def (get-in @state [:challenger :identity]))]
-      (core/rez state :contestant iwall)
+      (core/reveal state :contestant iwall)
       (card-ability state :challenger q 0)
       (is (last-log-contains? state (get-in qdef [:abilities 0 :msg]))
           "Quetzal ability did trigger")
@@ -1167,8 +1167,8 @@
           "Quetzal ability did trigger")
       (core/jack-out state :challenger nil))))
 
-(deftest reina-rez-cost-increase
-  ;; Reina Roja - Increase cost of first rezzed Character
+(deftest reina-reveal-cost-increase
+  ;; Reina Roja - Increase cost of first revealed Character
   (do-game
     (new-game
       (default-contestant [(qty "Quandary" 3)])
@@ -1178,8 +1178,8 @@
     (is (= 7 (:credit (get-contestant))))
     (run-on state "R&D")
     (let [quan (get-character state :rd 0)]
-      (core/rez state :contestant quan)
-      (is (= 5 (:credit (get-contestant))) "Rez cost increased by 1"))))
+      (core/reveal state :contestant quan)
+      (is (= 5 (:credit (get-contestant))) "Reveal cost increased by 1"))))
 
 (deftest rielle-kit-peddler-ability
   ;; Rielle "Kit" Peddler - Give Character Code Gate
@@ -1191,7 +1191,7 @@
     (run-on state "HQ")
     (let [k (get-in @state [:challenger :identity])
           iwall (get-character state :hq 0)]
-      (core/rez state :contestant iwall)
+      (core/reveal state :contestant iwall)
       (card-ability state :challenger k 0)
       (is (core/has-subtype? (refresh iwall) "Barrier") "Ice Wall has Barrier")
       (is (core/has-subtype? (refresh iwall) "Code Gate") "Ice Wall has Code Gate"))))
@@ -1292,7 +1292,7 @@
     (is (= 12 (get-counters (get-muthereff state 0) :credit)) "12 cr on Temujin")))
 
 (deftest spark-advertisements
-  ;; Spark Agency - Rezzing advertisements
+  ;; Spark Agency - Revealing advertisements
   (do-game
     (new-game
       (make-deck "Spark Agency: Worldswide Reach" [(qty "Launch Campaign" 3)])
@@ -1303,17 +1303,17 @@
     (let [lc1 (get-content state :remote1 0)
           lc2 (get-content state :remote2 0)
           lc3 (get-content state :remote3 0)]
-      (core/rez state :contestant lc1)
+      (core/reveal state :contestant lc1)
       (is (= 4 (:credit (get-challenger)))
-          "Challenger lost 1 credit from rez of advertisement (Contestant turn)")
-      (core/rez state :contestant lc3)
+          "Challenger lost 1 credit from reveal of advertisement (Contestant turn)")
+      (core/reveal state :contestant lc3)
       (is (= 4 (:credit (get-challenger)))
-          "Challenger did not lose credit from second Spark rez")
+          "Challenger did not lose credit from second Spark reveal")
       (take-credits state :contestant)
       (run-on state "Server 1")
-      (core/rez state :contestant lc2)
+      (core/reveal state :contestant lc2)
       (is (= 3 (:credit (get-challenger)))
-          "Challenger lost 1 credit from rez of advertisement (Challenger turn)"))))
+          "Challenger lost 1 credit from reveal of advertisement (Challenger turn)"))))
 
 (deftest strategic-innovations-future-forward
   ;; Strategic Innovations: Future Forward - Ability
@@ -1330,14 +1330,14 @@
           i2 (get-character state :remote2 0)]
       (take-credits state :contestant 0)
       (take-credits state :challenger)
-      (core/rez state :contestant i1)
+      (core/reveal state :contestant i1)
       (take-credits state :contestant)
       (take-credits state :challenger)
       (is (= 1 (count (:prompt (get-contestant)))) "Contestant prompted to trigger Strategic Innovations")
       (prompt-select :contestant (first (:discard (get-contestant))))
       (is (empty? (:discard (get-contestant))) "Hedge Fund moved back to R&D")
       (take-credits state :contestant)
-      (core/rez state :contestant i2)
+      (core/reveal state :contestant i2)
       (take-credits state :challenger)
       (is (= 0 (count (:prompt (get-contestant))))
           "Contestant not prompted to trigger Strategic Innovations"))))
@@ -1392,7 +1392,7 @@
       (let [scored (get-in @state [:contestant :scored 0])]
         (is (= 1 (get-counters (refresh scored) :agenda)) "1 counter added by Titan")
         (is (= 10 (get-counters (refresh scored) :credit)) "10 credits from Titan")
-        (core/rez state :contestant my)
+        (core/reveal state :contestant my)
         (card-ability state :contestant my 1)
         (prompt-select :contestant (refresh scored))
         (is (= 0 (get-counters (refresh scored) :agenda)) "Agenda counter used by Mark Yale")
