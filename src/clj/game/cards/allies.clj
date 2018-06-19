@@ -1,7 +1,9 @@
 (in-ns 'game.core)
 
 (def cards-allies
-  {"A More or Less Decent Giant"
+  {"\"Two-headed\" Troll"
+   {:hosting {:req #(and (character? %) (rezzed? %))}}
+   "A More or Less Decent Giant"
    {:hosting {:req #(and (character? %) (rezzed? %))}}
    "Bill the Pony"
    {:hosting {:req #(and (character? %) (rezzed? %))}}
