@@ -1,7 +1,7 @@
 (in-ns 'game.core)
 
 (declare active? all-installed cards card-init deactivate card-flag? get-card-hosted handle-end-run hazard? has-subtype? character?
-         make-eid resource? register-events remove-from-host remove-icon reset-card muthereff? rezzed? trash trigger-event update-hosted!
+         make-eid resource? register-events remove-from-host remove-icon reset-card muthereff? revealed? trash trigger-event update-hosted!
          update-character-strength unregister-events)
 
 ;;; Functions for loading card information.
@@ -90,7 +90,7 @@
              hosted (seq (flatten (map
                       (if same-zone? update-hosted trash-hosted)
                       (:hosted card))))
-             c (if (and (= side :contestant) (= (first dest) :discard) (rezzed? card))
+             c (if (and (= side :contestant) (= (first dest) :discard) (revealed? card))
                  (assoc card :seen true) card)
              c (if (and (or installed host (#{:servers :scored :current} (first zone)))
                         (#{:hand :deck :discard :rfg} (first dest))
@@ -149,7 +149,7 @@
                         card)]
      (update! state side (update-in updated-card [key] #(+ (or % 0) n)))
      (if (= key :advance-counter)
-       (do (when (and (character? updated-card) (rezzed? updated-card)) (update-character-strength state side updated-card))
+       (do (when (and (character? updated-card) (revealed? updated-card)) (update-character-strength state side updated-card))
            (if-not placed
              (trigger-event state side :advance (get-card state updated-card))
              (trigger-event state side :advancement-placed (get-card state updated-card))))

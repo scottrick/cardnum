@@ -350,30 +350,30 @@
   (let [get-root-content (fn [state]
                            (filter #(not (contains? already-accessed %)) (get-in @state [:contestant :servers zone :content])))
         server-name (central->name zone)
-        unrezzed-region (str "Unrezzed region in " server-name)
+        unrevealed-region (str "Unrevealed region in " server-name)
         card-from (str "Card from " label)]
     {:delayed-completion true
      :prompt "Select a card to access."
      :choices (concat (when (pos? amount) [card-from])
-                      (map #(if (rezzed? %) (:title %) unrezzed-region)
+                      (map #(if (revealed? %) (:title %) unrevealed-region)
                            (get-root-content state)))
      :effect (req (cond
-                    (= target unrezzed-region)
-                    ;; accessing an unrezzed region
+                    (= target unrevealed-region)
+                    ;; accessing an unrevealed region
                     (let [from-root (get-root-content state)
-                          unrezzed (filter #(and (= (last (:zone %)) :content) (not (:rezzed %)))
+                          unrevealed (filter #(and (= (last (:zone %)) :content) (not (:revealed %)))
                                            from-root)]
-                      (if (= 1 (count unrezzed))
-                        ;; only one unrezzed region; access it and continue
-                        (when-completed (handle-access state side unrezzed)
+                      (if (= 1 (count unrevealed))
+                        ;; only one unrevealed region; access it and continue
+                        (when-completed (handle-access state side unrevealed)
                                         (if (or (pos? amount) (< 1 (count from-root)))
                                           (continue-ability
                                             state side
                                             (access-helper-hq-or-rd state zone label amount select-fn title-fn
-                                                                    (conj already-accessed (first unrezzed)))
+                                                                    (conj already-accessed (first unrevealed)))
                                             card nil)
                                           (effect-completed state side eid)))
-                        ;; more than one unrezzed region. allow user to select with mouse.
+                        ;; more than one unrevealed region. allow user to select with mouse.
                         (continue-ability
                           state side
                           {:delayed-completion true
@@ -407,7 +407,7 @@
                                                                       (conj already-accessed accessed)))
                                             card nil)
                                           (effect-completed state side eid)))))
-                    ;; accessing a rezzed region
+                    ;; accessing a revealed region
                     :else
                     (let [accessed (some #(when (= (:title %) target) %) (get-root-content state))]
                       (when-completed (handle-access state side [accessed])
@@ -502,7 +502,7 @@
      :choices (concat (when (<= amount (count (filter (complement already-accessed) (get-archives-inactive state))))
                         [(str "Access " amount " inactive cards")])
                       (map :title (faceup-accessible already-accessed))
-                      (map #(if (rezzed? %) (:title %) "Unrezzed region in Archives") (root-content already-accessed))
+                      (map #(if (revealed? %) (:title %) "Unrevealed region in Archives") (root-content already-accessed))
                       (map (fn [_] (str "Facedown card in Archives")) (facedown-cards already-accessed)))
      :effect (req (cond
                     (.endsWith target "inactive cards")
@@ -521,18 +521,18 @@
                                         (next-access state side eid already-accessed card)
                                         (effect-completed state side eid))))
 
-                    (= target "Unrezzed region in Archives")
-                    ;; accessing an unrezzed region
-                    (let [unrezzed (filter #(and (= (last (:zone %)) :content) (not (:rezzed %)))
+                    (= target "Unrevealed region in Archives")
+                    ;; accessing an unrevealed region
+                    (let [unrevealed (filter #(and (= (last (:zone %)) :content) (not (:revealed %)))
                                            (root-content already-accessed))]
-                      (if (= 1 (count unrezzed))
-                        ;; only one unrezzed region; access it and continue
-                        (let [already-accessed (conj already-accessed (first unrezzed))]
-                          (when-completed (handle-access state side unrezzed)
+                      (if (= 1 (count unrevealed))
+                        ;; only one unrevealed region; access it and continue
+                        (let [already-accessed (conj already-accessed (first unrevealed))]
+                          (when-completed (handle-access state side unrevealed)
                                           (if (must-continue? already-accessed)
                                             (next-access state side eid already-accessed card)
                                             (effect-completed state side eid))))
-                        ;; more than one unrezzed region. allow user to select with mouse.
+                        ;; more than one unrevealed region. allow user to select with mouse.
                         (continue-ability
                           state side
                           {:delayed-completion true
@@ -547,7 +547,7 @@
                           card nil)))
 
                     :else
-                    ;; accessing a rezzed region, or a card in archives
+                    ;; accessing a revealed region, or a card in archives
                     (let [accessed (some #(when (= (:title %) target) %)
                                          (concat (faceup-accessible already-accessed) (root-content already-accessed)))
                           already-accessed (conj already-accessed accessed)]
@@ -667,7 +667,7 @@
     (do (swap! state dissoc :no-action)
         (system-msg state :contestant "wants to act before the run is successful")
         (show-wait-prompt state :challenger "Contestant's actions")
-        (show-prompt state :contestant nil "Rez and take actions before Successful Run" ["Done"]
+        (show-prompt state :contestant nil "Reveal and take actions before Successful Run" ["Done"]
                      (fn [args-contestant]
                        (clear-wait-prompt state :challenger)
                        (if-not (:ended (:run @state))

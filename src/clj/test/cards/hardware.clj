@@ -65,7 +65,7 @@
    (is (= 7 (core/hand-size state :challenger)))))
 
 (deftest blackguard
-  ;; Blackguard - +2 MU, forced rez of exposed character
+  ;; Blackguard - +2 MU, forced reveal of exposed character
   (do-game
    (new-game (default-contestant [(qty "Ice Wall" 1)])
              (default-challenger [(qty "Blackguard" 1)
@@ -80,7 +80,7 @@
          iwall (get-character state :archives 0)]
      (run-on state :archives)
      (card-ability state :challenger snitch 0)
-     (is (:rezzed (refresh iwall)) "Ice Wall was rezzed"))))
+     (is (:revealed (refresh iwall)) "Ice Wall was revealed"))))
 
 (deftest brain-chip
   ;; Brain Chip handsize and memory limit
@@ -155,21 +155,21 @@
       (is (= 2 (:click (get-challenger))))
       (is (nil? (:comet-event (core/get-card state comet))) "Comet ability disabled"))))
 
-(deftest cortez-chip
-  ;; Cortez Chip - Trash to add 2 credits to rez cost of an Character until end of turn
+(deftest corteveal-chip
+  ;; Corteveal Chip - Trash to add 2 credits to reveal cost of an Character until end of turn
   (do-game
     (new-game (default-contestant [(qty "Quandary" 1)])
-              (default-challenger [(qty "Cortez Chip" 1)]))
+              (default-challenger [(qty "Corteveal Chip" 1)]))
     (play-from-hand state :contestant "Quandary" "R&D")
     (take-credits state :contestant)
-    (play-from-hand state :challenger "Cortez Chip")
+    (play-from-hand state :challenger "Corteveal Chip")
     (let [quan (get-character state :rd 0)
-          cortez (get-hazard state 0)]
-      (card-ability state :challenger cortez 0)
+          corteveal (get-hazard state 0)]
+      (card-ability state :challenger corteveal 0)
       (prompt-select :challenger quan)
-      (is (= 1 (count (:discard (get-challenger)))) "Cortez Chip trashed")
-      (core/rez state :contestant quan)
-      (is (= 4 (:credit (get-contestant))) "Paid 3c instead of 1c to rez Quandary"))))
+      (is (= 1 (count (:discard (get-challenger)))) "Corteveal Chip trashed")
+      (core/reveal state :contestant quan)
+      (is (= 4 (:credit (get-contestant))) "Paid 3c instead of 1c to reveal Quandary"))))
 
 (deftest cybersolutions-mem-chip
   ;; CyberSolutions Mem Chip- Gain 2 memory
@@ -268,7 +268,7 @@
       (is (= 7 (:credit (get-challenger))))
       (let [ff (get-in @state [:challenger :rig :hazard 0])]
         (run-on state "Server 1")
-        (core/rez state :contestant dm)
+        (core/reveal state :contestant dm)
         (card-subroutine state :contestant dm 0)
         (card-ability state :challenger ff 0)
         (prompt-choice :challenger "Done")
@@ -613,7 +613,7 @@
             rr2 (get-in @state [:challenger :rig :hazard 1])
             rr3 (get-in @state [:challenger :rig :hazard 2])]
         (run-on state "Server 1")
-        (core/rez state :contestant dm)
+        (core/reveal state :contestant dm)
         (card-subroutine state :contestant dm 0)
         (card-ability state :challenger rr1 0)
         (prompt-choice :challenger 1)
@@ -643,7 +643,7 @@
       (play-from-hand state :challenger "Ramujan-reliant 550 BMI")
       (let [rr1 (get-in @state [:challenger :rig :hazard 0])]
         (run-on state "Server 1")
-        (core/rez state :contestant dm)
+        (core/reveal state :contestant dm)
         (card-subroutine state :contestant dm 0)
         (card-ability state :challenger rr1 0)
         (prompt-choice :challenger 1)
@@ -709,8 +709,8 @@
     (let [arch (get-character state :hq 0)
           ip (get-character state :hq 1)
           sifr (get-hazard state 0)]
-      (core/rez state :contestant arch)
-      (core/rez state :contestant ip)
+      (core/reveal state :contestant arch)
+      (core/reveal state :contestant ip)
       (is (= 4 (:current-strength (refresh ip))))
       (run-on state :hq)
       (is (= 2 (:position (:run @state))))
@@ -758,7 +758,7 @@
       (is (= 5 (:memory (get-challenger))))
       (is (= 2 (:rec-counter (refresh sm))))
       (run-on state :hq)
-      (core/rez state :contestant cad)
+      (core/reveal state :contestant cad)
       (card-subroutine state :contestant cad 0)
       (prompt-choice :contestant 0)
       (prompt-choice :challenger 0)
@@ -868,7 +868,7 @@
     (is (= 2 (count (:discard (get-challenger)))) "2 cards trashed for Ribs installation meat damage")
     (run-on state "HQ")
     (let [pup (get-character state :hq 0)]
-      (core/rez state :contestant pup)
+      (core/reveal state :contestant pup)
       (card-subroutine state :contestant pup 0)
       (prompt-select :challenger (find-card "Sure Gamble" (:hand (get-challenger)))) ; Ribs takes precedence over CP on Challenger turn
       (is (= 3 (count (:discard (get-challenger)))) "Chose card lost from 1 net damage")

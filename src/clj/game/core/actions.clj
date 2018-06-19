@@ -2,7 +2,7 @@
 
 ;; These functions are called by main.clj in response to commands sent by users.
 
-(declare card-str can-rez? can-advance? contestant-install effect-as-handler enforce-msg gain-agenda-point get-remote-names
+(declare card-str can-reveal? can-advance? contestant-install effect-as-handler enforce-msg gain-agenda-point get-remote-names
          get-run-characters jack-out move name-zone play-instant purge resolve-select run has-subtype?
          challenger-install trash update-breaker-strength update-character-in-server update-run-character win can-run?
          can-run-server? can-score? play-sfx)
@@ -77,7 +77,7 @@
                                  (= server "Grip")))
                        (or (and (= (:side c) "Challenger")
                                 (not (:facedown c)))
-                           (rezzed? c)
+                           (revealed? c)
                            (:seen c)
                            (= last-zone :deck)))
                 (:title c)
@@ -94,13 +94,13 @@
               (trash state s c {:unpreventable true})
               (system-msg state side (str action-str label from-str))))
         ("Grip" "HQ")
-        (do (move state s (dissoc c :seen :rezzed) :hand {:force true})
+        (do (move state s (dissoc c :seen :revealed) :hand {:force true})
             (system-msg state side (str "moves " label from-str " to " server)))
         ("Stack" "R&D")
-        (do (move state s (dissoc c :seen :rezzed) :deck {:front true :force true})
+        (do (move state s (dissoc c :seen :revealed) :deck {:front true :force true})
             (system-msg state side (str "moves " label from-str " to the top of " server)))
         ("Sites2" "Sites")
-        (do (move state s (dissoc c :seen :rezzed) :sites {:front true :force true})
+        (do (move state s (dissoc c :seen :revealed) :sites {:front true :force true})
             (system-msg state side (str "moves " label from-str " to the top of " server)))
         nil))))
 
@@ -284,53 +284,53 @@
       (system-msg state side message))
     (play-sfx state side "virus-purge")))
 
-(defn rez
-  "Rez a contestant card."
-  ([state side card] (rez state side (make-eid state) card nil))
+(defn reveal
+  "Reveal a contestant card."
+  ([state side card] (reveal state side (make-eid state) card nil))
   ([state side card args]
-   (rez state side (make-eid state) card args))
+   (reveal state side (make-eid state) card args))
   ([state side eid {:keys [disabled] :as card} {:keys [ignore-cost no-warning force no-get-card paid-alt] :as args}]
    (let [card (if no-get-card
                 card
                 (get-card state card))
          altcost (when-not no-get-card
                    (:alternative-cost (card-def card)))]
-     (if (or force (can-rez? state side card))
+     (if (or force (can-reveal? state side card))
        (do
-         (trigger-event state side :pre-rez card)
+         (trigger-event state side :pre-reveal card)
          (if (or (#{"Site" "Character" "Region" "Resource"} (:type card))
-                   (:install-rezzed (card-def card)))
-           (do (trigger-event state side :pre-rez-cost card)
+                   (:install-revealed (card-def card)))
+           (do (trigger-event state side :pre-reveal-cost card)
                (if (and altcost (can-pay? state side nil altcost)(not ignore-cost))
-                 (prompt! state side card (str "Pay the alternative Rez cost?") ["Yes" "No"]
+                 (prompt! state side card (str "Pay the alternative Reveal cost?") ["Yes" "No"]
                           {:delayed-completion true
                            :effect (req (if (and (= target "Yes")
                                                  (can-pay? state side (:title card) altcost))
                                           (do (pay state side card altcost)
-                                              (rez state side (-> card (dissoc :alternative-cost))
+                                              (reveal state side (-> card (dissoc :alternative-cost))
                                                    {:ignore-cost true
                                                     :no-get-card true
                                                     :paid-alt true}))
-                                          (rez state side (-> card (dissoc :alternative-cost))
+                                          (reveal state side (-> card (dissoc :alternative-cost))
                                                {:no-get-card true})))})
                  (let [cdef (card-def card)
-                       cost (rez-cost state side card)
+                       cost (reveal-cost state side card)
                        costs (concat (when-not ignore-cost [:credit cost])
                                      (when (and (not= ignore-cost :all-costs)
                                                 (not (:disabled card)))
                                        (:additional-cost cdef)))]
                    (when-let [cost-str (apply pay state side card costs)]
-                     ;; Deregister the derezzed-events before rezzing card
-                     (when (:derezzed-events cdef)
+                     ;; Deregister the hidden-events before revealing card
+                     (when (:hidden-events cdef)
                        (unregister-events state side card))
                      (if (not disabled)
-                       (card-init state side (assoc card :rezzed :this-turn))
-                       (update! state side (assoc card :rezzed :this-turn)))
+                       (card-init state side (assoc card :revealed :this-turn))
+                       (update! state side (assoc card :revealed :this-turn)))
                      (doseq [h (:hosted card)]
                        (update! state side (-> h
                                                (update-in [:zone] #(map to-keyword %))
                                                (update-in [:host :zone] #(map to-keyword %)))))
-                     (system-msg state side (str (build-spend-msg cost-str "rez" "rezzes")
+                     (system-msg state side (str (build-spend-msg cost-str "reveal" "reveals")
                                                  (:title card)
                                                  (cond
                                                    paid-alt
@@ -339,30 +339,30 @@
                                                    ignore-cost
                                                    " at no cost")))
                      (when (and (not no-warning) (:contestant-phase-12 @state))
-                       (toast state :contestant "You are not allowed to rez cards between Start of Turn and Mandatory Draw.
-                        Please rez prior to clicking Start Turn in the future." "warning"
+                       (toast state :contestant "You are not allowed to reveal cards between Start of Turn and Mandatory Draw.
+                        Please reveal prior to clicking Start Turn in the future." "warning"
                               {:time-out 0 :close-button true}))
                      (if (character? card)
                        (do (update-character-strength state side card)
-                           (play-sfx state side "rez-character"))
-                       (play-sfx state side "rez-other"))
-                     (trigger-event-sync state side eid :rez card)))))
+                           (play-sfx state side "reveal-character"))
+                       (play-sfx state side "reveal-other"))
+                     (trigger-event-sync state side eid :reveal card)))))
            (effect-completed state side eid))
          (swap! state update-in [:bonus] dissoc :cost))
        (effect-completed state side eid)))))
 
-(defn derez
-  "Derez a contestant card."
+(defn hide
+  "Hide a contestant card."
   [state side card]
   (let [card (get-card state card)]
-    (system-msg state side (str "derezzes " (:title card)))
+    (system-msg state side (str "hides " (:title card)))
     (update! state :contestant (deactivate state :contestant card true))
     (let [cdef (card-def card)]
-      (when-let [derez-effect (:derez-effect cdef)]
-        (resolve-ability state side derez-effect (get-card state card) nil))
-      (when-let [dre (:derezzed-events cdef)]
+      (when-let [hide-effect (:hide-effect cdef)]
+        (resolve-ability state side hide-effect (get-card state card) nil))
+      (when-let [dre (:hidden-events cdef)]
         (register-events state side dre card)))
-    (trigger-event state side :derez card side)))
+    (trigger-event state side :hide card side)))
 
 (defn rotate
   "Rotate a card."
@@ -465,7 +465,7 @@
         pos (get-in @state [:run :position])
         character (when (and pos (pos? pos) (<= pos (count run-character)))
               (get-card state (nth run-character (dec pos))))]
-    (when (rezzed? character)
+    (when (revealed? character)
       (trigger-event state side :encounter-character character)
       (update-character-strength state side character))))
 

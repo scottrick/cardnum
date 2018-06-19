@@ -1,16 +1,16 @@
 (in-ns 'test.core)
 
-(deftest contestant-rez-unique
-  ;; Rezzing a second copy of a unique Contestant card
+(deftest contestant-reveal-unique
+  ;; Revealing a second copy of a unique Contestant card
   (do-game
     (new-game (default-contestant [(qty "Caprcharacter Nisei" 2)])
               (default-challenger))
     (play-from-hand state :contestant "Caprcharacter Nisei" "HQ")
     (play-from-hand state :contestant "Caprcharacter Nisei" "R&D")
-    (core/rez state :contestant (get-content state :hq 0))
-    (is (:rezzed (get-content state :hq 0)) "First Caprcharacter rezzed")
-    (core/rez state :contestant (get-content state :rd 0))
-    (is (not (:rezzed (get-content state :rd 0))) "Second Caprcharacter could not be rezzed")))
+    (core/reveal state :contestant (get-content state :hq 0))
+    (is (:revealed (get-content state :hq 0)) "First Caprcharacter revealed")
+    (core/reveal state :contestant (get-content state :rd 0))
+    (is (not (:revealed (get-content state :rd 0))) "Second Caprcharacter could not be revealed")))
 
 (deftest challenger-install-resource
   ;; challenger-install - Resource; ensure costs are paid
@@ -90,7 +90,7 @@
     (is (= 4 (:click-per-turn (get-contestant))) "Up to 4 clicks per turn")
     (play-from-hand state :contestant "Contestantorate Town" "New remote")
     (let [ctown (get-content state :remote2 0)]
-      (core/rez state :contestant ctown)
+      (core/reveal state :contestant ctown)
       (prompt-select :contestant (get-scored state :contestant 0))
       (is (= 3 (:click-per-turn (get-contestant))) "Back down to 3 clicks per turn"))))
 
@@ -112,8 +112,8 @@
         (card-ability state :challenger cehosted 0) ; take Comp Empl credit
         (is (= 4 (:credit (get-challenger))))
         (is (= 0 (:rec-counter (refresh cehosted))))
-        (core/rez state :contestant iwall)
-        (is (= 5 (:credit (get-challenger))) "Compromised Employee gave 1 credit from character rez")
+        (core/reveal state :contestant iwall)
+        (is (= 5 (:credit (get-challenger))) "Compromised Employee gave 1 credit from character reveal")
         (take-credits state :challenger)
         (take-credits state :contestant)
         (is (= 1 (:rec-counter (refresh cehosted)))
@@ -147,8 +147,8 @@
           corr (get-in @state [:challenger :rig :resource 0])
           cchip (get-in @state [:challenger :rig :hazard 0])
           pap (get-in @state [:challenger :rig :muthereff 0])]
-      (core/rez state :contestant hqiwall0)
-      (core/rez state :contestant jh1)
+      (core/reveal state :contestant hqiwall0)
+      (core/reveal state :contestant jh1)
       (prompt-select :challenger (refresh hqiwall0))
       (is (= (core/card-str state (refresh hqiwall0)) "Ice Wall protecting HQ at position 0"))
       (is (= (core/card-str state (refresh hqiwall1)) "Character protecting HQ at position 1"))
@@ -184,15 +184,15 @@
               (default-challenger))
     (play-from-hand state :contestant "Full Immersion RecStudio" "New remote")
     (let [fir (get-content state :remote1 0)]
-      (core/rez state :contestant fir)
+      (core/reveal state :contestant fir)
       (card-ability state :contestant fir 0)
       (prompt-select :contestant (find-card "Worlds Plaza" (:hand (get-contestant))))
       (let [wp (first (:hosted (refresh fir)))]
-        (core/rez state :contestant wp)
+        (core/reveal state :contestant wp)
         (card-ability state :contestant wp 0)
         (prompt-select :contestant (find-card "Director Haas" (:hand (get-contestant))))
         (let [dh (first (:hosted (refresh wp)))]
-          (is (:rezzed dh) "Director Haas was rezzed")
+          (is (:revealed dh) "Director Haas was revealed")
           (is (= 0 (:credit (get-contestant))) "Contestant has 0 credits")
           (is (= 4 (:click-per-turn (get-contestant))) "Contestant has 4 clicks per turn")
           (is (= 3 (count (core/all-installed state :contestant))) "all-installed counting hosted Contestant cards")
@@ -274,7 +274,7 @@
               (default-challenger [(qty "Omni-drive" 1) (qty "Personal Workshop" 1) (qty "Leprechaun" 1) (qty "Corroder" 1) (qty "Mimic" 1) (qty "Knight" 1)]))
     (play-from-hand state :contestant "Wraparound" "HQ")
     (let [wrap (get-character state :hq 0)]
-      (core/rez state :contestant wrap)
+      (core/reveal state :contestant wrap)
       (take-credits state :contestant)
       (core/draw state :challenger)
       (core/gain state :challenger :credit 7)
@@ -353,19 +353,19 @@
     (take-credits state :challenger 3)
     (core/click-credit state :challenger nil)
     (core/end-turn state :challenger nil)
-    (core/rez state :contestant (refresh adonis))
-    (core/rez state :contestant (refresh publics1))
+    (core/reveal state :contestant (refresh adonis))
+    (core/reveal state :contestant (refresh publics1))
 
     ;; Turn 2 Contestant
     (core/start-turn state :contestant nil)
-    (core/rez state :contestant (refresh publics2))
+    (core/reveal state :contestant (refresh publics2))
     (is (= 3 (:click (get-contestant))))
     (is (= 3 (:credit (get-contestant))) "only Adonis money")
     (is (= 9 (get-counters (refresh adonis) :credit)))
     (is (= 2 (get-counters (refresh publics1) :power)))
     (is (= 3 (get-counters (refresh publics2) :power)))
 
-    ;; oops, forgot to rez 2nd public support before start of turn,
+    ;; oops, forgot to reveal 2nd public support before start of turn,
     ;; let me fix it with a /command
     (core/command-counter state :contestant ["power" 2])
     (prompt-select :contestant (refresh publics2))
@@ -419,7 +419,7 @@
   ;; Should not lose BP credits until a run is completely over. Issue #1721.
   (do-game
     (new-game (default-contestant [(qty "Cyberdex Virus Suite" 3)])
-              (make-deck "Valencia Estevez: The Angel of Cayambe" [(qty "Sure Gamble" 3)]))
+              (make-deck "Valencia Esteveveal: The Angel of Cayambe" [(qty "Sure Gamble" 3)]))
     (is (= 1 (:bad-publicity (get-contestant))) "Contestant starts with 1 BP")
     (play-from-hand state :contestant "Cyberdex Virus Suite" "New remote")
     (play-from-hand state :contestant "Cyberdex Virus Suite" "R&D")
@@ -442,12 +442,12 @@
   ;; Should pay from Bad Pub for Psi games during run #2374
   (do-game
     (new-game (default-contestant [(qty "Caprcharacter Nisei" 3)])
-              (make-deck "Valencia Estevez: The Angel of Cayambe" [(qty "Sure Gamble" 3)]))
+              (make-deck "Valencia Esteveveal: The Angel of Cayambe" [(qty "Sure Gamble" 3)]))
     (is (= 1 (:bad-publicity (get-contestant))) "Contestant starts with 1 BP")
     (play-from-hand state :contestant "Caprcharacter Nisei" "New remote")
     (take-credits state :contestant)
     (let [caprcharacter (get-content state :remote1 0)]
-      (core/rez state :contestant caprcharacter)
+      (core/reveal state :contestant caprcharacter)
       (run-on state "Server 1")
       (is (prompt-is-card? :contestant caprcharacter) "Caprcharacter prompt even with no character, once challenger makes run")
       (is (prompt-is-card? :challenger caprcharacter) "Challenger has Caprcharacter prompt")
@@ -489,7 +489,7 @@
     (core/move state :contestant (find-card "Sweeps Week" (:hand (get-contestant))) :deck)
     (core/move state :contestant (find-card "Manhunt" (:hand (get-contestant))) :deck)
     (core/move state :contestant (find-card "Big Brother" (:hand (get-contestant))) :deck)
-    (core/rez state :contestant (get-content state :rd 1))
+    (core/reveal state :contestant (get-content state :rd 1))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Medium")
     (let [keegan (get-content state :rd 0)
@@ -502,7 +502,7 @@
       (prompt-choice :challenger "Card from deck")
       (is (= "Hedge Fund" (-> (get-challenger) :prompt first :card :title)))
       (prompt-choice :challenger "OK")
-      (prompt-choice :challenger "Unrezzed region in R&D")
+      (prompt-choice :challenger "Unrevealed region in R&D")
       (is (= "Keegan Lane" (-> (get-challenger) :prompt first :card :title)))
       (prompt-choice :challenger "No")
       (prompt-choice :challenger "Card from deck")

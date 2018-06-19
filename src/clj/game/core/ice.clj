@@ -22,7 +22,7 @@
   "Updates the given character's strength by triggering strength events and updating the card."
   [state side character]
   (let [character (get-card state character) oldstren (or (:current-strength character) (:strength character))]
-    (when (:rezzed character)
+    (when (:revealed character)
       (swap! state update-in [:bonus] dissoc :character-strength)
       (trigger-event state side :pre-character-strength character)
       (update! state side (assoc character :current-strength (character-strength state side character)))

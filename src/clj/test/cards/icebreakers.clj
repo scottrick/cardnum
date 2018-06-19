@@ -134,7 +134,7 @@
           "Crypsis has 1 virus counter")
 
       (run-on state "Archives")
-      (core/rez state :contestant (get-character state :archives 0))
+      (core/reveal state :contestant (get-character state :archives 0))
       (card-ability state :challenger (refresh crypsis) 0) ; Match strength
       (card-ability state :challenger (refresh crypsis) 1) ; Break
       (is (= 1 (get-in (refresh crypsis) [:counter :virus]))
@@ -179,9 +179,9 @@
     (play-from-hand state :contestant "Hostile Infrastructure" "New remote")
     (play-from-hand state :contestant "Hostile Infrastructure" "New remote")
     (core/gain state :contestant :credit 10)
-    (core/rez state :contestant (get-content state :remote1 0))
-    (core/rez state :contestant (get-content state :remote2 0))
-    (core/rez state :contestant (get-content state :remote3 0))
+    (core/reveal state :contestant (get-content state :remote1 0))
+    (core/reveal state :contestant (get-content state :remote2 0))
+    (core/reveal state :contestant (get-content state :remote3 0))
     (take-credits state :contestant)
     (core/gain state :challenger :credit 10)
     (play-from-hand state :challenger "Deus X")
@@ -222,7 +222,7 @@
     (play-from-hand state :challenger "Faerie")
     (let [fae (get-resource state 0)]
       (run-on state :archives)
-      (core/rez state :contestant (get-character state :archives 0))
+      (core/reveal state :contestant (get-character state :archives 0))
       (card-ability state :challenger fae 0)
       (is (refresh fae) "Faerie not trashed until encounter over")
       (run-continue state)
@@ -300,7 +300,7 @@
           architect (get-character state :hq 0)]
       (is (= 1 (:current-strength (refresh nanotk))) "Default strength")
       (run-on state "HQ")
-      (core/rez state :contestant architect)
+      (core/reveal state :contestant architect)
       (is (= 2 (:current-strength (refresh nanotk))) "1 character on HQ")
       (card-subroutine state :contestant (refresh architect) 1)
       (prompt-select :contestant (find-card "Eli 1.0" (:hand (get-contestant))))
@@ -323,7 +323,7 @@
           susanoo (get-character state :hq 1)]
       (is (= 1 (:current-strength (refresh nanotk))) "Default strength")
       (run-on state "HQ")
-      (core/rez state :contestant susanoo)
+      (core/reveal state :contestant susanoo)
       (is (= 3 (:current-strength (refresh nanotk))) "2 character on HQ")
       (card-subroutine state :contestant (refresh susanoo) 0)
       (is (= 2 (:current-strength (refresh nanotk))) "1 character on Archives")
@@ -354,7 +354,7 @@
     (take-credits state :contestant)
     (trash-from-hand state :challenger "Paperclip")
     (run-on state "Archives")
-    (core/rez state :contestant (get-character state :archives 0))
+    (core/reveal state :contestant (get-character state :archives 0))
     (prompt-choice :challenger "Yes") ; install paperclip
     (run-continue state)
     (run-successful state)
@@ -375,19 +375,19 @@
     (trash-from-hand state :challenger "Paperclip")
     (trash-from-hand state :challenger "Paperclip")
     (run-on state "Archives")
-    (core/rez state :contestant (get-character state :archives 1))
+    (core/reveal state :contestant (get-character state :archives 1))
     (prompt-choice :challenger "No")
-    (is (empty? (:prompt (get-challenger))) "No additional prompts to rez other copies of Paperclip")
+    (is (empty? (:prompt (get-challenger))) "No additional prompts to reveal other copies of Paperclip")
     (run-continue state)
     ;; we should get the prompt on a second character even after denying the first.
-    (core/rez state :contestant (get-character state :archives 0))
+    (core/reveal state :contestant (get-character state :archives 0))
     (prompt-choice :challenger "No")
-    (is (empty? (:prompt (get-challenger))) "No additional prompts to rez other copies of Paperclip")
+    (is (empty? (:prompt (get-challenger))) "No additional prompts to reveal other copies of Paperclip")
     (core/jack-out state :challenger)
     ;; Run again, make sure we get the prompt to install again.
     (run-on state "Archives")
     (prompt-choice :challenger "No")
-    (is (empty? (:prompt (get-challenger))) "No additional prompts to rez other copies of Paperclip")))
+    (is (empty? (:prompt (get-challenger))) "No additional prompts to reveal other copies of Paperclip")))
 
 (deftest shiv
   ;; Shiv - Gain 1 strength for each installed breaker; no MU cost when 2+ link
@@ -425,8 +425,8 @@
          fw (get-character state :hq 0)
          snow (get-resource state 0)]
      (run-on state "HQ")
-     (core/rez state :contestant sp)
-     (core/rez state :contestant fw)
+     (core/reveal state :contestant sp)
+     (core/reveal state :contestant fw)
      (card-ability state :challenger snow 1) ; match strength
      (is (= 2 (:current-strength (refresh snow))))
      (card-ability state :challenger snow 0) ; strength matched, break a sub
@@ -473,7 +473,7 @@
    (run-on state "HQ")
    (let [character-wall (get-character state :hq 0)
          wyrm (get-in @state [:challenger :rig :resource 0])]
-     (core/rez state :contestant character-wall)
+     (core/reveal state :contestant character-wall)
      (card-ability state :challenger wyrm 1)
      (is (= 0 (:current-strength (refresh character-wall))) "Strength of Ice Wall reduced to 0")
      (card-ability state :challenger wyrm 1)

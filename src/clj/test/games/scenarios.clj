@@ -74,9 +74,9 @@
     (let [adon (get-content state :remote1 0)
           bbg (get-content state :remote1 1)
           ash (get-content state :hq 0)]
-      (core/rez state :contestant bbg)
-      (core/rez state :contestant adon)
-      (is (= 10 (:credit (get-contestant))) "Breaker Bay Grid allowed rez of Adonis for free")
+      (core/reveal state :contestant bbg)
+      (core/reveal state :contestant adon)
+      (is (= 10 (:credit (get-contestant))) "Breaker Bay Grid allowed reveal of Adonis for free")
       (take-credits state :contestant)
       (core/draw state :challenger 1)
       (play-from-hand state :challenger "Career Fair")
@@ -86,7 +86,7 @@
       (play-from-hand state :challenger "Desperado")
       (is (= 1 (:credit (get-challenger))))
       (run-on state "HQ")
-      (core/rez state :contestant ash)
+      (core/reveal state :contestant ash)
       (run-successful state)
       (prompt-choice :contestant 0)
       (prompt-choice :challenger 0)
@@ -116,14 +116,14 @@
       (run-on state "Server 1")
       (let [tur (get-character state :remote1 0)
             cap (get-content state :remote1 2)]
-        (core/rez state :contestant tur)
+        (core/reveal state :contestant tur)
         (is (= 5 (:current-strength (refresh tur))) "Turing +3 strength protecting a remote")
         (card-subroutine state :contestant tur 0) ; end the run
         (play-from-hand state :challenger "Emergency Shutdown")
         (prompt-select :challenger tur)
-        (is (not (get-in (refresh tur) [:rezzed])) "Turing derezzed")
+        (is (not (get-in (refresh tur) [:revealed])) "Turing hidden")
         (run-on state "Server 1") ; letting Challenger in this time to use Caprcharacter
-        (core/rez state :contestant cap)
+        (core/reveal state :contestant cap)
         (run-continue state)
         ;; Caprcharacter psi game started automatically
         (prompt-choice :contestant "1 [Credits]")
