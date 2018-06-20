@@ -144,33 +144,33 @@
   [state side card flag]
   (clear-flag-for-card! state side card :persistent flag))
 
-;;; Functions related to servers that can be run
-(defn prevent-run-on-server
-  "Adds specified server to list of servers that cannot be run on.
+;;; Functions related to locales that can be run
+(defn prevent-run-on-locale
+  "Adds specified locale to list of locales that cannot be run on.
   The causing card is also specified"
-  [state card & servers]
-  (doseq [server servers]
-    (swap! state assoc-in [:challenger :register :cannot-run-on-server server (:cid card)] true)))
+  [state card & locales]
+  (doseq [locale locales]
+    (swap! state assoc-in [:challenger :register :cannot-run-on-locale locale (:cid card)] true)))
 
-(defn enable-run-on-server
-  "Removes specified server from list of server for the associated card.
-  If other cards are associated with the same server that server will still be unable to be run
+(defn enable-run-on-locale
+  "Removes specified locale from list of locale for the associated card.
+  If other cards are associated with the same locale that locale will still be unable to be run
   on."
-  [state card & servers]
-  (doseq [server servers]
-    (let [card-map (get-in @state [:challenger :register :cannot-run-on-server server])
+  [state card & locales]
+  (doseq [locale locales]
+    (let [card-map (get-in @state [:challenger :register :cannot-run-on-locale locale])
           reduced-card-map (dissoc card-map (:cid card))]
       (if (empty? reduced-card-map)
-        ;; removes server if no cards block it, otherwise updates the map
-        (swap! state update-in [:challenger :register :cannot-run-on-server] dissoc server)
-        (swap! state assoc-in [:challenger :register :cannot-run-on-server server]
+        ;; removes locale if no cards block it, otherwise updates the map
+        (swap! state update-in [:challenger :register :cannot-run-on-locale] dissoc locale)
+        (swap! state assoc-in [:challenger :register :cannot-run-on-locale locale]
                reduced-card-map)))))
 
-(defn can-run-server?
-  "Returns true if the specified server can be run on. Specified server must be string form."
-  [state server]
-  (not-any? #{server}
-            (map zone->name (keys (get-in @state [:challenger :register :cannot-run-on-server])))))
+(defn can-run-locale?
+  "Returns true if the specified locale can be run on. Specified locale must be string form."
+  [state locale]
+  (not-any? #{locale}
+            (map zone->name (keys (get-in @state [:challenger :register :cannot-run-on-locale])))))
 
 
 ;;; Functions for preventing specific game actions.
@@ -201,8 +201,8 @@
   (swap! state update-in [tside :lock-install] #(remove #{cid} %)))
 
 ;;; Small utilities for card properties.
-(defn in-server?
-  "Checks if the specified card is installed in -- and not PROTECTING -- a server"
+(defn in-locale?
+  "Checks if the specified card is installed in -- and not PROTECTING -- a locale"
   [card]
   (= (last (:zone card)) :content))
 
@@ -281,7 +281,7 @@
   (or (:seen card) (:revealed card)))
 
 (defn installed? [card]
-  (or (:installed card) (= :servers (first (:zone card)))))
+  (or (:installed card) (= :locales (first (:zone card)))))
 
 (defn active?
   "Checks if the card is active and should receive game events/triggers."

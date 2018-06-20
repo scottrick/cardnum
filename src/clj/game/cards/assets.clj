@@ -55,7 +55,7 @@
   (gain-agenda-point state side n)))
 
 ;;; Card definitions
-(declare in-server?)
+(declare in-locale?)
 
 (def cards-assets
   {})

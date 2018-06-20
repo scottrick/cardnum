@@ -4,11 +4,11 @@
 
 (defn character-boost-agenda [subtype]
   (letfn [(count-character [contestant]
-            (reduce (fn [c server]
+            (reduce (fn [c locale]
                       (+ c (count (filter #(and (has-subtype? % subtype)
                                                 (revealed? %))
-                                          (:characters server)))))
-                    0 (flatten (seq (:servers contestant)))))]
+                                          (:characters locale)))))
+                    0 (flatten (seq (:locales contestant)))))]
     {:msg (msg "gain " (count-character contestant) " [Credits]")
      :interactive (req true)
      :effect (effect (gain :credit (count-character contestant))

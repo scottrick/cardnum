@@ -76,13 +76,13 @@
 ;;; "ToString"-like methods
 (defn card-str
   "Gets a string description of an installed card, reflecting whether it is revealed,
-  in/protecting a server, facedown, or hosted."
+  in/protecting a locale, facedown, or hosted."
   ([state card] (card-str state card nil))
   ([state card {:keys [visible] :as args}]
   (str (if (card-is? card :side :contestant)
          ; Contestant card messages
          (str (if (or (revealed? card) visible) (:title card) (if (character? card) "Character" "a card"))
-              ; Hosted cards do not need "in server 1" messages, host has them
+              ; Hosted cards do not need "in locale 1" messages, host has them
               (if-not (:host card)
                 (str (if (character? card) " protecting " " in ")
                      ;TODO add naming of scoring area of contestant/challenger
@@ -102,9 +102,9 @@
          [:sideboard] (if (= side "Challenger") "Ch-board" "Co-board")
          [:sites] (if (= side "Challenger") "Sites2" "Sites")
          [:rig _] "Rig"
-         [:servers :hq _] "the root of HQ"
-         [:servers :rd _] "the root of R&D"
-         [:servers :archives _] "the root of Archives"
+         [:locales :hq _] "the root of HQ"
+         [:locales :rd _] "the root of R&D"
+         [:locales :archives _] "the root of Archives"
          :else (zone->name (second zone))))
 
 
@@ -313,7 +313,7 @@
   [state side]
   (when state
     (toast state side
-           (str "Your last action caused a game error on the server. You can keep playing, but there "
+           (str "Your last action caused a game error on the locale. You can keep playing, but there "
                 "may be errors in the game's current state. Please click the button below to submit a report "
                 "to our GitHub issues page.<br/><br/>Use /error to see this message again.")
            "exception"

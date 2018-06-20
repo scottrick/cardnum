@@ -23,7 +23,7 @@
     (core/move state :contestant (find-card "Shock!" (:hand (get-contestant))) :discard)
     (core/move state :contestant (find-card "Launch Campaign" (:hand (get-contestant))) :discard)
     (play-from-hand state :challenger "Archives Interface")
-    (run-empty-server state :archives)
+    (run-empty-locale state :archives)
     (prompt-choice :challenger "Yes")
     (prompt-choice :challenger (find-card "Shock!" (:discard (get-contestant))))
     (is (= "Shock!" (:title (first (:rfg (get-contestant))))) "Shock! removed from game")
@@ -39,7 +39,7 @@
     (is (= 5 (:memory (get-challenger))) "Gain 1 memory")))
 
 (deftest astrolabe-draw
-  ;; Astrolabe - Draw on new server install
+  ;; Astrolabe - Draw on new locale install
   (do-game
     (new-game (default-contestant [(qty "Snare!" 3)])
               (default-challenger [(qty "Astrolabe" 3) (qty "Sure Gamble" 3) (qty "Cloak" 1)]))
@@ -47,10 +47,10 @@
     (play-from-hand state :challenger "Astrolabe")
     (take-credits state :challenger 3)
     ;; contestant's turn. install something from HQ to trigger Astrolabe draw
-    (play-from-hand state :contestant "Snare!" "New remote")
-    (is (= 5 (count (:hand (get-challenger)))) "Drew 1 card from server install")
-    ;; install over the old server; make sure nothing is drawn
-    (play-from-hand state :contestant "Snare!" "Server 0")
+    (play-from-hand state :contestant "Snare!" "New party")
+    (is (= 5 (count (:hand (get-challenger)))) "Drew 1 card from locale install")
+    ;; install over the old locale; make sure nothing is drawn
+    (play-from-hand state :contestant "Snare!" "Locale 0")
     (is (= 5 (count (:hand (get-challenger)))) "Did not draw")
     (is (= 1 (count (:deck (get-challenger)))) "1 card left in deck")))
 
@@ -187,7 +187,7 @@
               (default-challenger [(qty "Desperado" 3)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Desperado")
-    (run-empty-server state :archives)
+    (run-empty-locale state :archives)
     (is (= 5 (:memory (get-challenger))) "Gain 1 memory")
     (is (= 3 (:credit (get-challenger))) "Got 1c for successful run on Desperado")))
 
@@ -220,13 +220,13 @@
     (core/gain state :contestant :bad-publicity 1)
     (take-credits state :contestant)
     (play-from-hand state :challenger "Doppelgänger")
-    (run-empty-server state :hq)
+    (run-empty-locale state :hq)
     (prompt-choice :challenger "OK")
     (is (= 0 (:run-credit (get-challenger))) "Challenger lost BP credits")
     (prompt-choice :challenger "Yes")
     (prompt-choice :challenger "R&D")
     (is (:run @state) "New run started")
-    (is (= [:rd] (:server (:run @state))) "Running on R&D")
+    (is (= [:rd] (:locale (:run @state))) "Running on R&D")
     (is (= 1 (:run-credit (get-challenger))) "Challenger has 1 BP credit")))
 
 (deftest dorm-computer
@@ -234,13 +234,13 @@
   (do-game
     (new-game (default-contestant [(qty "Snare!" 1)])
               (default-challenger [(qty "Dorm Computer" 1)]))
-    (play-from-hand state :contestant "Snare!" "New remote")
+    (play-from-hand state :contestant "Snare!" "New party")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Dorm Computer")
     (let [dorm (get-in @state [:challenger :rig :hazard 0])]
       (card-ability state :challenger dorm 0)
-      (prompt-choice :challenger "Server 1")
-      (run-empty-server state "Server 1")
+      (prompt-choice :challenger "Locale 1")
+      (run-empty-locale state "Locale 1")
       (is (:run @state) "New run started")
       (is (= :waiting (-> @state :challenger :prompt first :prompt-type))
           "Challenger has prompt to wait for Snare!")
@@ -258,16 +258,16 @@
               (default-challenger [(qty "Feedback Filter" 2) (qty "Sure Gamble" 3)]))
     (play-from-hand state :contestant "Mushin No Shin")
     (prompt-select :contestant (find-card "Cerebral Overwriter" (:hand (get-contestant))))
-    (play-from-hand state :contestant "Data Mine" "Server 1")
-    (let [co (get-content state :remote1 0)
-          dm (get-character state :remote1 0)]
+    (play-from-hand state :contestant "Data Mine" "Locale 1")
+    (let [co (get-content state :party1 0)
+          dm (get-character state :party1 0)]
       (is (= 3 (:advance-counter (refresh co))) "3 advancements on Overwriter")
       (take-credits state :contestant)
       (play-from-hand state :challenger "Sure Gamble")
       (play-from-hand state :challenger "Feedback Filter")
       (is (= 7 (:credit (get-challenger))))
       (let [ff (get-in @state [:challenger :rig :hazard 0])]
-        (run-on state "Server 1")
+        (run-on state "Locale 1")
         (core/reveal state :contestant dm)
         (card-subroutine state :contestant dm 0)
         (card-ability state :challenger ff 0)
@@ -320,19 +320,19 @@
               (default-challenger [(qty "Maw" 1)]))
     (take-credits state :contestant)
     (core/gain state :challenger :credit 20)
-    (run-empty-server state :hq)
+    (run-empty-locale state :hq)
     (prompt-choice :challenger "No")
     (is (= 0 (count (:discard (get-contestant)))) "No HQ card in discard before Maw installed")
     (play-from-hand state :challenger "Maw")
-    (run-empty-server state :hq)
+    (run-empty-locale state :hq)
     (prompt-choice :challenger "No")
     (is (= 0 (count (:discard (get-contestant)))) "HQ card not trashed by Maw as first decline already happened")
     (take-credits state :challenger)
     (take-credits state :contestant)
-    (run-empty-server state :hq)
+    (run-empty-locale state :hq)
     (prompt-choice :challenger "No")
     (is (= 1 (count (:discard (get-contestant)))) "HQ card trashed by Maw")
-    (run-empty-server state :hq)
+    (run-empty-locale state :hq)
     (prompt-choice :challenger "No")
     (is (= 1 (count (:discard (get-contestant)))) "2nd HQ card on same turn not trashed by Maw")))
 
@@ -345,7 +345,7 @@
     (take-credits state :contestant)
     (core/gain state :challenger :credit 20)
     (play-from-hand state :challenger "Maw")
-    (run-empty-server state :hq)
+    (run-empty-locale state :hq)
     ;; (is (= 0 (count (:discard (get-contestant)))) "HQ card not trashed by Maw yet")
     (prompt-choice :challenger "OK")
     (is (= 1 (count (:discard (get-contestant)))) "HQ card trashed by Maw now")
@@ -359,7 +359,7 @@
     (take-credits state :contestant)
     (core/gain state :challenger :credit 20)
     (play-from-hand state :challenger "Maw")
-    (run-empty-server state :hq)
+    (run-empty-locale state :hq)
     (prompt-choice :challenger "No")
     (is (= 0 (count (:scored (get-contestant)))) "Hiro not scored")
     (is (= 1 (count (:discard (get-contestant)))) "Hiro trashed by Maw")))
@@ -375,7 +375,7 @@
     (play-from-hand state :challenger "Maya")
     (let [maya (get-in @state [:challenger :rig :hazard 0])
           accessed (first (:deck (get-contestant)))]
-      (run-empty-server state :rd)
+      (run-empty-locale state :rd)
       (is (= (:cid accessed) (:cid (:card (first (:prompt (get-challenger)))))) "Accessing the top card of R&D")
       (card-ability state :challenger maya 0)
       (is (empty? (:prompt (get-challenger))) "No more prompts for challenger")
@@ -387,7 +387,7 @@
       (core/move state :contestant (find-card "Snare!" (:hand (get-contestant))) :deck)
       (core/move state :contestant (find-card "Scorched Earth" (:hand (get-contestant))) :deck)
       (let [accessed (first (:deck (get-contestant)))]
-        (run-empty-server state :rd)
+        (run-empty-locale state :rd)
         (prompt-choice :contestant "Yes")
         (is (= 0 (count (:hand (get-challenger)))) "Challenger took Snare! net damage")
         (is (= (:cid accessed) (:cid (:card (first (:prompt (get-challenger)))))) "Accessing the top card of R&D")
@@ -409,7 +409,7 @@
     (play-from-hand state :challenger "R&D Interface")
     (let [maya (get-in @state [:challenger :rig :hazard 0])
           accessed (first (:deck (get-contestant)))]
-      (run-empty-server state :rd)
+      (run-empty-locale state :rd)
       (prompt-choice :challenger "Card from deck")
       (is (= (:cid accessed) (:cid (:card (first (:prompt (get-challenger)))))) "Accessing the top card of R&D")
       (card-ability state :challenger maya 0)
@@ -427,7 +427,7 @@
     (core/gain state :challenger :credit 10 :click 3)
     (play-from-hand state :challenger "Nerve Agent")
     (let [nerve (get-in @state [:challenger :rig :resource 0])]
-      (run-empty-server state :hq)
+      (run-empty-locale state :hq)
       (is (= 1 (get-counters (refresh nerve) :virus)) "1 virus counter on Nerve Agent")
       (prompt-choice :challenger "OK")
       (play-from-hand state :challenger "Obelus")
@@ -435,7 +435,7 @@
       (is (= 6 (core/hand-size state :challenger)) "Max hand size is 6")
       (core/lose state :challenger :tag 1)
       (is (= 5 (core/hand-size state :challenger)) "Max hand size is 5")
-      (run-empty-server state :hq)
+      (run-empty-locale state :hq)
       (is (= 2 (get-counters (refresh nerve) :virus)) "2 virus counters on Nerve Agent")
       (prompt-choice :challenger 1)
       (prompt-choice :challenger "Card from hand")
@@ -445,7 +445,7 @@
       (is (empty? (:hand (get-challenger))) "No cards drawn by Obelus, already had successful HQ run")
       (take-credits state :challenger)
       (take-credits state :contestant)
-      (run-empty-server state :hq)
+      (run-empty-locale state :hq)
       (is (= 3 (get-counters (refresh nerve) :virus)) "3 virus counters on Nerve Agent")
       (prompt-choice :challenger 2)
       (prompt-choice :challenger "Card from hand")
@@ -470,7 +470,7 @@
     (core/gain state :challenger :credit 10)
     (play-from-hand state :challenger "Obelus")
     (play-from-hand state :challenger "Hades Shard")
-    (run-empty-server state "R&D")
+    (run-empty-locale state "R&D")
     (card-ability state :challenger (get-muthereff state 0) 0)
     (prompt-choice :challenger "OK")
     (is (= 3 (count (:hand (get-challenger)))) "Obelus drew 3 cards")))
@@ -521,12 +521,12 @@
               (default-challenger [(qty "Recon Drone" 10)]))
     (core/gain state :contestant :click 10)
     (core/gain state :contestant :credit 100)
-    (play-from-hand state :contestant "House of Knives" "New remote")
-    (play-from-hand state :contestant "Snare!" "New remote")
-    (play-from-hand state :contestant "Prisec" "New remote")
-    (play-from-hand state :contestant "Cerebral Overwriter" "New remote")
-    (score-agenda state :contestant (get-content state :remote1 0))
-    (core/advance state :contestant (get-content state :remote4 0))
+    (play-from-hand state :contestant "House of Knives" "New party")
+    (play-from-hand state :contestant "Snare!" "New party")
+    (play-from-hand state :contestant "Prisec" "New party")
+    (play-from-hand state :contestant "Cerebral Overwriter" "New party")
+    (score-agenda state :contestant (get-content state :party1 0))
+    (core/advance state :contestant (get-content state :party4 0))
     (take-credits state :contestant)
     (core/gain state :challenger :click 100)
     (core/gain state :challenger :credit 100)
@@ -543,7 +543,7 @@
           rd3 (get-in @state [:challenger :rig :hazard 2])
           rd4 (get-in @state [:challenger :rig :hazard 3])
           hok (get-in @state [:contestant :scored 0])]
-      (run-empty-server state "Server 2")
+      (run-empty-locale state "Locale 2")
       (is (= :waiting (-> @state :challenger :prompt first :prompt-type))
         "Challenger has prompt to wait for Snare!")
       (prompt-choice :contestant "Yes")
@@ -552,7 +552,7 @@
       (prompt-choice :challenger "Done")
       (is (= 5 (count (:hand (get-challenger)))) "Challenger took no net damage")
       ; fire HOK while accessing Snare!
-      (run-empty-server state "Server 2")
+      (run-empty-locale state "Locale 2")
       (is (= :waiting (-> @state :challenger :prompt first :prompt-type))
           "Challenger has prompt to wait for Snare!")
       (card-ability state :contestant hok 0)
@@ -565,7 +565,7 @@
       (core/lose state :challenger :credit 100)
       ; can only stop 1 damage due to credits
       (core/gain state :challenger :credit 1)
-      (run-empty-server state "Server 2")
+      (run-empty-locale state "Locale 2")
       (is (= :waiting (-> @state :challenger :prompt first :prompt-type))
           "Challenger has prompt to wait for Snare!")
       (prompt-choice :contestant "Yes")
@@ -575,7 +575,7 @@
       (prompt-choice :challenger "Done")
       (is (= 2 (count (:hand (get-challenger)))) "Challenger took 2 net damage from Snare!")
       (core/gain state :challenger :credit 100)
-      (run-empty-server state "Server 3")
+      (run-empty-locale state "Locale 3")
       (is (= :waiting (-> @state :challenger :prompt first :prompt-type))
           "Challenger has prompt to wait for Prisec")
       (prompt-choice :contestant "Yes")
@@ -584,7 +584,7 @@
       (prompt-choice :challenger 1)
       (prompt-choice :challenger "Done")
       (is (= 2 (count (:hand (get-challenger)))) "Challenger took no meat damage")
-      (run-empty-server state "Server 4")
+      (run-empty-locale state "Locale 4")
       (is (= :waiting (-> @state :challenger :prompt first :prompt-type))
           "Challenger has prompt to wait for Cerebral Overwriter")
       (prompt-choice :contestant "Yes")
@@ -601,10 +601,10 @@
               (default-challenger [(qty "Ramujan-reliant 550 BMI" 4) (qty "Sure Gamble" 6)]))
     (starting-hand state :challenger
                    ["Ramujan-reliant 550 BMI" "Ramujan-reliant 550 BMI" "Ramujan-reliant 550 BMI" "Ramujan-reliant 550 BMI" "Sure Gamble"])
-    (play-from-hand state :contestant "Data Mine" "Server 1")
-    (play-from-hand state :contestant "Snare!" "Server 1")
-    (let [sn (get-content state :remote1 0)
-          dm (get-character state :remote1 0)]
+    (play-from-hand state :contestant "Data Mine" "Locale 1")
+    (play-from-hand state :contestant "Snare!" "Locale 1")
+    (let [sn (get-content state :party1 0)
+          dm (get-character state :party1 0)]
       (take-credits state :contestant)
       (play-from-hand state :challenger "Ramujan-reliant 550 BMI")
       (play-from-hand state :challenger "Ramujan-reliant 550 BMI")
@@ -612,7 +612,7 @@
       (let [rr1 (get-in @state [:challenger :rig :hazard 0])
             rr2 (get-in @state [:challenger :rig :hazard 1])
             rr3 (get-in @state [:challenger :rig :hazard 2])]
-        (run-on state "Server 1")
+        (run-on state "Locale 1")
         (core/reveal state :contestant dm)
         (card-subroutine state :contestant dm 0)
         (card-ability state :challenger rr1 0)
@@ -624,7 +624,7 @@
         (take-credits state :challenger)
         (take-credits state :contestant)
         (play-from-hand state :challenger "Ramujan-reliant 550 BMI")
-        (run-empty-server state "Server 1")
+        (run-empty-locale state "Locale 1")
         (prompt-choice :contestant "Yes")
         (card-ability state :challenger rr2 0)
         (prompt-choice :challenger 3)
@@ -637,12 +637,12 @@
   (do-game
     (new-game (default-contestant [(qty "Data Mine" 1)])
               (default-challenger [(qty "Ramujan-reliant 550 BMI" 1) (qty "Sure Gamble" 1)]))
-    (play-from-hand state :contestant "Data Mine" "Server 1")
-    (let [dm (get-character state :remote1 0)]
+    (play-from-hand state :contestant "Data Mine" "Locale 1")
+    (let [dm (get-character state :party1 0)]
       (take-credits state :contestant)
       (play-from-hand state :challenger "Ramujan-reliant 550 BMI")
       (let [rr1 (get-in @state [:challenger :rig :hazard 0])]
-        (run-on state "Server 1")
+        (run-on state "Locale 1")
         (core/reveal state :contestant dm)
         (card-subroutine state :contestant dm 0)
         (card-ability state :challenger rr1 0)
@@ -822,8 +822,8 @@
     (play-from-hand state :challenger "Gang Sign")
     (play-from-hand state :challenger "The Gauntlet")
     (take-credits state :challenger)
-    (play-from-hand state :contestant "Hostile Takeover" "New remote")
-    (score-agenda state :contestant (get-content state :remote1 0))
+    (play-from-hand state :contestant "Hostile Takeover" "New party")
+    (score-agenda state :contestant (get-content state :party1 0))
     ;; Gang Sign should trigger, without The Gauntlet pop-up
     (let [gs (get-muthereff state 0)]
       (prompt-is-card? :challenger gs))
@@ -887,14 +887,14 @@
   (do-game
     (new-game (default-contestant [(qty "Domestic Sleepers" 1) (qty "Project Vitruvius" 1)])
               (default-challenger [(qty "Turntable" 1)]))
-    (play-from-hand state :contestant "Project Vitruvius" "New remote")
-    (let [ag1 (get-content state :remote1 0)]
+    (play-from-hand state :contestant "Project Vitruvius" "New party")
+    (let [ag1 (get-content state :party1 0)]
       (score-agenda state :contestant ag1)
       (take-credits state :contestant)
       (play-from-hand state :challenger "Turntable")
       (is (= 3 (:credit (get-challenger))))
       (let [tt (get-in @state [:challenger :rig :hazard 0])]
-        (run-empty-server state "HQ")
+        (run-empty-locale state "HQ")
         (prompt-choice :challenger "Steal")
         (is (= 0 (:agenda-point (get-challenger))) "Stole Domestic Sleepers")
         (is (prompt-is-card? :challenger tt))

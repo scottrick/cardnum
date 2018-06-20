@@ -87,10 +87,10 @@
 (def socket (.connect js/io (str js/iourl "/lobby")))
 (def socket-channel (chan))
 (.on socket "meccg" #(put! socket-channel (js->clj % :keywordize-keys true)))
-(.on socket "disconnect" #(notify "Connection to the server lost. Attempting to reconnect."
+(.on socket "disconnect" #(notify "Connection to the locale lost. Attempting to reconnect."
                                   "error"))
 (.on socket "reconnect" #(when (.-onbeforeunload js/window)
-                           (notify "Reconnected to the server." "success")
+                           (notify "Reconnected to the locale." "success")
                            (.emit socket "meccg" #js {:action "reconnect" :gameid (:gameid @app-state)})))
 
 (def anr-icons {"[Credits]" "credit"
@@ -151,7 +151,7 @@
       (.focus input))))
 
 (defn send-typing [event owner]
-  "Send a typing event to server for this user if it is not already set in game state"
+  "Send a typing event to locale for this user if it is not already set in game state"
   (.preventDefault event)
   (let [input (om/get-node owner "msg-input")
         text (.-value input)]
@@ -179,13 +179,13 @@
 
 (defn toast
   "Display a toast warning with the specified message.
-  Sends a command to clear any server side toasts."
+  Sends a command to clear any locale side toasts."
   [msg type options]
   true)
 
 (defn toast-old
   "Display a toast warning with the specified message.
-  Sends a command to clear any server side toasts."
+  Sends a command to clear any locale side toasts."
   [msg type options]
   (set! (.-options js/toastr) (toastr-options options))
   (let [f (aget js/toastr (if (= "exception" type) "error" type))]
@@ -204,40 +204,40 @@
 (defn action-list [{:keys [type Secondary zone revealed tapped wounded rotated inverted advanceable advance-counter advancementcost current-cost] :as card}]
   (-> []
       (#(if (and (and (#{"Character" "Site" "Region"} type)
-                      (#{"servers" "onhost"} (first zone)))
+                      (#{"locales" "onhost"} (first zone)))
                  (not revealed))
           (cons "reveal" %) %))
       (#(if (and (and (#{"Character"} type)
-                 (#{"servers" "onhost"} (first zone)))
+                 (#{"locales" "onhost"} (first zone)))
                  (and revealed (not wounded)))
           (cons "wound" %) %))
       (#(if (and (and (#{"Character" "Site" "Region"} type)
-                      (#{"servers" "onhost"} (first zone)))
+                      (#{"locales" "onhost"} (first zone)))
                  revealed
                  (or (not tapped) wounded))
           (cons "tap" %) %))
       (#(if (and (and (#{"Character" "Site" "Region"} type)
-                      (#{"servers" "onhost"} (first zone)))
+                      (#{"locales" "onhost"} (first zone)))
                  (or tapped wounded))
           (cons "untap" %) %))
       (#(if (and (and (= type "Resource")
                  (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Special Item"])
-                 (#{"servers" "onhost"} (first zone)))
+                 (#{"locales" "onhost"} (first zone)))
                  (and (not rotated) (or (not tapped) inverted)))
           (cons "rotate" %) %))
       (#(if (and (and (= type "Resource")
                       (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Special Item"])
-                      (#{"servers" "onhost"} (first zone)))
+                      (#{"locales" "onhost"} (first zone)))
                  (and (not inverted) (not rotated) tapped))
           (cons "invert" %) %))
       (#(if (and (and (= type "Resource")
                       (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Special Item"])
-                      (#{"servers" "onhost"} (first zone)))
+                      (#{"locales" "onhost"} (first zone)))
                  (and (not tapped) (not rotated)))
           (cons "tap" %) %))
       (#(if (and (and (= type "Resource")
                       (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Special Item"])
-                      (#{"servers" "onhost"} (first zone)))
+                      (#{"locales" "onhost"} (first zone)))
                  (or tapped rotated))
           (cons "untap" %) %))))
 
@@ -273,26 +273,26 @@
         (case (first zone)
           "hand" (case type
                    ("Region" "Character") (if root
-                                       (send-command "play" {:card card :server root})
-                                       (-> (om/get-node owner "servers") js/$ .toggle))
-                   ("Agenda" "Site") (if (< (count (get-in @game-state [:challenger :servers])) 4)
-                                        (send-command "play" {:card card :server "New remote"})
-                                        (-> (om/get-node owner "servers") js/$ .toggle))
+                                       (send-command "play" {:card card :locale root})
+                                       (-> (om/get-node owner "locales") js/$ .toggle))
+                   ("Agenda" "Site") (if (< (count (get-in @game-state [:challenger :locales])) 4)
+                                        (send-command "play" {:card card :locale "New party"})
+                                        (-> (om/get-node owner "locales") js/$ .toggle))
                    (send-command "play" {:card card}))
-          ("rig" "current" "onhost" "play-area" "servers") (handle-abilities card owner)
+          ("rig" "current" "onhost" "play-area" "locales") (handle-abilities card owner)
           nil)
         ;; Contestant side
         (= side :contestant)
         (case (first zone)
           "hand" (case type
                    ("Region" "Character") (if root
-                                       (send-command "play" {:card card :server root})
-                                       (-> (om/get-node owner "servers") js/$ .toggle))
-                   ("Agenda" "Site") (if (< (count (get-in @game-state [:contestant :servers])) 4)
-                                        (send-command "play" {:card card :server "New remote"})
-                                        (-> (om/get-node owner "servers") js/$ .toggle))
+                                       (send-command "play" {:card card :locale root})
+                                       (-> (om/get-node owner "locales") js/$ .toggle))
+                   ("Agenda" "Site") (if (< (count (get-in @game-state [:contestant :locales])) 4)
+                                        (send-command "play" {:card card :locale "New party"})
+                                        (-> (om/get-node owner "locales") js/$ .toggle))
                    (send-command "play" {:card card}))
-          ("rig" "servers" "scored" "play-area" "current" "onhost") (handle-abilities card owner)
+          ("rig" "locales" "scored" "play-area" "current" "onhost") (handle-abilities card owner)
           nil)))))
 
 (defn in-play? [card]
@@ -515,11 +515,11 @@
   (-> e .-target js/$ (.addClass "dragged"))
   (-> e .-dataTransfer (.setData "card" (.stringify js/JSON (clj->js @cursor)))))
 
-(defn handle-drop [e server]
+(defn handle-drop [e locale]
   (-> e .-target js/$ (.removeClass "dragover"))
   (let [card (-> e .-dataTransfer (.getData "card") ((.-parse js/JSON)) (js->clj :keywordize-keys true))
-        side (if (#{"HQ" "R&D" "Archives"} server) "Contestant" "Challenger")]
-    (send-command "move" {:card card :server server})))
+        side (if (#{"HQ" "R&D" "Archives"} locale) "Contestant" "Challenger")]
+    (send-command "move" {:card card :locale locale})))
 
 (defn abs [n] (max n (- n)))
 
@@ -535,44 +535,44 @@
   (-> card (.css "left" (str (- (int (aget touch "pageX")) 30) "px")))
   (-> card (.css "top"  (str (- (int (aget touch "pageY")) 42) "px"))))
 
-(defn get-card [e server]
+(defn get-card [e locale]
   (-> e .-target js/$ (.closest ".card-wrapper")))
 
-(defn get-server-from-touch [touch]
+(defn get-locale-from-touch [touch]
   (let [cX (.. touch -clientX)
         cY (.. touch -clientY)
-        server (-> (js/document.elementFromPoint cX cY)
+        locale (-> (js/document.elementFromPoint cX cY)
                    js/$
-                   (.closest "[data-server]")
-                   (.attr "data-server"))]
-    [server (> (+ (abs (- (:x @touchmove) cX))
+                   (.closest "[data-locale]")
+                   (.attr "data-locale"))]
+    [locale (> (+ (abs (- (:x @touchmove) cX))
                   (abs (- (:y @touchmove) cY)))
                30)]))
 
 (defn handle-touchstart [e cursor]
   (let [touch (aget (.. e -targetTouches) 0)
-        [server _] (get-server-from-touch touch)
-        card (get-card e server)]
+        [locale _] (get-locale-from-touch touch)
+        card (get-card e locale)]
     (-> card (.addClass "disable-transition"))
     (reset! touchmove {:card (.stringify js/JSON (clj->js @cursor))
                        :x (.. touch -clientX)
                        :y (.. touch -clientY)
-                       :start-server server})))
+                       :start-locale locale})))
 
 (defn handle-touchmove [e]
   (let [touch (aget (.. e -targetTouches) 0)
-        card (get-card e (:start-server @touchmove))]
+        card (get-card e (:start-locale @touchmove))]
     (-> card (.css "position" "fixed"))
     (update-card-position card touch)))
 
 (defn handle-touchend [e]
   (let [touch (aget (.. e -changedTouches) 0)
-        card (get-card e (:start-server @touchmove))
-        [server moved-enough] (get-server-from-touch touch)]
+        card (get-card e (:start-locale @touchmove))
+        [locale moved-enough] (get-locale-from-touch touch)]
     (release-touch card)
-    (when (and server moved-enough (not= server (:start-server @touchmove)))
+    (when (and locale moved-enough (not= locale (:start-locale @touchmove)))
       (let [cardinfo (-> @touchmove :card ((.-parse js/JSON)) (js->clj :keywordize-keys true))]
-        (send-command "move" {:card cardinfo :server server})))))
+        (send-command "move" {:card cardinfo :locale locale})))))
 
 (defn ability-costs [ab]
   (when-let [cost (:cost ab)]
@@ -582,12 +582,12 @@
                         "credit" (str (second c) " [" (capitalize (name (first c))) "]")
                         (clojure.string/join "" (repeat (second c) (str "[" (capitalize (name (first c))) "]"))))))) ": ")))
 
-(defn remote->num [zone]
-  (-> zone str (clojure.string/split #":remote") last js/parseInt))
+(defn party->num [zone]
+  (-> zone str (clojure.string/split #":party") last js/parseInt))
 
-(defn remote->name [zone]
-  (let [num (remote->num zone)]
-    (str "Server " num)))
+(defn party->name [zone]
+  (let [num (party->num zone)]
+    (str "Locale " num)))
 
 (defn central->name [zone]
   "Converts a central zone keyword to a string."
@@ -600,7 +600,7 @@
 (defn zone->name [zone]
   "Converts a zone to a string."
   (or (central->name zone)
-      (remote->name zone)))
+      (party->name zone)))
 
 (defn zone->sort-key [zone]
   (case (if (keyword? zone) zone (last zone))
@@ -608,18 +608,18 @@
     :rd -2
     :hq -1
     (js/parseInt
-     (last (clojure.string/split (str zone) #":remote")))))
+     (last (clojure.string/split (str zone) #":party")))))
 
 (defn zones->sorted-names [zones]
   (->> zones (sort-by zone->sort-key) (map zone->name)))
 
-(defn get-remotes [servers]
-  (->> servers
+(defn get-parties [locales]
+  (->> locales
        (filter #(not (#{:hq :rd :archives} (first %))))
        (sort-by #(zone->sort-key (first %)))))
 
-(defn remote-list [remotes]
-  (->> remotes (map first) zones->sorted-names))
+(defn party-list [parties]
+  (->> parties (map first) zones->sorted-names))
 
 (defn card-counter-type [card]
   (let [counter-type (:counter-type card)]
@@ -713,8 +713,8 @@
        [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])])))
 
 (defn card-view [{:keys [zone fullCode type abilities counter advance-counter advancementcost current-cost subtype
-                         advanceable revealed tapped rotated strength current-strength title remotes selected hosted
-                         side rec-counter facedown  server-target subtype-target icon new challenger-abilities subroutines]
+                         advanceable revealed tapped rotated strength current-strength title parties selected hosted
+                         side rec-counter facedown  locale-target subtype-target icon new challenger-abilities subroutines]
                   :as cursor}
                  owner {:keys [flipped location] :as opts}]
   (om/component
@@ -757,7 +757,7 @@
       (when (and current-strength (not= strength current-strength))
         current-strength [:div.darkbg.strength current-strength])
       (when-let [{:keys [char color]} icon] [:div.darkbg.icon {:class color} char])
-      (when server-target [:div.darkbg.server-target server-target])
+      (when locale-target [:div.darkbg.locale-target locale-target])
       (when subtype-target
         (let [colour-type (case subtype-target
                             ("Barrier" "Sentry") (lower-case subtype-target)
@@ -771,15 +771,15 @@
           [:div.darkbg.subtype-target {:class colour-type} label]))
       (when (and (= zone ["hand"]) (#{"Agenda" "Site" "Character" "Region"} type))
         (let [centrals ["Archives" "R&D" "HQ"]
-              remotes (concat (remote-list remotes) ["New remote"])
-              servers (case type
-                        ("Agenda" "Site" "Region" "Character") remotes)]
-          [:div.panel.blue-shade.servers-menu {:ref "servers"}
+              parties (concat (party-list parties) ["New party"])
+              locales (case type
+                        ("Agenda" "Site" "Region" "Character") parties)]
+          [:div.panel.blue-shade.locales-menu {:ref "locales"}
            (map (fn [label]
-                  [:div {:on-click #(do (send-command "play" {:card @cursor :server label})
-                                        (-> (om/get-node owner "servers") js/$ .fadeOut))}
+                  [:div {:on-click #(do (send-command "play" {:card @cursor :locale label})
+                                        (-> (om/get-node owner "locales") js/$ .fadeOut))}
                    label])
-                servers)]))
+                locales)]))
       (when (pos? (+ (count challenger-abilities) (count subroutines)))
         [:div.panel.blue-shade.challenger-abilities {:ref "challenger-abilities"}
          (map-indexed
@@ -824,7 +824,7 @@
                                     (-> (om/get-node owner "abilities") js/$ .fadeOut))
                      :dangerouslySetInnerHTML #js {:__html (add-symbols (str "[Subroutine]" (:label sub)))}}])
             subroutines)]))
-      (when (#{"servers" "onhost"} (first zone))
+      (when (#{"locales" "onhost"} (first zone))
         (cond
           (and (= type "Agenda") (>= advance-counter (or current-cost advancementcost)))
           [:div.panel.blue-shade.menu.abilities {:ref "agenda"}
@@ -845,12 +845,12 @@
                                      nil)))}
           (om/build card-view card {:opts {:flipped (face-down? card)}})]))])))
 
-(defn drop-area [side server hmap]
-  (merge hmap {:on-drop #(handle-drop % server)
+(defn drop-area [side locale hmap]
+  (merge hmap {:on-drop #(handle-drop % locale)
                :on-drag-enter #(-> % .-target js/$ (.addClass "dragover"))
                :on-drag-leave #(-> % .-target js/$ (.removeClass "dragover"))
                :on-drag-over #(.preventDefault %)
-               :data-server server}))
+               :data-locale locale}))
 
 (defn close-popup [event owner ref msg shuffle? sites? board? deck?]
   (-> (om/get-node owner ref) js/$ .fadeOut)
@@ -870,7 +870,7 @@
        (str (:name opts) " (" (fn cursor) ")")]))))
 
 (defn build-hand-card-view
-  [player remotes wrapper-class]
+  [player parties wrapper-class]
   (let [side (get-in player [:identity :side])
         size (count (:hand player))]
     (sab/html
@@ -887,11 +887,11 @@
            (if (or (= (:user player) (:user @app-state))
                    (:openhand player)
                    (spectator-view-hidden?))
-             (om/build card-view (assoc card :remotes remotes))
+             (om/build card-view (assoc card :parties parties))
              (facedown-card side))])
         (:hand player)))))
 
-(defn hand-view [{:keys [player remotes popup popup-direction] :as cursor} owner]
+(defn hand-view [{:keys [player parties popup popup-direction] :as cursor} owner]
   (om/component
    (sab/html
     (let [side (get-in player [:identity :side])
@@ -902,7 +902,7 @@
         [:div.panel.blue-shade.hand
          (drop-area (:side @game-state) name {:class (when (> size 6) "squeeveale")})
          [:div
-          (build-hand-card-view player remotes "card-wrapper")]
+          (build-hand-card-view player parties "card-wrapper")]
          (om/build label (:hand player) {:opts {:name "Hand"}})]
         (when popup
           [:div.panel.blue-shade.hand-expand
@@ -913,7 +913,7 @@
           [:div
            [:a {:on-click #(close-popup % owner "hand-popup" nil false false false false)} "Close"]
            [:label (str size " card" (when (not= 1 size) "s") ".")]
-           (build-hand-card-view player remotes "card-popup-wrapper")
+           (build-hand-card-view player parties "card-popup-wrapper")
            ]])]))))
 
 (defn show-deck [event owner ref]
@@ -987,7 +987,7 @@
 
 (defmulti discard-view #(get-in % [:identity :side]))
 
-(defmethod discard-view "Challenger" [{:keys [discard servers] :as cursor} owner]
+(defmethod discard-view "Challenger" [{:keys [discard locales] :as cursor} owner]
   (om/component
     (sab/html
       (let [faceup? #(or (:seen %) (:revealed %))
@@ -1016,7 +1016,7 @@
                      (str total " cards, " (- total face-up) " face-down."))]]
           (for [c discard] (draw-card c))]]))))
 
-(defmethod discard-view "Contestant" [{:keys [discard servers] :as cursor} owner]
+(defmethod discard-view "Contestant" [{:keys [discard locales] :as cursor} owner]
   (om/component
    (sab/html
     (let [faceup? #(or (:seen %) (:revealed %))
@@ -1143,12 +1143,12 @@
          [:div (str (+ hand-size-base hand-size-modification) " Max hand size")
           (when me? (controls :hand-size-modification))]]))))
 
-(defn server-view [{:keys [server central-view run] :as cursor} owner opts]
+(defn locale-view [{:keys [locale central-view run] :as cursor} owner opts]
   (om/component
    (sab/html
-    (let [content (:content server)]
-      [:div.server
-       (let [characters (:characters server)
+    (let [content (:content locale)]
+      [:div.locale
+       (let [characters (:characters locale)
              run-pos (:position run)
              current-character (when (and run (pos? run-pos) (<= run-pos (count characters)))
                            (nth characters (dec run-pos)))
@@ -1175,7 +1175,7 @@
         (when (not-empty content)
           (for [card content
                 :let [is-first (= card (first content))]]
-            [:div.server-card {:class (when (:tapped card) "tapped")}
+            [:div.locale-card {:class (when (:tapped card) "tapped")}
              (om/build card-view card {:opts {:flipped (not (:revealed card)) :location true}})
              (when (and (not central-view) is-first)
                (om/build label content {:opts opts}))]))]]))))
@@ -1353,19 +1353,19 @@
 (defmethod decks-view "Contestant" [{:keys [player run]}]
   (om/component
     (sab/html
-      (let [servers (:servers player)
-            s (:server run)
-            server-type (first s)]
+      (let [locales (:locales player)
+            s (:locale run)
+            locale-type (first s)]
         [:div.contestant-board {:class (if (= (:side @game-state) :challenger) "opponent" "me")}
-         (om/build server-view {:server (:hq servers)
+         (om/build locale-view {:locale (:hq locales)
                                 :central-view (om/build sites-view player)
-                                :run (when (= server-type "hq") run)})
-         (om/build server-view {:server (:rd servers)
+                                :run (when (= locale-type "hq") run)})
+         (om/build locale-view {:locale (:rd locales)
                                 :central-view (om/build deck-view player)
-                                :run (when (= server-type "rd") run)})
-         (om/build server-view {:server (:archives servers)
+                                :run (when (= locale-type "rd") run)})
+         (om/build locale-view {:locale (:archives locales)
                                 :central-view (om/build discard-view player)
-                                :run (when (= server-type "archives") run)})]))))
+                                :run (when (= locale-type "archives") run)})]))))
 
 (defmethod decks-view "Challenger" [{:keys [player run]}]
   (om/component
@@ -1406,28 +1406,28 @@
 (defmethod board-view "Contestant" [{:keys [player run]}]
   (om/component
     (sab/html
-      (let [servers (:servers player)
-            s (:server run)
-            server-type (first s)]
+      (let [locales (:locales player)
+            s (:locale run)
+            locale-type (first s)]
         [:div.contestant-board {:class (if (= (:side @game-state) :challenger) "opponent" "me")}
-         (for [server (reverse (get-remotes servers))
-               :let [num (remote->num (first server))]]
-           (om/build server-view {:server (second server)
-                                  :run (when (= server-type (str "remote" num)) run)}
-                     {:opts {:name (remote->name (first server))}}))]))))
+         (for [locale (reverse (get-parties locales))
+               :let [num (party->num (first locale))]]
+           (om/build locale-view {:locale (second locale)
+                                  :run (when (= locale-type (str "party" num)) run)}
+                     {:opts {:name (party->name (first locale))}}))]))))
 
 (defmethod board-view "Challenger" [{:keys [player run]}]
   (om/component
     (sab/html
-      (let [servers (:servers player)
-            s (:server run)
-            server-type (first s)]
+      (let [locales (:locales player)
+            s (:locale run)
+            locale-type (first s)]
         [:div.challenger-board {:class (if (= (:side @game-state) :contestant) "opponent" "me")}
-         (for [server (reverse (get-remotes servers))
-               :let [num (remote->num (first server))]]
-           (om/build server-view {:server (second server)
-                                  :run (when (= server-type (str "remote" num)) run)}
-                     {:opts {:name (remote->name (first server))}}))]))))
+         (for [locale (reverse (get-parties locales))
+               :let [num (party->num (first locale))]]
+           (om/build locale-view {:locale (second locale)
+                                  :run (when (= locale-type (str "party" num)) run)}
+                     {:opts {:name (party->name (first locale))}}))]))))
 
 (defn cond-button [text cond f]
   (sab/html
@@ -1442,13 +1442,13 @@
       (toast (str "Discard to " max-size " card" (when (not= 1 max-size) "s")) "warning" nil)
       (send-command "end-turn"))))
 
-(defn runnable-servers
-  "List of servers the challenger can run on."
+(defn runnable-locales
+  "List of locales the challenger can run on."
   [contestant challenger]
-  (let [servers (keys (:servers contestant))
-        restricted-servers (keys (get-in challenger [:register :cannot-run-on-server]))]
-    ;; remove restricted servers from all servers to just return allowed servers
-    (remove (set restricted-servers) servers)))
+  (let [locales (keys (:locales contestant))
+        restricted-locales (keys (get-in challenger [:register :cannot-run-on-locale]))]
+    ;; remove restricted locales from all locales to just return allowed locales
+    (remove (set restricted-locales) locales)))
 
 (defn button-pane [{:keys [side active-player run end-turn challenger-phase-12 contestant-phase-12 contestant challenger me opponent] :as cursor} owner]
   (reify
@@ -1523,11 +1523,11 @@
                         [:button {:class (when (:rotated c) :rotated)
                                   :on-click #(send-command "choice" {:card @c}) :id fullCode} title]))))))]
            (if run
-             (let [s (:server run)
+             (let [s (:locale run)
                    kw (keyword (first s))
-                   server (if-let [n (second s)]
-                            (get-in contestant [:servers kw n])
-                            (get-in contestant [:servers kw]))]
+                   locale (if-let [n (second s)]
+                            (get-in contestant [:locales kw n])
+                            (get-in contestant [:locales kw]))]
                (if (= side :challenger)
                  [:div.panel.blue-shade
                   (when-not (:no-action run) [:h4 "Waiting for Contestant's actions"])
@@ -1562,13 +1562,13 @@
                  [:div.run-button
                   (cond-button "Run" (and (pos? (:click me))
                                           (not (get-in me [:register :cannot-run])))
-                               #(-> (om/get-node owner "servers") js/$ .toggle))
-                  [:div.panel.blue-shade.servers-menu {:ref "servers"}
+                               #(-> (om/get-node owner "locales") js/$ .toggle))
+                  [:div.panel.blue-shade.locales-menu {:ref "locales"}
                    (map (fn [label]
-                          [:div {:on-click #(do (send-command "run" {:server label})
-                                                (-> (om/get-node owner "servers") js/$ .fadeOut))}
+                          [:div {:on-click #(do (send-command "run" {:locale label})
+                                                (-> (om/get-node owner "locales") js/$ .fadeOut))}
                            label])
-                        (zones->sorted-names (runnable-servers contestant challenger)))]]])
+                        (zones->sorted-names (runnable-locales contestant challenger)))]]])
               (when (= side :contestant)
                 (cond-button "Purge" (>= (:click me) 3) #(send-command "purge")))
               (when (= side :contestant)
@@ -1685,7 +1685,7 @@
 
             [:div.leftpane
              [:div.opponent
-              (om/build hand-view {:player opponent :remotes (get-remotes (:servers (if (= side :challenger) contestant challenger)))
+              (om/build hand-view {:player opponent :parties (get-parties (:locales (if (= side :challenger) contestant challenger)))
                                    :popup (= side :spectator) :popup-direction "opponent"})]
 
              [:div.inner-leftpane
@@ -1716,7 +1716,7 @@
               ]
 
              [:div.me
-              (om/build hand-view {:player me :remotes (get-remotes (:servers (if (= side :challenger) challenger contestant)))
+              (om/build hand-view {:player me :parties (get-parties (:locales (if (= side :challenger) challenger contestant)))
                                    :popup true :popup-direction "me"})]]]))))))
 
 (om/root gameboard game-state {:target (. js/document (getElementById "gameboard"))})

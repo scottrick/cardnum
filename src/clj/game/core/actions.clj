@@ -2,20 +2,20 @@
 
 ;; These functions are called by main.clj in response to commands sent by users.
 
-(declare card-str can-reveal? can-advance? contestant-install effect-as-handler enforce-msg gain-agenda-point get-remote-names
+(declare card-str can-reveal? can-advance? contestant-install effect-as-handler enforce-msg gain-agenda-point get-party-names
          get-run-characters jack-out move name-zone play-instant purge resolve-select run has-subtype?
-         challenger-install trash update-breaker-strength update-character-in-server update-run-character win can-run?
-         can-run-server? can-score? play-sfx)
+         challenger-install trash update-breaker-strength update-character-in-locale update-run-character win can-run?
+         can-run-locale? can-score? play-sfx)
 
 ;;; Neutral actions
 (defn play
   "Called when the player clicks a card from hand."
-  [state side {:keys [card server]}]
+  [state side {:keys [card locale]}]
   (let [card (get-card state card)]
     (case (:type card)
       ("Event" "Operation") (play-instant state side card {:extra-cost [:click 0]})
       ("Hazard" "Muthereff" "Resource") (challenger-install state side (make-eid state) card {:extra-cost [:click 0]})
-      ("Character" "Region" "Site" "Agenda") (contestant-install state side card server {:extra-cost [:click 0] :action :contestant-click-install}))
+      ("Character" "Region" "Site" "Agenda") (contestant-install state side card locale {:extra-cost [:click 0] :action :contestant-click-install}))
     (trigger-event state side :play card)))
 
 (defn shuffle-deck
@@ -60,7 +60,7 @@
 
 (defn move-card
   "Called when the user drags a card from one zone to another."
-  [state side {:keys [card server]}]
+  [state side {:keys [card locale]}]
   (let [c (get-card state card)
         ;; hack: if dragging opponent's card from play-area (Indexing), the previous line will fail
         ;; to find the card. the next line will search in the other player's play-area.
@@ -74,7 +74,7 @@
         label (if (and (not= last-zone :play-area)
                        (not (and (= (:side c) "Challenger")
                                  (= last-zone :hand)
-                                 (= server "Grip")))
+                                 (= locale "Grip")))
                        (or (and (= (:side c) "Challenger")
                                 (not (:facedown c)))
                            (revealed? c)
@@ -82,26 +82,26 @@
                            (= last-zone :deck)))
                 (:title c)
                 "a card")
-        s (if (#{"HQ" "R&D" "Archives"} server) :contestant :challenger)]
+        s (if (#{"HQ" "R&D" "Archives"} locale) :contestant :challenger)]
     ;; allow moving from play-area always, otherwise only when same side, and to valid zone
-    (when (and (not= src server)
+    (when (and (not= src locale)
                (same-side? s (:side card))
                (or (= last-zone :play-area)
                    (same-side? side (:side card))))
-      (case server
+      (case locale
         ("Heap" "Archives")
         (do (let [action-str (if (= (first (:zone c)) :hand) "discards " "trashes ")]
               (trash state s c {:unpreventable true})
               (system-msg state side (str action-str label from-str))))
         ("Grip" "HQ")
         (do (move state s (dissoc c :seen :revealed) :hand {:force true})
-            (system-msg state side (str "moves " label from-str " to " server)))
+            (system-msg state side (str "moves " label from-str " to " locale)))
         ("Stack" "R&D")
         (do (move state s (dissoc c :seen :revealed) :deck {:front true :force true})
-            (system-msg state side (str "moves " label from-str " to the top of " server)))
+            (system-msg state side (str "moves " label from-str " to the top of " locale)))
         ("Sites2" "Sites")
         (do (move state s (dissoc c :seen :revealed) :sites {:front true :force true})
-            (system-msg state side (str "moves " label from-str " to the top of " server)))
+            (system-msg state side (str "moves " label from-str " to the top of " locale)))
         nil))))
 
 (defn concede [state side args]
@@ -124,10 +124,10 @@
   "Resolves a prompt by invoking its effect funtion with the selected target of the prompt.
   Triggered by a selection of a prompt choice button in the UI."
   [state side {:keys [choice card] :as args}]
-  (let [servercard (get-card state card)
-        card (if (not= (:title card) (:title servercard))
+  (let [localecard (get-card state card)
+        card (if (not= (:title card) (:title localecard))
                (@all-cards (:title card))
-               servercard)
+               localecard)
         prompt (first (get-in @state [side :prompt]))
         choices (:choices prompt)
         choice (if (= (:choices prompt) :credit)
@@ -472,17 +472,17 @@
 ;;; Challenger actions
 (defn click-run
   "Click to start a run."
-  [state side {:keys [server] :as args}]
+  [state side {:keys [locale] :as args}]
   (let [cost-bonus (get-in @state [:bonus :run-cost])
         click-cost-bonus (get-in @state [:bonus :click-run-cost])]
     (when (and (can-run? state side)
-               (can-run-server? state server)
+               (can-run-locale? state locale)
                (can-pay? state :challenger "a run" :click 1 cost-bonus click-cost-bonus))
       (swap! state assoc-in [:challenger :register :made-click-run] true)
-      (run state side server)
+      (run state side locale)
       (when-let [cost-str (pay state :challenger nil :click 1 cost-bonus click-cost-bonus)]
         (system-msg state :challenger
-                    (str (build-spend-msg cost-str "make a run on") server))
+                    (str (build-spend-msg cost-str "make a run on") locale))
         (play-sfx state side "click-run")))))
 
 (defn remove-tag
@@ -495,7 +495,7 @@
       (play-sfx state side "click-remove-tag"))))
 
 (defn continue
-  "The challenger decides to approach the next character, or the server itself."
+  "The challenger decides to approach the next character, or the locale itself."
   [state side args]
   (when (get-in @state [:run :no-action])
     (let [run-character (get-run-characters state)
@@ -505,8 +505,8 @@
           next-character (when (and pos (< 1 pos) (<= (dec pos) (count run-character)))
                      (get-card state (nth run-character (- pos 2))))]
       (when-completed (trigger-event-sync state side :pass-character cur-character)
-                      (do (update-character-in-server
-                            state side (get-in @state (concat [:contestant :servers] (get-in @state [:run :server]))))
+                      (do (update-character-in-locale
+                            state side (get-in @state (concat [:contestant :locales] (get-in @state [:run :locale]))))
                           (swap! state update-in [:run :position] dec)
                           (swap! state assoc-in [:run :no-action] false)
                           (system-msg state side "continues the run")

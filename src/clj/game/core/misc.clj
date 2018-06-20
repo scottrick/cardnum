@@ -3,64 +3,64 @@
 (declare set-prop get-nested-host get-nested-zone)
 
 (defn get-zones [state]
-  (keys (get-in state [:contestant :servers])))
+  (keys (get-in state [:contestant :locales])))
 
 (defn get-zones-challenger [state]
-  (keys (get-in state [:challenger :servers])))
+  (keys (get-in state [:challenger :locales])))
 
-(defn get-remote-zones [state]
-  (filter is-remote? (get-zones state)))
+(defn get-party-zones [state]
+  (filter is-party? (get-zones state)))
 
 (defn get-runnable-zones [state]
-  (let [restricted-zones (keys (get-in state [:challenger :register :cannot-run-on-server]))]
+  (let [restricted-zones (keys (get-in state [:challenger :register :cannot-run-on-locale]))]
     (remove (set restricted-zones) (get-zones state))))
 
-(defn get-remotes [state]
-  (select-keys (get-in state [:contestant :servers]) (get-remote-zones state)))
+(defn get-parties [state]
+  (select-keys (get-in state [:contestant :locales]) (get-party-zones state)))
 
-(defn get-remote-names [state]
-  (zones->sorted-names (get-remote-zones state)))
+(defn get-party-names [state]
+  (zones->sorted-names (get-party-zones state)))
 
-(defn server-list [state card]
+(defn locale-list [state card]
   (concat
     (if (#{"Site" "Agenda"} (:type card))
-      (get-remote-names @state)
+      (get-party-names @state)
       (zones->sorted-names (get-zones @state)))
-    ["New remote"]))
+    ["New party"]))
 
-(defn server->zone [state server]
-  (if (sequential? server)
-    (vec (cons :servers server))
-    (case server
-      "HQ" [:servers :hq]
-      "R&D" [:servers :rd]
-      "Archives" [:servers :archives]
-      "New remote" [:servers (keyword (str "remote" (make-rid state)))]
-      [:servers (->> (split server #" ") last (str "remote") keyword)])))
+(defn locale->zone [state locale]
+  (if (sequential? locale)
+    (vec (cons :locales locale))
+    (case locale
+      "HQ" [:locales :hq]
+      "R&D" [:locales :rd]
+      "Archives" [:locales :archives]
+      "New party" [:locales (keyword (str "party" (make-rid state)))]
+      [:locales (->> (split locale #" ") last (str "party") keyword)])))
 
-(defn same-server? [card1 card2]
-  "True if the two cards are IN or PROTECTING the same server."
+(defn same-locale? [card1 card2]
+  "True if the two cards are IN or PROTECTING the same locale."
   (let [zone1 (get-nested-zone card1)
         zone2 (get-nested-zone card2)]
     (= (second zone1) (second zone2))))
 
-(defn protecting-same-server? [card character]
-  "True if an character is protecting the server that the card is in or protecting."
+(defn protecting-same-locale? [card character]
+  "True if an character is protecting the locale that the card is in or protecting."
   (let [zone1 (get-nested-zone card)
         zone2 (get-nested-zone character)]
     (and (= (second zone1) (second zone2))
          (= :characters (last zone2)))))
 
-(defn in-same-server? [card1 card2]
-  "True if the two cards are installed IN the same server, or hosted on cards IN the same server."
+(defn in-same-locale? [card1 card2]
+  "True if the two cards are installed IN the same locale, or hosted on cards IN the same locale."
   (let [zone1 (get-nested-zone card1)
         zone2 (get-nested-zone card2)]
     (and (= zone1 zone2)
-         (is-remote? (second zone1)) ; cards in centrals are in the server's root, not in the server.
+         (is-party? (second zone1)) ; cards in centrals are in the locale's root, not in the locale.
          (= :content (last zone1)))))
 
-(defn from-same-server? [region target]
-  "True if the region is in the root of the server that the target is in."
+(defn from-same-locale? [region target]
+  "True if the region is in the root of the locale that the target is in."
   (= (central->zone (:zone target))
      (butlast (get-nested-zone region))))
 
@@ -70,15 +70,15 @@
   [state side]
   (if (= side :challenger)
     (let [top-level-cards (flatten (for [t [:resource :hazard :muthereff]] (get-in @state [:challenger :rig t])))
-          hosted-on-character (->> (:contestant @state) :servers seq flatten (mapcat :characters) (mapcat :hosted))]
+          hosted-on-character (->> (:contestant @state) :locales seq flatten (mapcat :characters) (mapcat :hosted))]
       (loop [unchecked (concat top-level-cards (filter #(= (:side %) "Challenger") hosted-on-character)) installed ()]
         (if (empty? unchecked)
           (filter :installed installed)
           (let [[card & remaining] unchecked]
             (recur (filter identity (into remaining (:hosted card))) (into installed [card]))))))
-    (let [servers (->> (:contestant @state) :servers seq flatten)
-          content (mapcat :content servers)
-          character (mapcat :characters servers)
+    (let [locales (->> (:contestant @state) :locales seq flatten)
+          content (mapcat :content locales)
+          character (mapcat :characters locales)
           top-level-cards (concat character content)]
       (loop [unchecked top-level-cards installed ()]
         (if (empty? unchecked)
