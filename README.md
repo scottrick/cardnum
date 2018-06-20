@@ -1,4 +1,4 @@
-[![Build status](https://circleci.com/gh/mtgred/meccg/tree/master.svg?style=shield)](https://circleci.com/gh/mtgred/meccg)
+
 
 Play Middle-earth:CCG in the browser.
 
@@ -6,15 +6,13 @@ Play Middle-earth:CCG in the browser.
 
 http://www.cardnum.net
 
-[Gameplay videos](https://www.youtube.com/results?search_query=cardnum.net)
 
-![screenshot](http://i.imgur.com/xkxOMHc.jpg)
-
+![screenshot](/resources/public/img/meccg_shot2.jpg)
 
 ## Card implementation status
 
 
-[Card rules implementation status](https://docs.google.com/spreadsheets/d/1ICv19cNjSaW9C-DoEEGH3iFt09PBTob4CAutGex0gnE/pubhtml)
+[Card rules implementation status](https://docs.google.com/spreadsheets/d/1Ly2RVe4QZRhN6TUfV1YO9DuuYvywzMnnaCunQapzzfs/edit?usp=sharing)
 
 
 ## Dependencies
@@ -78,7 +76,7 @@ $ lein test test.cards.agendas
 ```
 
 
-For more information refer to the [development guide](https://github.com/mtgred/meccg/wiki/Getting-Started-with-Development).
+For more information refer to the [development guide](https://github.com/rezwits/meccg/wiki/Getting-Started-with-Development).
 
 ## License
 
