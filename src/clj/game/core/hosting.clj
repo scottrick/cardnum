@@ -72,11 +72,11 @@
            tdef (card-def c)]
        (update! state side (update-in card [:hosted] #(conj % c)))
 
-       ;; events should be registered for: challenger cards that are installed; contestant cards that are Operations, or are installed and rezzed
+       ;; events should be registered for: challenger cards that are installed; contestant cards that are Operations, or are installed and revealed
        (when (or (is-type? target "Operation")
                  (and (is-type? target "Event") (not facedown))
                  (and installed (card-is? target :side :challenger))
-                 (and installed (card-is? target :side :contestant) (:rezzed target)))
+                 (and installed (card-is? target :side :contestant) (:revealed target)))
          (when-let [events (:events tdef)]
            (register-events state side events c))
          (when (or (:recurring tdef) (:prevent tdef))
@@ -91,6 +91,6 @@
          (hosted-gained state side (make-eid state) (get-card state card) [c]))
        (if (and (is-type? c "Resource")
                 (card-is? c :side :contestant))
-         (rez state side c)
+         (reveal state side c)
          c)
        ))))

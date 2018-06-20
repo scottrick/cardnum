@@ -125,7 +125,7 @@ var moment = {
   "months": function () {},
   "normalizeUnits": function () {},
   "invalid": function () {},
-  "parseZone": function () {},
+  "parsevealone": function () {},
   "parseTwoDigitYear": function () {},
   "fn": {
     "clone": function () {},
@@ -162,7 +162,7 @@ var moment = {
     "zone": function () {},
     "zoneAbbr": function () {},
     "zoneName": function () {},
-    "parseZone": function () {},
+    "parsevealone": function () {},
     "hasAlignedHourOffset": function () {},
     "daysInMonth": function () {},
     "dayOfYear": function () {},

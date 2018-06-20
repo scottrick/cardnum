@@ -73,16 +73,16 @@
                                      :subroutine ability :targets targets})))
 
 (defn get-character
-  "Get installed character protecting server by position."
-  [state server pos]
-  (get-in @state [:contestant :servers server :characters pos]))
+  "Get installed character protecting locale by position."
+  [state locale pos]
+  (get-in @state [:contestant :locales locale :characters pos]))
 
 (defn get-content
-  "Get card in a server by position. If no pos, get all cards in the server."
-  ([state server]
-   (get-in @state [:contestant :servers server :content]))
-  ([state server pos]
-   (get-in @state [:contestant :servers server :content pos])))
+  "Get card in a locale by position. If no pos, get all cards in the locale."
+  ([state locale]
+   (get-in @state [:contestant :locales locale :content]))
+  ([state locale pos]
+   (get-in @state [:contestant :locales locale :content pos])))
 
 (defn get-resource
   "Get non-hosted resource by position."
@@ -120,20 +120,20 @@
 
 (defn play-from-hand
   "Play a card from hand based on its title. If installing a Contestant card, also indicate
-  the server to install into with a string."
+  the locale to install into with a string."
   ([state side title] (play-from-hand state side title nil))
-  ([state side title server]
+  ([state side title locale]
     (core/play state side {:card (find-card title (get-in @state [side :hand]))
-                           :server server})))
+                           :locale locale})))
 
 
 ;;; Run functions
 (defn play-run-event
-  "Play a run event with a replace-access effect on an unprotected server.
+  "Play a run event with a replace-access effect on an unprotected locale.
   Advances the run timings to the point where replace-access occurs."
-  [state card server]
+  [state card locale]
   (core/play state :challenger {:card card})
-  (is (= [server] (get-in @state [:run :server])) "Correct server is run")
+  (is (= [locale] (get-in @state [:run :locale])) "Correct locale is run")
   (is (get-in @state [:run :run-effect]) "There is a run-effect")
   (core/no-action state :contestant nil)
   (core/successful-run state :challenger nil)
@@ -141,9 +141,9 @@
   (is (get-in @state [:run :successful]) "Run is marked successful"))
 
 (defn run-on
-  "Start run on specified server."
-  [state server]
-  (core/click-run state :challenger {:server server}))
+  "Start run on specified locale."
+  [state locale]
+  (core/click-run state :challenger {:locale locale}))
 
 (defn run-continue
   "No action from contestant and continue for challenger to proceed in current run."
@@ -168,10 +168,10 @@
   [state]
   (core/jack-out state :challenger nil))
 
-(defn run-empty-server
-  "Make a successful run on specified server, assumes no character in place."
-  [state server]
-  (run-on state server)
+(defn run-empty-locale
+  "Make a successful run on specified locale, assumes no character in place."
+  [state locale]
+  (run-on state locale)
   (run-successful state))
 
 

@@ -75,14 +75,14 @@
 
 ;;; "ToString"-like methods
 (defn card-str
-  "Gets a string description of an installed card, reflecting whether it is rezzed,
-  in/protecting a server, facedown, or hosted."
+  "Gets a string description of an installed card, reflecting whether it is revealed,
+  in/protecting a locale, facedown, or hosted."
   ([state card] (card-str state card nil))
   ([state card {:keys [visible] :as args}]
   (str (if (card-is? card :side :contestant)
          ; Contestant card messages
-         (str (if (or (rezzed? card) visible) (:title card) (if (character? card) "Character" "a card"))
-              ; Hosted cards do not need "in server 1" messages, host has them
+         (str (if (or (revealed? card) visible) (:title card) (if (character? card) "Character" "a card"))
+              ; Hosted cards do not need "in locale 1" messages, host has them
               (if-not (:host card)
                 (str (if (character? card) " protecting " " in ")
                      ;TODO add naming of scoring area of contestant/challenger
@@ -102,9 +102,9 @@
          [:sideboard] (if (= side "Challenger") "Ch-board" "Co-board")
          [:sites] (if (= side "Challenger") "Sites2" "Sites")
          [:rig _] "Rig"
-         [:servers :hq _] "the root of HQ"
-         [:servers :rd _] "the root of R&D"
-         [:servers :archives _] "the root of Archives"
+         [:locales :hq _] "the root of HQ"
+         [:locales :rd _] "the root of R&D"
+         [:locales :archives _] "the root of Archives"
          :else (zone->name (second zone))))
 
 
@@ -171,15 +171,15 @@
                         :choices {:req (fn [t] (card-is? t :side side))}}
                        {:title "/counter command"} nil)))))
 
-(defn command-rezall [state side value]
+(defn command-revealall [state side value]
   (resolve-ability state side
-    {:optional {:prompt "Rez all cards and turn cards in archives faceup?"
+    {:optional {:prompt "Reveal all cards and turn cards in archives faceup?"
                 :yes-ability {:effect (req
                                         (swap! state update-in [:contestant :discard] #(map (fn [c] (assoc c :seen true)) %))
                                         (doseq [c (all-installed state side)]
-                                          (when-not (:rezzed c)
-                                            (rez state side c {:ignore-cost :all-costs :force true}))))}}}
-    {:title "/rez-all command"} nil))
+                                          (when-not (:revealed c)
+                                            (reveal state side c {:ignore-cost :all-costs :force true}))))}}}
+    {:title "/reveal-all command"} nil))
 
 (defn command-roll [state side value]
   (system-msg state side (str "rolls a " value " sided die and rolls a " (inc (rand-int value)))))
@@ -256,12 +256,12 @@
                                                       {:title "/psi command" :side %2}
                                                       {:equal  {:msg "resolve equal bets effect"}
                                                        :not-equal {:msg "resolve unequal bets effect"}}))
-          "/rez"        #(when (= %2 :contestant)
+          "/reveal"        #(when (= %2 :contestant)
                            (resolve-ability %1 %2
-                                            {:effect (effect (rez target {:ignore-cost :all-costs :force true}))
+                                            {:effect (effect (reveal target {:ignore-cost :all-costs :force true}))
                                              :choices {:req (fn [t] (card-is? t :side %2))}}
-                                            {:title "/rez command"} nil))
-          "/rez-all"    #(when (= %2 :contestant) (command-rezall %1 %2 value))
+                                            {:title "/reveal command"} nil))
+          "/reveal-all"    #(when (= %2 :contestant) (command-revealall %1 %2 value))
           "/rfg"        #(resolve-ability %1 %2
                                           {:prompt "Select a card to remove from the game"
                                            :effect (req (let [c (deactivate %1 %2 target)]
@@ -313,7 +313,7 @@
   [state side]
   (when state
     (toast state side
-           (str "Your last action caused a game error on the server. You can keep playing, but there "
+           (str "Your last action caused a game error on the locale. You can keep playing, but there "
                 "may be errors in the game's current state. Please click the button below to submit a report "
                 "to our GitHub issues page.<br/><br/>Use /error to see this message again.")
            "exception"

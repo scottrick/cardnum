@@ -534,8 +534,8 @@ app.set 'port', 1042
 app.set 'ipaddr', "0.0.0.0"
 app.use methodOverride() # provide PUT DELETE
 app.use cookieParser()
-app.use(bodyParser.json({limit: '50mb'}))
-app.use(bodyParser.urlencoded({limit: '50mb', extended: true}))
+app.use(bodyParser.json({limit: '10mb'}))
+app.use(bodyParser.urlencoded({limit: '10mb', extended: true}))
 app.use session
   secret: config.salt
   saveUninitialized: false

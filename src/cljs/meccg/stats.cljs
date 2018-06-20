@@ -27,7 +27,7 @@
         (go (let [result (<! (POST "/user/clearstats" data :json))]
               (swap! app-state assoc :stats result)))))))
 
-;; Go loop to receive messages from node server to refresh stats on game-end
+;; Go loop to receive messages from node locale to refresh stats on game-end
 (go (while true
       (let [msg (<! stats-channel)
             result (-> (<! (GET "/user")) :json first :stats)

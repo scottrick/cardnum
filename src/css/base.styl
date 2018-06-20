@@ -864,7 +864,7 @@ nav ul
   overflow: auto
   -webkit-overflow-scrolling: touch
   padding-top: 40px
-  transform: translateZ(0)
+  transform: translateveal(0)
   flex(1)
 
 .card-preview
@@ -1440,7 +1440,7 @@ nav ul
     &.red
       background-color: red
 
-  .server-target, .subtype-target
+  .locale-target, .subtype-target
     position: absolute
     z-index: 10
     padding: 0
@@ -1453,7 +1453,7 @@ nav ul
     padding-right: 3px
     white-space: nowrap
 
-  .server-target
+  .locale-target
     background-color: sienna
 
   .subtype-target
@@ -1468,12 +1468,12 @@ nav ul
     &.sentry
       background-color: criminal-blue
 
-  .abilities, .servers-menu, .menu, .contestant-abilities, .challenger-abilities, .popup
+  .abilities, .locales-menu, .menu, .contestant-abilities, .challenger-abilities, .popup
     left: 0
     bottom: 100%
     margin: 6px -1px
 
-  .abilities, .servers-menu, .menu, .contestant-abilities, .challenger-abilities
+  .abilities, .locales-menu, .menu, .contestant-abilities, .challenger-abilities
     display: none
     position: absolute
     z-index: 30
@@ -1532,7 +1532,7 @@ nav ul
     width: 60px
     border-radius: 4px
 
-  .server-card
+  .locale-card
     position: relative
     min-height: 84px
     min-width: 60px
@@ -1580,7 +1580,7 @@ nav ul
    .disable-transition
      transition: none
 
-  .squeeze .card-wrapper
+  .squeeveale .card-wrapper
     position: absolute
 
   .stats > div
@@ -1635,7 +1635,7 @@ nav ul
           flex-direction(row-reverse)
           justify-content(space-between)
 
-          .server
+          .locale
             margin-left: 0px
             margin-right: 2px
 
@@ -1671,7 +1671,7 @@ nav ul
           .run-button
             position: relative
 
-            .servers-menu
+            .locales-menu
               left: 100%
               bottom: 0
               width: 120px
@@ -1723,7 +1723,7 @@ nav ul
       .card-wrapper
         margin: 3px 6px
 
-      .server
+      .locale
         position: relative
         min-width: 84px
         margin: 0 4px
@@ -1899,7 +1899,7 @@ nav ul
           transform(rotate(180deg))
           display-flex()
 
-          .server-card.tapped
+          .locale-card.tapped
             transform(rotate(-90deg))
 
             .abilities
@@ -1908,7 +1908,7 @@ nav ul
               transform(rotate(90deg) translateY(-100%))
               transform-origin(0 0)
 
-          .server-card
+          .locale-card
             margin: -7px 0
             cursor: pointer
 
@@ -1918,7 +1918,7 @@ nav ul
       .card-wrapper
         transform(rotate(0deg), translateY(100%))
 
-      .server
+      .locale
         transform(initial)
 
         .content

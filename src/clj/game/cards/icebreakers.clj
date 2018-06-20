@@ -4,7 +4,7 @@
 
 (def breaker-auto-pump
   "Updates an icebreaker's abilities with a pseudo-ability to trigger the
-  auto-pump routine in core, IF we are encountering a rezzed character with a subtype
+  auto-pump routine in core, IF we are encountering a revealed character with a subtype
   we can break."
   {:effect
    (req (let [abs (filter #(not= (:dynamic %) :auto-pump) (:abilities card))
@@ -22,7 +22,7 @@
                    (assoc card :abilities
                           (if (and pumpcst
                                    pumpnum
-                                   (rezzed? current-character)
+                                   (revealed? current-character)
                                    (or (some #(has-subtype? current-character %) (:breaks card))
                                        (= (first (:breaks card)) "All"))
                                    (pos? strdif))
@@ -146,7 +146,7 @@
   "Install-from-heap breakers"
   [title type abilities]
   (let [install-prompt {:req (req (and (= (:zone card) [:discard])
-                                       (rezzed? current-character)
+                                       (revealed? current-character)
                                        (has-subtype? current-character type)
                                        (not (install-locked? state side))
                                        (not (some #(= title (:title %)) (all-installed state :challenger)))
@@ -161,20 +161,20 @@
         heap-event (req (when (= (:zone card) [:discard])
                           (unregister-events state side card)
                           (register-events state side
-                                           {:rez install-prompt
+                                           {:reveal install-prompt
                                             :approach-character install-prompt
                                             :run install-prompt}
                                            (assoc card :zone [:discard]))))]
     {:move-zone heap-event
-     :events {:rez nil
+     :events {:reveal nil
               :approach-character nil
               :run nil}
      :abilities abilities}))
 
 (defn- central-breaker
-  "'Cannot be used on a remote server' breakers"
+  "'Cannot be used on a party locale' breakers"
   [type break pump]
-  (let [central-req (req (or (not (:central-breaker card)) (#{:hq :rd :archives} (first (:server run)))))]
+  (let [central-req (req (or (not (:central-breaker card)) (#{:hq :rd :archives} (first (:locale run)))))]
     (auto-icebreaker [type]
                      {:abilities [(assoc break :req central-req)
                                   (assoc pump :req central-req)]
