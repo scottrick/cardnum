@@ -75,7 +75,7 @@
                               :sideboard (zone :sideboard contestant-board)
                               :sites (zone :sites contestant-sites)
                               :discard [] :scored [] :rfg [] :play-area []
-                              :servers {:hq {} :rd {} :archives {}}
+                              :locales {:hq {} :rd {} :archives {}}
                               :rig {:resource [] :muthereff [] :hazard []}
                               :click 5 :credit 5 :bad-publicity 0 :has-bad-pub 0
                               :free_gi 0 :total_mp 0
@@ -93,7 +93,7 @@
                               :sideboard (zone :sideboard challenger-board)
                               :sites (zone :sites challenger-sites)
                               :discard [] :scored [] :rfg [] :play-area []
-                              :servers {:hq {} :rd {} :archives {}}
+                              :locales {:hq {} :rd {} :archives {}}
                               :rig {:resource [] :muthereff [] :hazard []}
                               :toast []
                               :click 5 :credit 5 :run-credit 0 :memory 4 :link 0 :tag 0
@@ -113,7 +113,7 @@
                         (when-completed (trigger-event-sync state side :pre-start-game)
                                         (init-hands state))))) @game-states))
 
-(defn server-card
+(defn locale-card
   ([ImageName] (@all-cards ImageName))
   ([ImageName user]
    (@all-cards ImageName)))
@@ -137,50 +137,50 @@
   ([side deck] (create-pool side deck nil))
   ([side deck user]
    (mapcat #(map (fn [card]
-                   (let [server-card (or (server-card (:ImageName card) user) card)
-                         c (assoc (make-card server-card) :side side :art (:art card))]
+                   (let [locale-card (or (locale-card (:ImageName card) user) card)
+                         c (assoc (make-card locale-card) :side side :art (:art card))]
                      (if-let [init (:init (card-def c))] (merge c init) c)))
                  (repeat (:qty %) (assoc (:card %) :art (:art %))))
            (vec (:pool deck)))))
 
 (defn create-deck
   "Creates a shuffled draw deck (R&D/Stack) from the given list of cards.
-  Loads card data from server-side @all-cards map if available."
+  Loads card data from locale-side @all-cards map if available."
   ([side deck] (create-deck side deck nil))
   ([side deck user]
    (shuffle (mapcat #(map (fn [card]
-                            (let [server-card (or (server-card (:ImageName card) user) card)
-                                  c (assoc (make-card server-card) :side side :art (:art card))]
+                            (let [locale-card (or (locale-card (:ImageName card) user) card)
+                                  c (assoc (make-card locale-card) :side side :art (:art card))]
                               (if-let [init (:init (card-def c))] (merge c init) c)))
                           (repeat (:qty %) (assoc (:card %) :art (:art %))))
                     (shuffle (vec (:cards deck)))))))
 
 (defn create-board
   "Creates a shuffled draw deck (R&D/Stack) from the given list of cards.
-  Loads card data from server-side @all-cards map if available."
+  Loads card data from locale-side @all-cards map if available."
   ([side deck] (create-board side deck nil))
   ([side deck user]
    (mapcat #(map (fn [card]
-                   (let [server-card (or (server-card (:ImageName card) user) card)
-                         c (assoc (make-card server-card) :side side :art (:art card))]
+                   (let [locale-card (or (locale-card (:ImageName card) user) card)
+                         c (assoc (make-card locale-card) :side side :art (:art card))]
                      (if-let [init (:init (card-def c))] (merge c init) c)))
                  (repeat (:qty %) (assoc (:card %) :art (:art %))))
            (vec (:sideboard deck)))))
 
 (defn create-sites
   "Creates a shuffled draw deck (R&D/Stack) from the given list of cards.
-  Loads card data from server-side @all-cards map if available."
+  Loads card data from locale-side @all-cards map if available."
   ([side deck] (create-sites side deck nil))
   ([side deck user]
    (mapcat #(map (fn [card]
-                   (let [server-card (or (server-card (:ImageName card) user) card)
-                         c (assoc (make-card server-card) :side side :art (:art card))]
+                   (let [locale-card (or (locale-card (:ImageName card) user) card)
+                         c (assoc (make-card locale-card) :side side :art (:art card))]
                      (if-let [init (:init (card-def c))] (merge c init) c)))
                  (repeat (:qty %) (assoc (:card %) :art (:art %))))
            (vec (:sites deck)))))
 
 (defn make-rid
-  "Returns a progressively-increasing integer to identify a new remote server."
+  "Returns a progressively-increasing integer to identify a new party locale."
   [state]
   (get-in (swap! state update-in [:rid] inc) [:rid]))
 
@@ -307,7 +307,7 @@
       (swap! state assoc-in [side :register-last-turn] (-> @state side :register))
       (let [rig-cards (apply concat (vals (get-in @state [:challenger :rig])))
             hosted-cards (filter :installed (mapcat :hosted rig-cards))
-            hosted-on-character (->> (get-in @state [:contestant :servers]) seq flatten (mapcat :characters) (mapcat :hosted))]
+            hosted-on-character (->> (get-in @state [:contestant :locales]) seq flatten (mapcat :characters) (mapcat :hosted))]
         (doseq [card (concat rig-cards hosted-cards hosted-on-character)]
           ;; Clear the added-virus-counter flag for each virus in play.
           ;; We do this even on the contestant's turn to prevent shenanigans with something like Gorman Drip and Surge

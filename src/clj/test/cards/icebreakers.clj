@@ -175,17 +175,17 @@
     (new-game
       (default-contestant [(qty "Hostile Infrastructure" 3)])
       (default-challenger [(qty "Deus X" 3) (qty "Sure Gamble" 2)]))
-    (play-from-hand state :contestant "Hostile Infrastructure" "New remote")
-    (play-from-hand state :contestant "Hostile Infrastructure" "New remote")
-    (play-from-hand state :contestant "Hostile Infrastructure" "New remote")
+    (play-from-hand state :contestant "Hostile Infrastructure" "New party")
+    (play-from-hand state :contestant "Hostile Infrastructure" "New party")
+    (play-from-hand state :contestant "Hostile Infrastructure" "New party")
     (core/gain state :contestant :credit 10)
-    (core/reveal state :contestant (get-content state :remote1 0))
-    (core/reveal state :contestant (get-content state :remote2 0))
-    (core/reveal state :contestant (get-content state :remote3 0))
+    (core/reveal state :contestant (get-content state :party1 0))
+    (core/reveal state :contestant (get-content state :party2 0))
+    (core/reveal state :contestant (get-content state :party3 0))
     (take-credits state :contestant)
     (core/gain state :challenger :credit 10)
     (play-from-hand state :challenger "Deus X")
-    (run-empty-server state "Server 1")
+    (run-empty-locale state "Locale 1")
     (prompt-choice :challenger "Yes")
     (let [dx (get-resource state 0)]
       (card-ability state :challenger dx 1)
@@ -198,11 +198,11 @@
     (new-game
       (make-deck "Jinteki: Personal Evolution" [(qty "Fetal AI" 6)])
       (default-challenger [(qty "Deus X" 3) (qty "Sure Gamble" 2)]))
-    (play-from-hand state :contestant "Fetal AI" "New remote")
+    (play-from-hand state :contestant "Fetal AI" "New party")
     (take-credits state :contestant)
     (core/gain state :challenger :credit 10)
     (play-from-hand state :challenger "Deus X")
-    (run-empty-server state "Server 1")
+    (run-empty-locale state "Locale 1")
     (prompt-choice :challenger "Access")
     (let [dx (get-resource state 0)]
       (card-ability state :challenger dx 1)
@@ -310,7 +310,7 @@
       (is (= 1 (:current-strength (refresh nanotk))) "Back to default strength"))))
 
 (deftest nanotk-redirect
-  ;; Na'Not'K - Strength adjusts accordingly when run redirected to another server
+  ;; Na'Not'K - Strength adjusts accordingly when run redirected to another locale
   (do-game
     (new-game (default-contestant [(qty "Susanoo-no-Mikoto" 1) (qty "Crick" 1) (qty "Cortex Lock" 1)])
               (default-challenger [(qty "Na'Not'K" 1)]))
@@ -489,7 +489,7 @@
     (play-from-hand state :challenger "Cache")
     (let [yusuf (get-resource state 0)
           cache (get-resource state 1)]
-      (run-empty-server state "Archives")
+      (run-empty-locale state "Archives")
       (is (= 1 (get-in (refresh yusuf) [:counter :virus])) "Yusuf has 1 virus counter")
       (is (= 3 (:current-strength (refresh yusuf))) "Initial Yusuf strength")
       (is (= 3 (get-in (refresh cache) [:counter :virus])) "Initial Cache virus counters")

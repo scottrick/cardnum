@@ -111,7 +111,7 @@
     (update-character-strength state side b-new)))
 
 (defn card-index
-  "Get the zero-based index of the given card in its server's list of content. Same as character-index"
+  "Get the zero-based index of the given card in its locale's list of content. Same as character-index"
   [state card]
   (first (keep-indexed #(when (= (:cid %2) (:cid card)) %1) (get-in @state (cons :contestant (:zone card))))))
 

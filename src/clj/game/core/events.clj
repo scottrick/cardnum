@@ -1,6 +1,6 @@
 (in-ns 'game.core)
 
-(declare can-trigger? card-def clear-wait-prompt effect-completed event-title get-card get-nested-host get-remote-names
+(declare can-trigger? card-def clear-wait-prompt effect-completed event-title get-card get-nested-host get-party-names
          get-runnable-zones get-zones get-zones-challenger installed? make-eid register-effect-completed register-suppress resolve-ability
          show-wait-prompt trigger-suppress unregister-suppress)
 
@@ -227,10 +227,10 @@
   [state side ev]
   (= (count (turn-events state side ev)) 1))
 
-(defn first-successful-run-on-server?
-  "Returns true if the active run is the first succesful run on the given server"
-  [state server]
-  (empty? (filter #(= [server] %) (turn-events state :challenger :successful-run))))
+(defn first-successful-run-on-locale?
+  "Returns true if the active run is the first succesful run on the given locale"
+  [state locale]
+  (empty? (filter #(= [locale] %) (turn-events state :challenger :successful-run))))
 
 (defn get-turn-damage
   "Returns the value of damage take this turn"

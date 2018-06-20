@@ -72,7 +72,7 @@
               (default-challenger [(qty "Data Dealer" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Data Dealer")
-    (run-empty-server state "HQ")
+    (run-empty-locale state "HQ")
     (prompt-choice :challenger "Steal")
     (is (= 2 (:agenda-point (get-challenger))))
     (card-ability state :challenger (get-muthereff state 0) 0)
@@ -85,11 +85,11 @@
   (do-game
     (new-game (default-contestant [(qty "Mandatory Regions" 1) (qty "Contestantorate Town" 1)])
               (default-challenger))
-    (play-from-hand state :contestant "Mandatory Regions" "New remote")
-    (score-agenda state :contestant (get-content state :remote1 0))
+    (play-from-hand state :contestant "Mandatory Regions" "New party")
+    (score-agenda state :contestant (get-content state :party1 0))
     (is (= 4 (:click-per-turn (get-contestant))) "Up to 4 clicks per turn")
-    (play-from-hand state :contestant "Contestantorate Town" "New remote")
-    (let [ctown (get-content state :remote2 0)]
+    (play-from-hand state :contestant "Contestantorate Town" "New party")
+    (let [ctown (get-content state :party2 0)]
       (core/reveal state :contestant ctown)
       (prompt-select :contestant (get-scored state :contestant 0))
       (is (= 3 (:click-per-turn (get-contestant))) "Back down to 3 clicks per turn"))))
@@ -130,8 +130,8 @@
     (core/gain state :contestant :click 2)
     (play-from-hand state :contestant "Ice Wall" "HQ")
     (play-from-hand state :contestant "Ice Wall" "R&D")
-    (play-from-hand state :contestant "Jackson Howard" "New remote")
-    (play-from-hand state :contestant "Jackson Howard" "New remote")
+    (play-from-hand state :contestant "Jackson Howard" "New party")
+    (play-from-hand state :contestant "Jackson Howard" "New party")
     (play-from-hand state :contestant "Ice Wall" "HQ")
     (core/end-turn state :contestant nil)
     (core/start-turn state :challenger nil)
@@ -142,8 +142,8 @@
     (let [hqiwall0 (get-character state :hq 0)
           hqiwall1 (get-character state :hq 1)
           rdiwall (get-character state :rd 0)
-          jh1 (get-content state :remote1 0)
-          jh2 (get-content state :remote2 0)
+          jh1 (get-content state :party1 0)
+          jh2 (get-content state :party2 0)
           corr (get-in @state [:challenger :rig :resource 0])
           cchip (get-in @state [:challenger :rig :hazard 0])
           pap (get-in @state [:challenger :rig :muthereff 0])]
@@ -155,8 +155,8 @@
       (is (= (core/card-str state (refresh rdiwall)) "Character protecting R&D at position 0"))
       (is (= (core/card-str state (refresh rdiwall) {:visible true})
              "Ice Wall protecting R&D at position 0"))
-      (is (= (core/card-str state (refresh jh1)) "Jackson Howard in Server 1"))
-      (is (= (core/card-str state (refresh jh2)) "a card in Server 2"))
+      (is (= (core/card-str state (refresh jh1)) "Jackson Howard in Locale 1"))
+      (is (= (core/card-str state (refresh jh2)) "a card in Locale 2"))
       (is (= (core/card-str state (refresh corr)) "Corroder"))
       (is (= (core/card-str state (refresh cchip)) "Clone Chip"))
       (is (= (core/card-str state (refresh pap)) "Paparazzi"))
@@ -168,22 +168,22 @@
   (do-game
     (new-game (default-contestant [(qty "Ancestral Imager" 1)])
               (default-challenger))
-    (play-from-hand state :contestant "Ancestral Imager" "New remote")
-    (let [ai (get-content state :remote1 0)]
+    (play-from-hand state :contestant "Ancestral Imager" "New party")
+    (let [ai (get-content state :party1 0)]
       ;; Trying to score without any tokens does not do anything
       (is (not (find-card "Ancestral Imager" (:scored (get-contestant)))) "AI not scored")
-      (is (not (nil? (get-content state :remote1 0))))
+      (is (not (nil? (get-content state :party1 0))))
       (core/advance state :contestant {:card (refresh ai)})
       (core/score state :contestant {:card (refresh ai)})
-      (is (not (nil? (get-content state :remote1 0)))))))
+      (is (not (nil? (get-content state :party1 0)))))))
 
 (deftest trash-contestant-hosted
   ;; Hosted Contestant cards are included in all-installed and fire leave-play effects when trashed
   (do-game
     (new-game (default-contestant [(qty "Full Immersion RecStudio" 1) (qty "Worlds Plaza" 1) (qty "Director Haas" 1)])
               (default-challenger))
-    (play-from-hand state :contestant "Full Immersion RecStudio" "New remote")
-    (let [fir (get-content state :remote1 0)]
+    (play-from-hand state :contestant "Full Immersion RecStudio" "New party")
+    (let [fir (get-content state :party1 0)]
       (core/reveal state :contestant fir)
       (card-ability state :contestant fir 0)
       (prompt-select :contestant (find-card "Worlds Plaza" (:hand (get-contestant))))
@@ -197,7 +197,7 @@
           (is (= 4 (:click-per-turn (get-contestant))) "Contestant has 4 clicks per turn")
           (is (= 3 (count (core/all-installed state :contestant))) "all-installed counting hosted Contestant cards")
           (take-credits state :contestant)
-          (run-empty-server state "Server 1")
+          (run-empty-locale state "Locale 1")
           (prompt-select :challenger dh)
           (prompt-choice :challenger "Yes") ; trash Director Haas
           (prompt-choice :challenger "Done")
@@ -212,10 +212,10 @@
     (core/gain state :challenger :click 1)
     (play-from-hand state :challenger "Imp")
     (let [imp (get-resource state 0)]
-      (run-empty-server state "HQ")
+      (run-empty-locale state "HQ")
       (card-ability state :challenger imp 0)
       (is (= 1 (count (:discard (get-contestant)))) "Accessed Hedge Fund is trashed")
-      (run-empty-server state "HQ")
+      (run-empty-locale state "HQ")
       (card-ability state :challenger imp 0)
       (is (= 1 (count (:discard (get-contestant)))) "Card can't be trashed, Imp already used this turn")
       (prompt-choice :challenger "OK")
@@ -224,7 +224,7 @@
       (prompt-select :challenger (find-card "Imp" (:discard (get-challenger)))))
     (let [imp (get-resource state 0)]
       (is (= 2 (get-counters (refresh imp) :virus)) "Reinstalled Imp has 2 counters")
-      (run-empty-server state "HQ")
+      (run-empty-locale state "HQ")
       (card-ability state :challenger imp 0))
     (is (= 2 (count (:discard (get-contestant)))) "Hedge Fund trashed, reinstalled Imp used on same turn")))
 
@@ -233,39 +233,39 @@
   (do-game
     (new-game (default-contestant [(qty "PAD Campaign" 3)])
               (default-challenger))
-    (play-from-hand state :contestant "PAD Campaign" "New remote")
-    (play-from-hand state :contestant "PAD Campaign" "New remote")
+    (play-from-hand state :contestant "PAD Campaign" "New party")
+    (play-from-hand state :contestant "PAD Campaign" "New party")
     (take-credits state :contestant 1)
-    (run-empty-server state "Server 1")
+    (run-empty-locale state "Locale 1")
     (prompt-choice :challenger "No")
     ;; run and trash the second site
-    (run-empty-server state "Server 2")
+    (run-empty-locale state "Locale 2")
     (prompt-choice :challenger "Yes")
     (take-credits state :challenger 2)
-    (play-from-hand state :contestant "PAD Campaign" "Server 1")
+    (play-from-hand state :contestant "PAD Campaign" "Locale 1")
     (prompt-choice :contestant "OK")
     (is (= 2 (count (:discard (get-contestant)))) "Trashed existing site")
     (is (:seen (first (get-in @state [:contestant :discard]))) "Site trashed by challenger is Seen")
     (is (not (:seen (second (get-in @state [:contestant :discard]))))
         "Site trashed by contestant is Unseen")
-    (is (not (:seen (get-content state :remote1 0))) "New site is unseen")))
+    (is (not (:seen (get-content state :party1 0))) "New site is unseen")))
 
 (deftest reinstall-seen-site
   ;; Install a faceup card in Archives, make sure it is not :seen
   (do-game
     (new-game (default-contestant [(qty "PAD Campaign" 1) (qty "Interns" 1)])
               (default-challenger))
-    (play-from-hand state :contestant "PAD Campaign" "New remote")
+    (play-from-hand state :contestant "PAD Campaign" "New party")
     (take-credits state :contestant 2)
     ;; run and trash the site
-    (run-empty-server state "Server 1")
+    (run-empty-locale state "Locale 1")
     (prompt-choice :challenger "Yes")
     (is (:seen (first (get-in @state [:contestant :discard]))) "Site trashed by challenger is Seen")
     (take-credits state :challenger 3)
     (play-from-hand state :contestant "Interns")
     (prompt-select :contestant (first (get-in @state [:contestant :discard])))
-    (prompt-choice :contestant "New remote")
-    (is (not (:seen (get-content state :remote2 0))) "New site is unseen")))
+    (prompt-choice :contestant "New party")
+    (is (not (:seen (get-content state :party2 0))) "New site is unseen")))
 
 (deftest all-installed-challenger-test
   ;; Tests all-installed for resources hosted on Character, nested hosted resources, and non-installed hosted resources
@@ -313,15 +313,15 @@
     (new-game
       (default-contestant [(qty "PAD Campaign" 7)])
       (default-challenger))
-    (play-from-hand state :contestant "PAD Campaign" "New remote")
+    (play-from-hand state :contestant "PAD Campaign" "New party")
     (trash-from-hand state :contestant "PAD Campaign")
     (take-credits state :contestant)
-    (run-empty-server state :hq)
+    (run-empty-locale state :hq)
     (prompt-choice :challenger "No") ; Dismiss trash prompt
     (is (last-log-contains? state "PAD Campaign") "Accessed card name was logged")
-    (run-empty-server state :rd)
+    (run-empty-locale state :rd)
     (is (last-log-contains? state "an unseen card") "Accessed card name was not logged")
-    (run-empty-server state :remote1)
+    (run-empty-locale state :party1)
     (prompt-choice :challenger "No") ; Dismiss trash prompt
     (is (last-log-contains? state "PAD Campaign") "Accessed card name was logged")))
 
@@ -334,14 +334,14 @@
               (default-challenger))
     ;; Turn 1 Contestant, install oaktown and sites
     (core/gain state :contestant :click 4)
-    (play-from-hand state :contestant "Adonis Campaign" "New remote")
-    (play-from-hand state :contestant "Public Support" "New remote")
-    (play-from-hand state :contestant "Public Support" "New remote")
-    (play-from-hand state :contestant "Oaktown Renovation" "New remote")
-    (let [adonis (get-content state :remote1 0)
-          publics1 (get-content state :remote2 0)
-          publics2 (get-content state :remote3 0)
-          oaktown (get-content state :remote4 0)]
+    (play-from-hand state :contestant "Adonis Campaign" "New party")
+    (play-from-hand state :contestant "Public Support" "New party")
+    (play-from-hand state :contestant "Public Support" "New party")
+    (play-from-hand state :contestant "Oaktown Renovation" "New party")
+    (let [adonis (get-content state :party1 0)
+          publics1 (get-content state :party2 0)
+          publics2 (get-content state :party3 0)
+          oaktown (get-content state :party4 0)]
     (core/advance state :contestant {:card (refresh oaktown)})
     (core/advance state :contestant {:card (refresh oaktown)})
     (core/advance state :contestant {:card (refresh oaktown)})
@@ -403,7 +403,7 @@
     (is (= 3 (:agenda-point (get-contestant)))) ; cheated PS1 should get scored
     (is (= 9 (:credit (get-contestant))))
     (is (= (:zone (refresh publics1) :scored)))
-    (is (= (:zone (refresh publics2)) [:servers :remote3 :content]))
+    (is (= (:zone (refresh publics2)) [:locales :party3 :content]))
     (is (= (:zone (refresh adonis) :discard)))
     (take-credits state :contestant)
 
@@ -421,19 +421,19 @@
     (new-game (default-contestant [(qty "Cyberdex Virus Suite" 3)])
               (make-deck "Valencia Esteveveal: The Angel of Cayambe" [(qty "Sure Gamble" 3)]))
     (is (= 1 (:bad-publicity (get-contestant))) "Contestant starts with 1 BP")
-    (play-from-hand state :contestant "Cyberdex Virus Suite" "New remote")
+    (play-from-hand state :contestant "Cyberdex Virus Suite" "New party")
     (play-from-hand state :contestant "Cyberdex Virus Suite" "R&D")
     (play-from-hand state :contestant "Cyberdex Virus Suite" "HQ")
     (take-credits state :contestant)
-    (run-empty-server state :remote1)
+    (run-empty-locale state :party1)
     (prompt-choice :contestant "No")
     (prompt-choice :challenger "Yes")
     (is (= 5 (:credit (get-challenger))) "1 BP credit spent to trash CVS")
-    (run-empty-server state :hq)
+    (run-empty-locale state :hq)
     (prompt-choice :contestant "No")
     (prompt-choice :challenger "Yes")
     (is (= 5 (:credit (get-challenger))) "1 BP credit spent to trash CVS")
-    (run-empty-server state :rd)
+    (run-empty-locale state :rd)
     (prompt-choice :contestant "No")
     (prompt-choice :challenger "Yes")
     (is (= 5 (:credit (get-challenger))) "1 BP credit spent to trash CVS")))
@@ -444,11 +444,11 @@
     (new-game (default-contestant [(qty "Caprcharacter Nisei" 3)])
               (make-deck "Valencia Esteveveal: The Angel of Cayambe" [(qty "Sure Gamble" 3)]))
     (is (= 1 (:bad-publicity (get-contestant))) "Contestant starts with 1 BP")
-    (play-from-hand state :contestant "Caprcharacter Nisei" "New remote")
+    (play-from-hand state :contestant "Caprcharacter Nisei" "New party")
     (take-credits state :contestant)
-    (let [caprcharacter (get-content state :remote1 0)]
+    (let [caprcharacter (get-content state :party1 0)]
       (core/reveal state :contestant caprcharacter)
-      (run-on state "Server 1")
+      (run-on state "Locale 1")
       (is (prompt-is-card? :contestant caprcharacter) "Caprcharacter prompt even with no character, once challenger makes run")
       (is (prompt-is-card? :challenger caprcharacter) "Challenger has Caprcharacter prompt")
       (prompt-choice :contestant "2 [Credits]")
@@ -497,7 +497,7 @@
           med (get-resource state 0)]
       (core/command-counter state :challenger ["virus" 2])
       (prompt-select :challenger (refresh med))
-      (run-empty-server state :rd)
+      (run-empty-locale state :rd)
       (prompt-choice :challenger 2)
       (prompt-choice :challenger "Card from deck")
       (is (= "Hedge Fund" (-> (get-challenger) :prompt first :card :title)))
@@ -525,7 +525,7 @@
     (trash-from-hand state :contestant "Breaking News")
     (trash-from-hand state :contestant "Breaking News")
     (take-credits state :contestant)
-    (run-empty-server state :archives)
+    (run-empty-locale state :archives)
     (prompt-choice :challenger "Breaking News")
     (prompt-choice :challenger "Steal")
     (prompt-choice :challenger "Breaking News")

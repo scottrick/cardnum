@@ -35,12 +35,12 @@
      [:p "A big props to Neal Terrell (nealpro), Joel Koepp (JoelCFC25), Filip Gokstorp (Saintis), Dan Hutchins (danhut, wozzit) and John Warwick (jwarwick, BobTomatoes) who actively contribute to the success of the project with regular code submissions, the management of the issue tracker and answers to questions in the chat. It would not be the same without your help."]
 
      [:h3 "Donations"]
-     [:p "Donations are appreciated and help finance fast servers. You can support the project financially with PayPal or Bitcoin. Alternate art cards will be enabled on your account as a token of gratitude. Please specify your username with your donation."]
+     [:p "Donations are appreciated and help finance fast locales. You can support the project financially with PayPal or Bitcoin. Alternate art cards will be enabled on your account as a token of gratitude. Please specify your username with your donation."]
      [:ul.list.compact
       [:li "PayPal: rezwits@me.com or " [:a {:href "https://www.paypal.me/rezwits" :title "PayPal" :target "_blank"} "paypal.me/rezwits"]]
       ]
 
-     [:p "Many thanks to all the donors. Your contributions and kind words are greatly appreciated. You help finance fast servers and keep the developer motivated."]
+     [:p "Many thanks to all the donors. Your contributions and kind words are greatly appreciated. You help finance fast locales and keep the developer motivated."]
      [:ul.list.compact
       (for [d (:donators cursor)]
         [:li d])]

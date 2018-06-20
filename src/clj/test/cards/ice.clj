@@ -15,7 +15,7 @@
     (play-from-hand state :contestant "Ice Wall" "HQ")
     (take-credits state :contestant 2)
     (run-on state "HQ")
-    (is (= [:hq] (get-in @state [:run :server])))
+    (is (= [:hq] (get-in @state [:run :locale])))
     (let [iwall (get-character state :hq 0)]
       (core/reveal state :contestant iwall)
       (card-subroutine state :contestant iwall 0)
@@ -30,7 +30,7 @@
                                (qty "Corroder" 1) (qty "Patron" 1)]))
     (starting-hand state :challenger ["Sure Gamble"]) ;move all other cards to stack
     (play-from-hand state :contestant "Aimor" "HQ")
-    (is (= 1 (count (get-in @state [:contestant :servers :hq :characters]))) "Aimor installed")
+    (is (= 1 (count (get-in @state [:contestant :locales :hq :characters]))) "Aimor installed")
     (take-credits state :contestant)
     (let [aim (get-character state :hq 0)]
       (run-on state "HQ")
@@ -38,7 +38,7 @@
       (card-subroutine state :contestant aim 0)
       (is (= 3 (count (:discard (get-challenger)))) "Challenger trashed 3 cards")
       (is (= 1 (count (:deck (get-challenger)))) "Challenger has 1 card in deck"))
-    (is (= 0 (count (get-in @state [:contestant :servers :hq :characters]))) "Aimor trashed")))
+    (is (= 0 (count (get-in @state [:contestant :locales :hq :characters]))) "Aimor trashed")))
 
 (deftest archangel
   ;; Archangel - accessing from R&D does not cause run to hang.
@@ -48,7 +48,7 @@
     (starting-hand state :contestant ["Hedge Fund"])
     (take-credits state :contestant)
     (play-from-hand state :challenger "Bank Job")
-    (run-empty-server state :rd)
+    (run-empty-locale state :rd)
     (prompt-choice :contestant "Yes")
     (prompt-choice :challenger "Yes")
     (prompt-choice :contestant 0)
@@ -110,7 +110,7 @@
       (is (= 1 (:tag (get-challenger))) "Run unsuccessful; Challenger kept 1 tag"))))
 
 (deftest bullfrog
-  ;; Bullfrog - Win psi to move to outermost position of another server and continue run there
+  ;; Bullfrog - Win psi to move to outermost position of another locale and continue run there
   (do-game
     (new-game (default-contestant [(qty "Bullfrog" 1) (qty "Pup" 2)])
               (default-challenger))
@@ -121,12 +121,12 @@
     (run-on state :hq)
     (let [frog (get-character state :hq 0)]
       (core/reveal state :contestant frog)
-      (is (= :hq (first (get-in @state [:run :server]))))
+      (is (= :hq (first (get-in @state [:run :locale]))))
       (card-subroutine state :contestant frog 0)
       (prompt-choice :contestant "0 [Credits]")
       (prompt-choice :challenger "1 [Credits]")
       (prompt-choice :contestant "R&D")
-      (is (= :rd (first (get-in @state [:run :server]))) "Run redirected to R&D")
+      (is (= :rd (first (get-in @state [:run :locale]))) "Run redirected to R&D")
       (is (= 2 (get-in @state [:run :position])) "Passed Bullfrog")
       (is (= "Bullfrog" (:title (get-character state :rd 2))) "Bullfrog at outermost position of R&D"))))
 
@@ -258,10 +258,10 @@
   (do-game
     (new-game (default-contestant [(qty "Data Mine" 1)])
               (default-challenger))
-    (play-from-hand state :contestant "Data Mine" "Server 1")
+    (play-from-hand state :contestant "Data Mine" "Locale 1")
     (take-credits state :contestant)
-    (let [dm (get-character state :remote1 0)]
-      (run-on state "Server 1")
+    (let [dm (get-character state :party1 0)]
+      (run-on state "Locale 1")
       (core/reveal state :contestant dm)
       (card-subroutine state :contestant dm 0)
       (is (= 1 (count (:discard (get-challenger)))) "Challenger suffered 1 net damage"))))
@@ -572,7 +572,7 @@
 	(is (= 1 (:current-strength (get-character state :rd 0))) "R&D at 0 strength")))
 
 (deftest mind-game
-  ;; Mind game - PSI redirect to different server
+  ;; Mind game - PSI redirect to different locale
   (do-game
     (new-game (default-contestant [(qty "Mind Game" 1)])
               (default-challenger))
@@ -584,12 +584,12 @@
       (card-subroutine state :contestant mindgame 0))
     (prompt-choice :contestant "1 [Credits]")
     (prompt-choice :challenger "0 [Credits]")
-    (is (= (set ["R&D" "Archives"]) (set (:choices (prompt-map :contestant)))) "Contestant cannot choose server Challenger is on")
+    (is (= (set ["R&D" "Archives"]) (set (:choices (prompt-map :contestant)))) "Contestant cannot choose locale Challenger is on")
     (prompt-choice :contestant "Archives")
-    (is (= [:archives] (get-in @state [:run :server])) "Challenger now running on Archives")))
+    (is (= [:archives] (get-in @state [:run :locale])) "Challenger now running on Archives")))
 
 (deftest minelayer
-  ;; Minelayer - Install a piece of Character in outermost position of Minelayer's server at no cost
+  ;; Minelayer - Install a piece of Character in outermost position of Minelayer's locale at no cost
   (do-game
     (new-game (default-contestant [(qty "Minelayer" 1) (qty "Fire Wall" 1)])
               (default-challenger))
@@ -600,7 +600,7 @@
     (is (= 6 (:credit (get-contestant))))
     (card-subroutine state :contestant (get-character state :hq 0) 0)
     (prompt-select :contestant (find-card "Fire Wall" (:hand (get-contestant))))
-    (is (= 2 (count (get-in @state [:contestant :servers :hq :characters]))) "2 Character protecting HQ")
+    (is (= 2 (count (get-in @state [:contestant :locales :hq :characters]))) "2 Character protecting HQ")
     (is (= 6 (:credit (get-contestant))) "Didn't pay 1 credit to install as second Character")))
 
 (deftest morph-character-subtype-changing
@@ -611,8 +611,8 @@
                              (qty "Superior Cyberwalls" 1)])
               (default-challenger))
     (core/gain state :contestant :click 2)
-    (play-from-hand state :contestant "Superior Cyberwalls" "New remote")
-    (let [sc (get-content state :remote1 0)]
+    (play-from-hand state :contestant "Superior Cyberwalls" "New party")
+    (let [sc (get-content state :party1 0)]
       (score-agenda state :contestant sc)
       (play-from-hand state :contestant "Wendigo" "HQ")
       (let [wend (get-character state :hq 0)]
@@ -847,9 +847,9 @@
     (new-game (default-contestant [(qty "Hostile Takeover" 1) (qty "Tithonium" 1) (qty "Patch" 1)])
               (default-challenger [(qty "Pawn" 1) (qty "Wasteland" 1)]))
     (core/gain state :contestant :click 10)
-    (play-from-hand state :contestant "Hostile Takeover" "New remote")
+    (play-from-hand state :contestant "Hostile Takeover" "New party")
     (play-from-hand state :contestant "Tithonium" "HQ")
-    (let [ht (get-content state :remote1 0)
+    (let [ht (get-content state :party1 0)
           ti (get-character state :hq 0)]
       (score-agenda state :contestant ht)
       (is (= 1 (count (:scored (get-contestant)))) "Agenda scored")
@@ -891,9 +891,9 @@
   (do-game
     (new-game (default-contestant [(qty "Hostile Takeover" 1) (qty "Oversight AI" 1) (qty "Tithonium" 1)])
               (default-challenger))
-    (play-from-hand state :contestant "Hostile Takeover" "New remote")
+    (play-from-hand state :contestant "Hostile Takeover" "New party")
     (play-from-hand state :contestant "Tithonium" "R&D")
-    (let [ht (get-content state :remote1 0)
+    (let [ht (get-content state :party1 0)
           ti (get-character state :rd 0)]
       (score-agenda state :contestant ht)
       (play-from-hand state :contestant "Oversight AI")
@@ -927,21 +927,21 @@
       (is (not (get-in (refresh tmi) [:revealed]))))))
 
 (deftest turing-positional-strength
-  ;; Turing - Strength boosted when protecting a remote server
+  ;; Turing - Strength boosted when protecting a party locale
   (do-game
     (new-game (default-contestant [(qty "Turing" 2) (qty "Hedge Fund" 1)])
               (default-challenger))
     (play-from-hand state :contestant "Hedge Fund")
     (play-from-hand state :contestant "Turing" "HQ")
-    (play-from-hand state :contestant "Turing" "New remote")
+    (play-from-hand state :contestant "Turing" "New party")
     (let [t1 (get-character state :hq 0)
-          t2 (get-character state :remote1 0)]
+          t2 (get-character state :party1 0)]
       (core/reveal state :contestant t1)
       (is (= 2 (:current-strength (refresh t1)))
-          "Turing default 2 strength over a central server")
+          "Turing default 2 strength over a central locale")
       (core/reveal state :contestant t2)
       (is (= 5 (:current-strength (refresh t2)))
-          "Turing increased to 5 strength over a remote server"))))
+          "Turing increased to 5 strength over a party locale"))))
 
 (deftest wraparound
   ;; Wraparound - Strength boosted when no fracter is installed

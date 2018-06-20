@@ -172,9 +172,9 @@
      :abilities abilities}))
 
 (defn- central-breaker
-  "'Cannot be used on a remote server' breakers"
+  "'Cannot be used on a party locale' breakers"
   [type break pump]
-  (let [central-req (req (or (not (:central-breaker card)) (#{:hq :rd :archives} (first (:server run)))))]
+  (let [central-req (req (or (not (:central-breaker card)) (#{:hq :rd :archives} (first (:locale run)))))]
     (auto-icebreaker [type]
                      {:abilities [(assoc break :req central-req)
                                   (assoc pump :req central-req)]

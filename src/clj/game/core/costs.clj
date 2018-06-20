@@ -90,7 +90,7 @@
 
     ;; Revealed Character
     :character (pay-trash state :contestant card :character (second cost) (filter (every-pred revealed? character?) (all-installed state :contestant))
-                    {:cause :ability-cost :keep-server-alive true})
+                    {:cause :ability-cost :keep-locale-alive true})
 
     :tag (deduce state :challenger cost)
     :net-damage (damage state side :net (second cost) {:unpreventable true})

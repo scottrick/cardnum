@@ -154,9 +154,9 @@
 (defn next-character-count
   "Counts number of revealed NEXT Character - for use with NEXT Bronze and NEXT Gold"
   [contestant]
-  (let [servers (flatten (seq (:servers contestant)))
+  (let [locales (flatten (seq (:locales contestant)))
         revealed-next? #(and (revealed? %) (has-subtype? % "NEXT"))]
-    (reduce (fn [c server] (+ c (count (filter revealed-next? (:characters server))))) 0 servers)))
+    (reduce (fn [c locale] (+ c (count (filter revealed-next? (:characters locale))))) 0 locales)))
 
 
 ;;; For Morph Character

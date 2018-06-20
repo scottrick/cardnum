@@ -165,7 +165,7 @@
      :sub (list
             {:id "shards"
              :title "How do I install Eden/Hades/Utopia Shard during a run?"
-             :content [:p "At the last run step on the relevant server, instead of pressing \"Successful Run\" button, "
+             :content [:p "At the last run step on the relevant locale, instead of pressing \"Successful Run\" button, "
                        "click the shard card you want to install in hand. You should end the run with the shard installed "
                        "at no cost."]}
             {:id "nasir"
@@ -175,7 +175,7 @@
             {:id "adam"
              :title "How do I install Adam's directives?"
              :content [:p "Adam's directives are installed automatically at the game start. The directives are pulled "
-                       "directly from the game-server so do not need to be a part of your deck. The previous workaround "
+                       "directly from the game-locale so do not need to be a part of your deck. The previous workaround "
                        "of explicitly adding the 3 directives to the deck is no longer necessary."]}
             {:id "napdmwl"
              :title "What is MWL and \"Tournament legal\"? Why is my deck marked as \"Casual play only\"?"
@@ -204,16 +204,16 @@
      :sub (list
             {:id "weird"
              :title "The site is behaving weird."
-             :content [:p "The server code may have been freshly updated and you don't have the latest Javascript code. "
+             :content [:p "The locale code may have been freshly updated and you don't have the latest Javascript code. "
                        "First step in every troubleshooting should be a forced refresh of your browser by doing a "
                        [:a {:href "http://refreshyourcache.com/en/cache/"} "force refresh"] " (" [:code "Ctrl + F5"] " on Windows). "
-                       "Also read the announcements on the main page, something about server problems may be written there."]}
+                       "Also read the announcements on the main page, something about locale problems may be written there."]}
             {:id "touchproblems"
              :title "The website doesn't work well on my touchscreen devcharacter."
              :content [:p "Touchscreen devcharacters are currently not supported. See answer to " [:a {:href "#bestbrowser"} "this question"]
                        " for best browsers to use with Cardnum.net."]}
-            {:id "toomanyservers"
-             :title "There are too many servers to fit on my screen."
+            {:id "toomanylocales"
+             :title "There are too many locales to fit on my screen."
              :content [:p "Decrease the zoom level of your browser and you should be able to see everything. If you are using "
                        "Chrome, you can do it by pressing CTRL and - (minus). If you are using Firefox, you may need to install "
                        [:a {:href "https://addons.mozilla.org/pl/firefox/addon/zoom-page/"} "Zoom Page addon"] " before the zoom works correctly."]}
