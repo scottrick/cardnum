@@ -680,35 +680,6 @@
   (om/component
    (sab/html
     [:div.card-preview.blue-shade
-     [:h4 (:title card)]
-     (when-let [memory (:memoryunits card)]
-       (if (< memory 3)
-         [:div.anr-icon {:class (str "mu" memory)} ""]
-         [:div.heading (str "Memory: " memory) [:span.anr-icon.mu]]))
-     (when-let [cost (:cost card)]
-       [:div.heading (str "Cost: " cost)])
-     (when-let [trash-cost (:trash card)]
-       [:div.heading (str "Trash cost: " trash-cost)])
-     (when-let [strength (:strength card)]
-       [:div.heading (str "Strength: " strength)])
-     (when-let [requirement (:advancementcost card)]
-       [:div.heading (str "Advancement requirement: " requirement)])
-     (when-let [agenda-point (:agendatpoints card)]
-       [:div.heading (str "Agenda points: " agenda-point)])
-     (when-let [min-deck-size (:minimumdecksize card)]
-       [:div.heading (str "Minimum deck size: " min-deck-size)])
-     (when-let [influence-limit (:influencelimit card)]
-       [:div.heading (str "Influence limit: " influence-limit)])
-     (when-let [influence (:factioncost card)]
-       (when-let [faction (:faction card)]
-        [:div.heading "Influence "
-         [:span.influence
-          {:dangerouslySetInnerHTML #js {:__html (apply str (for [i (range influence)] "&#8226;"))}
-           :class                   (-> faction .toLowerCase (.replace " " "-"))}]]))
-     [:div.text
-      [:p [:span.type (str (:type card))] (if (empty? (:subtype card))
-                                            "" (str ": " (:subtype card)))]
-      [:pre {:dangerouslySetInnerHTML #js {:__html (add-symbols (:text card))}}]]
      (when-let [url (image-url card)]
        [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])])))
 
