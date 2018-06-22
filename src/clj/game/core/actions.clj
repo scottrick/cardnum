@@ -292,27 +292,13 @@
   ([state side eid {:keys [disabled] :as card} {:keys [ignore-cost no-warning force no-get-card paid-alt] :as args}]
    (let [card (if no-get-card
                 card
-                (get-card state card))
-         altcost (when-not no-get-card
-                   (:alternative-cost (card-def card)))]
+                (get-card state card))]
      (if (or force (can-reveal? state side card))
        (do
          (trigger-event state side :pre-reveal card)
-         (if (or (#{"Site" "Character" "Region" "Resource"} (:type card))
+         (if (or (#{"Site" "Character" "Region" "Resource" "Hazard"} (:type card))
                    (:install-revealed (card-def card)))
            (do (trigger-event state side :pre-reveal-cost card)
-               (if (and altcost (can-pay? state side nil altcost)(not ignore-cost))
-                 (prompt! state side card (str "Pay the alternative Reveal cost?") ["Yes" "No"]
-                          {:delayed-completion true
-                           :effect (req (if (and (= target "Yes")
-                                                 (can-pay? state side (:title card) altcost))
-                                          (do (pay state side card altcost)
-                                              (reveal state side (-> card (dissoc :alternative-cost))
-                                                   {:ignore-cost true
-                                                    :no-get-card true
-                                                    :paid-alt true}))
-                                          (reveal state side (-> card (dissoc :alternative-cost))
-                                               {:no-get-card true})))})
                  (let [cdef (card-def card)
                        cost (reveal-cost state side card)
                        costs (concat (when-not ignore-cost [:credit cost])
@@ -324,29 +310,18 @@
                      (when (:hidden-events cdef)
                        (unregister-events state side card))
                      (if (not disabled)
-                       (card-init state side (assoc card :revealed :this-turn))
-                       (update! state side (assoc card :revealed :this-turn)))
+                       (card-init state side (assoc card :revealed true :facedown false))
+                       (update! state side (assoc card :revealed true :facedown false)))
                      (doseq [h (:hosted card)]
                        (update! state side (-> h
                                                (update-in [:zone] #(map to-keyword %))
                                                (update-in [:host :zone] #(map to-keyword %)))))
                      (system-msg state side (str (build-spend-msg cost-str "reveal" "reveals")
-                                                 (:title card)
-                                                 (cond
-                                                   paid-alt
-                                                   " by paying its alternative cost"
-
-                                                   ignore-cost
-                                                   " at no cost")))
-                     (when (and (not no-warning) (:contestant-phase-12 @state))
-                       (toast state :contestant "You are not allowed to reveal cards between Start of Turn and Mandatory Draw.
-                        Please reveal prior to clicking Start Turn in the future." "warning"
-                              {:time-out 0 :close-button true}))
+                                                 (:title card)))
                      (if (character? card)
-                       (do (update-character-strength state side card)
-                           (play-sfx state side "reveal-character"))
+                       (play-sfx state side "reveal-character")
                        (play-sfx state side "reveal-other"))
-                     (trigger-event-sync state side eid :reveal card)))))
+                     (trigger-event-sync state side eid :reveal card))))
            (effect-completed state side eid))
          (swap! state update-in [:bonus] dissoc :cost))
        (effect-completed state side eid)))))
