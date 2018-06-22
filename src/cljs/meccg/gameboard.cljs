@@ -15,22 +15,8 @@
 (defonce last-state (atom {}))
 (defonce lock (atom false))
 
-(defn image-url [{:keys [side fullCode] :as card}]
-  (let [art (or (:art card) ; use the art set on the card itself, or fall back to the user's preferences.
-                (get-in @game-state [(keyword (lower-case side)) :user :options :alt-arts (keyword fullCode)]))
-        art-options (:alt_art (get (:alt-arts @app-state) fullCode))
-        special-user (get-in @game-state [(keyword (lower-case side)) :user :special])
-        special-wants-art (get-in @game-state [(keyword (lower-case side)) :user :options :show-alt-art])
-        viewer-wants-art (get-in @app-state [:options :show-alt-art])
-        show-art (and special-user special-wants-art viewer-wants-art)
-        art-available (and art-options (not-empty art-options))
-        has-art (and art-options
-                     art
-                     (contains? art-options (keyword art)))
-        version-path (if (and has-art show-art)
-                       (get art-options (keyword art) (:fullCode card))
-                       (:fullCode card))]
-    (str "/img/cards/" (:setname card) "/" (:ImageName card))))
+(defn image-url [{:keys [setname ImageName] :as card}]
+    (str "/img/cards/" (:setname card) "/" (:ImageName card)))
 
 (defn toastr-options
   "Function that generates the correct toastr options for specified settings"
@@ -179,13 +165,13 @@
 
 (defn toast
   "Display a toast warning with the specified message.
-  Sends a command to clear any locale side toasts."
+  Sends a command to clear any server side toasts."
   [msg type options]
   true)
 
 (defn toast-old
   "Display a toast warning with the specified message.
-  Sends a command to clear any locale side toasts."
+  Sends a command to clear any server side toasts."
   [msg type options]
   (set! (.-options js/toastr) (toastr-options options))
   (let [f (aget js/toastr (if (= "exception" type) "error" type))]
