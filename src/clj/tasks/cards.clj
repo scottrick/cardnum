@@ -90,16 +90,16 @@
           show-all (some #{"--show-all"} args)
           show-none (some #{"--show-none"} args)
           nspaces {"Agenda" '(game-test.cards.agendas)
-                   "Site" '(game-test.cards.sites)
+                   "Site" '(game-test.cards.assets)
                    "Event" '(game-test.cards.events)
-                   "Hazard" '(game-test.cards.hazard)
-                   "Character" '(game-test.cards.character)
-                   "Icebreaker" '(game-test.cards.characterbreakers)
+                   "Hazard" '(game-test.cards.hardware)
+                   "Character" '(game-test.cards.ice)
+                   "Icebreaker" '(game-test.cards.icebreakers)
                    "Identity" '(game-test.cards.identities)
                    "Operation" '(game-test.cards.operations)
-                   "Resource"  '(game-test.cards.resources)
-                   "Muthereff" '(game-test.cards.muthereffs)
-                   "Region" '(game-test.cards.regions)}
+                   "Resource"  '(game-test.cards.programs)
+                   "Muthereff" '(game-test.cards.resources)
+                   "Region" '(game-test.cards.upgrades)}
           filtered-nspaces (if only
                              (select-keys nspaces [card-type])
                              (into (sorted-map) nspaces))]

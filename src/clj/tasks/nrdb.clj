@@ -13,70 +13,87 @@
 
 (declare faction-map)
 
-(def ^:const base-url "http://www.netrunnerdb.com/api/2.0/public/")
-(def ^:const cgdb-image-url "https://www.cardgamedb.com/forums/uploads/an/")
-(def ^:const nrdb-image-url "https://netrunnerdb.com/card_image/")
+(def ^:const base-url "http://192.168.1.180:8080/rez/")
+(def ^:const cgdb-image-url "http://192.168.1.180:8080/rez/")
+(def ^:const nrdb-image-url "http://192.168.1.180:8080/rez/")
 
 (defmacro rename
   "Rename a card field"
   [new-name]
   `(fn [[k# v#]] [~new-name v#]))
 
-(def cycle-fields
-  {
-   :code identity
-   :name identity
-   :position identity
-   :size identity
-   :rotated identity
-   })
-
 (def set-fields
   {
    :name identity
-   :date_release (fn [[k v]] [:available (if (nil? v) "4096-01-01" v)])
-   :cycle_code identity
-   :size (fn [[k v]] [:bigbox (> (or v -1) 20)])
    :code identity
+   :format identity
    :position identity
-   :ffg_id identity
    })
 
 (def mwl-fields
   {
-  :name identity
-  :code identity
-  :date_start identity
-  :cards identity
+   :NameEN (rename :name)
+   :code identity
+   :playableAlignment identity
+   :unplayableAlignment identity
+   :effectedAlignment identity
+   :uneffectedAlignment identity
+   :swapableAlignment identity
+   :Set identity
    })
 
 (def card-fields
   {
-   :code identity
-   :title identity
-   :type_code  (fn [[k v]] [:type (if (= v "character") "Character" (string/capitalize v))])
-   :keywords (rename :subtype)
-   :text  identity
-   :cost  (fn [[k v]] [:cost (if (nil? v) 0 v)])
-   :advancement_cost (rename :advancementcost)
-   :agenda_points (rename :agendapoints)
-   :base_link (rename :baselink)
-   :influence_limit (rename :influencelimit)
-   :minimum_deck_size (rename :minimumdecksize)
-   :faction_code (fn [[k v]] [:faction (faction-map v)])
-   :faction_cost (rename :factioncost)
-   :position (rename :number)
-   :pack_code (rename :set_code)
-   :cycle_code  identity
-   :side_code  (fn [[k v]] [:side (string/capitalize v)])
-   :uniqueness  identity
-   :memory_cost (rename :memoryunits)
-   :strength  (fn [[k v]] [:strength (if (nil? v) 0 v)])
-   :trash_cost (rename :trash)
-   :deck_limit (rename :limited)
-   :quantity (rename :packquantity)
-   :rotated  identity
-   :image_url identity
+   :Set (rename :set_code)
+   :Primary (rename :type)
+   :Alignment (rename :alignment)
+   :MEID identity
+   :Artist identity
+   :Rarity identity
+   :Precise identity
+   :NameEN (rename :title)
+   :NameFR identity
+   :NameGR identity
+   :NameSP identity
+   :NameJP identity
+   :ImageName (rename :image_url)
+   :Text (rename :text)
+   :Skill (rename :subtype)
+   :MPs identity
+   :Mind identity
+   :Direct identity
+   :General identity
+   :Prowess identity
+   :Body identity
+   :Corruption identity
+   :Home identity
+   :Unique (fn [[k v]] [:uniqueness (if (nil? v) 0 1)])
+   :Secondary identity
+   :Race identity
+   :RWMPs identity
+   :Site identity
+   :Path identity
+   :Region identity
+   :RPath identity
+   :Playable identity
+   :GoldRing identity
+   :GreaterItem identity
+   :MajorItem identity
+   :MinorItem identity
+   :Information identity
+   :Palantiri identity
+   :Scroll identity
+   :Haven identity
+   :Stage identity
+   :Strikes identity
+   :codeFR identity
+   :codeGR identity
+   :codeSP identity
+   :codeJP identity
+   :Specific identity
+   :fullCode (rename :code)
+   :alignCode identity
+   :setCode identity
    })
 
 (def ^:const faction-map
@@ -96,9 +113,8 @@
    })
 
 (def tables
-  {:cycle {:path "cycles" :fields cycle-fields :collection "cycles"}
-   :mwl   {:path "mwl"    :fields mwl-fields   :collection "mwl"}
-   :set   {:path "packs"  :fields set-fields   :collection "sets"}
+  {:mwl   {:path "mwl"    :fields mwl-fields   :collection "mwl"}
+   :set   {:path "sets"   :fields set-fields   :collection "sets"}
    :card  {:path "cards"  :fields card-fields  :collection "cards"}
    :config {:collection "config"}})
 
@@ -206,9 +222,7 @@
   [set-map c]
   (let [s (set-map (:set_code c))]
     (-> c
-      (prune-null-fields [:influencelimit :strength :factioncost])
       (assoc :setname (:name s)
-             :cycle_code (:cycle_code s)
              :rotated (:rotated s)
              :image_url (get-uri c s)
              :normalizedtitle (string/lower-case (deaccent (:title c)))))))
@@ -233,7 +247,7 @@
 (defn- card-image-file
   "Returns the path to a card's image as a File"
   [card]
-  (io/file "muthereffs" "public" "img" "cards" (str (:code card) ".png")))
+  (io/file "resources" "public" "img" "cards" (str (:code card) ".png")))
 
 (defn- download-card-image
   "Download a single card image from NRDB"
@@ -252,7 +266,7 @@
 (defn download-card-images
   "Download card images (if necessary) from NRDB"
   [card-map]
-   (let [img-dir (io/file "muthereffs" "public" "img" "cards")
+   (let [img-dir (io/file "resources" "public" "img" "cards")
          cards (vals card-map)]
      (when-not (.isDirectory img-dir)
        (println "Creating card images directory [" (.getPath img-dir) "]")
