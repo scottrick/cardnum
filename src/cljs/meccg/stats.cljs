@@ -1,13 +1,13 @@
-(ns netrunner.stats
+(ns meccg.stats
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [om.core :as om :include-macros true]
             [sablono.core :as sab :include-macros true]
             [cljs.core.async :refer [chan put! <!] :as async]
-            [netrunner.appstate :refer [app-state]]
-            [netrunner.deckbuilder :refer [process-decks num->percent]]
-            [netrunner.auth :refer [authenticated] :as auth]
-            [netrunner.ajax :refer [GET DELETE]]
-            [netrunner.ws :as ws]
+            [meccg.appstate :refer [app-state]]
+            [meccg.deckbuilder :refer [process-decks num->percent]]
+            [meccg.auth :refer [authenticated] :as auth]
+            [meccg.ajax :refer [GET DELETE]]
+            [meccg.ws :as ws]
             [goog.string :as gstring]
             [goog.string.format]))
 

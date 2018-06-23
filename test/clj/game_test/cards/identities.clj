@@ -874,12 +874,12 @@
       (core/jack-out state :runner nil)
       (is (= 1 (:tag (get-runner))) "Jesminder did not avoid John Masanori tag"))))
 
-(deftest jinteki-biotech:-life-imagined
-  ;; Jinteki Biotech
+(deftest cardnum-biotech:-life-imagined
+  ;; Cardnum Biotech
   (testing "Brewery net damage"
     (do-game
       (new-game
-        (make-deck "Jinteki Biotech: Life Imagined" ["Braintrust"])
+        (make-deck "Cardnum Biotech: Life Imagined" ["Braintrust"])
         (default-runner)
         {:dont-start-turn true})
       (prompt-choice :corp "The Brewery")
@@ -889,7 +889,7 @@
   (testing "Greenhouse four advancement tokens"
     (do-game
       (new-game
-        (make-deck "Jinteki Biotech: Life Imagined" ["Braintrust"])
+        (make-deck "Cardnum Biotech: Life Imagined" ["Braintrust"])
         (default-runner)
         {:dont-start-turn true})
       (prompt-choice :corp "The Greenhouse")
@@ -905,7 +905,7 @@
   (testing "Tank shuffle Archives into R&D"
     (do-game
       (new-game
-        (make-deck "Jinteki Biotech: Life Imagined" [(qty "Hedge Fund" 3)])
+        (make-deck "Cardnum Biotech: Life Imagined" [(qty "Hedge Fund" 3)])
         (default-runner)
         {:dont-start-turn true})
       (prompt-choice :corp "The Tank")
@@ -920,11 +920,11 @@
       (is (zero? (count (:discard (get-corp)))) "Archives ended empty")
       (is (= 3 (count (:deck (get-corp)))) "R&D ended with 3 cards"))))
 
-(deftest jinteki:-personal-evolution
+(deftest cardnum:-personal-evolution
   ;; Personal Evolution - Prevent runner from running on remotes unless they first run on a central
   (do-game
     (new-game
-      (make-deck "Jinteki: Personal Evolution" [(qty "Braintrust" 6)])
+      (make-deck "Cardnum: Personal Evolution" [(qty "Braintrust" 6)])
       (default-runner [(qty "Sure Gamble" 3)]))
     (play-from-hand state :corp "Braintrust" "New remote")
     (take-credits state :corp)
@@ -932,10 +932,10 @@
     (prompt-choice :runner "Steal")
     (is (= 2 (count (:hand (get-runner)))) "Runner took 1 net damage from steal")))
 
-(deftest jinteki:-potential-unleashed
+(deftest cardnum:-potential-unleashed
   ;; Potential Unleashed - when the runner takes at least one net damage, mill 1 from their deck
   (do-game
-    (new-game (make-deck "Jinteki: Potential Unleashed" ["Philotic Entanglement" "Neural EMP" (qty "Braintrust" 3)])
+    (new-game (make-deck "Cardnum: Potential Unleashed" ["Philotic Entanglement" "Neural EMP" (qty "Braintrust" 3)])
               (default-runner [(qty "Employee Strike" 10)]))
     (play-from-hand state :corp "Braintrust" "New remote")
     (play-from-hand state :corp "Braintrust" "New remote")
@@ -951,12 +951,12 @@
     (play-from-hand state :corp "Neural EMP")
     (is (= 5 (count (:discard (get-runner)))))))
 
-(deftest jinteki:-replicating-perfection
+(deftest cardnum:-replicating-perfection
   ;; Replicating Perfection - Prevent runner from running on remotes unless they first run on a central
   (testing "Basic test"
     (do-game
       (new-game
-        (make-deck "Jinteki: Replicating Perfection" [(qty "Mental Health Clinic" 3)])
+        (make-deck "Cardnum: Replicating Perfection" [(qty "Mental Health Clinic" 3)])
         (default-runner))
       (play-from-hand state :corp "Mental Health Clinic" "New remote")
       (take-credits state :corp)
@@ -966,7 +966,7 @@
   (testing "interaction with Employee Strike. Issue #1313 and #1956."
     (do-game
       (new-game
-        (make-deck "Jinteki: Replicating Perfection" [(qty "Mental Health Clinic" 3)])
+        (make-deck "Cardnum: Replicating Perfection" [(qty "Mental Health Clinic" 3)])
         (default-runner ["Employee Strike" "Scrubbed"]))
       (play-from-hand state :corp "Mental Health Clinic" "New remote")
       (take-credits state :corp)

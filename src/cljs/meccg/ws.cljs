@@ -1,9 +1,9 @@
-(ns netrunner.ws
+(ns meccg.ws
   (:require-macros
     [cljs.core.async.macros :as asyncm :refer [go go-loop]])
   (:require
     ;; <other stuff>
-    [netrunner.cardbrowser :refer [non-game-toast] :as cb]
+    [meccg.cardbrowser :refer [non-game-toast] :as cb]
     [cljs.core.async :as async :refer [<! >! put! chan]]
     [taoensso.sente  :as sente :refer [start-client-chsk-router!]]))
 
@@ -34,7 +34,7 @@
         (.clear js/toastr)
         (cb/non-game-toast "Reconnected to server" "success" nil))))
 
-  (defn handle-netrunner-msg [[event msg]]
+  (defn handle-meccg-msg [[event msg]]
     (if-let [handler (get @ws-handlers event)]
       (handler msg)
       (println "unknown game socket msg" event msg)))
@@ -44,7 +44,7 @@
       (case event-type
         :chsk/handshake nil
         :chsk/state (handle-state-msg data)
-        :chsk/recv (handle-netrunner-msg data)
+        :chsk/recv (handle-meccg-msg data)
         (println "unknown event message" event-type data)))))
 
 (start-client-chsk-router! <ws-recv event-msg-handler)

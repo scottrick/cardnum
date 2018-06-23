@@ -4,8 +4,8 @@
             [game.macros :refer [effect req msg wait-for continue-ability]]
             [clojure.string :refer [split-lines split join lower-case includes? starts-with?]]
             [clojure.stacktrace :refer [print-stack-trace]]
-            [jinteki.utils :refer [str->int]]
-            [jinteki.cards :refer [all-cards]]))
+            [cardnum.utils :refer [str->int]]
+            [cardnum.cards :refer [all-cards]]))
 
 (defn ice-boost-agenda [subtype]
   (letfn [(count-ice [corp]

@@ -3,7 +3,7 @@
             [cheshire.generate :refer [add-encoder encode-str]]
             [game.core :refer [card-is-public? game-states show-error-toast toast] :as core]
             [game.utils :refer [private-card]]
-            [jinteki.cards :refer [all-cards]]
+            [cardnum.cards :refer [all-cards]]
             [differ.core :as differ]))
 
 (add-encoder java.lang.Object encode-str)

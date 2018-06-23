@@ -1,19 +1,19 @@
-(ns netrunner.gamelobby
+(ns meccg.gamelobby
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [om.core :as om :include-macros true]
             [sablono.core :as sab :include-macros true]
             [cljs.core.async :refer [chan put! <!] :as async]
             [taoensso.sente  :as sente]
             [clojure.string :refer [join]]
-            [jinteki.utils :refer [str->int]]
-            [netrunner.ajax :refer [GET]]
-            [netrunner.ws :as ws]
-            [netrunner.appstate :refer [app-state]]
-            [netrunner.auth :refer [authenticated avatar] :as auth]
-            [netrunner.gameboard :refer [game-state toast launch-game parse-state]]
-            [netrunner.cardbrowser :refer [image-url non-game-toast] :as cb]
-            [netrunner.stats :refer [notnum->zero]]
-            [netrunner.deckbuilder :refer [format-deck-status-span deck-status-span process-decks load-decks num->percent]]))
+            [cardnum.utils :refer [str->int]]
+            [meccg.ajax :refer [GET]]
+            [meccg.ws :as ws]
+            [meccg.appstate :refer [app-state]]
+            [meccg.auth :refer [authenticated avatar] :as auth]
+            [meccg.gameboard :refer [game-state toast launch-game parse-state]]
+            [meccg.cardbrowser :refer [image-url non-game-toast] :as cb]
+            [meccg.stats :refer [notnum->zero]]
+            [meccg.deckbuilder :refer [format-deck-status-span deck-status-span process-decks load-decks num->percent]]))
 
 (def socket-channel (chan))
 
@@ -105,7 +105,7 @@
   ([msg] (send msg nil))
   ([msg fn]
    (try (js/ga "send" "event" "lobby" msg) (catch js/Error e))
-   ;(.emit socket "netrunner" (clj->js msg) fn)
+   ;(.emit socket "meccg" (clj->js msg) fn)
    ))
 
 (defn new-game [cursor owner]
@@ -148,7 +148,7 @@
      (ws/ws-send! [(case action
                      "join" :lobby/join
                      "watch" :lobby/watch
-                     "rejoin" :netrunner/rejoin)
+                     "rejoin" :meccg/rejoin)
                    {:gameid gameid :password password :options (:options @app-state)}]
                   8000
                   #(if (sente/cb-success? %)
@@ -166,7 +166,7 @@
   (swap! app-state dissoc :password-gameid))
 
 (defn leave-game []
-  (ws/ws-send! [:netrunner/leave {:gameid-str (:gameid @game-state)}])
+  (ws/ws-send! [:meccg/leave {:gameid-str (:gameid @game-state)}])
   (reset! game-state nil)
   (swap! app-state dissoc :gameid :side :password-gameid :win-shown)
   (.removeItem js/localStorage "gameid")
@@ -214,7 +214,7 @@
       "Apex" (icon-span "apex")
       "Criminal" (icon-span "criminal")
       "Haas-Bioroid" (icon-span "hb")
-      "Jinteki" (icon-span "jinteki")
+      "Cardnum" (icon-span "cardnum")
       "NBN" (icon-span "nbn")
       "Shaper" (icon-span "shaper")
       "Sunny Lebeau" (icon-span "sunny")
@@ -458,7 +458,7 @@
                   [:div.button-bar
                    (when (first-user? players user)
                      (if (every? :deck players)
-                       [:button {:on-click #(ws/ws-send! [:netrunner/start gameid])} "Start"]
+                       [:button {:on-click #(ws/ws-send! [:meccg/start gameid])} "Start"]
                        [:button {:class "disabled"} "Start"]))
                    [:button {:on-click #(leave-lobby cursor owner)} "Leave"]
                    (when (first-user? players user)

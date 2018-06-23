@@ -1599,7 +1599,7 @@
 (deftest obokata-protocol
   ;; Obotaka Protocol
   (do-game
-    (new-game (make-deck "Jinteki: Personal Evolution" [(qty "Obokata Protocol" 10)])
+    (new-game (make-deck "Cardnum: Personal Evolution" [(qty "Obokata Protocol" 10)])
               (default-runner [(qty "Sure Gamble" 4)]))
     (play-from-hand state :corp "Obokata Protocol" "New remote")
     (take-credits state :corp)

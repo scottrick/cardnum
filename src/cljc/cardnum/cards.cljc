@@ -1,4 +1,4 @@
-(ns jinteki.cards)
+(ns cardnum.cards)
 
 (defonce all-cards (atom {}))
 

@@ -1,13 +1,13 @@
 (ns tasks.fetch
-  "NetrunnerDB import tasks"
+  "MECCGDB import tasks"
   (:require [web.db :refer [db] :as webdb]
             [clojure.string :as string]
             [tasks.nrdb :refer :all]
             [tasks.altart :refer [add-art]]))
 
 (defn fetch
-  "Import data from NetrunnerDB.
-  Can accept `--local <path>` to use the `netrunner-card-json` project locally,
+  "Import data from MECCGDB.
+  Can accept `--local <path>` to use the `meccg-card-json` project locally,
   otherwise pulls data from NRDB.
   Specifying `--no-card-images` will not attempt to download images for cards."
   [& args]

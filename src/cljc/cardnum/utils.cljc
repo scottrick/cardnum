@@ -1,7 +1,6 @@
-(ns jinteki.utils)
+(ns cardnum.utils)
 
 (def INFINITY 2147483647)
-
 
 (defn str->int [s]
   #?(:clj  (java.lang.Integer/parseInt s)

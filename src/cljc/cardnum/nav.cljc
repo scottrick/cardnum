@@ -1,4 +1,4 @@
-(ns jinteki.nav)
+(ns cardnum.nav)
 (def navbar-links
   [["Chat" "/" 0 nil]
    ["Cards" "/cards" 1 nil]

@@ -1,7 +1,7 @@
 (ns game-test.core
   (:require [game.core :as core]
             [game.utils :as utils :refer [make-cid]]
-            [jinteki.cards :refer [all-cards]]
+            [cardnum.cards :refer [all-cards]]
             [game-test.utils :refer [load-cards]]
             [clojure.test :refer :all]))
 

@@ -1,4 +1,4 @@
-(ns netrunner.utils
+(ns meccg.utils
   (:require [clojure.string :refer [join] :as s]))
 
 ;; Dot definitions

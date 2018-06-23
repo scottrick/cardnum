@@ -987,7 +987,7 @@
       (is (not (:corp-phase-12 @state)) "Employee Strike suppressed Blue Sun step 1.2")))
   (testing "vs PU/Philotic - test for #2688"
     (do-game
-      (new-game (make-deck "Jinteki: Potential Unleashed" ["Philotic Entanglement" (qty "Braintrust" 2)])
+      (new-game (make-deck "Cardnum: Potential Unleashed" ["Philotic Entanglement" (qty "Braintrust" 2)])
                 (default-runner [(qty "Employee Strike" 10)]))
       (play-from-hand state :corp "Braintrust" "New remote")
       (play-from-hand state :corp "Braintrust" "New remote")

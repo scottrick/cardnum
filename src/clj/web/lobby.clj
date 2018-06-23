@@ -6,8 +6,8 @@
             [game.core :as core]
             [crypto.password.bcrypt :as bcrypt]
             [monger.collection :as mc]
-            [jinteki.cards :refer [all-cards]]
-            [jinteki.decks :as decks]
+            [cardnum.cards :refer [all-cards]]
+            [cardnum.decks :as decks]
             [cheshire.core :as json]
             [clj-time.core :as t])
   (:import org.bson.types.ObjectId))
@@ -125,7 +125,7 @@
       (let [clientids (lobby-clients gameid)]
         (if started
           (do (stats/game-finished game)
-              (ws/broadcast-to! clientids :netrunner/timeout (json/generate-string
+              (ws/broadcast-to! clientids :meccg/timeout (json/generate-string
                                                                {:gameid gameid})))
           (ws/broadcast-to! clientids :lobby/timeout {:gameid gameid}))
         (doseq [client-id clientids]

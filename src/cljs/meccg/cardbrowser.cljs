@@ -1,15 +1,15 @@
-(ns netrunner.cardbrowser
+(ns meccg.cardbrowser
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [om.core :as om :include-macros true]
             [sablono.core :as sab :include-macros true]
             [cljs.core.async :refer [chan put! >! sub pub] :as async]
             [clojure.string :as str]
-            [netrunner.appstate :refer [app-state]]
-            [netrunner.account :refer [alt-art-name]]
-            [netrunner.ajax :refer [GET]]
-            [netrunner.utils :refer [toastr-options banned-span restricted-span rotated-span influence-dots]]
-            [jinteki.cards :refer [all-cards] :as cards]
-            [jinteki.decks :as decks]))
+            [meccg.appstate :refer [app-state]]
+            [meccg.account :refer [alt-art-name]]
+            [meccg.ajax :refer [GET]]
+            [meccg.utils :refer [toastr-options banned-span restricted-span rotated-span influence-dots]]
+            [cardnum.cards :refer [all-cards] :as cards]
+            [cardnum.decks :as decks]))
 
 (def cards-channel (chan))
 (def pub-chan (chan))
@@ -121,7 +121,7 @@
       (make-span "\\[criminal\\]" "criminal")
       (make-span "\\[hb\\]" "haas-bioroid")
       (make-span "\\[haas-bioroid\\]" "haas-bioroid")
-      (make-span "\\[jinteki\\]" "jinteki")
+      (make-span "\\[cardnum\\]" "cardnum")
       (make-span "\\[nbn\\]" "nbn")
       (make-span "\\[shaper\\]" "shaper")
       (make-span "\\[sunny\\]" "sunny")
@@ -165,7 +165,7 @@
                      (assoc alts code (name art))
                      (dissoc alts code))]
       (om/update! cursor [:options :alt-arts] new-alts)
-      (netrunner.account/post-options "/profile" (partial post-response cursor)))))
+      (meccg.account/post-options "/profile" (partial post-response cursor)))))
 
 (defn- card-text
   "Generate text html representation a card"
@@ -269,7 +269,7 @@
 
 (defn factions [side]
   (let [runner-factions ["Anarch" "Criminal" "Shaper" "Adam" "Apex" "Sunny Lebeau"]
-        corp-factions ["Jinteki" "Haas-Bioroid" "NBN" "Weyland Consortium" "Neutral"]]
+        corp-factions ["Cardnum" "Haas-Bioroid" "NBN" "Weyland Consortium" "Neutral"]]
     (case side
       "All" (concat runner-factions corp-factions)
       "Runner" (conj runner-factions "Neutral")

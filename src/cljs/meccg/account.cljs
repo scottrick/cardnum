@@ -1,14 +1,14 @@
-(ns netrunner.account
+(ns meccg.account
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [om.core :as om :include-macros true]
             [sablono.core :as sab :include-macros true]
             [cljs.core.async :refer [chan put!] :as async]
             [clojure.string :as s]
             [goog.dom :as gdom]
-            [netrunner.auth :refer [authenticated avatar] :as auth]
-            [netrunner.appstate :refer [app-state]]
-            [netrunner.ajax :refer [POST GET PUT]]
-            [jinteki.cards :refer [all-cards]]))
+            [meccg.auth :refer [authenticated avatar] :as auth]
+            [meccg.appstate :refer [app-state]]
+            [meccg.ajax :refer [POST GET PUT]]
+            [cardnum.cards :refer [all-cards]]))
 
 (def alt-arts-channel (chan))
 (defn load-alt-arts []

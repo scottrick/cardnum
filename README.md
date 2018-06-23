@@ -1,12 +1,12 @@
-[![Build status](https://circleci.com/gh/mtgred/netrunner/tree/master.svg?style=shield)](https://circleci.com/gh/mtgred/netrunner)
+[![Build status](https://circleci.com/gh/rezwits/meccg/tree/master.svg?style=shield)](https://circleci.com/gh/rezwits/meccg)
 
-Play Android: Netrunner in the browser.
+Play Middle-earth CCG in the browser.
 
 ## Live server
 
-http://www.jinteki.net
+http://www.cardnum.net
 
-[Gameplay videos](https://www.youtube.com/results?search_query=jinteki.net)
+[Gameplay videos](https://www.youtube.com/results?search_query=cardnum.net)
 
 ![screenshot](http://i.imgur.com/xkxOMHc.jpg)
 
@@ -61,7 +61,7 @@ Launch web server:
     ```
 * As a standalone process in production mode (must first run `lein uberjar` and `lein cljsbuild once prod`):
     ```
-    $ java -jar target/netrunner-standalone.jar
+    $ java -jar target/meccg-standalone.jar
     ```
 
 Open http://localhost:1042/
@@ -84,11 +84,11 @@ Or a single test:
 $ lein test :only game-test.cards.agendas/fifteen-minutes
 ```
 
-For more information refer to the [development guide](https://github.com/mtgred/netrunner/wiki/Getting-Started-with-Development).
+For more information refer to the [development guide](https://github.com/rezwits/meccg/wiki/Getting-Started-with-Development).
 
 ## License
 
-Jinteki.net is released under the [MIT License](http://www.opensource.org/licenses/MIT).
+Cardnum.net is released under the [MIT License](http://www.opensource.org/licenses/MIT).
 
 
 <a name="footnote_1">1</a>: This is only necessary the first time you run the project, or if you are working on front end changes.

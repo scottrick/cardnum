@@ -5,7 +5,7 @@
          remove-old-current show-prompt system-say system-msg steal-trigger-events trash-cards
          untrashable-while-rezzed? update-all-ice untrashable-while-resources? win win-decked)
 
-;;;; Functions for applying core Netrunner game rules.
+;;;; Functions for applying core MECCG game rules.
 
 ;;; Playing cards.
 (defn- complete-play-instant

@@ -1,21 +1,21 @@
-(ns netrunner.deckbuilder
+(ns meccg.deckbuilder
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [om.core :as om :include-macros true]
             [sablono.core :as sab :include-macros true]
             [cljs.core.async :refer [chan put! <! timeout] :as async]
             [clojure.string :refer [split split-lines join escape] :as s]
-            [netrunner.appstate :refer [app-state]]
-            [netrunner.auth :refer [authenticated] :as auth]
-            [netrunner.cardbrowser :refer [cards-channel image-url card-view show-alt-art? filter-title expand-alts] :as cb]
-            [netrunner.account :refer [load-alt-arts]]
-            [netrunner.ajax :refer [POST GET DELETE PUT]]
-            [netrunner.utils :refer [banned-span restricted-span rotated-span influence-dot influence-dots alliance-dots dots-html make-dots]]
+            [meccg.appstate :refer [app-state]]
+            [meccg.auth :refer [authenticated] :as auth]
+            [meccg.cardbrowser :refer [cards-channel image-url card-view show-alt-art? filter-title expand-alts] :as cb]
+            [meccg.account :refer [load-alt-arts]]
+            [meccg.ajax :refer [POST GET DELETE PUT]]
+            [meccg.utils :refer [banned-span restricted-span rotated-span influence-dot influence-dots alliance-dots dots-html make-dots]]
             [goog.string :as gstring]
             [goog.string.format]
-            [jinteki.utils :refer [str->int INFINITY] :as utils]
-            [jinteki.cards :refer [all-cards]]
-            [jinteki.decks :as decks]
-            [jinteki.cards :as cards]))
+            [cardnum.utils :refer [str->int INFINITY] :as utils]
+            [cardnum.cards :refer [all-cards]]
+            [cardnum.decks :as decks]
+            [cardnum.cards :as cards]))
 
 (def select-channel (chan))
 (def zoom-channel (chan))

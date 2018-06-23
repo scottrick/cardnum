@@ -1,7 +1,7 @@
-(ns jinteki.decks
+(ns cardnum.decks
   (:require [clojure.string :refer [split split-lines join escape] :as s]
-            [jinteki.utils :refer [faction-label INFINITY]]
-            [jinteki.cards :refer [all-cards] :as cards]
+            [cardnum.utils :refer [faction-label INFINITY]]
+            [cardnum.cards :refer [all-cards] :as cards]
             #?@(:clj [[clj-time.core :as t] [clj-time.format :as f]])))
 
 (defn card-count [cards]
@@ -259,7 +259,7 @@
     { :legal (not-any? val reasons) :reason (join "\n" (filter identity (vals reasons)))}))
 
 (defn onesies-legal
-  "Returns true if deck is valid under 1.1.1.1 format rules. https://www.reddit.com/r/Netrunner/comments/5238a4/1111_onesies/"
+  "Returns true if deck is valid under 1.1.1.1 format rules. https://www.reddit.com/r/MECCG/comments/5238a4/1111_onesies/"
   [sets deck]
   (let [over-one-core (cards-over-one-core deck)
         valid-sets ["Core Set"]
@@ -286,7 +286,7 @@
            (= (:faction card) faction)
            (is-draft-id? identity))
        (or (not= code "03002") ; Custom Biotics: Engineered for Success
-           (not= (:faction card) "Jinteki"))))
+           (not= (:faction card) "Cardnum"))))
 
 (defn valid-deck? [{:keys [identity cards] :as deck}]
   (and (not (nil? identity))

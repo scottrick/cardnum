@@ -1047,7 +1047,7 @@
   ;; Off the Grid run restriction - and interaction with RP
   (do-game
    (new-game
-    (make-deck "Jinteki: Replicating Perfection" [(qty "Off the Grid" 3)
+    (make-deck "Cardnum: Replicating Perfection" [(qty "Off the Grid" 3)
                                                   (qty "Mental Health Clinic" 3)])
     (default-runner))
    (play-from-hand state :corp "Off the Grid" "New remote")

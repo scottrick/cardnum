@@ -1,4 +1,4 @@
-(ns netrunner.help
+(ns meccg.help
   (:require [om.core :as om :include-macros true]
             [sablono.core :as sab :include-macros true]
             [clojure.string :refer [split]]))
@@ -6,7 +6,7 @@
 (def app-state (atom {}))
 
 (def help-data
-  "List of maps with FAQ about jinteki.net. Every section MUST have an :id here, so the links can work."
+  "List of maps with FAQ about cardnum.net. Every section MUST have an :id here, so the links can work."
   (list
     {:id "general"
      :title "General"
@@ -83,44 +83,44 @@
                         [:li [:code "/undo-click"] " - Resets the game back to start of the click.  One click only retained. Only allowed for active player"]
                         [:li [:code "/undo-turn"] " - Resets the game back to end of the last turn. Requires both players to request it"]]]}
             {:id "documentation"
-             :title "Is there more documentation on how to use Jinteki.net?"
+             :title "Is there more documentation on how to use Cardnum.net?"
              :content [:p "Read the "
-                       [:a {:href "https://github.com/mtgred/netrunner/wiki/Jinteki.net-Guide" :target "_blank"}
-                        "Jinteki.net Guide"] " on the GitHub wiki."]}
+                       [:a {:href "https://github.com/rezwits/meccg/wiki/Cardnum.net-Guide" :target "_blank"}
+                        "Cardnum.net Guide"] " on the GitHub wiki."]}
             )}
     {:id "beginners"
      :title "Beginners"
      :sub (list
             {:id "learnrules"
              :title "Where can I find the game's rules explanation?"
-             :content (list [:p "The first step is reading " [:a {:href "https://www.fantasyflightgames.com/ffg_content/android-netrunner/support/android-netrunner-core-rules.pdf" :target "_blank"} "the official rulebook"]
+             :content (list [:p "The first step is reading " [:a {:href "https://www.fantasyflightgames.com/ffg_content/android-meccg/support/android-meccg-core-rules.pdf" :target "_blank"} "the official rulebook"]
                              ". If you prefer video form, FFG has prepared " [:a {:href "https://www.youtube.com/watch?v=VAslVfZ9p-Y" :target "_blank"} "a video tutorial"]
                              ", too."]
                             [:p "Once familiar with the basics, the finer points of rules/card interactions can be found in "
                              "the official FAQ on "
-                             [:a {:href "https://www.fantasyflightgames.com/en/products/android-netrunner-the-card-game/"} "the FFG page"] ". "
+                             [:a {:href "https://www.fantasyflightgames.com/en/products/android-meccg-the-card-game/"} "the FFG page"] ". "
                              "There is also " [:a {:href "http://ancur.wikia.com/wiki/Project_ANCUR_Wiki"} "Project ANCUR"] ", which is a collection "
                              "of rulings (also unofficial) regarding various cards and game situations."])}
             {:id "firstgame"
-             :title "Can I play my first game on jinteki.net even though I'm a total beginner and never played in meatspace?"
+             :title "Can I play my first game on cardnum.net even though I'm a total beginner and never played in meatspace?"
              :content [:p "Sure! Many players will be happy to play/teach a beginner if they know what they're getting into beforehand. "
                        "So just create a new game with name such as \"beginner here\" or \"core set only please\", someone "
                        "happy to play with a beginner should join after a while."]}
             {:id "finddecks"
              :title "Where can I find some good starting decks?"
-             :content (list [:p [:a {:href "https://netrunnerdb.com/"} "NetrunnerDB"] " is a good resource for finding decks of all kinds. "
+             :content (list [:p [:a {:href "https://meccgdb.com/"} "MECCGDB"] " is a good resource for finding decks of all kinds. "
                        "For finding decks consisting of core set only try setting some filters in "
-                       [:a {:href "http://netrunnerdb.com/en/decklists/search#allowed_packs"} "the decklist search"] "."]
-                            [:p "Once you find a deck you like, export it in Jinteki.net's format (or plain text format if the "
+                       [:a {:href "http://meccgdb.com/en/decklists/search#allowed_packs"} "the decklist search"] "."]
+                            [:p "Once you find a deck you like, export it in Cardnum.net's format (or plain text format if the "
                              "site doesn't offer the former), copy and paste it into the deckbuilder."])}
             {:id "communities"
-             :title "Where can I find other Netrunner players to talk to?"
-             :content [:p "Apart from the chatrooms here on Jinteki.net, here are a few links to online Netrunner communities:"
+             :title "Where can I find other MECCG players to talk to?"
+             :content [:p "Apart from the chatrooms here on Cardnum.net, here are a few links to online MECCG communities:"
                        [:ul
                         [:li [:a {:href "http://forum.stimhack.com/"} "Stimhack forums"]]
-                        [:li [:a {:href "http://reddit.com/r/netrunner/"} "/r/netrunner subreddit"]]
+                        [:li [:a {:href "http://reddit.com/r/meccg/"} "/r/meccg subreddit"]]
                         [:li "multiple Facebook groups, such as "
-                         [:a {:href "https://www.facebook.com/groups/netrunnergeeks/"} "Netrunner Geeks"]]]]}
+                         [:a {:href "https://www.facebook.com/groups/meccggeeks/"} "MECCG Geeks"]]]]}
             )}
     {:id "site"
      :title "Website"
@@ -128,7 +128,7 @@
             {:id "avatar"
              :title "How do I change my avatar?"
              :content [:p "Go to " [:a {:href "http://gravatar.com" :target "_blank"} "gravatar.com"]
-                       " and create an account with the same email as the one used to register on Jinteki.net. Please note that "
+                       " and create an account with the same email as the one used to register on Cardnum.net. Please note that "
                        "it can sometimes take up to a few hours for the new avatar to be visible on the site."]}
             {:id "bestbrowser"
              :title "What is the best supported browser?"
@@ -136,8 +136,8 @@
                         [:p "There is limited support for tablet browsers. If you have too many cards to fit on the screen you might not able to see all of them."]
                         [:p "Using a phone is not recommended. The screen will most likely be too small to fit the gameboard."])}
             {:id "fullscreen"
-             :title "How to use jinteki.net in fullscreen mode on a tablet?"
-             :content [:p "Add jinteki.net to your homescreen as described "
+             :title "How to use cardnum.net in fullscreen mode on a tablet?"
+             :content [:p "Add cardnum.net to your homescreen as described "
                        [:a {:href "http://www.howtogeek.com/196087/how-to-add-websites-to-the-home-screen-on-any-smartphone-or-tablet/"} "here"]
                        ". If you tap on the homescreen icon, you will be in fullscreen."]}
             {:id "privatemsgs"
@@ -205,7 +205,7 @@
                          "You may only include up to one card (up to its maximum number of copies) from the restricted category. "
                          "You may not include cards from the removed category. "
                          "For more information about the MWL read Tournament Rules from "
-                         [:a {:href "https://www.fantasyflightgames.com/en/products/android-netrunner-the-card-game/"} "the official FFG page"] "."]
+                         [:a {:href "https://www.fantasyflightgames.com/en/products/android-meccg-the-card-game/"} "the official FFG page"] "."]
                         [:p "Decks that are valid and fit within tournament restrictions are marked " [:span.legal "Tournament legal" ] ". "
                          "Decks that fit within the printed influence limit, but not within the tournament restrictions, "
                          "are marked " [:span.casual "Casual play only"] ". Decks that do not fit basic deckbuilding rules are marked " [:span.invalid "Invalid"] "."]
@@ -230,7 +230,7 @@
             {:id "touchproblems"
              :title "The website doesn't work well on my touchscreen device."
              :content [:p "Touchscreen devices are currently not supported. See answer to " [:a {:href "#bestbrowser"} "this question"]
-                       " for best browsers to use with Jinteki.net."]}
+                       " for best browsers to use with Cardnum.net."]}
             {:id "toomanyservers"
              :title "There are too many servers to fit on my screen."
              :content [:p "Decrease the zoom level of your browser and you should be able to see everything. If you are using "
@@ -238,8 +238,8 @@
                        [:a {:href "https://addons.mozilla.org/pl/firefox/addon/zoom-page/"} "Zoom Page addon"] " before the zoom works correctly."]}
             {:id "zerogames"
              :title "Whenever I connect to the site, I see there are 0 games in the lobby."
-             :content [:p "This is most likely a websocket issue. Check if your network filters let through traffic from ws.jinteki.net. "
-                       "Whitelisting *.jinteki.net should solve the problem."]}
+             :content [:p "This is most likely a websocket issue. Check if your network filters let through traffic from ws.cardnum.net. "
+                       "Whitelisting *.cardnum.net should solve the problem."]}
             )}
     {:id "alternativeformats"
      :title "Alternative Formats"
@@ -248,13 +248,13 @@
              :title "What is the Modded format?"
              :content [:p "This is a format designed to make it easy for new players with a limited card pool. "
                        "Deck building rules are up to 3 Revised Core Sets and data packs from the newest cycle only. "
-                       "There is no use of the MWL/Most Wanted List. The name originated from Modern but sounds more Netrunner. "
+                       "There is no use of the MWL/Most Wanted List. The name originated from Modern but sounds more MECCG. "
                        "Refer to " [:a {:href "https://forum.stimhack.com/t/modded-format-online-league-starts-april-14/9791"} "Modded"]]}
             {:id "onesies"
              :title "What is Onesies or 1.1.1.1 format?"
              :content [:p "This is a community designed format designed to vary the card choice options. "
                        "Deck building rules are that cards must be taken from 1 Revised Core Set, 1 Deluxe expansion, 1 data pack, and 1 other card from anywhere. "
-                       "There is no use of the MWL/Most Wanted List. Refer to " [:a {:href "https://www.reddit.com/r/Netrunner/comments/5238a4/1111_onesies/"} "Onesies"]]}
+                       "There is no use of the MWL/Most Wanted List. Refer to " [:a {:href "https://www.reddit.com/r/MECCG/comments/5238a4/1111_onesies/"} "Onesies"]]}
             {:id "cache"
              :title "What is the Cache Refresh format?"
              :content [:p "This is a format created in 2017 by Fantasy Flight Games. "
@@ -266,26 +266,26 @@
      :sub (list
             {:id "reportingbugs"
              :title "How can I report a bug?"
-             :content [:p "The best place to report bugs is the " [:a {:href "https://github.com/mtgred/netrunner/issues" :target "_blank"} "GitHub issue tracker"]
+             :content [:p "The best place to report bugs is the " [:a {:href "https://github.com/rezwits/meccg/issues" :target "_blank"} "GitHub issue tracker"]
                        ". Before reporting, it is best to make a quick search to see if it's already been reported. "
                        "If the bug concerns a card, look it up in "
                        [:a {:href "https://docs.google.com/spreadsheets/d/1ICv19cNjSaW9C-DoEEGH3iFt09PBTob4CAutGex0gnE/pubhtml" :target "_blank"} "Card implementation status"]
                        " - the card in question may be unimplemented yet."]}
             {:id "features"
              :title "How can I suggest a feature?"
-             :content [:p "Same as bugs - feature requests should go on the " [:a {:href "https://github.com/mtgred/netrunner/issues" :target "_blank"} "GitHub issue tracker"]
+             :content [:p "Same as bugs - feature requests should go on the " [:a {:href "https://github.com/rezwits/meccg/issues" :target "_blank"} "GitHub issue tracker"]
                        ". Again, it's best to make a quick search first to avoid duplicating existing issues."]}
             {:id "donations"
              :title "How can I make a donation?"
              :content [:p "Donation info can be found on the " [:a {:href "/about"} "About"] " page."]}
             {:id "devs"
              :title "How can I help with the coding/webdesign?"
-             :content (list [:p "Visit the project page on " [:a {:href "https://github.com/mtgred/netrunner/" :target "_blank"} "GitHub"] " and fork "
+             :content (list [:p "Visit the project page on " [:a {:href "https://github.com/rezwits/meccg/" :target "_blank"} "GitHub"] " and fork "
                              "the repository. Implement the changes you were planning on doing and create a PR (Pull Request). If you are in "
-                             "need of some ideas, check out " [:a {:href "https://github.com/mtgred/netrunner/labels/easy" :target "_blank"} "issues marked 'easy' on GitHub"] "."]
+                             "need of some ideas, check out " [:a {:href "https://github.com/rezwits/meccg/labels/easy" :target "_blank"} "issues marked 'easy' on GitHub"] "."]
                             [:p "After two of your PRs have been merged into the master branch, send an e-mail to "
-                             [:a {:href "mailto:mtgred@gmail.com"} "mtgred@gmail.com"] " stating who you are on GitHub and ask for access "
-                             "to Jinteki.net Slack, so you can get in better contact with the dev team."])}
+                             [:a {:href "mailto:rezwits@gmail.com"} "rezwits@gmail.com"] " stating who you are on GitHub and ask for access "
+                             "to Cardnum.net Slack, so you can get in better contact with the dev team."])}
             {:id "awesome"
              :title "Why is this site so awesome?"
              :content [:p "Because We Built It."]}

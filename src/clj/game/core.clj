@@ -6,8 +6,8 @@
             [clojure.java.io :as io]
             [clojure.core.match :refer [match]]
             [clojure.stacktrace :refer [print-stack-trace]]
-            [jinteki.utils :refer [str->int]]
-            [jinteki.cards :refer [all-cards]]))
+            [cardnum.utils :refer [str->int]]
+            [cardnum.cards :refer [all-cards]]))
 
 (load "core/events")    ; triggering of events
 (load "core/cards")     ; retrieving and updating cards

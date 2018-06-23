@@ -1,10 +1,10 @@
-(ns netrunner.news
+(ns meccg.news
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [om.core :as om :include-macros true]
             [sablono.core :as sab :include-macros true]
-            [netrunner.cardbrowser :refer [add-symbols] :as cb]
-            [netrunner.ajax :refer [GET]]
-            [netrunner.ws :refer [ws-send!]]
+            [meccg.cardbrowser :refer [add-symbols] :as cb]
+            [meccg.ajax :refer [GET]]
+            [meccg.ws :refer [ws-send!]]
             ))
 
 (def app-state (atom {}))

@@ -913,7 +913,7 @@
           "There is no prompt for 0 damage")))
   (testing "cannot steal Obokata while installed"
     (do-game
-      (new-game (make-deck "Jinteki: Personal Evolution" [(qty "Obokata Protocol" 10)])
+      (new-game (make-deck "Cardnum: Personal Evolution" [(qty "Obokata Protocol" 10)])
                 (default-runner ["Guru Davinder" (qty "Sure Gamble" 4)]))
       (play-from-hand state :corp "Obokata Protocol" "New remote")
       (take-credits state :corp)

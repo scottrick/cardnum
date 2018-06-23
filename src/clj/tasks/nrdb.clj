@@ -1,5 +1,5 @@
 (ns tasks.nrdb
-  "NetrunnerDB import tasks"
+  "MECCGDB import tasks"
   (:require [org.httpkit.client :as http]
             [web.db :refer [db] :as webdb]
             [monger.collection :as mc]
@@ -82,7 +82,7 @@
 (def ^:const faction-map
   {
   "haas-bioroid"  "Haas-Bioroid"
-  "jinteki"  "Jinteki"
+  "cardnum"  "Cardnum"
   "nbn"  "NBN"
   "weyland-consortium"  "Weyland Consortium"
   "anarch"  "Anarch"

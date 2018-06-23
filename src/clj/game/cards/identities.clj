@@ -4,8 +4,8 @@
             [game.macros :refer [effect req msg wait-for continue-ability]]
             [clojure.string :refer [split-lines split join lower-case includes? starts-with?]]
             [clojure.stacktrace :refer [print-stack-trace]]
-            [jinteki.utils :refer [str->int]]
-            [jinteki.cards :refer [all-cards]]))
+            [cardnum.utils :refer [str->int]]
+            [cardnum.cards :refer [all-cards]]))
 
 ;;; Helper functions for Draft cards
 (def draft-points-target
@@ -539,7 +539,7 @@
                        :msg "avoid the first tag during this run"
                        :effect (effect (tag-prevent 1))}}}
 
-   "Jinteki: Personal Evolution"
+   "Cardnum: Personal Evolution"
    {:events {:agenda-scored {:interactive (req true)
                              :async true
                              :req (req (not (:winner @state)))
@@ -550,15 +550,15 @@
                              :req (req (not (:winner @state)))
                              :effect (effect (damage eid :net 1 {:card card}))}}}
 
-   "Jinteki: Potential Unleashed"
+   "Cardnum: Potential Unleashed"
    {:events {:pre-resolve-damage
              {:req (req (and (-> @state :corp :disable-id not) (= target :net) (pos? (last targets))))
               :effect (req (let [c (first (get-in @state [:runner :deck]))]
-                             (system-msg state :corp (str "uses Jinteki: Potential Unleashed to trash " (:title c)
+                             (system-msg state :corp (str "uses Cardnum: Potential Unleashed to trash " (:title c)
                                                           " from the top of the Runner's Stack"))
                              (mill state :corp :runner 1)))}}}
 
-   "Jinteki: Replicating Perfection"
+   "Cardnum: Replicating Perfection"
    {:events
     {:runner-phase-12 {:effect (req (apply prevent-run-on-server
                                            state card (map first (get-remotes state))))}
@@ -571,12 +571,12 @@
     :effect (req (apply prevent-run-on-server state card (map first (get-remotes state))))
     :leave-play (req (apply enable-run-on-server state card (map first (get-remotes state))))}
 
-   "Jinteki Biotech: Life Imagined"
+   "Cardnum Biotech: Life Imagined"
    {:events {:pre-first-turn {:req (req (= side :corp))
-                              :prompt "Choose a copy of Jinteki Biotech to use this game"
+                              :prompt "Choose a copy of Cardnum Biotech to use this game"
                               :choices ["The Brewery" "The Tank" "The Greenhouse"]
                               :effect (effect (update! (assoc card :biotech-target target))
-                                              (system-msg (str "has chosen a copy of Jinteki Biotech for this game")))}}
+                                              (system-msg (str "has chosen a copy of Cardnum Biotech for this game")))}}
     :abilities [{:label "Check chosen flip identity"
                  :req (req (:biotech-target card))
                  :effect (req (case (:biotech-target card)
@@ -1057,7 +1057,7 @@
    "Synthetic Systems: The World Re-imagined"
    {:events {:pre-start-game {:effect draft-points-target}}
     :flags {:corp-phase-12 (req (and (not (:disabled (get-card state card)))
-                                     (has-most-faction? state :corp "Jinteki")
+                                     (has-most-faction? state :corp "Cardnum")
                                      (> (count (filter ice? (all-installed state :corp))) 1)))}
     :abilities [{:prompt "Select two pieces of ICE to swap positions"
                  :choices {:req #(and (installed? %) (ice? %)) :max 2}

@@ -4,8 +4,8 @@
             [monger.collection :as mc]
             [monger.result :refer [acknowledged?]]
             [web.config :refer [server-config]]
-            [jinteki.cards :refer [all-cards]]
-            [jinteki.decks :as decks]))
+            [cardnum.cards :refer [all-cards]]
+            [cardnum.decks :as decks]))
 
 
 (defn decks-handler [req]

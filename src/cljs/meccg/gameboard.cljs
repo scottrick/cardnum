@@ -1,15 +1,15 @@
-(ns netrunner.gameboard
+(ns meccg.gameboard
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [cljs.core.async :refer [chan put! <!] :as async]
             [clojure.string :refer [capitalize includes? join lower-case split]]
             [differ.core :as differ]
-            [jinteki.utils :refer [str->int]]
-            [jinteki.cards :refer [all-cards]]
-            [netrunner.appstate :refer [app-state]]
-            [netrunner.auth :refer [avatar] :as auth]
-            [netrunner.cardbrowser :refer [add-symbols] :as cb]
-            [netrunner.utils :refer [toastr-options influence-dot map-longest]]
-            [netrunner.ws :as ws]
+            [cardnum.utils :refer [str->int]]
+            [cardnum.cards :refer [all-cards]]
+            [meccg.appstate :refer [app-state]]
+            [meccg.auth :refer [avatar] :as auth]
+            [meccg.cardbrowser :refer [add-symbols] :as cb]
+            [meccg.utils :refer [toastr-options influence-dot map-longest]]
+            [meccg.ws :as ws]
             [om.core :as om :include-macros true]
             [om.dom :as dom]
             [sablono.core :as sab :include-macros true]))
@@ -92,10 +92,10 @@
 (defn parse-state [state]
   (js->clj (.parse js/JSON state) :keywordize-keys true))
 
-(ws/register-ws-handler! :netrunner/state #(handle-state (parse-state %)))
-(ws/register-ws-handler! :netrunner/start #(launch-game (parse-state %)))
-(ws/register-ws-handler! :netrunner/diff #(handle-diff (parse-state %)))
-(ws/register-ws-handler! :netrunner/timeout #(handle-timeout (parse-state %)))
+(ws/register-ws-handler! :meccg/state #(handle-state (parse-state %)))
+(ws/register-ws-handler! :meccg/start #(launch-game (parse-state %)))
+(ws/register-ws-handler! :meccg/diff #(handle-diff (parse-state %)))
+(ws/register-ws-handler! :meccg/timeout #(handle-timeout (parse-state %)))
 
 (def anr-icons {"[Credits]" "credit"
                 "[$]" "credit"
@@ -124,7 +124,7 @@
    (when (or (not @lock) no-lock)
      (try (js/ga "send" "event" "game" command) (catch js/Error e))
      (when-not no-lock (reset! lock true))
-     (ws/ws-send! [:netrunner/action {:gameid-str (:gameid @game-state) :command command :args args}]))))
+     (ws/ws-send! [:meccg/action {:gameid-str (:gameid @game-state) :command command :args args}]))))
 
 (defn send-msg [event owner]
   (.preventDefault event)
@@ -132,7 +132,7 @@
         text (.-value input)
         $div (js/$ ".gameboard .messages")]
     (when-not (empty? text)
-      (ws/ws-send! [:netrunner/say {:gameid-str (:gameid @game-state) :msg text}])
+      (ws/ws-send! [:meccg/say {:gameid-str (:gameid @game-state) :msg text}])
       (.scrollTop $div (+ (.prop $div "scrollHeight") 500))
       (aset input "value" "")
       (.focus input))))
@@ -143,15 +143,15 @@
   (let [input (om/get-node owner "msg-input")
         text (.-value input)]
     (if (empty? text)
-      (ws/ws-send! [:netrunner/typing {:gameid-str (:gameid @game-state) :typing false}])
+      (ws/ws-send! [:meccg/typing {:gameid-str (:gameid @game-state) :typing false}])
       (when (not-any? #{(get-in @app-state [:user :username])} (:typing @game-state))
-        (ws/ws-send! [:netrunner/typing {:gameid-str (:gameid @game-state) :typing true}])))))
+        (ws/ws-send! [:meccg/typing {:gameid-str (:gameid @game-state) :typing true}])))))
 
 (defn mute-spectators [mute-state]
-  (ws/ws-send! [:netrunner/mute-spectators {:gameid-str (:gameid @game-state) :mute-state mute-state}]))
+  (ws/ws-send! [:meccg/mute-spectators {:gameid-str (:gameid @game-state) :mute-state mute-state}]))
 
 (defn concede []
-  (ws/ws-send! [:netrunner/concede {:gameid-str (:gameid @game-state)}]))
+  (ws/ws-send! [:meccg/concede {:gameid-str (:gameid @game-state)}]))
 
 (defn build-exception-msg [msg error]
   (letfn [(build-report-url [error]
@@ -162,7 +162,7 @@
          msg
          "<br/>"
          "<button type=\"button\" class=\"reportbtn\" style=\"margin-top: 5px\" "
-         "onclick=\"window.open('https://github.com/mtgred/netrunner/issues/new?body="
+         "onclick=\"window.open('https://github.com/rezwits/meccg/issues/new?body="
          (build-report-url error)
          "');\">Report on GitHub</button></div>")))
 

@@ -1,5 +1,5 @@
-(ns netrunner.appstate
-  (:require [jinteki.utils :refer [str->int]]))
+(ns meccg.appstate
+  (:require [cardnum.utils :refer [str->int]]))
 
 (def app-state
   (atom {:active-page "/"
