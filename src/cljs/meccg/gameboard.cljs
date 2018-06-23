@@ -857,7 +857,7 @@
       [:div.hand-container
        [:div.hand-controls
         [:div.panel.blue-shade.hand
-         (drop-area (:side @game-state) name {:class (when (> size 6) "squeeveale")})
+         (drop-area (:side @game-state) name {:class (when (> size 6) "squeeze")})
          [:div
           (build-hand-card-view player parties "card-wrapper")]
          (om/build label (:hand player) {:opts {:name "Hand"}})]
@@ -1007,7 +1007,7 @@
    (sab/html
     (when-not (empty? cards)
       (let [size (count cards)]
-        [:div.panel.blue-shade.rfg {:class (when (> size 2) "squeeveale")
+        [:div.panel.blue-shade.rfg {:class (when (> size 2) "squeeze")
                                     :on-click (when popup #(-> (om/get-node owner "rfg-popup") js/$ .fadeToggle))}
          (map-indexed (fn [i card]
                         [:div.card-wrapper {:style {:left (* (/ 128 size) i)}}
@@ -1029,7 +1029,7 @@
           size (count cards)
           side (get-in player [:identity :side])]
       (when-not (empty? cards)
-        [:div.panel.blue-shade.rfg {:class (when (> size 2) "squeeveale")}
+        [:div.panel.blue-shade.rfg {:class (when (> size 2) "squeeze")}
          (map-indexed (fn [i card]
                         [:div.card-wrapper {:style {:left (* (/ 128 size) i)}}
                          (if (= (:user player) (:user @app-state))
@@ -1049,7 +1049,7 @@
   (om/component
    (sab/html
     (let [size (count scored)]
-      [:div.panel.blue-shade.scored.squeeveale
+      [:div.panel.blue-shade.scored.squeeze
        (map-indexed (fn [i card]
                       [:div.card-wrapper {:style {:left (* (/ 128 (dec size)) i)}}
                        [:div (om/build card-view card)]])
