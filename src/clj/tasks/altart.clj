@@ -9,7 +9,7 @@
             [cheshire.core :as json]))
 
 (def ^:const alt-art-sets "data/promo.json")
-(def ^:const img-directory ["resources" "public" "img" "cards"])
+(def ^:const img-directory ["muthereffs" "public" "img" "cards"])
 
 (def ^:const alt-collection "altarts")
 (def ^:const card-collection (:collection (:card tables)))

@@ -166,7 +166,7 @@
   (let [{players :players :as game} (game-for-id gameid)]
     (when (< (count players) 2)
       (let [{side :side :as fplayer} (first players)
-            new-side (if (= "Corp" side) "Runner" "Corp")
+            new-side (if (= "Contestant" side) "Challenger" "Contestant")
             new-player {:user    user
                         :ws-id   client-id
                         :side    new-side
@@ -190,9 +190,9 @@
   "Returns a new player map with the player's :side switched"
   [player]
   (-> player
-      (update-in [:side] #(if (= % "Corp")
-                            "Runner"
-                            "Corp"))
+      (update-in [:side] #(if (= % "Contestant")
+                            "Challenger"
+                            "Contestant"))
       (dissoc :deck)))
 
 (defn blocked-users

@@ -70,15 +70,15 @@
                                 :start-key :games-started :complete-key :games-completed
                                 :win-key :wins :lose-key :loses})]
           [:div
-           [:h3 "Corp Stats"]
+           [:h3 "Contestant Stats"]
            (om/build stat-view {:stats stats
-                                :start-key :games-started-corp :complete-key :games-completed-corp
-                                :win-key :wins-corp :lose-key :loses-corp})]
+                                :start-key :games-started-contestant :complete-key :games-completed-contestant
+                                :win-key :wins-contestant :lose-key :loses-contestant})]
           [:div
-           [:h3 "Runner Stats"]
+           [:h3 "Challenger Stats"]
            (om/build stat-view {:stats stats
-                                :start-key :games-started-runner :complete-key :games-completed-runner
-                                :win-key :wins-runner :lose-key :loses-runner})]]
+                                :start-key :games-started-challenger :complete-key :games-completed-challenger
+                                :win-key :wins-challenger :lose-key :loses-challenger})]]
          [:p
           [:button {:on-click #(clear-user-stats)} "Clear Stats"]]]))))
 

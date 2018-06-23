@@ -112,7 +112,7 @@
   (authenticated
    (fn [user]
      (om/set-state! owner :title (str (:username user) "'s game"))
-     (om/set-state! owner :side "Corp")
+     (om/set-state! owner :side "Contestant")
      (om/set-state! owner :editing true)
      (om/set-state! owner :flash-message "")
      (om/set-state! owner :protected false)
@@ -414,7 +414,7 @@
 
               [:section
                [:h3 "Side"]
-               (for [option ["Corp" "Runner"]]
+               (for [option ["Contestant" "Challenger"]]
                  [:p
                   [:label [:input {:type "radio"
                                    :name "side"

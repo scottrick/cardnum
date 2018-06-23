@@ -1,7 +1,7 @@
 (in-ns 'game.core)
 
 (declare available-mu free-mu host in-play? install-locked? make-rid rez run-flag? installable-servers server->zone set-prop system-msg
-         turn-flag? update-breaker-strength update-ice-strength update-run-ice use-mu)
+         turn-flag? update-breaker-strength update-character-strength update-run-character use-mu)
 
 ;;;; Functions for the installation and deactivation of cards.
 
@@ -9,7 +9,7 @@
 (defn- dissoc-card
   "Dissoc relevant keys in card"
   [card keep-counter]
-  (let [c (dissoc card :current-strength :abilities :subroutines :runner-abilities :corp-abilities :rezzed :special :new
+  (let [c (dissoc card :current-strength :abilities :subroutines :challenger-abilities :contestant-abilities :rezzed :special :new
                   :added-virus-counter :subtype-target :sifr-used :sifr-target :pump :server-target)
         c (if keep-counter c (dissoc c :counter :rec-counter :advance-counter :extra-advance-counter))]
     c))
@@ -19,8 +19,8 @@
   [state side {:keys [disabled installed rezzed facedown zone host] :as card}]
   (when-let [leave-effect (:leave-play (card-def card))]
     (when (and (not disabled)
-               (not (and (= (:side card) "Runner") host (not installed) (not facedown)))
-               (or (and (= (:side card) "Runner") installed (not facedown))
+               (not (and (= (:side card) "Challenger") host (not installed) (not facedown)))
+               (or (and (= (:side card) "Challenger") installed (not facedown))
                    rezzed
                    (and host (not facedown))
                    (= (first zone) :current)
@@ -57,16 +57,16 @@
     (for [ab abilities]
       (assoc (select-keys ab [:cost :pump :breaks]) :label (make-label ab)))))
 
-(defn- corp-ability-init
+(defn- contestant-ability-init
   "Gets abilities associated with the card"
   [cdef]
-  (for [ab (:corp-abilities cdef)]
+  (for [ab (:contestant-abilities cdef)]
     (assoc (select-keys ab [:cost]) :label (make-label ab))))
 
-(defn- runner-ability-init
+(defn- challenger-ability-init
   "Gets abilities associated with the card"
   [cdef]
-  (for [ab (:runner-abilities cdef)]
+  (for [ab (:challenger-abilities cdef)]
     (assoc (select-keys ab [:cost]) :label (make-label ab))))
 
 (defn- subroutines-init
@@ -86,15 +86,15 @@
    (let [cdef (card-def card)
          recurring (:recurring cdef)
          abilities (ability-init cdef)
-         run-abs (runner-ability-init cdef)
-         corp-abs (corp-ability-init cdef)
+         run-abs (challenger-ability-init cdef)
+         contestant-abs (contestant-ability-init cdef)
          subroutines (subroutines-init cdef)
          c (merge card
                   (when init-data (:data cdef))
                   {:abilities abilities
                    :subroutines subroutines
-                   :runner-abilities run-abs
-                   :corp-abilities corp-abs})
+                   :challenger-abilities run-abs
+                   :contestant-abilities contestant-abs})
          c (if (number? recurring) (assoc c :rec-counter recurring) c)
          c (if (string? (:strength c)) (assoc c :strength 0) c)]
      (when recurring
@@ -102,7 +102,7 @@
                  (effect (set-prop card :rec-counter recurring))
                  recurring)]
          (register-events state side
-                          {(if (= side :corp) :corp-phase-12 :runner-phase-12)
+                          {(if (= side :contestant) :contestant-phase-12 :challenger-phase-12)
                            {:effect r}} c)))
      (update! state side c)
      (when-let [events (:events cdef)]
@@ -115,106 +115,106 @@
      (get-card state c))))
 
 
-;;; Intalling a corp card
-(defn- corp-can-install-reason
+;;; Intalling a contestant card
+(defn- contestant-can-install-reason
   "Checks if the specified card can be installed.
    Returns true if there are no problems
-   Returns :region if Region check fails
-   Returns :ice if ICE check fails
+   Returns :regOLDion if RegOLDion check fails
+   Returns :character if Character check fails
    !! NB: This should only be used in a check with `true?` as all return values are truthy"
   [state side card dest-zone]
   (cond
-    ;; Region check
-    (and (has-subtype? card "Region")
-         (some #(has-subtype? % "Region") dest-zone))
-    :region
-    ;; ICE install prevented by Unscheduled Maintenance
-    (and (ice? card)
-         (not (turn-flag? state side card :can-install-ice)))
-    :ice
+    ;; RegOLDion check
+    (and (has-subtype? card "RegOLDion")
+         (some #(has-subtype? % "RegOLDion") dest-zone))
+    :regOLDion
+    ;; Character install prevented by Unscheduled Maintenance
+    (and (character? card)
+         (not (turn-flag? state side card :can-install-character)))
+    :character
     ;; Installing not locked
-    (install-locked? state :corp) :lock-install
+    (install-locked? state :contestant) :lock-install
     ;; no restrictions
     :default true))
 
-(defn- corp-can-install?
-  "Checks `corp-can-install-reason` if not true, toasts reason and returns false"
+(defn- contestant-can-install?
+  "Checks `contestant-can-install-reason` if not true, toasts reason and returns false"
   [state side card dest-zone]
-  (let [reason (corp-can-install-reason state side card dest-zone)
+  (let [reason (contestant-can-install-reason state side card dest-zone)
         reason-toast #(do (toast state side % "warning") false)
         title (:title card)]
     (case reason
       ;; pass on true value
       true true
-      ;; failed region check
-      :region
-      (reason-toast (str "Cannot install " (:title card) ", limit of one Region per server"))
+      ;; failed regOLDion check
+      :regOLDion
+      (reason-toast (str "Cannot install " (:title card) ", limit of one RegOLDion per server"))
       ;; failed install lock check
       :lock-install
       (reason-toast (str "Unable to install " title ", installing is currently locked"))
-      ;; failed ICE check
-      :ice
-      (reason-toast (str "Unable to install " title ": can only install 1 piece of ICE per turn")))))
+      ;; failed Character check
+      :character
+      (reason-toast (str "Unable to install " title ": can only install 1 piece of Character per turn")))))
 
-(defn corp-installable-type?
+(defn contestant-installable-type?
   "Is the card of an acceptable type to be installed in a server"
   [card]
-  (some? (#{"Asset" "Agenda" "ICE" "Upgrade"} (:type card))))
+  (some? (#{"Site" "Agenda" "Character" "Region"} (:type card))))
 
-(defn- corp-install-asset-agenda
-  "Forces the corp to trash an existing asset or agenda if a second was just installed."
+(defn- contestant-install-site-agenda
+  "Forces the contestant to trash an existing site or agenda if a second was just installed."
   [state side eid card dest-zone server]
-  (let [prev-card (some #(when (#{"Asset" "Agenda"} (:type %)) %) dest-zone)]
-    (if (and (#{"Asset" "Agenda"} (:type card))
+  (let [prev-card (some #(when (#{"Site" "Agenda"} (:type %)) %) dest-zone)]
+    (if (and (#{"Site" "Agenda"} (:type card))
              prev-card
              (not (:host card)))
       (continue-ability state side {:prompt (str "The " (:title prev-card) " in " server " will now be trashed.")
                                     :choices ["OK"]
                                     :async true
-                                    :effect (req (system-msg state :corp (str "trashes " (card-str state prev-card)))
+                                    :effect (req (system-msg state :contestant (str "trashes " (card-str state prev-card)))
                                                  (if (get-card state prev-card) ; make sure they didn't trash the card themselves
-                                                   (trash state :corp eid prev-card {:keep-server-alive true})
-                                                   (effect-completed state :corp eid)))}
+                                                   (trash state :contestant eid prev-card {:keep-server-alive true})
+                                                   (effect-completed state :contestant eid)))}
                        nil nil)
       (effect-completed state side eid))))
 
-(defn- corp-install-message
+(defn- contestant-install-message
   "Prints the correct install message."
   [state side card server install-state cost-str]
   (let [card-name (if (or (= :rezzed-no-cost install-state)
                           (= :face-up install-state)
                           (:rezzed card))
                     (:title card)
-                    (if (ice? card) "ICE" "a card"))
+                    (if (character? card) "Character" "a card"))
         server-name (if (= server "New remote")
                       (str (remote-num->name (get-in @state [:rid])) " (new remote)")
                       server)]
     (system-msg state side (str (build-spend-msg cost-str "install") card-name
-                                (if (ice? card) " protecting " " in ") server-name))))
+                                (if (character? card) " protecting " " in ") server-name))))
 
-(defn corp-install-list
+(defn contestant-install-list
   "Returns a list of targets for where a given card can be installed."
   [state card]
   (let [hosts (filter #(when-let [can-host (:can-host (card-def %))]
                         (and (rezzed? %)
-                             (can-host state :corp (make-eid state) % [card])))
-                      (all-installed state :corp))]
+                             (can-host state :contestant (make-eid state) % [card])))
+                      (all-installed state :contestant))]
     (concat hosts (installable-servers state card))))
 
-(defn- corp-install-continue
-  "Used by corp-install to actually install the card, rez it if it's supposed to be installed
-  rezzed, and calls :corp-install in an awaitable fashion."
+(defn- contestant-install-continue
+  "Used by contestant-install to actually install the card, rez it if it's supposed to be installed
+  rezzed, and calls :contestant-install in an awaitable fashion."
   [state side eid card server {:keys [install-state host-card front] :as args} slot cost-str]
   (let [cdef (card-def card)
-        dest-zone (get-in @state (cons :corp slot))
+        dest-zone (get-in @state (cons :contestant slot))
         install-state (or install-state (:install-state cdef))
         c (-> card
               (assoc :advanceable (:advanceable cdef) :new true)
               (dissoc :seen :disabled))]
     (clear-install-cost-bonus state side)
     (when-not host-card
-      (corp-install-message state side c server install-state cost-str))
-    (play-sfx state side "install-corp")
+      (contestant-install-message state side c server install-state cost-str))
+    (play-sfx state side "install-contestant")
 
     (let [moved-card (if host-card
                        (host state side host-card (assoc c :installed true))
@@ -222,10 +222,10 @@
       (when (is-type? c "Agenda")
         (update-advancement-cost state side moved-card))
 
-      ;; Check to see if a second agenda/asset was installed.
-      (wait-for (corp-install-asset-agenda state side moved-card dest-zone server)
+      ;; Check to see if a second agenda/site was installed.
+      (wait-for (contestant-install-site-agenda state side moved-card dest-zone server)
                 (letfn [(event [state side eid _]
-                          (trigger-event-sync state side eid :corp-install (get-card state moved-card)))]
+                          (trigger-event-sync state side eid :contestant-install (get-card state moved-card)))]
                   (case install-state
                     ;; Ignore all costs. Pass eid to rez.
                     :rezzed-no-cost
@@ -259,30 +259,30 @@
                     (when-not (:rezzed (get-card state moved-card))
                       (register-events state side dre moved-card))))))))
 
-(defn- corp-install-pay
-  "Used by corp-install to pay install costs, code continues in corp-install-continue"
+(defn- contestant-install-pay
+  "Used by contestant-install to pay install costs, code continues in contestant-install-continue"
   [state side eid card server {:keys [extra-cost no-install-cost host-card action] :as args} slot]
-  (let [dest-zone (get-in @state (cons :corp slot))
-        ice-cost (if (and (ice? card)
+  (let [dest-zone (get-in @state (cons :contestant slot))
+        character-cost (if (and (character? card)
                           (not no-install-cost)
                           (not (ignore-install-cost? state side)))
                    (count dest-zone) 0)
-        all-cost (concat extra-cost [:credit ice-cost])
+        all-cost (concat extra-cost [:credit character-cost])
         end-cost (if no-install-cost 0 (install-cost state side card all-cost))
         end-fn #((clear-install-cost-bonus state side)
                  (effect-completed state side eid))]
-    (if (and (corp-can-install? state side card dest-zone)
-             (not (install-locked? state :corp)))
+    (if (and (contestant-can-install? state side card dest-zone)
+             (not (install-locked? state :contestant)))
       (wait-for (pay-sync state side card end-cost {:action action})
                 (if-let [cost-str async-result]
                   (if (= server "New remote")
                     (wait-for (trigger-event-sync state side :server-created card)
-                              (corp-install-continue state side eid card server args slot cost-str))
-                    (corp-install-continue state side eid card server args slot cost-str))
+                              (contestant-install-continue state side eid card server args slot cost-str))
+                    (contestant-install-continue state side eid card server args slot cost-str))
                   (end-fn)))
       (end-fn))))
 
-(defn corp-install
+(defn contestant-install
   "Installs a card in the chosen server. If server is nil, asks for server to install in.
   The args input takes the following values:
   :host-card - Card to host on
@@ -290,35 +290,35 @@
   :no-install-cost - true if install costs should be ignored
   :action - What type of action installed the card
   :install-state - Can be :rezzed-no-cost, :rezzed-no-rez-cost, :rezzed, or :faceup"
-  ([state side card server] (corp-install state side (make-eid state) card server nil))
-  ([state side card server args] (corp-install state side (make-eid state) card server args))
+  ([state side card server] (contestant-install state side (make-eid state) card server nil))
+  ([state side card server args] (contestant-install state side (make-eid state) card server args))
   ([state side eid card server {:keys [host-card] :as args}]
    (cond
      ;; No server selected; show prompt to select an install site (Interns, Lateral Growth, etc.)
      (not server)
      (continue-ability state side
                        {:prompt (str "Choose a location to install " (:title card))
-                        :choices (corp-install-list state card)
+                        :choices (contestant-install-list state card)
                         :async true
-                        :effect (effect (corp-install eid card target args))}
+                        :effect (effect (contestant-install eid card target args))}
                        card nil)
      ;; A card was selected as the server; recurse, with the :host-card parameter set.
      (and (map? server) (not host-card))
-     (corp-install state side eid card server (assoc args :host-card server))
+     (contestant-install state side eid card server (assoc args :host-card server))
      ;; A server was selected
      :else
      (let [slot (if host-card
                   (:zone host-card)
-                  (conj (server->zone state server) (if (ice? card) :ices :content)))
-           dest-zone (get-in @state (cons :corp slot))]
-       ;; trigger :pre-corp-install before computing install costs so that
+                  (conj (server->zone state server) (if (character? card) :characters :content)))
+           dest-zone (get-in @state (cons :contestant slot))]
+       ;; trigger :pre-contestant-install before computing install costs so that
        ;; event handlers may adjust the cost.
-       (wait-for (trigger-event-sync state side :pre-corp-install card {:server server :dest-zone dest-zone})
-                 (corp-install-pay state side eid card server args slot))))))
+       (wait-for (trigger-event-sync state side :pre-contestant-install card {:server server :dest-zone dest-zone})
+                 (contestant-install-pay state side eid card server args slot))))))
 
 
-;;; Installing a runner card
-(defn- runner-can-install-reason
+;;; Installing a challenger card
+(defn- challenger-can-install-reason
   "Checks if the specified card can be installed.
    Checks uniqueness of card and installed console.
    Returns true if there are no problems
@@ -334,10 +334,10 @@
       facedown true
       ;; Console check
       (and (has-subtype? card "Console")
-           (some #(has-subtype? % "Console") (all-active-installed state :runner)))
+           (some #(has-subtype? % "Console") (all-active-installed state :challenger)))
       :console
       ;; Installing not locked
-      (install-locked? state :runner) :lock-install
+      (install-locked? state :challenger) :lock-install
       ;; Uniqueness check
       (and uniqueness (in-play? state card)) :unique
       ;; Req check
@@ -345,10 +345,10 @@
       ;; Nothing preventing install
       :default true)))
 
-(defn runner-can-install?
-  "Checks `runner-can-install-reason` if not true, toasts reason and returns false"
+(defn challenger-can-install?
+  "Checks `challenger-can-install-reason` if not true, toasts reason and returns false"
   [state side card facedown]
-  (let [reason (runner-can-install-reason state side card facedown)
+  (let [reason (challenger-can-install-reason state side card facedown)
         reason-toast #(do (toast state side % "warning") false)
         title (:title card)]
     (case reason
@@ -367,14 +367,14 @@
       :req
       (reason-toast (str "Installation requirements are not fulfilled for " title)))))
 
-(defn- runner-get-cost
+(defn- challenger-get-cost
   "Get the total install cost for specified card"
   [state side {:keys [cost] :as card}
    {:keys [extra-cost no-cost facedown] :as params}]
   (install-cost state side card
                 (concat extra-cost (when (and (not no-cost) (not facedown)) [:credit cost]))))
 
-(defn- runner-install-message
+(defn- challenger-install-message
   "Prints the correct msg for the card install"
   [state side card-title cost-str
    {:keys [no-cost host-card facedown custom-message] :as params}]
@@ -394,24 +394,24 @@
            (pos? (get-counters installed-card :virus)))
     (update! state side (assoc installed-card :added-virus-counter true))))
 
-(defn runner-install
-  "Installs specified runner card if able
+(defn challenger-install
+  "Installs specified challenger card if able
   Params include extra-cost, no-cost, host-card, facedown and custom-message."
-  ([state side card] (runner-install state side (make-eid state) card nil))
-  ([state side card params] (runner-install state side (make-eid state) card params))
+  ([state side card] (challenger-install state side (make-eid state) card nil))
+  ([state side card params] (challenger-install state side (make-eid state) card params))
   ([state side eid card {:keys [host-card facedown no-mu] :as params}]
    (if (and (empty? (get-in @state [side :locked (-> card :zone first)]))
-            (not (install-locked? state :runner)))
+            (not (install-locked? state :challenger)))
      (if-let [hosting (and (not host-card) (not facedown) (:hosting (card-def card)))]
        (continue-ability state side
                          {:choices hosting
                           :prompt (str "Choose a card to host " (:title card) " on")
                           :async true
-                          :effect (effect (runner-install eid card (assoc params :host-card target)))}
+                          :effect (effect (challenger-install eid card (assoc params :host-card target)))}
                          card nil)
        (do (trigger-event state side :pre-install card facedown)
-           (let [cost (runner-get-cost state side card params)]
-             (if (runner-can-install? state side card facedown)
+           (let [cost (challenger-get-cost state side card params)]
+             (if (challenger-can-install? state side card facedown)
                (if-let [cost-str (pay state side card cost)]
                  (let [c (if host-card
                            (host state side host-card card)
@@ -422,20 +422,20 @@
                                         (update! state side c)
                                         (card-init state side c {:resolve-effect false
                                                                  :init-data true}))]
-                   (runner-install-message state side (:title card) cost-str params)
-                   (play-sfx state side "install-runner")
-                   (when (and (is-type? card "Program")
+                   (challenger-install-message state side (:title card) cost-str params)
+                   (play-sfx state side "install-challenger")
+                   (when (and (is-type? card "Resource")
                               (not facedown)
                               (not no-mu))
-                     ;; Use up mu from program not installed facedown
+                     ;; Use up mu from resource not installed facedown
                      (use-mu state (:memoryunits card))
                      (toast-check-mu state))
                    (handle-virus-counter-flag state side installed-card)
-                   (when (and (not facedown) (is-type? card "Resource"))
-                     (swap! state assoc-in [:runner :register :installed-resource] true))
+                   (when (and (not facedown) (is-type? card "Muthereff"))
+                     (swap! state assoc-in [:challenger :register :installed-muthereff] true))
                    (when (and (not facedown) (has-subtype? c "Icebreaker"))
                      (update-breaker-strength state side c))
-                   (trigger-event-simult state side eid :runner-install
+                   (trigger-event-simult state side eid :challenger-install
                                          {:card-ability (card-as-handler installed-card)}
                                          installed-card))
                  (effect-completed state side eid))

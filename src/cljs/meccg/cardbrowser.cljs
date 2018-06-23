@@ -260,20 +260,20 @@
             (card-text selected-card cursor)]]))))))
 
 (defn types [side]
-  (let [runner-types ["Identity" "Program" "Hardware" "Resource" "Event"]
-        corp-types ["Agenda" "Asset" "ICE" "Operation" "Upgrade"]]
+  (let [challenger-types ["Identity" "Resource" "Hardware" "Muthereff" "Event"]
+        contestant-types ["Agenda" "Site" "Character" "Operation" "Region"]]
     (case side
-      "All" (concat runner-types corp-types)
-      "Runner" runner-types
-      "Corp" (cons "Identity" corp-types))))
+      "All" (concat challenger-types contestant-types)
+      "Challenger" challenger-types
+      "Contestant" (cons "Identity" contestant-types))))
 
 (defn factions [side]
-  (let [runner-factions ["Anarch" "Criminal" "Shaper" "Adam" "Apex" "Sunny Lebeau"]
-        corp-factions ["Cardnum" "Haas-Bioroid" "NBN" "Weyland Consortium" "Neutral"]]
+  (let [challenger-factions ["Anarch" "Criminal" "Shaper" "Adam" "Apex" "Sunny Lebeau"]
+        contestant-factions ["Cardnum" "Haas-Bioroid" "NBN" "Weyland Consortium" "Neutral"]]
     (case side
-      "All" (concat runner-factions corp-factions)
-      "Runner" (conj runner-factions "Neutral")
-      "Corp" corp-factions)))
+      "All" (concat challenger-factions contestant-factions)
+      "Challenger" (conj challenger-factions "Neutral")
+      "Contestant" contestant-factions)))
 
 (defn options [list]
   (let [options (cons "All" list)]
@@ -418,7 +418,7 @@
            (for [filter [["Set" :set-filter (if (show-alt-art? true)
                                               (concat set-names alt-art-sets)
                                               set-names)]
-                         ["Side" :side-filter ["Corp" "Runner"]]
+                         ["Side" :side-filter ["Contestant" "Challenger"]]
                          ["Faction" :faction-filter (factions (:side-filter state))]
                          ["Type" :type-filter (types (:side-filter state))]]]
              [:div

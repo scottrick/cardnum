@@ -26,18 +26,18 @@
                         [:p "There are two undo functions - undo to turn start, and undo the last click. "
                          "To undo the start of the current turn both players must use the /undo-turn command. "
                          "To undo to the start of the click the active player must use the /undo-click command. "]
-                        [:p "There are some non-click based interactions such as using clone-chip and rezzing ICE or assets which are "
+                        [:p "There are some non-click based interactions such as using clone-chip and rezzing Character or sites which are "
                          "not supported via the undo-click function and players will need to handle manually. "
                          " Trashed/played cards can be dragged back to hand and reinstalled if needed. If there"
                           " are lingering/hard to dismiss prompts, try using " [:code "/close-prompt"] " command as a last resort."])}
-            {:id "breakice"
-             :title "How do I break ICE and fire ICE subroutines?"
+            {:id "breakcharacter"
+             :title "How do I break Character and fire Character subroutines?"
              :content (list
-                        [:p "Breaking ICE during a run and subroutines firing is currently not automated. Runner signals using their "
-                         "icebreakers by clicking them and using their abilities. When some subroutines are left unbroken and fire, "
-                         "Corp clicks the piece of ICE with subroutines firing and uses them."]
-                        [:p "It's considered common courtesy to wait as Corp for the runner to say \"fire\" before firing the "
-                         "subroutines, since Runner may have ways of breaking/avoiding the effects that are not immediately obvious "
+                        [:p "Breaking Character during a run and subroutines firing is currently not automated. Challenger signals using their "
+                         "characterbreakers by clicking them and using their abilities. When some subroutines are left unbroken and fire, "
+                         "Contestant clicks the piece of Character with subroutines firing and uses them."]
+                        [:p "It's considered common courtesy to wait as Contestant for the challenger to say \"fire\" before firing the "
+                         "subroutines, since Challenger may have ways of breaking/avoiding the effects that are not immediately obvious "
                          "and the effects of a fired subroutine may be hard to undo."])}
             {:id "closemenu"
              :title "How do I close a card's menu?"
@@ -61,25 +61,25 @@
                         [:li [:code "/discard #n"] " - Discard card number n from your hand"]
                         [:li [:code "/discard-random"] " - Discard a random card from your hand"]
                         [:li [:code "/draw n"] " - Draw n cards"]
-                        [:li [:code "/end-run"] " - End the run (Corp only)"]
+                        [:li [:code "/end-run"] " - End the run (Contestant only)"]
                         [:li [:code "/handsize n"] " - Set your handsize to n"]
-                        [:li [:code "/jack-out"] " - Jack out (Runner only)"]
+                        [:li [:code "/jack-out"] " - Jack out (Challenger only)"]
                         [:li [:code "/link n"] " - Set your link to n"]
                         [:li [:code "/memory n"] " - Set your memory to n"]
                         [:li [:code "/move-bottom"] " - Pick a card in your hand to put on the bottom of your deck"]
                         [:li [:code "/move-deck"] " - Pick a card from your play-area to put on top of your deck"]
                         [:li [:code "/move-hand"] " - Pick a card from your play-area to put into your hand"]
-                        [:li [:code "/psi"] " - Start a Psi game (Corp only)"]
-                        [:li [:code "/rez"] " - Select a card to rez, ignoring all costs (Corp only)"]
-                        [:li [:code "/rez-all"] " - Rez all cards, ignoring all costs and flip cards in archives faceup (Corp only). For revealing your servers at the end of a game."]
+                        [:li [:code "/psi"] " - Start a Psi game (Contestant only)"]
+                        [:li [:code "/rez"] " - Select a card to rez, ignoring all costs (Contestant only)"]
+                        [:li [:code "/rez-all"] " - Rez all cards, ignoring all costs and flip cards in archives faceup (Contestant only). For revealing your servers at the end of a game."]
                         [:li [:code "/rfg"] " - Select a card to remove from the game"]
-                        [:li [:code "/facedown"] " - Select a card to install facedown in your rig (Runner only)"]
+                        [:li [:code "/facedown"] " - Select a card to install facedown in your rig (Challenger only)"]
                         [:li [:code "/roll n"] " - Roll an n-sided die"]
                         [:li [:code "/tag n"] " - Set your tags to n"]
-                        [:li [:code "/take-brain n"] " - Take n brain damage (Runner only)"]
-                        [:li [:code "/take-meat n"] " - Take n meat damage (Runner only)"]
-                        [:li [:code "/take-net n"] " - Take n net damage (Runner only)"]
-                        [:li [:code "/trace n"] " - Start a trace with base strength n (Corp only)"]
+                        [:li [:code "/take-brain n"] " - Take n brain damage (Challenger only)"]
+                        [:li [:code "/take-meat n"] " - Take n meat damage (Challenger only)"]
+                        [:li [:code "/take-net n"] " - Take n net damage (Challenger only)"]
+                        [:li [:code "/trace n"] " - Start a trace with base strength n (Contestant only)"]
                         [:li [:code "/undo-click"] " - Resets the game back to start of the click.  One click only retained. Only allowed for active player"]
                         [:li [:code "/undo-turn"] " - Resets the game back to end of the last turn. Requires both players to request it"]]]}
             {:id "documentation"
@@ -108,7 +108,7 @@
                        "happy to play with a beginner should join after a while."]}
             {:id "finddecks"
              :title "Where can I find some good starting decks?"
-             :content (list [:p [:a {:href "https://meccgdb.com/"} "MECCGDB"] " is a good resource for finding decks of all kinds. "
+             :content (list [:p [:a {:href "https://meccgdb.com/"} "MECCGDB"] " is a good muthereff for finding decks of all kinds. "
                        "For finding decks consisting of core set only try setting some filters in "
                        [:a {:href "http://meccgdb.com/en/decklists/search#allowed_packs"} "the decklist search"] "."]
                             [:p "Once you find a deck you like, export it in Cardnum.net's format (or plain text format if the "
@@ -158,7 +158,7 @@
                               [:li "enough time reserved for a full game and no distractions"]]]
                             [:p "Games with players not able or willing to follow above recommendations are probably better suited to the Casual room. "
                              "Some examples would be: learning the game, learning the site's interface, testing a completely new and crazy deck idea, "
-                             "testing future spoilers, playing on a touchscreen, playing at work and likely to have to quit on short notice, etc. "
+                             "testing future spoilers, playing on a touchscreen, playing at work and likely to have to quit on short notcharacter, etc. "
                              "All of these circumstances may cause needless frustration of players expecting to play a game in a competitive setting."])}
             {:id "aboutstats"
              :title "What are the options for tracking Game and Deck Statistics, and what do they mean?"
@@ -189,7 +189,7 @@
                        "at no cost."]}
             {:id "nasir"
              :title "How do I use Nasir's ability?"
-             :content [:p "Nasir's ability is currently triggered manually - when encountering a piece of ICE, click Nasir's "
+             :content [:p "Nasir's ability is currently triggered manually - when encountering a piece of Character, click Nasir's "
                        "identity card to trigger the ability."]}
             {:id "adam"
              :title "How do I install Adam's directives?"
@@ -228,8 +228,8 @@
                        [:a {:href "http://refreshyourcache.com/en/cache/"} "force refresh"] " (" [:code "Ctrl + F5"] " on Windows). "
                        "Also read the announcements on the main page, something about server problems may be written there."]}
             {:id "touchproblems"
-             :title "The website doesn't work well on my touchscreen device."
-             :content [:p "Touchscreen devices are currently not supported. See answer to " [:a {:href "#bestbrowser"} "this question"]
+             :title "The website doesn't work well on my touchscreen devcharacter."
+             :content [:p "Touchscreen devIces are currently not supported. See answer to " [:a {:href "#bestbrowser"} "this question"]
                        " for best browsers to use with Cardnum.net."]}
             {:id "toomanyservers"
              :title "There are too many servers to fit on my screen."

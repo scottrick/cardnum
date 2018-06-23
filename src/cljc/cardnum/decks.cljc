@@ -39,13 +39,13 @@
      "10109")                                              ; Ibrahim Salem
     (default-alliance-is-free? cards line)
     "10018"                                                 ; Mumba Temple
-    (>= 15 (card-count (filter #(= "ICE" (:type (:card %))) cards)))
+    (>= 15 (card-count (filter #(= "Character" (:type (:card %))) cards)))
     "10019"                                                 ; Museum of History
     (<= 50 (card-count cards))
     "10038"                                                 ; PAD Factory
     (= 3 (card-count (filter #(= "PAD Campaign" (:title (:card %))) cards)))
     "10076"                                                 ; Mumbad Virtual Tour
-    (<= 7 (card-count (filter #(= "Asset" (:type (:card %))) cards)))
+    (<= 7 (card-count (filter #(= "Site" (:type (:card %))) cards)))
     ;; Not an alliance card
     false))
 
@@ -76,10 +76,10 @@
       (<= qty (or (:limited card) 3))))
 
 (defn is-prof-prog?
-  "Check if ID is The Professor and card is a Program"
+  "Check if ID is The Professor and card is a Resource"
   [deck card]
   (and (= "03029" (get-in deck [:identity :code]))
-       (= "Program" (:type card))))
+       (= "Resource" (:type card))))
 
 (defn- before-today? [date]
   #?(:clj  (let [parsed-date (if (string? date)
@@ -120,7 +120,7 @@
     (if (zero? base-cost)
       0
       (cond
-        ;; The Professor: Keeper of Knowledge - discount influence cost of first copy of each program
+        ;; The Professor: Keeper of Knowledge - discount influence cost of first copy of each resource
         (is-prof-prog? deck (:card line))
         (- base-cost (get-in line [:card :factioncost]))
         ;; Check if the card is Alliance and fulfills its requirement
@@ -294,7 +294,7 @@
        (<= (influence-count deck) (id-inf-limit identity))
        (every? #(and (allowed? (:card %) identity)
                      (legal-num-copies? identity %)) cards)
-       (or (= (:side identity) "Runner")
+       (or (= (:side identity) "Challenger")
            (let [min (min-agenda-points deck)]
              (<= min (agenda-points deck) (inc min))))))
 

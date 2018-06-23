@@ -623,11 +623,11 @@
            [:div.button-bar
             (if (:user @app-state)
               (list
-                [:button {:on-click #(new-deck "Corp" owner)} "New Corp deck"]
-                [:button {:on-click #(new-deck "Runner" owner)} "New Runner deck"])
+                [:button {:on-click #(new-deck "Contestant" owner)} "New Contestant deck"]
+                [:button {:on-click #(new-deck "Challenger" owner)} "New Challenger deck"])
               (list
-                [:button {:class "disabled"} "New Corp deck"]
-                [:button {:class "disabled"} "New Runner deck"]))]
+                [:button {:class "disabled"} "New Contestant deck"]
+                [:button {:class "disabled"} "New Challenger deck"]))]
            [:div.deck-collection
             (when-not (:edit state)
               (om/build deck-collection {:sets sets :decks decks :decks-loaded decks-loaded :active-deck (om/get-state owner :deck)}))
@@ -682,7 +682,7 @@
                     "/" (if (= INFINITY id-limit) "∞" id-limit)
                     (if (pos? inf)
                       (list " " (deck-influence-html deck)))])
-                 (when (= (:side identity) "Corp")
+                 (when (= (:side identity) "Contestant")
                    (let [min-point (decks/min-agenda-points deck)
                          points (decks/agenda-points deck)]
                      [:div "Agenda points: " points

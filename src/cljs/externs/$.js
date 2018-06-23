@@ -2495,12 +2495,12 @@ var $ = {
                       "productSub": {},
                       "cookieEnabled": {},
                       "buildID": {},
-                      "mediaDevices": {
+                      "mediaDevcharacters": {
                         "closure_uid_523191572": {},
                         "getSupportedConstraints": {
                           "closure_uid_523191572": {}
                         },
-                        "enumerateDevices": {
+                        "enumerateDevcharacters": {
                           "closure_uid_523191572": {}
                         },
                         "getUserMedia": {
@@ -2516,7 +2516,7 @@ var $ = {
                           "closure_uid_523191572": {}
                         }
                       },
-                      "serviceWorker": {
+                      "servcharacterWorker": {
                         "controller": {},
                         "closure_uid_523191572": {},
                         "register": {
@@ -2716,10 +2716,10 @@ var $ = {
                       "getEntriesByName": {
                         "closure_uid_523191572": {}
                       },
-                      "clearResourceTimings": {
+                      "clearMuthereffTimings": {
                         "closure_uid_523191572": {}
                       },
-                      "setResourceTimingBufferSize": {
+                      "setMuthereffTimingBufferSize": {
                         "closure_uid_523191572": {}
                       },
                       "mark": {
@@ -2775,7 +2775,7 @@ var $ = {
                         "TYPE_BACK_FORWARD": {},
                         "TYPE_RESERVED": {}
                       },
-                      "onresourcetimingbufferfull": {}
+                      "onmutherefftimingbufferfull": {}
                     },
                     "caches": {
                       "closure_uid_523191572": {},
@@ -2797,18 +2797,18 @@ var $ = {
                     },
                     "mozInnerScreenX": {},
                     "mozInnerScreenY": {},
-                    "devicePixelRatio": {},
+                    "devcharacterPixelRatio": {},
                     "scrollMaxX": {},
                     "scrollMaxY": {},
                     "fullScreen": {},
                     "mozPaintCount": {},
                     "onwheel": {},
-                    "ondevicemotion": {},
-                    "ondeviceorientation": {},
-                    "onabsolutedeviceorientation": {},
-                    "ondeviceproximity": {},
+                    "ondevcharactermotion": {},
+                    "ondevcharacterorientation": {},
+                    "onabsolutedevcharacterorientation": {},
+                    "ondevcharacterproximity": {},
                     "onuserproximity": {},
-                    "ondevicelight": {},
+                    "ondevcharacterlight": {},
                     "content": {},
                     "isSecureContext": {},
                     "sidebar": {
@@ -2954,13 +2954,13 @@ var $ = {
                       "resume": {
                         "closure_uid_523191572": {}
                       },
-                      "getVoices": {
+                      "getVocharacters": {
                         "closure_uid_523191572": {}
                       },
                       "pending": {},
                       "speaking": {},
                       "paused": {},
-                      "onvoiceschanged": {},
+                      "onvocharacterschanged": {},
                       "addEventListener": {
                         "closure_uid_523191572": {}
                       },
@@ -4203,12 +4203,12 @@ var $ = {
                     "productSub": {},
                     "cookieEnabled": {},
                     "buildID": {},
-                    "mediaDevices": {
+                    "mediaDevcharacters": {
                       "closure_uid_523191572": {},
                       "getSupportedConstraints": {
                         "closure_uid_523191572": {}
                       },
-                      "enumerateDevices": {
+                      "enumerateDevcharacters": {
                         "closure_uid_523191572": {}
                       },
                       "getUserMedia": {
@@ -4224,7 +4224,7 @@ var $ = {
                         "closure_uid_523191572": {}
                       }
                     },
-                    "serviceWorker": {
+                    "servcharacterWorker": {
                       "controller": {},
                       "closure_uid_523191572": {},
                       "register": {
@@ -4424,10 +4424,10 @@ var $ = {
                     "getEntriesByName": {
                       "closure_uid_523191572": {}
                     },
-                    "clearResourceTimings": {
+                    "clearMuthereffTimings": {
                       "closure_uid_523191572": {}
                     },
-                    "setResourceTimingBufferSize": {
+                    "setMuthereffTimingBufferSize": {
                       "closure_uid_523191572": {}
                     },
                     "mark": {
@@ -4483,7 +4483,7 @@ var $ = {
                       "TYPE_BACK_FORWARD": {},
                       "TYPE_RESERVED": {}
                     },
-                    "onresourcetimingbufferfull": {}
+                    "onmutherefftimingbufferfull": {}
                   },
                   "caches": {
                     "closure_uid_523191572": {},
@@ -4505,18 +4505,18 @@ var $ = {
                   },
                   "mozInnerScreenX": {},
                   "mozInnerScreenY": {},
-                  "devicePixelRatio": {},
+                  "devcharacterPixelRatio": {},
                   "scrollMaxX": {},
                   "scrollMaxY": {},
                   "fullScreen": {},
                   "mozPaintCount": {},
                   "onwheel": {},
-                  "ondevicemotion": {},
-                  "ondeviceorientation": {},
-                  "onabsolutedeviceorientation": {},
-                  "ondeviceproximity": {},
+                  "ondevcharactermotion": {},
+                  "ondevcharacterorientation": {},
+                  "onabsolutedevcharacterorientation": {},
+                  "ondevcharacterproximity": {},
                   "onuserproximity": {},
-                  "ondevicelight": {},
+                  "ondevcharacterlight": {},
                   "content": {
                     "0": {},
                     "close": {
@@ -5115,12 +5115,12 @@ var $ = {
                       "productSub": {},
                       "cookieEnabled": {},
                       "buildID": {},
-                      "mediaDevices": {
+                      "mediaDevcharacters": {
                         "closure_uid_523191572": {},
                         "getSupportedConstraints": {
                           "closure_uid_523191572": {}
                         },
-                        "enumerateDevices": {
+                        "enumerateDevcharacters": {
                           "closure_uid_523191572": {}
                         },
                         "getUserMedia": {
@@ -5136,7 +5136,7 @@ var $ = {
                           "closure_uid_523191572": {}
                         }
                       },
-                      "serviceWorker": {
+                      "servcharacterWorker": {
                         "controller": {},
                         "closure_uid_523191572": {},
                         "register": {
@@ -5336,10 +5336,10 @@ var $ = {
                       "getEntriesByName": {
                         "closure_uid_523191572": {}
                       },
-                      "clearResourceTimings": {
+                      "clearMuthereffTimings": {
                         "closure_uid_523191572": {}
                       },
-                      "setResourceTimingBufferSize": {
+                      "setMuthereffTimingBufferSize": {
                         "closure_uid_523191572": {}
                       },
                       "mark": {
@@ -5395,7 +5395,7 @@ var $ = {
                         "TYPE_BACK_FORWARD": {},
                         "TYPE_RESERVED": {}
                       },
-                      "onresourcetimingbufferfull": {}
+                      "onmutherefftimingbufferfull": {}
                     },
                     "caches": {
                       "closure_uid_523191572": {},
@@ -5417,18 +5417,18 @@ var $ = {
                     },
                     "mozInnerScreenX": {},
                     "mozInnerScreenY": {},
-                    "devicePixelRatio": {},
+                    "devcharacterPixelRatio": {},
                     "scrollMaxX": {},
                     "scrollMaxY": {},
                     "fullScreen": {},
                     "mozPaintCount": {},
                     "onwheel": {},
-                    "ondevicemotion": {},
-                    "ondeviceorientation": {},
-                    "onabsolutedeviceorientation": {},
-                    "ondeviceproximity": {},
+                    "ondevcharactermotion": {},
+                    "ondevcharacterorientation": {},
+                    "onabsolutedevcharacterorientation": {},
+                    "ondevcharacterproximity": {},
                     "onuserproximity": {},
-                    "ondevicelight": {},
+                    "ondevcharacterlight": {},
                     "content": {},
                     "isSecureContext": {},
                     "sidebar": {
@@ -5574,13 +5574,13 @@ var $ = {
                       "resume": {
                         "closure_uid_523191572": {}
                       },
-                      "getVoices": {
+                      "getVocharacters": {
                         "closure_uid_523191572": {}
                       },
                       "pending": {},
                       "speaking": {},
                       "paused": {},
-                      "onvoiceschanged": {},
+                      "onvocharacterschanged": {},
                       "addEventListener": {
                         "closure_uid_523191572": {}
                       },
@@ -6547,13 +6547,13 @@ var $ = {
                     "resume": {
                       "closure_uid_523191572": {}
                     },
-                    "getVoices": {
+                    "getVocharacters": {
                       "closure_uid_523191572": {}
                     },
                     "pending": {},
                     "speaking": {},
                     "paused": {},
-                    "onvoiceschanged": {},
+                    "onvocharacterschanged": {},
                     "addEventListener": {
                       "closure_uid_523191572": {}
                     },
@@ -7248,12 +7248,12 @@ var $ = {
                       "productSub": {},
                       "cookieEnabled": {},
                       "buildID": {},
-                      "mediaDevices": {
+                      "mediaDevcharacters": {
                         "closure_uid_523191572": {},
                         "getSupportedConstraints": {
                           "closure_uid_523191572": {}
                         },
-                        "enumerateDevices": {
+                        "enumerateDevcharacters": {
                           "closure_uid_523191572": {}
                         },
                         "getUserMedia": {
@@ -7269,7 +7269,7 @@ var $ = {
                           "closure_uid_523191572": {}
                         }
                       },
-                      "serviceWorker": {
+                      "servcharacterWorker": {
                         "controller": {},
                         "closure_uid_523191572": {},
                         "register": {
@@ -7469,10 +7469,10 @@ var $ = {
                       "getEntriesByName": {
                         "closure_uid_523191572": {}
                       },
-                      "clearResourceTimings": {
+                      "clearMuthereffTimings": {
                         "closure_uid_523191572": {}
                       },
-                      "setResourceTimingBufferSize": {
+                      "setMuthereffTimingBufferSize": {
                         "closure_uid_523191572": {}
                       },
                       "mark": {
@@ -7528,7 +7528,7 @@ var $ = {
                         "TYPE_BACK_FORWARD": {},
                         "TYPE_RESERVED": {}
                       },
-                      "onresourcetimingbufferfull": {}
+                      "onmutherefftimingbufferfull": {}
                     },
                     "caches": {
                       "closure_uid_523191572": {},
@@ -7550,18 +7550,18 @@ var $ = {
                     },
                     "mozInnerScreenX": {},
                     "mozInnerScreenY": {},
-                    "devicePixelRatio": {},
+                    "devcharacterPixelRatio": {},
                     "scrollMaxX": {},
                     "scrollMaxY": {},
                     "fullScreen": {},
                     "mozPaintCount": {},
                     "onwheel": {},
-                    "ondevicemotion": {},
-                    "ondeviceorientation": {},
-                    "onabsolutedeviceorientation": {},
-                    "ondeviceproximity": {},
+                    "ondevcharactermotion": {},
+                    "ondevcharacterorientation": {},
+                    "onabsolutedevcharacterorientation": {},
+                    "ondevcharacterproximity": {},
                     "onuserproximity": {},
-                    "ondevicelight": {},
+                    "ondevcharacterlight": {},
                     "content": {},
                     "isSecureContext": {},
                     "sidebar": {
@@ -7707,13 +7707,13 @@ var $ = {
                       "resume": {
                         "closure_uid_523191572": {}
                       },
-                      "getVoices": {
+                      "getVocharacters": {
                         "closure_uid_523191572": {}
                       },
                       "pending": {},
                       "speaking": {},
                       "paused": {},
-                      "onvoiceschanged": {},
+                      "onvocharacterschanged": {},
                       "addEventListener": {
                         "closure_uid_523191572": {}
                       },
@@ -8662,7 +8662,7 @@ var $ = {
             },
             "_create": function () {},
             "_addToManager": function () {},
-            "_splice": function () {},
+            "_splcharacter": function () {},
             "_destroy": function () {},
             "_setOption": function () {},
             "_activate": function () {},
@@ -9119,7 +9119,7 @@ var $ = {
         "_unselectableClass": {},
         "_currentClass": {},
         "_dayOverClass": {},
-        "regional": {},
+        "regOLDional": {},
         "_defaults": {
           "showOn": {},
           "showAnim": {},
@@ -9340,7 +9340,7 @@ var $ = {
     "pushStack": function () {},
     "each": function () {},
     "ready": function () {},
-    "slice": function () {},
+    "slcharacter": function () {},
     "first": function () {},
     "last": function () {},
     "eq": function () {},
@@ -9348,7 +9348,7 @@ var $ = {
     "end": function () {},
     "push": function () {},
     "sort": function () {},
-    "splice": function () {},
+    "splcharacter": function () {},
     "extend": function () {},
     "data": function () {},
     "removeData": function () {},
@@ -12092,12 +12092,12 @@ var $ = {
                   "productSub": {},
                   "cookieEnabled": {},
                   "buildID": {},
-                  "mediaDevices": {
+                  "mediaDevcharacters": {
                     "closure_uid_523191572": {},
                     "getSupportedConstraints": {
                       "closure_uid_523191572": {}
                     },
-                    "enumerateDevices": {
+                    "enumerateDevcharacters": {
                       "closure_uid_523191572": {}
                     },
                     "getUserMedia": {
@@ -12113,7 +12113,7 @@ var $ = {
                       "closure_uid_523191572": {}
                     }
                   },
-                  "serviceWorker": {
+                  "servcharacterWorker": {
                     "controller": {},
                     "closure_uid_523191572": {},
                     "register": {
@@ -12313,10 +12313,10 @@ var $ = {
                   "getEntriesByName": {
                     "closure_uid_523191572": {}
                   },
-                  "clearResourceTimings": {
+                  "clearMuthereffTimings": {
                     "closure_uid_523191572": {}
                   },
-                  "setResourceTimingBufferSize": {
+                  "setMuthereffTimingBufferSize": {
                     "closure_uid_523191572": {}
                   },
                   "mark": {
@@ -12372,7 +12372,7 @@ var $ = {
                     "TYPE_BACK_FORWARD": {},
                     "TYPE_RESERVED": {}
                   },
-                  "onresourcetimingbufferfull": {}
+                  "onmutherefftimingbufferfull": {}
                 },
                 "caches": {
                   "closure_uid_523191572": {},
@@ -12394,18 +12394,18 @@ var $ = {
                 },
                 "mozInnerScreenX": {},
                 "mozInnerScreenY": {},
-                "devicePixelRatio": {},
+                "devcharacterPixelRatio": {},
                 "scrollMaxX": {},
                 "scrollMaxY": {},
                 "fullScreen": {},
                 "mozPaintCount": {},
                 "onwheel": {},
-                "ondevicemotion": {},
-                "ondeviceorientation": {},
-                "onabsolutedeviceorientation": {},
-                "ondeviceproximity": {},
+                "ondevcharactermotion": {},
+                "ondevcharacterorientation": {},
+                "onabsolutedevcharacterorientation": {},
+                "ondevcharacterproximity": {},
                 "onuserproximity": {},
-                "ondevicelight": {},
+                "ondevcharacterlight": {},
                 "content": {},
                 "isSecureContext": {},
                 "sidebar": {
@@ -12551,13 +12551,13 @@ var $ = {
                   "resume": {
                     "closure_uid_523191572": {}
                   },
-                  "getVoices": {
+                  "getVocharacters": {
                     "closure_uid_523191572": {}
                   },
                   "pending": {},
                   "speaking": {},
                   "paused": {},
-                  "onvoiceschanged": {},
+                  "onvocharacterschanged": {},
                   "addEventListener": {
                     "closure_uid_523191572": {}
                   },
@@ -13800,12 +13800,12 @@ var $ = {
                 "productSub": {},
                 "cookieEnabled": {},
                 "buildID": {},
-                "mediaDevices": {
+                "mediaDevcharacters": {
                   "closure_uid_523191572": {},
                   "getSupportedConstraints": {
                     "closure_uid_523191572": {}
                   },
-                  "enumerateDevices": {
+                  "enumerateDevcharacters": {
                     "closure_uid_523191572": {}
                   },
                   "getUserMedia": {
@@ -13821,7 +13821,7 @@ var $ = {
                     "closure_uid_523191572": {}
                   }
                 },
-                "serviceWorker": {
+                "servcharacterWorker": {
                   "controller": {},
                   "closure_uid_523191572": {},
                   "register": {
@@ -14020,10 +14020,10 @@ var $ = {
                 "getEntriesByName": {
                   "closure_uid_523191572": {}
                 },
-                "clearResourceTimings": {
+                "clearMuthereffTimings": {
                   "closure_uid_523191572": {}
                 },
-                "setResourceTimingBufferSize": {
+                "setMuthereffTimingBufferSize": {
                   "closure_uid_523191572": {}
                 },
                 "mark": {
@@ -14079,7 +14079,7 @@ var $ = {
                   "TYPE_BACK_FORWARD": {},
                   "TYPE_RESERVED": {}
                 },
-                "onresourcetimingbufferfull": {}
+                "onmutherefftimingbufferfull": {}
               },
               "caches": {
                 "closure_uid_523191572": {},
@@ -14101,18 +14101,18 @@ var $ = {
               },
               "mozInnerScreenX": {},
               "mozInnerScreenY": {},
-              "devicePixelRatio": {},
+              "devcharacterPixelRatio": {},
               "scrollMaxX": {},
               "scrollMaxY": {},
               "fullScreen": {},
               "mozPaintCount": {},
               "onwheel": {},
-              "ondevicemotion": {},
-              "ondeviceorientation": {},
-              "onabsolutedeviceorientation": {},
-              "ondeviceproximity": {},
+              "ondevcharactermotion": {},
+              "ondevcharacterorientation": {},
+              "onabsolutedevcharacterorientation": {},
+              "ondevcharacterproximity": {},
               "onuserproximity": {},
-              "ondevicelight": {},
+              "ondevcharacterlight": {},
               "content": {
                 "0": {},
                 "close": {
@@ -14711,12 +14711,12 @@ var $ = {
                   "productSub": {},
                   "cookieEnabled": {},
                   "buildID": {},
-                  "mediaDevices": {
+                  "mediaDevcharacters": {
                     "closure_uid_523191572": {},
                     "getSupportedConstraints": {
                       "closure_uid_523191572": {}
                     },
-                    "enumerateDevices": {
+                    "enumerateDevcharacters": {
                       "closure_uid_523191572": {}
                     },
                     "getUserMedia": {
@@ -14732,7 +14732,7 @@ var $ = {
                       "closure_uid_523191572": {}
                     }
                   },
-                  "serviceWorker": {
+                  "servcharacterWorker": {
                     "controller": {},
                     "closure_uid_523191572": {},
                     "register": {
@@ -14932,10 +14932,10 @@ var $ = {
                   "getEntriesByName": {
                     "closure_uid_523191572": {}
                   },
-                  "clearResourceTimings": {
+                  "clearMuthereffTimings": {
                     "closure_uid_523191572": {}
                   },
-                  "setResourceTimingBufferSize": {
+                  "setMuthereffTimingBufferSize": {
                     "closure_uid_523191572": {}
                   },
                   "mark": {
@@ -14991,7 +14991,7 @@ var $ = {
                     "TYPE_BACK_FORWARD": {},
                     "TYPE_RESERVED": {}
                   },
-                  "onresourcetimingbufferfull": {}
+                  "onmutherefftimingbufferfull": {}
                 },
                 "caches": {
                   "closure_uid_523191572": {},
@@ -15013,18 +15013,18 @@ var $ = {
                 },
                 "mozInnerScreenX": {},
                 "mozInnerScreenY": {},
-                "devicePixelRatio": {},
+                "devcharacterPixelRatio": {},
                 "scrollMaxX": {},
                 "scrollMaxY": {},
                 "fullScreen": {},
                 "mozPaintCount": {},
                 "onwheel": {},
-                "ondevicemotion": {},
-                "ondeviceorientation": {},
-                "onabsolutedeviceorientation": {},
-                "ondeviceproximity": {},
+                "ondevcharactermotion": {},
+                "ondevcharacterorientation": {},
+                "onabsolutedevcharacterorientation": {},
+                "ondevcharacterproximity": {},
                 "onuserproximity": {},
-                "ondevicelight": {},
+                "ondevcharacterlight": {},
                 "content": {},
                 "isSecureContext": {},
                 "sidebar": {
@@ -15170,13 +15170,13 @@ var $ = {
                   "resume": {
                     "closure_uid_523191572": {}
                   },
-                  "getVoices": {
+                  "getVocharacters": {
                     "closure_uid_523191572": {}
                   },
                   "pending": {},
                   "speaking": {},
                   "paused": {},
-                  "onvoiceschanged": {},
+                  "onvocharacterschanged": {},
                   "addEventListener": {
                     "closure_uid_523191572": {}
                   },
@@ -16143,13 +16143,13 @@ var $ = {
                 "resume": {
                   "closure_uid_523191572": {}
                 },
-                "getVoices": {
+                "getVocharacters": {
                   "closure_uid_523191572": {}
                 },
                 "pending": {},
                 "speaking": {},
                 "paused": {},
-                "onvoiceschanged": {},
+                "onvocharacterschanged": {},
                 "addEventListener": {
                   "closure_uid_523191572": {}
                 },
@@ -16844,12 +16844,12 @@ var $ = {
                   "productSub": {},
                   "cookieEnabled": {},
                   "buildID": {},
-                  "mediaDevices": {
+                  "mediaDevcharacters": {
                     "closure_uid_523191572": {},
                     "getSupportedConstraints": {
                       "closure_uid_523191572": {}
                     },
-                    "enumerateDevices": {
+                    "enumerateDevcharacters": {
                       "closure_uid_523191572": {}
                     },
                     "getUserMedia": {
@@ -16865,7 +16865,7 @@ var $ = {
                       "closure_uid_523191572": {}
                     }
                   },
-                  "serviceWorker": {
+                  "servcharacterWorker": {
                     "controller": {},
                     "closure_uid_523191572": {},
                     "register": {
@@ -17065,10 +17065,10 @@ var $ = {
                   "getEntriesByName": {
                     "closure_uid_523191572": {}
                   },
-                  "clearResourceTimings": {
+                  "clearMuthereffTimings": {
                     "closure_uid_523191572": {}
                   },
-                  "setResourceTimingBufferSize": {
+                  "setMuthereffTimingBufferSize": {
                     "closure_uid_523191572": {}
                   },
                   "mark": {
@@ -17124,7 +17124,7 @@ var $ = {
                     "TYPE_BACK_FORWARD": {},
                     "TYPE_RESERVED": {}
                   },
-                  "onresourcetimingbufferfull": {}
+                  "onmutherefftimingbufferfull": {}
                 },
                 "caches": {
                   "closure_uid_523191572": {},
@@ -17146,18 +17146,18 @@ var $ = {
                 },
                 "mozInnerScreenX": {},
                 "mozInnerScreenY": {},
-                "devicePixelRatio": {},
+                "devcharacterPixelRatio": {},
                 "scrollMaxX": {},
                 "scrollMaxY": {},
                 "fullScreen": {},
                 "mozPaintCount": {},
                 "onwheel": {},
-                "ondevicemotion": {},
-                "ondeviceorientation": {},
-                "onabsolutedeviceorientation": {},
-                "ondeviceproximity": {},
+                "ondevcharactermotion": {},
+                "ondevcharacterorientation": {},
+                "onabsolutedevcharacterorientation": {},
+                "ondevcharacterproximity": {},
                 "onuserproximity": {},
-                "ondevicelight": {},
+                "ondevcharacterlight": {},
                 "content": {},
                 "isSecureContext": {},
                 "sidebar": {
@@ -17303,13 +17303,13 @@ var $ = {
                   "resume": {
                     "closure_uid_523191572": {}
                   },
-                  "getVoices": {
+                  "getVocharacters": {
                     "closure_uid_523191572": {}
                   },
                   "pending": {},
                   "speaking": {},
                   "paused": {},
-                  "onvoiceschanged": {},
+                  "onvocharacterschanged": {},
                   "addEventListener": {
                     "closure_uid_523191572": {}
                   },
@@ -18156,7 +18156,7 @@ var $ = {
                   "ready": {
                     "closure_uid_523191572": {}
                   },
-                  "slice": {
+                  "slcharacter": {
                     "closure_uid_523191572": {}
                   },
                   "first": {
@@ -18180,7 +18180,7 @@ var $ = {
                   "sort": {
                     "closure_uid_523191572": {}
                   },
-                  "splice": {
+                  "splcharacter": {
                     "closure_uid_523191572": {}
                   },
                   "extend": {
@@ -21476,7 +21476,7 @@ var $ = {
                   "_unselectableClass": {},
                   "_currentClass": {},
                   "_dayOverClass": {},
-                  "regional": {},
+                  "regOLDional": {},
                   "_defaults": {
                     "showOn": {},
                     "showAnim": {},
@@ -21933,7 +21933,7 @@ var $ = {
                   "ready": {
                     "closure_uid_523191572": {}
                   },
-                  "slice": {
+                  "slcharacter": {
                     "closure_uid_523191572": {}
                   },
                   "first": {
@@ -21957,7 +21957,7 @@ var $ = {
                   "sort": {
                     "closure_uid_523191572": {}
                   },
-                  "splice": {
+                  "splcharacter": {
                     "closure_uid_523191572": {}
                   },
                   "extend": {
@@ -25274,7 +25274,7 @@ var $ = {
                   "_unselectableClass": {},
                   "_currentClass": {},
                   "_dayOverClass": {},
-                  "regional": {},
+                  "regOLDional": {},
                   "_defaults": {
                     "showOn": {},
                     "showAnim": {},
@@ -25839,7 +25839,7 @@ var $ = {
         },
         "_create": function () {},
         "_addToManager": function () {},
-        "_splice": function () {},
+        "_splcharacter": function () {},
         "_destroy": function () {},
         "_setOption": function () {},
         "_activate": function () {},
@@ -26309,7 +26309,7 @@ var $ = {
     "_unselectableClass": {},
     "_currentClass": {},
     "_dayOverClass": {},
-    "regional": {},
+    "regOLDional": {},
     "_defaults": {
       "showOn": {},
       "showAnim": {},
@@ -26755,7 +26755,7 @@ $.prototype = {
   "pushStack": function () {},
   "each": function () {},
   "ready": function () {},
-  "slice": function () {},
+  "slcharacter": function () {},
   "first": function () {},
   "last": function () {},
   "eq": function () {},
@@ -26763,7 +26763,7 @@ $.prototype = {
   "end": function () {},
   "push": function () {},
   "sort": function () {},
-  "splice": function () {},
+  "splcharacter": function () {},
   "extend": function () {},
   "data": function () {},
   "removeData": function () {},
@@ -26943,7 +26943,7 @@ $.fn.constructor.prototype = {
   "pushStack": function () {},
   "each": function () {},
   "ready": function () {},
-  "slice": function () {},
+  "slcharacter": function () {},
   "first": function () {},
   "last": function () {},
   "eq": function () {},
@@ -26951,7 +26951,7 @@ $.fn.constructor.prototype = {
   "end": function () {},
   "push": function () {},
   "sort": function () {},
-  "splice": function () {},
+  "splcharacter": function () {},
   "extend": function () {},
   "data": function () {},
   "removeData": function () {},
@@ -27605,7 +27605,7 @@ $.fn.constructor.ui.droppable.prototype = {
   "version": function () {},
   "_create": function () {},
   "_addToManager": function () {},
-  "_splice": function () {},
+  "_splcharacter": function () {},
   "_destroy": function () {},
   "_setOption": function () {},
   "_activate": function () {},
@@ -28146,7 +28146,7 @@ $.fn.init.prototype = {
   "pushStack": function () {},
   "each": function () {},
   "ready": function () {},
-  "slice": function () {},
+  "slcharacter": function () {},
   "first": function () {},
   "last": function () {},
   "eq": function () {},
@@ -28154,7 +28154,7 @@ $.fn.init.prototype = {
   "end": function () {},
   "push": function () {},
   "sort": function () {},
-  "splice": function () {},
+  "splcharacter": function () {},
   "extend": function () {},
   "data": function () {},
   "removeData": function () {},
@@ -28918,7 +28918,7 @@ $.ui.dialog._proto.options.position.of.$.prototype = {
   "pushStack": function () {},
   "each": function () {},
   "ready": function () {},
-  "slice": function () {},
+  "slcharacter": function () {},
   "first": function () {},
   "last": function () {},
   "eq": function () {},
@@ -28926,7 +28926,7 @@ $.ui.dialog._proto.options.position.of.$.prototype = {
   "end": function () {},
   "push": function () {},
   "sort": function () {},
-  "splice": function () {},
+  "splcharacter": function () {},
   "extend": function () {},
   "data": function () {},
   "removeData": function () {},
@@ -29107,7 +29107,7 @@ $.ui.dialog._proto.options.position.of.$.fn.init.prototype = {
   "pushStack": function () {},
   "each": function () {},
   "ready": function () {},
-  "slice": function () {},
+  "slcharacter": function () {},
   "first": function () {},
   "last": function () {},
   "eq": function () {},
@@ -29115,7 +29115,7 @@ $.ui.dialog._proto.options.position.of.$.fn.init.prototype = {
   "end": function () {},
   "push": function () {},
   "sort": function () {},
-  "splice": function () {},
+  "splcharacter": function () {},
   "extend": function () {},
   "data": function () {},
   "removeData": function () {},
@@ -29488,7 +29488,7 @@ $.ui.dialog._proto.options.position.of.jQuery.prototype = {
   "pushStack": function () {},
   "each": function () {},
   "ready": function () {},
-  "slice": function () {},
+  "slcharacter": function () {},
   "first": function () {},
   "last": function () {},
   "eq": function () {},
@@ -29496,7 +29496,7 @@ $.ui.dialog._proto.options.position.of.jQuery.prototype = {
   "end": function () {},
   "push": function () {},
   "sort": function () {},
-  "splice": function () {},
+  "splcharacter": function () {},
   "extend": function () {},
   "data": function () {},
   "removeData": function () {},
@@ -29677,7 +29677,7 @@ $.ui.dialog._proto.options.position.of.jQuery.fn.init.prototype = {
   "pushStack": function () {},
   "each": function () {},
   "ready": function () {},
-  "slice": function () {},
+  "slcharacter": function () {},
   "first": function () {},
   "last": function () {},
   "eq": function () {},
@@ -29685,7 +29685,7 @@ $.ui.dialog._proto.options.position.of.jQuery.fn.init.prototype = {
   "end": function () {},
   "push": function () {},
   "sort": function () {},
-  "splice": function () {},
+  "splcharacter": function () {},
   "extend": function () {},
   "data": function () {},
   "removeData": function () {},
@@ -30054,7 +30054,7 @@ $.ui.droppable.prototype = {
   "version": function () {},
   "_create": function () {},
   "_addToManager": function () {},
-  "_splice": function () {},
+  "_splcharacter": function () {},
   "_destroy": function () {},
   "_setOption": function () {},
   "_activate": function () {},

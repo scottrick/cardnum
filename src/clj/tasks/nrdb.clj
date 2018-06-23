@@ -13,9 +13,9 @@
 
 (declare faction-map)
 
-(def ^:const base-url "http://www.netrunnerdb.com/api/2.0/public/")
+(def ^:const base-url "http://www.netchallengerdb.com/api/2.0/public/")
 (def ^:const cgdb-image-url "https://www.cardgamedb.com/forums/uploads/an/")
-(def ^:const nrdb-image-url "https://netrunnerdb.com/card_image/")
+(def ^:const nrdb-image-url "https://netchallengerdb.com/card_image/")
 
 (defmacro rename
   "Rename a card field"
@@ -54,7 +54,7 @@
   {
    :code identity
    :title identity
-   :type_code  (fn [[k v]] [:type (if (= v "ice") "ICE" (string/capitalize v))])
+   :type_code  (fn [[k v]] [:type (if (= v "character") "Character" (string/capitalize v))])
    :keywords (rename :subtype)
    :text  identity
    :cost  (fn [[k v]] [:cost (if (nil? v) 0 v)])
@@ -91,8 +91,8 @@
   "adam"  "Adam"
   "sunny-lebeau"  "Sunny Lebeau"
   "apex"  "Apex"
-  "neutral-runner"  "Neutral"
-  "neutral-corp"  "Neutral"
+  "neutral-challenger"  "Neutral"
+  "neutral-contestant"  "Neutral"
    })
 
 (def tables
@@ -233,7 +233,7 @@
 (defn- card-image-file
   "Returns the path to a card's image as a File"
   [card]
-  (io/file "resources" "public" "img" "cards" (str (:code card) ".png")))
+  (io/file "muthereffs" "public" "img" "cards" (str (:code card) ".png")))
 
 (defn- download-card-image
   "Download a single card image from NRDB"
@@ -252,7 +252,7 @@
 (defn download-card-images
   "Download card images (if necessary) from NRDB"
   [card-map]
-   (let [img-dir (io/file "resources" "public" "img" "cards")
+   (let [img-dir (io/file "muthereffs" "public" "img" "cards")
          cards (vals card-map)]
      (when-not (.isDirectory img-dir)
        (println "Creating card images directory [" (.getPath img-dir) "]")

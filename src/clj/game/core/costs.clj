@@ -24,9 +24,9 @@
                                              #(- % value)
                                              (sub->0 value)))
         (when (and (= attr :credit)
-                   (= side :runner)
-                   (get-in @state [:runner :run-credit]))
-          (swap! state update-in [:runner :run-credit] (sub->0 value)))))
+                   (= side :challenger)
+                   (get-in @state [:challenger :run-credit]))
+          (swap! state update-in [:challenger :run-credit] (sub->0 value)))))
   (when-let [cost-name (cost-names value attr)]
     cost-name))
 
@@ -50,13 +50,13 @@
       (not (or (#{:memory :net-damage} cost-type)
                (and (= cost-type :forfeit) (>= (- (count (get-in @state [side :scored])) amount) 0))
                (and (= cost-type :mill) (>= (- (count (get-in @state [side :deck])) amount) 0))
-               (and (= cost-type :tag) (>= (- (get-in @state [:runner :tag]) amount) 0))
-               (and (= cost-type :ice) (>= (- (count (filter (every-pred rezzed? ice?) (all-installed state :corp))) amount) 0))
-               (and (= cost-type :hardware) (>= (- (count (get-in @state [:runner :rig :hardware])) amount) 0))
-               (and (= cost-type :program) (>= (- (count (get-in @state [:runner :rig :program])) amount) 0))
+               (and (= cost-type :tag) (>= (- (get-in @state [:challenger :tag]) amount) 0))
+               (and (= cost-type :character) (>= (- (count (filter (every-pred rezzed? character?) (all-installed state :contestant))) amount) 0))
+               (and (= cost-type :hardware) (>= (- (count (get-in @state [:challenger :rig :hardware])) amount) 0))
+               (and (= cost-type :resource) (>= (- (count (get-in @state [:challenger :rig :resource])) amount) 0))
                (and (= cost-type :connection) (>= (- (count (filter #(has-subtype? % "Connection")
-                                                                    (all-active-installed state :runner))) amount) 0))
-               (and (= cost-type :shuffle-installed-to-stack) (>= (- (count (all-installed state :runner)) amount) 0))
+                                                                    (all-active-installed state :challenger))) amount) 0))
+               (and (= cost-type :shuffle-installed-to-stack) (>= (- (count (all-installed state :challenger)) amount) 0))
                (>= (- (get-in @state [side cost-type] -1) amount) 0)))
       computer-says-no)))
 
@@ -124,22 +124,22 @@
     cost-name))
 
 (defn pay-shuffle-installed-to-stack
-  "Shuffle installed runner card(s) into the stack as part of paying for a card or ability"
+  "Shuffle installed challenger card(s) into the stack as part of paying for a card or ability"
   [state side eid card amount]
   (let [cost-name (cost-names amount :shuffle-installed-to-stack)]
-    (continue-ability state :runner
+    (continue-ability state :challenger
                     {:prompt (str "Choose " amount " " (pluralize "card" amount) " to shuffle into the stack")
                      :choices {:max amount
                                :all true
-                               :req #(and (installed? %) (= (:side %) "Runner"))}
+                               :req #(and (installed? %) (= (:side %) "Challenger"))}
                      :async true
                      :effect (req
                                (doseq [c targets]
-                                 (move state :runner c :deck))
-                               (system-msg state :runner
+                                 (move state :challenger c :deck))
+                               (system-msg state :challenger
                                            (str "shuffles " (join ", " (map :title targets))
                                                 " into their stack"))
-                               (shuffle! state :runner :deck)
+                               (shuffle! state :challenger :deck)
                                (effect-completed state side (make-result eid cost-name)))}
                     card nil)
     cost-name))
@@ -161,25 +161,25 @@
                 ;; do not create an undo state if click is being spent due to a steal cost (eg. Ikawah Project)
                 (swap! state assoc :click-state (dissoc @state :log)))
               (trigger-event state side
-                             (if (= side :corp) :corp-spent-click :runner-spent-click)
+                             (if (= side :contestant) :contestant-spent-click :challenger-spent-click)
                              a (:click (into {} costs)))
               (swap! state assoc-in [side :register :spent-click] true)
               (complete-with-result state side eid (deduct state side cost)))
      :forfeit (pay-forfeit state side eid card (second cost))
      :hardware (pay-trash state side eid card "piece of hardware" (second cost) (every-pred installed? #(is-type? % :hardware) (complement facedown?)))
-     :program (pay-trash state side eid card "program" (second cost) (every-pred installed? #(is-type? % :program) (complement facedown?)))
+     :resource (pay-trash state side eid card "resource" (second cost) (every-pred installed? #(is-type? % :resource) (complement facedown?)))
 
      ;; Connection
      :connection (pay-trash state side eid card "connection" (second cost) (every-pred installed? #(has-subtype? % "Connection") (complement facedown?)))
 
-     ;; Rezzed ICE
-     :ice (pay-trash state :corp eid card "rezzed ICE" (second cost) (every-pred rezzed? ice?) {:cause :ability-cost :keep-server-alive true})
+     ;; Rezzed Character
+     :character (pay-trash state :contestant eid card "rezzed Character" (second cost) (every-pred rezzed? character?) {:cause :ability-cost :keep-server-alive true})
 
-     :tag (complete-with-result state side eid (deduct state :runner cost))
+     :tag (complete-with-result state side eid (deduct state :challenger cost))
      :net-damage (pay-damage state side eid :net (second cost))
      :mill (complete-with-result state side eid (mill state side (second cost)))
 
-     ;; Shuffle installed runner cards into the stack (eg Degree Mill)
+     ;; Shuffle installed challenger cards into the stack (eg Degree Mill)
      :shuffle-installed-to-stack (pay-shuffle-installed-to-stack state side eid card (second cost))
 
      ;; Else
@@ -187,7 +187,7 @@
 
 (defn pay
   "Deducts each cost from the player.
-  args format as follows with each being optional ([:click 1 :credit 0] [:forfeit] {:action :corp-click-credit})
+  args format as follows with each being optional ([:click 1 :credit 0] [:forfeit] {:action :contestant-click-credit})
   The map with :action was added for Jeeves so we can log what each click was used on"
   [state side card & args]
   (let [raw-costs (not-empty (remove map? args))
@@ -240,7 +240,7 @@
 
 (defn lose [state side & args]
   (doseq [r (partition 2 args)]
-    (trigger-event state side (if (= side :corp) :corp-loss :runner-loss) r)
+    (trigger-event state side (if (= side :contestant) :contestant-loss :challenger-loss) r)
     (if (= (last r) :all)
       (do (swap! state assoc-in [side (first r)] 0)
           (swap! state update-in [:stats side :lose (first r)] (fnil + 0) (get-in @state [side (first r)])))

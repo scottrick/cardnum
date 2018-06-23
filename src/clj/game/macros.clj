@@ -2,53 +2,53 @@
 
 (defmacro effect [& expr]
   `(fn ~['state 'side 'eid 'card 'targets]
-     ~(let [actions (map #(if (#{:runner :corp} (second %))
+     ~(let [actions (map #(if (#{:challenger :contestant} (second %))
                             (concat [(first %) 'state (second %)] (drop 2 %))
                             (concat [(first %) 'state 'side] (rest %)))
                          expr)]
-        `(let ~['runner '(:runner @state)
-                'corp '(:corp @state)
-                'corp-reg '(get-in @state [:corp :register])
-                'corp-reg-last '(get-in @state [:corp :register-last-turn])
-                'runner-reg '(get-in @state [:runner :register])
-                'runner-reg-last '(get-in @state [:runner :register-last-turn])
+        `(let ~['challenger '(:challenger @state)
+                'contestant '(:contestant @state)
+                'contestant-reg '(get-in @state [:contestant :register])
+                'contestant-reg-last '(get-in @state [:contestant :register-last-turn])
+                'challenger-reg '(get-in @state [:challenger :register])
+                'challenger-reg-last '(get-in @state [:challenger :register-last-turn])
                 'run-server '(when (:run @state)
-                               (get-in @state (concat [:corp :servers] (:server (:run @state)))))
-                'run-ices '(:ices run-server)
-                'current-ice '(when-let [run-pos (:position (:run @state))]
-                                (when (and (pos? run-pos) (<= run-pos (count (:ices run-server))))
-                                  (nth (:ices run-server) (dec run-pos))))
+                               (get-in @state (concat [:contestant :servers] (:server (:run @state)))))
+                'run-characters '(:characters run-server)
+                'current-character '(when-let [run-pos (:position (:run @state))]
+                                (when (and (pos? run-pos) (<= run-pos (count (:characters run-server))))
+                                  (nth (:characters run-server) (dec run-pos))))
                 'target '(first targets)]
            ~@actions))))
 
 (defmacro req [& expr]
   `(fn ~['state 'side 'eid 'card 'targets]
-     (let ~['runner '(:runner @state)
-            'corp '(:corp @state)
+     (let ~['challenger '(:challenger @state)
+            'contestant '(:contestant @state)
             'run '(:run @state)
             'run-server '(when (:run @state)
-                           (get-in @state (concat [:corp :servers] (:server (:run @state)))))
-            'run-ices '(:ices run-server)
-            'current-ice '(when-let [run-pos (:position (:run @state))]
-                            (when (and (pos? run-pos) (<= run-pos (count (:ices run-server))))
-                              (nth (:ices run-server) (dec run-pos))))
-            'corp-reg '(get-in @state [:corp :register])
-            'corp-reg-last '(get-in @state [:corp :register-last-turn])
-            'runner-reg '(get-in @state [:runner :register])
-            'runner-reg-last '(get-in @state [:runner :register-last-turn])
+                           (get-in @state (concat [:contestant :servers] (:server (:run @state)))))
+            'run-characters '(:characters run-server)
+            'current-character '(when-let [run-pos (:position (:run @state))]
+                            (when (and (pos? run-pos) (<= run-pos (count (:characters run-server))))
+                              (nth (:characters run-server) (dec run-pos))))
+            'contestant-reg '(get-in @state [:contestant :register])
+            'contestant-reg-last '(get-in @state [:contestant :register-last-turn])
+            'challenger-reg '(get-in @state [:challenger :register])
+            'challenger-reg-last '(get-in @state [:challenger :register-last-turn])
             'target '(first targets)
             'installed '(#{:rig :servers} (first (:zone (get-nested-host card))))
             'remotes '(get-remote-names state)
             'servers '(zones->sorted-names (get-zones state))
             'unprotected '(let [server (second (:zone (if (:host card)
                                                         (get-card state (:host card)) card)))]
-                            (empty? (get-in @state [:corp :servers server :ices])))
+                            (empty? (get-in @state [:contestant :servers server :characters])))
             'runnable-servers '(zones->sorted-names (get-runnable-zones state))
-            'hq-runnable '(not (:hq (get-in runner [:register :cannot-run-on-server])))
-            'rd-runnable '(not (:rd (get-in runner [:register :cannot-run-on-server])))
-            'archives-runnable '(not (:archives (get-in runner [:register :cannot-run-on-server])))
-            'tagged '(or (pos? (:tagged runner)) (pos? (:tag runner)))
-            'has-bad-pub '(or (pos? (:bad-publicity corp)) (pos? (:has-bad-pub corp)))
+            'hq-runnable '(not (:hq (get-in challenger [:register :cannot-run-on-server])))
+            'rd-runnable '(not (:rd (get-in challenger [:register :cannot-run-on-server])))
+            'archives-runnable '(not (:archives (get-in challenger [:register :cannot-run-on-server])))
+            'tagged '(or (pos? (:tagged challenger)) (pos? (:tag challenger)))
+            'has-bad-pub '(or (pos? (:bad-publicity contestant)) (pos? (:has-bad-pub contestant)))
             'this-server '(let [s (-> card :zone rest butlast)
                                 r (:server run)]
                             (and (= (first r) (first s))
@@ -57,21 +57,21 @@
 
 (defmacro msg [& expr]
   `(fn ~['state 'side 'eid 'card 'targets]
-     (let ~['runner '(:runner @state)
-            'corp '(:corp @state)
-            'corp-reg '(get-in @state [:corp :register])
-            'corp-reg-last '(get-in @state [:corp :register-last-turn])
-            'runner-reg '(get-in @state [:runner :register])
-            'runner-reg-last '(get-in @state [:runner :register-last-turn])
+     (let ~['challenger '(:challenger @state)
+            'contestant '(:contestant @state)
+            'contestant-reg '(get-in @state [:contestant :register])
+            'contestant-reg-last '(get-in @state [:contestant :register-last-turn])
+            'challenger-reg '(get-in @state [:challenger :register])
+            'challenger-reg-last '(get-in @state [:challenger :register-last-turn])
             'run '(:run @state)
             'run-server '(when (:run @state)
-                           (get-in @state (concat [:corp :servers] (:server (:run @state)))))
-            'run-ices '(:ices run-server)
-            'current-ice '(when-let [run-pos (:position (:run @state))]
-                            (when (and (pos? run-pos) (<= run-pos (count (:ices run-server))))
-                              (nth (:ices run-server) (dec run-pos))))
+                           (get-in @state (concat [:contestant :servers] (:server (:run @state)))))
+            'run-characters '(:characters run-server)
+            'current-character '(when-let [run-pos (:position (:run @state))]
+                            (when (and (pos? run-pos) (<= run-pos (count (:characters run-server))))
+                              (nth (:characters run-server) (dec run-pos))))
             'target '(first targets)
-            'tagged '(or (pos? (:tagged runner)) (pos? (:tag runner)))]
+            'tagged '(or (pos? (:tagged challenger)) (pos? (:tag challenger)))]
        (str ~@expr))))
 
 (defmacro wait-for

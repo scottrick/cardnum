@@ -14,7 +14,7 @@
   (hiccup/html5
     [:head
      [:meta {:charset "utf-8"}]
-     [:meta {:name "viewport" :content "width=device-width, initial-scale=0.6, minimal-ui"}]
+     [:meta {:name "viewport" :content "width=devcharacter-width, initial-scale=0.6, minimal-ui"}]
      [:meta {:name "apple-mobile-web-app-capable" :content "yes"}]
      [:title "Cardnum"]
      (hiccup/include-css "/css/carousel.css")
