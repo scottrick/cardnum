@@ -13,9 +13,9 @@
 
 (declare faction-map)
 
-(def ^:const base-url "http://www.netchallengerdb.com/api/2.0/public/")
+(def ^:const base-url "http://www.netrunnerdb.com/api/2.0/public/")
 (def ^:const cgdb-image-url "https://www.cardgamedb.com/forums/uploads/an/")
-(def ^:const nrdb-image-url "https://netchallengerdb.com/card_image/")
+(def ^:const nrdb-image-url "https://netrunnerdb.com/card_image/")
 
 (defmacro rename
   "Rename a card field"

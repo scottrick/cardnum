@@ -1,4 +1,4 @@
-(ns game.cards.regions
+(ns game.cards.upgrades
   (:require [game.core :refer :all]
             [game.utils :refer :all]
             [game.macros :refer [effect req msg wait-for continue-ability]]

@@ -24,7 +24,7 @@
 (add-encoder org.bson.types.ObjectId encode-str)
 
 (defroutes public-routes
-           (route/muthereffs "/")
+           (route/resources "/")
            (POST "/register" [] auth/register-handler)
            (POST "/login" [] auth/login-handler)
            (GET "/check/:username" [] auth/check-username-handler)

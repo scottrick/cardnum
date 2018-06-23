@@ -1,4 +1,4 @@
-(ns game.cards.characterbreakers
+(ns game.cards.icebreakers
   (:require [game.core :refer :all]
             [game.utils :refer :all]
             [game.macros :refer [effect req msg wait-for continue-ability]]

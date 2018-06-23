@@ -71,7 +71,7 @@
                                   :targets targets})))
 
 (defn card-subroutine
-  "Trigger a piece of ice's subroutine with the 0-based index."
+  "Trigger a piece of character's subroutine with the 0-based index."
   ([state side card ability] (card-subroutine state side card ability nil))
   ([state side card ability targets]
    (core/play-subroutine state side {:card (core/get-card state card)
@@ -88,12 +88,12 @@
                 (core/play-corp-ability state side ab)
                 (core/play-runner-ability state side ab)))))
 
-(defn get-ice
-  "Get installed ice protecting server by position. If no pos, get all ice on the server."
+(defn get-character
+  "Get installed character protecting server by position. If no pos, get all character on the server."
   ([state server]
-   (get-in @state [:corp :servers server :ices]))
+   (get-in @state [:corp :servers server :characters]))
   ([state server pos]
-   (get-in @state [:corp :servers server :ices pos])))
+   (get-in @state [:corp :servers server :characters pos])))
 
 (defn get-content
   "Get card in a server by position. If no pos, get all cards in the server."
@@ -102,23 +102,23 @@
   ([state server pos]
    (get-in @state [:corp :servers server :content pos])))
 
-(defn get-program
-  "Get non-hosted program by position. If no pos, get all installed programs."
-  ([state] (get-in @state [:runner :rig :program]))
-  ([state pos]
-   (get-in @state [:runner :rig :program pos])))
-
-(defn get-hardware
-  "Get hardware by position. If no pos, get all installed hardware."
-  ([state] (get-in @state [:runner :rig :hardware]))
-  ([state pos]
-   (get-in @state [:runner :rig :hardware pos])))
-
 (defn get-resource
   "Get non-hosted resource by position. If no pos, get all installed resources."
   ([state] (get-in @state [:runner :rig :resource]))
   ([state pos]
    (get-in @state [:runner :rig :resource pos])))
+
+(defn get-hazard
+  "Get hazard by position. If no pos, get all installed hazard."
+  ([state] (get-in @state [:runner :rig :hazard]))
+  ([state pos]
+   (get-in @state [:runner :rig :hazard pos])))
+
+(defn get-muthereff
+  "Get non-hosted muthereff by position. If no pos, get all installed muthereffs."
+  ([state] (get-in @state [:runner :rig :muthereff]))
+  ([state pos]
+   (get-in @state [:runner :rig :muthereff pos])))
 
 (defn get-runner-facedown
   "Get non-hosted runner facedown by position. If no pos, get all runner facedown installed cards."
@@ -201,7 +201,7 @@
   (core/jack-out state :runner nil))
 
 (defn run-empty-server
-  "Make a successful run on specified server, assumes no ice in place."
+  "Make a successful run on specified server, assumes no character in place."
   [state server]
   (run-on state server)
   (run-successful state))
@@ -242,10 +242,10 @@
   [state side title]
   (core/trash state side (find-card title (get-in @state [side :hand]))))
 
-(defn trash-resource
+(defn trash-muthereff
   "Trash specified card from rig of the runner"
   [state title]
-  (core/trash state :runner (find-card title (get-in @state [:runner :rig :resource]))))
+  (core/trash state :runner (find-card title (get-in @state [:runner :rig :muthereff]))))
 
 (defn starting-hand
   "Moves all cards in the player's hand to their draw pile, then moves the specified card names

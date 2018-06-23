@@ -2550,7 +2550,7 @@ var $ = {
                           "closure_uid_523191572": {}
                         }
                       },
-                      "hardwareConcurrency": {},
+                      "hazardConcurrency": {},
                       "geolocation": {
                         "closure_uid_523191572": {},
                         "getCurrentPosition": {
@@ -4258,7 +4258,7 @@ var $ = {
                         "closure_uid_523191572": {}
                       }
                     },
-                    "hardwareConcurrency": {},
+                    "hazardConcurrency": {},
                     "geolocation": {
                       "closure_uid_523191572": {},
                       "getCurrentPosition": {
@@ -5170,7 +5170,7 @@ var $ = {
                           "closure_uid_523191572": {}
                         }
                       },
-                      "hardwareConcurrency": {},
+                      "hazardConcurrency": {},
                       "geolocation": {
                         "closure_uid_523191572": {},
                         "getCurrentPosition": {
@@ -7303,7 +7303,7 @@ var $ = {
                           "closure_uid_523191572": {}
                         }
                       },
-                      "hardwareConcurrency": {},
+                      "hazardConcurrency": {},
                       "geolocation": {
                         "closure_uid_523191572": {},
                         "getCurrentPosition": {
@@ -12147,7 +12147,7 @@ var $ = {
                       "closure_uid_523191572": {}
                     }
                   },
-                  "hardwareConcurrency": {},
+                  "hazardConcurrency": {},
                   "geolocation": {
                     "closure_uid_523191572": {},
                     "getCurrentPosition": {
@@ -13855,7 +13855,7 @@ var $ = {
                     "closure_uid_523191572": {}
                   }
                 },
-                "hardwareConcurrency": {},
+                "hazardConcurrency": {},
                 "geolocation": {
                   "closure_uid_523191572": {},
                   "getCurrentPosition": {
@@ -14766,7 +14766,7 @@ var $ = {
                       "closure_uid_523191572": {}
                     }
                   },
-                  "hardwareConcurrency": {},
+                  "hazardConcurrency": {},
                   "geolocation": {
                     "closure_uid_523191572": {},
                     "getCurrentPosition": {
@@ -16899,7 +16899,7 @@ var $ = {
                       "closure_uid_523191572": {}
                     }
                   },
-                  "hardwareConcurrency": {},
+                  "hazardConcurrency": {},
                   "geolocation": {
                     "closure_uid_523191572": {},
                     "getCurrentPosition": {

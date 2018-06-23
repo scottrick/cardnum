@@ -1,4 +1,4 @@
-(ns game.cards.character
+(ns game.cards.ice
   (:require [game.core :refer :all]
             [game.utils :refer :all]
             [game.macros :refer [effect req msg wait-for continue-ability]]
@@ -863,13 +863,13 @@
     :strength-bonus advance-counters}
 
    "Flare"
-   {:subroutines [(trace-ability 6 {:label "Trash 1 hardware, do 2 meat damage, and end the run"
-                                    :msg "trash 1 hardware, do 2 meat damage, and end the run"
+   {:subroutines [(trace-ability 6 {:label "Trash 1 hazard, do 2 meat damage, and end the run"
+                                    :msg "trash 1 hazard, do 2 meat damage, and end the run"
                                     :async true
                                     :effect (effect (continue-ability
-                                                     {:prompt "Select a piece of hardware to trash"
-                                                      :label "Trash a piece of hardware"
-                                                      :choices {:req #(is-type? % "Hardware")}
+                                                     {:prompt "Select a piece of hazard to trash"
+                                                      :label "Trash a piece of hazard"
+                                                      :choices {:req #(is-type? % "Hazard")}
                                                       :msg (msg "trash " (:title target))
                                                       :effect (req (wait-for
                                                                      (trash state side target {:cause :subroutine})
@@ -1186,7 +1186,7 @@
     :subroutines [end-the-run]}
 
    "Kamali 1.0"
-   (letfn [(better-name [kind] (if (= "hardware" kind) "piece of hardware" kind))
+   (letfn [(better-name [kind] (if (= "hazard" kind) "piece of hazard" kind))
            (challenger-trash [kind]
              {:prompt (str "Select an installed " (better-name kind) " to trash")
               :label (str "Trash an installed " (better-name kind))
@@ -1214,7 +1214,7 @@
                            (wait-for (resolve-ability state side (sub-map kind) card nil)
                                      (clear-wait-prompt state :contestant)))})]
      {:subroutines [(brain-trash "muthereff")
-                    (brain-trash "hardware")
+                    (brain-trash "hazard")
                     (brain-trash "resource")]
       :challenger-abilities [(challenger-break [:click 1] 1)]})
 
@@ -1243,7 +1243,7 @@
     :subroutines [(do-net-damage 1)]}
 
    "Lab Dog"
-   {:subroutines [(assoc trash-hardware :label "Force the Challenger to trash an installed piece of hardware"
+   {:subroutines [(assoc trash-hazard :label "Force the Challenger to trash an installed piece of hazard"
                                         :player :challenger
                                         :msg (msg "force the Challenger to trash " (:title target))
                                         :effect (req (trash state side target)
@@ -2042,7 +2042,7 @@
                    :effect (effect (move target :deck {:front true}))}]}
 
    "Taurus"
-   (constellation-character trash-hardware)
+   (constellation-character trash-hazard)
 
    "Thoth"
    {:implementation "Encounter effect is manual"
@@ -2299,6 +2299,6 @@
 
    "Zed 2.0"
    {:implementation "Restriction on having spent [click] is not implemented"
-    :subroutines [trash-hardware
+    :subroutines [trash-hazard
                   (do-brain-damage 2)]
     :challenger-abilities [(challenger-break [:click 2] 2)]}})

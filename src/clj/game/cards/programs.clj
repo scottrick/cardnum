@@ -1,4 +1,4 @@
-(ns game.cards.resources
+(ns game.cards.programs
   (:require [game.core :refer :all]
             [game.utils :refer :all]
             [game.macros :refer [effect req msg wait-for continue-ability]]
@@ -206,7 +206,7 @@
                         (resolve-ability state side
                                          {:prompt "Choose a card to install from your Grip"
                                           :choices {:req #(and (<= (:cost %) (get-counters c :power))
-                                                               (#{"Hardware" "Resource" "Muthereff"} (:type %))
+                                                               (#{"Hazard" "Resource" "Muthereff"} (:type %))
                                                                (in-hand? %))}
                                           :req (req (not (install-locked? state side)))
                                           :msg (msg "install " (:title target) " at no cost")
@@ -587,14 +587,14 @@
                                           (use-mu (:memoryunits target)))}}}
 
    "LLDS Energy Regulator"
-   {:interactions {:prevent [{:type #{:trash-hardware}
+   {:interactions {:prevent [{:type #{:trash-hazard}
                               :req (req true)}]}
     :abilities [{:cost [:credit 3]
-                 :msg "prevent a hardware from being trashed"
-                 :effect (effect (trash-prevent :hardware 1))}
-                {:label "[Trash]: Prevent a hardware from being trashed"
-                 :msg "prevent a hardware from being trashed"
-                 :effect (effect (trash-prevent :hardware 1)
+                 :msg "prevent a hazard from being trashed"
+                 :effect (effect (trash-prevent :hazard 1))}
+                {:label "[Trash]: Prevent a hazard from being trashed"
+                 :msg "prevent a hazard from being trashed"
+                 :effect (effect (trash-prevent :hazard 1)
                                  (trash card {:cause :ability-cost}))}]}
 
    "Magnum Opus"

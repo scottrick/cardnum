@@ -260,7 +260,7 @@
             (card-text selected-card cursor)]]))))))
 
 (defn types [side]
-  (let [challenger-types ["Identity" "Resource" "Hardware" "Muthereff" "Event"]
+  (let [challenger-types ["Identity" "Resource" "Hazard" "Muthereff" "Event"]
         contestant-types ["Agenda" "Site" "Character" "Operation" "Region"]]
     (case side
       "All" (concat challenger-types contestant-types)

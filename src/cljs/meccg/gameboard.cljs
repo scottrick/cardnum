@@ -1118,7 +1118,7 @@
                      (om/build identity-view player)])]
       [:div.challenger-board {:class (if is-me "me" "opponent")}
        (when-not is-me centrals)
-       (for [zone [:resource :hardware :muthereff :facedown]]
+       (for [zone [:resource :hazard :muthereff :facedown]]
          [:div
           (for [c (zone (:rig player))]
             [:div.card-wrapper {:class (when (playable? c) "playable")}

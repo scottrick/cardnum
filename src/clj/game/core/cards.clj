@@ -1,7 +1,7 @@
 (in-ns 'game.core)
 
 (declare active? all-installed all-active-installed cards card-init deactivate card-flag? gain lose get-card-hosted
-         handle-end-run hardware? has-subtype? character? is-type? make-eid resource? register-events remove-from-host
+         handle-end-run hazard? has-subtype? character? is-type? make-eid resource? register-events remove-from-host
          remove-icon reset-card muthereff? rezzed? toast toast-check-mu trash trigger-event update-breaker-strength
          update-hosted! update-character-strength unregister-events use-mu)
 

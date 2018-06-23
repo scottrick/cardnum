@@ -926,14 +926,14 @@
                                   " from HQ")}}}
 
    "Replicator"
-   (letfn [(hardware-and-in-deck? [target challenger]
-             (and (is-type? target "Hardware")
+   (letfn [(hazard-and-in-deck? [target challenger]
+             (and (is-type? target "Hazard")
                   (some #(= (:title %) (:title target)) (:deck challenger))))]
      {:events {:challenger-install
-               {:interactive (req (hardware-and-in-deck? target challenger))
-                :silent (req (not (hardware-and-in-deck? target challenger)))
+               {:interactive (req (hazard-and-in-deck? target challenger))
+                :silent (req (not (hazard-and-in-deck? target challenger)))
                 :optional {:prompt "Use Replicator to add a copy?"
-                           :req (req (hardware-and-in-deck? target challenger))
+                           :req (req (hazard-and-in-deck? target challenger))
                            :yes-ability {:msg (msg "add a copy of " (:title target) " to their Grip")
                                          :effect (effect (trigger-event :searched-stack nil)
                                                    (shuffle! :deck)

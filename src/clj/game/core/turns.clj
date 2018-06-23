@@ -81,7 +81,7 @@
                 :deck-id challenger-deck-id
                 :hand []
                 :discard [] :scored [] :rfg [] :play-area []
-                :rig {:resource [] :muthereff [] :hardware []}
+                :rig {:resource [] :muthereff [] :hazard []}
                 :toast []
                 :click 0 :credit 5 :run-credit 0 :link 0 :tag 0
                 :memory {:base 4 :mod 0 :used 0}

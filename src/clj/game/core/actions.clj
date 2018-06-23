@@ -14,7 +14,7 @@
   (when-let [card (get-card state card)]
     (case (:type card)
       ("Event" "Operation") (play-instant state side card {:extra-cost [:click 1]})
-      ("Hardware" "Muthereff" "Resource") (challenger-install state side (make-eid state) card {:extra-cost [:click 1]})
+      ("Hazard" "Muthereff" "Resource") (challenger-install state side (make-eid state) card {:extra-cost [:click 1]})
       ("Character" "Region" "Site" "Agenda") (contestant-install state side card server {:extra-cost [:click 1] :action :contestant-click-install}))
     (trigger-event state side :play card)))
 

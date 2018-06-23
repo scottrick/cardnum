@@ -99,7 +99,7 @@
                        :click (reduce str (for [i (range value)] "[Click]"))
                        :net-damage (str value " net damage")
                        :mill (str value " card mill")
-                       :hardware (str value " installed hardware")
+                       :hazard (str value " installed hazard")
                        :shuffle-installed-to-stack (str "shuffling " value " installed "
                                                         (pluralize "card" value) " into the stack")
                        (str value (str key)))) (partition 2 (flatten costs)))))

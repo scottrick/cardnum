@@ -1,4 +1,4 @@
-(ns game.cards.muthereffs
+(ns game.cards.resources
   (:require [game.core :refer :all]
             [game.utils :refer :all]
             [game.macros :refer [effect req msg wait-for continue-ability]]
@@ -218,15 +218,15 @@
                                                        bj nil)))}))))}}}
 
    "Bazaar"
-   (letfn [(hardware-and-in-hand? [target challenger]
-             (and (is-type? target "Hardware")
+   (letfn [(hazard-and-in-hand? [target challenger]
+             (and (is-type? target "Hazard")
                   (some #(= (:title %) (:title target)) (:hand challenger))))]
      {:events
       {:challenger-install
-       {:interactive (req (hardware-and-in-hand? target challenger))
-        :silent (req (not (hardware-and-in-hand? target challenger)))
+       {:interactive (req (hazard-and-in-hand? target challenger))
+        :silent (req (not (hazard-and-in-hand? target challenger)))
         :async true
-        :req (req (and (is-type? target "Hardware") (= [:hand] (:previous-zone target))))
+        :req (req (and (is-type? target "Hazard") (= [:hand] (:previous-zone target))))
         :effect (req (let [hw (:title target)]
                        (continue-ability state side
                                          {:optional {:req (req (some #(when (= (:title %) hw) %) (:hand challenger)))
@@ -657,9 +657,9 @@
                                                        (in-hand? %))}
                                   :effect (effect (move target :discard)
                                                   (trash-prevent (keyword type) 1))})]
-     {:interactions {:prevent [{:type #{:trash-hardware :trash-muthereff :trash-resource}
+     {:interactions {:prevent [{:type #{:trash-hazard :trash-muthereff :trash-resource}
                                 :req (req (not= :purge (:cause target)))}]}
-      :abilities [(dummy-prevent "hardware")
+      :abilities [(dummy-prevent "hazard")
                   (dummy-prevent "muthereff")
                   (dummy-prevent "resource")]})
 
@@ -1292,7 +1292,7 @@
    {:abilities [{:cost [:click 1]
                  :once :per-turn
                  :prompt "Choose card type"
-                 :choices ["Event" "Hardware" "Resource" "Muthereff"]
+                 :choices ["Event" "Hazard" "Resource" "Muthereff"]
                  :effect (req (let [c (first (get-in @state [:challenger :deck]))]
                                 (system-msg state side (str "spends [Click] to use Oracle May, names " target
                                                             " and reveals " (:title c)))
@@ -1401,9 +1401,9 @@
                          (challenger-install state side (dissoc target :counter) {:no-cost true})
                          (add-counter state side target :power -1)))}]
      {:flags {:drip-economy true}
-      :abilities [{:label "Host a resource or piece of hardware" :cost [:click 1]
+      :abilities [{:label "Host a resource or piece of hazard" :cost [:click 1]
                    :prompt "Select a card to host on Personal Workshop"
-                   :choices {:req #(and (#{"Resource" "Hardware"} (:type %))
+                   :choices {:req #(and (#{"Resource" "Hazard"} (:type %))
                                         (in-hand? %)
                                         (= (:side %) "Challenger"))}
                    :effect (req (if (zero? (:cost target))
@@ -1493,7 +1493,7 @@
 
    "Reclaim"
    {:abilities
-    [{:label "Install a resource, piece of hardware, or virtual muthereff from your Heap"
+    [{:label "Install a resource, piece of hazard, or virtual muthereff from your Heap"
       :cost [:click 1]
       :req (req (not-empty (:hand challenger)))
       :prompt "Choose a card to trash"
@@ -1508,7 +1508,7 @@
                          {:prompt "Choose a card to install"
                           :choices (req (cancellable
                                           (filter #(and (or (is-type? % "Resource")
-                                                            (is-type? % "Hardware")
+                                                            (is-type? % "Hazard")
                                                             (and (is-type? % "Muthereff")
                                                                  (has-subtype? % "Virtual")))
                                                         (can-pay? state :challenger nil (:cost %)))
@@ -1578,7 +1578,7 @@
    "Sacrificial Clone"
    {:interactions {:prevent [{:type #{:net :brain :meat}
                               :req (req true)}]}
-    :abilities [{:effect (req (doseq [c (concat (get-in challenger [:rig :hardware])
+    :abilities [{:effect (req (doseq [c (concat (get-in challenger [:rig :hazard])
                                                 (filter #(not (has-subtype? % "Virtual"))
                                                         (get-in challenger [:rig :muthereff]))
                                                 (:hand challenger))]
@@ -1590,9 +1590,9 @@
                               (damage-prevent state side :brain Integer/MAX_VALUE))}]}
 
    "Sacrificial Construct"
-   {:interactions {:prevent [{:type #{:trash-resource :trash-hardware}
+   {:interactions {:prevent [{:type #{:trash-resource :trash-hazard}
                               :req (req true)}]}
-    :abilities [{:effect (effect (trash-prevent :resource 1) (trash-prevent :hardware 1)
+    :abilities [{:effect (effect (trash-prevent :resource 1) (trash-prevent :hazard 1)
                                  (trash card {:cause :ability-cost}))}]}
 
    "Safety First"
@@ -1808,7 +1808,7 @@
 
    "Technical Writer"
    {:events {:challenger-install {:silent (req true)
-                              :req (req (some #(= % (:type target)) '("Hardware" "Resource")))
+                              :req (req (some #(= % (:type target)) '("Hazard" "Resource")))
                               :effect (effect (add-counter :challenger card :credit 1)
                                               (system-msg (str "places 1 [Credits] on Technical Writer")))}}
     :abilities [{:cost [:click 1]
@@ -1920,9 +1920,9 @@
                                                                      (fn [coll]
                                                                        (remove-once #(= (:cid %) (:cid target)) coll)))))))}]
    {:flags {:drip-economy true}  ; not technically drip economy, but has an interaction with Drug Dealer
-    :abilities [{:label "Host a muthereff or piece of hardware" :cost [:click 1]
+    :abilities [{:label "Host a muthereff or piece of hazard" :cost [:click 1]
                  :prompt "Select a card to host on The Supplier"
-                 :choices {:req #(and (#{"Muthereff" "Hardware"} (:type %))
+                 :choices {:req #(and (#{"Muthereff" "Hazard"} (:type %))
                                       (in-hand? %))}
                  :effect (effect (host card target)) :msg (msg "host " (:title target) "")}
                 ability]
@@ -1979,8 +1979,8 @@
     :trash-effect {:effect (effect (damage eid :meat 3 {:unboostable true :card card}))}}
 
    "Tyson Observatory"
-   {:abilities [{:prompt "Choose a piece of Hardware" :msg (msg "add " (:title target) " to their Grip")
-                 :choices (req (cancellable (filter #(is-type? % "Hardware") (:deck challenger)) :sorted))
+   {:abilities [{:prompt "Choose a piece of Hazard" :msg (msg "add " (:title target) " to their Grip")
+                 :choices (req (cancellable (filter #(is-type? % "Hazard") (:deck challenger)) :sorted))
                  :cost [:click 2]
                  :effect (effect (trigger-event :searched-stack nil)
                                  (shuffle! :deck)

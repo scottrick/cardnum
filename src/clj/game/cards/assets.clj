@@ -1,4 +1,4 @@
-(ns game.cards.sites
+(ns game.cards.assets
   (:require [game.core :refer :all]
             [game.utils :refer :all]
             [game.macros :refer [effect req msg wait-for continue-ability]]
@@ -751,7 +751,7 @@
                          :once :per-turn
                          :req (req (seq (:hand challenger)))
                          :prompt "Choose a card type"
-                         :choices ["Event" "Hardware" "Resource" "Muthereff"]
+                         :choices ["Event" "Hazard" "Resource" "Muthereff"]
                          :msg (msg "reveal " (join ", " (map :title (:hand challenger))) " and trash a " target)
                          :effect (effect (resolve-ability (trash-ability target) card nil))}]
      {:additional-cost [:forfeit]
@@ -1555,9 +1555,9 @@
                       :effect (req (let [counters (get-counters (get-card state card) :advancement)]
                                      (continue-ability
                                        state side
-                                       (-> trash-hardware
+                                       (-> trash-hazard
                                            (assoc-in [:choices :max] counters)
-                                           (assoc :prompt (msg "Select " (quantify counters "piece") " of hardware to trash")
+                                           (assoc :prompt (msg "Select " (quantify counters "piece") " of hazard to trash")
                                                   :effect (effect (trash-cards targets))
                                                   :msg (msg "trash " (join ", " (map :title targets)))))
                                        card nil)))})
@@ -1678,7 +1678,7 @@
    "TechnoCo"
    (letfn [(is-techno-target [card]
              (or (is-type? card "Resource")
-                 (is-type? card "Hardware")
+                 (is-type? card "Hazard")
                  (and (is-type? card "Muthereff") (has-subtype? card "Virtual"))))]
      {:events {:pre-install {:req (req (and (is-techno-target target)
                                             (not (second targets)))) ; not facedown

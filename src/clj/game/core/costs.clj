@@ -52,7 +52,7 @@
                (and (= cost-type :mill) (>= (- (count (get-in @state [side :deck])) amount) 0))
                (and (= cost-type :tag) (>= (- (get-in @state [:challenger :tag]) amount) 0))
                (and (= cost-type :character) (>= (- (count (filter (every-pred rezzed? character?) (all-installed state :contestant))) amount) 0))
-               (and (= cost-type :hardware) (>= (- (count (get-in @state [:challenger :rig :hardware])) amount) 0))
+               (and (= cost-type :hazard) (>= (- (count (get-in @state [:challenger :rig :hazard])) amount) 0))
                (and (= cost-type :resource) (>= (- (count (get-in @state [:challenger :rig :resource])) amount) 0))
                (and (= cost-type :connection) (>= (- (count (filter #(has-subtype? % "Connection")
                                                                     (all-active-installed state :challenger))) amount) 0))
@@ -166,7 +166,7 @@
               (swap! state assoc-in [side :register :spent-click] true)
               (complete-with-result state side eid (deduct state side cost)))
      :forfeit (pay-forfeit state side eid card (second cost))
-     :hardware (pay-trash state side eid card "piece of hardware" (second cost) (every-pred installed? #(is-type? % :hardware) (complement facedown?)))
+     :hazard (pay-trash state side eid card "piece of hazard" (second cost) (every-pred installed? #(is-type? % :hazard) (complement facedown?)))
      :resource (pay-trash state side eid card "resource" (second cost) (every-pred installed? #(is-type? % :resource) (complement facedown?)))
 
      ;; Connection

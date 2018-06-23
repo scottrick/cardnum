@@ -7,9 +7,9 @@
             [game-test.cards.agendas]
             [game-test.cards.sites]
             [game-test.cards.events]
-            [game-test.cards.hardware]
-            [game-test.cards.character]
-            [game-test.cards.characterbreakers]
+            [game-test.cards.hazard]
+            [game-test.cards.ice]
+            [game-test.cards.icebreakers]
             [game-test.cards.identities]
             [game-test.cards.operations]
             [game-test.cards.resources]
@@ -92,7 +92,7 @@
           nspaces {"Agenda" '(game-test.cards.agendas)
                    "Site" '(game-test.cards.sites)
                    "Event" '(game-test.cards.events)
-                   "Hardware" '(game-test.cards.hardware)
+                   "Hazard" '(game-test.cards.hazard)
                    "Character" '(game-test.cards.character)
                    "Icebreaker" '(game-test.cards.characterbreakers)
                    "Identity" '(game-test.cards.identities)
