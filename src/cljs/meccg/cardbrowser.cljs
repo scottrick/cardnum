@@ -62,8 +62,8 @@
                       (contains? (:alt_art alt-card) (keyword art)))
          version-path (if has-art
                         (get (:alt_art alt-card) (keyword art) (:code card))
-                        (:code card))]
-     (str "/img/cards/" version-path ".png"))))
+                        (:image_url card))]
+     (str "/img/cards/" (:set_code card) "/" version-path))))
 
 (defn- alt-version-from-string
   "Given a string name, get the keyword version or nil"
