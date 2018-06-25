@@ -178,15 +178,6 @@
   [l]
   (reduce #(assoc %1 (:code %2) %2) {} l))
 
-(defn add-set-fields
-  "Add additional fields to the set documents"
-  [cycle-map s]
-  (let [c (cycle-map (:cycle_code s))]
-    (assoc s
-      :rotated (:rotated c)
-      :cycle_position (:position c)
-      :cycle (:name c))))
-
 (defn deaccent
   "Remove diacritical marks from a string, from http://www.matt-reid.co.uk/blog_post.php?id=69"
   [s]

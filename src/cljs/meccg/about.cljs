@@ -27,8 +27,8 @@
      [:p "Bug reports and feature suggestions can be submitted "
       [:a {:href "https://github.com/rezwits/meccg/issues" :target "_blank"} "here"] "."]
 
-     [:p "Card automation "
-      [:a {:href "https://docs.google.com/spreadsheets/d/1ICv19cNjSaW9C-DoEEGH3iFt09PBTob4CAutGex0gnE/pubhtml"
+     [:p "Card Texts, Stats, and Fixes "
+      [:a {:href "https://docs.google.com/spreadsheets/d/1Ly2RVe4QZRhN6TUfV1YO9DuuYvywzMnnaCunQapzzfs/edit?usp=sharing"
            :target "_blank"} "status"] "."]
 
      [:h3 "Contributors"]

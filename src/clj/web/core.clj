@@ -27,18 +27,12 @@
     (web.db/connect)
     (let [cards (mc/find-maps db "cards" nil)
           sets (mc/find-maps db "sets" nil)
-          cycles (mc/find-maps db "cycles" nil)
-          mwl (mc/find-maps db "mwl" nil)
-          latest_mwl (->> mwl
-                       (map (fn [e] (update e :date_start #(f/parse (f/formatters :date) %))))
-                       (sort-by :date_start)
-                       (last))]
+          mwl (mc/find-maps db "mwl" nil)]
       (core/reset-card-defs)
       (reset! cards/all-cards (into {} (map (juxt :title identity)
                                             (sort-by (complement :rotated) cards))))
       (reset! cards/sets sets)
-      (reset! cards/cycles cycles)
-      (reset! cards/mwl latest_mwl))
+      (reset! cards/mwl mwl))
 
     (when (#{"dev" "prod"} (first args))
       (reset! server-mode (first args)))

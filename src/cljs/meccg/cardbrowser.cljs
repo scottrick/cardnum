@@ -331,9 +331,9 @@
       (.replace "&nbsp;&nbsp;&nbsp;&nbsp;" "")
       (.replace " Cycle" "")))
 
-(defn selected-set-rotated? [{:keys [sets cycles]} state]
+(defn selected-set-rotated? [{:keys [sets]} state]
   (let [s (selected-set-name state)
-        combined (concat sets cycles)]
+        combined sets]
     (if (= s "All")
       false
       (->> combined

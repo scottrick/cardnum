@@ -5,5 +5,3 @@
 (defonce mwl (atom []))
 
 (defonce sets (atom []))
-
-(defonce cycles (atom []))
