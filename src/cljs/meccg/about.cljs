@@ -17,7 +17,7 @@
 
      [:h3 "Contact"]
      [:p "Twitter: " [:a {:href "http://twitter.com/rezwits" :target "_blank"} "@rezwits"]]
-     [:p "Email: " [:a {:href "mailto:rezwits@gmail.com"} "rezwits@gmail.com"]]
+     [:p "Email: " [:a {:href "mailto:rezwits@me.com"} "rezwits@me.com"]]
 
      [:h3 "Development"]
 
@@ -37,7 +37,7 @@
      [:h3 "Donations"]
      [:p "Donations are appreciated and help finance fast servers. You can support the project financially with PayPal or Bitcoin. Alternate art cards will be enabled on your account as a token of gratitude. Please specify your username with your donation."]
      [:ul.list.compact
-      [:li "PayPal: rezwits@gmail.com or " [:a {:href "https://www.paypal.me/rezwits" :title "PayPal" :target "_blank"} "paypal.me/rezwits"]]
+      [:li "PayPal: rezwits@me.com or " [:a {:href "https://www.paypal.me/rezwits" :title "PayPal" :target "_blank"} "paypal.me/rezwits"]]
       [:li "Bitcoin: " [:span.bitcoin "1ByjuLNZRvG17YaRKgKUjNi3c4qQ3daX3g" [:img.qr {:src "/img/bitcoin.png" :alt "Bitcoin QR Code"}]]]
       ]
 

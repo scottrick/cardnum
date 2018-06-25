@@ -284,7 +284,7 @@
                              "the repository. Implement the changes you were planning on doing and create a PR (Pull Request). If you are in "
                              "need of some ideas, check out " [:a {:href "https://github.com/rezwits/meccg/labels/easy" :target "_blank"} "issues marked 'easy' on GitHub"] "."]
                             [:p "After two of your PRs have been merged into the master branch, send an e-mail to "
-                             [:a {:href "mailto:rezwits@gmail.com"} "rezwits@gmail.com"] " stating who you are on GitHub and ask for access "
+                             [:a {:href "mailto:rezwits@me.com"} "rezwits@me.com"] " stating who you are on GitHub and ask for access "
                              "to Cardnum.net Slack, so you can get in better contact with the dev team."])}
             {:id "awesome"
              :title "Why is this site so awesome?"

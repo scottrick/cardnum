@@ -7,7 +7,6 @@
 (defn card-count [cards]
   (reduce #(+ %1 (:qty %2)) 0 cards))
 
-
 ;;; Helpers for Alliance cards
 (defn- is-alliance?
   "Checks if the card is an alliance card"
@@ -189,7 +188,6 @@
        (distinct)
        (count)))
 
-
 ;; alternative formats validation
 (defn group-cards-from-restricted-sets
   "Return map (big boxes and datapacks) of used sets that are restricted by given format"
@@ -278,9 +276,9 @@
 ;; Card and deck validity
 (defn allowed?
   "Checks if a card is allowed in deck of a given identity - not accounting for influence"
-  [card {:keys [side faction code] :as identity}]
-  (and (not= (:type card) "Identity")
-       (= (:side card) side)
+  [card {:keys [alignment faction code] :as identity}]
+  (and (not= (:type card) "Site")
+       (= (:alignment card) alignment)
        (or (not= (:type card) "Agenda")
            (= (:faction card) "Neutral")
            (= (:faction card) faction)
@@ -294,7 +292,7 @@
        (<= (influence-count deck) (id-inf-limit identity))
        (every? #(and (allowed? (:card %) identity)
                      (legal-num-copies? identity %)) cards)
-       (or (= (:side identity) "Challenger")
+       (or (not= (:alignment identity) "Crazy")
            (let [min (min-agenda-points deck)]
              (<= min (agenda-points deck) (inc min))))))
 

@@ -43,7 +43,7 @@
 
 (def card-fields
   {
-   :Set (rename :set_code)
+   :Set (rename :setname)
    :Primary (rename :type)
    :Alignment (rename :alignment)
    :MEID identity
@@ -90,6 +90,7 @@
    :codeSP identity
    :codeJP identity
    :Specific identity
+   :code (rename :trimCode)
    :fullCode (rename :code)
    :alignCode identity
    :setCode identity
@@ -205,7 +206,7 @@
 (defn- make-image-url
   "Create a URI to the card in CardGameDB"
   [card]
-  (str nrdb-image-url (:set_code card) "/" (:image_url card)))
+  (str nrdb-image-url (:setname card) "/" (:image_url card)))
 
 (defn- get-uri
   "Figure out the card art image uri"
@@ -217,9 +218,9 @@
 (defn- add-card-fields
   "Add additional fields to the card documents"
   [set-map c]
-  (let [s (set-map (:set_code c))]
+  (let [s (set-map (:setname c))]
     (-> c
-        (assoc :setname (:name s)
+        (assoc :full_set (:name s)
                :rotated (:rotated s)
                :image_url (get-uri c)
                :normalizedtitle (string/lower-case (deaccent (:title c)))))))
@@ -244,7 +245,7 @@
 (defn- card-image-file
   "Returns the path to a card's image as a File"
   [card]
-  (io/file "resources" "public" "img" "cards" (str (:set_code card)) (str (:image_url card))))
+  (io/file "resources" "public" "img" "cards" (str (:setname card)) (str (:image_url card))))
 
 (defn- download-card-image
   "Download a single card image from NRDB"
