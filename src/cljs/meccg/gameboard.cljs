@@ -1065,13 +1065,14 @@
 (defmulti stats-view #(get-in % [:identity :side]))
 
 (defmethod stats-view "Challenger" [{:keys [user free_gi char_mp ally_mp item_mp fact_mp kill_mp misc_mp
-                                            total_mp hand-size-base hand-size-modification active]} owner]
+                                            total_mp stage_pt hand-size-base hand-size-modification active]} owner]
   (om/component
    (sab/html
     (let [me? (= (:side @game-state) :challenger)]
       [:div.panel.blue-shade.stats {:class (when active "active-player")}
        [:h4.ellipsis (om/build avatar user {:opts {:size 22}}) (:username user)]
        [:div (str free_gi " Free G.I.") (when me? (controls :free_gi))]
+       [:div (str stage_pt " Stage pt" (if (not= stage_pt 1) "s" "")) (when me? (controls :stage_pt))]
        [:div (str total_mp " Total MP" (if (not= total_mp 1) "s" "")) (when me? (controls :total_mp))]
        [:div (str char_mp " Character MP" (if (not= char_mp 1) "s" "")) (when me? (controls :char_mp))]
        [:div (str ally_mp " Ally MP" (if (not= ally_mp 1) "s" "")) (when me? (controls :ally_mp))]
@@ -1083,13 +1084,14 @@
         (when me? (controls :hand-size-modification))]]))))
 
 (defmethod stats-view "Contestant" [{:keys [user free_gi char_mp ally_mp item_mp fact_mp kill_mp misc_mp
-                                            total_mp hand-size-base hand-size-modification active]} owner]
+                                            total_mp stage_pt hand-size-base hand-size-modification active]} owner]
   (om/component
     (sab/html
       (let [me? (= (:side @game-state) :contestant)]
         [:div.panel.blue-shade.stats {:class (when active "active-player")}
          [:h4.ellipsis (om/build avatar user {:opts {:size 22}}) (:username user)]
          [:div (str free_gi " Free G.I.") (when me? (controls :free_gi))]
+         [:div (str stage_pt " Stage pt" (if (not= stage_pt 1) "s" "")) (when me? (controls :stage_pt))]
          [:div (str total_mp " Total MP" (if (not= total_mp 1) "s" "")) (when me? (controls :total_mp))]
          [:div (str char_mp " Character MP" (if (not= char_mp 1) "s" "")) (when me? (controls :char_mp))]
          [:div (str ally_mp " Ally MP" (if (not= ally_mp 1) "s" "")) (when me? (controls :ally_mp))]
@@ -1278,7 +1280,7 @@
          (drop-area (:side @game-state) map-name
                     {:on-click #(-> (om/get-node owner map-menu-ref) js/$ .toggle)})
          (facedown-card "Locations")
-         (om/build label sites {:opts {:name "Sites"}})
+         (om/build label sites {:opts {:name "Location"}})
          (when (= (:side @game-state) side)
            [:div.panel.blue-shade.menu {:ref map-menu-ref}
             [:div {:on-click #(show-map % owner reg-ref)} "Regions"]
