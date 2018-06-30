@@ -29,9 +29,12 @@ zmq = require('zmq')
 
 config = require('./config')
 
+#trello api key
+process.env.TRELLO_API_KEY = ''
+
 # MongoDB connection
-appName = 'netrunner'
-mongoUrl = process.env['MONGO_URL'] || "mongodb://127.0.0.1:27017/netrunner"
+appName = 'meccg'
+mongoUrl = process.env['MONGO_URL'] || "mongodb://127.0.0.1:27017/meccg"
 db = mongoskin.db(mongoUrl)
 
 # Game lobby
@@ -40,7 +43,7 @@ lobbyUpdate = false
 lobbyUpdates = {"create" : {}, "update" : {}, "delete" : {}}
 
 swapSide = (side) ->
-  if side is "Corp" then "Runner" else "Corp"
+  if side is "Contestant" then "Challenger" else "Contestant"
 
 refreshLobby = (type, gameid) ->
   lobbyUpdate = true
@@ -73,7 +76,7 @@ removePlayer = (socket) ->
       refreshLobby("delete", socket.gameid)
       # Send a message to players telling browser to pull updated stats
       for id in stats.sockets
-        stats.to(id).emit("netrunner", {channel: 'stats', msg: 'updatestats'})
+        stats.to(id).emit("meccg", {channel: 'stats', msg: 'updatestats'})
     else
       refreshLobby("update", socket.gameid)
     socket.leave(socket.gameid)
@@ -87,25 +90,25 @@ removePlayer = (socket) ->
 rejoinGame = (socket, gameid, user, options) ->
   game = games[gameid]
   if game and game.started and game.players.length < 2
-    side = if game.players.length is 1 then swapSide(game.players[0].side) else "Corp"
+    side = if game.players.length is 1 then swapSide(game.players[0].side) else "Contestant"
     user.id = socket.id
     game.players.push(user)
     # Replace the game end player list with the new list
     game.endingPlayers = game.players.slice(0)
     socket.join(gameid)
     socket.gameid = gameid
-    socket.emit("netrunner", {type: "game", gameid: gameid})
+    socket.emit("meccg", {type: "game", gameid: gameid})
     refreshLobby("update", gameid)
     requester.send(JSON.stringify({action: "finaluser-del", gameid: socket.gameid}))
 
-joinGame = (socket, gameid, options) ->
+joinGame = (socket, gameid, options, alignment) ->
   game = games[gameid]
   if game and game.players.length < 2
-    side = if game.players.length is 1 then swapSide(game.players[0].side) else "Corp"
-    game.players.push({user: socket.request.user, id: socket.id, side: side, options: options})
+    side = if game.players.length is 1 then swapSide(game.players[0].side) else "Contestant"
+    game.players.push({user: socket.request.user, id: socket.id, side: side, alignment: alignment, options: options})
     socket.join(gameid)
     socket.gameid = gameid
-    socket.emit("netrunner", {type: "game", gameid: gameid})
+    socket.emit("meccg", {type: "game", gameid: gameid})
     refreshLobby("update", gameid)
 
 getUsername = (socket) ->
@@ -190,11 +193,11 @@ inc_game_start = (user, side, room) ->
     deckID = user['deck-id']
     inc_deck(deckID, "stats.games-started") if deckID
 
-inc_corp_game_start = (user, room) ->
-  inc_game_start(user, "corp", room)
+inc_contestant_game_start = (user, room) ->
+  inc_game_start(user, "contestant", room)
 
-inc_runner_game_start = (user, room) ->
-  inc_game_start(user, "runner", room)
+inc_challenger_game_start = (user, room) ->
+  inc_game_start(user, "challenger", room)
 
 # ZeroMQ
 clojure_hostname = process.env['CLOJURE_HOST'] || "127.0.0.1"
@@ -214,22 +217,22 @@ requester.monitor(500, 0)
 requester.connect("tcp://#{clojure_hostname}:1043")
 
 sendGameResponse = (game, response) ->
-  diffs = response.runnerdiff
+  diffs = response.challengerdiff
 
   for player in game.players
     socket = io.sockets.connected[player.id]
-    if player.side is "Corp"
+    if player.side is "Contestant"
       # The response will either have a diff or a state. we don't actually send both,
       # whichever is null will not be sent over the socket.
-      lobby.to(player.id).emit("netrunner", {type: response.action,\
-                                             diff: response.corpdiff, \
-                                             state: response.corpstate})
-    else if player.side is "Runner"
-      lobby.to(player.id).emit("netrunner", {type: response.action, \
-                                             diff: response.runnerdiff, \
-                                             state: response.runnerstate})
+      lobby.to(player.id).emit("meccg", {type: response.action,\
+                                             diff: response.contestantdiff, \
+                                             state: response.contestantstate})
+    else if player.side is "Challenger"
+      lobby.to(player.id).emit("meccg", {type: response.action, \
+                                             diff: response.challengerdiff, \
+                                             state: response.challengerstate})
   for spect in game.spectators
-    lobby.to(spect.id).emit("netrunner", {type: response.action,\
+    lobby.to(spect.id).emit("meccg", {type: response.action,\
                                           diff: response.spectdiff, \
                                           state: response.spectstate})
 
@@ -242,16 +245,14 @@ requester.on 'message', (data) ->
         reason: response.state.reason
         endDate: response.state["end-time"]
         turn: response.state.turn
-        runnerAgenda: response.state.runner["agenda-point"]
-        corpAgenda: response.state.corp["agenda-point"]
       }
       db.collection('gamestats').update {gameid: response.gameid}, {$set: g}, (err) ->
         throw err if err
 
-      if response.state.corp.user and response.state.runner.user # have two users in the game
+      if response.state.contestant.user and response.state.challenger.user # have two users in the game
         room = response.state.room
-        inc_corp_game_start(response.state.corp, room)
-        inc_runner_game_start(response.state.runner, room)
+        inc_contestant_game_start(response.state.contestant, room)
+        inc_challenger_game_start(response.state.challenger, room)
         if response.state.winner # and someone won
           inc_game_win(response.state[response.state.winner], room)
           inc_game_loss(response.state[response.state.loser], room)
@@ -277,20 +278,20 @@ io.use (socket, next) ->
     next()
 
 stats = io.of('/stats').on 'connection', (socket) ->
-  socket.on 'netrunner', (msg) ->
-    stats.emit('netrunner', msg)
+  socket.on 'meccg', (msg) ->
+    stats.emit('meccg', msg)
 
 chat = io.of('/chat').on 'connection', (socket) ->
-  socket.on 'netrunner', (msg) ->
+  socket.on 'meccg', (msg) ->
     if socket.request.user
       msg.date = new Date()
       msg.username = socket.request.user.username
       msg.emailhash = socket.request.user.emailhash
-      chat.emit('netrunner', msg)
+      chat.emit('meccg', msg)
       db.collection('messages').insert msg, (err, result) ->
 
 lobby = io.of('/lobby').on 'connection', (socket) ->
-  socket.emit("netrunner", {type: "games", games: games})
+  socket.emit("meccg", {type: "games", games: games})
 
   socket.on 'disconnect', () ->
     gid = socket.gameid
@@ -300,7 +301,7 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
         requester.send(JSON.stringify({action: "notification", gameid: gid, text: "#{getUsername(socket)} disconnected."}))
       removePlayer(socket)
 
-  socket.on 'netrunner', (msg, fn) ->
+  socket.on 'meccg', (msg, fn) ->
     switch msg.action
       when "create"
         gameid = uuid.v1()
@@ -313,19 +314,19 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
           mutespectators: false
           password: if msg.password then crypto.createHash('md5').update(msg.password).digest('hex') else ""
           room: msg.room
-          players: [{user: socket.request.user, id: socket.id, side: msg.side, options: msg.options}]
+          players: [{user: socket.request.user, id: socket.id, side: msg.side, alignment: msg.alignment, options: msg.options}]
           spectators: []
         games[gameid] = game
         socket.join(gameid)
         socket.gameid = gameid
-        socket.emit("netrunner", {type: "game", gameid: gameid})
+        socket.emit("meccg", {type: "game", gameid: gameid})
         refreshLobby("create", gameid)
 
       when "leave-lobby"
         gid = socket.gameid
         removePlayer(socket)
         if socket.request.user
-          socket.broadcast.to(gid).emit('netrunner', {type: "say", user: "__system__", text: "#{getUsername(socket)} left the game."})
+          socket.broadcast.to(gid).emit('meccg', {type: "say", user: "__system__", text: "#{getUsername(socket)} left the game."})
 
       when "leave-game"
         gid = socket.gameid
@@ -355,8 +356,9 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
 
         if not game.password or game.password.length is 0 or (msg.password and crypto.createHash('md5').update(msg.password).digest('hex') is game.password)
           fn("join ok")
-          joinGame(socket, msg.gameid, msg.options)
-          socket.broadcast.to(msg.gameid).emit 'netrunner',
+          if msg.alignment == null then msg.alignment = "Hero"
+          joinGame(socket, msg.gameid, msg.options, msg.alignment)
+          socket.broadcast.to(msg.gameid).emit 'meccg',
             type: "say"
             user: "__system__"
             notification: "ting"
@@ -389,12 +391,12 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
             game.spectators.push({user: socket.request.user, id: socket.id})
             socket.join(msg.gameid)
             socket.gameid = msg.gameid
-            socket.emit("netrunner", {type: "game", gameid: msg.gameid, started: game.started})
+            socket.emit("meccg", {type: "game", gameid: msg.gameid, started: game.started})
             refreshLobby("update", msg.gameid)
             if game.started
               requester.send(JSON.stringify({action: "notification", gameid: msg.gameid, text: "#{getUsername(socket)} joined the game as a spectator."}))
             else
-              socket.broadcast.to(msg.gameid).emit 'netrunner',
+              socket.broadcast.to(msg.gameid).emit 'meccg',
                 type: "say"
                 user: "__system__"
                 text: "#{getUsername(socket)} joined the game as a spectator."
@@ -423,7 +425,7 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
           if game.started
             requester.send(JSON.stringify({action: "notification", gameid: msg.gameid, text: text}))
           else
-            socket.broadcast.to(msg.gameid).emit 'netrunner',
+            socket.broadcast.to(msg.gameid).emit 'meccg',
               type: "say"
               user: "__system__"
               text: text
@@ -431,7 +433,7 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
       when "reconnect"
         game = games[msg.gameid]
         if game and game.started
-          joinGame(socket, msg.gameid, null)
+          joinGame(socket, msg.gameid, null, msg.alignment)
           requester.send(JSON.stringify({action: "notification", gameid: socket.gameid, text: "#{getUsername(socket)} reconnected."}))
 
       when "say"
@@ -440,7 +442,7 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
           fn("not allowed")
           return
 
-        lobby.to(msg.gameid).emit("netrunner", {type: "say", user: socket.request.user, text: msg.text})
+        lobby.to(msg.gameid).emit("meccg", {type: "say", user: socket.request.user, text: msg.text})
 
       when "swap"
         for player in games[socket.gameid].players
@@ -448,7 +450,7 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
           player.deck = null
         updateMsg = {"update" : {}}
         updateMsg["update"][socket.gameid] = games[socket.gameid]
-        lobby.to(msg.gameid).emit('netrunner', {type: "games", gamesdiff: updateMsg})
+        lobby.to(msg.gameid).emit('meccg', {type: "games", gamesdiff: updateMsg})
         refreshLobby("update", msg.gameid)
 
       when "deck"
@@ -460,16 +462,16 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
               break
           updateMsg = {"update" : {}}
           updateMsg["update"][socket.gameid] = games[socket.gameid]
-          lobby.to(msg.gameid).emit('netrunner', {type: "games", gamesdiff: updateMsg})
+          lobby.to(msg.gameid).emit('meccg', {type: "games", gamesdiff: updateMsg})
 
       when "start"
         if !requester_connected
-          lobby.to(msg.gameid).emit 'netrunner',
+          lobby.to(msg.gameid).emit 'meccg',
             type: "say"
             user: "__system__"
             notification: "ting"
             text: "Unable to connect to game server, please try again."
-          lobby.to(msg.gameid).emit 'netrunner',
+          lobby.to(msg.gameid).emit 'meccg',
             type: "lobby-notification"
             text: "Unable to start game. Please try again."
             severity: "error"
@@ -477,17 +479,17 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
           game = games[socket.gameid]
           if game
             if game.players.length is 2
-              corp = if game.players[0].side is "Corp" then game.players[0] else game.players[1]
-              runner = if game.players[0].side is "Runner" then game.players[0] else game.players[1]
+              contestant = if game.players[0].side is "Contestant" then game.players[0] else game.players[1]
+              challenger = if game.players[0].side is "Challenger" then game.players[0] else game.players[1]
               g = {
                 gameid: socket.gameid
                 startDate: (new Date()).toISOString()
                 title: game.title
                 room: game.room
-                corp: corp.user.username
-                runner: runner.user.username
-                corpIdentity: if corp.deck then corp.deck.identity.title else null
-                runnerIdentity: if runner.deck then runner.deck.identity.title else null
+                contestant: contestant.user.username
+                challenger: challenger.user.username
+                contestantIdentity: if contestant.deck then contestant.deck.identity.title else null
+                challengerIdentity: if challenger.deck then challenger.deck.identity.title else null
               }
               db.collection('gamestats').insert g, (err, data) ->
                 console.log(err) if err
@@ -521,7 +523,7 @@ lobby = io.of('/lobby').on 'connection', (socket) ->
 
 sendLobby = () ->
   if lobby and lobbyUpdate
-    lobby.emit('netrunner', {type: "games", gamesdiff: lobbyUpdates})
+    lobby.emit('meccg', {type: "games", gamesdiff: lobbyUpdates})
     lobbyUpdate = false
     lobbyUpdates["create"] = {}
     lobbyUpdates["update"] = {}
@@ -530,16 +532,13 @@ sendLobby = () ->
 setInterval(sendLobby, 1000)
 
 # Express config
-app.use favicon(__dirname + "/resources/public/img/jinteki.ico")
+app.use favicon(__dirname + "/resources/public/img/cardnum.ico")
 app.set 'port', 1042
 app.set 'ipaddr', "0.0.0.0"
 app.use methodOverride() # provide PUT DELETE
 app.use cookieParser()
-app.use bodyParser.urlencoded(extended: false)
-app.use (req, res, next) ->
-  bodyParser.json() req, res, (err) ->
-    if err then console.log(err)
-    next()
+app.use(bodyParser.json({limit: '10mb'}))
+app.use(bodyParser.urlencoded({limit: '10mb', extended: true}))
 app.use session
   secret: config.salt
   saveUninitialized: false
@@ -665,9 +664,9 @@ app.post '/forgot', (req, res) ->
         }
       }
       mailOptions = {
-        from: 'support@jinteki.net',
+        from: 'support@cardnum.net',
         to: user.email,
-        subject: 'Jinteki Password Reset',
+        subject: 'Cardnum Password Reset',
         text: 'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
           'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
           'http://' + req.headers.host + '/reset/' + token + '\n\n' +
@@ -725,7 +724,7 @@ app.post '/reset/:token', (req, res) ->
       }
       mailOptions = {
         to: user.email,
-        from: 'passwordreset@jinteki.net',
+        from: 'passwordreset@cardnum.net',
         subject: 'Your password has been changed',
         text: 'Hello,\n\n' +
           'This is a confirmation that the password for your account ' + user.email + ' has just been changed.\n'
@@ -847,7 +846,7 @@ app.get '/data/news', (req, res) ->
     cached = cache.get('news')
     if not cached
       t = new Trello(process.env['TRELLO_API_KEY'])
-      t.get '/1/lists/5668b498ced988b1204cae9a/cards', {filter : 'open', fields : 'dateLastActivity,name,labels'}, (err, data) ->
+      t.get '/1/lists/59e6cce7054d7253dea1fc0f/cards', {filter : 'open', fields : 'dateLastActivity,name,labels'}, (err, data) ->
         throw err if err
         data = ({title: d.name, date: d.date = moment(d.dateLastActivity).format("MM/DD/YYYY HH:mm")} \
           for d in data when d.labels.length == 0)

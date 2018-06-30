@@ -260,11 +260,11 @@ span.small
     box-shadow(none)
     border-color: orange
 
-.rotated
+.rotated-old
   color: white
   background-color: grey
   border-color: orangered
-  opacity: 0.5
+  opacity: 1.0
   box-shadow(none)
   cursor: auto
 
@@ -324,37 +324,36 @@ span.small
   vertical-align: middle
 
   &.adam
-    background-image: url('/img/factions/runner-adam.png')
+    background-image: url('/img/factions/challenger-adam.png')
 
   &.anarch
-    background-image: url('/img/factions/runner-anarch.png')
+    background-image: url('/img/factions/challenger-anarch.png')
 
   &.apex
-    background-image: url('/img/factions/runner-apex.png')
+    background-image: url('/img/factions/challenger-apex.png')
 
   &.criminal
-    background-image: url('/img/factions/runner-criminal.png')
+    background-image: url('/img/factions/challenger-criminal.png')
 
   &.hb
-    background-image: url('/img/factions/corp-hb.png')
+    background-image: url('/img/factions/contestant-hb.png')
 
   &.jinteki
-    background-image: url('/img/factions/corp-jinteki.png')
+    background-image: url('/img/factions/contestant-jinteki.png')
 
   &.nbn
-    background-image: url('/img/factions/corp-nbn.png')
+    background-image: url('/img/factions/contestant-nbn.png')
 
   &.shaper
-    background-image: url('/img/factions/runner-shaper.png')
+    background-image: url('/img/factions/challenger-shaper.png')
 
   &.sunny
-    background-image: url('/img/factions/runner-sunny.png')
+    background-image: url('/img/factions/challenger-sunny.png')
 
   &.weyland
-    background-image: url('/img/factions/corp-weyland.png')
+    background-image: url('/img/factions/contestant-weyland.png')
 
 // Dropdown
-
 .dropdown
   position: relative
 
@@ -389,7 +388,6 @@ span.small
 
 .open > a
   outline: 0
-
 
 // Modal
 .modal-open
@@ -513,7 +511,6 @@ nav ul
   border: 1px solid #ffa500
   z-index: 2
 
-
 .win-right
   position: absolute
   top: 0px
@@ -530,17 +527,23 @@ nav ul
     background-color: transparent-orange
     border-color: orange
 
+#regiones_x5F_vector_1_ {fill: transparent;}
+  .st0:hover{stroke:#000000;opacity:0.5;stroke-width:5.0;stroke-miterlimit:10;}
+  .st1:hover{stroke:#77571C;opacity:0.5;stroke-width:5.0;stroke-miterlimit:10;}
+  .st2:hover{stroke:#DD2911;opacity:0.5;stroke-width:5.0;stroke-miterlimit:10;}
+  .st3:hover{stroke:#1F7728;opacity:0.5;stroke-width:5.0;stroke-miterlimit:10;}
+  .st4:hover{stroke:#0F97BC;opacity:0.5;stroke-width:5.0;stroke-miterlimit:10;}
+  .st5:hover{stroke:#F2E9E8;opacity:0.5;stroke-width:5.0;stroke-miterlimit:10;}
+
 #stats
   .content-page
     margin-top: 9px
-  
 
 // Influence dots
-
 .influence.neutral
   color: white
 
-// Corps
+// Contestants
 .influence.haas-bioroid
   color: blueviolet
 
@@ -553,7 +556,7 @@ nav ul
 .influence.weyland-consortium
   color: darkgreen
 
-// Runners
+// Challengers
 .influence.adam
   color: olive
 
@@ -609,7 +612,6 @@ nav ul
     margin-left: 12px
 
 // Auth
-
 #auth-forms, .reset-form
   input
     width: 240px
@@ -646,7 +648,6 @@ nav ul
     border: 1px solid orange
 
 // Layout
-
 #main
   height: 100%
 
@@ -659,37 +660,40 @@ nav ul
       color: white
 
 .home-bg
-  cover-img: url('/img/bg/Beanstalk.jpg')
+  cover-img: url('/img/bg/CarnDum2.jpg')
 
 .lobby-bg
-  cover-img: url('/img/bg/TheRoot.jpg')
+  cover-img: url('/img/bg/rogrog.jpg')
+
+.lobby2-bg
+  cover-img: url('/img/bg/Grimoire2.jpg')
 
 .deckbuilder-bg
-  cover-img: url('/img/bg/ProjectAtlas.jpg')
+  cover-img: url('/img/bg/CarnDum3.jpg')
 
 .cardbrowser-bg
-  cover-img: url('/img/bg/DysonMemChip.jpg')
+  cover-img: url('/img/bg/CarnDum1.jpg')
 
 .help-bg
-  cover-img: url('/img/bg/Grimoire.jpg')
+  cover-img: url('/img/bg/Siege.jpg')
 
 .about-bg
-  cover-img: url('/img/bg/FastTrack.jpg')
+  cover-img: url('/img/bg/About.jpg')
 
 .account-bg
-  cover-img: url('/img/bg/Logos.jpg')
+  cover-img: url('/img/bg/Settings.jpg')
 
 .reset-bg
-  cover-img: url('/img/bg/Logos.jpg')
+  cover-img: url('/img/bg/Settings.jpg')
 
 .stats-bg
-  cover-img: url('/img/bg/RumorMill.jpg')
+  cover-img: url('/img/bg/MordorGates.jpg')
 
 .traffic-jam-bg
   cover-img: url('/img/bg/TrafficJam.jpg')
 
 .rumor-mill-bg
-  cover-img: url('/img/bg/RumorMill.jpg')
+  cover-img: url('/img/bg/MordorGates.jpg')
 
 .find-the-truth-bg
   cover-img: url('/img/bg/FindTheTruth.jpg')
@@ -710,7 +714,6 @@ nav ul
   cover-color: obsidian
 
 // Chat
-
 .chat-app
   display-flex()
   position: absolute
@@ -764,7 +767,6 @@ nav ul
   .date
     font-weight: 300
     font-size: 12px
-
 
 .msg-box
   display-flex()
@@ -862,9 +864,8 @@ nav ul
   overflow: auto
   -webkit-overflow-scrolling: touch
   padding-top: 40px
-  transform: translateZ(0)
+  transform: translateveal(0)
   flex(1)
-
 
 .card-preview
   float: left
@@ -906,7 +907,6 @@ nav ul
     border-radius: 12px
 
 // Deckbuilder
-
 .deck-collection
   overflow: auto
   -webkit-overflow-scrolling: touch
@@ -979,15 +979,21 @@ nav ul
 
         button
           width: 135px
+          margin: 2px 2px
+          margin-right: 5px
 
       .card-preview
         position: absolute
+        height: 443px
+        width: 310px
         left: auto
         z-index: 10
         right: 5px
         top: 0
 
       .edit .card-preview
+        height: 443px
+        width: 310px
         right: -100%
         transform: translateX(100%)
         margin-right: -17px
@@ -1018,6 +1024,11 @@ nav ul
       .cards
         columns(2, 5px)
 
+        h3
+          font-size: 16px
+          margin: 8px 0 0
+          line-height: 10px
+
       .line
         position: relative
         overflow: visible
@@ -1035,10 +1046,36 @@ nav ul
 
     .deckedit
       display-flex()
-      flex-direction(column)
+      flex-direction(row)
+      flex-wrap(wrap)
 
-      .deckname, .identity
-        width: 100%
+      h3.lftlabel
+        width: 49%
+        float: left
+
+      h3.rgtlabel
+        width: 49%
+        float: right
+
+      h3.column1
+        float: left
+        width: 33%
+
+      h3.column2
+        float: left
+        width: 33%
+
+      h3.column3
+        float: left
+        width: 33%
+
+      .deckname
+        width: 49%
+        float: left
+
+      .identity
+        width: 49%
+        float: right
 
       .card-search
         position: relative
@@ -1081,9 +1118,18 @@ nav ul
         margin: 0 0 5px 0
 
       textarea
-        margin: 0 15px
+        margin: -3px -1px
+        margin-right: 3px
         line-height: 18px
         flex(1)
+
+      .txttop
+        width: 32%
+        height: 44%
+
+      .txtbot
+        width: 32%
+        height: 20%
 
 .deck-status.shift-tooltip
     padding-right: 12px
@@ -1120,7 +1166,6 @@ nav ul
       display: inline
 
 // Game Lobby
-
 .lobby
   padding: 15px 0
   margin: 8px auto
@@ -1275,7 +1320,6 @@ nav ul
     padding: 0
 
 // Gameboard
-
 #gameboard
   width: 100%
   height: 100%
@@ -1396,7 +1440,7 @@ nav ul
     &.red
       background-color: red
 
-  .server-target, .subtype-target
+  .locale-target, .subtype-target
     position: absolute
     z-index: 10
     padding: 0
@@ -1409,7 +1453,7 @@ nav ul
     padding-right: 3px
     white-space: nowrap
 
-  .server-target
+  .locale-target
     background-color: sienna
 
   .subtype-target
@@ -1424,16 +1468,16 @@ nav ul
     &.sentry
       background-color: criminal-blue
 
-  .abilities, .servers-menu, .menu, .runner-abilities, .popup
+  .abilities, .locales-menu, .menu, .contestant-abilities, .challenger-abilities, .popup
     left: 0
     bottom: 100%
     margin: 6px -1px
 
-  .abilities, .servers-menu, .menu, .runner-abilities
+  .abilities, .locales-menu, .menu, .contestant-abilities, .challenger-abilities
     display: none
     position: absolute
     z-index: 30
-    width: 200px
+    width: 120px
     font-size: 12px
     line-height: 16px
 
@@ -1453,7 +1497,8 @@ nav ul
   .popup
     display: none
     position: absolute
-    width: 590px
+    width: 708px
+    max-height: 500px
     min-height: 92px
     z-index: 20
 
@@ -1487,7 +1532,7 @@ nav ul
     width: 60px
     border-radius: 4px
 
-  .server-card
+  .locale-card
     position: relative
     min-height: 84px
     min-width: 60px
@@ -1539,7 +1584,7 @@ nav ul
     position: absolute
 
   .stats > div
-    height: 20px
+    height: 14px
     font-size: 12px
 
     .controls
@@ -1562,6 +1607,7 @@ nav ul
     display-flex()
     flex-direction(column)
     justify-content(space-between)
+    margin-right: -50px
 
     .inner-leftpane
       flex(1)
@@ -1584,6 +1630,32 @@ nav ul
         display-flex()
         flex-direction(column)
 
+        .contestant-board
+          flex(1)
+          display-flex()
+          flex-direction(row-reverse)
+          justify-content(space-between)
+
+          .locale
+            margin-left: 0px
+            margin-right: 2px
+
+        .challenger-board, .contestant-board
+          flex(1)
+          display-flex()
+          flex-direction(row-reverse)
+          justify-content(space-between)
+
+        > div
+          display-flex()
+
+        .challenger-centrals, .contestant-centrals
+          display-flex()
+
+          .deck, .discard, .identity
+            margin-left: 0px
+            margin-right: 2px
+
         > div
           width: 100%
           display-flex()
@@ -1600,7 +1672,7 @@ nav ul
           .run-button
             position: relative
 
-            .servers-menu
+            .locales-menu
               left: 100%
               bottom: 0
               width: 120px
@@ -1634,43 +1706,26 @@ nav ul
     min-width: 90px
     overflow: auto
 
-    .card-wrapper
-      margin: 3px 6px
-
-    .runner-board
+    .contestant-rig, .challenger-rig
       flex(1)
       display-flex()
-      flex-direction(column)
+      flex-direction(row)
+      justify-content(flex-end)
 
-      > div
-        display-flex()
+      .card-wrapper
+        margin: 3px 6px
 
-        &:first-child
-          margin-top: auto
-
-      .runner-centrals
-        padding: 5px 0
-        display-flex()
-
-        .deck, .discard, .identity
-          margin-left: 16px
-          margin-right: 16px
-
-    .runner-board.opponent
-      opacity: 0.99
-      > div:first-child
-        margin-top: 0
-
-      > div:last-child
-        margin-bottom: auto
-
-    .corp-board
+    .contestant-board, .challenger-board
       flex(1)
       display-flex()
       flex-direction(row-reverse)
       justify-content(flex-end)
+      margin-left: 40px
 
-      .server
+      .card-wrapper
+        margin: 3px 6px
+
+      .locale
         position: relative
         min-width: 84px
         margin: 0 4px
@@ -1680,7 +1735,7 @@ nav ul
         justify-content(flex-end)
         align-items(center)
 
-        .ices
+        .characters
           position: relative
           display-flex()
           flex-direction(column-reverse)
@@ -1720,9 +1775,26 @@ nav ul
                 transform(translateX(-50%))
                 border-bottom: 22px solid transparent-orange
 
-          .ice
+          .character.wounded
+            transform(rotate(0deg))
+
+            .abilities
+              top: 0
+              right: 25
+              bottom: auto
+              transform(rotate(180deg) translateY(-100%))
+              transform-origin(0 0)
+
+          .character.tapped
+            transform(rotate(-90deg))
+
+            .abilities
+              transform-origin(0 0)
+              transform(rotate(-90deg) translateX(-25%))
+
+          .character
             margin: -7px 0
-            transform(rotate(90deg))
+            transform(rotate(-180deg))
             cursor: pointer
 
             &.host
@@ -1734,13 +1806,13 @@ nav ul
               left: 57px
               transform: rotate(-90deg)
 
-          .hosted
-            margin-top: -69px
+          .hosted.rotated
+            transform(rotate(-90deg))
+            margin-top: -49px
             flex-direction(column)
 
             .card-frame
               margin-left: 0
-              transform(rotate(90deg))
 
               &:not(:first-child)
                 margin-top: -42px
@@ -1748,11 +1820,52 @@ nav ul
               .counters
                 transform(rotate(-90deg))
 
-              .abilities, .runner-abilities
-                top: auto
-                bottom: 100%
-                left: 0
-                margin: 6px -1px
+              .abilities, .challenger-abilities, .contestant-abilities
+                top: 0
+                bottom: auto
+                transform(rotate(90deg) translateY(-50%))
+                transform-origin(0 0)
+
+          .hosted.inverted
+            transform(rotate(180deg))
+
+          .hosted.tapped
+            transform(rotate(90deg))
+            margin-top: -49px
+            flex-direction(column)
+
+            .card-frame
+              margin-left: 0
+
+              &:not(:first-child)
+                margin-top: -42px
+
+              .counters
+                transform(rotate(-90deg))
+
+              .abilities, .challenger-abilities, .contestant-abilities
+                top: 0
+                bottom: auto
+                transform(rotate(-90deg))
+                transform-origin(0 0)
+
+          .hosted
+            margin-top: -49px
+            flex-direction(column)
+
+            .card-frame
+              margin-left: 0
+
+              &:not(:first-child)
+                margin-top: -42px
+
+              .counters
+                transform(rotate(-90deg))
+
+              .abilities, .challenger-abilities, .contestant-abilities
+                top: 0
+                bottom: auto
+                transform-origin(0 0)
                 transform(initial)
 
           .strength
@@ -1768,19 +1881,17 @@ nav ul
           .counter
             transform(rotate(90deg))
 
-          .abilities, .runner-abilities
-            left: 100%
-            margin: -1px 6px
+          .abilities, .challenger-abilities, .contestant-abilities
+            left: 0%
+            margin: -1px 25px
 
           .abilities
             top: 0
             bottom: auto
-            transform(rotate(90deg) translateY(-100%))
             transform-origin(0 0)
 
-          .runner-abilities
+          .challenger-abilities, .contestant-abilities
             bottom: 0
-            transform(rotate(-90deg) translateY(100%))
             transform-origin(0 100%)
 
         .content
@@ -1790,41 +1901,70 @@ nav ul
           transform(rotate(180deg))
           display-flex()
 
-    .corp-board.opponent .server
-      transform(initial)
-
-      .content
-        transform(initial)
-
-      .strength
-        transform(rotate(-90deg))
-
-      .icon
-        transform(rotate(-90deg))
-
-      .ices
-        opacity: 0.99
-        .subtype-target
-          transform(rotate(-90deg), translateY(-100%))
-
-        .hosted
-          .card-frame
+          .locale-card.tapped
             transform(rotate(-90deg))
 
-          .counters
-            transform(rotate(90deg))
+            .abilities
+              top: 0
+              bottom: auto
+              transform(rotate(90deg) translateY(-100%))
+              transform-origin(0 0)
 
-          .abilities, .runner-abilities
-            top: 100%
-            bottom: auto
+          .locale-card
+            margin: -7px 0
+            cursor: pointer
 
-        .counter
-          transform(rotate(-90deg))
+    .contestant-board.opponent, .challenger-board.opponent
+      transform(initial)
 
-        .run-card
+      .card-wrapper
+        transform(rotate(0deg), translateY(100%))
+
+      .locale
+        transform(initial)
+
+        .content
           transform(initial)
 
-  .rightpane
+        .strength
+          transform(rotate(-90deg))
+
+        .icon
+          transform(rotate(-90deg))
+
+        .characters
+          opacity: 0.99
+          flex-direction(column)
+          transform(rotate(180deg), translateY(0%))
+
+          .subtype-target
+            transform(rotate(-90deg), translateY(-100%))
+
+          .hosted
+            .card-frame
+              transform(rotate(0deg))
+
+            .counters
+              transform(rotate(90deg))
+
+            .abilities, .challenger-abilities, contestant-abilitities
+              top: 100%
+              bottom: auto
+
+          .counter
+            transform(rotate(-90deg))
+
+          .run-card
+            transform(initial)
+
+    .contestant-rig.opponent, .challenger-rig.opponent
+      transform(initial)
+
+      .card-wrapper
+        transform(rotate(0deg), translateY(100%))
+        margin: 3px 6px
+
+.rightpane
     position: relative
     display-flex()
     flex-direction(column)

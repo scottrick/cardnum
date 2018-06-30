@@ -1,18 +1,18 @@
-(ns netrunner.stats
+(ns meccg.stats
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [om.core :as om :include-macros true]
             [sablono.core :as sab :include-macros true]
             [cljs.core.async :refer [chan put! <!] :as async]
-            [netrunner.appstate :refer [app-state]]
-            [netrunner.deckbuilder :refer [process-decks num->percent]]
-            [netrunner.auth :refer [authenticated] :as auth]
-            [netrunner.ajax :refer [POST GET]]
+            [meccg.appstate :refer [app-state]]
+            [meccg.deckbuilder :refer [process-decks num->percent]]
+            [meccg.auth :refer [authenticated] :as auth]
+            [meccg.ajax :refer [POST GET]]
             [goog.string :as gstring]
             [goog.string.format]))
 
 (def stats-channel (chan))
 (def stats-socket (.connect js/io (str js/iourl "/stats")))
-(.on stats-socket "netrunner" #(put! stats-channel (js->clj % :keywordize-keys true)))
+(.on stats-socket "meccg" #(put! stats-channel (js->clj % :keywordize-keys true)))
 
 (defn notnum->zero
   "Converts a non-positive-number value to zero.  Returns the value if already a number"
@@ -27,7 +27,7 @@
         (go (let [result (<! (POST "/user/clearstats" data :json))]
               (swap! app-state assoc :stats result)))))))
 
-;; Go loop to receive messages from node server to refresh stats on game-end
+;; Go loop to receive messages from node locale to refresh stats on game-end
 (go (while true
       (let [msg (<! stats-channel)
             result (-> (<! (GET "/user")) :json first :stats)
@@ -68,15 +68,15 @@
                                 :start-key :games-started :complete-key :games-completed
                                 :win-key :wins :lose-key :loses})]
           [:div
-           [:h3 "Corp Stats"]
+           [:h3 "Contestant Stats"]
            (om/build stat-view {:stats stats
-                                :start-key :games-started-corp :complete-key :games-completed-corp
-                                :win-key :wins-corp :lose-key :loses-corp})]
+                                :start-key :games-started-contestant :complete-key :games-completed-contestant
+                                :win-key :wins-contestant :lose-key :loses-contestant})]
           [:div
-           [:h3 "Runner Stats"]
+           [:h3 "Challenger Stats"]
            (om/build stat-view {:stats stats
-                                :start-key :games-started-runner :complete-key :games-completed-runner
-                                :win-key :wins-runner :lose-key :loses-runner})]]
+                                :start-key :games-started-challenger :complete-key :games-completed-challenger
+                                :win-key :wins-challenger :lose-key :loses-challenger})]]
          [:p
           [:button {:on-click #(clear-user-stats)} "Clear Stats"]]]))))
 

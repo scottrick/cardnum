@@ -2,76 +2,84 @@
 
 (defmacro effect [& expr]
   `(fn ~['state 'side 'eid 'card 'targets]
-     ~(let [actions (map #(if (#{:runner :corp} (second %))
+     ~(let [actions (map #(if (#{:challenger :contestant} (second %))
                             (concat [(first %) 'state (second %)] (drop 2 %))
                             (concat [(first %) 'state 'side] (rest %)))
                          expr)]
-        `(let ~['runner '(:runner @state)
-                'corp '(:corp @state)
-                'corp-reg '(get-in @state [:corp :register])
-                'corp-reg-last '(get-in @state [:corp :register-last-turn])
-                'runner-reg '(get-in @state [:runner :register])
-                'runner-reg-last '(get-in @state [:runner :register-last-turn])
-                'run-server '(when (:run @state)
-                               (get-in @state (concat [:corp :servers] (:server (:run @state)))))
-                'run-ices '(:ices run-server)
-                'current-ice '(when-let [run-pos (:position (:run @state))]
-                                (when (and (pos? run-pos) (<= run-pos (count (:ices run-server))))
-                                  (nth (:ices run-server) (dec run-pos))))
-                'target '(first targets)]
+        `(let ~['challenger '(:challenger @state)
+                'contestant '(:contestant @state)
+                'contestant-reg '(get-in @state [:contestant :register])
+                'contestant-reg-last '(get-in @state [:contestant :register-last-turn])
+                'challenger-reg '(get-in @state [:challenger :register])
+                'challenger-reg-last '(get-in @state [:challenger :register-last-turn])
+                'run-locale '(when (:run @state)
+                               (get-in @state (concat [:contestant :locales] (:locale (:run @state)))))
+                'run-characters '(:characters run-locale)
+                'current-character '(when-let [run-pos (:position (:run @state))]
+                                (when (and (pos? run-pos) (<= run-pos (count (:characters run-locale))))
+                                  (nth (:characters run-locale) (dec run-pos))))
+                'target '(first targets)
+                'played '(if (= (:side card) "Contestant") (:contestant @state) (:challenger @state))
+                'versus '(if (= (:side card) "Contestant") (:challenger @state) (:contestant @state))]
            ~@actions))))
 
 (defmacro req [& expr]
   `(fn ~['state 'side 'eid 'card 'targets]
-     (let ~['runner '(:runner @state)
-            'corp '(:corp @state)
+     (let ~['challenger '(:challenger @state)
+            'contestant '(:contestant @state)
             'run '(:run @state)
-            'run-server '(when (:run @state)
-                           (get-in @state (concat [:corp :servers] (:server (:run @state)))))
-            'run-ices '(:ices run-server)
-            'current-ice '(when-let [run-pos (:position (:run @state))]
-                            (when (and (pos? run-pos) (<= run-pos (count (:ices run-server))))
-                              (nth (:ices run-server) (dec run-pos))))
-            'corp-reg '(get-in @state [:corp :register])
-            'corp-reg-last '(get-in @state [:corp :register-last-turn])
-            'runner-reg '(get-in @state [:runner :register])
-            'runner-reg-last '(get-in @state [:runner :register-last-turn])
+            'run-locale '(when (:run @state)
+                           (get-in @state (concat [:contestant :locales] (:locale (:run @state)))))
+            'run-characters '(:characters run-locale)
+            'current-character '(when-let [run-pos (:position (:run @state))]
+                            (when (and (pos? run-pos) (<= run-pos (count (:characters run-locale))))
+                              (nth (:characters run-locale) (dec run-pos))))
+            'contestant-reg '(get-in @state [:contestant :register])
+            'contestant-reg-last '(get-in @state [:contestant :register-last-turn])
+            'challenger-reg '(get-in @state [:challenger :register])
+            'challenger-reg-last '(get-in @state [:challenger :register-last-turn])
             'target '(first targets)
-            'installed '(#{:rig :servers} (first (:zone (get-nested-host card))))
-            'remotes '(get-remote-names @state)
-            'servers '(zones->sorted-names (get-zones @state))
-            'unprotected '(let [server (second (:zone (if (:host card)
+            'installed '(#{:rig :locales} (first (:zone (get-nested-host card))))
+            'parties '(get-party-names @state)
+            'locales '(zones->sorted-names (get-zones @state))
+            'unprotected '(let [locale (second (:zone (if (:host card)
                                                         (get-card state (:host card)) card)))]
-                            (empty? (get-in @state [:corp :servers server :ices])))
-            'runnable-servers '(zones->sorted-names (get-runnable-zones @state))
-            'hq-runnable '(not (:hq (get-in runner [:register :cannot-run-on-server])))
-            'rd-runnable '(not (:rd (get-in runner [:register :cannot-run-on-server])))
-            'archives-runnable '(not (:archives (get-in runner [:register :cannot-run-on-server])))
-            'tagged '(or (> (:tagged runner) 0) (> (:tag runner) 0))
-            'has-bad-pub '(or (> (:bad-publicity corp) 0) (> (:has-bad-pub corp) 0))
-            'this-server '(let [s (-> card :zone rest butlast)
-                                r (:server run)]
+                            (empty? (get-in @state [:contestant :locales locale :characters])))
+            'runnable-locales '(zones->sorted-names (get-runnable-zones @state))
+            'hq-runnable '(not (:hq (get-in challenger [:register :cannot-run-on-locale])))
+            'rd-runnable '(not (:rd (get-in challenger [:register :cannot-run-on-locale])))
+            'archives-runnable '(not (:archives (get-in challenger [:register :cannot-run-on-locale])))
+            'tagged '(or (> (:tagged challenger) 0) (> (:tag challenger) 0))
+            'has-bad-pub '(or (> (:bad-publicity contestant) 0) (> (:has-bad-pub contestant) 0))
+            'this-locale '(let [s (-> card :zone rest butlast)
+                                r (:locale run)]
                             (and (= (first r) (first s))
-                                 (= (last r) (last s))))]
-        ~@expr)))
+                                 (= (last r) (last s))))
+            'played '(if (= (:side card) "Contestant") (:contestant @state) (:challenger @state))
+            'versus '(if (= (:side card) "Contestant") (:challenger @state) (:contestant @state))
+            'served '(zones->sorted-names
+                       (if (= (:side card) "Contestant") (get-zones @state) (get-zones-challenger @state)))]
+       ~@expr)))
 
 (defmacro msg [& expr]
   `(fn ~['state 'side 'eid 'card 'targets]
-     (let ~['runner '(:runner @state)
-            'corp '(:corp @state)
-            'corp-reg '(get-in @state [:corp :register])
-            'corp-reg-last '(get-in @state [:corp :register-last-turn])
-            'runner-reg '(get-in @state [:runner :register])
-            'runner-reg-last '(get-in @state [:runner :register-last-turn])
+     (let ~['challenger '(:challenger @state)
+            'contestant '(:contestant @state)
+            'contestant-reg '(get-in @state [:contestant :register])
+            'contestant-reg-last '(get-in @state [:contestant :register-last-turn])
+            'challenger-reg '(get-in @state [:challenger :register])
+            'challenger-reg-last '(get-in @state [:challenger :register-last-turn])
             'run '(:run @state)
-            'run-server '(when (:run @state)
-                           (get-in @state (concat [:corp :servers] (:server (:run @state)))))
-            'run-ices '(:ices run-server)
-            'current-ice '(when-let [run-pos (:position (:run @state))]
-                            (when (and (pos? run-pos) (<= run-pos (count (:ices run-server))))
-                              (nth (:ices run-server) (dec run-pos))))
+            'run-locale '(when (:run @state)
+                           (get-in @state (concat [:contestant :locales] (:locale (:run @state)))))
+            'run-characters '(:characters run-locale)
+            'current-character '(when-let [run-pos (:position (:run @state))]
+                            (when (and (pos? run-pos) (<= run-pos (count (:characters run-locale))))
+                              (nth (:characters run-locale) (dec run-pos))))
             'target '(first targets)
-            'tagged '(or (> (:tagged runner) 0) (> (:tag runner) 0))]
+            'tagged '(or (> (:tagged challenger) 0) (> (:tag challenger) 0))
+            'played '(if (= (:side card) "Contestant") (:contestant @state) (:challenger @state))
+            'versus '(if (= (:side card) "Contestant") (:challenger @state) (:contestant @state))]
        (str ~@expr))))
 
 (defmacro when-completed

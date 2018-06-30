@@ -37,11 +37,17 @@
    "purge" core/do-purge
    "remove-tag" core/remove-tag
    "play" core/play
-   "rez" #(core/rez %1 %2 (:card %3) nil)
-   "derez" #(core/derez %1 %2 (:card %3))
+   "reveal" #(core/reveal %1 %2 (:card %3) nil)
+   "hide" #(core/hide %1 %2 (:card %3))
+   "tap" #(core/tap %1 %2 (:card %3))
+   "untap" #(core/untap %1 %2 (:card %3))
+   "wound" #(core/wound %1 %2 (:card %3))
+   "invert" #(core/invert %1 %2 (:card %3))
+   "rotate" #(core/rotate %1 %2 (:card %3))
+   "fix-tap" #(core/fix-tap %1 %2 (:card %3))
    "run" core/click-run
    "no-action" core/no-action
-   "corp-phase-43" core/corp-phase-43
+   "contestant-phase-43" core/contestant-phase-43
    "continue" core/continue
    "access" core/successful-run
    "jack-out" core/jack-out
@@ -51,13 +57,17 @@
    "select" core/select
    "shuffle" core/shuffle-deck
    "ability" core/play-ability
-   "runner-ability" core/play-runner-ability
+   "challenger-ability" core/play-challenger-ability
    "subroutine" core/play-subroutine
-   "trash-resource" core/trash-resource
+   "trash-muthereff" core/trash-muthereff
    "dynamic-ability" core/play-dynamic-ability
    "toast" core/toast
    "view-deck" core/view-deck
-   "close-deck" core/close-deck})
+   "close-deck" core/close-deck
+   "view-sideboard" core/view-sideboard
+   "close-sideboard" core/close-sideboard
+   "view-sites" core/view-sites
+   "close-sites" core/close-sites})
 
 (defn convert [args]
   (try
@@ -74,7 +84,7 @@
 (defn not-spectator?
   "Returns true if the specified user in the specified state is not a spectator"
   [state user]
-  (and state (#{(get-in @state [:corp :user]) (get-in @state [:runner :user])} user)))
+  (and state (#{(get-in @state [:contestant :user]) (get-in @state [:challenger :user])} user)))
 
 (defn handle-do
   "Ensures the user is allowed to do command they are trying to do"
@@ -92,44 +102,64 @@
                 :else card))
             cards)))
 
-(defn- make-private-runner [state]
-  (-> (:runner @state)
-      (update-in [:hand] #(private-card-vector state :runner %))
-      (update-in [:discard] #(private-card-vector state :runner %))
-      (update-in [:deck] #(private-card-vector state :runner %))
-      (update-in [:rig :facedown] #(private-card-vector state :runner %))
-      (update-in [:rig :resource] #(private-card-vector state :runner %))))
+(defn- make-private-challenger [state]
+  (-> (:challenger @state)
+      (update-in [:hand] #(private-card-vector state :challenger %))
+      (update-in [:discard] #(private-card-vector state :challenger %))
+      (update-in [:deck] #(private-card-vector state :challenger %))
+      (update-in [:sideboard] #(private-card-vector state :challenger %))
+      (update-in [:sites] #(private-card-vector state :challenger %))
+      (update-in [:rig :facedown] #(private-card-vector state :challenger %))
+      (update-in [:rig :muthereff] #(private-card-vector state :challenger %))))
 
-(defn- make-private-corp [state]
-  (let [zones (concat [[:hand]] [[:discard]] [[:deck]]
-                      (for [server (keys (:servers (:corp @state)))] [:servers server :ices])
-                      (for [server (keys (:servers (:corp @state)))] [:servers server :content]))]
-    (loop [s (:corp @state)
+(defn- make-private-contestant [state]
+  (let [zones (concat [[:hand]] [[:discard]] [[:deck]] [[:sideboard]] [[:sites]]
+                      (for [locale (keys (:locales (:contestant @state)))] [:locales locale :characters])
+                      (for [locale (keys (:locales (:contestant @state)))] [:locales locale :content]))]
+    (loop [s (:contestant @state)
            z zones]
       (if (empty? z)
         s
-        (recur (update-in s (first z) #(private-card-vector state :corp %)) (next z))))))
+        (recur (update-in s (first z) #(private-card-vector state :contestant %)) (next z))))))
 
 (defn- make-private-deck [state side deck]
   (if (:view-deck (side @state))
     deck
     (private-card-vector state side deck)))
 
+(defn- make-private-sideboard [state side sideboard]
+  (if (:view-sideboard (side @state))
+    sideboard
+    (private-card-vector state side sideboard)))
+
+(defn- make-private-sites [state side sites]
+  (let [sorted (if (:cut-region (side @state))
+                 (filter #(= (:Region %) (:cut-region (side @state))) sites)
+                 nil)]
+    (if (:view-sites (side @state))
+      sorted
+      (private-card-vector state side sorted))))
+
 (defn- private-states [state]
-  "Generates privatized states for the Corp, Runner and any spectators from the base state.
+  "Generates privatized states for the Contestant, Challenger and any spectators from the base state.
   If `:spectatorhands` is on, all information is passed on to spectators as well."
-  ;; corp, runner, spectator
-  (let [corp-private (make-private-corp state)
-        runner-private (make-private-runner state)
-        corp-deck (update-in (:corp @state) [:deck] #(make-private-deck state :corp %))
-        runner-deck (update-in (:runner @state) [:deck] #(make-private-deck state :runner %))]
-    [(assoc @state :runner runner-private
-                   :corp corp-deck)
-     (assoc @state :corp corp-private
-                   :runner runner-deck)
+  ;; contestant, challenger, spectator
+  (let [contestant-private (make-private-contestant state)
+        challenger-private (make-private-challenger state)
+        contestant-deck (update-in (:contestant @state) [:deck] #(make-private-deck state :contestant %))
+        challenger-deck (update-in (:challenger @state) [:deck] #(make-private-deck state :challenger %))
+        contestant-sideboard (update-in (:contestant @state) [:sideboard] #(make-private-sideboard state :contestant %))
+        challenger-sideboard (update-in (:challenger @state) [:sideboard] #(make-private-sideboard state :challenger %))
+        contestant-sites (update-in (:contestant @state) [:sites] #(make-private-sites state :contestant %))
+        challenger-sites (update-in (:challenger @state) [:sites] #(make-private-sites state :challenger %))]
+    [(assoc @state :challenger challenger-private
+                   :contestant contestant-deck :contestant contestant-sideboard :contestant contestant-sites)
+     (assoc @state :contestant contestant-private
+                   :challenger challenger-deck :challenger challenger-sideboard :challenger challenger-sites)
      (if (get-in @state [:options :spectatorhands])
-       (assoc @state :corp corp-deck :runner runner-deck)
-       (assoc @state :corp corp-private :runner runner-private))]))
+       (assoc @state :contestant contestant-deck :contestant contestant-sideboard :contestant contestant-sites
+                     :challenger challenger-deck :challenger challenger-sideboard :challenger challenger-sites)
+       (assoc @state :contestant contestant-private :challenger challenger-private))]))
 
 (defn- reset-all-cards
   [cards]
@@ -161,8 +191,8 @@
              (when state
                ;; when rejoining, there is probably a new socket ID that needs to be set into the user.
                (let [side (cond
-                            (= (:_id user) (get-in @state [:corp :user :_id])) :corp
-                            (= (:_id user) (get-in @state [:runner :user :_id])) :runner
+                            (= (:_id user) (get-in @state [:contestant :user :_id])) :contestant
+                            (= (:_id user) (get-in @state [:challenger :user :_id])) :challenger
                             :else nil)]
                  (swap! state assoc-in [side :user] user)
                  (swap! state update-in [:log] #(conj % {:user "__system__" :text text})))))
@@ -182,7 +212,7 @@
                         false)))))))
 
 (defn run
-  "Main thread for handling commands from the UI server. Attempts to apply a command,
+  "Main thread for handling commands from the UI locale. Attempts to apply a command,
   then returns the resulting game state, or another message as appropriate."
   [socket]
   (while true
@@ -192,33 +222,33 @@
         (let [{:keys [gameid action command args] :as msg} (convert (.recv socket))]
           (if (= action "alert")
             (do (doseq [state (vals @game-states)]
-                  (doseq [side [:runner :corp]]
+                  (doseq [side [:challenger :contestant]]
                     (toast state side command "warning" {:time-out 0 :close-button true})))
                 (.send socket (generate-string "ok")))
             (let [state (@game-states (:gameid msg))
                   old-state (when state (@old-states (:gameid msg)))
-                  [old-corp old-runner old-spect] (when old-state (private-states (atom old-state)))]
+                  [old-contestant old-challenger old-spect] (when old-state (private-states (atom old-state)))]
               (if (handle-command msg state)
                 (if (= action "initialize")
                   (.send socket (generate-string "ok"))
                   (if-let [new-state (@game-states gameid)]
-                    (let [[new-corp new-runner new-spect] (private-states new-state)]
+                    (let [[new-contestant new-challenger new-spect] (private-states new-state)]
                       (do
                         (swap! old-states assoc (:gameid msg) @new-state)
                         (if (#{"start" "reconnect" "notification" "rejoin"} action)
                           ;; send the whole state, not a diff
                           (.send socket (generate-string {:action      action
-                                                          :runnerstate (strip new-runner)
-                                                          :corpstate   (strip new-corp)
+                                                          :challengerstate (strip new-challenger)
+                                                          :contestantstate   (strip new-contestant)
                                                           :spectstate  (strip new-spect)
                                                           :gameid      gameid}))
                           ;; send a diff
-                          (let [runner-diff (differ/diff (strip old-runner) (strip new-runner))
-                                corp-diff (differ/diff (strip old-corp) (strip new-corp))
+                          (let [challenger-diff (differ/diff (strip old-challenger) (strip new-challenger))
+                                contestant-diff (differ/diff (strip old-contestant) (strip new-contestant))
                                 spect-diff (differ/diff (strip old-spect) (strip new-spect))]
                             (.send socket (generate-string {:action     action
-                                                            :runnerdiff runner-diff
-                                                            :corpdiff   corp-diff
+                                                            :challengerdiff challenger-diff
+                                                            :contestantdiff   contestant-diff
                                                             :spectdiff  spect-diff
                                                             :gameid     gameid}))))))
                     (.send socket (generate-string {:action action :state old-state :gameid gameid}))))

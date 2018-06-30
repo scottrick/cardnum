@@ -2,16 +2,16 @@
   (:require [clojure.test :refer :all]
             test.core
             test.cards.agendas
-            test.cards.assets
+            test.cards.sites
             test.cards.events
-            test.cards.hardware
-            test.cards.ice
+            test.cards.hazard
+            test.cards.character
             test.cards.icebreakers
             test.cards.identities
             test.cards.operations
-            test.cards.programs
             test.cards.resources
-            test.cards.upgrades
+            test.cards.resources
+            test.cards.regions
             test.games.scenarios))
 
 (deftest all-tests

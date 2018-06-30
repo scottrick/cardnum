@@ -1,17 +1,17 @@
-(ns netrunner.chat
+(ns meccg.chat
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [om.core :as om :include-macros true]
             [sablono.core :as sab :include-macros true]
             [cljs.core.async :refer [chan put! <!] :as async]
-            [netrunner.appstate :refer [app-state]]
-            [netrunner.auth :refer [avatar authenticated] :as auth]
-            [netrunner.gameboard :refer [card-preview-mouse-over card-preview-mouse-out get-message-parts create-span card-zoom] :as gameboard]
-            [netrunner.ajax :refer [GET]]))
+            [meccg.appstate :refer [app-state]]
+            [meccg.auth :refer [avatar authenticated] :as auth]
+            [meccg.gameboard :refer [card-preview-mouse-over card-preview-mouse-out get-message-parts create-span card-zoom] :as gameboard]
+            [meccg.ajax :refer [GET]]))
 
 (def chat-channel (chan))
 (def chat-socket (.connect js/io (str js/iourl "/chat")))
 
-(.on chat-socket "netrunner" #(put! chat-channel (js->clj % :keywordize-keys true)))
+(.on chat-socket "meccg" #(put! chat-channel (js->clj % :keywordize-keys true)))
 
 (defn filter-blocked-messages
   [messages]
@@ -36,7 +36,7 @@
            text (.-value input)
            $div (js/$ ".chat-app .message-list")]
        (when-not (empty? text)
-         (.emit chat-socket "netrunner" #js {:channel (name channel)
+         (.emit chat-socket "meccg" #js {:channel (name channel)
                                              :msg text
                                              :username (:username user)
                                              :emailhash (:emailhash user)})
@@ -132,7 +132,7 @@
          [:div.chat-app
           [:div.blue-shade.panel.channel-list
            [:h4 "Channels"]
-           (for [ch [:general :america :europe :asia-pacific :united-kingdom :français :español :italia :polska :português :sverige :stimhack-league]]
+           (for [ch [:general ]]
              (om/build channel-view {:channel ch :active-channel (:channel state)}
                        {:init-state {:channel-ch (:channel-ch state)}}))]
           [:div.chat-container

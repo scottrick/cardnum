@@ -1,13 +1,13 @@
-(ns netrunner.account
+(ns meccg.account
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [om.core :as om :include-macros true]
             [sablono.core :as sab :include-macros true]
             [cljs.core.async :refer [chan put!] :as async]
             [clojure.string :as s]
             [goog.dom :as gdom]
-            [netrunner.auth :refer [authenticated avatar] :as auth]
-            [netrunner.appstate :refer [app-state]]
-            [netrunner.ajax :refer [POST GET]]))
+            [meccg.auth :refer [authenticated avatar] :as auth]
+            [meccg.appstate :refer [app-state]]
+            [meccg.ajax :refer [POST GET]]))
 
 (def alt-arts-channel (chan))
 (defn load-alt-arts []
@@ -190,7 +190,7 @@
 
            [:section
             [:h3  "Game board background"]
-            (for [option [{:name "The Root"        :ref "lobby-bg"}
+            (for [option [{:name "The Root"        :ref "lobby2-bg"}
                           {:name "Freelancer"      :ref "freelancer-bg"}
                           {:name "Mushin No Shin"  :ref "mushin-no-shin-bg"}
                           {:name "Traffic Jam"     :ref "traffic-jam-bg"}

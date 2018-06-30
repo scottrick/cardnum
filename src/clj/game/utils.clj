@@ -22,13 +22,7 @@
   "This combines costs from a number of sources in the game into a single cost per type
   Damage is not merged as it needs to be invidual.  Needs augmention more than net-damage appears"
   [costs]
-  (let [fc (partition 2 (flatten (clean-forfeit costs)))
-        jc (filter #(not= :net-damage (first %)) fc)
-        dc (filter #(= :net-damage (first %)) fc)]
-    (vec (map vec (concat
-      (reduce #(let [k (first %2) value (last %2)]
-                    (assoc %1 k (+ (or (k %1) 0) value)))
-                 {} jc) dc)))))
+  {})
 
 (defn remove-once [pred coll]
   (let [[head tail] (split-with pred coll)]
@@ -73,7 +67,7 @@
   (str (Character/toUpperCase (first string)) (subs string 1)))
 
 (defn costs-to-symbol
-  "Used during steal to print runner prompt for payment"
+  "Used during steal to print challenger prompt for payment"
   [costs]
   (join ", " (map #(let [key (first %) value (last %)]
                      (case key
@@ -81,7 +75,7 @@
                        :click (reduce str (for [i (range value)] "[Click]"))
                        :net-damage (str value " net damage")
                        :mill (str value " card mill")
-                       :hardware (str value " installed hardware")
+                       :hazard (str value " installed hazard")
                        (str value (str key)))) (partition 2 (flatten costs)))))
 
 (defn vdissoc [v n]
@@ -127,8 +121,8 @@
   "Returns true if player has spent at least one click"
   [side state]
   (case side
-    :runner (contains? (into {} (get @state :turn-events)) :runner-spent-click)
-    :corp   (contains? (into {} (get @state :turn-events)) :corp-spent-click)))
+    :challenger (contains? (into {} (get @state :turn-events)) :challenger-spent-click)
+    :contestant   (contains? (into {} (get @state :turn-events)) :contestant-spent-click)))
 
 (defn used-this-turn?
   "Returns true if a card has been used this turn"
@@ -173,17 +167,17 @@
      (str "spends " cost-str " to " verb " "))))
 
 (defn other-side [side]
-  (cond (= side :corp) :runner
-        (= side :runner) :corp))
+  (cond (= side :contestant) :challenger
+        (= side :challenger) :contestant))
 
 (defn side-str
   "Converts kw into str. If str is passed same str is returned."
   [side]
   (cond
-    (= side :corp) "Corp"
-    (= side "Corp") "Corp"
-    (= side :runner) "Runner"
-    (= side "Runner") "Runner"))
+    (= side :contestant) "Contestant"
+    (= side "Contestant") "Contestant"
+    (= side :challenger) "Challenger"
+    (= side "Challenger") "Challenger"))
 
 (defn same-side?
   "Checks if two supplied sides are the same side. Accepts both keyword and str."
@@ -197,17 +191,17 @@
     (= (func card1) (func card2))))
 
 ;;; Functions for working with zones.
-(defn remote-num->name [num]
-  (str "Server " num))
+(defn party-num->name [num]
+  (str "Locale " num))
 
-(defn remote->name
-  "Converts a remote zone to a string"
+(defn party->name
+  "Converts a party zone to a string"
   [zone]
   (let [kw (if (keyword? zone) zone (last zone))
         s (str kw)]
-    (if (.startsWith s ":remote")
-      (let [num (last (split s #":remote"))]
-        (remote-num->name num)))))
+    (if (.startsWith s ":party")
+      (let [num (last (split s #":party"))]
+        (party-num->name num)))))
 
 (defn central->name
   "Converts a central zone keyword to a string."
@@ -222,7 +216,7 @@
   "Converts a zone to a string."
   [zone]
   (or (central->name zone)
-      (remote->name zone)))
+      (party->name zone)))
 
 (defn zone->sort-key [zone]
   (case (if (keyword? zone) zone (last zone))
@@ -230,37 +224,37 @@
     :rd -2
     :hq -1
     (string->num
-      (last (safe-split (str zone) #":remote")))))
+      (last (safe-split (str zone) #":party")))))
 
 (defn zones->sorted-names [zones]
   (->> zones (sort-by zone->sort-key) (map zone->name)))
 
-(defn is-remote?
-  "Returns true if the zone is for a remote server"
+(defn is-party?
+  "Returns true if the zone is for a party locale"
   [zone]
-  (not (nil? (remote->name zone))))
+  (not (nil? (party->name zone))))
 
 (defn is-central?
-  "Returns true if the zone is for a central server"
+  "Returns true if the zone is for a central locale"
   [zone]
-  (not (is-remote? zone)))
+  (not (is-party? zone)))
 
 (defn central->zone
-  "Converts a central server keyword like :discard into a corresponding zone vector"
+  "Converts a central locale keyword like :discard into a corresponding zone vector"
   [zone]
   (case (if (keyword? zone) zone (last zone))
-    :discard [:servers :archives]
-    :hand [:servers :hq]
-    :deck [:servers :rd]
+    :discard [:locales :archives]
+    :hand [:locales :hq]
+    :deck [:locales :rd]
     nil))
 
 (defn type->rig-zone
-  "Converts a runner's card type to a vector zone, e.g. 'Program' -> [:rig :program]"
+  "Converts a challenger's card type to a vector zone, e.g. 'Resource' -> [:rig :resource]"
   [type]
   (vec [:rig (-> type .toLowerCase keyword)]))
 
-(defn get-server-type [zone]
-  (or (#{:hq :rd :archives} zone) :remote))
+(defn get-locale-type [zone]
+  (or (#{:hq :rd :archives} zone) :party))
 
 (defn private-card [card]
   (select-keys card [:zone :cid :side :new :host :counter :advance-counter :hosted :icon]))

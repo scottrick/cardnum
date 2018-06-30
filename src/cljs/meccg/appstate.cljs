@@ -1,9 +1,9 @@
-(ns netrunner.appstate)
+(ns meccg.appstate)
 
 (def app-state
   (atom {:active-page "/"
          :user (js->clj js/user :keywordize-keys true)
-         :options (merge {:background "lobby-bg"
+         :options (merge {:background "lobby2-bg"
                           :show-alt-art true
                           :deckstats "always"
                           :gamestats "always"
@@ -18,7 +18,6 @@
          :decks [] :decks-loaded false
          :stats (:stats (js->clj js/user :keywordize-keys true))
          :games [] :gameid nil :messages []
-         :channels {:general [] :america [] :europe [] :asia-pacific [] :united-kingdom [] :français []
-                    :español [] :italia [] :português [] :sverige [] :stimhack-league []}
+         :channels {:general []}
          }))
 

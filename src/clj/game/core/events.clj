@@ -1,7 +1,7 @@
 (in-ns 'game.core)
 
-(declare can-trigger? card-def clear-wait-prompt effect-completed event-title get-card get-nested-host get-remote-names
-         get-runnable-zones get-zones installed? make-eid register-effect-completed register-suppress resolve-ability
+(declare can-trigger? card-def clear-wait-prompt effect-completed event-title get-card get-nested-host get-party-names
+         get-runnable-zones get-zones get-zones-challenger installed? make-eid register-effect-completed register-suppress resolve-ability
          show-wait-prompt trigger-suppress unregister-suppress)
 
 ; Functions for registering and dispatching events.
@@ -17,9 +17,9 @@
   "Removes all event handlers defined for the given card."
   [state side card]
   (let [cdef (card-def card)]
-    ;; Combine normal events and derezzed events. Any merge conflicts should not matter
+    ;; Combine normal events and hidden events. Any merge conflicts should not matter
     ;; as they should cause all relevant events to be removed anyway.
-    (doseq [e (merge (:events cdef) (:derezzed-events cdef))]
+    (doseq [e (merge (:events cdef) (:hidden-events cdef))]
       (swap! state update-in [:events (first e)]
              #(remove (fn [effect] (= (get-in effect [:card :cid]) (:cid card))) %))))
   (unregister-suppress state side card))
@@ -145,7 +145,7 @@
   event: the event keyword to trigger handlers for
   first-ability: an ability map (fed to resolve-ability) that should be resolved after the list of handlers is determined
                  but before any of them is actually fired. Typically used for core rules that happen in the same window
-                 as triggering handlers, such as trashing a corp Current when an agenda is stolen. Necessary for
+                 as triggering handlers, such as trashing a contestant Current when an agenda is stolen. Necessary for
                  interaction with New Angeles Sol and Employee Strike
   card-ability:  a card's ability that triggers at the same time as the event trigger, but is coded as a card ability
                  and not an event handler. (For example, :stolen on agendas happens in the same window as :agenda-stolen
@@ -227,15 +227,15 @@
   [state side ev]
   (= (count (turn-events state side ev)) 1))
 
-(defn first-successful-run-on-server?
-  "Returns true if the active run is the first succesful run on the given server"
-  [state server]
-  (empty? (filter #(= [server] %) (turn-events state :runner :successful-run))))
+(defn first-successful-run-on-locale?
+  "Returns true if the active run is the first succesful run on the given locale"
+  [state locale]
+  (empty? (filter #(= [locale] %) (turn-events state :challenger :successful-run))))
 
 (defn get-turn-damage
   "Returns the value of damage take this turn"
   [state side]
-  (apply + (map #(nth % 2) (turn-events state :runner :damage))))
+  (apply + (map #(nth % 2) (turn-events state :challenger :damage))))
 
 (defn get-installed-trashed
   "Returns list of cards trashed this turn owned by side that were installed"

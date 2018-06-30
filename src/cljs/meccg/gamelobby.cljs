@@ -1,21 +1,20 @@
-(ns netrunner.gamelobby
+(ns meccg.gamelobby
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [om.core :as om :include-macros true]
             [sablono.core :as sab :include-macros true]
             [cljs.core.async :refer [chan put! <!] :as async]
             [clojure.string :refer [join]]
-            [netrunner.ajax :refer [GET]]
-            [netrunner.appstate :refer [app-state]]
-            [netrunner.auth :refer [authenticated avatar] :as auth]
-            [netrunner.gameboard :refer [init-game game-state toast launch-game]]
-            [netrunner.cardbrowser :refer [image-url] :as cb]
-            [netrunner.stats :refer [notnum->zero]]
-            [netrunner.deckbuilder :refer [deck-status-span deck-status-label process-decks load-decks num->percent]]))
+            [meccg.ajax :refer [GET]]
+            [meccg.appstate :refer [app-state]]
+            [meccg.auth :refer [authenticated avatar] :as auth]
+            [meccg.gameboard :refer [init-game game-state toast launch-game]]
+            [meccg.cardbrowser :refer [image-url] :as cb]
+            [meccg.stats :refer [notnum->zero]]
+            [meccg.deckbuilder :refer [deck-status-span deck-status-label process-decks load-decks num->percent]]))
 
 (def socket-channel (chan))
 (def socket (.connect js/io (str js/iourl "/lobby")))
-(.on socket "netrunner" #(put! socket-channel (js->clj % :keywordize-keys true)))
-
+(.on socket "meccg" #(put! socket-channel (js->clj % :keywordize-keys true)))
 
 (defn sort-games-list [games]
    (sort-by #(vec (map (assoc % :started (not (:started %))
@@ -57,13 +56,14 @@
   ([msg] (send msg nil))
   ([msg fn]
    (try (js/ga "send" "event" "lobby" msg) (catch js/Error e))
-   (.emit socket "netrunner" (clj->js msg) fn)))
+   (.emit socket "meccg" (clj->js msg) fn)))
 
 (defn new-game [cursor owner]
   (authenticated
    (fn [user]
      (om/set-state! owner :title (str (:username user) "'s game"))
-     (om/set-state! owner :side "Corp")
+     (om/set-state! owner :side "Contestant")
+     (om/set-state! owner :alignment "Hero")
      (om/set-state! owner :editing true)
      (om/set-state! owner :flash-message "")
      (om/set-state! owner :protected false)
@@ -88,6 +88,7 @@
                    :allowspectator (om/get-state owner :allowspectator)
                    :spectatorhands (om/get-state owner :spectatorhands)
                    :side (om/get-state owner :side)
+                   :alignment (om/get-state owner :alignment)
                    :room (om/get-state owner :current-room)
                    :options (:options @app-state)})))))))
 
@@ -96,7 +97,11 @@
    (fn [user]
      (om/set-state! owner :editing false)
      (swap! app-state assoc :messages [])
-     (send {:action action :gameid gameid :password password :options (:options @app-state)}
+     (send {:action action
+            :gameid gameid
+            :password password
+            :alignment (om/get-state owner :alignment)
+            :options (:options @app-state)}
            #(cond
               (= % "invalid password") (om/set-state! owner :error-msg "Invalid password")
               (= % "not allowed") (om/set-state! owner :error-msg "Not allowed")
@@ -142,16 +147,19 @@
       [:h3 "Select your deck"]
       [:div.deck-collection
        (let [players (:players (some #(when (= (:gameid %) gameid) %) games))
+             alignment (:alignment (some #(when (= (:user %) user) %) players))
              side (:side (some #(when (= (:user %) user) %) players))]
          [:div {:data-dismiss "modal"}
-          (for [deck (sort-by :date > (filter #(= (get-in % [:identity :side]) side) decks))]
-            [:div.deckline {:on-click #(send {:action "deck" :gameid (:gameid @app-state) :deck deck})}
-             [:img {:src (image-url (:identity deck))
-                    :alt (get-in deck [:identity :title] "")}]
-             [:div.float-right (deck-status-span sets deck)]
-             [:h4 (:name deck)]
-             [:div.float-right (-> (:date deck) js/Date. js/moment (.format "MMM Do YYYY"))]
-             [:p (get-in deck [:identity :title])]])])]]])))
+            (for [deck (sort-by :date > (filter #(= (get-in % [:identity :alignment]) alignment) decks))]
+              [:div.deckline {:on-click #(send {:action "deck" :gameid (:gameid @app-state) :deck deck})}
+               [:img {:src (image-url (:identity deck))
+                      :alt (get-in deck [:identity :title] "")}]
+               [:div.float-right (deck-status-span sets deck)]
+               [:h4 (:name deck)]
+               [:div.float-right (-> (:date deck) js/Date. js/moment (.format "MMM Do YYYY"))]
+               [:p (get-in deck [:identity :title])]
+               ])
+          ])]]])))
 
 (defn faction-icon
   [faction identity]
@@ -186,13 +194,13 @@
     [:span.player
      (om/build avatar (:user player) {:opts {:size 22}})
      (user-status-span player)
-     (let [side (:side player)
+     (let [alignment (:alignment player)
            faction (:faction player)
            identity (:identity player)
            specs (:allowspectator game)]
        (cond
          (and (some? faction) (not= "Neutral" faction) specs) (faction-icon faction identity)
-         side [:span.side (str "(" side ")")]))])))
+         alignment [:span.alignment (str " (" alignment ")")]))])))
 
 (defn chat-view [messages owner]
   (reify
@@ -235,6 +243,15 @@
                     (do (swap! app-state assoc :password-gameid gameid) (om/set-state! owner :prompt action))))))]
        (sab/html
         [:div.gameline {:class (when (= current-game gameid) "active")}
+         [:section
+          [:h3 "Alignment"]
+          (for [option ["Hero" "Minion" "Balrog" "Fallen-wizard" "Elf-lord" "Dwarf-lord"]]
+            [:p
+             [:label [:input {:type "radio"
+                              :name "alignment"
+                              :value option
+                              :on-change #(om/set-state! owner :alignment (.. % -target -value))
+                              :checked (= (om/get-state owner :alignment) option)}] option]])]
          (when (and (:allowspectator game) (not (or password-game current-game)))
            [:button {:on-click #(join "watch")} "Watch"])
          (when-not (or current-game (= (count players) 2) started password-game)
@@ -356,14 +373,14 @@
                                    :value (:title state) :placeholder "Title" :maxLength "100"}]]
 
               [:section
-               [:h3 "Side"]
-               (for [option ["Corp" "Runner"]]
+               [:h3 "Alignment"]
+               (for [option ["Hero" "Minion" "Balrog" "Fallen-wizard" "Elf-lord" "Dwarf-lord"]]
                  [:p
                   [:label [:input {:type "radio"
-                                   :name "side"
+                                   :name "alignment"
                                    :value option
-                                   :on-change #(om/set-state! owner :side (.. % -target -value))
-                                   :checked (= (om/get-state owner :side) option)}] option]])]
+                                   :on-change #(om/set-state! owner :alignment (.. % -target -value))
+                                   :checked (= (om/get-state owner :alignment) option)}] option]])]
 
               [:section
                [:h3 "Options"]
@@ -401,16 +418,16 @@
                      (if (every? :deck players)
                        [:button {:on-click #(send {:action "start" :gameid (:gameid @app-state)})} "Start"]
                        [:button {:class "disabled"} "Start"]))
-                   [:button {:on-click #(leave-lobby cursor owner)} "Leave"]
-                   (when (= (-> players first :user) user)
-                     [:button {:on-click #(send {:action "swap" :gameid gameid})} "Swap sides"])]
+                   [:button {:on-click #(leave-lobby cursor owner)} "Leave"]]
                   [:div.content
                    [:h2 (:title game)]
                    (when-not (every? :deck players)
                      [:div.flash-message "Waiting players deck selection"])
+
                    [:h3 "Players"]
                    [:div.players
                     (for [player (:players game)]
+
                       [:div
                        (om/build player-view {:player player})
                        (when-let [deck (:deck player)]
@@ -425,7 +442,11 @@
                          [:span.fake-link.deck-load
                           {:data-target "#deck-select" :data-toggle "modal"
                            :on-click (fn [] (send {:action "deck" :gameid (:gameid @app-state) :deck nil}))
-                           } "Select deck"])])]
+                           } "Select deck"])]
+
+                      )
+                    ]
+
                    (when (:allowspectator game)
                      [:div.spectators
                       (let [c (count (:spectators game))]
