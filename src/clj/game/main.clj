@@ -37,8 +37,8 @@
    "purge" core/do-purge
    "remove-tag" core/remove-tag
    "play" core/play
-   "rez" #(core/rez %1 %2 (:card %3) nil)
-   "derez" #(core/derez %1 %2 (:card %3))
+   "reveal" #(core/reveal %1 %2 (:card %3) nil)
+   "hide" #(core/hide %1 %2 (:card %3))
    "tap" #(core/tap %1 %2 (:card %3))
    "untap" #(core/untap %1 %2 (:card %3))
    "wound" #(core/wound %1 %2 (:card %3))
@@ -114,8 +114,8 @@
 
 (defn- make-private-contestant [state]
   (let [zones (concat [[:hand]] [[:discard]] [[:deck]] [[:sideboard]] [[:sites]]
-                      (for [server (keys (:servers (:contestant @state)))] [:servers server :characters])
-                      (for [server (keys (:servers (:contestant @state)))] [:servers server :content]))]
+                      (for [locale (keys (:locales (:contestant @state)))] [:locales locale :characters])
+                      (for [locale (keys (:locales (:contestant @state)))] [:locales locale :content]))]
     (loop [s (:contestant @state)
            z zones]
       (if (empty? z)
@@ -212,7 +212,7 @@
                         false)))))))
 
 (defn run
-  "Main thread for handling commands from the UI server. Attempts to apply a command,
+  "Main thread for handling commands from the UI locale. Attempts to apply a command,
   then returns the resulting game state, or another message as appropriate."
   [socket]
   (while true

@@ -1,6 +1,6 @@
 (in-ns 'game.core)
 
-(declare can-trigger? card-def clear-wait-prompt effect-completed event-title get-card get-nested-host get-remote-names
+(declare can-trigger? card-def clear-wait-prompt effect-completed event-title get-card get-nested-host get-party-names
          get-runnable-zones get-zones get-zones-challenger installed? make-eid register-effect-completed register-suppress resolve-ability
          show-wait-prompt trigger-suppress unregister-suppress)
 
@@ -17,9 +17,9 @@
   "Removes all event handlers defined for the given card."
   [state side card]
   (let [cdef (card-def card)]
-    ;; Combine normal events and derezzed events. Any merge conflicts should not matter
+    ;; Combine normal events and hidden events. Any merge conflicts should not matter
     ;; as they should cause all relevant events to be removed anyway.
-    (doseq [e (merge (:events cdef) (:derezzed-events cdef))]
+    (doseq [e (merge (:events cdef) (:hidden-events cdef))]
       (swap! state update-in [:events (first e)]
              #(remove (fn [effect] (= (get-in effect [:card :cid]) (:cid card))) %))))
   (unregister-suppress state side card))
@@ -227,10 +227,10 @@
   [state side ev]
   (= (count (turn-events state side ev)) 1))
 
-(defn first-successful-run-on-server?
-  "Returns true if the active run is the first succesful run on the given server"
-  [state server]
-  (empty? (filter #(= [server] %) (turn-events state :challenger :successful-run))))
+(defn first-successful-run-on-locale?
+  "Returns true if the active run is the first succesful run on the given locale"
+  [state locale]
+  (empty? (filter #(= [locale] %) (turn-events state :challenger :successful-run))))
 
 (defn get-turn-damage
   "Returns the value of damage take this turn"

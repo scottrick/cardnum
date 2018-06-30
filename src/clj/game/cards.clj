@@ -30,10 +30,10 @@
                                            (= (:side %) "Challenger"))}
                       :effect (effect (trash target {:cause :subroutine}))})
 
-(def contestant-rez-toast
+(def contestant-reveal-toast
   "Effect to be placed with `:challenger-turn-ends` to remind players of 'when turn begins'
   triggers"
-  {:effect (req (toast state :contestant "Reminder: You have unrezzed cards with \"when turn begins\" abilities." "info"))})
+  {:effect (req (toast state :contestant "Reminder: You have unrevealed cards with \"when turn begins\" abilities." "info"))})
 
 (declare reorder-final) ; forward reference since reorder-choice and reorder-final are mutually recursive
 
@@ -111,7 +111,7 @@
     (update-character-strength state side b-new)))
 
 (defn card-index
-  "Get the zero-based index of the given card in its server's list of content. Same as character-index"
+  "Get the zero-based index of the given card in its locale's list of content. Same as character-index"
   [state card]
   (first (keep-indexed #(when (= (:cid %2) (:cid card)) %1) (get-in @state (cons :contestant (:zone card))))))
 

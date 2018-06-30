@@ -1,7 +1,7 @@
 (in-ns 'game.core)
 
 (declare card-init card-str close-access-prompt enforce-msg gain-agenda-point get-agenda-points installed? is-type?
-         in-contestant-scored? prevent-draw resolve-steal-events make-result say show-prompt system-msg trash-cards untrashable-while-rezzed?
+         in-contestant-scored? prevent-draw resolve-steal-events make-result say show-prompt system-msg trash-cards untrashable-while-revealed?
          update-all-character win win-decked play-sfx can-run? untrashable-while-muthereffs?)
 
 ;;;; Functions for applying core MECCG game rules.
@@ -307,15 +307,15 @@
 
 (defn- resolve-trash-end
   [state side eid {:keys [zone type disabled] :as card}
-   {:keys [unpreventable cause keep-server-alive suppress-event host-trashed] :as args} & targets]
+   {:keys [unpreventable cause keep-locale-alive suppress-event host-trashed] :as args} & targets]
   (let [cdef (card-def card)
-        moved-card (move state (to-keyword (:side card)) card :discard {:keep-server-alive keep-server-alive})
+        moved-card (move state (to-keyword (:side card)) card :discard {:keep-locale-alive keep-locale-alive})
         card-prompts (filter #(= (get-in % [:card :title]) (get moved-card :title)) (get-in @state [side :prompt]))]
 
     (when-let [trash-effect (:trash-effect cdef)]
       (when (and (not disabled) (or (and (= (:side card) "Challenger")
                                          (:installed card))
-                                    (and (:rezzed card) (not host-trashed))
+                                    (and (:revealed card) (not host-trashed))
                                     (and (:when-inactive trash-effect) (not host-trashed))))
         (resolve-ability state side trash-effect moved-card (cons cause targets))))
     (swap! state update-in [:per-turn] dissoc (:cid moved-card))
@@ -323,7 +323,7 @@
 
 (defn- resolve-trash
   [state side eid {:keys [zone type] :as card}
-   {:keys [unpreventable cause keep-server-alive suppress-event] :as args} & targets]
+   {:keys [unpreventable cause keep-locale-alive suppress-event] :as args} & targets]
   (if (and (not suppress-event) (not= (last zone) :current)) ; Trashing a current does not trigger a trash event.
     (when-completed (apply trigger-event-sync state side (keyword (str (name side) "-trash")) card cause targets)
                     (apply resolve-trash-end state side eid card args targets))
@@ -337,7 +337,7 @@
    (if (not (some #{:discard} zone))
      (cond
 
-       (untrashable-while-rezzed? card)
+       (untrashable-while-revealed? card)
        (do (enforce-msg state card "cannot be trashed while installed")
            (effect-completed state side eid))
 
@@ -439,7 +439,7 @@
   (update! state side (assoc agenda :current-cost (advancement-cost state side agenda))))
 
 (defn update-all-advancement-costs [state side]
-  (doseq [ag (->> (mapcat :content (flatten (seq (get-in @state [:contestant :servers]))))
+  (doseq [ag (->> (mapcat :content (flatten (seq (get-in @state [:contestant :locales]))))
                   (filter #(is-type? % "Agenda")))]
     (update-advancement-cost state side ag)))
 
@@ -480,7 +480,7 @@
   [state side]
   (trigger-event state side :pre-purge)
   (let [rig-cards (all-installed state :challenger)
-        hosted-on-character (->> (get-in @state [:contestant :servers]) seq flatten (mapcat :characters) (mapcat :hosted))]
+        hosted-on-character (->> (get-in @state [:contestant :locales]) seq flatten (mapcat :characters) (mapcat :hosted))]
     (doseq [card (concat rig-cards hosted-on-character)]
       (when (or (has-subtype? card "Virus")
                 (contains? (:counter card) :virus))

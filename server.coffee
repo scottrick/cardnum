@@ -29,6 +29,9 @@ zmq = require('zmq')
 
 config = require('./config')
 
+#trello api key
+process.env.TRELLO_API_KEY = ''
+
 # MongoDB connection
 appName = 'meccg'
 mongoUrl = process.env['MONGO_URL'] || "mongodb://127.0.0.1:27017/meccg"
@@ -534,8 +537,8 @@ app.set 'port', 1042
 app.set 'ipaddr', "0.0.0.0"
 app.use methodOverride() # provide PUT DELETE
 app.use cookieParser()
-app.use(bodyParser.json({limit: '50mb'}))
-app.use(bodyParser.urlencoded({limit: '50mb', extended: true}))
+app.use(bodyParser.json({limit: '10mb'}))
+app.use(bodyParser.urlencoded({limit: '10mb', extended: true}))
 app.use session
   secret: config.salt
   saveUninitialized: false
@@ -843,7 +846,7 @@ app.get '/data/news', (req, res) ->
     cached = cache.get('news')
     if not cached
       t = new Trello(process.env['TRELLO_API_KEY'])
-      t.get '/1/lists/5668b498ced988b1204cae9a/cards', {filter : 'open', fields : 'dateLastActivity,name,labels'}, (err, data) ->
+      t.get '/1/lists/59e6cce7054d7253dea1fc0f/cards', {filter : 'open', fields : 'dateLastActivity,name,labels'}, (err, data) ->
         throw err if err
         data = ({title: d.name, date: d.date = moment(d.dateLastActivity).format("MM/DD/YYYY HH:mm")} \
           for d in data when d.labels.length == 0)

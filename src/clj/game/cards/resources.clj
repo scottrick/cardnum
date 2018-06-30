@@ -3,7 +3,19 @@
 (declare can-host?)
 
 (def cards-resources
-  {"Dark Tryst"
+  {"By the Ringwraiths Word"
+   {:abilities [{:effect (req (let [r (get-card state card)
+                                    hosted? (character? (:host r))]
+                                (resolve-ability state side
+                                                 {:prompt (if hosted?
+                                                            (msg "You may not play this on different character")
+                                                            (msg "Place this card with a character"))
+                                                  :choices {:req #(if (not hosted?)
+                                                                    (and (character? %)
+                                                                         (can-host? %)))}
+                                                  :msg (msg "host it on " (card-str state target))
+                                                  :effect (effect (host target card))} card nil)))}]}
+   "Dark Tryst"
    {:abilities [{:label "Resolve"
                  :effect (req (let [r (get-card state card)
                                     old-host (:host r)]

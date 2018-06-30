@@ -25,7 +25,7 @@
                   (and (= type :forfeit) (>= (- (count (get-in @state [side :scored])) amount) 0))
                   (and (= type :mill) (>= (- (count (get-in @state [side :deck])) amount) 0))
                   (and (= type :tag) (>= (- (get-in @state [:challenger :tag]) amount) 0))
-                  (and (= type :character) (>= (- (count (filter (every-pred rezzed? character?) (all-installed state :contestant))) amount) 0))
+                  (and (= type :character) (>= (- (count (filter (every-pred revealed? character?) (all-installed state :contestant))) amount) 0))
                   (and (= type :hazard) (>= (- (count (get-in @state [:challenger :rig :hazard])) amount) 0))
                   (and (= type :resource) (>= (- (count (get-in @state [:challenger :rig :resource])) amount) 0))
                   (and (= type :connection) (>= (- (count (filter #(has-subtype? % "Connection")
@@ -88,9 +88,9 @@
     :connection (pay-trash state side card :connection (second cost) (filter (fn [c] (has-subtype? c "Connection"))
                                                                           (all-installed state :challenger)))
 
-    ;; Rezzed Character
-    :character (pay-trash state :contestant card :character (second cost) (filter (every-pred rezzed? character?) (all-installed state :contestant))
-                    {:cause :ability-cost :keep-server-alive true})
+    ;; Revealed Character
+    :character (pay-trash state :contestant card :character (second cost) (filter (every-pred revealed? character?) (all-installed state :contestant))
+                    {:cause :ability-cost :keep-locale-alive true})
 
     :tag (deduce state :challenger cost)
     :net-damage (damage state side :net (second cost) {:unpreventable true})
@@ -130,10 +130,10 @@
 (defn play-cost [state side card all-cost]
   (int 0))
 
-(defn rez-cost-bonus [state side n]
+(defn reveal-cost-bonus [state side n]
   (swap! state update-in [:bonus :cost] (fnil #(+ % n) 0)))
 
-(defn rez-cost [state side {:keys [cost] :as card}]
+(defn reveal-cost [state side {:keys [cost] :as card}]
   0)
 
 (defn run-cost-bonus [state side n]

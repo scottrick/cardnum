@@ -42,7 +42,7 @@
                               (when (zero? (get-in card [:counter :credit]))
                                 (trash state :contestant card)))}]
     {:effect (effect (add-counter card :credit counters))
-     :derezzed-events {:challenger-turn-ends contestant-rez-toast}
+     :hidden-events {:challenger-turn-ends contestant-reveal-toast}
      :events {:contestant-turn-begins ability}
      :abilities [ability]}))
 
@@ -55,7 +55,7 @@
   (gain-agenda-point state side n)))
 
 ;;; Card definitions
-(declare in-server?)
+(declare in-locale?)
 
 (def cards-assets
   {})
