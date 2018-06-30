@@ -1200,7 +1200,10 @@
              [:button {:on-click #(new-deck "Balrog" owner)} "New Balrog deck"]
              [:button {:on-click #(new-deck "Fallen-wizard" owner)} "New Fallen deck"]
              [:button {:on-click #(new-deck "Elf-lord" owner)} "New Elf deck"]
-             [:button {:on-click #(new-deck "Dwarf-lord" owner)} "New Dwarf deck"]]
+             [:button {:on-click #(new-deck "Dwarf-lord" owner)} "New Dwarf deck"]
+             [:button {:on-click #(new-deck "Dragon-lord" owner)} "New Dragon deck"]
+             [:button {:on-click #(new-deck "Atani-lord" owner)} "New Atani deck"]
+             [:button {:on-click #(new-deck "Future Use" owner)} "New Future Use"]]
             [:div.deck-collection
              (when-not (:edit state)
                (om/build deck-collection {:sets sets :decks decks :decks-loaded decks-loaded :active-deck (om/get-state owner :deck)}))
