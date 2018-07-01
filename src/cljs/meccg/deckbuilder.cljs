@@ -7,7 +7,7 @@
             [meccg.appstate :refer [app-state]]
             [meccg.auth :refer [authenticated] :as auth]
             [meccg.cardbrowser :refer [cards-channel image-url card-view show-alt-art? filter-title expand-alts] :as cb]
-            [meccg.sites :refer [all-regions all-wizard-sites all-minion-sites all-fallen-sites all-balrog-sites all-elf-sites all-dwarf-sites all-dual-sites]]
+            [meccg.sites :refer [all-regions all-wizard-sites all-minion-sites all-fallen-sites all-balrog-sites all-elf-sites all-dwarf-sites all-lord-sites all-dual-sites]]
             [meccg.account :refer [load-alt-arts]]
             [meccg.ajax :refer [POST GET]]
             [goog.string :as gstring]
@@ -232,7 +232,8 @@
           combed (into (:characters deck) joined)
           cards (lookup-deck combed)
           dual-sites (parse-deck-string all-dual-sites)
-          dwarf-sites (into dual-sites (parse-deck-string all-dwarf-sites))
+          lord-sites (into dual-sites (parse-deck-string all-lord-sites))
+          dwarf-sites (into lord-sites (parse-deck-string all-dwarf-sites))
           elf-sites (into dwarf-sites (parse-deck-string all-elf-sites))
           fallen-sites (into elf-sites (parse-deck-string all-fallen-sites))
           balrog-sites (into fallen-sites (parse-deck-string all-balrog-sites))

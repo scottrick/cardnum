@@ -15,22 +15,8 @@
 (defonce last-state (atom {}))
 (defonce lock (atom false))
 
-(defn image-url [{:keys [side fullCode] :as card}]
-  (let [art (or (:art card) ; use the art set on the card itself, or fall back to the user's preferences.
-                (get-in @game-state [(keyword (lower-case side)) :user :options :alt-arts (keyword fullCode)]))
-        art-options (:alt_art (get (:alt-arts @app-state) fullCode))
-        special-user (get-in @game-state [(keyword (lower-case side)) :user :special])
-        special-wants-art (get-in @game-state [(keyword (lower-case side)) :user :options :show-alt-art])
-        viewer-wants-art (get-in @app-state [:options :show-alt-art])
-        show-art (and special-user special-wants-art viewer-wants-art)
-        art-available (and art-options (not-empty art-options))
-        has-art (and art-options
-                     art
-                     (contains? art-options (keyword art)))
-        version-path (if (and has-art show-art)
-                       (get art-options (keyword art) (:fullCode card))
-                       (:fullCode card))]
-    (str "/img/cards/" (:setname card) "/" (:ImageName card))))
+(defn image-url [{:keys [setname ImageName] :as card}]
+    (str "/img/cards/" (:setname card) "/" (:ImageName card)))
 
 (defn toastr-options
   "Function that generates the correct toastr options for specified settings"
@@ -179,13 +165,13 @@
 
 (defn toast
   "Display a toast warning with the specified message.
-  Sends a command to clear any locale side toasts."
+  Sends a command to clear any server side toasts."
   [msg type options]
   true)
 
 (defn toast-old
   "Display a toast warning with the specified message.
-  Sends a command to clear any locale side toasts."
+  Sends a command to clear any server side toasts."
   [msg type options]
   (set! (.-options js/toastr) (toastr-options options))
   (let [f (aget js/toastr (if (= "exception" type) "error" type))]
@@ -680,35 +666,6 @@
   (om/component
    (sab/html
     [:div.card-preview.blue-shade
-     [:h4 (:title card)]
-     (when-let [memory (:memoryunits card)]
-       (if (< memory 3)
-         [:div.anr-icon {:class (str "mu" memory)} ""]
-         [:div.heading (str "Memory: " memory) [:span.anr-icon.mu]]))
-     (when-let [cost (:cost card)]
-       [:div.heading (str "Cost: " cost)])
-     (when-let [trash-cost (:trash card)]
-       [:div.heading (str "Trash cost: " trash-cost)])
-     (when-let [strength (:strength card)]
-       [:div.heading (str "Strength: " strength)])
-     (when-let [requirement (:advancementcost card)]
-       [:div.heading (str "Advancement requirement: " requirement)])
-     (when-let [agenda-point (:agendatpoints card)]
-       [:div.heading (str "Agenda points: " agenda-point)])
-     (when-let [min-deck-size (:minimumdecksize card)]
-       [:div.heading (str "Minimum deck size: " min-deck-size)])
-     (when-let [influence-limit (:influencelimit card)]
-       [:div.heading (str "Influence limit: " influence-limit)])
-     (when-let [influence (:factioncost card)]
-       (when-let [faction (:faction card)]
-        [:div.heading "Influence "
-         [:span.influence
-          {:dangerouslySetInnerHTML #js {:__html (apply str (for [i (range influence)] "&#8226;"))}
-           :class                   (-> faction .toLowerCase (.replace " " "-"))}]]))
-     [:div.text
-      [:p [:span.type (str (:type card))] (if (empty? (:subtype card))
-                                            "" (str ": " (:subtype card)))]
-      [:pre {:dangerouslySetInnerHTML #js {:__html (add-symbols (:text card))}}]]
      (when-let [url (image-url card)]
        [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])])))
 
@@ -900,7 +857,7 @@
       [:div.hand-container
        [:div.hand-controls
         [:div.panel.blue-shade.hand
-         (drop-area (:side @game-state) name {:class (when (> size 6) "squeeveale")})
+         (drop-area (:side @game-state) name {:class (when (> size 6) "squeeze")})
          [:div
           (build-hand-card-view player parties "card-wrapper")]
          (om/build label (:hand player) {:opts {:name "Hand"}})]
@@ -1050,7 +1007,7 @@
    (sab/html
     (when-not (empty? cards)
       (let [size (count cards)]
-        [:div.panel.blue-shade.rfg {:class (when (> size 2) "squeeveale")
+        [:div.panel.blue-shade.rfg {:class (when (> size 2) "squeeze")
                                     :on-click (when popup #(-> (om/get-node owner "rfg-popup") js/$ .fadeToggle))}
          (map-indexed (fn [i card]
                         [:div.card-wrapper {:style {:left (* (/ 128 size) i)}}
@@ -1072,7 +1029,7 @@
           size (count cards)
           side (get-in player [:identity :side])]
       (when-not (empty? cards)
-        [:div.panel.blue-shade.rfg {:class (when (> size 2) "squeeveale")}
+        [:div.panel.blue-shade.rfg {:class (when (> size 2) "squeeze")}
          (map-indexed (fn [i card]
                         [:div.card-wrapper {:style {:left (* (/ 128 size) i)}}
                          (if (= (:user player) (:user @app-state))
@@ -1092,7 +1049,7 @@
   (om/component
    (sab/html
     (let [size (count scored)]
-      [:div.panel.blue-shade.scored.squeeveale
+      [:div.panel.blue-shade.scored.squeeze
        (map-indexed (fn [i card]
                       [:div.card-wrapper {:style {:left (* (/ 128 (dec size)) i)}}
                        [:div (om/build card-view card)]])
@@ -1108,13 +1065,14 @@
 (defmulti stats-view #(get-in % [:identity :side]))
 
 (defmethod stats-view "Challenger" [{:keys [user free_gi char_mp ally_mp item_mp fact_mp kill_mp misc_mp
-                                            total_mp hand-size-base hand-size-modification active]} owner]
+                                            total_mp stage_pt hand-size-base hand-size-modification active]} owner]
   (om/component
    (sab/html
     (let [me? (= (:side @game-state) :challenger)]
       [:div.panel.blue-shade.stats {:class (when active "active-player")}
        [:h4.ellipsis (om/build avatar user {:opts {:size 22}}) (:username user)]
        [:div (str free_gi " Free G.I.") (when me? (controls :free_gi))]
+       [:div (str stage_pt " Stage pt" (if (not= stage_pt 1) "s" "")) (when me? (controls :stage_pt))]
        [:div (str total_mp " Total MP" (if (not= total_mp 1) "s" "")) (when me? (controls :total_mp))]
        [:div (str char_mp " Character MP" (if (not= char_mp 1) "s" "")) (when me? (controls :char_mp))]
        [:div (str ally_mp " Ally MP" (if (not= ally_mp 1) "s" "")) (when me? (controls :ally_mp))]
@@ -1126,13 +1084,14 @@
         (when me? (controls :hand-size-modification))]]))))
 
 (defmethod stats-view "Contestant" [{:keys [user free_gi char_mp ally_mp item_mp fact_mp kill_mp misc_mp
-                                            total_mp hand-size-base hand-size-modification active]} owner]
+                                            total_mp stage_pt hand-size-base hand-size-modification active]} owner]
   (om/component
     (sab/html
       (let [me? (= (:side @game-state) :contestant)]
         [:div.panel.blue-shade.stats {:class (when active "active-player")}
          [:h4.ellipsis (om/build avatar user {:opts {:size 22}}) (:username user)]
          [:div (str free_gi " Free G.I.") (when me? (controls :free_gi))]
+         [:div (str stage_pt " Stage pt" (if (not= stage_pt 1) "s" "")) (when me? (controls :stage_pt))]
          [:div (str total_mp " Total MP" (if (not= total_mp 1) "s" "")) (when me? (controls :total_mp))]
          [:div (str char_mp " Character MP" (if (not= char_mp 1) "s" "")) (when me? (controls :char_mp))]
          [:div (str ally_mp " Ally MP" (if (not= ally_mp 1) "s" "")) (when me? (controls :ally_mp))]
@@ -1321,7 +1280,7 @@
          (drop-area (:side @game-state) map-name
                     {:on-click #(-> (om/get-node owner map-menu-ref) js/$ .toggle)})
          (facedown-card "Locations")
-         (om/build label sites {:opts {:name "Sites"}})
+         (om/build label sites {:opts {:name "Location"}})
          (when (= (:side @game-state) side)
            [:div.panel.blue-shade.menu {:ref map-menu-ref}
             [:div {:on-click #(show-map % owner reg-ref)} "Regions"]
