@@ -50,13 +50,29 @@
 (defn change
   "Increase/decrease a player's property (clicks, credits, MU, etc.) by delta."
   [state side {:keys [key delta]}]
-  (let [kw (to-keyword key)]
-    (if (neg? delta)
-      (deduce state side [kw (- delta)])
-      (swap! state update-in [side kw] (partial + delta)))
-    (system-msg state side
-                (str "sets " (.replace key "-" " ") " to " (get-in @state [side kw])
-                     " (" (if (pos? delta) (str "+" delta) delta) ")"))))
+  (let [kw (to-keyword key)
+        kt (to-keyword :total_mp)
+        ks (to-keyword :stage_pt)
+        kg (to-keyword :free_gi)
+        kh (to-keyword :hand-size-modification)]
+    (if (or (= kw kt)
+            (= kw ks)
+            (= kw kg)
+            (= kw kh))
+      (if (neg? delta)
+        (deduce state side [kw (- delta)])
+        (swap! state update-in [side kw] (partial + delta)))
+      (if (neg? delta)
+        (do       (deduce state side [kw (- delta)])
+                  (deduce state side [kt (- delta)]))
+        (do         (swap! state update-in [side kw] (partial + delta))
+                    (swap! state update-in [side kt] (partial + delta)))
+        )
+      )))
+;;    (system-msg state side
+  ;;              (str "sets " (.replace key "-" " ") " to " (get-in @state [side kw])
+    ;;                 " (" (if (pos? delta) (str "+" delta) delta) ")"))))
+
 
 (defn move-card
   "Called when the user drags a card from one zone to another."

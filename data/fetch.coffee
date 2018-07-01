@@ -25,6 +25,8 @@ setFields = {
   "code" : same
   "format" : same
   "position" : same
+  "dreamcards" : rename("dreamcard")
+  "released" : same
 }
 
 mapSets = {}
@@ -81,10 +83,15 @@ cardFields = {
   "fullCode" : same,
   "alignCode" : same,
   "setCode" : same,
-  "normalizedtitle" : same
+  "normalizedtitle" : same,
+  "DCpath" : same,
+  "dreamcard" : same,
+  "released" : same
 }
 
 baseurl = "http://192.168.1.180:8080/rez/"
+dcbaseurl = "https://github.com/vastorper/dc/blob/master/graphics/Metw/"
+dcbaseurl2 = "http://192.168.1.180:8080/dc/graphics/Metw/"
 
 selectFields = (fields, objectList) ->
   ((Object.keys(fields).reduce ((newObj, key) ->
@@ -94,7 +101,7 @@ selectFields = (fields, objectList) ->
   for obj in objectList)
 
 fetchSets = (callback) ->
-  request.get baseurl + "sets", (error, response, body) ->
+  request.get baseurl + "sets-dc", (error, response, body) ->
     if !error and response.statusCode is 200
       data = JSON.parse(body)
       sets = selectFields(setFields, data)
@@ -113,12 +120,12 @@ fetchSets = (callback) ->
 fetchImg = (urlTemplate, card, localPath, t) ->
   setTimeout ->
     console.log("Downloading image for " + card)
-    url = urlTemplate + card
+    url = urlTemplate
     request(url).pipe(fs.createWriteStream(localPath))
   , t
 
 fetchCards = (callback) ->
-  request.get baseurl + "cards", (error, response, body) ->
+  request.get baseurl + "cards-dc", (error, response, body) ->
     if !error and response.statusCode is 200
       data = JSON.parse(body)
       cards = selectFields(cardFields, data)
@@ -127,7 +134,7 @@ fetchCards = (callback) ->
       for card in cards
         imgPath = path.join(imgDir, "#{card.setname}", "#{card.ImageName}")
         if !fs.existsSync(imgPath)
-          fetchImg((baseurl + card.setname + "/"), card.ImageName, imgPath, i++ * 200)
+          fetchImg((dcbaseurl + card.DCpath + "?raw=true"), card.ImageName, imgPath, i++ * 200)
       db.collection("cards").remove ->
         db.collection("cards").insert cards, (err, result) ->
           fs.writeFile "andb-cards.json", JSON.stringify(cards), ->
