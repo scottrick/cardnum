@@ -141,25 +141,7 @@
   "Generate text html representation a card"
   [card cursor]
   [:div
-   [:h4 (:title card)]
-   (when-let [memory (:memoryunits card)]
-     (if (< memory 3)
-       [:div.anr-icon {:class (str "mu" memory)} ""]
-       [:div.heading (str "Memory: " memory) [:span.anr-icon.mu]]))
-   (when-let [cost (:cost card)]
-     [:div.heading (str "Cost: " cost)])
-   (when-let [trash-cost (:trash card)]
-     [:div.heading (str "Trash cost: " trash-cost)])
-   (when-let [strength (:strength card)]
-     [:div.heading (str "Strength: " strength)])
-   (when-let [requirement (:advancementcost card)]
-     [:div.heading (str "Advancement requirement: " requirement)])
-   (when-let [agenda-point (:agendapoints card)]
-     [:div.heading (str "Agenda points: " agenda-point)])
-   (when-let [min-deck-size (:minimumdecksize card)]
-     [:div.heading (str "Minimum deck size: " min-deck-size)])
-   (when-let [influence-limit (:influencelimit card)]
-     [:div.heading (str "Influence limit: " influence-limit)])
+   [:h4 (:setname card) ": " (:title card)]
    [:div.text
     [:p [:span.type (str (:type card))] (if (= (.toLowerCase (:type card)) (:Secondary card))
                                           ""
@@ -208,10 +190,13 @@
 
 (def primary-order ["Character" "Resource" "Hazard" "Site" "Region"])
 (def resource-secondaries ["Ally" "Faction" "Greater Item" "Major Item" "Minor Item" "Special Item"])
-(def shared-secondaries ["Long-event" "Permanent-event" "Permanent-event/Short-event" "Short-event"])
-(def hazard-secondaries ["Creature" "Creature/Permanent-event" "Creature/Short-event"])
-(def general-alignments ["Hero" "Minion" "Balrog" "Lord" "Fallen-wizard" "Elf-lord" "Dwarf-lord" "FW/DL" "Dual"])
-(def set-order ["METW" "METD" "MEDM" "MELE" "MEAS" "MEWH" "MEBA" "MEFB" "MEDF"])
+(def shared-secondaries ["Permanent-event" "Short-event" "Long-event" "Permanent-event/Short-event" "Permanent-event/Long-event" "Short-event/Long-event"])
+(def hazard-secondaries ["Creature" "Creature/Permanent-event" "Creature/Short-event" "Creature/Long-event"])
+(def general-alignments ["Hero" "Minion" "Balrog" "Lord" "Fallen-wizard" "Elf-lord" "Dwarf-lord" "Atani-lord" "Dragon-lord" "FW/DL" "Dual"])
+(def set-order ["METW" "METD" "MEDM" "MELE" "MEAS" "MEWH" "MEBA"])
+(def set-order-dc ["MEFB" "MEDF" "MENE" "MEBO" "MECA" "MECP" "MEDS"
+                   "MEGW" "MEKN" "MEML" "MEMM" "MENW" "MERN" "MERS"
+                   "MESL" "METI" "MEWR"])
 
 (defn secondaries [primary]
   (case primary
@@ -241,6 +226,11 @@
     cards
     (filter #(= (field %) filter-value) cards)))
 
+(defn filter-dreamcards [should-filter cards]
+  (if should-filter
+    (filter-cards false :dreamcard cards)
+    cards))
+
 (defn filter-title [query cards]
   (if (empty? query)
     cards
@@ -253,15 +243,25 @@
   (case fieldname
     "Set" #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:setname %))
     "Name" (juxt :title #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:setname %)))
-    "Primary" (juxt #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:setname %))
-                    #((into {} (map-indexed (fn [i e] [e i]) primary-order)) (:primary %)))
-    "Alignment" (juxt #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:setname %))
+    "Type" (juxt #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:setname %))
+                    #((into {} (map-indexed (fn [i e] [e i]) primary-order)) (:type %)))
+    "Align" (juxt #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:setname %))
                       #((into {} (map-indexed (fn [i e] [e i]) (concat general-alignments ["Neutral"]))) (:alignment %)))))
 
 (defn selected-set-name [state]
   (-> (:set-filter state)
       (.replace "&nbsp;&nbsp;&nbsp;&nbsp;" "")
       (.replace " Set" "")))
+
+(defn selected-set-dreamcards? [{:keys [sets]} state]
+  (let [s (selected-set-name state)
+        combined sets]
+    (if (= s "All")
+      false
+      (->> combined
+           (filter #(= s (:name %)))
+           (first)
+           (:dreamcards)))))
 
 (defn handle-scroll [e owner {:keys [page]}]
   (let [$cardlist (js/$ ".card-list")
@@ -279,11 +279,12 @@
     om/IInitState
     (init-state [this]
       {:search-query ""
-       :sort-field "Set"
+       :sort-field "Name"
        :set-filter "All"
        :primary-filter "All"
        :alignment-filter "All"
        :secondary-filter "All"
+       :hide-dreamcards true
        :page 1
        :filter-ch (chan)
        :selected-card nil})
@@ -318,23 +319,34 @@
                              :title "text" :placeholder "Search cards" :value query}]])
 
           [:div
-           [:h4 "Sort by"]
+           [:h4 "By"]
            [:select {:value (:sort-filter state)
                      :on-change #(om/set-state! owner :sort-field (.trim (.. % -target -value)))}
-            (for [field ["Set" "Name" "Primary" "Alignment"]]
+            (for [field ["Name" "Set" "Type" "Align"]]
               [:option {:value field} field])]]
 
-            (for [filter [["Set" :set-filter (map :code
-                                                  (sort-by (juxt :position)
-                                                           sets))]
-                          ["Primary" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
-                          ["Alignment" :alignment-filter (alignments (:primary-filter state))]
-                          ["Secondary" :secondary-filter (secondaries (:primary-filter state))]]]
+            (for [filter [["Set" :set-filter (if (:hide-dreamcards state)
+                           set-order
+                           (concat set-order set-order-dc))]
+                          ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
+                          ["Align" :alignment-filter (alignments (:primary-filter state))]
+                          ["Strict" :secondary-filter (secondaries (:primary-filter state))]]]
               [:div
                [:h4 (first filter)]
                [:select {:value ((second filter) state)
                          :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
                 (options (last filter))]])
+
+          [:div.hide-dreamcards-div
+           [:label [:input.hide-dreamcards {:type "checkbox"
+                                         :value true
+                                         :checked (om/get-state owner :hide-dreamcards)
+                                         :on-change #(let [hide (.. % -target -checked)]
+                                                       (om/set-state! owner :hide-dreamcards hide)
+                                                       (when (and hide (selected-set-dreamcards? cursor state))
+                                                         (om/set-state! owner :set-filter "All"))
+                                                       )}]
+            "Hide Dreamcards"]]
 
           (om/build card-info-view cursor {:state {:selected-card (:selected-card state)}})
           ]
@@ -350,6 +362,7 @@
                                         (filter #(= (:setname %) s) (:cards cursor))
                                         (filter #(list-sets (:position %)) (:cards cursor))))]
                           (->> cards
+                               (filter-dreamcards (:hide-dreamcards state))
                                (filter-cards (:primary-filter state) :type)
                                (filter-cards (:alignment-filter state) :alignment)
                                (filter-cards (:secondary-filter state) :Secondary)
