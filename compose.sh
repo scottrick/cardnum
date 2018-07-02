@@ -28,4 +28,4 @@ fi
 docker-compose up npm-install
 docker-compose up -d mongodb
 docker-compose up -d stylus-css
-docker-compose up lein-meccg lein-cljs
+docker-compose up lein-cljs lein-meccg

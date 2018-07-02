@@ -13,9 +13,7 @@ services:
     image: meccg-node
     volumes:
       - .:/meccg
-    command: |
-      sh -c "./node_modules/.bin/bower
-             ./node_modules/.bin/stylus -w src/css -o resources/public/css/"
+    command: ./node_modules/.bin/stylus -w src/css -o resources/public/css/
 
   lein-cljs:
     image: clojure:latest
@@ -25,6 +23,7 @@ services:
       - 3449:3449
     command: |
       sh -c "cd /meccg
+             lein deps
              lein cljsbuild auto dev"
 
   lein-meccg:
@@ -42,8 +41,7 @@ services:
       - mongodb
     command: |
       sh -c "cd /meccg
-             lein deps
-             lein fetch --no-card-images
+             lein fetch
              lein run dev"
 
   mongodb:
