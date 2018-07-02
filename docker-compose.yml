@@ -9,27 +9,20 @@ services:
       sh -c "npm install
              ./node_modules/.bin/bower --allow-root install"
 
-  fetch-cards:
+  stylus-css:
     image: meccg-node
     volumes:
       - .:/meccg
-    links:
-      - mongo
-    environment: 
-      OPENSHIFT_MONGODB_DB_HOST: mongo 
-    command: npm run fetch
-
-  mongo:
-    image: mongo:latest
-    ports:
-      - 27017:27017
-    volumes:
-      - /tmp/meccg/mongo-data:/data/db
+    command: |
+      sh -c "./node_modules/.bin/bower
+             ./node_modules/.bin/stylus -w src/css -o resources/public/css/"
 
   lein-cljs:
     image: clojure:latest
     volumes:
       - .:/meccg
+    ports:
+      - 3449:3449
     command: |
       sh -c "cd /meccg
              lein cljsbuild auto dev"
@@ -39,29 +32,23 @@ services:
     volumes:
       - .:/meccg
     ports:
-      - 7001:7001
+      - 1042:1042
     environment:
+      MONGODB_HOST: mongodb
       ZMQ_HOST: "*"
+    links:
+      - mongodb
+    depends_on:
+      - mongodb
     command: |
       sh -c "cd /meccg
-             lein run"
+             lein deps
+             lein fetch --no-card-images
+             lein run dev"
 
-  stylus-css:
-    image: meccg-node
-    volumes:
-      - .:/meccg
-    command: ./node_modules/.bin/stylus -w src/css -o resources/public/css/
-
-  coffee-server:
-    image: meccg-node
-    volumes:
-      - .:/meccg
+  mongodb:
+    image: mongo:latest
     ports:
-      - 1042:1042
-    links:
-      - mongo
-      - lein-meccg
-    environment:
-      MONGO_URL: mongodb://mongo:27017/meccg
-      CLOJURE_HOST: lein-meccg
-    command: ./node_modules/.bin/coffee server.coffee
+      - 27017:27017
+    volumes:
+      - /tmp/meccg/mongo-data:/data/db

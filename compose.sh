@@ -26,11 +26,6 @@ if [[ -n ${BUILD} ]]; then
 fi
 
 docker-compose up npm-install
-docker-compose up -d mongo
-sleep 30
-
-docker-compose up fetch-cards
-
-docker-compose up -d coffee-server stylus-css
-
+docker-compose up -d mongodb
+docker-compose up -d stylus-css
 docker-compose up lein-meccg lein-cljs
