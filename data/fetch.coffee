@@ -101,7 +101,7 @@ selectFields = (fields, objectList) ->
   for obj in objectList)
 
 fetchSets = (callback) ->
-  request.get baseurl + "sets-dc", (error, response, body) ->
+  request.get baseurl + "sets", (error, response, body) ->
     if !error and response.statusCode is 200
       data = JSON.parse(body)
       sets = selectFields(setFields, data)
@@ -125,7 +125,7 @@ fetchImg = (urlTemplate, card, localPath, t) ->
   , t
 
 fetchCards = (callback) ->
-  request.get baseurl + "cards-dc", (error, response, body) ->
+  request.get baseurl + "cards", (error, response, body) ->
     if !error and response.statusCode is 200
       data = JSON.parse(body)
       cards = selectFields(cardFields, data)
