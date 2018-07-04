@@ -96,17 +96,16 @@
   "Gets a string representation for the given zone."
   [side zone]
   (match (vec zone)
-         [:hand] (if (= side "Challenger") "Grip" "HQ")
-         [:discard] (if (= side "Challenger") "Heap" "Archives")
-         [:deck] (if (= side "Challenger") "Stack" "R&D")
-         [:sideboard] (if (= side "Challenger") "Ch-board" "Co-board")
-         [:sites] (if (= side "Challenger") "Sites2" "Sites")
-         [:rig _] "Rig"
+         [:hand] "Hand"
+         [:discard] "Discard"
+         [:deck] "Play Deck"
+         [:sideboard] "Sideboard"
+         [:sites] "Location Deck"
+         [:rig _] "in play"
          [:locales :hq _] "the root of HQ"
          [:locales :rd _] "the root of R&D"
          [:locales :archives _] "the root of Archives"
          :else (zone->name (second zone))))
-
 
 ;;; In-game chat commands
 (defn set-adv-counter [state side target value]

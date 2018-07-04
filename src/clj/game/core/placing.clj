@@ -351,7 +351,9 @@
       (system-msg state side custom-message)
       (system-msg state side
                   (str (build-spend-msg cost-str "place") card-title
-                       (when host-card (str " on " (:title host-card)))
+                       (if host-card
+                         (str " on " (:title host-card))
+                         (str " in play"))
                        (when no-cost " at no cost"))))))
 
 (defn- handle-virus-counter-flag
@@ -372,7 +374,7 @@
      (if-let [hosting (and (not host-card) (not facedown) (:hosting (card-def card)))]
        (continue-ability state side
                          {:choices hosting
-                          :prompt (str "Choose a card to host " (:title card) " on")
+                          :prompt (str "Choose a card to place " (:title card) " on")
                           :delayed-completion true
                           :effect (effect (challenger-place eid card (assoc params :host-card target)))}
                          card nil)

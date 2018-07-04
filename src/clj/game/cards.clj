@@ -51,7 +51,7 @@
   ([reorder-side wait-side remaining chosen n original dest]
   {:prompt (str "Select a card to move next "
                 (if (= dest "bottom") "under " "onto ")
-                (if (= reorder-side :contestant) "R&D" "your Stack"))
+                (if (= reorder-side :contestant) "your Play Deck" "your Play Deck"))
    :choices remaining
    :delayed-completion true
    :effect (req (let [chosen (cons target chosen)]
@@ -67,9 +67,9 @@
   ([reorder-side wait-side chosen original] (reorder-final reorder-side wait-side chosen original nil))
   ([reorder-side wait-side chosen original dest]
    {:prompt (if (= dest "bottom")
-              (str "The bottom cards of " (if (= reorder-side :contestant) "R&D" "your Stack")
+              (str "The bottom cards of " (if (= reorder-side :contestant) "your Play Deck" "your Play Deck")
                    " will be " (join  ", " (map :title (reverse chosen))) ".")
-              (str "The top cards of " (if (= reorder-side :contestant) "R&D" "your Stack")
+              (str "The top cards of " (if (= reorder-side :contestant) "your Play Deck" "your Play Deck")
                    " will be " (join  ", " (map :title chosen)) "."))
    :choices ["Done" "Start over"]
    :delayed-completion true

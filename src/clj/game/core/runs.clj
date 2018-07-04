@@ -423,7 +423,7 @@
   {:delayed-completion true
    :effect (req (if (pos? (count cards))
                   (if (= 1 (count cards))
-                    (handle-access state side eid cards "an unseen card from R&D")
+                    (handle-access state side eid cards "an unseen card from play deck")
                     (let [from-rd (access-count state side :rd-access)]
                       (continue-ability state side (access-helper-hq-or-rd
                                                      state :rd "deck" from-rd

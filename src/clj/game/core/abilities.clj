@@ -551,7 +551,7 @@
                                                 (when (pos? m)
                                                   (str (when-not (empty? seen) " and ")
                                                        (quantify m "unseen card")))))
-                                         " into R&D")
+                                         " into play deck")
                      :effect        (req (doseq [c targets] (move state side c :deck))
                                          (shuffle! state side :deck))
                      :cancel-effect (req (shuffle! state side :deck))}

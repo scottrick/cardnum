@@ -111,13 +111,13 @@
               (system-msg state side (str action-str label from-str))))
         ("Grip" "HQ")
         (do (move state s (dissoc c :seen :revealed) :hand {:force true})
-            (system-msg state side (str "moves " label from-str " to " locale)))
+            (system-msg state side (str "moves " label from-str " to their Hand")))
         ("Stack" "R&D")
         (do (move state s (dissoc c :seen :revealed) :deck {:front true :force true})
-            (system-msg state side (str "moves " label from-str " to the top of " locale)))
+            (system-msg state side (str "moves " label from-str " to the top of their Play Deck")))
         ("Sites2" "Sites")
         (do (move state s (dissoc c :seen :revealed) :sites {:front true :force true})
-            (system-msg state side (str "moves " label from-str " to the top of " locale)))
+            (system-msg state side (str "moves " label from-str " to the their Location Deck")))
         nil))))
 
 (defn concede [state side args]
