@@ -36,7 +36,7 @@
       (run-empty-locale state "Locale 1")
       (prompt-choice :contestant "Yes")
       (is (= 3 (get-in @state [:contestant :credit])))
-      ;; Contestant can trash one resource
+      ;; Contestant can discard one resource
       (prompt-select :contestant (get-in @state [:challenger :rig :resource 1]))
       ;; There should be two Caches left
       (is (= 3 (get-in @state [:contestant :credit])))
@@ -52,7 +52,7 @@
     (let [alexa (get-content state :party1 0)]
       (core/reveal state :contestant alexa)
       (card-ability state :contestant alexa 0)
-      (is (= 1 (count (:discard (get-contestant)))) "Alexa Belsky trashed")
+      (is (= 1 (count (:discard (get-contestant)))) "Alexa Belsky discarded")
       (is (= 5 (count (:hand (get-contestant)))))
       (is (= 0 (count (:deck (get-contestant)))))
       (prompt-choice :challenger 5) ;Challenger chooses to pay 5 credits so 2 cards are prevented from being shuffled
@@ -82,7 +82,7 @@
   (do-game
     (new-game (default-contestant [(qty "Fetal AI" 3) (qty "Blacklist" 1)])
               (default-challenger))
-    (trash-from-hand state :contestant "Fetal AI")
+    (discard-from-hand state :contestant "Fetal AI")
     (play-from-hand state :contestant "Blacklist" "New party")
     (core/reveal state :contestant (get-content state :party1 0))
     (= 1 (count (get-in @state [:contestant :discard])))
@@ -151,23 +151,23 @@
       (is (= 7 (:credit (get-contestant))) "Used twice, gained 4 credits"))))
 
 (deftest chairman-hiro
-  ;; Chairman Hiro - Reduce Challenger max hand size; add as 2 agenda points if Challenger trashes him
+  ;; Chairman Hiro - Reduce Challenger max hand size; add as 2 agenda points if Challenger discards him
   (do-game
     (new-game (default-contestant [(qty "Chairman Hiro" 2)])
               (default-challenger))
     (play-from-hand state :contestant "Chairman Hiro" "New party")
     (play-from-hand state :contestant "Chairman Hiro" "Locale 1")
     (prompt-choice :contestant "OK")
-    (is (= 1 (count (:discard (get-contestant)))) "First Hiro trashed")
-    (is (= 0 (:agenda-point (get-challenger))) "No points for Challenger if trashed by Contestant")
+    (is (= 1 (count (:discard (get-contestant)))) "First Hiro discarded")
+    (is (= 0 (:agenda-point (get-challenger))) "No points for Challenger if discarded by Contestant")
     (let [hiro (get-content state :party1 0)]
       (core/reveal state :contestant hiro)
       (is (= 3 (core/hand-size state :challenger)) "Challenger max hand size reduced by 2")
       (take-credits state :contestant)
       (take-credits state :challenger 3)
       (run-empty-locale state "Locale 1")
-      (prompt-choice :challenger "Yes") ; trash Hiro
-      (is (= 2 (:credit (get-challenger))) "Challenger paid 6 credits to trash")
+      (prompt-choice :challenger "Yes") ; discard Hiro
+      (is (= 2 (:credit (get-challenger))) "Challenger paid 6 credits to discard")
       (is (= 5 (core/hand-size state :challenger)) "Challenger max hand size restored to 5")
       (is (= 1 (count (get-in @state [:challenger :scored])))
           "Chairman Hiro added to Challenger score area")
@@ -194,7 +194,7 @@
       (is (empty? (:prompt (get-challenger))) "City Surveillance only fired once")))
 
 (deftest clyde-van-rite
-  ;; Clyde Van Rite - Multiple scenarios involving Challenger not having credits/cards to trash
+  ;; Clyde Van Rite - Multiple scenarios involving Challenger not having credits/cards to discard
   (do-game
     (new-game (default-contestant [(qty "Clyde Van Rite" 1)])
               (default-challenger [(qty "Sure Gamble" 3) (qty "Restructure" 2) (qty "John Masanori" 2)]))
@@ -214,7 +214,7 @@
       (core/end-phase-12 state :contestant nil)
       (take-credits state :contestant)
       (take-credits state :challenger)
-      ;; Challenger chooses to pay - can't pay 1 credit so trash top card
+      ;; Challenger chooses to pay - can't pay 1 credit so discard top card
       (core/lose state :challenger :credit 12)
       (card-ability state :contestant clyde 0)
       (is (= 0 (:credit (get-challenger))))
@@ -225,21 +225,21 @@
       (core/end-phase-12 state :contestant nil)
       (take-credits state :contestant)
       (take-credits state :challenger)
-      ;; Challenger chooses to trash - has 1+ card in Stack so trash 1 card
+      ;; Challenger chooses to discard - has 1+ card in Stack so discard 1 card
       (card-ability state :contestant clyde 0)
       (is (= 4 (:credit (get-challenger))))
       (is (= 1 (count (:deck (get-challenger)))))
-      (prompt-choice :challenger "Trash top card")
+      (prompt-choice :challenger "Discard top card")
       (is (= 4 (:credit (get-challenger))))
       (is (= 0 (count (:deck (get-challenger)))))
       (core/end-phase-12 state :contestant nil)
       (take-credits state :contestant)
       (take-credits state :challenger)
-      ;; Challenger chooses to trash - no cards in Stack so pays 1 credit
+      ;; Challenger chooses to discard - no cards in Stack so pays 1 credit
       (card-ability state :contestant clyde 0)
       (is (= 8 (:credit (get-challenger))))
       (is (= 0 (count (:deck (get-challenger)))))
-      (prompt-choice :challenger "Trash top card")
+      (prompt-choice :challenger "Discard top card")
       (is (= 7 (:credit (get-challenger))))
       (is (= 0 (count (:deck (get-challenger))))))))
 
@@ -408,7 +408,7 @@
     (is (= 2 (:brain-damage (get-challenger))) "Challenger did not take brain damage when no Character protected Edge of World")))
 
 (deftest elizabeth-mills
-  ;; Elizabeth Mills - Remove 1 bad publicity when revealed; click-trash to trash a location
+  ;; Elizabeth Mills - Remove 1 bad publicity when revealed; click-discard to discard a location
   (do-game
     (new-game (default-contestant [(qty "Elizabeth Mills" 1)])
               (default-challenger [(qty "Earthrise Hotel" 1)]))
@@ -423,9 +423,9 @@
       (is (= 0 (:bad-publicity (get-contestant))) "1 bad publicity removed")
       (card-ability state :contestant liz 0)
       (prompt-select :contestant hotel)
-      (is (= 1 (count (:discard (get-challenger)))) "Earthrise trashed")
-      (is (= 1 (count (:discard (get-contestant)))) "Elizabeth Mills trashed")
-      (is (= 1 (:bad-publicity (get-contestant))) "1 bad publicity taken from trashing a location"))))
+      (is (= 1 (count (:discard (get-challenger)))) "Earthrise discarded")
+      (is (= 1 (count (:discard (get-contestant)))) "Elizabeth Mills discarded")
+      (is (= 1 (:bad-publicity (get-contestant))) "1 bad publicity taken from discarding a location"))))
 
 (deftest elizas-toybox
   ;; Eliza's Toybox - Reveal a card ignoring all costs
@@ -446,7 +446,7 @@
       (is (= 1 (:credit (get-contestant))) "No credits spent"))))
 
 (deftest encryption-protocol
-  ;; Encryption Protocol - Trash cost of installed cards increased by 1
+  ;; Encryption Protocol - Discard cost of placed cards increased by 1
   (do-game
     (new-game (default-contestant [(qty "Encryption Protocol" 2)])
               (default-challenger))
@@ -458,12 +458,12 @@
       (core/reveal state :contestant ep2)
       (take-credits state :contestant)
       (run-empty-locale state "Locale 1")
-      (is (= 4 (core/trash-cost state :challenger (refresh ep1)))
-          "Trash cost increased to 4 by two active Encryption Protocols")
-      (prompt-choice :challenger "Yes") ; trash first EP
+      (is (= 4 (core/discard-cost state :challenger (refresh ep1)))
+          "Discard cost increased to 4 by two active Encryption Protocols")
+      (prompt-choice :challenger "Yes") ; discard first EP
       (run-empty-locale state "Locale 2")
-      (is (= 3 (core/trash-cost state :challenger (refresh ep2)))
-          "Trash cost increased to 3 by one active Encryption Protocol"))))
+      (is (= 3 (core/discard-cost state :challenger (refresh ep2)))
+          "Discard cost increased to 3 by one active Encryption Protocol"))))
 
 (deftest eve-campaign
   (do-game
@@ -518,12 +518,12 @@
     (is (= 0 (count (get-in @state [:contestant :locales :locale2 :content]))) "Agenda was stolen")
     (is (= 2 (:agenda-point (get-challenger))) "Challenger stole 2 points")
     (is (= 0 (count (get-in @state [:contestant :locales :locale1 :content])))
-        "Franchise City no longer installed")
+        "Franchise City no longer placed")
     (is (find-card "Franchise City" (:scored (get-contestant))) "Franchise City in contestant scored area")
     (is (= 1 (:agenda-point (get-contestant))) "Contestant has 1 point")))
 
 (deftest full-immersion-recstudio
-  ;; Full Immmersion RecStudio - install directly, and via Interns
+  ;; Full Immmersion RecStudio - place directly, and via Interns
   (do-game
     (new-game
       (default-contestant [(qty "Full Immersion RecStudio" 1)
@@ -538,7 +538,7 @@
       (let [lc (first (:hosted (refresh fir)))]
         (is lc "Launch Campaign hosted on Full Immersion RecStudio")
         (core/reveal state :contestant lc)
-        (is (and (:installed (refresh lc)) (:revealed (refresh lc))) "Revealed Launch Campaign")
+        (is (and (:placed (refresh lc)) (:revealed (refresh lc))) "Revealed Launch Campaign")
         (take-credits state :contestant)
         (take-credits state :challenger)
         (is (= 5 (:credit (get-contestant))) "Gained 2cr from Launch Campaign")
@@ -546,7 +546,7 @@
         (play-from-hand state :contestant "Interns")
         (prompt-select :contestant (find-card "Launch Campaign" (:hand (get-contestant))))
         (prompt-choice :contestant (refresh fir))
-        (is (= 2 (count (:hosted (refresh fir)))) "Interns installed onto FIR")))))
+        (is (= 2 (count (:hosted (refresh fir)))) "Interns placed onto FIR")))))
 
 (deftest full-immersion-recstudio-sandburg
   ;; Full Immmersion RecStudio - hosting an site with events does not double-register events. Issue #1827.
@@ -571,9 +571,9 @@
       (core/advance state :contestant {:card (last (:hosted (refresh fir)))})
       (is (= 11 (:credit (get-contestant))) "Gained 1cr from advancing Oaktown"))))
 
-(deftest gene-splcharacterr-access-unadvanced-no-trash
-  ;; Challenger accesses an unadvanced Gene Splcharacterr and doesn't trash
-  ;; No net damage is dealt and Gene Splcharacterr remains installed
+(deftest gene-splcharacterr-access-unadvanced-no-discard
+  ;; Challenger accesses an unadvanced Gene Splcharacterr and doesn't discard
+  ;; No net damage is dealt and Gene Splcharacterr remains placed
   (do-game
     (new-game
       (default-contestant [(qty "Gene Splcharacterr" 1)])
@@ -583,11 +583,11 @@
     (run-empty-locale state "Locale 1")
     (prompt-choice :challenger "No")
     (is (= 0 (count (:discard (get-challenger)))) "Challenger took no net damage")
-    (is (= "Gene Splcharacterr" (:title (get-content state :party1 0))) "Gene Splcharacterr was not trashed")
+    (is (= "Gene Splcharacterr" (:title (get-content state :party1 0))) "Gene Splcharacterr was not discarded")
     (is (= 5 (:credit (get-challenger))) "Challenger spent no credits")))
 
-(deftest gene-splcharacterr-access-unadvanced-trash
-  ;; Challenger accesses an unadvanced Gene Splcharacterr and trashes it - no net damage is dealt and Gene Splcharacterr is trashed
+(deftest gene-splcharacterr-access-unadvanced-discard
+  ;; Challenger accesses an unadvanced Gene Splcharacterr and discards it - no net damage is dealt and Gene Splcharacterr is discarded
   (do-game
     (new-game
       (default-contestant [(qty "Gene Splcharacterr" 1)])
@@ -598,12 +598,12 @@
     (prompt-choice :challenger "Yes")
     (is (= 0 (count (:discard (get-challenger)))) "Challenger took no net damage")
     (is (= nil (get-content state :party1 0)) "Gene Splcharacterr is no longer in party")
-    (is (= (:title (last (:discard (get-contestant)))) "Gene Splcharacterr") "Gene Splcharacterr trashed")
-    (is (= 4 (:credit (get-challenger))) "Challenger spent 1 credit to trash Gene Splcharacterr")))
+    (is (= (:title (last (:discard (get-contestant)))) "Gene Splcharacterr") "Gene Splcharacterr discarded")
+    (is (= 4 (:credit (get-challenger))) "Challenger spent 1 credit to discard Gene Splcharacterr")))
 
-(deftest gene-splcharacterr-access-single-advanced-no-trash
-  ;; Challenger accesses a single-advanced Gene Splcharacterr and doesn't trash
-  ;; 1 net damage is dealt and Gene Splcharacterr remains installed
+(deftest gene-splcharacterr-access-single-advanced-no-discard
+  ;; Challenger accesses a single-advanced Gene Splcharacterr and doesn't discard
+  ;; 1 net damage is dealt and Gene Splcharacterr remains placed
   (do-game
     (new-game
       (default-contestant [(qty "Gene Splcharacterr" 1)])
@@ -614,12 +614,12 @@
     (run-empty-locale state "Locale 1")
     (prompt-choice :challenger "No")
     (is (= 1 (count (:discard (get-challenger)))) "Challenger took 1 net damage")
-    (is (= "Gene Splcharacterr" (:title (get-content state :party1 0))) "Gene Splcharacterr was not trashed")
+    (is (= "Gene Splcharacterr" (:title (get-content state :party1 0))) "Gene Splcharacterr was not discarded")
     (is (= 5 (:credit (get-challenger))) "Challenger spent no credits")))
 
-(deftest gene-splcharacterr-access-single-advanced-trash
-  ;; Challenger accesses a single-advanced Gene Splcharacterr and trashes it
-  ;; 1 net damage is dealt and Gene Splcharacterr is trashed
+(deftest gene-splcharacterr-access-single-advanced-discard
+  ;; Challenger accesses a single-advanced Gene Splcharacterr and discards it
+  ;; 1 net damage is dealt and Gene Splcharacterr is discarded
   (do-game
     (new-game
       (default-contestant [(qty "Gene Splcharacterr" 1)])
@@ -631,12 +631,12 @@
     (prompt-choice :challenger "Yes")
     (is (= 1 (count (:discard (get-challenger)))) "Challenger took 1 net damage")
     (is (= nil (get-content state :party1 0)) "Gene Splcharacterr is no longer in party")
-    (is (= (:title (last (:discard (get-contestant)))) "Gene Splcharacterr") "Gene Splcharacterr trashed")
-    (is (= 4 (:credit (get-challenger))) "Challenger spent 1 credit to trash Gene Splcharacterr")))
+    (is (= (:title (last (:discard (get-contestant)))) "Gene Splcharacterr") "Gene Splcharacterr discarded")
+    (is (= 4 (:credit (get-challenger))) "Challenger spent 1 credit to discard Gene Splcharacterr")))
 
-(deftest gene-splcharacterr-access-double-advanced-no-trash
-  ;; Challenger accesses a double-advanced Gene Splcharacterr and doesn't trash
-  ;; 2 net damage is dealt and Gene Splcharacterr remains installed
+(deftest gene-splcharacterr-access-double-advanced-no-discard
+  ;; Challenger accesses a double-advanced Gene Splcharacterr and doesn't discard
+  ;; 2 net damage is dealt and Gene Splcharacterr remains placed
   (do-game
     (new-game
       (default-contestant [(qty "Gene Splcharacterr" 1)])
@@ -647,12 +647,12 @@
     (run-empty-locale state "Locale 1")
     (prompt-choice :challenger "No")
     (is (= 2 (count (:discard (get-challenger)))) "Challenger took 2 net damage")
-    (is (= "Gene Splcharacterr" (:title (get-content state :party1 0))) "Gene Splcharacterr was not trashed")
+    (is (= "Gene Splcharacterr" (:title (get-content state :party1 0))) "Gene Splcharacterr was not discarded")
     (is (= 5 (:credit (get-challenger))) "Challenger spent no credits")))
 
-(deftest gene-splcharacterr-access-double-advanced-trash
-  ;; Challenger accesses a double-advanced Gene Splcharacterr and trashes it
-  ;; 2 net damage is dealt and Gene Splcharacterr is trashed
+(deftest gene-splcharacterr-access-double-advanced-discard
+  ;; Challenger accesses a double-advanced Gene Splcharacterr and discards it
+  ;; 2 net damage is dealt and Gene Splcharacterr is discarded
   (do-game
     (new-game
       (default-contestant [(qty "Gene Splcharacterr" 1)])
@@ -664,8 +664,8 @@
     (prompt-choice :challenger "Yes")
     (is (= 2 (count (:discard (get-challenger)))) "Challenger took 2 net damage")
     (is (= nil (get-content state :party1 0)) "Gene Splcharacterr is no longer in party")
-    (is (= (:title (last (:discard (get-contestant)))) "Gene Splcharacterr") "Gene Splcharacterr trashed")
-    (is (= 4 (:credit (get-challenger))) "Challenger spent 1 credit to trash Gene Splcharacterr")))
+    (is (= (:title (last (:discard (get-contestant)))) "Gene Splcharacterr") "Gene Splcharacterr discarded")
+    (is (= 4 (:credit (get-challenger))) "Challenger spent 1 credit to discard Gene Splcharacterr")))
 
 (deftest gene-splcharacterr-agenda-ability
   ;; Contestant triple-advances a Gene Splcharacterr and uses its ability to add to their score area as a 1 point agenda
@@ -793,7 +793,7 @@
   (do-game
     (new-game (default-contestant [(qty "Honeyfarm" 3)])
               (default-challenger))
-    (trash-from-hand state :contestant "Honeyfarm")
+    (discard-from-hand state :contestant "Honeyfarm")
     (play-from-hand state :contestant "Honeyfarm" "New party")
     (take-credits state :contestant)
     (run-empty-locale state "Locale 1")
@@ -804,7 +804,7 @@
     (is (= 2 (:credit (get-challenger))))))
 
 (deftest hostile-infrastructure
-  ;; Hostile Infrastructure - do 1 net damage when challenger trashes a contestant card
+  ;; Hostile Infrastructure - do 1 net damage when challenger discards a contestant card
   (do-game
     (new-game (default-contestant [(qty "Hostile Infrastructure" 3)])
               (default-challenger))
@@ -842,7 +842,7 @@
       (is (= 3 (:credit (get-contestant))) "No credits gained from Hyoubu"))))
 
 (deftest illegal-arms-factory
-  ;; Illegal Arms Factory; draw a card, gain a credit, bad pub when trashed while revealed
+  ;; Illegal Arms Factory; draw a card, gain a credit, bad pub when discarded while revealed
   (do-game
     (new-game (default-contestant [(qty "Hedge Fund" 1)
 	                         (qty "Beanstalk Royalties" 1)
@@ -860,14 +860,14 @@
       (take-credits state :contestant)
 	  (run-empty-locale state :party1)
       (prompt-choice :challenger "Yes")
-      (is (= 0 (:bad-publicity (get-contestant))) "Took no bad pub on unrevealed trash")
+      (is (= 0 (:bad-publicity (get-contestant))) "Took no bad pub on unrevealed discard")
       (take-credits state :challenger)
 	  (is (= 3 (count (:hand (get-contestant)))) "Drew a card from IAF + mandatory")
       (is (= 4 (:credit (get-contestant))) "Gained 1 credit from IAF")
       (take-credits state :contestant)
 	  (run-empty-locale state :party2)
       (prompt-choice :challenger "Yes")
-      (is (= 1 (:bad-publicity (get-contestant))) "Took a bad pub on revealed trash"))))
+      (is (= 1 (:bad-publicity (get-contestant))) "Took a bad pub on revealed discard"))))
 
 (deftest it-department
   ;; IT Department - Add strength to revealed Character until end of turn
@@ -934,7 +934,7 @@
     (play-from-hand state :challenger "Ghost Challenger")
     (play-from-hand state :challenger "Ghost Challenger")
     (take-credits state :challenger)
-    ; install 3 things
+    ; place 3 things
     (play-from-hand state :contestant "TGTBT" "New party")
     (play-from-hand state :contestant "Melange Mining Contestant." "New party")
     (play-from-hand state :contestant "Melange Mining Contestant." "New party")
@@ -964,15 +964,15 @@
     (is (= 1 (:click (get-contestant))))
     (take-credits state :contestant)
     (take-credits state :challenger)
-    ;; trash 3 muthereffs
+    ;; discard 3 muthereffs
     (core/gain state :challenger :tag 1)
-    (core/trash-muthereff state :contestant nil)
+    (core/discard-muthereff state :contestant nil)
     (prompt-select :contestant (get-muthereff state 0))
     (is (= 1 (count (:discard (get-challenger)))))
-    (core/trash-muthereff state :contestant nil)
+    (core/discard-muthereff state :contestant nil)
     (prompt-select :contestant (get-muthereff state 0))
     (is (= 2 (count (:discard (get-challenger)))))
-    (core/trash-muthereff state :contestant nil)
+    (core/discard-muthereff state :contestant nil)
     (prompt-select :contestant (get-muthereff state 0))
     (is (= 3 (count (:discard (get-challenger)))))
     (is (= 1 (:click (get-contestant))))))
@@ -995,7 +995,7 @@
       (is (= 1 (count (:discard (get-contestant)))))
       (is (= 1 (count (:discard (get-challenger)))))
       (is (last-log-contains? state "Sure Gamble")
-          "Kala Ghoda did log trashed card names"))))
+          "Kala Ghoda did log discarded card names"))))
 
 (deftest launch-campaign
   (do-game
@@ -1012,7 +1012,7 @@
       (is (= 4 (get-counters (refresh launch) :credit))))))
 
 (deftest mark-yale
-  ;; Mark Yale - Spend agenda counters or trash himself to gain credits
+  ;; Mark Yale - Spend agenda counters or discard himself to gain credits
   (do-game
     (new-game (default-contestant [(qty "Firmware Updates" 1) (qty "Mark Yale" 1)])
               (default-challenger))
@@ -1042,7 +1042,7 @@
         (is (= 0 (get-counters (refresh firmscored) :agenda)))
         (card-ability state :contestant yale 0)
         (is (= 15 (:credit (get-contestant))) "Gained 2 credits")
-        (is (= 1 (count (:discard (get-contestant)))) "Mark Yale trashed")))))
+        (is (= 1 (count (:discard (get-contestant)))) "Mark Yale discarded")))))
 
 (deftest mca-austerity-policy
   (do-game
@@ -1090,7 +1090,7 @@
   (do-game
     (new-game (default-contestant [(qty "News Team" 3) (qty "Blacklist" 1)])
               (default-challenger))
-    (trash-from-hand state :contestant "News Team")
+    (discard-from-hand state :contestant "News Team")
     (play-from-hand state :contestant "Blacklist" "New party")
     (take-credits state :contestant)
     (run-empty-locale state :archives)
@@ -1099,7 +1099,7 @@
     (run-empty-locale state :archives)
     (prompt-choice :challenger "Add News Team to score area")
     (is (= 1 (count (:scored (get-challenger)))) "News Team added to Challenger score area")
-    (trash-from-hand state :contestant "News Team")
+    (discard-from-hand state :contestant "News Team")
     (core/reveal state :contestant (get-content state :party1 0))
     (run-empty-locale state :archives)
     (prompt-choice :challenger "Add News Team to score area")
@@ -1183,16 +1183,16 @@
       (card-ability state :contestant ngo1 1)
       (card-ability state :contestant ngo1 0)
       (is (= 2 (:credit (get-contestant))) "Contestant still 2 credits")
-      (is (= 0 (count (:discard (get-contestant)))) "Nothing trashed")
+      (is (= 0 (count (:discard (get-contestant)))) "Nothing discarded")
       (card-ability state :contestant ngo2 1)
       (is (= 2 (:credit (get-contestant))) "Contestant still 2 credits")
-      (is (= 0 (count (:discard (get-contestant)))) "Nothing trashed")
+      (is (= 0 (count (:discard (get-contestant)))) "Nothing discarded")
       (card-ability state :contestant ngo2 0)
       (is (= 7 (:credit (get-contestant))) "Contestant gained 5 credits")
-      (is (= 1 (count (:discard (get-contestant)))) "1 NGO Front Trashed")
+      (is (= 1 (count (:discard (get-contestant)))) "1 NGO Front Discarded")
       (card-ability state :contestant ngo3 1)
       (is (= 15 (:credit (get-contestant))) "Contestant gained 8 credits")
-      (is (= 2 (count (:discard (get-contestant)))) "2 NGO Front Trashed")
+      (is (= 2 (count (:discard (get-contestant)))) "2 NGO Front Discarded")
       )))
 
 (deftest plan-b
@@ -1225,24 +1225,24 @@
     (core/move state :contestant (find-card "Oaktown Renovation" (:hand (get-contestant))) :deck)
     (play-from-hand state :contestant "Political Dealings" "New party")
     (core/reveal state :contestant (get-content state :party1 0))
-    ;; Install Medical Breakthrough
+    ;; Place Medical Breakthrough
     (core/draw state :contestant)
     (prompt-choice :contestant "Yes")
     (prompt-choice :contestant "New party")
     (is (= "Medical Breakthrough" (:title (get-content state :party2 0)))
-        "Medical Breakthrough installed by Political Dealings")
-    ;; Install Oaktown Renovation
+        "Medical Breakthrough placed by Political Dealings")
+    ;; Place Oaktown Renovation
     (core/draw state :contestant)
     (prompt-choice :contestant "Yes")
     (prompt-choice :contestant "New party")
     (is (= "Oaktown Renovation" (:title (get-content state :party3 0)))
-        "Oaktown Renovation installed by Political Dealings")
+        "Oaktown Renovation placed by Political Dealings")
     (is (= true (:revealed (get-content state :party3 0)))
-        "Oaktown Renovation installed face up")))
+        "Oaktown Renovation placed face up")))
 
 (deftest political-dealings-daily-business-show
   ;; Political Dealings - Daily Business Show interaction.
-  ;; Draw 2 agendas, install both of them but return 1 to bottom of R&D"
+  ;; Draw 2 agendas, place both of them but return 1 to bottom of R&D"
   (do-game
     (new-game (default-contestant [(qty "Political Dealings" 1) (qty "Daily Business Show" 1) (qty "Turtlebacks" 1)
                              (qty "Breaking News" 1) (qty "Project Beale" 1)])
@@ -1260,14 +1260,14 @@
     (let [agenda1 (first (:deck (get-contestant)))
           agenda2 (second (:deck (get-contestant)))]
       (take-credits state :challenger)
-      ;; Install first agenda
+      ;; Place first agenda
       (is (= 2 (count (:hand (get-contestant)))))
       (is (= 0 (:credit (get-contestant))))
       (prompt-choice :contestant "Yes")
       (prompt-choice :contestant "New party")
       (is (= (:cid agenda1) (:cid (get-content state :party4 0))))
       (is (= 1 (:credit (get-contestant))) "Turtlebacks triggered")
-      ;; Install second agenda
+      ;; Place second agenda
       (prompt-choice :contestant "Yes")
       (prompt-choice :contestant "New party")
       (is (= (:cid agenda2) (:cid (get-content state :party5 0))))
@@ -1308,9 +1308,9 @@
   (do-game
     (new-game (default-contestant [(qty "Psychic Field" 2) (qty "Shock!" 2) (qty "Clone Retirement" 2)])
               (default-challenger))
-    (trash-from-hand state :contestant "Psychic Field")
-    (trash-from-hand state :contestant "Shock!")
-    (trash-from-hand state :contestant "Clone Retirement")
+    (discard-from-hand state :contestant "Psychic Field")
+    (discard-from-hand state :contestant "Shock!")
+    (discard-from-hand state :contestant "Clone Retirement")
     (take-credits state :contestant)
     ;; Challenger run on archives to trigger access choice
     (run-empty-locale state :archives)
@@ -1330,16 +1330,16 @@
     (run-empty-locale state :party1)
     (prompt-choice :contestant "0 [Credits]")
     (prompt-choice :challenger "1 [Credits]")
-    (is (not (get-content state :party1)) "Psychic Field trashed by Neutralize All Threats")
+    (is (not (get-content state :party1)) "Psychic Field discarded by Neutralize All Threats")
     (is (= "Flatline" (:reason @state)) "Win condition reports flatline")))
 
 (deftest public-support
-  ;; Public support scoring and trashing
+  ;; Public support scoring and discarding
   ;; TODO could also test for NOT triggering "when scored" events
   (do-game
     (new-game (default-contestant [(qty "Public Support" 2)])
               (default-challenger))
-    ;; Contestant turn 1, install and reveal public supports
+    ;; Contestant turn 1, place and reveal public supports
     (play-from-hand state :contestant "Public Support" "New party")
     (play-from-hand state :contestant "Public Support" "New party")
     (let [publics1 (get-content state :party1 0)
@@ -1359,9 +1359,9 @@
       (is (nil? (:agendapoints (refresh publics1))))
       (take-credits state :contestant)
 
-      ;; Challenger turn 2, run and trash publics2
+      ;; Challenger turn 2, run and discard publics2
       (run-empty-locale state "Locale 2")
-      (prompt-choice :challenger "Yes") ; pay to trash
+      (prompt-choice :challenger "Yes") ; pay to discard
       (is (= 5 (:credit (get-challenger))))
       (take-credits state :challenger)
 
@@ -1452,7 +1452,7 @@
       (is (= 1 (:advance-counter (refresh rc))) "Reconstruction Contract doesn't get advancement token for net damage"))))
 
 (deftest reversed-accounts
-  ;; Reversed Accounts - Trash to make Challenger lose 4 credits per advancement
+  ;; Reversed Accounts - Discard to make Challenger lose 4 credits per advancement
   (do-game
     (new-game (default-contestant [(qty "Reversed Accounts" 1)])
               (default-challenger))
@@ -1471,11 +1471,11 @@
       (is (= 4 (:advance-counter (refresh rev))))
       (core/reveal state :contestant (refresh rev))
       (card-ability state :contestant rev 0)
-      (is (= 1 (count (:discard (get-contestant)))) "Reversed Accounts trashed")
+      (is (= 1 (count (:discard (get-contestant)))) "Reversed Accounts discarded")
       (is (= 2 (:credit (get-challenger))) "Challenger lost 16 credits"))))
 
 (deftest ronald-five
-  ;; Ronald Five - Challenger loses a click every time they trash a Contestant card
+  ;; Ronald Five - Challenger loses a click every time they discard a Contestant card
   (do-game
     (new-game (default-contestant [(qty "Ronald Five" 1) (qty "Melange Mining Contestant." 1)])
               (default-challenger))
@@ -1484,14 +1484,14 @@
     (take-credits state :contestant)
     (core/reveal state :contestant (get-content state :party1 0))
     (run-empty-locale state :party2)
-    (prompt-choice :challenger "Yes") ; trash MMC
+    (prompt-choice :challenger "Yes") ; discard MMC
     (is (= 2 (:click (get-challenger))) "Lost 1 click")
     (run-empty-locale state :party1)
-    (prompt-choice :challenger "Yes") ; trash Ronald Five
+    (prompt-choice :challenger "Yes") ; discard Ronald Five
     (is (= 0 (:click (get-challenger))) "Lost 1 click")))
 
 (deftest ronin
-  ;; Ronin - Click-trash to do 3 net damage when it has 4 or more advancements
+  ;; Ronin - Click-discard to do 3 net damage when it has 4 or more advancements
   (do-game
     (new-game (default-contestant [(qty "Ronin" 1) (qty "Mushin No Shin" 1)])
               (default-challenger))
@@ -1509,7 +1509,7 @@
       (is (= 4 (:advance-counter (refresh ron))))
       (card-ability state :contestant ron 0)
       (is (= 3 (count (:discard (get-challenger)))) "Ronin did 3 net damage")
-      (is (= 2 (count (:discard (get-contestant)))) "Ronin trashed"))))
+      (is (= 2 (count (:discard (get-contestant)))) "Ronin discarded"))))
 
 (deftest sandburg
   ;; Sandburg - +1 strength to all Character for every 5c when Contestant has over 10c
@@ -1543,7 +1543,7 @@
       (is (= 1 (:current-strength (refresh iwall2))) "Strength back to default"))))
 
 (deftest sealed-vault
-  ;; Sealed Vault - Store credits for 1c, retrieve credits by trashing or spending click
+  ;; Sealed Vault - Store credits for 1c, retrieve credits by discarding or spending click
   (do-game
     (new-game (default-contestant [(qty "Sealed Vault" 1) (qty "Hedge Fund" 1)])
               (default-challenger))
@@ -1567,10 +1567,10 @@
       (card-ability state :contestant sv 2)
       (prompt-choice :contestant 7)
       (is (= 7 (:credit (get-contestant))))
-      (is (= 2 (count (:discard (get-contestant)))) "Sealed Vault trashed"))))
+      (is (= 2 (count (:discard (get-contestant)))) "Sealed Vault discarded"))))
 
 (deftest locale-diagnostics
-  ;; Locale Diagnostics - Gain 2c when turn begins; trashed when Character is installed
+  ;; Locale Diagnostics - Gain 2c when turn begins; discarded when Character is placed
   (do-game
     (new-game (default-contestant [(qty "Locale Diagnostics" 1) (qty "Pup" 1)
                              (qty "Launch Campaign" 1)])
@@ -1578,19 +1578,19 @@
     (play-from-hand state :contestant "Locale Diagnostics" "New party")
     (core/reveal state :contestant (get-content state :party1 0))
     (play-from-hand state :contestant "Launch Campaign" "New party")
-    (is (= 1 (count (get-content state :party1))) "Non-Character install didn't trash Serv Diag")
+    (is (= 1 (count (get-content state :party1))) "Non-Character place didn't discard Serv Diag")
     (take-credits state :contestant)
     (take-credits state :challenger)
     (is (= 5 (:credit (get-contestant))) "Gained 2c at start of turn")
     (play-from-hand state :contestant "Pup" "HQ")
-    (is (= 1 (count (:discard (get-contestant)))) "Locale Diagnostics trashed by Character install")))
+    (is (= 1 (count (:discard (get-contestant)))) "Locale Diagnostics discarded by Character place")))
 
 (deftest shock
   ;; do 1 net damage on access
   (do-game
     (new-game (default-contestant [(qty "Shock!" 3)])
               (default-challenger))
-    (trash-from-hand state :contestant "Shock!")
+    (discard-from-hand state :contestant "Shock!")
     (play-from-hand state :contestant "Shock!" "New party")
     (take-credits state :contestant)
     (run-empty-locale state "Locale 1")
@@ -1603,13 +1603,13 @@
   (do-game
     (new-game (default-contestant [(qty "Shock!" 3) (qty "Chairman Hiro" 1)])
               (default-challenger))
-    (trash-from-hand state :contestant "Shock!")
+    (discard-from-hand state :contestant "Shock!")
     (play-from-hand state :contestant "Shock!" "New party")
     (take-credits state :contestant)
     (run-empty-locale state "Archives")
     (is (= 2 (count (:hand (get-challenger)))) "Challenger took 1 net damage")
     (is (not (:run @state)) "Run is complete")
-    (trash-from-hand state :contestant "Chairman Hiro")
+    (discard-from-hand state :contestant "Chairman Hiro")
     (is (= 2 (count (:discard (get-contestant)))) "Hiro and Shock still in archives")
     (is (= 0 (count (:scored (get-challenger)))) "Hiro not scored by Challenger")))
 
@@ -1671,8 +1671,8 @@
   (do-game
     (new-game (default-contestant [(qty "Space Camp" 1) (qty "News Team" 1) (qty "Breaking News" 1)])
               (default-challenger))
-    (trash-from-hand state :contestant "Space Camp")
-    (trash-from-hand state :contestant "News Team")
+    (discard-from-hand state :contestant "Space Camp")
+    (discard-from-hand state :contestant "News Team")
     (play-from-hand state :contestant "Breaking News" "New party")
     (take-credits state :contestant)
     (run-empty-locale state :archives)
@@ -1739,7 +1739,7 @@
 ;      (is (= 5 (:credit (get-contestant))) "Contestant did not gain 2cr from run on Sundew"))))
 
 (deftest team-sponsorship-hq
-  ;; Team Sponsorship - Install from HQ
+  ;; Team Sponsorship - Place from HQ
   (do-game
     (new-game (default-contestant [(qty "Domestic Sleepers" 1)
                              (qty "Team Sponsorship" 1)
@@ -1754,11 +1754,11 @@
       (prompt-select :contestant (find-card "Adonis Campaign" (:hand (get-contestant))))
       (prompt-choice :contestant "New party")
       (is (= "Adonis Campaign" (:title (get-content state :party3 0)))
-          "Adonis installed by Team Sponsorship")
+          "Adonis placed by Team Sponsorship")
       (is (nil? (find-card "Adonis Campaign" (:hand (get-contestant)))) "No Adonis in hand"))))
 
 (deftest team-sponsorship-archives
-  ;; Team Sponsorship - Install from Archives
+  ;; Team Sponsorship - Place from Archives
   (do-game
     (new-game (default-contestant [(qty "Domestic Sleepers" 1)
                              (qty "Team Sponsorship" 1)
@@ -1766,7 +1766,7 @@
               (default-challenger))
     (play-from-hand state :contestant "Team Sponsorship" "New party")
     (play-from-hand state :contestant "Domestic Sleepers" "New party")
-    (trash-from-hand state :contestant "Adonis Campaign")
+    (discard-from-hand state :contestant "Adonis Campaign")
     (let [ag1 (get-content state :party2 0)
           tsp (get-content state :party1 0)]
       (core/reveal state :contestant tsp)
@@ -1774,11 +1774,11 @@
       (prompt-select :contestant (find-card "Adonis Campaign" (:discard (get-contestant))))
       (prompt-choice :contestant "New party")
       (is (= "Adonis Campaign" (:title (get-content state :party3 0)))
-          "Adonis installed by Team Sponsorship")
+          "Adonis placed by Team Sponsorship")
       (is (nil? (find-card "Adonis Campaign" (:discard (get-contestant)))) "No Adonis in discard"))))
 
 (deftest team-sponsorship-multiple
-  ;; Team Sponsorship - Multiple installed
+  ;; Team Sponsorship - Multiple placed
   (do-game
     (new-game (default-contestant [(qty "Domestic Sleepers" 1)
                              (qty "Team Sponsorship" 2)
@@ -1787,7 +1787,7 @@
     (play-from-hand state :contestant "Team Sponsorship" "New party")
     (play-from-hand state :contestant "Team Sponsorship" "New party")
     (play-from-hand state :contestant "Domestic Sleepers" "New party")
-    (trash-from-hand state :contestant "Adonis Campaign")
+    (discard-from-hand state :contestant "Adonis Campaign")
     (let [ag1 (get-content state :party3 0)
           tsp2 (get-content state :party2 0)
           tsp1 (get-content state :party1 0)]
@@ -1800,9 +1800,9 @@
       (prompt-select :contestant (find-card "Adonis Campaign" (:hand (get-contestant))))
       (prompt-choice :contestant "New party")
       (is (= "Adonis Campaign" (:title (get-content state :party4 0)))
-          "Adonis installed by Team Sponsorship")
+          "Adonis placed by Team Sponsorship")
       (is (= "Adonis Campaign" (:title (get-content state :party5 0)))
-          "Adonis installed by Team Sponsorship"))))
+          "Adonis placed by Team Sponsorship"))))
 
 (deftest team-sponsorship-one-window
   ;; Team Sponsorship - Score 5 points in one window
@@ -1941,7 +1941,7 @@
       (play-from-hand state :contestant "PAD Campaign" "New party")
       (is (= 4 (:credit (get-contestant))) "Gained 1 credit for new locale created")
       (play-from-hand state :contestant "Wraparound" "Locale 1")
-      (is (= 4 (:credit (get-contestant))) "No credit gained for install into existing locale")
+      (is (= 4 (:credit (get-contestant))) "No credit gained for place into existing locale")
       (play-from-hand state :contestant "PAD Campaign" "New party")
       (is (= 5 (:credit (get-contestant))) "Gained 1 credit for new locale created"))))
 
@@ -1950,7 +1950,7 @@
   (do-game
     (new-game (default-contestant [(qty "Urban Renewal" 1)])
               (default-challenger [(qty "Sure Gamble" 3) (qty "Easy Mark" 2)]))
-    ;; Contestant turn 1, install and reveal urban renewal
+    ;; Contestant turn 1, place and reveal urban renewal
     (play-from-hand state :contestant "Urban Renewal" "New party")
     (let [ur (get-content state :party1 0)]
       (core/reveal state :contestant (refresh ur))
@@ -1972,12 +1972,12 @@
       (take-credits state :contestant)
 
       ;; Challenger turn 3
-      (is (= 0 (count (:discard (get-contestant)))) "Nothing in Contestant trash")
-      (is (= 0 (count (:discard (get-challenger)))) "Nothing in Challenger trash")
+      (is (= 0 (count (:discard (get-contestant)))) "Nothing in Contestant discard")
+      (is (= 0 (count (:discard (get-challenger)))) "Nothing in Challenger discard")
       (take-credits state :challenger)
 
       ;; Contestant turn 4 - damage fires
-      (is (= 1 (count (:discard (get-contestant)))) "Urban Renewal got trashed")
+      (is (= 1 (count (:discard (get-contestant)))) "Urban Renewal got discarded")
       (is (= 4 (count (:discard (get-challenger)))) "Urban Renewal did 4 meat damage"))))
 
 (deftest watchdog
@@ -2002,7 +2002,7 @@
       (is (= 0 (:credit (get-contestant))) "No reveal discount on Wraparound"))))
 
 (deftest whampoa-reclamation
-  ;; Whampoa Reclamation: Enable trashing a card from HQ to place a card in Archives on the bottom of R+D
+  ;; Whampoa Reclamation: Enable discarding a card from HQ to place a card in Archives on the bottom of R+D
   (do-game
     (new-game (default-contestant [(qty "Whampoa Reclamation" 3) (qty "PAD Campaign" 2) (qty "Global Food Initiative" 3)])
               (default-challenger))
@@ -2012,7 +2012,7 @@
       (take-credits state :contestant)
       (core/reveal state :contestant wr)
       (let [gfi (find-card "Global Food Initiative" (:hand (get-contestant)))]
-        (core/trash state :challenger gfi)
+        (core/discard state :challenger gfi)
         (card-ability state :contestant wr 0)
         (prompt-choice :contestant "Global Food Initiative") ;; into archives
         (prompt-select :contestant (first (:discard (get-contestant)))) ;; into R&D

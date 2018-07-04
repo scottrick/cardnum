@@ -1,6 +1,6 @@
 (in-ns 'game.core)
 
-(declare forfeit prompt! toast damage mill installed? is-type? is-scored?)
+(declare forfeit prompt! toast damage mill placed? is-type? is-scored?)
 
 (defn deduce
   "Deduct the value from the player's attribute."
@@ -25,11 +25,11 @@
                   (and (= type :forfeit) (>= (- (count (get-in @state [side :scored])) amount) 0))
                   (and (= type :mill) (>= (- (count (get-in @state [side :deck])) amount) 0))
                   (and (= type :tag) (>= (- (get-in @state [:challenger :tag]) amount) 0))
-                  (and (= type :character) (>= (- (count (filter (every-pred revealed? character?) (all-installed state :contestant))) amount) 0))
+                  (and (= type :character) (>= (- (count (filter (every-pred revealed? character?) (all-placed state :contestant))) amount) 0))
                   (and (= type :hazard) (>= (- (count (get-in @state [:challenger :rig :hazard])) amount) 0))
                   (and (= type :resource) (>= (- (count (get-in @state [:challenger :rig :resource])) amount) 0))
                   (and (= type :connection) (>= (- (count (filter #(has-subtype? % "Connection")
-                                                                  (all-installed state :challenger))) amount) 0))
+                                                                  (all-placed state :challenger))) amount) 0))
                   (>= (- (or (get-in @state [side type]) -1 ) amount) 0))
       "Unable to pay")))
 
@@ -61,14 +61,14 @@
   (when-let [cost-name (cost-names n :forfeit)]
     cost-name))
 
-(defn pay-trash
-  "Trash a card as part of paying for a card or ability"
+(defn pay-discard
+  "Discard a card as part of paying for a card or ability"
   ;; If multiples needed in future likely prompt-select needs work to take a function
   ;; instead of an ability
-  ([state side card type amount choices] (pay-trash state side card type amount choices nil))
+  ([state side card type amount choices] (pay-discard state side card type amount choices nil))
   ([state side card type amount choices args]
-   (prompt! state side card (str "Choose a " (name type) " to trash") choices
-            {:effect (effect (trash target args))})
+   (prompt! state side card (str "Choose a " (name type) " to discard") choices
+            {:effect (effect (discard target args))})
    (when-let [cost-name (cost-names amount type)] cost-name)))
 
 (defn- cost-handler
@@ -81,15 +81,15 @@
                (swap! state assoc-in [side :register :spent-click] true)
                (deduce state side cost))
     :forfeit (pay-forfeit state side card (second cost))
-    :hazard (pay-trash state side card :hazard (second cost) (get-in @state [:challenger :rig :hazard]))
-    :resource (pay-trash state side card :resource (second cost) (get-in @state [:challenger :rig :resource]))
+    :hazard (pay-discard state side card :hazard (second cost) (get-in @state [:challenger :rig :hazard]))
+    :resource (pay-discard state side card :resource (second cost) (get-in @state [:challenger :rig :resource]))
 
     ;; Connection
-    :connection (pay-trash state side card :connection (second cost) (filter (fn [c] (has-subtype? c "Connection"))
-                                                                          (all-installed state :challenger)))
+    :connection (pay-discard state side card :connection (second cost) (filter (fn [c] (has-subtype? c "Connection"))
+                                                                          (all-placed state :challenger)))
 
     ;; Revealed Character
-    :character (pay-trash state :contestant card :character (second cost) (filter (every-pred revealed? character?) (all-installed state :contestant))
+    :character (pay-discard state :contestant card :character (second cost) (filter (every-pred revealed? character?) (all-placed state :contestant))
                     {:cause :ability-cost :keep-locale-alive true})
 
     :tag (deduce state :challenger cost)
@@ -142,45 +142,45 @@
 (defn click-run-cost-bonus [state side & n]
   (swap! state update-in [:bonus :click-run-cost] #(merge-costs (concat % n))))
 
-(defn trash-cost-bonus [state side n]
-  (swap! state update-in [:bonus :trash] (fnil #(+ % n) 0)))
+(defn discard-cost-bonus [state side n]
+  (swap! state update-in [:bonus :discard] (fnil #(+ % n) 0)))
 
-(defn trash-cost [state side {:keys [trash] :as card}]
-  (when-not (nil? trash)
-    (-> (if-let [trashfun (:trash-cost-bonus (card-def card))]
-          (+ trash (trashfun state side (make-eid state) card nil))
-          trash)
-        (+ (or (get-in @state [:bonus :trash]) 0))
+(defn discard-cost [state side {:keys [discard] :as card}]
+  (when-not (nil? discard)
+    (-> (if-let [discardfun (:discard-cost-bonus (card-def card))]
+          (+ discard (discardfun state side (make-eid state) card nil))
+          discard)
+        (+ (or (get-in @state [:bonus :discard]) 0))
         (max 0))))
 
-(defn install-cost-bonus [state side n]
-  (swap! state update-in [:bonus :install-cost] #(merge-costs (concat % n))))
+(defn place-cost-bonus [state side n]
+  (swap! state update-in [:bonus :place-cost] #(merge-costs (concat % n))))
 
-(defn ignore-install-cost [state side b]
-  (swap! state assoc-in [:bonus :ignore-install-cost] b))
+(defn ignore-place-cost [state side b]
+  (swap! state assoc-in [:bonus :ignore-place-cost] b))
 
-(defn ignore-install-cost? [state side]
-  (get-in @state [:bonus :ignore-install-cost]))
+(defn ignore-place-cost? [state side]
+  (get-in @state [:bonus :ignore-place-cost]))
 
-(defn clear-install-cost-bonus [state side]
-  (swap! state update-in [:bonus] dissoc :install-cost)
-  (swap! state update-in [:bonus] dissoc :ignore-install-cost))
+(defn clear-place-cost-bonus [state side]
+  (swap! state update-in [:bonus] dissoc :place-cost)
+  (swap! state update-in [:bonus] dissoc :ignore-place-cost))
 
-(defn install-cost [state side card all-cost]
+(defn place-cost [state side card all-cost]
   (vec (map #(if (keyword? %) % (max % 0))
-            (-> (concat (get-in @state [:bonus :install-cost]) all-cost
-                        (when-let [instfun (:install-cost-bonus (card-def card))]
+            (-> (concat (get-in @state [:bonus :place-cost]) all-cost
+                        (when-let [instfun (:place-cost-bonus (card-def card))]
                           (instfun state side (make-eid state) card nil)))
                 merge-costs flatten))))
 
-(defn modified-install-cost
-  "Returns the number of credits required to install the given card, after modification effects including
+(defn modified-place-cost
+  "Returns the number of credits required to place the given card, after modification effects including
   the argument 'additional', which is a vector of costs like [:credit -1]. Allows cards like
-  Street Peddler to pre-calculate install costs without actually triggering the install."
-  ([state side card] (modified-install-cost state side card nil))
+  Street Peddler to pre-calculate place costs without actually triggering the place."
+  ([state side card] (modified-place-cost state side card nil))
   ([state side card additional]
-   (trigger-event state side :pre-install card)
-   (let [cost (install-cost state side card (merge-costs (concat additional [:credit (:cost card)])))]
-     (swap! state update-in [:bonus] dissoc :install-cost)
-     (swap! state update-in [:bonus] dissoc :ignore-install-cost)
+   (trigger-event state side :pre-place card)
+   (let [cost (place-cost state side card (merge-costs (concat additional [:credit (:cost card)])))]
+     (swap! state update-in [:bonus] dissoc :place-cost)
+     (swap! state update-in [:bonus] dissoc :ignore-place-cost)
      cost)))

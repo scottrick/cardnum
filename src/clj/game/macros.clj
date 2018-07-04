@@ -39,7 +39,7 @@
             'challenger-reg '(get-in @state [:challenger :register])
             'challenger-reg-last '(get-in @state [:challenger :register-last-turn])
             'target '(first targets)
-            'installed '(#{:rig :locales} (first (:zone (get-nested-host card))))
+            'placed '(#{:rig :locales} (first (:zone (get-nested-host card))))
             'parties '(get-party-names @state)
             'locales '(zones->sorted-names (get-zones @state))
             'unprotected '(let [locale (second (:zone (if (:host card)

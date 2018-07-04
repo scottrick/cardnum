@@ -23,7 +23,7 @@
             {:id "undo"
              :title "How do I undo an action?"
              :content [:p "There is no \"general purpose undo button\". Surplus/missing credits, clicks can be manipulated with "
-                       "the panel on the left. Trashed/played cards can be dragged back to hand and reinstalled if needed. If there
+                       "the panel on the left. Discarded/played cards can be dragged back to hand and replaced if needed. If there
                        are lingering/hard to dismiss prompts, try using " [:code "/close-prompt"] " command as a last resort."]}
             {:id "breakcharacter"
              :title "How do I break Character and fire Character subroutines?"
@@ -165,17 +165,17 @@
      :title "Cards and Specific Interactions"
      :sub (list
             {:id "shards"
-             :title "How do I install Eden/Hades/Utopia Shard during a run?"
+             :title "How do I place Eden/Hades/Utopia Shard during a run?"
              :content [:p "At the last run step on the relevant locale, instead of pressing \"Successful Run\" button, "
-                       "click the shard card you want to install in hand. You should end the run with the shard installed "
+                       "click the shard card you want to place in hand. You should end the run with the shard placed "
                        "at no cost."]}
             {:id "nasir"
              :title "How do I use Nasir's ability?"
              :content [:p "Nasir's ability is currently triggered manually - when encountering a piece of Character, click Nasir's "
                        "identity card to trigger the ability."]}
             {:id "adam"
-             :title "How do I install Adam's directives?"
-             :content [:p "Adam's directives are installed automatically at the game start. The directives are pulled "
+             :title "How do I place Adam's directives?"
+             :content [:p "Adam's directives are placed automatically at the game start. The directives are pulled "
                        "directly from the game-locale so do not need to be a part of your deck. The previous workaround "
                        "of explicitly adding the 3 directives to the deck is no longer necessary."]}
             {:id "napdmwl"
@@ -216,7 +216,7 @@
             {:id "toomanylocales"
              :title "There are too many locales to fit on my screen."
              :content [:p "Decrease the zoom level of your browser and you should be able to see everything. If you are using "
-                       "Chrome, you can do it by pressing CTRL and - (minus). If you are using Firefox, you may need to install "
+                       "Chrome, you can do it by pressing CTRL and - (minus). If you are using Firefox, you may need to place "
                        [:a {:href "https://addons.mozilla.org/pl/firefox/addon/zoom-page/"} "Zoom Page addon"] " before the zoom works correctly."]}
             {:id "zerogames"
              :title "Whenever I connect to the site, I see there are 0 games in the lobby."

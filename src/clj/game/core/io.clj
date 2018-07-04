@@ -40,7 +40,7 @@
 
 (defn enforce-msg
   "Prints a message related to a rules enforcement on a given card.
-  Example: 'Architect cannot be trashed while installed.'"
+  Example: 'Architect cannot be discarded while placed.'"
   [state card text]
   (say state nil {:user (get-in card [:title]) :text (str (:title card) " " text ".")}))
 
@@ -75,7 +75,7 @@
 
 ;;; "ToString"-like methods
 (defn card-str
-  "Gets a string description of an installed card, reflecting whether it is revealed,
+  "Gets a string description of an placed card, reflecting whether it is revealed,
   in/protecting a locale, facedown, or hosted."
   ([state card] (card-str state card nil))
   ([state card {:keys [visible] :as args}]
@@ -144,9 +144,9 @@
 
 (defn command-facedown [state side]
   (resolve-ability state side
-                   {:prompt "Select a card to install facedown"
+                   {:prompt "Select a card to place facedown"
                     :choices {:req #(in-hand? %)}
-                    :effect (effect (challenger-install target {:facedown true}))}
+                    :effect (effect (challenger-place target {:facedown true}))}
                    {:title "/facedown command"} nil))
 
 (defn command-counter [state side args]
@@ -176,7 +176,7 @@
     {:optional {:prompt "Reveal all cards and turn cards in archives faceup?"
                 :yes-ability {:effect (req
                                         (swap! state update-in [:contestant :discard] #(map (fn [c] (assoc c :seen true)) %))
-                                        (doseq [c (all-installed state side)]
+                                        (doseq [c (all-placed state side)]
                                           (when-not (:revealed c)
                                             (reveal state side c {:ignore-cost :all-costs :force true}))))}}}
     {:title "/reveal-all command"} nil))
@@ -292,10 +292,10 @@
                                                                 :msg "resolve successful trace effect"}))
           nil)))))
 
-(defn contestant-install-msg
-  "Gets a message describing where a card has been installed from. Example: Interns. "
+(defn contestant-place-msg
+  "Gets a message describing where a card has been placed from. Example: Interns. "
   [card]
-  (str "install " (if (:seen card) (:title card) "an unseen card") " from " (name-zone :contestant (:zone card))))
+  (str "place " (if (:seen card) (:title card) "an unseen card") " from " (name-zone :contestant (:zone card))))
 
 (defn turn-message
   "Prints a message for the start or end of a turn, summarizing credits and cards in hand."

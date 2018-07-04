@@ -19,7 +19,7 @@
 (load "core/turns")     ; the turn sequence
 (load "core/actions")   ; functions linked to UI actions
 (load "core/abilities") ; support for card abilities and prompts
-(load "core/installing"); installing and interacting with installed cards and locales
+(load "core/placing"); placing and interacting with placed cards and locales
 (load "core/hosting")   ; hosting routines
 (load "core/runs")      ; the run sequence
 (load "core/ice")       ; character and icebreaker interactions

@@ -55,8 +55,8 @@
                                        (when (card-flag? c :has-events-when-stolen true)
                                          (register-events state side (:events (card-def c)) c))
                                        (when-let [current (first (get-in @state [:contestant :current]))]
-                                         (say state side {:user "__system__" :text (str (:title current) " is trashed.")})
-                                         (trash state side current)))}
+                                         (say state side {:user "__system__" :text (str (:title current) " is discarded.")})
+                                         (discard state side current)))}
           :card-ability (ability-as-handler c (:stolen (card-def c)))}
          c)
        (effect-completed state side eid nil)))))
@@ -110,51 +110,51 @@
 (defn- access-non-agenda
   [state side eid c]
   (trigger-event state side :access c)
-  (trigger-event state side :pre-trash c)
+  (trigger-event state side :pre-discard c)
   (if (not= (:zone c) [:discard]) ; if not accessing in Archives
-    (if-let [trash-cost (trash-cost state side c)]
-      ;; The card has a trash cost (Site, Region)
+    (if-let [discard-cost (discard-cost state side c)]
+      ;; The card has a discard cost (Site, Region)
       (let [card (assoc c :seen true)
             name (:title card)
-            trash-msg (str trash-cost " [Credits] to trash " name " from " (name-zone :contestant (:zone card)))]
-        (if (and (get-in @state [:challenger :register :force-trash])
-                 (can-pay? state :challenger name :credit trash-cost))
-          ;; If the challenger is forced to trash this card (Neutralize All Threats)
+            discard-msg (str discard-cost " [Credits] to discard " name " from " (name-zone :contestant (:zone card)))]
+        (if (and (get-in @state [:challenger :register :force-discard])
+                 (can-pay? state :challenger name :credit discard-cost))
+          ;; If the challenger is forced to discard this card (Neutralize All Threats)
           (continue-ability state :challenger
-                            {:cost [:credit trash-cost]
+                            {:cost [:credit discard-cost]
                              :delayed-completion true
-                             :effect (req (trash state side eid card nil)
-                                          (swap! state assoc-in [:challenger :register :trashed-card] true)
-                                          (system-msg state side (str "is forced to pay " trash-msg)))}
+                             :effect (req (discard state side eid card nil)
+                                          (swap! state assoc-in [:challenger :register :discarded-card] true)
+                                          (system-msg state side (str "is forced to pay " discard-msg)))}
                             card nil)
-          ;; Otherwise, show the option to pay to trash the card.
+          ;; Otherwise, show the option to pay to discard the card.
           (when-not (and (is-type? card "Operation")
-                         ;; Don't show the option if Edward Kim's auto-trash flag is true.
-                         (card-flag? card :can-trash-operation true))
-            ;; If card has already been trashed this access don't show option to pay to trash (eg. Ed Kim)
+                         ;; Don't show the option if Edward Kim's auto-discard flag is true.
+                         (card-flag? card :can-discard-operation true))
+            ;; If card has already been discarded this access don't show option to pay to discard (eg. Ed Kim)
             (when-not (find-cid (:cid card) (get-in @state [:contestant :discard]))
               (continue-ability state :challenger
                                 {:optional
-                                 {:prompt (str "Pay " trash-cost " [Credits] to trash " name "?")
+                                 {:prompt (str "Pay " discard-cost " [Credits] to discard " name "?")
                                   :no-ability {:effect (req
                                                          ;; toggle access flag to prevent Hiro issue #2638
                                                          (swap! state dissoc :access)
-                                                         (trigger-event state side :no-trash c)
+                                                         (trigger-event state side :no-discard c)
                                                          (swap! state assoc :access true))}
-                                  :yes-ability {:cost [:credit trash-cost]
+                                  :yes-ability {:cost [:credit discard-cost]
                                                 :delayed-completion true
-                                                :effect (req (trash state side eid card nil)
+                                                :effect (req (discard state side eid card nil)
                                                              (when (:run @state)
-                                                               (swap! state assoc-in [:run :did-trash] true))
-                                                             (swap! state assoc-in [:challenger :register :trashed-card] true)
-                                                             (system-msg state side (str "pays " trash-msg)))}}}
+                                                               (swap! state assoc-in [:run :did-discard] true))
+                                                             (swap! state assoc-in [:challenger :register :discarded-card] true)
+                                                             (system-msg state side (str "pays " discard-msg)))}}}
                                 card nil)))))
-      ;; The card does not have a trash cost
+      ;; The card does not have a discard cost
       (do (prompt! state :challenger c (str "You accessed " (:title c)) ["OK"] {:eid eid})
-          ;; TODO: Trigger :no-trash after hit "OK" on access
+          ;; TODO: Trigger :no-discard after hit "OK" on access
           (when-not (find-cid (:cid c) (get-in @state [:contestant :discard]))
-            ;; Do not trigger :no-trash if card (operation) has already been trashed
-            (trigger-event state side :no-trash c))))
+            ;; Do not trigger :no-discard if card (operation) has already been discarded
+            (trigger-event state side :no-discard c))))
     (effect-completed state side eid)))
 
 (defn- steal-pay-choice
@@ -246,8 +246,8 @@
   ([state side eid cards title]
    (swap! state assoc :access true)
    (doseq [c cards]
-     ;; Reset counters for increasing costs of trash, steal, and access.
-     (swap! state update-in [:bonus] dissoc :trash)
+     ;; Reset counters for increasing costs of discard, steal, and access.
+     (swap! state update-in [:bonus] dissoc :discard)
      (swap! state update-in [:bonus] dissoc :steal-cost)
      (swap! state update-in [:bonus] dissoc :access-cost)
      (when-completed (trigger-event-sync state side :pre-access-card c)
@@ -255,7 +255,7 @@
                                ;; hack to prevent toasts when playing against Gagarin and accessing on 0 credits
                                anon-card (dissoc c :title)]
                            (cond
-                             ;; Check if a pre-access-card effect trashed the card (By Any Means)
+                             ;; Check if a pre-access-card effect discarded the card (By Any Means)
                              (not (get-card state c))
                              (effect-completed state side eid)
 
@@ -754,7 +754,7 @@
         eid (:eid run)]
     (swap! state assoc-in [:run :ending] true)
     (trigger-event state side :run-ends (first locale))
-    (doseq [p (filter #(has-subtype? % "Icebreaker") (all-installed state :challenger))]
+    (doseq [p (filter #(has-subtype? % "Icebreaker") (all-placed state :challenger))]
       (update! state side (update-in (get-card state p) [:pump] dissoc :all-run))
       (update! state side (update-in (get-card state p) [:pump] dissoc :encounter ))
       (update-breaker-strength state side p))

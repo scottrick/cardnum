@@ -60,7 +60,7 @@
               :leave-play (req (remove-watch state (keyword (str "cloud" (:cid card))))
                                (when (> (get-in @state [:challenger :link]) 1)
                                  (lose state :challenger :memory (:memoryunits card))))
-              :install-cost-bonus (req (when (> (get-in @state [:challenger :link]) 1)
+              :place-cost-bonus (req (when (> (get-in @state [:challenger :link]) 1)
                                          [:memory (* -1 (:memoryunits card))]))))
 
 (defn- strength-pump
@@ -100,15 +100,15 @@
 (defn- break-and-enter
   "Breakers from the Break and Entry set"
   [type]
-  (cloud-icebreaker {:abilities [{:label (str "[Trash]: Break up to 3 " (lower-case type) "subroutines")
+  (cloud-icebreaker {:abilities [{:label (str "[Discard]: Break up to 3 " (lower-case type) "subroutines")
                                   :msg (str "break up to 3 " (lower-case type) " subroutines")
-                                  :effect (effect (trash card {:cause :ability-cost}))}]
+                                  :effect (effect (discard card {:cause :ability-cost}))}]
                       :events (let [cloud {:silent (req true)
                                            :req (req (has-subtype? target "Icebreaker"))
                                            :effect (effect (update-breaker-strength card))}]
-                                {:challenger-install cloud :trash cloud :card-moved cloud})
+                                {:challenger-place cloud :discard cloud :card-moved cloud})
                       :strength-bonus (req (count (filter #(has-subtype? % "Icebreaker")
-                                                          (all-installed state :challenger))))}))
+                                                          (all-placed state :challenger))))}))
 
 (defn- global-sec-breaker
   "GlobalSec breakers for Sunny"
@@ -133,7 +133,7 @@
                                                                                 :init-data true}))
                                                 (let [devavec (get-in @state [:challenger :rig :resource])
                                                       devaindex (first (keep-indexed #(when (= (:cid %2) (:cid card)) %1) devavec))
-                                                      newdeva (assoc target :zone (:zone card) :installed true)
+                                                      newdeva (assoc target :zone (:zone card) :placed true)
                                                       newvec (apply conj (subvec devavec 0 devaindex) newdeva (subvec devavec devaindex))]
                                                   (lose state :challenger :memory (:memoryunits card))
                                                   (swap! state assoc-in [:challenger :rig :resource] newvec)
@@ -143,27 +143,27 @@
                                               (move state side card :hand))}]}))
 
 (defn- conspiracy
-  "Install-from-heap breakers"
+  "Place-from-heap breakers"
   [title type abilities]
-  (let [install-prompt {:req (req (and (= (:zone card) [:discard])
+  (let [place-prompt {:req (req (and (= (:zone card) [:discard])
                                        (revealed? current-character)
                                        (has-subtype? current-character type)
-                                       (not (install-locked? state side))
-                                       (not (some #(= title (:title %)) (all-installed state :challenger)))
+                                       (not (place-locked? state side))
+                                       (not (some #(= title (:title %)) (all-placed state :challenger)))
                                        (not (get-in @state [:run :register :conspiracy (:cid current-character)]))))
                         :optional {:player :challenger
-                                   :prompt (str "Install " title "?")
+                                   :prompt (str "Place " title "?")
                                    :yes-ability {:effect (effect (unregister-events card)
-                                                                 (challenger-install :challenger card))}
-                                   :no-ability {:effect (req  ;; Add a register to note that the player was already asked about installing,
+                                                                 (challenger-place :challenger card))}
+                                   :no-ability {:effect (req  ;; Add a register to note that the player was already asked about placing,
                                                               ;; to prevent multiple copies from prompting multiple times.
                                                               (swap! state assoc-in [:run :register :conspiracy (:cid current-character)] true))}}}
         heap-event (req (when (= (:zone card) [:discard])
                           (unregister-events state side card)
                           (register-events state side
-                                           {:reveal install-prompt
-                                            :approach-character install-prompt
-                                            :run install-prompt}
+                                           {:reveal place-prompt
+                                            :approach-character place-prompt
+                                            :run place-prompt}
                                            (assoc card :zone [:discard]))))]
     {:move-zone heap-event
      :events {:reveal nil

@@ -97,8 +97,8 @@
                 "[l]" "link"
                 "[Memory Unit]" "mu"
                 "[mu]" "mu"
-                "[Trash]" "trash"
-                "[t]" "trash"})
+                "[Discard]" "discard"
+                "[t]" "discard"})
 
 (go (while true
       (let [msg (<! socket-channel)]
@@ -616,14 +616,14 @@
     ;; Determine the appropriate type of counter for styling, falling back to
     ;; power counters when no other type can be inferred.
     (cond
-      ;; If an installed card contains an annotation, use it.
-      (and (:installed card)
+      ;; If an placed card contains an annotation, use it.
+      (and (:placed card)
            (not (nil? counter-type)))
       counter-type
       (= "Agenda" (:type card)) "Agenda"
-      ;; Assume uninstalled cards with counters are hosted on Personal
+      ;; Assume unplaced cards with counters are hosted on Personal
       ;; Workshop.
-      (not (:installed card)) "Power"
+      (not (:placed card)) "Power"
       (not (:subtype card)) "Power"
       (> (.indexOf (:subtype card) "Virus") -1) "Virus"
       :else "Power")))
@@ -659,7 +659,7 @@
            [:img.card.bg {:src url :alt title :onError #(-> % .-target js/$ .hide)}]])]]))))
 
 (defn face-down?
-  "Returns true if the installed card should be drawn face down."
+  "Returns true if the placed card should be drawn face down."
   [{:keys [side type facedown revealed host] :as card}]
   (if (= side "Contestant")
     (and (not= type "Resource")
@@ -1421,11 +1421,11 @@
               (when (= side :contestant)
                 (cond-button "Purge" (>= (:click me) 3) #(send-command "purge")))
               (when (= side :contestant)
-                (cond-button "Trash Muthereff" (and (pos? (:click me))
-                                                   (>= (:credit me) (- 2 (or (:trash-cost-bonus me) 0)))
+                (cond-button "Discard Muthereff" (and (pos? (:click me))
+                                                   (>= (:credit me) (- 2 (or (:discard-cost-bonus me) 0)))
                                                    (or (pos? (:tagged opponent))
                                                        (pos? (:tag opponent))))
-                             #(send-command "trash-muthereff")))
+                             #(send-command "discard-muthereff")))
               (cond-button "Draw" (and (pos? (:click me)) (not-empty (:deck me))) #(send-command "draw"))
               (cond-button "Gain Credit" (pos? (:click me)) #(send-command "credit"))]))]))))
 
@@ -1461,8 +1461,8 @@
                           (audio-sfx "click-run")
                           (audio-sfx "click-remove-tag")
                           (audio-sfx "game-end")
-                          (audio-sfx "install-contestant")
-                          (audio-sfx "install-challenger")
+                          (audio-sfx "place-contestant")
+                          (audio-sfx "place-challenger")
                           (audio-sfx "play-instant")
                           (audio-sfx "reveal-character")
                           (audio-sfx "reveal-other")

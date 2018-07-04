@@ -81,21 +81,21 @@
       (score-agenda state :contestant (get-content state :party1 0))
       (play-from-hand state :contestant "AstroScript Pilot Resource" "New party")
       (let [scored-astro (get-in @state [:contestant :scored 0])
-            installed-astro (get-content state :party2 0)
+            placed-astro (get-content state :party2 0)
             hand-astro (find-card "AstroScript Pilot Resource" (:hand get-contestant))]
         (should-not-place scored-astro hand-astro " in hand")
-        (should-place scored-astro installed-astro " that is installed")
-        (core/advance state :contestant {:card (refresh installed-astro)})
-        (core/advance state :contestant {:card (refresh installed-astro)})
-        (core/score   state :contestant {:card (refresh installed-astro)}))
+        (should-place scored-astro placed-astro " that is placed")
+        (core/advance state :contestant {:card (refresh placed-astro)})
+        (core/advance state :contestant {:card (refresh placed-astro)})
+        (core/score   state :contestant {:card (refresh placed-astro)}))
       (play-from-hand state :contestant "Ice Wall" "HQ")
       (let [no-token-astro (get-in @state [:contestant :scored 0])
             token-astro (get-in @state [:contestant :scored 1])
             hand-character-wall (find-card "Ice Wall" (:hand get-contestant))
-            installed-character-wall (get-character state :hq 0)]
+            placed-character-wall (get-character state :hq 0)]
         (should-not-place token-astro no-token-astro " that is scored")
         (should-not-place token-astro hand-character-wall " in hand")
-        (should-place token-astro installed-character-wall " that is installed")))))
+        (should-place token-astro placed-character-wall " that is placed")))))
 
 (deftest braintrust
   ;; Braintrust - Discount Character reveal by 1 for every 2 over-advancements when scored
@@ -125,7 +125,7 @@
     (is (= 0 (get-in @state [:challenger :tag]))) "Two tags removed at the end of the turn"))
 
 (deftest character-assassination
-  ;; Character Assassination - Unpreventable trash of 1 muthereff when scored
+  ;; Character Assassination - Unpreventable discard of 1 muthereff when scored
   (do-game
     (new-game (default-contestant [(qty "Character Assassination" 1)])
               (default-challenger [(qty "Fall Guy" 1) (qty "Kati Jones" 1)]))
@@ -138,7 +138,7 @@
     (let [kati (get-in @state [:challenger :rig :muthereff 0])]
       (prompt-select :contestant kati)
       (is (empty? (:prompt (get-challenger))) "Fall Guy prevention didn't occur")
-      (is (= 1 (count (:discard (get-challenger)))) "Kati Jones trashed"))))
+      (is (= 1 (count (:discard (get-challenger)))) "Kati Jones discarded"))))
 	  
 (deftest contestantorate-sales-team
   ;; Contestantorate Sales Team - Places 10c on card, contestant takes 1c on each turn start
@@ -222,7 +222,7 @@
     (is (= 2 (-> (get-contestant) :selected first :max)) "Contestant chooses 2 cards for Challenger to access")))
 
 (deftest eden-fragment
-  ;; Test that Eden Fragment ignores the install cost of the first character
+  ;; Test that Eden Fragment ignores the place cost of the first character
   (do-game
     (new-game (default-contestant [(qty "Eden Fragment" 3) (qty "Ice Wall" 3)])
               (default-challenger))
@@ -235,11 +235,11 @@
     (take-credits state :challenger)
     (take-credits state :challenger)
     (play-from-hand state :contestant "Ice Wall" "HQ")
-    (is (not (nil? (get-character state :hq 1))) "Contestant has two character installed on HQ")
-    (is (= 6 (get-in @state [:contestant :credit])) "Contestant does not pay for installing the first Character of the turn")
+    (is (not (nil? (get-character state :hq 1))) "Contestant has two character placed on HQ")
+    (is (= 6 (get-in @state [:contestant :credit])) "Contestant does not pay for placing the first Character of the turn")
     (play-from-hand state :contestant "Ice Wall" "HQ")
-    (is (not (nil? (get-character state :hq 2))) "Contestant has three character installed on HQ")
-    (is (= 4 (get-in @state [:contestant :credit])) "Contestant pays for installing the second Character of the turn")))
+    (is (not (nil? (get-character state :hq 2))) "Contestant has three character placed on HQ")
+    (is (= 4 (get-in @state [:contestant :credit])) "Contestant pays for placing the second Character of the turn")))
 
 (deftest efficiency-committee
   ;; Efficiency Committee - Cannot advance cards if agenda counter is used
@@ -373,7 +373,7 @@
         (score-agenda state :contestant gr)
         (prompt-select :contestant bt2)
         (is (zero? (get-counters (refresh bt2) :agenda))
-            "No agenda counters on installed Braintrust; not a valid target")
+            "No agenda counters on placed Braintrust; not a valid target")
         (prompt-select :contestant btscored)
         (is (= 1 (get-counters (refresh btscored) :agenda))
             "1 agenda counter placed on scored Braintrust")))))
@@ -585,14 +585,14 @@
      (is (= 0 (get-counters (refresh scored-nisei) :agenda)) "Scored Nisei has no counters"))))
 
 (deftest oaktown-renovation
-  ;; Oaktown Renovation - Installed face up, gain credits with each conventional advancement
+  ;; Oaktown Renovation - Placed face up, gain credits with each conventional advancement
   (do-game
     (new-game (default-contestant [(qty "Oaktown Renovation" 1) (qty "Shipment from SanSan" 1)])
               (default-challenger))
     (core/gain state :contestant :click 3)
     (play-from-hand state :contestant "Oaktown Renovation" "New party")
     (let [oak (get-content state :party1 0)]
-      (is (get-in (refresh oak) [:revealed]) "Oaktown installed face up")
+      (is (get-in (refresh oak) [:revealed]) "Oaktown placed face up")
       (core/advance state :contestant {:card (refresh oak)})
       (is (= 6 (:credit (get-contestant))) "Spent 1 credit to advance, gained 2 credits from Oaktown")
       (play-from-hand state :contestant "Shipment from SanSan")
@@ -641,7 +641,7 @@
       (card-ability state :challenger chip 0)
       (prompt-select :challenger (find-card "Self-modifying Code" (:discard (get-challenger))))
       (is (second-last-log-contains? state "Patron")
-          "Personality Profiles trashed card name is in log")
+          "Personality Profiles discarded card name is in log")
       (is (= 3 (count (:discard (get-challenger))))))))
 
 (deftest personality-profiles-empty-hand
@@ -752,9 +752,9 @@
       (core/advance state :contestant {:card (refresh ares)})
       (is (= 6 (:advance-counter (refresh ares)))
       (core/score state :contestant {:card (refresh ares)}))
-      (is (prompt-is-card? :challenger ares) "Challenger has Ares prompt to trash installed cards"))
+      (is (prompt-is-card? :challenger ares) "Challenger has Ares prompt to discard placed cards"))
     (prompt-select :challenger (find-card "Clone Chip" (:hazard (:rig (get-challenger)))))
-    (is (empty? (get-in @state [:challenger :prompt])) "Challenger must trash 2 cards but only has 1 card in rig, prompt ended")
+    (is (empty? (get-in @state [:challenger :prompt])) "Challenger must discard 2 cards but only has 1 card in rig, prompt ended")
     (is (= 1 (count (:discard (get-challenger)))))
     (is (= 1 (:bad-publicity (get-contestant))))))
 
@@ -994,7 +994,7 @@
       (card-subroutine state :contestant viktor 0)
       (card-ability state :challenger ff 1) ;prevent the brain damage this time
       (prompt-choice :challenger "Done")
-      (is (= 3 (count (:discard (get-challenger)))) "Feedback filter trashed, didn't take another net damage")
+      (is (= 3 (count (:discard (get-challenger)))) "Feedback filter discarded, didn't take another net damage")
       (is (= 1 (:brain-damage (get-challenger)))))))
 
 ;; OHG still not working...
@@ -1017,7 +1017,7 @@
       (prompt-choice :challenger "Access")
       (is (= 1 (:tag (get-challenger))) "Challenger took 1 tag from accessing without stealing")
       (prompt-select :challenger ohg))
-    (prompt-choice :challenger "Yes") ; Trashes OHG
+    (prompt-choice :challenger "Yes") ; Discards OHG
     (run-empty-locale state "Locale 2")
     ;; Accesses TGTBT and can steal
     (prompt-choice :challenger "Access")
@@ -1049,7 +1049,7 @@
     (is (= 1 (count (:hand (get-challenger)))) "Only 1 damage dealt to Challenger from Cybernetics")))
 
 (deftest the-future-perfect
-  ;; The Future Perfect - cannot steal on failed psi game (if not installed)
+  ;; The Future Perfect - cannot steal on failed psi game (if not placed)
   (do-game
     (new-game (default-contestant [(qty "The Future Perfect" 2)])
               (default-challenger))
@@ -1073,10 +1073,10 @@
       (prompt-choice :challenger "Steal")
       (is (= 3 (:agenda-point (get-challenger))) "Challenger stole TFP"))
 
-    (testing "No Psi game and successful steal when installed"
+    (testing "No Psi game and successful steal when placed"
       (run-empty-locale state "Locale 1")
       (prompt-choice :challenger "Steal")
-      (is (= 6 (:agenda-point (get-challenger))) "Challenger stole TFP - no Psi game on installed TFP"))))
+      (is (= 6 (:agenda-point (get-challenger))) "Challenger stole TFP - no Psi game on placed TFP"))))
 
 (deftest underway-renovation
   ;; Underway Renovation - Mill the Challenger when advanced
@@ -1091,10 +1091,10 @@
     (let [ur (get-content state :party1 0)]
       (core/advance state :contestant {:card (refresh ur)})
       (is (last-log-contains? state "Sure Gamble")
-          "Underway Renovation trashed card name is in log")
+          "Underway Renovation discarded card name is in log")
       ; check for #2370
       (is (not (last-log-contains? state "Sure Gamble, Sure Gamble"))
-          "Underway Renovation trashed card name is in log")
+          "Underway Renovation discarded card name is in log")
       (is (= 1 (count (:discard (get-challenger)))) "1 card milled from Challenger Stack")
       (play-from-hand state :contestant "Shipment from SanSan")
       (prompt-choice :contestant "2")
@@ -1104,7 +1104,7 @@
       (core/advance state :contestant {:card (refresh ur)})
       (is (= 4 (:advance-counter (refresh ur))))
       (is (last-log-contains? state "Sure Gamble, Sure Gamble")
-          "Underway Renovation trashed card name is in log")
+          "Underway Renovation discarded card name is in log")
       (is (= 3 (count (:discard (get-challenger)))) "2 cards milled from Challenger Stack; 4+ advancements"))))
 
 (deftest vulcan-coverup

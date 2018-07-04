@@ -59,7 +59,7 @@
    "ability" core/play-ability
    "challenger-ability" core/play-challenger-ability
    "subroutine" core/play-subroutine
-   "trash-muthereff" core/trash-muthereff
+   "discard-muthereff" core/discard-muthereff
    "dynamic-ability" core/play-dynamic-ability
    "toast" core/toast
    "view-deck" core/view-deck

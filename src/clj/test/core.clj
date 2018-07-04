@@ -73,7 +73,7 @@
                                      :subroutine ability :targets targets})))
 
 (defn get-character
-  "Get installed character protecting locale by position."
+  "Get placed character protecting locale by position."
   [state locale pos]
   (get-in @state [:contestant :locales locale :characters pos]))
 
@@ -119,8 +119,8 @@
   (get-in card [:counter type] 0))
 
 (defn play-from-hand
-  "Play a card from hand based on its title. If installing a Contestant card, also indicate
-  the locale to install into with a string."
+  "Play a card from hand based on its title. If placing a Contestant card, also indicate
+  the locale to place into with a string."
   ([state side title] (play-from-hand state side title nil))
   ([state side title locale]
     (core/play state side {:card (find-card title (get-in @state [side :hand]))
@@ -207,15 +207,15 @@
          (re-find (re-pattern content)
                   (get (last (butlast (get @state :log))) :text)))))
 
-(defn trash-from-hand
-  "Trash specified card from hand of specified side"
+(defn discard-from-hand
+  "Discard specified card from hand of specified side"
   [state side title]
-  (core/trash state side (find-card title (get-in @state [side :hand]))))
+  (core/discard state side (find-card title (get-in @state [side :hand]))))
 
-(defn trash-muthereff
-  "Trash specified card from rig of the challenger"
+(defn discard-muthereff
+  "Discard specified card from rig of the challenger"
   [state title]
-  (core/trash state :challenger (find-card title (get-in @state [:challenger :rig :muthereff]))))
+  (core/discard state :challenger (find-card title (get-in @state [:challenger :rig :muthereff]))))
 
 (defn starting-hand
   "Moves all cards in the player's hand to their draw pile, then moves the specified card names

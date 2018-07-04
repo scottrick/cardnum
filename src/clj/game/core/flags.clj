@@ -18,7 +18,7 @@
     (and func (= (func state side (make-eid state) card nil) value))))
 
 (defn any-flag-fn?
-  "Checks `card-flag-fn? on all installed cards on specified side for the value with the flag-key
+  "Checks `card-flag-fn? on all placed cards on specified side for the value with the flag-key
   Default value of `cards` is `(all-active state side)`"
   ([state side flag-key value]
     (any-flag-fn? state side flag-key value (all-active state side)))
@@ -194,15 +194,15 @@
 (defn release-zone [state side cid tside tzone]
   (swap! state update-in [tside :locked tzone] #(remove #{cid} %)))
 
-(defn lock-install [state side cid tside]
-  (swap! state update-in [tside :lock-install] #(conj % cid)))
+(defn lock-place [state side cid tside]
+  (swap! state update-in [tside :lock-place] #(conj % cid)))
 
-(defn unlock-install [state side cid tside]
-  (swap! state update-in [tside :lock-install] #(remove #{cid} %)))
+(defn unlock-place [state side cid tside]
+  (swap! state update-in [tside :lock-place] #(remove #{cid} %)))
 
 ;;; Small utilities for card properties.
 (defn in-locale?
-  "Checks if the specified card is installed in -- and not PROTECTING -- a locale"
+  "Checks if the specified card is placed in -- and not PROTECTING -- a locale"
   [card]
   (= (last (:zone card)) :content))
 
@@ -280,8 +280,8 @@
 (defn faceup? [card]
   (or (:seen card) (:revealed card)))
 
-(defn installed? [card]
-  (or (:installed card) (= :locales (first (:zone card)))))
+(defn placed? [card]
+  (or (:placed card) (= :locales (first (:zone card)))))
 
 (defn active?
   "Checks if the card is active and should receive game events/triggers."
@@ -289,22 +289,22 @@
   (or (is-type? card "Identity")
       (= zone [:current])
       (and (card-is? card :side :contestant)
-           (installed? card)
+           (placed? card)
            (revealed? card))
       (and (card-is? card :side :challenger)
-           (installed? card)
+           (placed? card)
            (not (facedown? card)))))
 
-(defn untrashable-while-revealed? [card]
-  (and (card-flag? card :untrashable-while-revealed true) (revealed? card)))
+(defn undiscardable-while-revealed? [card]
+  (and (card-flag? card :undiscardable-while-revealed true) (revealed? card)))
 
-(defn untrashable-while-muthereffs? [card]
-  (and (card-flag? card :untrashable-while-muthereffs true) (installed? card)))
+(defn undiscardable-while-muthereffs? [card]
+  (and (card-flag? card :undiscardable-while-muthereffs true) (placed? card)))
 
-(defn install-locked?
-  "Checks if installing is locked"
+(defn place-locked?
+  "Checks if placing is locked"
   [state side]
-  (seq (get-in @state [side :lock-install])))
+  (seq (get-in @state [side :lock-place])))
 
 (defn- can-reveal-reason
   "Checks if the contestant can reveal the card.
@@ -324,7 +324,7 @@
       (not (run-flag? state side card :can-reveal)) :run-flag
       (not (turn-flag? state side card :can-reveal)) :turn-flag
       ;; Uniqueness check
-      (and uniqueness (some #(and (:revealed %) (= (:code card) (:code %))) (all-installed state :contestant))) :unique
+      (and uniqueness (some #(and (:revealed %) (= (:code card) (:code %))) (all-placed state :contestant))) :unique
       ;; Reveal req check
       (and req (not (req state side (make-eid state) card nil))) :req
       ;; No problems - return true
@@ -347,7 +347,7 @@
        :turn-flag false
        ;; Uniqueness
        :unique (or ignore-unique
-                   (reason-toast (str "Cannot reveal a second copy of " title " since it is unique. Please trash the other"
+                   (reason-toast (str "Cannot reveal a second copy of " title " since it is unique. Please discard the other"
                                       " copy first")))
        ;; Reveal requirement
        :req (reason-toast (str "Reveal requirements for " title " are not fulfilled"))))))
@@ -402,24 +402,24 @@
       (and (card-is? card :advanceable :while-unrevealed)
            (not (revealed? card)))
       (and (is-type? card "Agenda")
-           (installed? card))))
+           (placed? card))))
 
 (defn card-is-public? [state side {:keys [zone] :as card}]
   (if (= side :challenger)
     ;; public challenger cards: in hand and :openhand is true;
-    ;; or installed/hosted and not facedown;
+    ;; or placed/hosted and not facedown;
     ;; or scored or current or in heap
     (or (card-is? card :side :contestant)
         (and (:openhand (:challenger @state)) (in-hand? card))
-        (and (or (installed? card) (:host card)) (not (facedown? card)))
+        (and (or (placed? card) (:host card)) (not (facedown? card)))
         (#{:scored :discard :current} (last zone)))
     ;; public contestant cards: in hand and :openhand;
-    ;; or installed and revealed;
+    ;; or placed and revealed;
     ;; or in :discard and :seen
     ;; or scored or current
     (or (card-is? card :side :challenger)
         (and (:openhand (:contestant @state)) (in-hand? card))
-        (and (or (installed? card) (:host card))
+        (and (or (placed? card) (:host card))
              (or (is-type? card "Operation") (revealed? card)))
         (and (in-discard? card) (:seen card))
         (#{:scored :current} (last zone)))))

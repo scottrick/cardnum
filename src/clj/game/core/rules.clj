@@ -1,8 +1,8 @@
 (in-ns 'game.core)
 
-(declare card-init card-str close-access-prompt enforce-msg gain-agenda-point get-agenda-points installed? is-type?
-         in-contestant-scored? prevent-draw resolve-steal-events make-result say show-prompt system-msg trash-cards untrashable-while-revealed?
-         update-all-character win win-decked play-sfx can-run? untrashable-while-muthereffs?)
+(declare card-init card-str close-access-prompt enforce-msg gain-agenda-point get-agenda-points placed? is-type?
+         in-contestant-scored? prevent-draw resolve-steal-events make-result say show-prompt system-msg discard-cards undiscardable-while-revealed?
+         update-all-character win win-decked play-sfx can-run? undiscardable-while-muthereffs?)
 
 ;;;; Functions for applying core MECCG game rules.
 
@@ -52,9 +52,9 @@
              (play-sfx state side "play-instant")
              (if (has-subtype? c "Current")
                (do (doseq [s [:contestant :challenger]]
-                     (when-let [current (first (get-in @state [s :current]))] ; trash old current
-                       (say state side {:user "__system__" :text (str (:title current) " is trashed.")})
-                       (trash state side current)))
+                     (when-let [current (first (get-in @state [s :current]))] ; discard old current
+                       (say state side {:user "__system__" :text (str (:title current) " is discarded.")})
+                       (discard state side current)))
                    (let [c (some #(when (= (:cid %) (:cid card)) %) (get-in @state [side :play-area]))
                          moved-card (move state side c :current)]
                      (card-init state side eid moved-card {:resolve-effect true
@@ -195,17 +195,17 @@
                         (let [n (if-let [defer (get-defer-damage state side type args)] defer n)]
                           (when (pos? n)
                             (let [hand (get-in @state [:challenger :hand])
-                                  cards-trashed (take n (shuffle hand))]
+                                  cards-discarded (take n (shuffle hand))]
                               (when (= type :brain)
                                 (swap! state update-in [:challenger :brain-damage] #(+ % n))
                                 (swap! state update-in [:challenger :hand-size-modification] #(- % n)))
-                              (when-let [trashed-msg (join ", " (map :title cards-trashed))]
-                                (system-msg state :challenger (str "trashes " trashed-msg " due to damage")))
+                              (when-let [discarded-msg (join ", " (map :title cards-discarded))]
+                                (system-msg state :challenger (str "discards " discarded-msg " due to damage")))
                               (if (< (count hand) n)
                                 (do (flatline state)
-                                    (trash-cards state side (make-eid state) cards-trashed
+                                    (discard-cards state side (make-eid state) cards-discarded
                                                  {:unpreventable true}))
-                                (do (trash-cards state side (make-eid state) cards-trashed
+                                (do (discard-cards state side (make-eid state) cards-discarded
                                                  {:unpreventable true :cause type})
                                     (trigger-event state side :damage type card n)))))))
                       (swap! state update-in [:damage :defer-damage] dissoc type)
@@ -296,110 +296,110 @@
          (resolve-tag state side eid n args))))))
 
 
-;;; Trashing
-(defn trash-muthereff-bonus
-  "Applies a cost increase of n to trashing a muthereff with the click action. (SYNC.)"
+;;; Discarding
+(defn discard-muthereff-bonus
+  "Applies a cost increase of n to discarding a muthereff with the click action. (SYNC.)"
   [state side n]
-  (swap! state update-in [:contestant :trash-cost-bonus] (fnil #(+ % n) 0)))
+  (swap! state update-in [:contestant :discard-cost-bonus] (fnil #(+ % n) 0)))
 
-(defn trash-prevent [state side type n]
-  (swap! state update-in [:trash :trash-prevent type] (fnil #(+ % n) 0)))
+(defn discard-prevent [state side type n]
+  (swap! state update-in [:discard :discard-prevent type] (fnil #(+ % n) 0)))
 
-(defn- resolve-trash-end
+(defn- resolve-discard-end
   [state side eid {:keys [zone type disabled] :as card}
-   {:keys [unpreventable cause keep-locale-alive suppress-event host-trashed] :as args} & targets]
+   {:keys [unpreventable cause keep-locale-alive suppress-event host-discarded] :as args} & targets]
   (let [cdef (card-def card)
         moved-card (move state (to-keyword (:side card)) card :discard {:keep-locale-alive keep-locale-alive})
         card-prompts (filter #(= (get-in % [:card :title]) (get moved-card :title)) (get-in @state [side :prompt]))]
 
-    (when-let [trash-effect (:trash-effect cdef)]
+    (when-let [discard-effect (:discard-effect cdef)]
       (when (and (not disabled) (or (and (= (:side card) "Challenger")
-                                         (:installed card))
-                                    (and (:revealed card) (not host-trashed))
-                                    (and (:when-inactive trash-effect) (not host-trashed))))
-        (resolve-ability state side trash-effect moved-card (cons cause targets))))
+                                         (:placed card))
+                                    (and (:revealed card) (not host-discarded))
+                                    (and (:when-inactive discard-effect) (not host-discarded))))
+        (resolve-ability state side discard-effect moved-card (cons cause targets))))
     (swap! state update-in [:per-turn] dissoc (:cid moved-card))
     (effect-completed state side eid)))
 
-(defn- resolve-trash
+(defn- resolve-discard
   [state side eid {:keys [zone type] :as card}
    {:keys [unpreventable cause keep-locale-alive suppress-event] :as args} & targets]
-  (if (and (not suppress-event) (not= (last zone) :current)) ; Trashing a current does not trigger a trash event.
-    (when-completed (apply trigger-event-sync state side (keyword (str (name side) "-trash")) card cause targets)
-                    (apply resolve-trash-end state side eid card args targets))
-    (apply resolve-trash-end state side eid card args targets)))
+  (if (and (not suppress-event) (not= (last zone) :current)) ; Discarding a current does not trigger a discard event.
+    (when-completed (apply trigger-event-sync state side (keyword (str (name side) "-discard")) card cause targets)
+                    (apply resolve-discard-end state side eid card args targets))
+    (apply resolve-discard-end state side eid card args targets)))
 
-(defn trash
-  "Attempts to trash the given card, allowing for boosting/prevention effects."
-  ([state side card] (trash state side (make-eid state) card nil))
-  ([state side card args] (trash state side (make-eid state) card args))
+(defn discard
+  "Attempts to discard the given card, allowing for boosting/prevention effects."
+  ([state side card] (discard state side (make-eid state) card nil))
+  ([state side card args] (discard state side (make-eid state) card args))
   ([state side eid {:keys [zone type] :as card} {:keys [unpreventable cause suppress-event] :as args} & targets]
    (if (not (some #{:discard} zone))
      (cond
 
-       (untrashable-while-revealed? card)
-       (do (enforce-msg state card "cannot be trashed while installed")
+       (undiscardable-while-revealed? card)
+       (do (enforce-msg state card "cannot be discarded while placed")
            (effect-completed state side eid))
 
        (and (= side :contestant)
-            (untrashable-while-muthereffs? card)
-            (> (count (filter #(is-type? % "Muthereff") (all-installed state :challenger))) 1))
-       (do (enforce-msg state card "cannot be trashed while there are other muthereffs installed")
+            (undiscardable-while-muthereffs? card)
+            (> (count (filter #(is-type? % "Muthereff") (all-placed state :challenger))) 1))
+       (do (enforce-msg state card "cannot be discarded while there are other muthereffs placed")
            (effect-completed state side eid))
 
-       ;; Card is not enforced untrashable
+       ;; Card is not enforced undiscardable
        :else
        (let [ktype (keyword (clojure.string/lower-case type))]
          (when (and (not unpreventable) (not= cause :ability-cost))
-           (swap! state update-in [:trash :trash-prevent] dissoc ktype))
-         (let [prevent (get-in @state [:prevent :trash ktype])]
+           (swap! state update-in [:discard :discard-prevent] dissoc ktype))
+         (let [prevent (get-in @state [:prevent :discard ktype])]
            ;; Check for prevention effects
            (if (and (not unpreventable) (not= cause :ability-cost) (pos? (count prevent)))
-             (do (system-msg state :challenger "has the option to prevent trash effects")
-                 (show-wait-prompt state :contestant "Challenger to prevent trash effects" {:priority 10})
+             (do (system-msg state :challenger "has the option to prevent discard effects")
+                 (show-wait-prompt state :contestant "Challenger to prevent discard effects" {:priority 10})
                  (show-prompt state :challenger nil
-                              (str "Prevent the trashing of " (:title card) "?") ["Done"]
+                              (str "Prevent the discarding of " (:title card) "?") ["Done"]
                               (fn [_]
                                 (clear-wait-prompt state :contestant)
-                                (if-let [_ (get-in @state [:trash :trash-prevent ktype])]
-                                  (do (system-msg state :challenger (str "prevents the trashing of " (:title card)))
-                                      (swap! state update-in [:trash :trash-prevent] dissoc ktype)
+                                (if-let [_ (get-in @state [:discard :discard-prevent ktype])]
+                                  (do (system-msg state :challenger (str "prevents the discarding of " (:title card)))
+                                      (swap! state update-in [:discard :discard-prevent] dissoc ktype)
                                       (effect-completed state side eid))
-                                  (do (system-msg state :challenger (str "will not prevent the trashing of " (:title card)))
-                                      (apply resolve-trash state side eid card args targets))))
+                                  (do (system-msg state :challenger (str "will not prevent the discarding of " (:title card)))
+                                      (apply resolve-discard state side eid card args targets))))
                               {:priority 10}))
-             ;; No prevention effects; resolve the trash.
-             (apply resolve-trash state side eid card args targets)))))
+             ;; No prevention effects; resolve the discard.
+             (apply resolve-discard state side eid card args targets)))))
      (effect-completed state side eid))))
 
-(defn trash-cards
-  ([state side cards] (trash-cards state side (make-eid state) cards nil))
+(defn discard-cards
+  ([state side cards] (discard-cards state side (make-eid state) cards nil))
   ([state side eid cards args & targets]
-   (letfn [(trashrec [cs]
+   (letfn [(discardrec [cs]
              (if (not-empty cs)
-               (when-completed (apply trash state side (first cs) args targets)
-                               (trashrec (next cs)))
+               (when-completed (apply discard state side (first cs) args targets)
+                               (discardrec (next cs)))
                (effect-completed state side eid)))]
-     (trashrec cards))))
+     (discardrec cards))))
 
-(defn- resolve-trash-no-cost
+(defn- resolve-discard-no-cost
   [state side card]
-  (trash state side (assoc card :seen true))
-  (swap! state assoc-in [:challenger :register :trashed-card] true)
+  (discard state side (assoc card :seen true))
+  (swap! state assoc-in [:challenger :register :discarded-card] true)
   (close-access-prompt state side))
 
-(defn trash-no-cost
-  "Trashes a card at no cost while it is being accessed. (Imp.)"
+(defn discard-no-cost
+  "Discards a card at no cost while it is being accessed. (Imp.)"
   [state side]
   (let [prompt (-> @state side :prompt first)
              card (:card prompt)
              eid (:eid prompt)]
     (when card
-      ;; trashing before the :access events actually fire; fire them manually
+      ;; discarding before the :access events actually fire; fire them manually
       (if (is-type? card "Agenda")
         (when-completed (resolve-steal-events state side card)
-                        (resolve-trash-no-cost state side card))
-        (resolve-trash-no-cost state side card)))))
+                        (resolve-discard-no-cost state side card))
+        (resolve-discard-no-cost state side card)))))
 
 
 ;;; Agendas
@@ -455,7 +455,7 @@
   ([state side eid card]
    ;; Remove all hosted cards first
    (doseq [h (:hosted card)]
-     (trash state side
+     (discard state side
             (update-in h [:zone] #(map to-keyword %))
             {:unpreventable true :suppress-event true}))
    (let [card (get-card state card)]
@@ -479,7 +479,7 @@
   "Purges viruses."
   [state side]
   (trigger-event state side :pre-purge)
-  (let [rig-cards (all-installed state :challenger)
+  (let [rig-cards (all-placed state :challenger)
         hosted-on-character (->> (get-in @state [:contestant :locales]) seq flatten (mapcat :characters) (mapcat :hosted))]
     (doseq [card (concat rig-cards hosted-on-character)]
       (when (or (has-subtype? card "Virus")

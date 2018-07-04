@@ -273,7 +273,7 @@
   (when (= side :contestant)
     (swap! state update-in [:turn] inc))
 
-  (doseq [c (filter #(:new %) (all-installed state side))]
+  (doseq [c (filter #(:new %) (all-placed state side))]
     (update! state side (dissoc c :new)))
 
   (swap! state assoc :active-player side :per-turn nil :end-turn false)
@@ -306,7 +306,7 @@
         (resolve-ability state side (:ability a) (:card a) (:targets a)))
       (swap! state assoc-in [side :register-last-turn] (-> @state side :register))
       (let [rig-cards (apply concat (vals (get-in @state [:challenger :rig])))
-            hosted-cards (filter :installed (mapcat :hosted rig-cards))
+            hosted-cards (filter :placed (mapcat :hosted rig-cards))
             hosted-on-character (->> (get-in @state [:contestant :locales]) seq flatten (mapcat :characters) (mapcat :hosted))]
         (doseq [card (concat rig-cards hosted-cards hosted-on-character)]
           ;; Clear the added-virus-counter flag for each virus in play.
@@ -316,7 +316,7 @@
       (swap! state assoc :end-turn true)
       (swap! state update-in [side :register] dissoc :cannot-draw)
       (swap! state update-in [side :register] dissoc :drawn-this-turn)
-      (doseq [c (filter #(= :this-turn (:revealed %)) (all-installed state :contestant))]
+      (doseq [c (filter #(= :this-turn (:revealed %)) (all-placed state :contestant))]
         (update! state side (assoc c :revealed true)))
       (clear-turn-register! state)
       (swap! state dissoc :turn-events)

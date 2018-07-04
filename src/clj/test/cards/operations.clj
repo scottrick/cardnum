@@ -499,7 +499,7 @@
           "Challenger spends 1 additional click to make a run"))))
 
 (deftest enhanced-login-protocol-new-angeles-sol
-  ;; Enhanced Login Protocol trashed and reinstalled on steal doesn't double remove penalty
+  ;; Enhanced Login Protocol discarded and replaced on steal doesn't double remove penalty
   (do-game
     (new-game
       (make-deck "New Angeles Sol: Your News" [(qty "Enhanced Login Protocol" 1) (qty "Breaking News" 1)])
@@ -555,7 +555,7 @@
                          [(qty "Enhanced Login Protocol" 1)
                           (qty "Breaking News" 1)])
               (default-challenger [(qty "Hades Shard" 1)]))
-    (trash-from-hand state :contestant "Breaking News")
+    (discard-from-hand state :contestant "Breaking News")
     (take-credits state :contestant)
 
     (core/gain state :challenger :credit 2)
@@ -580,7 +580,7 @@
                          [(qty "Enhanced Login Protocol" 1)
                           (qty "Breaking News" 1)])
               (default-challenger [(qty "Hades Shard" 1)]))
-    (trash-from-hand state :contestant "Breaking News")
+    (discard-from-hand state :contestant "Breaking News")
     (take-credits state :contestant)
 
     (run-on state :hq)
@@ -767,7 +767,7 @@
     (is (= 9 (:credit (get-contestant))))))
 
 (deftest housekeeping
-  ;; Housekeeping - Challenger must trash a card from Grip on first install of a turn
+  ;; Housekeeping - Challenger must discard a card from Grip on first place of a turn
   (do-game
     (new-game (default-contestant [(qty "Housekeeping" 1)])
               (default-challenger [(qty "Cache" 2) (qty "Fall Guy" 1) (qty "Mr. Li" 1)]))
@@ -779,9 +779,9 @@
     (play-from-hand state :challenger "Cache")
     (prompt-select :challenger (find-card "Mr. Li" (:hand (get-challenger))))
     (is (empty? (:prompt (get-challenger))) "Fall Guy prevention didn't trigger")
-    (is (= 1 (count (:discard (get-challenger)))) "Card trashed")
+    (is (= 1 (count (:discard (get-challenger)))) "Card discarded")
     (play-from-hand state :challenger "Cache")
-    (is (empty? (:prompt (get-challenger))) "Housekeeping didn't trigger on 2nd install")))
+    (is (empty? (:prompt (get-challenger))) "Housekeeping didn't trigger on 2nd place")))
 
 (deftest invasion-of-privacy
   ;; Invasion of Privacy - Full test
@@ -789,7 +789,7 @@
     (new-game (default-contestant [(qty "Invasion of Privacy" 3)])
               (default-challenger [(qty "Sure Gamble" 2) (qty "Fall Guy" 1) (qty "Cache" 2)]))
     (core/gain state :contestant :click 3 :credit 6)
-    ;; trash 2 cards
+    ;; discard 2 cards
     (play-from-hand state :contestant "Invasion of Privacy")
     (prompt-choice :contestant 0) ; default trace
     (prompt-choice :challenger 0) ; Challenger won't match
@@ -800,7 +800,7 @@
       (prompt-choice :contestant (find-card "Sure Gamble" (:hand (get-challenger))))
       (prompt-choice :contestant (find-card "Sure Gamble" (:hand (get-challenger)))))
     (is (= 3 (count (:hand (get-challenger)))))
-    ;; able to trash 2 cards but only 1 available target in Challenger's hand
+    ;; able to discard 2 cards but only 1 available target in Challenger's hand
     (play-from-hand state :contestant "Invasion of Privacy")
     (prompt-choice :contestant 0) ; default trace
     (prompt-choice :challenger 0) ; Challenger won't match
@@ -852,7 +852,7 @@
     (prompt-select :contestant (find-card "Breaking News" (:hand (get-contestant))))
     (prompt-choice :contestant "New party")
     (is (= "Breaking News" (:title (get-content state :party1 0)))
-      "Breaking News installed by Lateral Growth")
+      "Breaking News placed by Lateral Growth")
     (is (= 7 (:credit (get-contestant))))))
 
 (deftest mass-commercialization
@@ -1008,7 +1008,7 @@
     (is (= 7 (:credit (get-contestant))) "Gained 3 credits for 3 revealed Character; unrevealed Character ignored")))
 
 (deftest power-shutdown
-  ;; Power Shutdown - Trash cards from R&D to force Challenger to trash a resource or hazard
+  ;; Power Shutdown - Discard cards from R&D to force Challenger to discard a resource or hazard
   (do-game
     (new-game (default-contestant [(qty "Power Shutdown" 3) (qty "Hive" 3)])
               (default-challenger [(qty "Grimoire" 1) (qty "Cache" 1)]))
@@ -1024,12 +1024,12 @@
     (core/move state :contestant (find-card "Hive" (:hand (get-contestant))) :deck)
     (play-from-hand state :contestant "Power Shutdown")
     (prompt-choice :contestant 2)
-    (is (= 3 (count (:discard (get-contestant)))) "2 cards trashed from R&D")
+    (is (= 3 (count (:discard (get-contestant)))) "2 cards discarded from R&D")
     (is (= 1 (count (:deck (get-contestant)))) "1 card remaining in R&D")
     (prompt-select :challenger (get-in @state [:challenger :rig :hazard 0])) ; try targeting Grimoire
     (is (empty? (:discard (get-challenger))) "Grimoire too expensive to be targeted")
     (prompt-select :challenger (get-in @state [:challenger :rig :resource 0]))
-    (is (= 1 (count (:discard (get-challenger)))) "Cache trashed")))
+    (is (= 1 (count (:discard (get-challenger)))) "Cache discarded")))
 
 (deftest precognition
   ;; Precognition - Full test
@@ -1089,39 +1089,39 @@
       (is (= 4 (:advance-counter (refresh pj))) "Junebug has 4 advancements"))))
 
 (deftest psychokinesis
-  ;; Pyschokinesis - Terminal Event (end the turn); Look at R&D, install an Site, Agenda, or Region in a Party Locale
+  ;; Pyschokinesis - Terminal Event (end the turn); Look at R&D, place an Site, Agenda, or Region in a Party Locale
   (do-game
     (new-game (default-contestant [(qty "Psychokinesis" 3) (qty "Caprcharacter Nisei" 1) (qty "Adonis Campaign" 1)
                               (qty "Global Food Initiative" 1)])
               (default-challenger))
     (starting-hand state :contestant ["Psychokinesis","Psychokinesis","Psychokinesis"])
-    ;; Test installing an Region
+    ;; Test placing an Region
     (play-from-hand state :contestant "Psychokinesis")
     (prompt-choice :contestant (find-card "Caprcharacter Nisei" (:deck (get-contestant))))
     (prompt-choice :contestant "New party")
     (is (= "Caprcharacter Nisei" (:title (get-content state :party1 0)))
-      "Caprcharacter Nisei installed by Psychokinesis")
-    ;; Test installing an Site
+      "Caprcharacter Nisei placed by Psychokinesis")
+    ;; Test placing an Site
     (core/gain state :contestant :click 1)
     (play-from-hand state :contestant "Psychokinesis")
     (prompt-choice :contestant (find-card "Adonis Campaign" (:deck (get-contestant))))
     (prompt-choice :contestant "New party")
     (is (= "Adonis Campaign" (:title (get-content state :party2 0)))
-      "Adonis Campaign installed by Psychokinesis")
-    ;; Test installing an Agenda
+      "Adonis Campaign placed by Psychokinesis")
+    ;; Test placing an Agenda
     (core/gain state :contestant :click 1)
     (play-from-hand state :contestant "Psychokinesis")
     (prompt-choice :contestant (find-card "Global Food Initiative" (:deck (get-contestant))))
     (prompt-choice :contestant "New party")
     (is (= "Global Food Initiative" (:title (get-content state :party3 0)))
-      "Global Food Initiative installed by Psychokinesis")
+      "Global Food Initiative placed by Psychokinesis")
     ;; Test selecting "None"
     (core/gain state :contestant :click 1)
     (core/move state :contestant (find-card "Psychokinesis" (:discard (get-contestant))) :hand)
     (play-from-hand state :contestant "Psychokinesis")
     (prompt-choice :contestant "None")
     (is (= nil (:title (get-content state :party4 0)))
-      "Nothing is installed by Psychokinesis")))
+      "Nothing is placed by Psychokinesis")))
 
 (deftest punitive-counterstrike
   ;; Punitive Counterstrike - deal meat damage equal to printed agenda points
@@ -1140,7 +1140,7 @@
     (is (empty? (:hand (get-challenger))) "Challenger took 3 meat damage")))
 
 (deftest reuse
-  ;; Reuse - Gain 2 credits for each card trashed from HQ
+  ;; Reuse - Gain 2 credits for each card discarded from HQ
   (do-game
     (new-game (default-contestant [(qty "Reuse" 2) (qty "Hive" 1) (qty "IQ" 1)
                              (qty "Ice Wall" 1)])
@@ -1150,7 +1150,7 @@
     (prompt-select :contestant (find-card "Hive" (:hand (get-contestant))))
     (prompt-select :contestant (find-card "IQ" (:hand (get-contestant))))
     (prompt-choice :contestant "Done")
-    (is (= 4 (count (:discard (get-contestant)))) "3 cards trashed plus operation played")
+    (is (= 4 (count (:discard (get-contestant)))) "3 cards discarded plus operation played")
     (is (= 11 (:credit (get-contestant))) "Gained 6 credits")
     (is (= 1 (:click (get-contestant))) "Spent 2 clicks")))
 
@@ -1231,7 +1231,7 @@
     (is (empty? (:prompt (get-contestant))) "Contestant does not have a second Subcontract selection prompt")))
 
 (deftest self-growth-resource
-  ;; Self-Growth Resource - Add 2 installed cards to grip if challenger is tagged
+  ;; Self-Growth Resource - Add 2 placed cards to grip if challenger is tagged
   (do-game
     (new-game (default-contestant [(qty "Self-Growth Resource" 1)])
               (default-challenger [(qty "Clone Chip" 1) (qty "Inti" 1)]))
@@ -1249,8 +1249,8 @@
       (prompt-select :contestant inti)
       (prompt-select :contestant cc))
     (is (= 2 (count (:hand (get-challenger)))) "2 cards returned to hand")
-    (is (= 0 (count (get-in @state [:challenger :rig :resource]))) "No resources installed")
-    (is (= 0 (count (get-in @state [:challenger :rig :hazard]))) "No hazard installed")))
+    (is (= 0 (count (get-in @state [:challenger :rig :resource]))) "No resources placed")
+    (is (= 0 (count (get-in @state [:challenger :rig :hazard]))) "No hazard placed")))
 
 (deftest servcharacter-outage
   ;; Servcharacter Outage - First click run each turn costs a credit
@@ -1365,7 +1365,7 @@
     (new-game (make-deck "New Angeles Sol: Your News" [(qty "Servcharacter Outage" 1)
                                                        (qty "Breaking News" 1)])
               (default-challenger [(qty "Hades Shard" 1)]))
-    (trash-from-hand state :contestant "Breaking News")
+    (discard-from-hand state :contestant "Breaking News")
     (take-credits state :contestant)
 
     (core/gain state :challenger :credit 3)
@@ -1388,7 +1388,7 @@
     (new-game (make-deck "New Angeles Sol: Your News" [(qty "Servcharacter Outage" 1)
                                                        (qty "Breaking News" 1)])
               (default-challenger [(qty "Hades Shard" 1)]))
-    (trash-from-hand state :contestant "Breaking News")
+    (discard-from-hand state :contestant "Breaking News")
     (take-credits state :contestant)
 
     (run-on state :hq)
@@ -1410,7 +1410,7 @@
         "Challenger doesn't spend 1 additional credit to make a run")))
 
 (deftest servcharacter-outage-new-angeles-sol
-  ;; Servcharacter Outage trashed and reinstalled on steal doesn't double remove penalty
+  ;; Servcharacter Outage discarded and replaced on steal doesn't double remove penalty
   (do-game
     (new-game
       (make-deck "New Angeles Sol: Your News" [(qty "Servcharacter Outage" 1)
@@ -1481,7 +1481,7 @@
       (is (core/has-subtype? (refresh qu) "Barrier") "Quandary Character Barrier"))))
 
 (deftest subliminal-messaging
-  ;; Subliminal Messaging - Playing/trashing/milling will all prompt returning to hand
+  ;; Subliminal Messaging - Playing/discarding/milling will all prompt returning to hand
   (do-game
     (new-game (default-contestant [(qty "Subliminal Messaging" 3)])
               (make-deck "Noise: Hacker Extraordinaire" [(qty "Cache" 3) (qty "Utopia Shard" 1)]))
@@ -1491,7 +1491,7 @@
     (play-from-hand state :contestant "Subliminal Messaging")
     (is (= 7 (:credit (get-contestant))))
     (is (= 2 (:click (get-contestant))) "Second Subliminal Messaging does not gain 1 click")
-    (trash-from-hand state :contestant "Subliminal Messaging")
+    (discard-from-hand state :contestant "Subliminal Messaging")
     (is (= 0 (count (:hand (get-contestant)))))
     (take-credits state :contestant)
     (take-credits state :challenger)
@@ -1573,7 +1573,7 @@
     (new-game (default-contestant [(qty "Subliminal Messaging" 2)])
               (default-challenger))
   (play-from-hand state :contestant "Subliminal Messaging")
-  (trash-from-hand state :contestant "Subliminal Messaging")
+  (discard-from-hand state :contestant "Subliminal Messaging")
   (take-credits state :contestant)
   (run-on state "R&D")
   (run-jack-out state)
@@ -1592,7 +1592,7 @@
     (new-game (default-contestant [(qty "Subliminal Messaging" 2)])
               (default-challenger))
     (play-from-hand state :contestant "Subliminal Messaging")
-    (trash-from-hand state :contestant "Subliminal Messaging")
+    (discard-from-hand state :contestant "Subliminal Messaging")
     (take-credits state :contestant)
     (take-credits state :challenger)
     (prompt-choice :contestant "No")
@@ -1688,7 +1688,7 @@
     (is (= 13 (:credit (get-contestant))) "Paid 2 to play event; gained 7 credits")))
 
 (deftest threat-assessment
-  ;; Threat Assessment - play only if challenger trashed a card last turn, move a card to the stack or take 2 tags
+  ;; Threat Assessment - play only if challenger discarded a card last turn, move a card to the stack or take 2 tags
   (do-game
     (new-game (default-contestant [(qty "Threat Assessment" 3) (qty "Adonis Campaign" 1)])
               (default-challenger [(qty "Desperado" 1) (qty "Corroder" 1)]))
@@ -1697,7 +1697,7 @@
 
     (run-on state :party1)
     (run-successful state)
-    (prompt-choice :challenger "Yes") ;trash
+    (prompt-choice :challenger "Yes") ;discard
     (core/gain state :challenger :credit 5)
     (play-from-hand state :challenger "Desperado")
     (play-from-hand state :challenger "Corroder")
@@ -1708,7 +1708,7 @@
     (prompt-select :contestant (find-card "Desperado" (-> (get-challenger) :rig :hazard)))
     (prompt-choice :challenger "2 tags")
     (is (= 2 (:tag (get-challenger))) "Challenger took 2 tags")
-    (is (= 1 (count (-> (get-challenger) :rig :hazard))) "Didn't trash Desperado")
+    (is (= 1 (count (-> (get-challenger) :rig :hazard))) "Didn't discard Desperado")
     (is (= "Threat Assessment" (:title (first (:rfg (get-contestant))))) "Threat Assessment removed from game")
 
     (play-from-hand state :contestant "Threat Assessment")
@@ -1723,7 +1723,7 @@
     (take-credits state :challenger)
 
     (play-from-hand state :contestant "Threat Assessment")
-    (is (empty? (:prompt (get-contestant))) "Threat Assessment triggered with no trash")))
+    (is (empty? (:prompt (get-contestant))) "Threat Assessment triggered with no discard")))
 
 (deftest transparency-initiative
   ;; Transparency Initiative - Full test

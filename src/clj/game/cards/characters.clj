@@ -1,6 +1,6 @@
 (in-ns 'game.core)
 
-(declare trash-resource trash-hazard trash-muthereff-sub trash-installed)
+(declare discard-resource discard-hazard discard-muthereff-sub discard-placed)
 
 (def cards-characters
   {"Adrazar"

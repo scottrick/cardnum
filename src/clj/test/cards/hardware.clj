@@ -39,17 +39,17 @@
     (is (= 5 (:memory (get-challenger))) "Gain 1 memory")))
 
 (deftest astrolabe-draw
-  ;; Astrolabe - Draw on new locale install
+  ;; Astrolabe - Draw on new locale place
   (do-game
     (new-game (default-contestant [(qty "Snare!" 3)])
               (default-challenger [(qty "Astrolabe" 3) (qty "Sure Gamble" 3) (qty "Cloak" 1)]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Astrolabe")
     (take-credits state :challenger 3)
-    ;; contestant's turn. install something from HQ to trigger Astrolabe draw
+    ;; contestant's turn. place something from HQ to trigger Astrolabe draw
     (play-from-hand state :contestant "Snare!" "New party")
-    (is (= 5 (count (:hand (get-challenger)))) "Drew 1 card from locale install")
-    ;; install over the old locale; make sure nothing is drawn
+    (is (= 5 (count (:hand (get-challenger)))) "Drew 1 card from locale place")
+    ;; place over the old locale; make sure nothing is drawn
     (play-from-hand state :contestant "Snare!" "Locale 0")
     (is (= 5 (count (:hand (get-challenger)))) "Did not draw")
     (is (= 1 (count (:deck (get-challenger)))) "1 card left in deck")))
@@ -105,7 +105,7 @@
     (new-game (default-contestant)
               (default-challenger [(qty "Datasucker" 1) (qty "Clone Chip" 2)]))
     (take-credits state :contestant)
-    (trash-from-hand state :challenger "Datasucker")
+    (discard-from-hand state :challenger "Datasucker")
     (play-from-hand state :challenger "Clone Chip")
     (let [chip (get-in @state [:challenger :rig :hazard 0])]
       (card-ability state :challenger chip 0)
@@ -114,27 +114,27 @@
         (is (not (nil? ds)))
         (is (= (:title ds) "Datasucker"))))))
 
-(deftest clone-chip-dont-install-choices-challenger-cant-afford
+(deftest clone-chip-dont-place-choices-challenger-cant-afford
   ;; Test clone chip usage - dont show inavalid choices
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Inti" 1) (qty "Magnum Opus" 1) (qty "Clone Chip" 1)]))
     (take-credits state :contestant)
-    (trash-from-hand state :challenger "Inti")
-    (trash-from-hand state :challenger "Magnum Opus")
+    (discard-from-hand state :challenger "Inti")
+    (discard-from-hand state :challenger "Magnum Opus")
     (play-from-hand state :challenger "Clone Chip")
     (is (= (get-in @state [:challenger :click]) 3) "Challenger has 3 clicks left")
     (let [chip (get-in @state [:challenger :rig :hazard 0])]
       (card-ability state :challenger chip 0)
       (prompt-select :challenger (find-card "Magnum Opus" (:discard (get-challenger))))
-      (is (nil? (get-in @state [:challenger :rig :resource 0])) "No resource was installed"))
+      (is (nil? (get-in @state [:challenger :rig :resource 0])) "No resource was placed"))
     (let [chip (get-in @state [:challenger :rig :hazard 0])]
-      (is (not (nil? chip)) "Clone Chip is still installed")
+      (is (not (nil? chip)) "Clone Chip is still placed")
       (is (= (get-in @state [:challenger :click]) 3) "Challenger has 3 clicks left")
       (card-ability state :challenger chip 0)
       (prompt-select :challenger (find-card "Inti" (:discard (get-challenger))))
       (let [inti (get-in @state [:challenger :rig :resource 0])]
-        (is (not (nil? inti)) "Resource was installed")
+        (is (not (nil? inti)) "Resource was placed")
         (is (= (:title inti) "Inti") "Resource is Inti")
         (is (= (get-in @state [:challenger :click]) 3) "Challenger has 3 clicks left")))))
 
@@ -156,7 +156,7 @@
       (is (nil? (:comet-event (core/get-card state comet))) "Comet ability disabled"))))
 
 (deftest corteveal-chip
-  ;; Corteveal Chip - Trash to add 2 credits to reveal cost of an Character until end of turn
+  ;; Corteveal Chip - Discard to add 2 credits to reveal cost of an Character until end of turn
   (do-game
     (new-game (default-contestant [(qty "Quandary" 1)])
               (default-challenger [(qty "Corteveal Chip" 1)]))
@@ -167,7 +167,7 @@
           corteveal (get-hazard state 0)]
       (card-ability state :challenger corteveal 0)
       (prompt-select :challenger quan)
-      (is (= 1 (count (:discard (get-challenger)))) "Corteveal Chip trashed")
+      (is (= 1 (count (:discard (get-challenger)))) "Corteveal Chip discarded")
       (core/reveal state :contestant quan)
       (is (= 4 (:credit (get-contestant))) "Paid 3c instead of 1c to reveal Quandary"))))
 
@@ -192,7 +192,7 @@
     (is (= 3 (:credit (get-challenger))) "Got 1c for successful run on Desperado")))
 
 (deftest dinosaurus-strength-boost-mu-savings
-  ;; Dinosaurus - Boost strength of hosted icebreaker; keep MU the same when hosting or trashing hosted breaker
+  ;; Dinosaurus - Boost strength of hosted icebreaker; keep MU the same when hosting or discarding hosted breaker
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Dinosaurus" 1) (qty "Battering Ram" 1)]))
@@ -208,7 +208,7 @@
       (let [ram (first (:hosted (refresh dino)))]
         (is (= 5 (:current-strength (refresh ram)))
             "Dinosaurus giving +2 strength to Battering Ram")
-        ;; Trash Battering Ram
+        ;; Discard Battering Ram
         (core/move state :challenger (find-card "Battering Ram" (:hosted (refresh dino))) :discard)
         (is (= 4 (:memory (get-challenger))) "Battering Ram 2 MU not added to available MU")))))
 
@@ -278,13 +278,13 @@
         (prompt-choice :contestant "Yes") ; pay 3 to fire Overwriter
         (card-ability state :challenger ff 1)
         (prompt-choice :challenger "Done")
-        (prompt-choice :challenger "Yes") ; trash Overwriter for 0
+        (prompt-choice :challenger "Yes") ; discard Overwriter for 0
         (is (= 1 (:brain-damage (get-challenger))) "2 of the 3 brain damage prevented")
         (is (= 2 (count (:hand (get-challenger)))))
-        (is (empty? (get-in @state [:challenger :rig :hazard])) "Feedback Filter trashed")))))
+        (is (empty? (get-in @state [:challenger :rig :hazard])) "Feedback Filter discarded")))))
 
 (deftest grimoire
-  ;; Grimoire - Gain 2 MU, add a free virus counter to installed virus resources
+  ;; Grimoire - Gain 2 MU, add a free virus counter to placed virus resources
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Grimoire" 1) (qty "Imp" 1)]))
@@ -293,10 +293,10 @@
     (is (= 6 (:memory (get-challenger))) "Gained 2 MU")
     (play-from-hand state :challenger "Imp")
     (let [imp (get-in @state [:challenger :rig :resource 0])]
-      (is (= 3 (get-counters (refresh imp) :virus)) "Imp received an extra virus counter on install"))))
+      (is (= 3 (get-counters (refresh imp) :virus)) "Imp received an extra virus counter on place"))))
 
 (deftest llds-processor
-  ;; LLDS Processor - Add 1 strength until end of turn to an icebreaker upon install
+  ;; LLDS Processor - Add 1 strength until end of turn to an icebreaker upon place
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "LLDS Processor" 2) (qty "Inti" 1) (qty "Passport" 1)]))
@@ -307,14 +307,14 @@
     (play-from-hand state :challenger "Passport")
     (let [inti (get-in @state [:challenger :rig :resource 0])
           pass (get-in @state [:challenger :rig :resource 1])]
-      (is (= 2 (:current-strength (refresh inti))) "Strength boosted by 1; 1 copy of LLDS when installed")
-      (is (= 4 (:current-strength (refresh pass))) "Strength boosted by 2; 2 copies of LLDS when installed")
+      (is (= 2 (:current-strength (refresh inti))) "Strength boosted by 1; 1 copy of LLDS when placed")
+      (is (= 4 (:current-strength (refresh pass))) "Strength boosted by 2; 2 copies of LLDS when placed")
       (take-credits state :challenger)
       (is (= 1 (:current-strength (refresh inti))) "Strength reduced to default")
       (is (= 2 (:current-strength (refresh pass))) "Strength reduced to default"))))
 
 (deftest maw
-  ;; Once per turn, first time challenger declines to steal or trash, trash a HQ card at random
+  ;; Once per turn, first time challenger declines to steal or discard, discard a HQ card at random
   (do-game
     (new-game (default-contestant [(qty "BOOM!" 5)])
               (default-challenger [(qty "Maw" 1)]))
@@ -322,23 +322,23 @@
     (core/gain state :challenger :credit 20)
     (run-empty-locale state :hq)
     (prompt-choice :challenger "No")
-    (is (= 0 (count (:discard (get-contestant)))) "No HQ card in discard before Maw installed")
+    (is (= 0 (count (:discard (get-contestant)))) "No HQ card in discard before Maw placed")
     (play-from-hand state :challenger "Maw")
     (run-empty-locale state :hq)
     (prompt-choice :challenger "No")
-    (is (= 0 (count (:discard (get-contestant)))) "HQ card not trashed by Maw as first decline already happened")
+    (is (= 0 (count (:discard (get-contestant)))) "HQ card not discarded by Maw as first decline already happened")
     (take-credits state :challenger)
     (take-credits state :contestant)
     (run-empty-locale state :hq)
     (prompt-choice :challenger "No")
-    (is (= 1 (count (:discard (get-contestant)))) "HQ card trashed by Maw")
+    (is (= 1 (count (:discard (get-contestant)))) "HQ card discarded by Maw")
     (run-empty-locale state :hq)
     (prompt-choice :challenger "No")
-    (is (= 1 (count (:discard (get-contestant)))) "2nd HQ card on same turn not trashed by Maw")))
+    (is (= 1 (count (:discard (get-contestant)))) "2nd HQ card on same turn not discarded by Maw")))
 
 (deftest maw-card-seen
-  ;; Check trashed card is trashed face-up if it's the card that is accessed, issue #2695
-  ;; Also checks Maw auto-trashes on Operation with no trash cost
+  ;; Check discarded card is discarded face-up if it's the card that is accessed, issue #2695
+  ;; Also checks Maw auto-discards on Operation with no discard cost
   (do-game
     (new-game (default-contestant [(qty "Hedge Fund" 1)])
               (default-challenger [(qty "Maw" 1)]))
@@ -346,13 +346,13 @@
     (core/gain state :challenger :credit 20)
     (play-from-hand state :challenger "Maw")
     (run-empty-locale state :hq)
-    ;; (is (= 0 (count (:discard (get-contestant)))) "HQ card not trashed by Maw yet")
+    ;; (is (= 0 (count (:discard (get-contestant)))) "HQ card not discarded by Maw yet")
     (prompt-choice :challenger "OK")
-    (is (= 1 (count (:discard (get-contestant)))) "HQ card trashed by Maw now")
-    (is (:seen (first (:discard (get-contestant)))) "Trashed card is registered as seen since it was accessed")))
+    (is (= 1 (count (:discard (get-contestant)))) "HQ card discarded by Maw now")
+    (is (:seen (first (:discard (get-contestant)))) "Discarded card is registered as seen since it was accessed")))
 
 (deftest maw-hiro
-  ;; Maw with Hiro in hand - Hiro not moved to challenger scored area on trash decline #2638
+  ;; Maw with Hiro in hand - Hiro not moved to challenger scored area on discard decline #2638
   (do-game
     (new-game (default-contestant [(qty "Chairman Hiro" 1)])
               (default-challenger [(qty "Maw" 1)]))
@@ -362,7 +362,7 @@
     (run-empty-locale state :hq)
     (prompt-choice :challenger "No")
     (is (= 0 (count (:scored (get-contestant)))) "Hiro not scored")
-    (is (= 1 (count (:discard (get-contestant)))) "Hiro trashed by Maw")))
+    (is (= 1 (count (:discard (get-contestant)))) "Hiro discarded by Maw")))
 
 (deftest maya
   ;; Maya - Move accessed card to bottom of R&D
@@ -463,8 +463,8 @@
               (default-challenger [(qty "Obelus" 1) (qty "Hades Shard" 1)
                                (qty "Sure Gamble" 3) (qty "Cache" 3)]))
     (starting-hand state :contestant ["Hedge Fund" "Hedge Fund"])
-    (trash-from-hand state :contestant "Hedge Fund")
-    (trash-from-hand state :contestant "Hedge Fund")
+    (discard-from-hand state :contestant "Hedge Fund")
+    (discard-from-hand state :contestant "Hedge Fund")
     (take-credits state :contestant)
     (starting-hand state :challenger ["Obelus" "Hades Shard"])
     (core/gain state :challenger :credit 10)
@@ -483,7 +483,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Plascrete Carapace")
     (let [plas (get-in @state [:challenger :rig :hazard 0])]
-      (is (= 4 (get-counters (refresh plas) :power)) "4 counters on install")
+      (is (= 4 (get-counters (refresh plas) :power)) "4 counters on place")
       (take-credits state :challenger)
       (core/gain state :challenger :tag 1)
       (play-from-hand state :contestant "Scorched Earth")
@@ -493,10 +493,10 @@
       (card-ability state :challenger plas 0)
       (prompt-choice :challenger "Done")
       (is (= 1 (count (:hand (get-challenger)))) "All meat damage prevented")
-      (is (empty? (get-in @state [:challenger :rig :hazard])) "Plascrete depleted and trashed"))))
+      (is (empty? (get-in @state [:challenger :rig :hazard])) "Plascrete depleted and discarded"))))
 
 (deftest rabbit-hole
-  ;; Rabbit Hole - +1 link, optionally search Stack to install more copies
+  ;; Rabbit Hole - +1 link, optionally search Stack to place more copies
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Sure Gamble" 1) (qty "Rabbit Hole" 3)]))
@@ -510,11 +510,11 @@
     (prompt-choice :challenger "Yes")
     (is (= 3 (:link (get-challenger))))
     (is (= 3 (count (get-in @state [:challenger :rig :hazard]))))
-    (is (= 2 (:click (get-challenger))) "Clickless installs of extra 2 copies")
+    (is (= 2 (:click (get-challenger))) "Clickless places of extra 2 copies")
     (is (= 3 (:credit (get-challenger))) "Paid 2c for each of 3 copies")))
 
 (deftest recon-drone
-  ;; trash and pay X to prevent that much damage from a card you are accessing
+  ;; discard and pay X to prevent that much damage from a card you are accessing
   (do-game
     (new-game (default-contestant [(qty "Snare!" 1) (qty "House of Knives" 1)
                              (qty "Prisec" 1) (qty "Cerebral Overwriter" 1)])
@@ -618,7 +618,7 @@
         (card-ability state :challenger rr1 0)
         (prompt-choice :challenger 1)
         (is (last-log-contains? state "Sure Gamble")
-            "Ramujan did log trashed card names")
+            "Ramujan did log discarded card names")
         (is (= 2 (count (:hand (get-challenger)))) "1 net damage prevented")
         (run-successful state)
         (take-credits state :challenger)
@@ -629,7 +629,7 @@
         (card-ability state :challenger rr2 0)
         (prompt-choice :challenger 3)
         (is (last-log-contains? state "Sure Gamble, Sure Gamble, Sure Gamble")
-            "Ramujan did log trashed card names")
+            "Ramujan did log discarded card names")
         (is (= 1 (count (:hand (get-challenger)))) "3 net damage prevented")))))
 
 (deftest ramujan-reliant-empty
@@ -659,26 +659,26 @@
       (starting-hand state :challenger ["Replicator" "Bazaar" "Spy Camera"])
       (play-from-hand state :challenger "Replicator")
       (play-from-hand state :challenger "Bazaar")
-      (play-from-hand state :challenger "Spy Camera") ; 1 installed
-      (is (count-spy 1) "1 Spy Cameras installed")
+      (play-from-hand state :challenger "Spy Camera") ; 1 placed
+      (is (count-spy 1) "1 Spy Cameras placed")
       (prompt-choice :challenger "Yes") ; for now, choosing Replicator then shows its optional Yes/No
-      (prompt-choice :challenger "Yes") ; Bazaar triggers, 2 installed
-      (is (count-spy 2) "2 Spy Cameras installed")
+      (prompt-choice :challenger "Yes") ; Bazaar triggers, 2 placed
+      (is (count-spy 2) "2 Spy Cameras placed")
       (prompt-choice :challenger "Yes")
-      (prompt-choice :challenger "Yes")  ; 3 installed
-      (is (count-spy 3) "3 Spy Cameras installed")
+      (prompt-choice :challenger "Yes")  ; 3 placed
+      (is (count-spy 3) "3 Spy Cameras placed")
 
       (prompt-choice :challenger "Yes")
-      (prompt-choice :challenger "Yes")  ; 4 installed
-      (is (count-spy 4) "4 Spy Cameras installed")
+      (prompt-choice :challenger "Yes")  ; 4 placed
+      (is (count-spy 4) "4 Spy Cameras placed")
 
       (prompt-choice :challenger "Yes")
-      (prompt-choice :challenger "Yes")  ; 5 installed
-      (is (count-spy 5) "5 Spy Cameras installed")
+      (prompt-choice :challenger "Yes")  ; 5 placed
+      (is (count-spy 5) "5 Spy Cameras placed")
 
       (prompt-choice :challenger "Yes")
-      (prompt-choice :challenger "Yes")  ; 6 installed
-      (is (count-spy 6) "6 Spy Cameras installed"))))
+      (prompt-choice :challenger "Yes")  ; 6 placed
+      (is (count-spy 6) "6 Spy Cameras placed"))))
 
 (deftest respirocytes-multiple
   ;; Should draw multiple cards when multiple respirocytes are in play
@@ -694,7 +694,7 @@
 
 (deftest sifr
   ;; Once per turn drop encountered Character to zero strenght
-  ;; Also handle archangel then re-install sifr should not break the game #2576
+  ;; Also handle archangel then re-place sifr should not break the game #2576
   (do-game
     (new-game (default-contestant [(qty "Archangel" 1) (qty "IP Block" 1) (qty "Hedge Fund" 1)])
               (default-challenger [(qty "Modded" 1) (qty "Clone Chip" 1) (qty "Şifr" 1) (qty "Parasite" 1)]))
@@ -703,7 +703,7 @@
     (play-from-hand state :contestant "Archangel" "HQ")
     (play-from-hand state :contestant "IP Block" "HQ")
     (take-credits state :contestant)
-    (trash-from-hand state :challenger "Parasite")
+    (discard-from-hand state :challenger "Parasite")
     (play-from-hand state :challenger "Şifr")
     (is (= 2 (count (:hand (get-challenger)))) "Modded and Clone Chip in hand")
     (let [arch (get-character state :hq 0)
@@ -737,12 +737,12 @@
       (take-credits state :contestant 4)
       (let [chip (get-hazard state 1)]
         (is (nil? (:sifr-target (refresh sifr))) "Sifr cleaned up on leave play")
-        (is (= 0 (count (:discard (get-contestant)))) "No Contestant cards trashed")
+        (is (= 0 (count (:discard (get-contestant)))) "No Contestant cards discarded")
         (card-ability state :challenger chip 0)
         (prompt-select :challenger (find-card "Parasite" (:discard (get-challenger))))
         (let [para (get-resource state 0)]
           (prompt-select :challenger ip)
-          (is (= 0 (count (:discard (get-contestant)))) "IP Block Not Trashed")
+          (is (= 0 (count (:discard (get-contestant)))) "IP Block Not Discarded")
           (is (= 1 (count (:hosted (refresh ip)))) "Parasite is hosted"))))))
 
 (deftest spinal-modem
@@ -864,8 +864,8 @@
     (play-from-hand state :challenger "Titanium Ribs")
     (prompt-select :challenger (find-card "Titanium Ribs" (:hand (get-challenger))))
     (prompt-select :challenger (find-card "Kati Jones" (:hand (get-challenger))))
-    (is (empty? (:prompt (get-challenger))) "Fall Guy didn't try to prevent trashing of Kati")
-    (is (= 2 (count (:discard (get-challenger)))) "2 cards trashed for Ribs installation meat damage")
+    (is (empty? (:prompt (get-challenger))) "Fall Guy didn't try to prevent discarding of Kati")
+    (is (= 2 (count (:discard (get-challenger)))) "2 cards discarded for Ribs placeation meat damage")
     (run-on state "HQ")
     (let [pup (get-character state :hq 0)]
       (core/reveal state :contestant pup)

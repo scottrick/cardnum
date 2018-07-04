@@ -23,22 +23,22 @@
       (is (get-in @state [:challenger :register :unsuccessful-run]) "Run was unsuccessful"))))
 
 (deftest aimor
-  ;; Aimor - trash the top 3 cards of the stack, trash Aimor
+  ;; Aimor - discard the top 3 cards of the stack, discard Aimor
   (do-game
     (new-game (default-contestant [(qty "Aimor" 1)])
               (default-challenger [(qty "Sure Gamble" 2) (qty "Desperado" 1)
                                (qty "Corroder" 1) (qty "Patron" 1)]))
     (starting-hand state :challenger ["Sure Gamble"]) ;move all other cards to stack
     (play-from-hand state :contestant "Aimor" "HQ")
-    (is (= 1 (count (get-in @state [:contestant :locales :hq :characters]))) "Aimor installed")
+    (is (= 1 (count (get-in @state [:contestant :locales :hq :characters]))) "Aimor placed")
     (take-credits state :contestant)
     (let [aim (get-character state :hq 0)]
       (run-on state "HQ")
       (core/reveal state :contestant aim)
       (card-subroutine state :contestant aim 0)
-      (is (= 3 (count (:discard (get-challenger)))) "Challenger trashed 3 cards")
+      (is (= 3 (count (:discard (get-challenger)))) "Challenger discarded 3 cards")
       (is (= 1 (count (:deck (get-challenger)))) "Challenger has 1 card in deck"))
-    (is (= 0 (count (get-in @state [:contestant :locales :hq :characters]))) "Aimor trashed")))
+    (is (= 0 (count (get-in @state [:contestant :locales :hq :characters]))) "Aimor discarded")))
 
 (deftest archangel
   ;; Archangel - accessing from R&D does not cause run to hang.
@@ -57,20 +57,20 @@
     (prompt-choice :challenger "OK")
     (is (not (:run @state)) "Run ended")))
 
-(deftest architect-untrashable
-  ;; Architect is untrashable while installed and revealed, but trashable if hidden or from HQ
+(deftest architect-undiscardable
+  ;; Architect is undiscardable while placed and revealed, but discardable if hidden or from HQ
   (do-game
     (new-game (default-contestant [(qty "Architect" 3)])
               (default-challenger))
     (play-from-hand state :contestant "Architect" "HQ")
     (let [architect (get-character state :hq 0)]
       (core/reveal state :contestant architect)
-      (core/trash state :contestant (refresh architect))
-      (is (not= nil (get-character state :hq 0)) "Architect was trashed, but should be untrashable")
+      (core/discard state :contestant (refresh architect))
+      (is (not= nil (get-character state :hq 0)) "Architect was discarded, but should be undiscardable")
       (core/hide state :contestant (refresh architect))
-      (core/trash state :contestant (refresh architect))
-      (is (= nil (get-character state :hq 0)) "Architect was not trashed, but should be trashable")
-      (core/trash state :contestant (get-in @state [:contestant :hand 0]))
+      (core/discard state :contestant (refresh architect))
+      (is (= nil (get-character state :hq 0)) "Architect was not discarded, but should be discardable")
+      (core/discard state :contestant (get-in @state [:contestant :hand 0]))
       (is (= (get-in @state [:contestant :discard 0 :title]) "Architect"))
       (is (= (get-in @state [:contestant :discard 1 :title]) "Architect")))))
 
@@ -179,7 +179,7 @@
       (is (= 3 (count (:discard (get-challenger)))) "Challenger suffered 3 net damage"))))
 
 (deftest crick
-  ;; Crick - Strength boost when protecting Archives; installs a card from Archives
+  ;; Crick - Strength boost when protecting Archives; places a card from Archives
   (do-game
     (new-game (default-contestant [(qty "Crick" 2) (qty "Ice Wall" 1)])
               (default-challenger))
@@ -196,7 +196,7 @@
       (card-subroutine state :contestant cr2 0)
       (prompt-select :contestant (find-card "Ice Wall" (:discard (get-contestant))))
       (prompt-choice :contestant "HQ")
-      (is (= 3 (:credit (get-contestant))) "Paid 1 credit to install as 2nd Character over HQ"))))
+      (is (= 3 (:credit (get-contestant))) "Paid 1 credit to place as 2nd Character over HQ"))))
 
 (deftest curtain-wall
   ;; Curtain Wall - Strength boost when outermost Character
@@ -229,7 +229,7 @@
       (card-subroutine state :contestant dh 0)
       (prompt-choice :contestant 2)
       (prompt-choice :challenger 0)
-      ;; trash 1 card and rearrange the other 3
+      ;; discard 1 card and rearrange the other 3
       (prompt-choice :contestant (find-card "Desperado" (:deck (get-challenger))))
       (is (= 1 (count (:discard (get-challenger)))))
       (prompt-choice :contestant (find-card "Sure Gamble" (:deck (get-challenger))))
@@ -249,12 +249,12 @@
       (card-subroutine state :contestant dh 0)
       (prompt-choice :contestant 0)
       (prompt-choice :challenger 1)
-      ;; trash the only card automatically
+      ;; discard the only card automatically
       (is (= 2 (count (:discard (get-challenger)))))
       (is (= "Corroder" (:title (first (:deck (get-challenger)))))))))
 
 (deftest data-mine
-  ;; Data Mine - do one net and trash
+  ;; Data Mine - do one net and discard
   (do-game
     (new-game (default-contestant [(qty "Data Mine" 1)])
               (default-challenger))
@@ -342,7 +342,7 @@
       (is (= 4 (core/hand-size state :challenger))))))
 
 (deftest flare
-  ;; Flare - Trash 1 resource, do 2 unpreventable meat damage, and end the run
+  ;; Flare - Discard 1 resource, do 2 unpreventable meat damage, and end the run
   (do-game
     (new-game (default-contestant [(qty "Flare" 1)])
               (default-challenger [(qty "Plascrete Carapace" 1) (qty "Clone Chip" 1) (qty "Cache" 3)]))
@@ -359,7 +359,7 @@
       (prompt-choice :contestant 0)
       (prompt-choice :challenger 0)
       (prompt-select :contestant cc)
-      (is (= 1 (count (get-in @state [:challenger :rig :hazard]))) "Clone Chip trashed")
+      (is (= 1 (count (get-in @state [:challenger :rig :hazard]))) "Clone Chip discarded")
       (is (empty? (:prompt (get-challenger))) "Plascrete didn't try preventing meat damage")
       (is (= 1 (count (:hand (get-challenger)))))
       (is (= 3 (count (:discard (get-challenger)))) "Clone Chip plus 2 cards lost from damage in discard")
@@ -426,7 +426,7 @@
                  (= 2 (:credit (get-contestant)))) "3 cards in HQ: paid 3 to reveal, both have 3 strength")))))
 
 (deftest jua-encounter
-  ;; Jua (encounter effect) - Prevent Challenger from installing cards for the rest of the turn
+  ;; Jua (encounter effect) - Prevent Challenger from placing cards for the rest of the turn
   (do-game
     (new-game (default-contestant [(qty "Jua" 1)])
               (default-challenger [(qty "Desperado" 1) (qty "Sure Gamble" 1)]))
@@ -439,14 +439,14 @@
       (run-successful state)
       (is (= 2 (count (:hand (get-challenger)))) "Challenger starts with 2 cards in hand")
       (play-from-hand state :challenger "Desperado")
-      (is (= 2 (count (:hand (get-challenger)))) "No cards installed")
+      (is (= 2 (count (:hand (get-challenger)))) "No cards placed")
       (play-from-hand state :challenger "Sure Gamble")
       (is (= 1 (count (:hand (get-challenger)))) "Can play events")
       (take-credits state :challenger)
       (take-credits state :contestant)
       (is (= 1 (count (:hand (get-challenger)))) "Challenger starts with 1 cards in hand")
       (play-from-hand state :challenger "Desperado")
-      (is (= 0 (count (:hand (get-challenger)))) "Card installed"))))
+      (is (= 0 (count (:hand (get-challenger)))) "Card placed"))))
 
 (deftest jua-sub
   ;; Jua (subroutine effect) - Select 2 challenger cards, challenger moves one to the stack
@@ -461,7 +461,7 @@
       (run-on state "HQ")
       (core/reveal state :contestant jua)
       (card-subroutine state :contestant (refresh jua) 0)
-      (is (empty? (:prompt (get-contestant))) "Can't fire for 1 installed card")
+      (is (empty? (:prompt (get-contestant))) "Can't fire for 1 placed card")
       (run-successful state)
 
       (play-from-hand state :challenger "Gordian Blade")
@@ -470,7 +470,7 @@
       (prompt-select :contestant (get-resource state 0))
       (prompt-select :contestant (get-hazard state 0))
       (prompt-choice :challenger "Gordian Blade")
-      (is (nil? (get-resource state 0)) "Card is uninstalled")
+      (is (nil? (get-resource state 0)) "Card is unplaced")
       (is (= 1 (count (:deck (get-challenger)))) "Challenger puts card in deck"))))
 
 (deftest lockdown
@@ -589,7 +589,7 @@
     (is (= [:archives] (get-in @state [:run :locale])) "Challenger now running on Archives")))
 
 (deftest minelayer
-  ;; Minelayer - Install a piece of Character in outermost position of Minelayer's locale at no cost
+  ;; Minelayer - Place a piece of Character in outermost position of Minelayer's locale at no cost
   (do-game
     (new-game (default-contestant [(qty "Minelayer" 1) (qty "Fire Wall" 1)])
               (default-challenger))
@@ -601,7 +601,7 @@
     (card-subroutine state :contestant (get-character state :hq 0) 0)
     (prompt-select :contestant (find-card "Fire Wall" (:hand (get-contestant))))
     (is (= 2 (count (get-in @state [:contestant :locales :hq :characters]))) "2 Character protecting HQ")
-    (is (= 6 (:credit (get-contestant))) "Didn't pay 1 credit to install as second Character")))
+    (is (= 6 (:credit (get-contestant))) "Didn't pay 1 credit to place as second Character")))
 
 (deftest morph-character-subtype-changing
   ;; Morph character gain and lose subtypes from normal advancements and placed advancements
@@ -755,7 +755,7 @@
       (is (= 1 (:tag (get-challenger))) "Trace succeeds with 0 advancements"))))
 
 (deftest sherlock
-  ;; Sherlock 1.0 - Trace to add an installed resource to the top of Challenger's Stack
+  ;; Sherlock 1.0 - Trace to add an placed resource to the top of Challenger's Stack
   (do-game
     (new-game (default-contestant [(qty "Sherlock 1.0" 1)])
               (default-challenger [(qty "Gordian Blade" 3) (qty "Sure Gamble" 3)]))
@@ -768,7 +768,7 @@
     (prompt-choice :contestant 0)
     (prompt-choice :challenger 0)
     (prompt-select :contestant (get-in @state [:challenger :rig :resource 0]))
-    (is (empty? (get-in @state [:challenger :rig :resource])) "Gordian uninstalled")
+    (is (empty? (get-in @state [:challenger :rig :resource])) "Gordian unplaced")
     (is (= "Gordian Blade" (:title (first (:deck (get-challenger))))) "Gordian on top of Stack")))
 
 (deftest shiro
@@ -823,8 +823,8 @@
       (prompt-choice :challenger "1 [Credits]")
       (is (not (:run @state)) "Run ended"))))
 
-(deftest special-offer-trash-character-during-run
-  ;; Special Offer trashes itself and updates the run position
+(deftest special-offer-discard-character-during-run
+  ;; Special Offer discards itself and updates the run position
   (do-game
     (new-game (default-contestant [(qty "Ice Wall" 1) (qty "Special Offer" 1)])
               (default-challenger))
@@ -882,7 +882,7 @@
         (run-on state "HQ")
         (card-subroutine state :contestant ti 2)
         (prompt-select :contestant (refresh wast))
-        (is (= 1 (count (:discard (get-challenger)))) "1 card trashed")
+        (is (= 1 (count (:discard (get-challenger)))) "1 card discarded")
         (card-subroutine state :contestant ti 1)
         (is (not (:run @state)) "Run ended")))))
 
@@ -944,7 +944,7 @@
           "Turing increased to 5 strength over a party locale"))))
 
 (deftest wraparound
-  ;; Wraparound - Strength boosted when no fracter is installed
+  ;; Wraparound - Strength boosted when no fracter is placed
   (do-game
     (new-game (default-contestant [(qty "Wraparound" 1)])
               (default-challenger [(qty "Corroder" 1)]))
@@ -956,4 +956,4 @@
       (take-credits state :contestant)
       (play-from-hand state :challenger "Corroder")
       (is (= 0 (:current-strength (refresh wrap)))
-          "Wraparound 0 strength after Corroder installed"))))
+          "Wraparound 0 strength after Corroder placed"))))
