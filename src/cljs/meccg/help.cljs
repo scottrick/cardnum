@@ -49,7 +49,8 @@
                         [:li [:code "/counter n"] " - set counters on a card to n (player's own cards only). Attempts to infer the type of counter to place. If the inference fails, you must use the next command to specify the counter type."]
                         [:li [:code "/counter type n"] " - set the specified counter type on a card to n (player's own cards only). Type must be " [:code "agenda"] ", " [:code "advance"] ", " [:code "credit"] ", " [:code "power"] ", or " [:code "virus"] ". Can be abbreviated as " [:code "ag"] ", "  [:code "ad"] ", "  [:code "c"] ", "  [:code "p"] ", or " [:code "v"] " respectively."]
                         [:li [:code "/deck #n"] " - Put card number n from your hand on top of your deck"]
-                        [:li [:code "/discard #n"] " - Discard card number n from your hand"]
+                        [:li [:code "/discard"] " - Discard card hard to get to"]
+                        [:li [:code "/discard-n #n"] " - Discard card number n from your hand"]
                         [:li [:code "/discard-random"] " - Discard a random card from your hand"]
                         [:li [:code "/draw n"] " - Draw n cards"]
                         [:li [:code "/handsize n"] " - Set your handsize to n"]
@@ -60,7 +61,7 @@
                         [:li [:code "/re-deck"] " - Use this to move all cards from your discard back to your deck"]
                         [:li [:code "/reveal"] " - Select a card to reveal, ignoring all costs (Contestant only)"]
                         [:li [:code "/rfg"] " - Select a card to remove from the game"]
-                        [:li [:code "/facedown"] " - Select a card to install facedown in your rig (Challenger only)"]
+                        [:li [:code "/og"] " - Select a card to play on-guard"]
                         [:li [:code "/roll n"] " - Roll an n-sided die"]
                         [:li [:code "/r"] " - Roll 2d6"]]]}
             {:id "documentation"

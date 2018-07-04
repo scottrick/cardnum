@@ -217,7 +217,13 @@
           "/counter"    #(command-counter %1 %2 args)
           "/credit"     #(swap! %1 assoc-in [%2 :credit] (max 0 value))
           "/deck"       #(toast %1 %2 "/deck number takes the format #n")
-          "/discard"    #(toast %1 %2 "/discard number takes the format #n")
+          "/discard"        #(resolve-ability %1 %2
+                                          {:prompt "Select a card to discard"
+                                           :effect (req (let [c (deactivate %1 %2 target)]
+                                                          (move %1 %2 c :discard)))
+                                           :choices {:req (fn [t] (card-is? t :side %2))}}
+                                          {:title "/discard command"} nil)
+          "/discard-n"    #(toast %1 %2 "/discard number takes the format #n")
           "/discard-random" #(move %1 %2 (rand-nth (get-in @%1 [%2 :hand])) :discard)
           "/draw"       #(draw %1 %2 (max 0 value))
           "/end-run"    #(when (= %2 :contestant) (end-run %1 %2))
@@ -273,7 +279,7 @@
                                                           (move %1 %2 c :scored)))
                                            :choices {:req (fn [t] true)}}
                                           {:title "/score command"} nil)
-          "/facedown"   #(command-facedown %1 %2)
+          "/og"         #(command-facedown %1 %2)
           "/roll"       #(command-roll %1 %2 value)
           "/r"          #(basic-roll %1 %2)
           "/tag"        #(swap! %1 assoc-in [%2 :tag] (max 0 value))

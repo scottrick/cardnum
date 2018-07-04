@@ -830,6 +830,12 @@
       [:div.header {:class (when (> (count cursor) 0) "darkbg")}
        (str (:name opts) " (" (fn cursor) ")")]))))
 
+(defn label-site [cursor owner opts]
+  (om/component
+    (sab/html
+      [:div.header {:class (when (> (count cursor) 0) "darkbg")}
+       (str (:name opts))])))
+
 (defn build-hand-card-view
   [player parties wrapper-class]
   (let [side (get-in player [:identity :side])
@@ -1164,7 +1170,7 @@
          (drop-area (:side @game-state) map-name
                     {:on-click #(-> (om/get-node owner map-menu-ref) js/$ .toggle)})
          (facedown-card "Locations")
-         (om/build label sites {:opts {:name "Location"}})
+         (om/build label-site sites {:opts {:name "Location"}})
          (when (= (:side @game-state) side)
            [:div.panel.blue-shade.menu {:ref map-menu-ref}
             [:div {:on-click #(show-map % owner reg-ref)} "Regions"]
@@ -1185,7 +1191,7 @@
             ]
            [:div.panel.blue-shade.popup {:ref site-content-ref}
             [:div
-             [:a {:on-click #(close-popup % owner site-content-ref "stops at a region" false true false false)}
+             [:a {:on-click #(close-popup % owner site-content-ref "stops looking at a region" false true false false)}
               "Close"]]
             (om/build-all card-view sites {:key :cid})
             ]
@@ -1545,8 +1551,8 @@
               [:div.right-inner-leftpane
                [:div
                 (om/build decks-view {:player opponent :run run})
-                (om/build rfg-view {:cards (:rfg opponent) :name "Removed from the game" :popup true})
-                (om/build rfg-view {:cards (:rfg me) :name "Removed from the game" :popup true})
+                (om/build rfg-view {:cards (:rfg opponent) :name "Removed from play/game" :popup true})
+                (om/build rfg-view {:cards (:rfg me) :name "Removed from play/game" :popup true})
                 (om/build play-area-view {:player opponent :name "Temporary Zone"})
                 (om/build play-area-view {:player me :name "Temporary Zone"})
                 (om/build rfg-view {:cards (:current opponent) :name "Current" :popup false})
