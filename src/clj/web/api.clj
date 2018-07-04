@@ -1,5 +1,5 @@
 (ns web.api
-  (:require [jinteki.nav :as nav]
+  (:require [cardnum.nav :as nav]
             [web.utils :refer [response]]
             [web.data :as data]
             [web.pages :as pages]
@@ -30,13 +30,11 @@
            (GET "/check/:username" [] auth/check-username-handler)
 
            (GET "/data/cards" [] data/cards-handler)
-           (GET "/data/cards/version" [] data/cards-version-handler)
            (GET "/data/cards/altarts" [] data/alt-arts-handler)
 
            (GET "/data/news" [] news/news-handler)
            (GET "/data/sets" [] data/sets-handler)
            (GET "/data/mwl" [] data/mwl-handler)
-           (GET "/data/cycles" [] data/cycles-handler)
            (GET "/data/donors" [] data/donors-handler)
 
            (GET "/messages/:channel" [] chat/messages-handler)

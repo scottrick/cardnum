@@ -6,8 +6,8 @@
             [clojure.java.io :as io]
             [clojure.core.match :refer [match]]
             [clojure.stacktrace :refer [print-stack-trace]]
-            [jinteki.utils :refer [str->int]]
-            [jinteki.cards :refer [all-cards]]))
+            [cardnum.utils :refer [str->int]]
+            [cardnum.cards :refer [all-cards]]))
 
 (load "core/events")    ; triggering of events
 (load "core/cards")     ; retrieving and updating cards
@@ -19,7 +19,7 @@
 (load "core/installing"); installing and interacting with installed cards and servers
 (load "core/hosting")   ; hosting routines
 (load "core/runs")      ; the run sequence
-(load "core/ice")       ; ice and icebreaker interactions
+(load "core/ice")       ; character and characterbreaker interactions
 (load "core/flags")     ; various miscellaneous manipulations of specific effects
 (load "core/io")        ; routines for parsing input or printing to the log
 (load "core/misc")      ; misc stuff

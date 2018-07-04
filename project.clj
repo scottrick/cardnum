@@ -1,7 +1,7 @@
-(defproject netrunner "1.0"
+(defproject meccg "1.0"
   ;; the version string gets replaced by the git rev version plugin anyway
-  :description "Browser implementation of Android: Netrunner card game."
-  :url "https://github.com/mtgred/netrunner"
+  :description "Browser implementation of MECCG card game."
+  :url "https://github.com/rezwits/meccg"
   :license {:name "The MIT License (MIT)"
             :url "https://opensource.org/licenses/MIT"}
 
@@ -54,9 +54,9 @@
     ;; aot only the namespaces needed for the main game in uberjar, notably ignoring the test and task namespaces.
   :aot [#"game\.*"
         #"web\.*"
-        #"jinteki\.*"]
-  :jar-name "netrunner.jar"
-  :uberjar-name "netrunner-standalone.jar"
+        #"cardnum\.*"]
+  :jar-name "meccg.jar"
+  :uberjar-name "meccg-standalone.jar"
   :omit-source true
   :main web.core
 
@@ -77,7 +77,7 @@
                   :source-map-timestamp true
                   :external-config {:devtools/config {:features-to-install :all}}}}
       {:id "prod"
-       :source-paths ["src/cljs/netrunner" "src/cljc"]
+       :source-paths ["src/cljs/meccg" "src/cljc"]
        :compiler {:output-to "resources/public/js/app.js"
                   :output-dir "out"
                   :optimizations :advanced

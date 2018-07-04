@@ -91,7 +91,7 @@
   (str (Character/toUpperCase (first string)) (subs string 1)))
 
 (defn costs->symbol
-  "Used during steal to print runner prompt for payment"
+  "Used during steal to print challenger prompt for payment"
   [costs]
   (join ", " (map #(let [key (first %) value (last %)]
                      (case key
@@ -99,7 +99,7 @@
                        :click (reduce str (for [i (range value)] "[Click]"))
                        :net-damage (str value " net damage")
                        :mill (str value " card mill")
-                       :hardware (str value " installed hardware")
+                       :hazard (str value " installed hazard")
                        :shuffle-installed-to-stack (str "shuffling " value " installed "
                                                         (pluralize "card" value) " into the stack")
                        (str value (str key)))) (partition 2 (flatten costs)))))
@@ -147,8 +147,8 @@
   "Returns true if player has spent at least one click"
   [side state]
   (case side
-    :runner (contains? (into {} (get @state :turn-events)) :runner-spent-click)
-    :corp   (contains? (into {} (get @state :turn-events)) :corp-spent-click)))
+    :challenger (contains? (into {} (get @state :turn-events)) :challenger-spent-click)
+    :contestant   (contains? (into {} (get @state :turn-events)) :contestant-spent-click)))
 
 (defn used-this-turn?
   "Returns true if a card has been used this turn"
@@ -196,17 +196,17 @@
      (str "spends " cost-str " to " verb " "))))
 
 (defn other-side [side]
-  (cond (= side :corp) :runner
-        (= side :runner) :corp))
+  (cond (= side :contestant) :challenger
+        (= side :challenger) :contestant))
 
 (defn side-str
   "Converts kw into str. If str is passed same str is returned."
   [side]
   (cond
-    (= side :corp) "Corp"
-    (= side "Corp") "Corp"
-    (= side :runner) "Runner"
-    (= side "Runner") "Runner"))
+    (= side :contestant) "Contestant"
+    (= side "Contestant") "Contestant"
+    (= side :challenger) "Challenger"
+    (= side "Challenger") "Challenger"))
 
 (defn same-side?
   "Checks if two supplied sides are the same side. Accepts both keyword and str."
@@ -278,7 +278,7 @@
     nil))
 
 (defn type->rig-zone
-  "Converts a runner's card type to a vector zone, e.g. 'Program' -> [:rig :program]"
+  "Converts a challenger's card type to a vector zone, e.g. 'Resource' -> [:rig :resource]"
   [type]
   (vec [:rig (-> type .toLowerCase keyword)]))
 

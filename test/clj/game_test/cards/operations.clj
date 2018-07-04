@@ -188,7 +188,7 @@
               (default-runner))
     (core/gain state :corp :click 1)
     (play-from-hand state :corp "Hunter" "HQ")
-    (let [hunter (get-ice state :hq 0)]
+    (let [hunter (get-character state :hq 0)]
       (core/rez state :corp hunter)
       (is (= 4 (:current-strength (refresh hunter))))
       (play-from-hand state :corp "Casting Call")
@@ -278,20 +278,20 @@
                                "Ice Wall"])
                 (default-runner))
       (play-from-hand state :corp "Ice Wall" "HQ")
-      (core/add-counter state :corp (refresh (get-ice state :hq 0)) :advancement 1)
+      (core/add-counter state :corp (refresh (get-character state :hq 0)) :advancement 1)
       (play-from-hand state :corp "Commercialization")
-      (prompt-select :corp (refresh (get-ice state :hq 0)))
-      (is (= 6 (:credit (get-corp))) "Gained 1 for single advanced ice from Commercialization")))
+      (prompt-select :corp (refresh (get-character state :hq 0)))
+      (is (= 6 (:credit (get-corp))) "Gained 1 for single advanced character from Commercialization")))
   (testing "Two advancement tokens"
     (do-game
       (new-game (default-corp ["Commercialization"
                                "Ice Wall"])
                 (default-runner))
       (play-from-hand state :corp "Ice Wall" "HQ")
-      (core/add-counter state :corp (refresh (get-ice state :hq 0)) :advancement 2)
+      (core/add-counter state :corp (refresh (get-character state :hq 0)) :advancement 2)
       (play-from-hand state :corp "Commercialization")
-      (prompt-select :corp (refresh (get-ice state :hq 0)))
-      (is (= 7 (:credit (get-corp))) "Gained 2 for double advanced ice from Commercialization"))))
+      (prompt-select :corp (refresh (get-character state :hq 0)))
+      (is (= 7 (:credit (get-corp))) "Gained 2 for double advanced character from Commercialization"))))
 
 (deftest consulting-visit
   ;; Consulting Visit - Only show single copies of operations corp can afford as choices. Play chosen operation
@@ -352,7 +352,7 @@
       (is (= (+ 1 corp-creds) (:credit (get-corp))) "Corp gained 1 when runner installed Aumakua")
       (play-from-hand state :runner "Fall Guy")
       (is (= (+ 2 corp-creds) (:credit (get-corp))) "Corp gained 1 when runner installed Fall Guy")
-      (card-ability state :runner (get-resource state 0) 1)
+      (card-ability state :runner (get-muthereff state 0) 1)
       (is (= (+ 3 corp-creds) (:credit (get-corp))) "Corp gained 1 when runner trashed Fall Guy")
       (run-empty-server state :remote1)
       (prompt-choice-partial :runner "Pay")  ;; Runner trashes PAD Campaign
@@ -367,7 +367,7 @@
     (play-from-hand state :corp "Viktor 1.0" "HQ")
     (take-credits state :corp)
     (run-on state :hq)
-    (let [vik (get-ice state :hq 0)]
+    (let [vik (get-character state :hq 0)]
       (core/rez state :corp vik)
       (card-subroutine state :corp vik 0)
       (is (= 2 (count (:discard (get-runner)))) "2 cards lost to brain damage")
@@ -412,7 +412,7 @@
     (play-from-hand state :corp "PAD Campaign" "New remote")
     (play-from-hand state :corp "PAD Campaign" "New remote")
     (play-from-hand state :corp "Diversified Portfolio")
-    (is (= 7 (:credit (get-corp))) "Ignored remote with ICE but no server contents")))
+    (is (= 7 (:credit (get-corp))) "Ignored remote with Character but no server contents")))
 
 (deftest door-to-door
   ;; Door to Door
@@ -486,9 +486,9 @@
     (play-from-hand state :corp "Enforcing Loyalty")
     (prompt-choice :corp 0)
     (prompt-choice :runner 0)
-    (prompt-select :corp (get-program state 0))
-    (is (empty? (:discard (get-runner))) "Can't target Inti; matches Runner faction")
     (prompt-select :corp (get-resource state 0))
+    (is (empty? (:discard (get-runner))) "Can't target Inti; matches Runner faction")
+    (prompt-select :corp (get-muthereff state 0))
     (is (= 1 (count (:discard (get-runner)))) "Caldera trashed")))
 
 (deftest enhanced-login-protocol
@@ -529,7 +529,7 @@
       (take-credits state :runner)
       (take-credits state :corp)
       (is (= 4 (:click (get-runner))) "Runner has 2 clicks")
-      (let [sneakdoor (get-program state 0)]
+      (let [sneakdoor (get-resource state 0)]
         (card-ability state :runner sneakdoor 0)
         (is (= 3 (:click (get-runner))) "Runner doesn't spend 1 additional click to run with a card ability")
         (run-successful state)
@@ -586,7 +586,7 @@
       (take-credits state :corp)
       (core/gain state :runner :credit 2)
       (play-from-hand state :runner "Hades Shard")
-      (card-ability state :runner (get-resource state 0) 0)
+      (card-ability state :runner (get-muthereff state 0) 0)
       (prompt-choice :runner "Steal")
       (prompt-choice :corp "Yes")
       (prompt-select :corp (find-card "Enhanced Login Protocol" (:hand (get-corp))))
@@ -607,7 +607,7 @@
     (prompt-choice :runner "No action")
     (core/gain state :runner :credit 2)
     (play-from-hand state :runner "Hades Shard")
-    (card-ability state :runner (get-resource state 0) 0)
+    (card-ability state :runner (get-muthereff state 0) 0)
     (prompt-choice :runner "Steal")
     (prompt-choice :corp "Yes")
     (prompt-select :corp (find-card "Enhanced Login Protocol" (:hand (get-corp))))
@@ -702,22 +702,22 @@
       (let [fifm (get-scored state :corp 0)]
         (card-ability state :corp fifm 0))
       (is (= "15 Minutes" (:title (first (:deck (get-corp))))))))
-  (testing "Swapping a Mandatory Upgrades gives the Corp an additional click per turn. #1687"
+  (testing "Swapping a Mandatory Regions gives the Corp an additional click per turn. #1687"
     (do-game
-      (new-game (default-corp [(qty "Exchange of Information" 2) "Mandatory Upgrades"
+      (new-game (default-corp [(qty "Exchange of Information" 2) "Mandatory Regions"
                                "Global Food Initiative"])
                 (default-runner))
       (score-agenda state :corp (find-card "Global Food Initiative" (:hand (get-corp))))
       (take-credits state :corp)
       (core/gain state :runner :tag 1)
-      (core/steal state :runner (find-card "Mandatory Upgrades" (:hand (get-corp))))
+      (core/steal state :runner (find-card "Mandatory Regions" (:hand (get-corp))))
       (take-credits state :runner)
       (is (= 3 (:agenda-point (get-corp))))
       (is (= 2 (:agenda-point (get-runner))))
       (is (= 3 (:click (get-corp))))
       (is (= 3 (:click-per-turn (get-corp))))
       (play-from-hand state :corp "Exchange of Information")
-      (prompt-select :corp (find-card "Mandatory Upgrades" (:scored (get-runner))))
+      (prompt-select :corp (find-card "Mandatory Regions" (:scored (get-runner))))
       (prompt-select :corp (find-card "Global Food Initiative" (:scored (get-corp))))
       (is (= 2 (:agenda-point (get-corp))))
       (is (= 2 (:agenda-point (get-runner))))
@@ -729,7 +729,7 @@
       (is (= 4 (:click-per-turn (get-corp))))
       (play-from-hand state :corp "Exchange of Information")
       (prompt-select :corp (find-card "Global Food Initiative" (:scored (get-runner))))
-      (prompt-select :corp (find-card "Mandatory Upgrades" (:scored (get-corp))))
+      (prompt-select :corp (find-card "Mandatory Regions" (:scored (get-corp))))
       (is (= 3 (:agenda-point (get-corp))))
       (is (= 2 (:agenda-point (get-runner))))
       (is (= 2 (:click (get-corp))))
@@ -752,12 +752,12 @@
     (play-from-hand state :corp "Foxfire")
     (prompt-choice :corp 0)
     (prompt-choice :runner 0)
-    (prompt-select :corp (get-hardware state 0))
+    (prompt-select :corp (get-hazard state 0))
     (is (= 1 (-> (get-runner) :discard count)) "Corp should trash Dyson Mem Chip from winning Foxfire trace")
     (play-from-hand state :corp "Foxfire")
     (prompt-choice :corp 0)
     (prompt-choice :runner 0)
-    (prompt-select :corp (get-resource state 0))
+    (prompt-select :corp (get-muthereff state 0))
     (is (= 2 (-> (get-runner) :discard count)) "Corp should trash Ice Carver from winning Foxfire trace")))
 
 (deftest hard-hitting-news
@@ -788,10 +788,10 @@
     (play-from-hand state :corp "Hatchet Job")
     (prompt-choice :corp 0)
     (prompt-choice :runner 0)
-    (prompt-select :corp (get-resource state 0))
+    (prompt-select :corp (get-muthereff state 0))
     (is (empty? (:hand (get-runner))) "Can't choose virtual card")
     (is (not (empty? (:prompt (get-corp)))))
-    (prompt-select :corp (get-program state 0))
+    (prompt-select :corp (get-resource state 0))
     (is (= 1 (count (:hand (get-runner)))) "Upya returned to grip")))
 
 (deftest hedge-fund
@@ -813,7 +813,7 @@
     (is (zero? (-> (get-runner) :deck count)) "Runner should have no cards in Stack")
     (prompt-choice :corp 0)
     (prompt-choice :runner 0)
-    (prompt-select :corp (get-resource state 0))
+    (prompt-select :corp (get-muthereff state 0))
     (is (= 1 (-> (get-runner) :deck count)) "Runner should have 1 card in Stack from losing Hellion Alpha Test trace")
     (is (= "Daily Casts" (-> (get-runner) :deck first :title))
         "Runner should have Daily Casts on top of Stack from losing Hellion Alpha Test trace")
@@ -845,8 +845,8 @@
       (play-from-hand state :corp "Hellion Beta Test")
       (prompt-choice :corp 0)
       (prompt-choice :runner 0)
-      (prompt-select :corp (get-resource state 0))
-      (prompt-select :corp (get-hardware state 0))
+      (prompt-select :corp (get-muthereff state 0))
+      (prompt-select :corp (get-hazard state 0))
       (is (= 2 (-> (get-runner) :discard count)) "Runner should have 2 cards in heap after losing Hellion Beta Test trace")))
   (testing "Losing trace - Gaining bad publicity"
     (do-game
@@ -989,10 +989,10 @@
     (play-from-hand state :corp "Vanilla" "HQ")
     (play-from-hand state :corp "Lotus Field" "R&D")
     (play-from-hand state :corp "Lag Time")
-    (core/rez state :corp (get-ice state :hq 0))
-    (core/rez state :corp (get-ice state :rd 0))
-    (is (= 1 (:current-strength (get-ice state :hq 0))) "Vanilla at 1 strength")
-    (is (= 5 (:current-strength (get-ice state :rd 0))) "Lotus Field at 5 strength")))
+    (core/rez state :corp (get-character state :hq 0))
+    (core/rez state :corp (get-character state :rd 0))
+    (is (= 1 (:current-strength (get-character state :hq 0))) "Vanilla at 1 strength")
+    (is (= 5 (:current-strength (get-character state :rd 0))) "Lotus Field at 5 strength")))
 
 (deftest lateral-growth
   (do-game
@@ -1079,12 +1079,12 @@
     (play-from-hand state :corp "Ice Wall" "R&D")
     (play-from-hand state :corp "Ice Wall" "Archives")
     (take-credits state :runner)
-    (core/advance state :corp {:card (refresh (get-ice state :hq 0))})
-    (core/advance state :corp {:card (refresh (get-ice state :archives 0))})
-    (core/advance state :corp {:card (refresh (get-ice state :rd 0))})
+    (core/advance state :corp {:card (refresh (get-character state :hq 0))})
+    (core/advance state :corp {:card (refresh (get-character state :archives 0))})
+    (core/advance state :corp {:card (refresh (get-character state :rd 0))})
     (take-credits state :runner)
     (play-from-hand state :corp "Mass Commercialization")
-    (is (= 8 (:credit (get-corp))) "Gained 6 for 3 advanced ice from Mass Commercialization")))
+    (is (= 8 (:credit (get-corp))) "Gained 6 for 3 advanced character from Mass Commercialization")))
 
 (deftest medical-research-fundraiser
   ;; Medical Research Fundraiser - runner gains 8creds, runner gains 3creds
@@ -1145,7 +1145,7 @@
         (is (= 1 (:agenda-point (get-corp))) "Profiteering was able to be scored")))))
 
 (deftest mutate
-  ;; Mutate - trash a rezzed piece of ice, install and rez one from R&D
+  ;; Mutate - trash a rezzed piece of character, install and rez one from R&D
   (testing "Basic operation"
     (do-game
       (new-game (default-corp ["Mutate" "Ice Wall" "Enigma" "Hedge Fund"])
@@ -1153,28 +1153,28 @@
       (core/move state :corp (find-card "Hedge Fund" (:hand (get-corp))) :deck)
       (core/move state :corp (find-card "Enigma" (:hand (get-corp))) :deck)
       (play-from-hand state :corp "Ice Wall" "HQ")
-      (core/rez state :corp (get-ice state :hq 0))
-      (is (= 1 (count (get-ice state :hq))) "1 ice installed")
-      (is (= "Ice Wall" (:title (get-ice state :hq 0))) "Ice Wall is installed")
+      (core/rez state :corp (get-character state :hq 0))
+      (is (= 1 (count (get-character state :hq))) "1 character installed")
+      (is (= "Ice Wall" (:title (get-character state :hq 0))) "Ice Wall is installed")
       (play-from-hand state :corp "Mutate")
-      (prompt-select :corp (get-ice state :hq 0))
-      (is (= 1 (count (get-ice state :hq))) "1 ice installed")
-      (is (= "Enigma" (:title (get-ice state :hq 0))) "Enigma is installed")
-      (is (:rezzed (get-ice state :hq 0)) "Enigma is rezzed")
+      (prompt-select :corp (get-character state :hq 0))
+      (is (= 1 (count (get-character state :hq))) "1 character installed")
+      (is (= "Enigma" (:title (get-character state :hq 0))) "Enigma is installed")
+      (is (:rezzed (get-character state :hq 0)) "Enigma is rezzed")
       (is (second-last-log-contains? state "Hedge Fund") "Skipped card name was logged")
       (is (second-last-log-contains? state "Enigma") "Installed card name was logged")))
-  (testing "No ice in R&D"
+  (testing "No character in R&D"
     (do-game
       (new-game (default-corp ["Mutate" "Ice Wall" "Enigma" "Hedge Fund"])
                 (default-runner))
       (core/move state :corp (find-card "Hedge Fund" (:hand (get-corp))) :deck)
       (play-from-hand state :corp "Ice Wall" "HQ")
-      (core/rez state :corp (get-ice state :hq 0))
-      (is (= 1 (count (get-ice state :hq))) "1 ice installed")
-      (is (= "Ice Wall" (:title (get-ice state :hq 0))) "Ice Wall is installed")
+      (core/rez state :corp (get-character state :hq 0))
+      (is (= 1 (count (get-character state :hq))) "1 character installed")
+      (is (= "Ice Wall" (:title (get-character state :hq 0))) "Ice Wall is installed")
       (play-from-hand state :corp "Mutate")
-      (prompt-select :corp (get-ice state :hq 0))
-      (is (empty? (get-ice state :hq)) "No ice installed")
+      (prompt-select :corp (get-character state :hq 0))
+      (is (empty? (get-character state :hq)) "No character installed")
       (is (second-last-log-contains? state "Hedge Fund") "Skipped card name was logged"))))
 
 (deftest neural-emp
@@ -1191,12 +1191,12 @@
     (is (= 1 (count (:discard (get-runner)))) "Runner took 1 net damage")))
 
 (deftest oversight-ai
-  ;; Oversight AI - Rez a piece of ICE ignoring all costs
+  ;; Oversight AI - Rez a piece of Character ignoring all costs
   (do-game
     (new-game (default-corp ["Oversight AI" "Archer"])
               (default-runner))
     (play-from-hand state :corp "Archer" "R&D")
-    (let [archer (get-ice state :rd 0)]
+    (let [archer (get-character state :rd 0)]
       (play-from-hand state :corp "Oversight AI")
       (prompt-select :corp archer)
       (is (:rezzed (refresh archer)))
@@ -1210,10 +1210,10 @@
     (new-game (default-corp ["Patch" "Vanilla"])
               (default-runner))
     (play-from-hand state :corp "Vanilla" "HQ")
-    (core/rez state :corp (get-ice state :hq 0))
+    (core/rez state :corp (get-character state :hq 0))
     (play-from-hand state :corp "Patch")
-    (prompt-select :corp (get-ice state :hq 0))
-    (is (= 2 (:current-strength (get-ice state :hq 0))) "Vanilla at 2 strength")))
+    (prompt-select :corp (get-character state :hq 0))
+    (is (= 2 (:current-strength (get-character state :hq 0))) "Vanilla at 2 strength")))
 
 (deftest paywall-implementation
   ;; Paywall Implementation - Gain 1 credit for every successful run
@@ -1231,7 +1231,7 @@
     (is (= 9 (:credit (get-corp))) "Gained 1 credit from successful run")))
 
 (deftest peak-efficiency
-  ;; Peak Efficiency - Gain 1 credit for each rezzed ICE
+  ;; Peak Efficiency - Gain 1 credit for each rezzed Character
   (do-game
     (new-game (default-corp ["Peak Efficiency" (qty "Paper Wall" 3) "Wraparound"])
               (default-runner))
@@ -1240,14 +1240,14 @@
     (play-from-hand state :corp "Paper Wall" "R&D")
     (play-from-hand state :corp "Paper Wall" "New remote")
     (play-from-hand state :corp "Wraparound" "New remote")
-    (core/rez state :corp (get-ice state :hq 0))
-    (core/rez state :corp (get-ice state :rd 0))
-    (core/rez state :corp (get-ice state :remote1 0))
+    (core/rez state :corp (get-character state :hq 0))
+    (core/rez state :corp (get-character state :rd 0))
+    (core/rez state :corp (get-character state :remote1 0))
     (play-from-hand state :corp "Peak Efficiency")
-    (is (= 7 (:credit (get-corp))) "Gained 3 credits for 3 rezzed ICE; unrezzed ICE ignored")))
+    (is (= 7 (:credit (get-corp))) "Gained 3 credits for 3 rezzed Character; unrezzed Character ignored")))
 
 (deftest power-shutdown
-  ;; Power Shutdown - Trash cards from R&D to force Runner to trash a program or hardware
+  ;; Power Shutdown - Trash cards from R&D to force Runner to trash a resource or hazard
   (do-game
     (new-game (default-corp [(qty "Power Shutdown" 3) (qty "Hive" 3)])
               (default-runner ["Grimoire" "Cache"]))
@@ -1265,9 +1265,9 @@
     (prompt-choice :corp 2)
     (is (= 3 (count (:discard (get-corp)))) "2 cards trashed from R&D")
     (is (= 1 (count (:deck (get-corp)))) "1 card remaining in R&D")
-    (prompt-select :runner (get-hardware state 0)) ; try targeting Grimoire
+    (prompt-select :runner (get-hazard state 0)) ; try targeting Grimoire
     (is (empty? (:discard (get-runner))) "Grimoire too expensive to be targeted")
-    (prompt-select :runner (get-program state 0))
+    (prompt-select :runner (get-resource state 0))
     (is (= 1 (count (:discard (get-runner)))) "Cache trashed")))
 
 (deftest power-grid-overload
@@ -1282,18 +1282,18 @@
     (play-from-hand state :corp "Power Grid Overload")
     (prompt-choice :corp 3)
     (prompt-choice :runner 0)
-    (prompt-select :corp (get-hardware state 0))
+    (prompt-select :corp (get-hazard state 0))
     (is (= 1 (-> (get-runner) :discard count)) "Dyson Mem Chip should be in heap after Runner loses Power Grid Overload trace")))
 
 (deftest precognition
   ;; Precognition - Full test
   (do-game
-    (new-game (default-corp ["Precognition" "Caprice Nisei" "Adonis Campaign"
+    (new-game (default-corp ["Precognition" "Caprcharacter Nisei" "Adonis Campaign"
                              "Quandary" "Jackson Howard" "Global Food Initiative"])
               (default-runner))
     (starting-hand state :corp ["Precognition"])
     (play-from-hand state :corp "Precognition")
-    (prompt-card :corp (find-card "Caprice Nisei" (:deck (get-corp))))
+    (prompt-card :corp (find-card "Caprcharacter Nisei" (:deck (get-corp))))
     (prompt-card :corp (find-card "Adonis Campaign" (:deck (get-corp))))
     (prompt-card :corp (find-card "Quandary" (:deck (get-corp))))
     (prompt-card :corp (find-card "Jackson Howard" (:deck (get-corp))))
@@ -1304,9 +1304,9 @@
     (prompt-card :corp (find-card "Jackson Howard" (:deck (get-corp))))
     (prompt-card :corp (find-card "Quandary" (:deck (get-corp))))
     (prompt-card :corp (find-card "Adonis Campaign" (:deck (get-corp))))
-    (prompt-card :corp (find-card "Caprice Nisei" (:deck (get-corp)))) ;this is the top card of R&D
+    (prompt-card :corp (find-card "Caprcharacter Nisei" (:deck (get-corp)))) ;this is the top card of R&D
     (prompt-choice :corp "Done")
-    (is (= "Caprice Nisei" (:title (first (:deck (get-corp))))))
+    (is (= "Caprcharacter Nisei" (:title (first (:deck (get-corp))))))
     (is (= "Adonis Campaign" (:title (second (:deck (get-corp))))))
     (is (= "Quandary" (:title (second (rest (:deck (get-corp)))))))
     (is (= "Jackson Howard" (:title (second (rest (rest (:deck (get-corp))))))))
@@ -1369,21 +1369,21 @@
       (is (= 4 (get-counters (refresh pj) :advancement)) "Junebug has 4 advancements"))))
 
 (deftest psychokinesis
-  ;; Pyschokinesis - Terminal Event (end the turn); Look at R&D, install an Asset, Agenda, or Upgrade in a Remote Server
+  ;; Pyschokinesis - Terminal Event (end the turn); Look at R&D, install an Site, Agenda, or Region in a Remote Server
   (do-game
-    (new-game (default-corp [(qty "Psychokinesis" 3) "Caprice Nisei" "Adonis Campaign"
+    (new-game (default-corp [(qty "Psychokinesis" 3) "Caprcharacter Nisei" "Adonis Campaign"
                               "Global Food Initiative" "Mwanza City Grid"])
               (default-runner))
     (starting-hand state :corp ["Psychokinesis" "Psychokinesis" "Psychokinesis"])
-    ;; Test installing an Upgrade
+    ;; Test installing an Region
     (play-from-hand state :corp "Psychokinesis")
     (is (not-any? #{"Mwanza City Grid"} (map :title (-> (get-corp) :prompt first :choices)))
         "Mwanza City Grid is not on the list of installable cards")
-    (prompt-card :corp (find-card "Caprice Nisei" (:deck (get-corp))))
+    (prompt-card :corp (find-card "Caprcharacter Nisei" (:deck (get-corp))))
     (prompt-choice :corp "New remote")
-    (is (= "Caprice Nisei" (:title (get-content state :remote1 0)))
-      "Caprice Nisei installed by Psychokinesis")
-    ;; Test installing an Asset
+    (is (= "Caprcharacter Nisei" (:title (get-content state :remote1 0)))
+      "Caprcharacter Nisei installed by Psychokinesis")
+    ;; Test installing an Site
     (core/gain state :corp :click 1)
     (play-from-hand state :corp "Psychokinesis")
     (prompt-card :corp (find-card "Adonis Campaign" (:deck (get-corp))))
@@ -1434,8 +1434,8 @@
     (play-from-hand state :corp "Ice Wall" "R&D")
     (let [gt (get-content state :remote1 0)
           gr (get-content state :remote2 0)
-          iw1 (get-ice state :hq 0)
-          iw2 (get-ice state :rd 0)]
+          iw1 (get-character state :hq 0)
+          iw2 (get-character state :rd 0)]
       (core/add-prop state :corp gr :advance-counter 3)
       (core/add-prop state :corp iw1 :advance-counter 2)
       (core/add-prop state :corp iw2 :advance-counter 1)
@@ -1474,13 +1474,13 @@
     (play-from-hand state :runner "Virus Breeding Ground")
     (play-from-hand state :runner "Datasucker")
     (take-credits state :runner)
-    (core/add-counter state :runner (get-resource state 0) :virus 4)
-    (core/add-counter state :runner (get-program state 0) :virus 3)
+    (core/add-counter state :runner (get-muthereff state 0) :virus 4)
+    (core/add-counter state :runner (get-resource state 0) :virus 3)
     (play-from-hand state :corp "Reverse Infection")
     (prompt-choice :corp "Purge virus counters.")
     (is (= 9 (:credit (get-corp))) "Corp did not gain credits")
-    (is (zero? (get-counters (get-resource state 0) :virus)) "Viruses purged from VBG")
-    (is (zero? (get-counters (get-program state 0) :virus)) "Viruses purged from Datasucker")
+    (is (zero? (get-counters (get-muthereff state 0) :virus)) "Viruses purged from VBG")
+    (is (zero? (get-counters (get-resource state 0) :virus)) "Viruses purged from Datasucker")
     (is (= 2 (count (:discard (get-runner)))) "Two cards trashed from stack")))
 
 (deftest riot-suppression
@@ -1599,35 +1599,35 @@
     (prompt-choice :runner 0)
     (is (= 1 (:tag (get-runner))) "Runner should get 1 tag from losing SEA Source trace")))
 
-(deftest self-growth-program
-  ;; Self-Growth Program - Add 2 installed cards to grip if runner is tagged
+(deftest self-growth-resource
+  ;; Self-Growth Resource - Add 2 installed cards to grip if runner is tagged
   (do-game
-    (new-game (default-corp ["Self-Growth Program"])
+    (new-game (default-corp ["Self-Growth Resource"])
               (default-runner ["Clone Chip" "Inti"]))
     (take-credits state :corp)
     (play-from-hand state :runner "Clone Chip")
     (play-from-hand state :runner "Inti")
     (take-credits state :runner)
-    (play-from-hand state :corp "Self-Growth Program")
-    (is (= 3 (:click (get-corp))) "Self-Growth Program precondition not met; card not played")
+    (play-from-hand state :corp "Self-Growth Resource")
+    (is (= 3 (:click (get-corp))) "Self-Growth Resource precondition not met; card not played")
     (core/gain state :runner :tag 1)
     (is (zero? (count (:hand (get-runner)))) "Runner hand is empty")
-    (let [inti (get-program state 0)
-          cc (get-hardware state 0)]
-      (play-from-hand state :corp "Self-Growth Program")
+    (let [inti (get-resource state 0)
+          cc (get-hazard state 0)]
+      (play-from-hand state :corp "Self-Growth Resource")
       (prompt-select :corp inti)
       (prompt-select :corp cc))
     (is (= 2 (count (:hand (get-runner)))) "2 cards returned to hand")
-    (is (zero? (count (get-program state))) "No programs installed")
-    (is (zero? (count (get-hardware state))) "No hardware installed")))
+    (is (zero? (count (get-resource state))) "No resources installed")
+    (is (zero? (count (get-hazard state))) "No hazard installed")))
 
-(deftest service-outage
-  ;; Service Outage
+(deftest servcharacter-outage
+  ;; Servcharacter Outage
   (testing "First click run each turn costs a credit"
     (do-game
-      (new-game (default-corp ["Service Outage"])
+      (new-game (default-corp ["Servcharacter Outage"])
                 (default-runner ["Employee Strike"]))
-      (play-from-hand state :corp "Service Outage")
+      (play-from-hand state :corp "Servcharacter Outage")
       (take-credits state :corp)
       (is (= 5 (:credit (get-runner))) "Runner has 5 credits")
       (run-on state :archives)
@@ -1657,14 +1657,14 @@
           "Runner doesn't spend 1 credit to make a run")))
   (testing "First card ability run each turn costs an additional credit"
     (do-game
-      (new-game (default-corp ["Service Outage"])
+      (new-game (default-corp ["Servcharacter Outage"])
                 (default-runner ["Sneakdoor Beta"]))
-      (play-from-hand state :corp "Service Outage")
+      (play-from-hand state :corp "Servcharacter Outage")
       (take-credits state :corp)
       (play-from-hand state :runner "Sneakdoor Beta")
       (take-credits state :runner 1)
       (is (= 2 (:credit (get-runner))) "Runner has 2 credits")
-      (let [sneakdoor (get-program state 0)]
+      (let [sneakdoor (get-resource state 0)]
         (card-ability state :runner sneakdoor 0)
         (is (= 1 (:credit (get-runner)))
             "Runner spends 1 additional credit to run with a card ability")
@@ -1684,9 +1684,9 @@
         (is (zero? (:credit (get-runner))) "Runner has 0 credits"))))
   (testing "First run event each turn costs an additional credit"
     (do-game
-      (new-game (default-corp ["Service Outage"])
+      (new-game (default-corp ["Servcharacter Outage"])
                 (default-runner [(qty "Out of the Ashes" 2)]))
-      (play-from-hand state :corp "Service Outage")
+      (play-from-hand state :corp "Servcharacter Outage")
       (take-credits state :corp)
       (is (= 5 (:credit (get-runner))) "Runner has 5 credits")
       (play-from-hand state :runner "Out of the Ashes")
@@ -1711,26 +1711,26 @@
       (is (= 1 (:credit (get-runner))) "Runner has 1 credit")))
   (testing "Works when played on the runner's turn"
     (do-game
-      (new-game (make-deck "New Angeles Sol: Your News" ["Service Outage"
+      (new-game (make-deck "New Angeles Sol: Your News" ["Servcharacter Outage"
                                                          "Breaking News"])
                 (default-runner ["Hades Shard"]))
       (trash-from-hand state :corp "Breaking News")
       (take-credits state :corp)
       (core/gain state :runner :credit 3)
       (play-from-hand state :runner "Hades Shard")
-      (card-ability state :runner (get-resource state 0) 0)
+      (card-ability state :runner (get-muthereff state 0) 0)
       (prompt-choice :runner "Steal")
       (prompt-choice :corp "Yes")
-      (prompt-select :corp (find-card "Service Outage" (:hand (get-corp))))
-      (is (find-card "Service Outage" (:current (get-corp)))
-          "Service Outage is in play")
+      (prompt-select :corp (find-card "Servcharacter Outage" (:hand (get-corp))))
+      (is (find-card "Servcharacter Outage" (:current (get-corp)))
+          "Servcharacter Outage is in play")
       (is (= 1 (:credit (get-runner))) "Runner has 1 credit")
       (run-on state :archives)
       (is (zero? (:credit (get-runner)))
           "Runner spends 1 additional credit to make a run")))
 (testing "Doesn't fire if already run when played on the runner's turn"
   (do-game
-    (new-game (make-deck "New Angeles Sol: Your News" ["Service Outage"
+    (new-game (make-deck "New Angeles Sol: Your News" ["Servcharacter Outage"
                                                        "Breaking News"])
               (default-runner ["Hades Shard"]))
     (trash-from-hand state :corp "Breaking News")
@@ -1740,12 +1740,12 @@
     (prompt-choice :runner "No action")
     (core/gain state :runner :credit 3)
     (play-from-hand state :runner "Hades Shard")
-    (card-ability state :runner (get-resource state 0) 0)
+    (card-ability state :runner (get-muthereff state 0) 0)
     (prompt-choice :runner "Steal")
     (prompt-choice :corp "Yes")
-    (prompt-select :corp (find-card "Service Outage" (:hand (get-corp))))
-    (is (find-card "Service Outage" (:current (get-corp)))
-        "Service Outage is in play")
+    (prompt-select :corp (find-card "Servcharacter Outage" (:hand (get-corp))))
+    (is (find-card "Servcharacter Outage" (:current (get-corp)))
+        "Servcharacter Outage is in play")
     (is (= 1 (:credit (get-runner))) "Runner has 1 credit")
     (run-on state :archives)
     (is (= 1 (:credit (get-runner)))
@@ -1753,17 +1753,17 @@
 (testing "trashed and reinstalled on steal doesn't double remove penalty"
   (do-game
     (new-game
-      (make-deck "New Angeles Sol: Your News" ["Service Outage"
+      (make-deck "New Angeles Sol: Your News" ["Servcharacter Outage"
                                                "Breaking News"])
       (default-runner))
     (play-from-hand state :corp "Breaking News" "New remote")
-    (play-from-hand state :corp "Service Outage")
+    (play-from-hand state :corp "Servcharacter Outage")
     (take-credits state :corp)
     (run-on state :remote1)
     (run-successful state)
     (prompt-choice :runner "Steal")
     (prompt-choice :corp "Yes")
-    (prompt-select :corp (find-card "Service Outage" (:discard (get-corp))))
+    (prompt-select :corp (find-card "Servcharacter Outage" (:discard (get-corp))))
     (take-credits state :runner)
     (take-credits state :corp)
     (is (= 7 (:credit (get-runner))) "Runner has 7 credits")
@@ -1776,7 +1776,7 @@
     (new-game (default-corp [(qty "Shipment from SanSan" 3) (qty "Ice Wall" 3)])
               (default-runner))
     (play-from-hand state :corp "Ice Wall" "HQ")
-    (let [iwall (get-ice state :hq 0)]
+    (let [iwall (get-character state :hq 0)]
       (play-from-hand state :corp "Shipment from SanSan")
       (prompt-choice :corp "2")
       (prompt-select :corp iwall)
@@ -1795,14 +1795,14 @@
     (play-from-hand state :corp "Snatch and Grab")
     (prompt-choice :corp 0)
     (prompt-choice :runner 0)
-    (prompt-select :corp (get-resource state 0))
+    (prompt-select :corp (get-muthereff state 0))
     (prompt-choice :runner "Yes")
     (is (= 1 (:tag (get-runner))) "Runner should get 1 tag from losing Snatch and Grab trace and opting to take the tag")
     (is (zero? (-> (get-runner) :discard count)) "Runner should start with 0 cards in heap")
     (play-from-hand state :corp "Snatch and Grab")
     (prompt-choice :corp 0)
     (prompt-choice :runner 0)
-    (prompt-select :corp (get-resource state 0))
+    (prompt-select :corp (get-muthereff state 0))
     (prompt-choice :runner "No")
     (is (= 1 (-> (get-runner) :discard count)) "Scrubber should be in Runner's heap after losing Snatch and Grab trace")))
 
@@ -1824,19 +1824,19 @@
     (is (= 11 (:credit (get-corp))))))
 
 (deftest sub-boost
-  ;; Sub Boost - Give ICE Barrier
+  ;; Sub Boost - Give Character Barrier
   (do-game
     (new-game (default-corp ["Sub Boost" "Quandary"])
               (default-runner))
     (play-from-hand state :corp "Quandary" "HQ")
-    (let [qu (get-ice state :hq 0)]
+    (let [qu (get-character state :hq 0)]
       (core/rez state :corp qu)
       (is (not (core/has-subtype? (refresh qu) "Barrier")) "Quandry starts without Barrier")
       (is (= 1 (count (:subroutines (refresh qu)))) "Quandry has 1 subroutine")
       (play-from-hand state :corp "Sub Boost")
       (prompt-select :corp (refresh qu))
       (is (core/has-subtype? (refresh qu) "Code Gate") "Quandary has Code Gate")
-      (is (core/has-subtype? (refresh qu) "Barrier") "Quandary ICE Barrier")
+      (is (core/has-subtype? (refresh qu) "Barrier") "Quandary Character Barrier")
       (is (= 2 (count (:subroutines (refresh qu)))) "Quandry gains a subroutine"))))
 
 (deftest subcontract
@@ -1895,7 +1895,7 @@
       (take-credits state :corp)
       (play-from-hand state :runner "Cache")
       (play-from-hand state :runner "Utopia Shard")
-      (let [utopia (get-resource state 0)]
+      (let [utopia (get-muthereff state 0)]
         (card-ability state :runner utopia 0))
       (take-credits state :runner)
       (prompt-choice :corp "Yes")
@@ -2034,7 +2034,7 @@
         (is (= 2 (:agenda-point (get-corp)))))))
   (testing "interaction with Jemison, regression test for issue #2704"
     (do-game
-      (new-game (make-deck "Jemison Astronautics: Sacrifice. Audacity. Success."
+      (new-game (make-deck "Jemison Astronautics: Sacrifcharacter. Audacity. Success."
                            ["Success"
                             "High-Risk Investment"
                             "Government Takeover"])
@@ -2087,7 +2087,7 @@
       (take-credits state :runner)
       (play-from-hand state :corp "Data Raven" "HQ")
       (take-credits state :corp)
-      (let [dr (get-ice state :hq 0)]
+      (let [dr (get-character state :hq 0)]
         (core/rez state :corp (refresh dr))
         (run-on state :hq)
         (card-subroutine state :corp dr 0)
@@ -2115,7 +2115,7 @@
       (play-from-hand state :corp "Forced Connection" "Server 1")
       (play-from-hand state :corp "Data Raven" "Server 1")
       (take-credits state :corp)
-      (let [dr (get-ice state :remote1 0)
+      (let [dr (get-character state :remote1 0)
             bn (get-content state :remote1 0)
             fc (get-content state :remote1 1)]
         (core/rez state :corp (refresh dr))
@@ -2136,7 +2136,7 @@
     (do-game
       (new-game (default-corp ["The All-Seeing I"])
                 (default-runner ["Fall Guy" (qty "Same Old Thing" 2)]))
-      (letfn [(res [] (count (get-in (get-runner) [:rig :resource])))]
+      (letfn [(res [] (count (get-in (get-runner) [:rig :muthereff])))]
         (take-credits state :corp)
         (play-from-hand state :runner "Same Old Thing")
         (play-from-hand state :runner "Fall Guy")
@@ -2146,10 +2146,10 @@
         (is (= 1 (count (:hand (get-corp)))) "Corp could not play All Seeing I when runner was not tagged")
         (core/gain state :runner :tag 1)
         (play-from-hand state :corp "The All-Seeing I")
-        (let [fall-guy (get-resource state 1)]
+        (let [fall-guy (get-muthereff state 1)]
           (card-ability state :runner fall-guy 0))
         (prompt-choice :runner "Done")
-        (is (= 1 (res)) "One installed resource saved by Fall Guy")
+        (is (= 1 (res)) "One installed muthereff saved by Fall Guy")
         (is (= 2 (count (:discard (get-runner)))) "Two cards in heap"))))
   (testing "Checks that All-seeing I does not double-trash hosted cards, trashes hosted cards"
     (do-game
@@ -2157,7 +2157,7 @@
                 (default-runner [(qty "Fall Guy" 2) "Off-Campus Apartment"]))
       (take-credits state :corp)
       (play-from-hand state :runner "Off-Campus Apartment")
-      (let [oca (get-resource state 0)
+      (let [oca (get-muthereff state 0)
             fg1 (get-in (get-runner) [:hand 0])
             fg2 (get-in (get-runner) [:hand 1])]
         (card-ability state :runner oca 0)
@@ -2174,29 +2174,29 @@
       (prompt-choice :runner "Done") ;; This assumes hosted cards get put in trash-list before host
       (is (= 1 (count (core/all-active-installed state :runner))) "One installed card (Off-Campus)")
       (is  (= 2 (count (:discard (get-runner)))) "Two cards in heap")))
-  (testing "should not trash Jarogniew Mercs if there are other installed resources"
+  (testing "should not trash Jarogniew Mercs if there are other installed muthereffs"
     (do-game
       (new-game (default-corp [(qty "The All-Seeing I" 4)])
                 (default-runner [(qty "Jarogniew Mercs" 2) (qty "Same Old Thing" 2)]))
-      (letfn [(res [] (count (get-in (get-runner) [:rig :resource])))]
+      (letfn [(res [] (count (get-in (get-runner) [:rig :muthereff])))]
         (take-credits state :corp)
         (play-from-hand state :runner "Same Old Thing")
         (play-from-hand state :runner "Jarogniew Mercs")
         (take-credits state :runner)
-        (is (= 2 (res)) "There are two installed resources")
+        (is (= 2 (res)) "There are two installed muthereffs")
         (play-from-hand state :corp "The All-Seeing I")
         (is (= 1 (res)) "Jarogniew Mercs still installed")
         (play-from-hand state :corp "The All-Seeing I")
-        (is (zero? (res)) "There are no installed resources")
+        (is (zero? (res)) "There are no installed muthereffs")
         (take-credits state :corp)
         (play-from-hand state :runner "Jarogniew Mercs") ;; Testing if order matters
         (play-from-hand state :runner "Same Old Thing")
         (take-credits state :runner)
-        (is (= 2 (res)) "There are two installed resources")
+        (is (= 2 (res)) "There are two installed muthereffs")
         (play-from-hand state :corp "The All-Seeing I")
         (is (= 1 (res)) "Jarogniew Mercs still installed")
         (play-from-hand state :corp "The All-Seeing I")
-        (is (zero? (res)) "There are no installed resources")))))
+        (is (zero? (res)) "There are no installed muthereffs")))))
 
 (deftest threat-assessment
   ;; Threat Assessment - play only if runner trashed a card last turn, move a card to the stack or take 2 tags
@@ -2214,13 +2214,13 @@
     (take-credits state :runner)
     (is (zero? (:tag (get-runner))) "Runner starts with 0 tags")
     (play-from-hand state :corp "Threat Assessment")
-    (prompt-select :corp (find-card "Desperado" (-> (get-runner) :rig :hardware)))
+    (prompt-select :corp (find-card "Desperado" (-> (get-runner) :rig :hazard)))
     (prompt-choice :runner "2 tags")
     (is (= 2 (:tag (get-runner))) "Runner took 2 tags")
-    (is (= 1 (count (-> (get-runner) :rig :hardware))) "Didn't trash Desperado")
+    (is (= 1 (count (-> (get-runner) :rig :hazard))) "Didn't trash Desperado")
     (is (= "Threat Assessment" (:title (first (:rfg (get-corp))))) "Threat Assessment removed from game")
     (play-from-hand state :corp "Threat Assessment")
-    (prompt-select :corp (find-card "Corroder" (-> (get-runner) :rig :program)))
+    (prompt-select :corp (find-card "Corroder" (-> (get-runner) :rig :resource)))
     (prompt-choice :runner "Move Corroder")
     (is (= 2 (:tag (get-runner))) "Runner didn't take tags")
     (is (= "Corroder" (:title (first (:deck (get-runner))))) "Moved Corroder to the deck")
@@ -2299,12 +2299,12 @@
     (play-from-hand state :corp "Trojan Horse")
     (prompt-choice :corp 0)
     (prompt-choice :runner 0)
-    (prompt-select :corp (get-program state 0))
+    (prompt-select :corp (get-resource state 0))
     (is (= 1 (-> (get-runner) :discard count)) "Wyrm should be in heap after Runner loses Trojan Horse trace")))
 
 (deftest wake-up-call
   ;; Wake Up Call
-  (testing "should fire after using En Passant to trash ice"
+  (testing "should fire after using En Passant to trash character"
     (do-game
       (new-game (default-corp ["Enigma" "Wake Up Call"])
                 (default-runner ["En Passant" "Maya"]))
@@ -2316,18 +2316,18 @@
       (prompt-choice :runner "No action")
       (is (zero? (count (:discard (get-corp)))) "Corp starts with no discards")
       (play-from-hand state :runner "En Passant")
-      (prompt-select :runner (get-ice state :hq 0))
-      (is (= 1 (count (:discard (get-corp)))) "Corp trashes installed ice")
+      (prompt-select :runner (get-character state :hq 0))
+      (is (= 1 (count (:discard (get-corp)))) "Corp trashes installed character")
       (take-credits state :runner)
       (is (= 1 (count (:discard (get-runner)))) "Runner starts with 1 trashed card (En Passant)")
       (play-from-hand state :corp "Wake Up Call")
-      (prompt-select :corp (get-hardware state 0))
+      (prompt-select :corp (get-hazard state 0))
       (prompt-choice :runner "Trash Maya")
       (is (= 2 (count (:discard (get-runner)))) "Maya is trashed")
       (is (= 1 (count (:rfg (get-corp)))) "Wake Up Call is removed from the game"))))
 
 (deftest wetwork-refit
-  ;; Wetwork Refit - Only works on Bioroid ICE and adds a subroutine
+  ;; Wetwork Refit - Only works on Bioroid Character and adds a subroutine
   (do-game
     (new-game (default-corp ["Eli 1.0"
                              "Vanilla"
@@ -2337,8 +2337,8 @@
     (core/gain state :corp :click 10)
     (play-from-hand state :corp "Eli 1.0" "R&D")
     (play-from-hand state :corp "Vanilla" "HQ")
-    (let [eli (get-ice state :rd 0)
-          vanilla (get-ice state :hq 0)]
+    (let [eli (get-character state :rd 0)
+          vanilla (get-character state :hq 0)]
       (play-from-hand state :corp "Wetwork Refit")
       (is (not-any? #{"Eli 1.0"} (get-in @state [:corp :prompt :choices]))
           "Unrezzed Eli 1.0 is not a choice to host Wetwork Refit")

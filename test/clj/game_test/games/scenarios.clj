@@ -7,8 +7,8 @@
 
 (use-fixtures :once load-all-cards (partial reset-card-defs nil))
 
-(deftest minigame-prevent-netdmg-resourcetrash
-  (testing "Mini-game testing prevention of net damage and resource trashing, with hosted Fall Guy"
+(deftest minigame-prevent-netdmg-mutherefftrash
+  (testing "Mini-game testing prevention of net damage and muthereff trashing, with hosted Fall Guy"
     (do-game
       (new-game
         (default-corp ["Neural EMP" (qty "Hedge Fund" 3) "SEA Source"])
@@ -24,13 +24,13 @@
       (play-from-hand state :runner "Off-Campus Apartment")
       (play-from-hand state :runner "Wireless Net Pavilion")
       (play-from-hand state :runner "Net Shield")
-      (let [apt (get-resource state 0)]
+      (let [apt (get-muthereff state 0)]
         (card-ability state :runner apt 0)
         (prompt-select :runner (find-card "Fall Guy" (:hand (get-runner))))
         (take-credits state :runner)
         (is (= 6 (:credit (get-runner))))
         (play-from-hand state :corp "Neural EMP")
-        (let [ns (get-program state 0)
+        (let [ns (get-resource state 0)
               fg (first (:hosted (refresh apt)))]
           (card-ability state :runner ns 0)
           (is (= 5 (:credit (get-runner))) "Runner paid 1c to survive Neural EMP")
@@ -40,22 +40,22 @@
           (prompt-choice :runner 0)
           (is (= 1 (:tag (get-runner))) "Runner took tag from SEA Source")
           (is (= 7 (:credit (get-corp))))
-          (core/trash-resource state :corp nil)
+          (core/trash-muthereff state :corp nil)
           (prompt-select :corp (find-card "Off-Campus Apartment" (:rig (get-runner))))
-          (is (= 3 (:credit (get-corp))) "WNP increased cost to trash a resource by 2")
+          (is (= 3 (:credit (get-corp))) "WNP increased cost to trash a muthereff by 2")
           (card-ability state :runner fg 0)                   ; Trash Fall Guy to save the Apartment!
-          (is (= (:title (get-resource state 0)) "Off-Campus Apartment")
+          (is (= (:title (get-muthereff state 0)) "Off-Campus Apartment")
               "Apartment still standing")
           (is (= (:title (last (:discard (get-runner)))) "Fall Guy") "Fall Guy trashed"))))))
 
 (deftest hb-glacier
-  (testing "HB Glacier econ and server protection with upgrades - Ash, Caprice, Breaker Bay Grid, positional ice strength boost"
+  (testing "HB Glacier econ and server protection with regions - Ash, Caprcharacter, Breaker Bay Grid, positional character strength boost"
     (do-game
       (new-game (make-deck "Haas-Bioroid: Engineering the Future"
                            ["Adonis Campaign"
                             "Global Food Initiative"
                             "Breaker Bay Grid"
-                            "Caprice Nisei"
+                            "Caprcharacter Nisei"
                             "Ash 2X3ZB9CY"
                             "Turing"
                             "Hedge Fund"])
@@ -95,7 +95,7 @@
             "Desperado paid 1 to Runner, Lamprey took 1 from Corp")
         (prompt-choice :runner "No action") ; can't afford to trash Ash
         (take-credits state :runner)
-        (play-from-hand state :corp "Caprice Nisei" "Server 1")
+        (play-from-hand state :corp "Caprcharacter Nisei" "Server 1")
         (is (= 11 (:credit (get-corp))) "Gained 3 from Adonis and 1 from HB:EtF")
         (play-from-hand state :corp "Turing" "Server 1")
         (take-credits state :corp 1)
@@ -115,7 +115,7 @@
         (is (and (= 6 (:credit (get-runner))) (= 10 (:credit (get-corp))))
             "Desperado plus Dirty Laundry, Lamprey took 1 from Corp")
         (run-on state "Server 1")
-        (let [tur (get-ice state :remote1 0)
+        (let [tur (get-character state :remote1 0)
               cap (get-content state :remote1 2)]
           (core/rez state :corp tur)
           (is (= 5 (:current-strength (refresh tur))) "Turing +3 strength protecting a remote")
@@ -123,10 +123,10 @@
           (play-from-hand state :runner "Emergency Shutdown")
           (prompt-select :runner tur)
           (is (not (:rezzed (refresh tur))) "Turing derezzed")
-          (run-on state "Server 1") ; letting Runner in this time to use Caprice
+          (run-on state "Server 1") ; letting Runner in this time to use Caprcharacter
           (core/rez state :corp cap)
           (run-continue state)
-          ;; Caprice psi game started automatically
+          ;; Caprcharacter psi game started automatically
           (prompt-choice :corp "1 [Credits]")
           (prompt-choice :runner "2 [Credits]")
-          (is (not (:run @state)) "Corp won Caprice psi game and ended the run"))))))
+          (is (not (:run @state)) "Corp won Caprcharacter psi game and ended the run"))))))

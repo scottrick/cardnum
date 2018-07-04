@@ -6,7 +6,7 @@ usage () {
     cat<<EOF
 Usage: $0 [-b]
 
-  -b   build netrunner-node image
+  -b   build meccg-node image
 EOF
 }
 
@@ -22,15 +22,10 @@ while getopts ':b' o; do
 done
 
 if [[ -n ${BUILD} ]]; then
-    docker build -t netrunner-node .
+    docker build -t meccg-node .
 fi
 
 docker-compose up npm-install
-docker-compose up -d mongo
-sleep 30
-
-docker-compose up fetch-cards
-
-docker-compose up -d coffee-server stylus-css
-
-docker-compose up lein-netrunner lein-cljs
+docker-compose up -d mongodb
+docker-compose up -d stylus-css
+docker-compose up lein-cljs lein-meccg

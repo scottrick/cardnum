@@ -5,7 +5,7 @@
          :list-id nil}
  :db    {:address "localhost"
          :port    27017
-         :name    "netrunner"}
+         :name    "meccg"}
  :auth  {:expiration 60
          :secret     "Dev salt"
          :cookie     {:http-only true

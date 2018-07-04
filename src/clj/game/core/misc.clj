@@ -3,17 +3,17 @@
 (declare set-prop get-nested-host get-nested-zone all-active-installed)
 
 (defn get-zones [state]
-  (keys (get-in @state [:corp :servers])))
+  (keys (get-in @state [:contestant :servers])))
 
 (defn get-remote-zones [state]
   (filter is-remote? (get-zones state)))
 
 (defn get-runnable-zones [state]
-  (let [restricted-zones (keys (get-in @state [:runner :register :cannot-run-on-server]))]
+  (let [restricted-zones (keys (get-in @state [:challenger :register :cannot-run-on-server]))]
     (remove (set restricted-zones) (get-zones state))))
 
 (defn get-remotes [state]
-  (select-keys (get-in @state [:corp :servers]) (get-remote-zones state)))
+  (select-keys (get-in @state [:contestant :servers]) (get-remote-zones state)))
 
 (defn get-remote-names [state]
   (zones->sorted-names (get-remote-zones state)))
@@ -29,7 +29,7 @@
   (let [base-list (concat (server-list state) ["New remote"])]
     (if-let [install-req (-> card card-def :install-req)]
       ;; Install req function overrides normal list of install locations
-      (install-req state :corp card (make-eid state) base-list)
+      (install-req state :contestant card (make-eid state) base-list)
       ;; Standard list
       base-list)))
 
@@ -52,12 +52,12 @@
     (= (second zone1) (second zone2))))
 
 (defn protecting-same-server?
-  "True if an ice is protecting the server that the card is in or protecting."
-  [card ice]
+  "True if an character is protecting the server that the card is in or protecting."
+  [card character]
   (let [zone1 (get-nested-zone card)
-        zone2 (get-nested-zone ice)]
+        zone2 (get-nested-zone character)]
     (and (= (second zone1) (second zone2))
-         (= :ices (last zone2)))))
+         (= :characters (last zone2)))))
 
 (defn in-same-server?
   "True if the two cards are installed IN the same server, or hosted on cards IN the same server."
@@ -69,59 +69,59 @@
          (= :content (last zone1)))))
 
 (defn from-same-server?
-  "True if the upgrade is in the root of the server that the target is in."
-  [upgrade target]
+  "True if the region is in the root of the server that the target is in."
+  [region target]
   (= (central->zone (:zone target))
-     (butlast (get-nested-zone upgrade))))
+     (butlast (get-nested-zone region))))
 
 (defn all-installed
   "Returns a vector of all installed cards for the given side, including those hosted on other cards,
   but not including 'inactive hosting' like Personal Workshop."
   [state side]
-  (if (= side :runner)
-    (let [top-level-cards (flatten (for [t [:program :hardware :resource :facedown]] (get-in @state [:runner :rig t])))
-          hosted-on-ice (->> (:corp @state) :servers seq flatten (mapcat :ices) (mapcat :hosted))]
-      (loop [unchecked (concat top-level-cards (filter #(= (:side %) "Runner") hosted-on-ice)) installed ()]
+  (if (= side :challenger)
+    (let [top-level-cards (flatten (for [t [:resource :hazard :muthereff :facedown]] (get-in @state [:challenger :rig t])))
+          hosted-on-character (->> (:contestant @state) :servers seq flatten (mapcat :characters) (mapcat :hosted))]
+      (loop [unchecked (concat top-level-cards (filter #(= (:side %) "Challenger") hosted-on-character)) installed ()]
         (if (empty? unchecked)
           (filter :installed installed)
           (let [[card & remaining] unchecked]
             (recur (filter identity (into remaining (:hosted card))) (into installed [card]))))))
-    (let [servers (->> (:corp @state) :servers seq flatten)
+    (let [servers (->> (:contestant @state) :servers seq flatten)
           content (mapcat :content servers)
-          ice (mapcat :ices servers)
-          top-level-cards (concat ice content)]
+          character (mapcat :characters servers)
+          top-level-cards (concat character content)]
       (loop [unchecked top-level-cards installed ()]
         (if (empty? unchecked)
-          (filter #(= (:side %) "Corp") installed)
+          (filter #(= (:side %) "Contestant") installed)
           (let [[card & remaining] unchecked]
             (recur (filter identity (into remaining (:hosted card))) (into installed [card]))))))))
 
 (defn get-all-installed
   "Returns a list of all installed cards"
   [state]
-  (concat (all-installed state :corp) (all-installed state :runner)))
+  (concat (all-installed state :contestant) (all-installed state :challenger)))
 
 (defn number-of-virus-counters
   "Returns number of actual virus counters (excluding virtual counters from Hivemind)"
   [state]
-  (reduce + (map #(get-counters % :virus) (all-installed state :runner))))
+  (reduce + (map #(get-counters % :virus) (all-installed state :challenger))))
 
 (defn all-active
   "Returns a vector of all active cards for the given side. Active cards are either installed, the identity,
-  currents, or the corp's scored area."
+  currents, or the contestant's scored area."
   [state side]
-  (if (= side :runner)
-    (cons (get-in @state [:runner :identity]) (concat (get-in @state [:runner :current]) (all-active-installed state side)))
-    (cons (get-in @state [:corp :identity]) (remove :disabled
+  (if (= side :challenger)
+    (cons (get-in @state [:challenger :identity]) (concat (get-in @state [:challenger :current]) (all-active-installed state side)))
+    (cons (get-in @state [:contestant :identity]) (remove :disabled
                                                     (concat (all-active-installed state side)
-                                                            (get-in @state [:corp :current])
-                                                            (get-in @state [:corp :scored]))))))
+                                                            (get-in @state [:contestant :current])
+                                                            (get-in @state [:contestant :scored]))))))
 
 (defn all-active-installed
   "Returns a vector of active AND installed cards for the given side. This is all face-up installed cards."
   [state side]
   (let [installed (all-installed state side)]
-   (if (= side :runner)
+   (if (= side :challenger)
      (remove :facedown installed)
      (filter :rezzed installed))))
 
@@ -150,64 +150,64 @@
   (base-mod-size state side :hand-size))
 
 (defn available-mu
-  "Returns the available MU the runner has"
+  "Returns the available MU the challenger has"
   [state]
-  (- (base-mod-size state :runner :memory)
-     (get-in @state [:runner :memory :used] 0)))
+  (- (base-mod-size state :challenger :memory)
+     (get-in @state [:challenger :memory :used] 0)))
 
 (defn toast-check-mu
-  "Check runner has not exceeded, toast if they have"
+  "Check challenger has not exceeded, toast if they have"
   [state]
   (when (neg? (available-mu state))
-    (toast state :runner "You have exceeded your memory units!")))
+    (toast state :challenger "You have exceeded your memory units!")))
 
 (defn free-mu
   "Frees up specified amount of mu (reduces :used)"
   ([state _ n] (free-mu state n))
   ([state n]
-   (deduct state :runner [:memory {:used n}])))
+   (deduct state :challenger [:memory {:used n}])))
 
 (defn use-mu
   "Increases amount of mu used (increased :used)"
   ([state _ n] (use-mu state n))
   ([state n]
-   (gain state :runner :memory {:used n})))
+   (gain state :challenger :memory {:used n})))
 
 (defn swap-agendas
-  "Swaps the two specified agendas, first one scored (on corp side), second one stolen (on runner side)"
+  "Swaps the two specified agendas, first one scored (on contestant side), second one stolen (on challenger side)"
   [state side scored stolen]
-  (let [corp-ap-stolen (get-agenda-points state :corp stolen)
-        corp-ap-scored (get-agenda-points state :corp scored)
-        runner-ap-stolen (get-agenda-points state :runner stolen)
-        runner-ap-scored (get-agenda-points state :runner scored)
-        corp-ap-change (- corp-ap-stolen corp-ap-scored)
-        runner-ap-change (- runner-ap-scored runner-ap-stolen)]
+  (let [contestant-ap-stolen (get-agenda-points state :contestant stolen)
+        contestant-ap-scored (get-agenda-points state :contestant scored)
+        challenger-ap-stolen (get-agenda-points state :challenger stolen)
+        challenger-ap-scored (get-agenda-points state :challenger scored)
+        contestant-ap-change (- contestant-ap-stolen contestant-ap-scored)
+        challenger-ap-change (- challenger-ap-scored challenger-ap-stolen)]
     ;; Remove end of turn events for swapped out agenda
-    (swap! state update-in [:corp :register :end-turn]
+    (swap! state update-in [:contestant :register :end-turn]
            (fn [events] (filter #(not= (:cid scored) (get-in % [:card :cid])) events)))
     ;; Move agendas
-    (swap! state update-in [:corp :scored]
+    (swap! state update-in [:contestant :scored]
            (fn [coll] (conj (remove-once #(= (:cid %) (:cid scored)) coll) stolen)))
-    (swap! state update-in [:runner :scored]
+    (swap! state update-in [:challenger :scored]
            (fn [coll] (conj (remove-once #(= (:cid %) (:cid stolen)) coll)
                             (if-not (card-flag? scored :has-abilities-when-stolen true)
                               (dissoc scored :abilities :events) scored))))
     ;; Update agenda points
-    (gain-agenda-point state :runner runner-ap-change)
-    (gain-agenda-point state :corp corp-ap-change)
+    (gain-agenda-point state :challenger challenger-ap-change)
+    (gain-agenda-point state :contestant contestant-ap-change)
     ;; Set up abilities and events for new scored agenda
-    (let [new-scored (find-cid (:cid stolen) (get-in @state [:corp :scored]))
+    (let [new-scored (find-cid (:cid stolen) (get-in @state [:contestant :scored]))
           abilities (:abilities (card-def new-scored))
           new-scored (merge new-scored {:abilities abilities})]
-      (update! state :corp new-scored)
+      (update! state :contestant new-scored)
       (when-let [events (:events (card-def new-scored))]
         (unregister-events state side new-scored)
         (register-events state side events new-scored))
       (resolve-ability state side (:swapped (card-def new-scored)) new-scored nil))
     ;; Set up abilities and events for new stolen agenda
     (when-not (card-flag? scored :has-events-when-stolen true)
-      (let [new-stolen (find-cid (:cid scored) (get-in @state [:runner :scored]))]
-        (deactivate state :corp new-stolen)))))
+      (let [new-stolen (find-cid (:cid scored) (get-in @state [:challenger :scored]))]
+        (deactivate state :contestant new-stolen)))))
 
 (defn remove-old-current
   "Removes the old current when a new one is played, or an agenda is stolen / scored"

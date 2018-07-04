@@ -5,24 +5,24 @@
             [clojure.data :refer [diff]]
             [clojure.string :as s]
             [game-test.cards.agendas]
-            [game-test.cards.assets]
+            [game-test.cards.sites]
             [game-test.cards.events]
-            [game-test.cards.hardware]
+            [game-test.cards.hazard]
             [game-test.cards.ice]
             [game-test.cards.icebreakers]
             [game-test.cards.identities]
             [game-test.cards.operations]
-            [game-test.cards.programs]
             [game-test.cards.resources]
-            [game-test.cards.upgrades]))
+            [game-test.cards.muthereffs]
+            [game-test.cards.regions]))
 
 (defn- get-card-by-type
   "Get the normalized title (as a symbol) for cards of a specific type in the database"
   [t]
-  (let [card-type (if (= "Icebreaker" t) "Program" t)
+  (let [card-type (if (= "Icebreaker" t) "Resource" t)
         f (case t
             "Icebreaker" filter
-            "Program" remove
+            "Resource" remove
             nil)
         func (fn [coll]
                (if f
@@ -90,16 +90,16 @@
           show-all (some #{"--show-all"} args)
           show-none (some #{"--show-none"} args)
           nspaces {"Agenda" '(game-test.cards.agendas)
-                   "Asset" '(game-test.cards.assets)
+                   "Site" '(game-test.cards.assets)
                    "Event" '(game-test.cards.events)
-                   "Hardware" '(game-test.cards.hardware)
-                   "ICE" '(game-test.cards.ice)
+                   "Hazard" '(game-test.cards.hardware)
+                   "Character" '(game-test.cards.ice)
                    "Icebreaker" '(game-test.cards.icebreakers)
                    "Identity" '(game-test.cards.identities)
                    "Operation" '(game-test.cards.operations)
-                   "Program"  '(game-test.cards.programs)
-                   "Resource" '(game-test.cards.resources)
-                   "Upgrade" '(game-test.cards.upgrades)}
+                   "Resource"  '(game-test.cards.programs)
+                   "Muthereff" '(game-test.cards.resources)
+                   "Region" '(game-test.cards.upgrades)}
           filtered-nspaces (if only
                              (select-keys nspaces [card-type])
                              (into (sorted-map) nspaces))]
