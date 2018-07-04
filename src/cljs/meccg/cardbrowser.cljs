@@ -30,60 +30,10 @@
 (defn make-span [text symbol class]
   (.replace text (apply str symbol) (str "<img src='" class "'style=\"width:16px;height:16px;\"></img>")))
 
-(defn show-alt-art?
-  "Is the current user allowed to use alternate art cards and do they want to see them?"
-  ([] (show-alt-art? false))
-  ([allow-all-users]
-   (and
-     (get-in @app-state [:options :show-alt-art] true)
-     (or allow-all-users
-         (get-in @app-state [:user :special] false)))))
-
 (defn image-url
   ([card] (image-url card false))
   ([card allow-all-users]
-   (let [art (or (:art card) ; use the art set on the card itself, or fall back to the user's preferences.
-                 (get-in @app-state [:options :alt-arts (keyword (:code card))]))
-         alt-card (get (:alt-arts @app-state) (:code card))
-         has-art (and (show-alt-art? allow-all-users)
-                      art
-                      (contains? (:alt_art alt-card) (keyword art)))
-         version-path (if has-art
-                        (get (:alt_art alt-card) (keyword art) (:code card))
-                        (:image_url card))]
-     (str "/img/cards/" (:setname card) "/" (:image_url card)))))
-
-(defn- alt-version-from-string
-  "Given a string name, get the keyword version or nil"
-  [setname]
-  (when-let [alt (some #(when (= setname (:name %)) %) (:alt-info @app-state))]
-    (keyword (:version alt))))
-
-(defn- expand-alts
-  [only-version acc card]
-  (let [alt-card (get (:alt-arts @app-state) (:code card))
-        alt-only (alt-version-from-string only-version)
-        alt-keys (keys (:alt_art alt-card))
-        alt-arts (if alt-only
-                   (filter #(= alt-only %) alt-keys)
-                   alt-keys)]
-    (if (and alt-arts
-             (show-alt-art? true))
-      (->> alt-arts
-           (concat [""])
-           (map (fn [art] (if art
-                            (assoc card :art art)
-                            card)))
-           (map (fn [c] (if (:art c)
-                          (assoc c :display-name (str (:display-name c) " [" (alt-art-name (:art c)) "]"))
-                          c)))
-           (concat acc))
-      (conj acc card))))
-
-(defn- insert-alt-arts
-  "Add copies of alt art cards to the list of cards. If `only-version` is nil, all alt versions will be added."
-  [only-version cards]
-  (reduce (partial expand-alts only-version) () (reverse cards)))
+   (str "/img/cards/" (:setname card) "/" (:ImageName card))))
 
 (defn add-symbols [card-text]
   (-> (if (nil? card-text) "" card-text)
@@ -171,36 +121,11 @@
       (non-game-toast "Updated Art" "success" nil))
     (non-game-toast "Failed to Update Art" "error" nil)))
 
-(defn selected-alt-art [card cursor]
-  (let [code (keyword (:code card))
-        alt-card (get (:alt-arts @app-state) (name code) nil)
-        selected-alts (:alt-arts (:options cursor))
-        selected-art (keyword (get selected-alts code nil))
-        card-art (:art card)]
-    (and alt-card
-         (cond
-           (= card-art selected-art) true
-           (and (nil? selected-art)
-                (not (keyword? card-art))) true
-           (and (= :default selected-art)
-                (not (keyword? card-art))) true
-           :else false))))
-
-(defn select-alt-art [card cursor]
-  (when-let [art (:art card)]
-    (let [code (keyword (:code card))
-          alts (:alt-arts (:options cursor))
-          new-alts (if (keyword? art)
-                     (assoc alts code (name art))
-                     (dissoc alts code))]
-      (om/update! cursor [:options :alt-arts] new-alts)
-      (meccg.account/post-options "/profile" (partial post-response cursor)))))
-
 (defn- card-text
   "Generate text html representation a card"
   [card cursor]
   [:div
-   [:h4 (:title card)]
+   [:h4 (:full_set card) ": " (:title card)]
    [:div.text
     [:p [:span.type (str (:type card))] (if (= (.toLowerCase (:type card)) (:Secondary card))
                                           ""
@@ -221,8 +146,7 @@
         (sab/html
           [:div.card-preview.blue-shade
            (when (om/get-state owner :decorate-card)
-             {:class (cond (:selected card) "selected"
-                           (selected-alt-art card cursor) "selected-alt")})
+             {:class (cond (:selected card) "selected")})
            (if (:showText state)
              (card-text card cursor)
              (when-let [url (image-url card true)]
@@ -250,14 +174,13 @@
 
 (def primary-order ["Character" "Resource" "Hazard" "Site" "Region"])
 (def resource-secondaries ["Ally" "Faction" "Greater Item" "Major Item" "Minor Item" "Special Item"])
-(def shared-secondaries ["Long-event" "Permanent-event" "Permanent-event/Short-event" "Short-event"])
-(def hazard-secondaries ["Creature" "Creature/Permanent-event" "Creature/Short-event"])
-(def general-alignments ["Hero" "Minion" "Balrog" "Lord" "Fallen-wizard" "Elf-lord" "Dwarf-lord" "FW/DL" "Dual"])
-(def set-order ["The Wizards" "The Dragons" "Dark Minions" "The Lidless Eye" "Against the Shadow"
-                "The White Hand" "The Balrog" "Firstborn" "Durin's Folk" "The Necromancer"
-                "Bay of Ormal" "Court of Ardor" "The Central Plains" "Dominion" "The Great Wyrms"
-                "Kingdom of the North" "Morgoth's Legacy" "Mortal Men" "The Northern Waste" "Red Nightfall"
-                "Return of the Shadow" "The Sun Lands" "Treason of Isengard" "War of the Ring"])
+(def shared-secondaries ["Permanent-event" "Short-event" "Long-event" "Permanent-event/Short-event" "Permanent-event/Long-event" "Short-event/Long-event"])
+(def hazard-secondaries ["Creature" "Creature/Permanent-event" "Creature/Short-event" "Creature/Long-event"])
+(def general-alignments ["Hero" "Minion" "Balrog" "Lord" "Fallen-wizard" "Elf-lord" "Dwarf-lord" "Atani-lord" "Dragon-lord" "FW/DL" "Dual"])
+(def set-order ["The Wizards" "The Dragons" "Dark Minions" "The Lidless Eye" "Against the Shadow" "The White Hand" "The Balrog"
+                "Firstborn" "Durin's Folk" "The Necromancer" "Bay of Ormal" "Court of Ardor" "The Central Plains" "Dominion"
+                   "The Great Wyrms" "Kingdom of the North" "Morgoth's Legacy" "Mortal Men" "The Northern Waste" "Red Nightfall"
+                   "Return of the Shadow" "The Sun Lands" "Treason of Isengard" "War of the Ring"])
 
 (defn secondaries [primary]
   (case primary
@@ -282,24 +205,14 @@
     (for [option options]
       [:option {:value option :dangerouslySetInnerHTML #js {:__html option}}])))
 
-(defn filter-alt-art-cards [cards]
-  (let [alt-arts (:alt-arts @app-state)]
-    (filter #(contains? alt-arts (:code %)) cards)))
-
-(defn filter-alt-art-set [setname cards]
-  (when-let [alt-key (alt-version-from-string setname)]
-    (let [sa (map first
-                  (filter (fn [[k v]] (contains? (:alt_art v) alt-key)) (:alt-arts @app-state)))]
-      (filter (fn [c] (some #(= (:code c) %) sa)) cards))))
-
 (defn filter-cards [filter-value field cards]
   (if (= filter-value "All")
     cards
     (filter #(= (field %) filter-value) cards)))
 
-(defn filter-rotated [should-filter cards]
+(defn filter-dreamcards [should-filter cards]
   (if should-filter
-    (filter-cards false :rotated cards)
+    (filter-cards false :dreamcard cards)
     cards))
 
 (defn filter-title [query cards]
@@ -322,9 +235,9 @@
 (defn selected-set-name [state]
   (-> (:set-filter state)
       (.replace "&nbsp;&nbsp;&nbsp;&nbsp;" "")
-      (.replace " Cycle" "")))
+      (.replace " Set" "")))
 
-(defn selected-set-rotated? [{:keys [sets]} state]
+(defn selected-set-dreamcards? [{:keys [sets]} state]
   (let [s (selected-set-name state)
         combined sets]
     (if (= s "All")
@@ -332,7 +245,7 @@
       (->> combined
            (filter #(= s (:name %)))
            (first)
-           (:rotated)))))
+           (:dreamcards)))))
 
 (defn handle-scroll [e owner {:keys [page]}]
   (let [$cardlist (js/$ ".card-list")
@@ -355,7 +268,7 @@
        :primary-filter "All"
        :alignment-filter "All"
        :secondary-filter "All"
-       :hide-rotated false
+       :hide-dreamcards true
        :page 1
        :filter-ch (chan)
        :selected-card nil})
@@ -390,15 +303,15 @@
                              :type "text" :placeholder "Search cards" :value query}]])
 
           [:div
-           [:h4 "Sort by"]
+           [:h4 "By"]
            [:select {:value (:sort-filter state)
                      :on-change #(om/set-state! owner :sort-field (.trim (.. % -target -value)))}
-            (for [field ["Name" "Set" "Primary" "Alignment"]]
+            (for [field ["Name" "Set" "Type" "Align"]]
               [:option {:value field} field])]]
 
           (let [format-pack-name (fn [name] (str "&nbsp;&nbsp;&nbsp;&nbsp;" name))
-                hide-rotated (:hide-rotated state)
-                sets-filtered (filter-rotated hide-rotated sets)
+                hide-dreamcards (:hide-dreamcards state)
+                sets-filtered (filter-dreamcards hide-dreamcards sets)
                 ;; Draft is specified as a cycle, but contains no set, nor is it marked as a bigbox
                 ;; so we handled it specifically here for formatting purposes
                 sets-list (map #(if (not (or (:bigbox %) (= (:name %) "Draft")))
@@ -407,32 +320,27 @@
                                sets-filtered)
                 set-names (map :name
                                (sort-by (juxt :cycle_position :position)
-                                        sets-list))
-                alt-art-sets (concat `("Alt Art")
-                                     (map #(format-pack-name (:name %))
-                                          (sort-by :position (:alt-info @app-state))))]
-            (for [filter [["Set" :set-filter (if (show-alt-art? true)
-                                               (concat set-names alt-art-sets)
-                                               set-names)]
-                          ["Primary" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
-                          ["Alignment" :alignment-filter (alignments (:primary-filter state))]
-                          ["Secondary" :secondary-filter (secondaries (:primary-filter state))]]]
+                                        sets-list))]
+            (for [filter [["Set" :set-filter set-names]
+                          ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
+                          ["Align" :alignment-filter (alignments (:primary-filter state))]
+                          ["Strict" :secondary-filter (secondaries (:primary-filter state))]]]
               [:div
                [:h4 (first filter)]
                [:select {:value ((second filter) state)
                          :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
                 (options (last filter))]]))
 
-          [:div.hide-rotated-div
-           [:label [:input.hide-rotated {:type "checkbox"
-                                         :value true
-                                         :checked (om/get-state owner :hide-rotated)
-                                         :on-change #(let [hide (.. % -target -checked)]
-                                                       (om/set-state! owner :hide-rotated hide)
-                                                       (when (and hide (selected-set-rotated? cursor state))
-                                                         (om/set-state! owner :set-filter "All"))
-                                                       )}]
-            "Hide rotated cards"]]
+          [:div.hide-dreamcards-div
+           [:label [:input.hide-dreamcards {:type "checkbox"
+                                            :value true
+                                            :checked (om/get-state owner :hide-dreamcards)
+                                            :on-change #(let [hide (.. % -target -checked)]
+                                                          (om/set-state! owner :hide-dreamcards hide)
+                                                          (when (and hide (selected-set-dreamcards? cursor state))
+                                                            (om/set-state! owner :set-filter "All"))
+                                                          )}]
+            "Hide Dreamcards"]]
 
           (om/build card-info-view cursor {:state {:selected-card (:selected-card state)}})
           ]
@@ -440,21 +348,16 @@
          [:div.card-list {:on-scroll #(handle-scroll % owner state)}
           (om/build-all card-view
                         (let [s (selected-set-name state)
-                              cycle-sets (set (for [x sets :when (= (:cycle x) s)] (:name x)))
                               [alt-filter cards] (cond
                                                    (= s "All") [nil @all-cards]
-                                                   (= s "Alt Art") [nil (filter-alt-art-cards @all-cards)]
-                                                   (str/ends-with? (:set-filter state) " Cycle") [nil (filter #(cycle-sets (:full_set %)) @all-cards)]
-                                                   (not (some #(= s (:name %)) (:sets @app-state))) [s (filter-alt-art-set s @all-cards)]
                                                    :else
                                                    [nil (filter #(= (:full_set %) s) @all-cards)])]
                           (->> cards
+                               (filter-dreamcards (:hide-dreamcards state))
                                (filter-cards (:primary-filter state) :type)
                                (filter-cards (:alignment-filter state) :alignment)
                                (filter-cards (:secondary-filter state) :Secondary)
-                               (filter-rotated (:hide-rotated state))
                                (filter-title (:search-query state))
-                               (insert-alt-arts alt-filter)
                                (sort-by (sort-field (:sort-field state)))
                                (take (* (:page state) 28))))
                         {:key-fn #(str (:setname %) (:code %) (:art %))

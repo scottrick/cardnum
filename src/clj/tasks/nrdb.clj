@@ -52,7 +52,7 @@
    :Rarity identity
    :Precise identity
    :NameEN (rename :title)
-   :ImageName (rename :image_url)
+   :ImageName identity
    :Text (rename :text)
    :Skill (rename :subtype)
    :MPs identity
@@ -89,6 +89,7 @@
    :setCode identity
    :DCpath identity
    :dreamcard identity
+   :released identity
    })
 
 (def ^:const faction-map
@@ -195,13 +196,6 @@
   ;;(str dc-image-url (:DCpath card)))
   (string/replace (str dc-image-url (:DCpath card) "?raw=true") " " "%20"))
 
-(defn- get-uri
-  "Figure out the card art image uri"
-  [card]
-  (if (contains? card :image_url)
-    (:image_url card)
-    (make-image-url card)))
-
 (defn- add-card-fields
   "Add additional fields to the card documents"
   [set-map c]
@@ -231,7 +225,7 @@
 (defn- card-image-file
   "Returns the path to a card's image as a File"
   [card]
-  (io/file "resources" "public" "img" "cards" (str (:setname card)) (str (:image_url card))))
+  (io/file "resources" "public" "img" "cards" (str (:setname card)) (str (:ImageName card))))
 
 (defn- download-card-image
   "Download a single card image from NRDB"

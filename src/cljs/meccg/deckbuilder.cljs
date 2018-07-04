@@ -6,7 +6,7 @@
             [clojure.string :refer [split split-lines join escape] :as s]
             [meccg.appstate :refer [app-state]]
             [meccg.auth :refer [authenticated] :as auth]
-            [meccg.cardbrowser :refer [cards-channel image-url card-view show-alt-art? filter-title] :as cb]
+            [meccg.cardbrowser :refer [cards-channel image-url card-view filter-title] :as cb]
             [meccg.sites :refer [all-regions all-wizard-sites all-minion-sites all-fallen-sites all-balrog-sites all-elf-sites all-dwarf-sites all-dual-sites]]
             [meccg.account :refer [load-alt-arts]]
             [meccg.ajax :refer [POST GET DELETE PUT]]
