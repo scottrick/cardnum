@@ -15,24 +15,14 @@
 (def pub-chan (chan))
 (def notif-chan (pub pub-chan :topic))
 
-(go (let [server-version (get-in (<! (GET "/data/cards/version")) [:json :version])
-          local-cards (js->clj (.parse js/JSON (.getItem js/localStorage "cards")) :keywordize-keys true)
-          need-update? (or (not local-cards) (not= server-version (:version local-cards)))
-          cards (sort-by :code
-                         (if need-update?
-                           (:json (<! (GET "/data/cards")))
-                           (:cards local-cards)))
+(go (let [local-cards (js->clj (.parse js/JSON (.getItem js/localStorage "cards")) :keywordize-keys true)
+          need-update? (not local-cards)
+          cards (sort-by :code (:json (<! (GET "/data/cards"))))
           sets (:json (<! (GET "/data/sets")))
-          mwl (:json (<! (GET "/data/mwl")))
-          latest_mwl (->> mwl
-                          (map (fn [e] (update e :date_start #(js/Date.parse %))))
-                          (sort-by :date_start)
-                          (last))]
-      (reset! cards/mwl latest_mwl)
+          mwl (:json (<! (GET "/data/mwl")))]
+      (reset! cards/mwl mwl)
       (reset! cards/sets sets)
       (swap! app-state assoc :sets sets)
-      (when need-update?
-        (.setItem js/localStorage "cards" (.stringify js/JSON (clj->js {:cards cards :version server-version}))))
       (reset! all-cards cards)
       (swap! app-state assoc :cards-loaded true)
       (put! cards-channel cards)))
@@ -61,7 +51,7 @@
          version-path (if has-art
                         (get (:alt_art alt-card) (keyword art) (:code card))
                         (:image_url card))]
-     (str "/img/cards/" (:setname card) "/" version-path))))
+     (str "/img/cards/" (:setname card) "/" (:image_url card)))))
 
 (defn- alt-version-from-string
   "Given a string name, get the keyword version or nil"
@@ -264,7 +254,10 @@
 (def hazard-secondaries ["Creature" "Creature/Permanent-event" "Creature/Short-event"])
 (def general-alignments ["Hero" "Minion" "Balrog" "Lord" "Fallen-wizard" "Elf-lord" "Dwarf-lord" "FW/DL" "Dual"])
 (def set-order ["The Wizards" "The Dragons" "Dark Minions" "The Lidless Eye" "Against the Shadow"
-                "The White Hand" "The Balrog" "Firstborn" "Durin's Folk"])
+                "The White Hand" "The Balrog" "Firstborn" "Durin's Folk" "The Necromancer"
+                "Bay of Ormal" "Court of Ardor" "The Central Plains" "Dominion" "The Great Wyrms"
+                "Kingdom of the North" "Morgoth's Legacy" "Mortal Men" "The Northern Waste" "Red Nightfall"
+                "Return of the Shadow" "The Sun Lands" "Treason of Isengard" "War of the Ring"])
 
 (defn secondaries [primary]
   (case primary

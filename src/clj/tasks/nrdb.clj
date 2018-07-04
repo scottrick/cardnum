@@ -1,5 +1,5 @@
 (ns tasks.nrdb
-  "MECCGDB import tasks"
+  "MECCG import tasks"
   (:require [org.httpkit.client :as http]
             [web.db :refer [db] :as webdb]
             [monger.collection :as mc]
@@ -14,7 +14,7 @@
 (declare faction-map)
 
 (def ^:const base-url "http://192.168.1.180:8080/rez/")
-(def ^:const nrdb-image-url "http://192.168.1.180:8080/rez/")
+(def ^:const dc-image-url "https://github.com/vastorper/dc/blob/master/graphics/Metw/")
 
 (defmacro rename
   "Rename a card field"
@@ -27,6 +27,8 @@
    :code identity
    :format identity
    :position identity
+   :dreamcards (rename :dreamcard)
+   :released (rename :rotated)
    })
 
 (def mwl-fields
@@ -46,15 +48,10 @@
    :Set (rename :setname)
    :Primary (rename :type)
    :Alignment (rename :alignment)
-   :MEID identity
    :Artist identity
    :Rarity identity
    :Precise identity
    :NameEN (rename :title)
-   :NameFR identity
-   :NameGR identity
-   :NameSP identity
-   :NameJP identity
    :ImageName (rename :image_url)
    :Text (rename :text)
    :Skill (rename :subtype)
@@ -85,15 +82,13 @@
    :Haven identity
    :Stage identity
    :Strikes identity
-   :codeFR identity
-   :codeGR identity
-   :codeSP identity
-   :codeJP identity
    :Specific identity
    :code (rename :trimCode)
    :fullCode (rename :code)
    :alignCode identity
    :setCode identity
+   :DCpath identity
+   :dreamcard identity
    })
 
 (def ^:const faction-map
@@ -197,7 +192,8 @@
 (defn- make-image-url
   "Create a URI to the card in CardGameDB"
   [card]
-  (str nrdb-image-url (:setname card) "/" (:image_url card)))
+  ;;(str dc-image-url (:DCpath card)))
+  (string/replace (str dc-image-url (:DCpath card) "?raw=true") " " "%20"))
 
 (defn- get-uri
   "Figure out the card art image uri"
@@ -212,8 +208,7 @@
   (let [s (set-map (:setname c))]
     (-> c
         (assoc :full_set (:name s)
-               :rotated (:rotated s)
-               :image_url (get-uri c)
+               :rotated false
                :normalizedtitle (string/lower-case (deaccent (:title c)))))))
 
 (defn fetch-data
@@ -241,7 +236,7 @@
 (defn- download-card-image
   "Download a single card image from NRDB"
   [card]
-  (println "Downloading: " (:title card) "\t\t(" (:image_url card) ")")
+  (println "Downloading: " (:title card) " (" (:ImageName card) ")")
   (let [card_url (make-image-url card)]
     (http/get card_url {:as :byte-array :timeout 120000}
               (fn [{:keys [status body error]}]
@@ -256,7 +251,10 @@
 (defn download-card-images
   "Download card images (if necessary) from NRDB"
   [card-map]
-  (doseq [set ["METW" "METD" "MEDM" "MELE" "MEAS" "MEWH" "MEBA" "MEFB" "MEDF"]]
+  (doseq [set ["METW" "METD" "MEDM" "MELE" "MEAS" "MEWH" "MEBA"
+               "MEFB" "MEDF" "MENE" "MEBO" "MECA" "MECP" "MEDS"
+               "MEGW" "MEKN" "MEML" "MEMM" "MENW" "MERN" "MERS"
+               "MESL" "METI" "MEWR"]]
     (let [img-dir (io/file "resources" "public" "img" "cards" set)]
       (when-not (.isDirectory img-dir)
         (println "Creating card images directory [" (.getPath img-dir) "]")
@@ -282,11 +280,8 @@
         cards-replaced (->> cards
                             vals
                             (group-by :title)
-                            (filter (fn [[k v]] (>= (count v) 2)))
+                            (filter (fn [[k v]] (>= (count v) 5)))
                             vals
-                            (map (fn [[c1 c2]] [(:title c1)
-                                                (if (:rotated c1) (:code c1) (:code c2))
-                                                (if (:rotated c1) (:code c2) (:code c1))]))
                             (reduce rotate-cards cards))]
     (spit "data/cards.json" (str cards))
     (mc/remove db collection)
