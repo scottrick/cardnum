@@ -508,7 +508,7 @@
 (defn handle-drop [e locale]
   (-> e .-target js/$ (.removeClass "dragover"))
   (let [card (-> e .-dataTransfer (.getData "card") ((.-parse js/JSON)) (js->clj :keywordize-keys true))
-        side (if (#{"HQ" "R&D" "Archives"} locale) "Contestant" "Challenger")]
+        side (if (#{"HQ" "R&D" "Archives" "Sites"} locale) "Contestant" "Challenger")]
     (send-command "move" {:card card :locale locale})))
 
 (defn abs [n] (max n (- n)))
@@ -585,6 +585,7 @@
     :hq "HQ"
     :rd "R&D"
     :archives "Archives"
+    :sites "Sites"
     nil))
 
 (defn zone->name [zone]
@@ -731,7 +732,7 @@
                       subtype-target)]
           [:div.darkbg.subtype-target {:class colour-type} label]))
       (when (and (= zone ["hand"]) (#{"Agenda" "Site" "Character" "Region"} type))
-        (let [centrals ["Archives" "R&D" "HQ"]
+        (let [centrals ["Archives" "R&D" "HQ" "Sites"]
               parties (concat (party-list parties) ["New party"])
               locales (case type
                         ("Agenda" "Site" "Region" "Character") parties)]
@@ -813,11 +814,11 @@
                :on-drag-over #(.preventDefault %)
                :data-locale locale}))
 
-(defn close-popup [event owner ref msg shuffle? sites? board? deck?]
+(defn close-popup [event owner ref msg shuffle? location? board? deck?]
   (-> (om/get-node owner ref) js/$ .fadeOut)
   (cond
     shuffle? (send-command "shuffle" {:close "true"})
-    sites? (send-command "close-sites")
+    location? (send-command "close-location")
     board? (send-command "close-sideboard")
     deck? (send-command "close-deck")
     msg (send-command "system-msg" {:msg msg}))
@@ -902,7 +903,7 @@
     (do (-> (om/get-node owner (str ref "-content")) js/$ .fadeIn)
         (-> (om/get-node owner (str ref "-menu")) js/$ .fadeOut)
         (-> (om/get-node owner menu) js/$ .toggle)
-        (send-command "view-sites" region))))
+        (send-command "view-location" region))))
 
 (defn show-map [event owner ref]
   (-> (om/get-node owner (str ref "-content")) js/$ .fadeIn)
@@ -1149,7 +1150,7 @@
              (when (and (not central-view) is-first)
                (om/build label content {:opts opts}))]))]]))))
 
-(defn sites-view [{:keys [identity sites] :as cursor} owner]
+(defn location-view [{:keys [identity location] :as cursor} owner]
   (om/component
     (sab/html
       (let [is-challenger (= "Challenger" (:side identity))
@@ -1158,8 +1159,8 @@
             map-ref (if is-challenger "Ch-menu" "Co-menu")
             map-menu-ref (str map-ref "-menu")
             map-content-ref (str map-ref "-content")
-            site-name (if is-challenger "Sites2" "Sites")
-            site-ref (if is-challenger "Ch-sites" "Co-sites")
+            site-name (if is-challenger "Location2" "Location")
+            site-ref (if is-challenger "Ch-location" "Co-location")
             site-menu-ref (str site-ref "-menu")
             site-content-ref (str site-ref "-content")
             reg-name (if is-challenger "Regions2" "Regions")
@@ -1170,7 +1171,7 @@
          (drop-area (:side @game-state) map-name
                     {:on-click #(-> (om/get-node owner map-menu-ref) js/$ .toggle)})
          (facedown-card "Locations")
-         (om/build label-site sites {:opts {:name "Location"}})
+         (om/build label-site location {:opts {:name "Location"}})
          (when (= (:side @game-state) side)
            [:div.panel.blue-shade.menu {:ref map-menu-ref}
             [:div {:on-click #(show-map % owner reg-ref)} "Regions"]
@@ -1193,7 +1194,7 @@
             [:div
              [:a {:on-click #(close-popup % owner site-content-ref "stops looking at a region" false true false false)}
               "Close"]]
-            (om/build-all card-view sites {:key :cid})
+            (om/build-all card-view location {:key :cid})
             ]
          ]))))
 
@@ -1207,7 +1208,7 @@
             locale-type (first s)]
         [:div.contestant-board {:class (if (= (:side @game-state) :challenger) "opponent" "me")}
          (om/build locale-view {:locale (:hq locales)
-                                :central-view (om/build sites-view player)
+                                :central-view (om/build location-view player)
                                 :run (when (= locale-type "hq") run)})
          (om/build locale-view {:locale (:rd locales)
                                 :central-view (om/build deck-view player)
@@ -1220,7 +1221,7 @@
   (om/component
     (sab/html
         [:div.challenger-board {:class (if (= (:side @game-state) :contestant) "opponent" "me")}
-         (om/build sites-view player)
+         (om/build location-view player)
          (om/build deck-view player)
          (om/build discard-view player)])))
 

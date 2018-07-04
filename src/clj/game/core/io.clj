@@ -100,11 +100,12 @@
          [:discard] "Discard"
          [:deck] "Play Deck"
          [:sideboard] "Sideboard"
-         [:sites] "Location Deck"
+         [:location] "Location Deck"
          [:rig _] "in play"
-         [:locales :hq _] "the root of HQ"
-         [:locales :rd _] "the root of R&D"
-         [:locales :archives _] "the root of Archives"
+         [:locales :hq _] "the root of Hand"
+         [:locales :rd _] "the root of Deck"
+         [:locales :archives _] "the root of Discard"
+         [:locales :sites _] "the root of Location"
          :else (zone->name (second zone))))
 
 ;;; In-game chat commands
@@ -172,7 +173,7 @@
 
 (defn command-revealall [state side value]
   (resolve-ability state side
-    {:optional {:prompt "Reveal all cards and turn cards in archives faceup?"
+    {:optional {:prompt "Reveal all cards and turn cards in discard faceup?"
                 :yes-ability {:effect (req
                                         (swap! state update-in [:contestant :discard] #(map (fn [c] (assoc c :seen true)) %))
                                         (doseq [c (all-placed state side)]
@@ -243,9 +244,9 @@
                                            :choices {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/move-hand command"} nil)
           "/move-site"  #(resolve-ability %1 %2
-                                          {:prompt "Select a site to move to your sites"
+                                          {:prompt "Select a site to move to your Location Deck"
                                            :effect (req (let [c (deactivate %1 %2 target)]
-                                                          (move %1 %2 c :sites)))
+                                                          (move %1 %2 c :location)))
                                            :choices {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/move-site command"} nil)
           "/move-sb"  #(resolve-ability %1 %2

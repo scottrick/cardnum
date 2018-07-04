@@ -35,6 +35,7 @@
       "HQ" [:locales :hq]
       "R&D" [:locales :rd]
       "Archives" [:locales :archives]
+      "Sites" [:locales :sites]
       "New party" [:locales (keyword (str "party" (make-rid state)))]
       [:locales (->> (split locale #" ") last (str "party") keyword)])))
 

@@ -19,7 +19,7 @@
     (trigger-event state side :play card)))
 
 (defn shuffle-deck
-  "Shuffle R&D/Stack."
+  "Shuffle Play Deck."
   [state side {:keys [close] :as args}]
   (swap! state update-in [side :deck] shuffle)
   (if close
@@ -98,7 +98,7 @@
                            (= last-zone :deck)))
                 (:title c)
                 "a card")
-        s (if (#{"HQ" "R&D" "Archives"} locale) :contestant :challenger)]
+        s (if (#{"HQ" "R&D" "Archives" "Sites"} locale) :contestant :challenger)]
     ;; allow moving from play-area always, otherwise only when same side, and to valid zone
     (when (and (not= src locale)
                (same-side? s (:side card))
@@ -116,7 +116,7 @@
         (do (move state s (dissoc c :seen :revealed) :deck {:front true :force true})
             (system-msg state side (str "moves " label from-str " to the top of their Play Deck")))
         ("Sites2" "Sites")
-        (do (move state s (dissoc c :seen :revealed) :sites {:front true :force true})
+        (do (move state s (dissoc c :seen :revealed) :location {:front true :force true})
             (system-msg state side (str "moves " label from-str " to the their Location Deck")))
         nil))))
 
@@ -533,16 +533,16 @@
   (system-msg state side "stops looking at their sideboard")
   (swap! state update-in [side] dissoc :view-sideboard))
 
-(defn view-sites
+(defn view-location
   "Allows the player to view their deck by making the cards in the deck public."
   [state side region]
-  (system-msg state side "looks at their sites")
+  (system-msg state side "looks at their location deck")
   (swap! state assoc-in [side :cut-region] region)
-  (swap! state assoc-in [side :view-sites] true))
+  (swap! state assoc-in [side :view-location] true))
 
-(defn close-sites
+(defn close-location
   "Closes the deck view and makes cards in deck private again."
   [state side args]
-  (system-msg state side "stops looking at their sites")
+  (system-msg state side "stops looking at their location deck")
   (swap! state update-in [side] dissoc :cut-region)
-  (swap! state update-in [side] dissoc :view-sites))
+  (swap! state update-in [side] dissoc :view-location))

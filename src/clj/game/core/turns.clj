@@ -1,6 +1,6 @@
 (in-ns 'game.core)
 
-(declare all-active card-flag-fn? clear-turn-register! clear-wait-prompt create-pool create-deck create-board create-sites hand-size keep-hand interrupt mulligan
+(declare all-active card-flag-fn? clear-turn-register! clear-wait-prompt create-pool create-deck create-board create-location hand-size keep-hand interrupt mulligan
          show-wait-prompt turn-message)
 
 (def game-states (atom {}))
@@ -51,8 +51,8 @@
         challenger-deck (create-deck "Challenger" (:deck challenger) (:user challenger))
         contestant-board (create-board "Contestant" (:deck contestant) (:user contestant))
         challenger-board (create-board "Challenger" (:deck challenger) (:user challenger))
-        contestant-sites (create-sites "Contestant" (:deck contestant) (:user contestant))
-        challenger-sites (create-sites "Challenger" (:deck challenger) (:user challenger))
+        contestant-location (create-location "Contestant" (:deck contestant) (:user contestant))
+        challenger-location (create-location "Challenger" (:deck challenger) (:user challenger))
         contestant-deck-id (get-in contestant [:deck :_id])
         challenger-deck-id (get-in challenger [:deck :_id])
         contestant-options (get-in contestant [:options])
@@ -73,9 +73,9 @@
                               :deck-id contestant-deck-id
                               :hand (zone :hand contestant-pool)
                               :sideboard (zone :sideboard contestant-board)
-                              :sites (zone :sites contestant-sites)
+                              :location (zone :location contestant-location)
                               :discard [] :scored [] :rfg [] :play-area []
-                              :locales {:hq {} :rd {} :archives {}}
+                              :locales {:hq {} :rd {} :archives {} :sites {}}
                               :rig {:resource [] :muthereff [] :hazard []}
                               :click 5 :credit 5 :bad-publicity 0 :has-bad-pub 0
                               :free_gi 0 :total_mp 0 :stage_pt 0
@@ -91,9 +91,9 @@
                               :deck-id challenger-deck-id
                               :hand (zone :hand challenger-pool)
                               :sideboard (zone :sideboard challenger-board)
-                              :sites (zone :sites challenger-sites)
+                              :location (zone :location challenger-location)
                               :discard [] :scored [] :rfg [] :play-area []
-                              :locales {:hq {} :rd {} :archives {}}
+                              :locales {:hq {} :rd {} :archives {} :sites {}}
                               :rig {:resource [] :muthereff [] :hazard []}
                               :toast []
                               :click 5 :credit 5 :run-credit 0 :memory 4 :link 0 :tag 0
@@ -144,7 +144,7 @@
            (vec (:pool deck)))))
 
 (defn create-deck
-  "Creates a shuffled draw deck (R&D/Stack) from the given list of cards.
+  "Creates a shuffled draw deck from the given list of cards.
   Loads card data from locale-side @all-cards map if available."
   ([side deck] (create-deck side deck nil))
   ([side deck user]
@@ -156,7 +156,7 @@
                     (shuffle (vec (:cards deck)))))))
 
 (defn create-board
-  "Creates a shuffled draw deck (R&D/Stack) from the given list of cards.
+  "Creates a shuffled draw deck from the given list of cards.
   Loads card data from locale-side @all-cards map if available."
   ([side deck] (create-board side deck nil))
   ([side deck user]
@@ -167,17 +167,17 @@
                  (repeat (:qty %) (assoc (:card %) :art (:art %))))
            (vec (:sideboard deck)))))
 
-(defn create-sites
-  "Creates a shuffled draw deck (R&D/Stack) from the given list of cards.
+(defn create-location
+  "Creates a shuffled draw deck from the given list of cards.
   Loads card data from locale-side @all-cards map if available."
-  ([side deck] (create-sites side deck nil))
+  ([side deck] (create-location side deck nil))
   ([side deck user]
    (mapcat #(map (fn [card]
                    (let [locale-card (or (locale-card (:ImageName card) user) card)
                          c (assoc (make-card locale-card) :side side :art (:art card))]
                      (if-let [init (:init (card-def c))] (merge c init) c)))
                  (repeat (:qty %) (assoc (:card %) :art (:art %))))
-           (vec (:sites deck)))))
+           (vec (:location deck)))))
 
 (defn make-rid
   "Returns a progressively-increasing integer to identify a new party locale."
