@@ -11,18 +11,6 @@
             [cardnum.cards :refer [all-cards]]))
 
 (def alt-arts-channel (chan))
-(defn load-alt-arts []
-  (go (let [alt_info (->> (<! (GET "/data/cards/altarts"))
-                       (:json)
-                       (map #(select-keys % [:version :name :description :position])))
-            cards (->> @all-cards
-                    (filter #(not (:replaced_by %)))
-                    (map #(select-keys % [:title :setname :code :alt_art :replaces :replaced_by]))
-                    (filter :alt_art)
-                    (into {} (map (juxt :code identity))))]
-        (swap! app-state assoc :alt-arts cards)
-        (swap! app-state assoc :alt-info alt_info)
-        (put! alt-arts-channel cards))))
 
 (defn image-url [card-code version]
   (let [card (get (:alt-arts @app-state) card-code)

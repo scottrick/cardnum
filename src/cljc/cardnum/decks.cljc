@@ -258,14 +258,14 @@
 (defn allowed?
   "Checks if a card is allowed in deck of a given identity - not accounting for influence"
   [card {:keys [alignment faction code] :as identity}]
-  (and (not= (:type card) "Site")
-       (= (:alignment card) alignment)
-       (or (not= (:type card) "Agenda")
-           (= (:faction card) "Neutral")
-           (= (:faction card) faction)
-           (is-draft-id? identity))
-       (or (not= code "03002") ; Custom Biotics: Engineered for Success
-           (not= (:faction card) "Cardnum"))))
+  (or (not= (:type card) "Site")
+      (= (:alignment card) alignment)
+      (or (not= (:Secondary card) "Agenda")
+          (= (:faction card) "Neutral")
+          (= (:faction card) faction)
+          (is-draft-id? identity))
+      (or (not= code "03002") ; Custom Biotics: Engineered for Success
+          (not= (:faction card) "Jinteki"))))
 
 (defn valid-deck? [{:keys [identity cards] :as deck}]
   (and (not (nil? identity))

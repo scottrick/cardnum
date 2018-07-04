@@ -285,6 +285,15 @@
     4 Iron Hill Dwarf-hold [D] (DF)
     "))
 
+(def all-lord-sites
+  (str "
+    1 Edhellond [F] (FB)
+    1 Grey Havens [F] (FB)
+    1 Lórien [F] (FB)
+    1 Rivendell [F] (FB)
+    1 Thranduil's Halls [F] (FB)
+    "))
+
 (def all-dual-sites
   (str "
     1 Osteledan
