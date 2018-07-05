@@ -23,7 +23,7 @@
 
 (defn locale-list [state card]
   (concat
-    (if (#{"Site" "Agenda"} (:type card))
+    (if (#{"Site"} (:type card))
       (get-party-names @state)
       (zones->sorted-names (get-zones @state)))
     ["New party"]))

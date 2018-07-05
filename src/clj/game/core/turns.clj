@@ -75,7 +75,7 @@
                               :sideboard (zone :sideboard contestant-board)
                               :location (zone :location contestant-location)
                               :discard [] :scored [] :rfg [] :play-area []
-                              :locales {:hq {} :rd {} :archives {} :sites {}}
+                              :locales {}
                               :rig {:resource [] :muthereff [] :hazard []}
                               :click 5 :credit 5 :bad-publicity 0 :has-bad-pub 0
                               :free_gi 0 :total_mp 0 :stage_pt 0
@@ -93,7 +93,7 @@
                               :sideboard (zone :sideboard challenger-board)
                               :location (zone :location challenger-location)
                               :discard [] :scored [] :rfg [] :play-area []
-                              :locales {:hq {} :rd {} :archives {} :sites {}}
+                              :locales {}
                               :rig {:resource [] :muthereff [] :hazard []}
                               :toast []
                               :click 5 :credit 5 :run-credit 0 :memory 4 :link 0 :tag 0

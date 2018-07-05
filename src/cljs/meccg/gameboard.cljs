@@ -262,12 +262,12 @@
         (= side :challenger)
         (case (first zone)
           "hand" (case type
-                   ("Region" "Character") (if root
-                                       (send-command "play" {:card card :locale root})
+                   ("Character") (if root
+                                   (send-command "play" {:card card :locale root})
+                                   (-> (om/get-node owner "locales") js/$ .toggle))
+                   ("Region" "Site") (if (< (count (get-in @game-state [:challenger :locales])) 4)
+                                       (send-command "play" {:card card :locale "New party"})
                                        (-> (om/get-node owner "locales") js/$ .toggle))
-                   ("Agenda" "Site") (if (< (count (get-in @game-state [:challenger :locales])) 4)
-                                        (send-command "play" {:card card :locale "New party"})
-                                        (-> (om/get-node owner "locales") js/$ .toggle))
                    (send-command "play" {:card card}))
           ("rig" "current" "onhost" "play-area" "locales") (handle-abilities card owner)
           nil)
@@ -275,12 +275,12 @@
         (= side :contestant)
         (case (first zone)
           "hand" (case type
-                   ("Region" "Character") (if root
-                                       (send-command "play" {:card card :locale root})
+                   ("Character") (if root
+                                   (send-command "play" {:card card :locale root})
+                                   (-> (om/get-node owner "locales") js/$ .toggle))
+                   ("Region" "Site") (if (< (count (get-in @game-state [:contestant :locales])) 4)
+                                       (send-command "play" {:card card :locale "New party"})
                                        (-> (om/get-node owner "locales") js/$ .toggle))
-                   ("Agenda" "Site") (if (< (count (get-in @game-state [:contestant :locales])) 4)
-                                        (send-command "play" {:card card :locale "New party"})
-                                        (-> (om/get-node owner "locales") js/$ .toggle))
                    (send-command "play" {:card card}))
           ("rig" "locales" "scored" "play-area" "current" "onhost") (handle-abilities card owner)
           nil)))))
@@ -326,7 +326,7 @@
 
          (and (= zone ["hand"])
               (or (not uniqueness) (not (in-play? card)))
-              (or (#{"Agenda" "Site" "Region" "Character" "Resource"} type) (>= (:credit me) cost))
+              (or (#{"Site" "Region" "Character" "Resource"} type) (>= (:credit me) cost))
               (pos? (:click me))))))
 
 (defn spectator-view-hidden?
@@ -595,6 +595,7 @@
 
 (defn zone->sort-key [zone]
   (case (if (keyword? zone) zone (last zone))
+    :sites -4
     :archives -3
     :rd -2
     :hq -1
@@ -606,7 +607,7 @@
 
 (defn get-parties [locales]
   (->> locales
-       (filter #(not (#{:hq :rd :archives} (first %))))
+       (filter #(not (#{:hq :rd :archives :sites} (first %))))
        (sort-by #(zone->sort-key (first %)))))
 
 (defn party-list [parties]
@@ -731,11 +732,10 @@
                            (join " - "))
                       subtype-target)]
           [:div.darkbg.subtype-target {:class colour-type} label]))
-      (when (and (= zone ["hand"]) (#{"Agenda" "Site" "Character" "Region"} type))
-        (let [centrals ["Archives" "R&D" "HQ" "Sites"]
-              parties (concat (party-list parties) ["New party"])
+      (when (and (= zone ["hand"]) (#{"Site" "Character" "Region"} type))
+        (let [parties (concat (party-list parties) ["New party"])
               locales (case type
-                        ("Agenda" "Site" "Region" "Character") parties)]
+                        ("Site" "Region" "Character") parties)]
           [:div.panel.blue-shade.locales-menu {:ref "locales"}
            (map (fn [label]
                   [:div {:on-click #(do (send-command "play" {:card @cursor :locale label})
@@ -817,8 +817,8 @@
 (defn close-popup [event owner ref msg shuffle? location? board? deck?]
   (-> (om/get-node owner ref) js/$ .fadeOut)
   (cond
-    shuffle? (send-command "shuffle" {:close "true"})
     location? (send-command "close-location")
+    shuffle? (send-command "shuffle" {:close "true"})
     board? (send-command "close-sideboard")
     deck? (send-command "close-deck")
     msg (send-command "system-msg" {:msg msg}))
@@ -831,7 +831,7 @@
       [:div.header {:class (when (> (count cursor) 0) "darkbg")}
        (str (:name opts) " (" (fn cursor) ")")]))))
 
-(defn label-site [cursor owner opts]
+(defn label-without [cursor owner opts]
   (om/component
     (sab/html
       [:div.header {:class (when (> (count cursor) 0) "darkbg")}
@@ -915,7 +915,7 @@
     (let [is-challenger (= "Challenger" (:side identity))
           side (if is-challenger :challenger :contestant)
           name (if is-challenger "Stack" "R&D")
-          ref (if is-challenger "Ch-menu" "Ch-menu")
+          ref (if is-challenger "Ch-deck" "Ch-deck")
           menu-ref (str ref "-menu")
           content-ref (str ref "-content")
           deck-name (if is-challenger "Stack" "R&D")
@@ -1148,7 +1148,7 @@
             [:div.locale-card {:class (when (:tapped card) "tapped")}
              (om/build card-view card {:opts {:flipped (not (:revealed card)) :location true}})
              (when (and (not central-view) is-first)
-               (om/build label content {:opts opts}))]))]]))))
+               (om/build label-without content {:opts opts}))]))]]))))
 
 (defn location-view [{:keys [identity location] :as cursor} owner]
   (om/component
@@ -1156,11 +1156,11 @@
       (let [is-challenger (= "Challenger" (:side identity))
             side (if is-challenger :challenger :contestant)
             map-name (if is-challenger "Sites2" "Sites")
-            map-ref (if is-challenger "Ch-menu" "Co-menu")
+            map-ref (if is-challenger "Ch-map" "Co-map-menu")
             map-menu-ref (str map-ref "-menu")
             map-content-ref (str map-ref "-content")
             site-name (if is-challenger "Location2" "Location")
-            site-ref (if is-challenger "Ch-location" "Co-location")
+            site-ref (if is-challenger "Ch-sites" "Co-sites")
             site-menu-ref (str site-ref "-menu")
             site-content-ref (str site-ref "-content")
             reg-name (if is-challenger "Regions2" "Regions")
@@ -1171,7 +1171,7 @@
          (drop-area (:side @game-state) map-name
                     {:on-click #(-> (om/get-node owner map-menu-ref) js/$ .toggle)})
          (facedown-card "Locations")
-         (om/build label-site location {:opts {:name "Location"}})
+         (om/build label-without location {:opts {:name "Location"}})
          (when (= (:side @game-state) side)
            [:div.panel.blue-shade.menu {:ref map-menu-ref}
             [:div {:on-click #(show-map % owner reg-ref)} "Regions"]
@@ -1207,7 +1207,7 @@
             s (:locale run)
             locale-type (first s)]
         [:div.contestant-board {:class (if (= (:side @game-state) :challenger) "opponent" "me")}
-         (om/build locale-view {:locale (:hq locales)
+         (om/build locale-view {:locale (:sites locales)
                                 :central-view (om/build location-view player)
                                 :run (when (= locale-type "hq") run)})
          (om/build locale-view {:locale (:rd locales)
