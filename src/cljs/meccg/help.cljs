@@ -58,6 +58,7 @@
                         [:li [:code "/move-hand"] " - Pick a card from your play-area to put into your hand"]
                         [:li [:code "/move-site"] " - Pick a card from your play-area to put into your site deck"]
                         [:li [:code "/move-sb"] " - Pick a card from your play-area to put into your sideboard"]
+                        [:li [:code "/move-fw-sb"] " - Pick a card from your play-area to put into your fw-sideboard"]
                         [:li [:code "/re-deck"] " - Use this to move all cards from your discard back to your deck"]
                         [:li [:code "/reveal"] " - Select a card to reveal, ignoring all costs (Contestant only)"]
                         [:li [:code "/rfg"] " - Select a card to remove from the game"]

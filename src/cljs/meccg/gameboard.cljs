@@ -814,12 +814,13 @@
                :on-drag-over #(.preventDefault %)
                :data-locale locale}))
 
-(defn close-popup [event owner ref msg shuffle? location? board? deck?]
+(defn close-popup [event owner ref msg shuffle? location? board? fw-dc? deck?]
   (-> (om/get-node owner ref) js/$ .fadeOut)
   (cond
     location? (send-command "close-location")
     shuffle? (send-command "shuffle" {:close "true"})
     board? (send-command "close-sideboard")
+    fw-dc? (send-command "close-fw-dc-sb")
     deck? (send-command "close-deck")
     msg (send-command "system-msg" {:msg msg}))
   (.stopPropagation event))
@@ -879,7 +880,7 @@
        (when popup
          [:div.panel.blue-shade.popup {:ref "hand-popup" :class popup-direction}
           [:div
-           [:a {:on-click #(close-popup % owner "hand-popup" nil false false false false)} "Close"]
+           [:a {:on-click #(close-popup % owner "hand-popup" nil false false false false false)} "Close"]
            [:label (str size " card" (when (not= 1 size) "s") ".")]
            (build-hand-card-view player parties "card-popup-wrapper")
            ]])]))))
@@ -893,6 +894,11 @@
   (-> (om/get-node owner (str ref "-content")) js/$ .fadeIn)
   (-> (om/get-node owner (str ref "-menu")) js/$ .fadeOut)
   (send-command "view-sideboard"))
+
+(defn show-fw-dc-sb [event owner ref]
+  (-> (om/get-node owner (str ref "-content")) js/$ .fadeIn)
+  (-> (om/get-node owner (str ref "-menu")) js/$ .fadeOut)
+  (send-command "view-fw-dc-sb"))
 
 (defn show-sites [event owner ref menu terrain region]
   (if (or (= ref "Ch-regions") (= ref "Co-regions"))
@@ -909,7 +915,7 @@
   (-> (om/get-node owner (str ref "-content")) js/$ .fadeIn)
   (-> (om/get-node owner (str ref "-menu")) js/$ .fadeOut))
 
-(defn deck-view [{:keys [identity deck sideboard] :as cursor} owner]
+(defn deck-view [{:keys [identity deck sideboard fw-dc-sb] :as cursor} owner]
   (om/component
    (sab/html
     (let [is-challenger (= "Challenger" (:side identity))
@@ -924,7 +930,10 @@
           deck-content-ref (str deck-ref "-content")
           side-ref (if is-challenger "Ch-board" "Co-board")
           side-menu-ref (str side-ref "-menu")
-          side-content-ref (str side-ref "-content")]
+          side-content-ref (str side-ref "-content")
+          fwdc-ref (if is-challenger "Ch-dc-fw" "Co-dc-fw")
+          fwdc-menu-ref (str fwdc-ref "-menu")
+          fwdc-content-ref (str fwdc-ref "-content")]
       [:div.blue-shade.deck
        (drop-area (:side @game-state) deck-name
                   {:on-click #(-> (om/get-node owner menu-ref) js/$ .toggle)})
@@ -936,22 +945,31 @@
           [:div {:on-click #(do (send-command "shuffle")
                                 (-> (om/get-node owner menu-ref) js/$ .fadeOut))} "Shuffle"]
           [:div {:on-click #(show-deck % owner deck-ref)} "Show Deck"]
-          [:div {:on-click #(show-sideboard % owner side-ref)} "Sideboard"]])
+          [:div {:on-click #(show-sideboard % owner side-ref)} "Sideboard"]
+          [:div {:on-click #(show-fw-dc-sb % owner fwdc-ref)} "FW-DC-SB"]])
        (when (= (:side @game-state) side)
          [:div.panel.blue-shade.popup {:ref deck-content-ref}
           [:div
-           [:a {:on-click #(close-popup % owner deck-content-ref "stops looking at their deck" false false false true)}
+           [:a {:on-click #(close-popup % owner deck-content-ref "stops looking at their deck" false false false false true)}
             "Close"]
-           [:a {:on-click #(close-popup % owner deck-content-ref "stops looking at their deck" true false false true)}
+           [:a {:on-click #(close-popup % owner deck-content-ref "stops looking at their deck" true false false false true)}
             "Close & Shuffle"]]
           (om/build-all card-view deck {:key :cid})])
        (when (= (:side @game-state) side)
          [:div.panel.blue-shade.popup {:ref side-content-ref}
           [:div
-           [:a {:on-click #(close-popup % owner side-content-ref "stops looking at their sideboard" false false true false)}
+           [:a {:on-click #(close-popup % owner side-content-ref "stops looking at their sideboard" false false true false false)}
             "Close"](om/build-all card-view sideboard {:key :cid})]
           ]
-         )]))))
+         )
+       (when (= (:side @game-state) side)
+         [:div.panel.blue-shade.popup {:ref fwdc-content-ref}
+          [:div
+           [:a {:on-click #(close-popup % owner fwdc-content-ref "stops looking at their fallen-wizard sideboard" false false false true false)}
+            "Close"](om/build-all card-view fw-dc-sb {:key :cid})]
+          ]
+         )
+       ]))))
 
 (defmulti discard-view #(get-in % [:identity :side]))
 
@@ -978,7 +996,7 @@
 
          [:div.panel.blue-shade.popup {:ref "popup" :class (if (= (:side @game-state) :contestant) "opponent" "me")}
           [:div
-           [:a {:on-click #(close-popup % owner "popup" nil false false false false)} "Close"]
+           [:a {:on-click #(close-popup % owner "popup" nil false false false false false)} "Close"]
            [:label (let [total (count discard)
                          face-up (count (filter faceup? discard))]
                      (str total " cards, " (- total face-up) " face-down."))]]
@@ -1007,7 +1025,7 @@
 
        [:div.panel.blue-shade.popup {:ref "popup" :class (if (= (:side @game-state) :challenger) "opponent" "me")}
         [:div
-         [:a {:on-click #(close-popup % owner "popup" nil false false false false)} "Close"]
+         [:a {:on-click #(close-popup % owner "popup" nil false false false false false)} "Close"]
          [:label (let [total (count discard)
                        face-up (count (filter faceup? discard))]
                    (str total " cards, " (- total face-up) " face-down."))]]
@@ -1029,7 +1047,7 @@
          (when popup
            [:div.panel.blue-shade.popup {:ref "rfg-popup" :class "opponent"}
             [:div
-             [:a {:on-click #(close-popup % owner "rfg-popup" nil false false false false)} "Close"]
+             [:a {:on-click #(close-popup % owner "rfg-popup" nil false false false false false)} "Close"]
              [:label (str size " card" (when (not= 1 size) "s") ".")]]
             (for [c cards] (om/build card-view c))])])))))
 
@@ -1181,18 +1199,18 @@
            [:div.panel.blue-shade.popup {:ref reg-content-ref}
             [:div
              (standard-map show-sites owner reg-ref map-menu-ref)
-             [:a {:on-click #(close-popup % owner reg-content-ref "stops looking at the map" false true false false)}
+             [:a {:on-click #(close-popup % owner reg-content-ref "stops looking at the map" false true false false false)}
               "Close"]]
             ])
            [:div.panel.blue-shade.popup {:ref map-content-ref}
             [:div
              (standard-map show-sites owner site-ref map-menu-ref)
-             [:a {:on-click #(close-popup % owner map-content-ref "stops looking at the map" false true false false)}
+             [:a {:on-click #(close-popup % owner map-content-ref "stops looking at the map" false true false false false)}
               "Close"]]
             ]
            [:div.panel.blue-shade.popup {:ref site-content-ref}
             [:div
-             [:a {:on-click #(close-popup % owner site-content-ref "stops looking at a region" false true false false)}
+             [:a {:on-click #(close-popup % owner site-content-ref "stops looking at a region" false true false false false)}
               "Close"]]
             (om/build-all card-view location {:key :cid})
             ]

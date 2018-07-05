@@ -1,6 +1,6 @@
 (in-ns 'game.core)
 
-(declare all-active card-flag-fn? clear-turn-register! clear-wait-prompt create-pool create-deck create-board create-location hand-size keep-hand interrupt mulligan
+(declare all-active card-flag-fn? clear-turn-register! clear-wait-prompt create-pool create-deck create-board create-fw-dc create-location hand-size keep-hand interrupt mulligan
          show-wait-prompt turn-message)
 
 (def game-states (atom {}))
@@ -51,6 +51,8 @@
         challenger-deck (create-deck "Challenger" (:deck challenger) (:user challenger))
         contestant-board (create-board "Contestant" (:deck contestant) (:user contestant))
         challenger-board (create-board "Challenger" (:deck challenger) (:user challenger))
+        contestant-fw-dc (create-fw-dc "Contestant" (:deck contestant) (:user contestant))
+        challenger-fw-dc (create-fw-dc "Challenger" (:deck challenger) (:user challenger))
         contestant-location (create-location "Contestant" (:deck contestant) (:user contestant))
         challenger-location (create-location "Challenger" (:deck challenger) (:user challenger))
         contestant-deck-id (get-in contestant [:deck :_id])
@@ -73,6 +75,7 @@
                               :deck-id contestant-deck-id
                               :hand (zone :hand contestant-pool)
                               :sideboard (zone :sideboard contestant-board)
+                              :fw-dc-sb (zone :fw-dc-sb contestant-fw-dc)
                               :location (zone :location contestant-location)
                               :discard [] :scored [] :rfg [] :play-area []
                               :locales {}
@@ -91,6 +94,7 @@
                               :deck-id challenger-deck-id
                               :hand (zone :hand challenger-pool)
                               :sideboard (zone :sideboard challenger-board)
+                              :fw-dc-sb (zone :fw-dc-sb challenger-fw-dc)
                               :location (zone :location challenger-location)
                               :discard [] :scored [] :rfg [] :play-area []
                               :locales {}
@@ -166,6 +170,18 @@
                      (if-let [init (:init (card-def c))] (merge c init) c)))
                  (repeat (:qty %) (assoc (:card %) :art (:art %))))
            (vec (:sideboard deck)))))
+
+(defn create-fw-dc
+  "Creates a shuffled draw deck from the given list of cards.
+  Loads card data from locale-side @all-cards map if available."
+  ([side deck] (create-fw-dc side deck nil))
+  ([side deck user]
+   (mapcat #(map (fn [card]
+                   (let [locale-card (or (locale-card (:ImageName card) user) card)
+                         c (assoc (make-card locale-card) :side side :art (:art card))]
+                     (if-let [init (:init (card-def c))] (merge c init) c)))
+                 (repeat (:qty %) (assoc (:card %) :art (:art %))))
+           (vec (:fwsb deck)))))
 
 (defn create-location
   "Creates a shuffled draw deck from the given list of cards.

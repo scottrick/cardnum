@@ -100,6 +100,7 @@
          [:discard] "Discard"
          [:deck] "Play Deck"
          [:sideboard] "Sideboard"
+         [:fw-dc-sb] "FW-DC-SB"
          [:location] "Location Deck"
          [:rig _] "in play"
          [:locales :hq _] "the root of Hand"
@@ -255,6 +256,12 @@
                                                           (move %1 %2 c :sideboard)))
                                            :choices {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/move-sb command"} nil)
+          "/move-fw-sb"  #(resolve-ability %1 %2
+                                        {:prompt "Select a site to move to your FW-Sideboard"
+                                         :effect (req (let [c (deactivate %1 %2 target)]
+                                                        (move %1 %2 c :fw-dc-sb)))
+                                         :choices {:req (fn [t] (card-is? t :side %2))}}
+                                        {:title "/move-fw-sb command"} nil)
           "/re-deck"  #(resolve-ability %1 %2
                                         {:effect (effect (shuffle-into-deck {} :discard))}
                                         {:title "/re-deck command"} nil)
