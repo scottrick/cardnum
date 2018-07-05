@@ -39,6 +39,7 @@
    "play" core/play
    "reveal" #(core/reveal %1 %2 (:card %3) nil)
    "hide" #(core/hide %1 %2 (:card %3))
+   "organize" #(core/organize %1 %2 (:card %3) nil)
    "tap" #(core/tap %1 %2 (:card %3))
    "untap" #(core/untap %1 %2 (:card %3))
    "wound" #(core/wound %1 %2 (:card %3))
