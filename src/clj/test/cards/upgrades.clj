@@ -7,7 +7,7 @@
 
 
 (deftest amazon-industrial-zone
-  ;; Amazon Industrial Zone - Immediately reveal Character installed over its locale at 3 credit discount
+  ;; Amazon Industrial Zone - Immediately reveal Character placed over its locale at 3 credit discount
   (do-game
     (new-game (default-contestant [(qty "Spiderweb" 1) (qty "Amazon Industrial Zone" 1)])
               (default-challenger))
@@ -77,8 +77,8 @@
       (is (= 2 (count (:discard (get-challenger)))) "Challenger took 2 net")
       (is (= 1 (count (:scored (get-challenger)))) "1 scored agenda"))))
 
-(deftest ben-musashi-trash
-  ;; Ben Musashi - pay even when trashed
+(deftest ben-musashi-discard
+  ;; Ben Musashi - pay even when discarded
   (do-game
     (new-game (default-contestant [(qty "Ben Musashi" 3) (qty "House of Knives" 3)])
               (default-challenger))
@@ -92,7 +92,7 @@
       (run-empty-locale state "Locale 1")
       ;; challenger now chooses which to access.
       (prompt-select :challenger bm)
-      (prompt-choice :challenger "Yes") ; pay to trash
+      (prompt-choice :challenger "Yes") ; pay to discard
       (prompt-select :challenger hok)
       ;; should now have prompt to pay 2 net for HoK
       (prompt-choice :challenger "Yes")
@@ -164,14 +164,14 @@
     (prompt-choice :challenger 0)
     (prompt-choice :challenger "Yes")
     (is (= 1 (:tag (get-challenger))))
-    (is (= 2 (:credit (get-challenger))) "Challenger paid 3cr to trash Berncharacter")
+    (is (= 2 (:credit (get-challenger))) "Challenger paid 3cr to discard Berncharacter")
     (core/reveal state :contestant (get-content state :party2 0))
     (core/gain state :challenger :credit 20)
     (run-empty-locale state :party2)
     (prompt-choice :contestant 0)
     (prompt-choice :challenger 10)
-    (is (not (get-content state :party2 0)) "Berncharacter auto-trashed from unsuccessful trace")
-    (is (not (:run @state)) "Run ended when Berncharacter was trashed from locale")
+    (is (not (get-content state :party2 0)) "Berncharacter auto-discarded from unsuccessful trace")
+    (is (not (:run @state)) "Run ended when Berncharacter was discarded from locale")
     (core/reveal state :contestant (get-content state :rd 0))
     (run-empty-locale state :rd)
     (prompt-choice :contestant 0)
@@ -193,7 +193,7 @@
     (prompt-choice :challenger 0)
     (prompt-choice :challenger "Yes")
     (is (= 1 (:tag (get-challenger))))
-    (is (= 2 (:credit (get-challenger))) "Challenger paid 3cr to trash Berncharacter")
+    (is (= 2 (:credit (get-challenger))) "Challenger paid 3cr to discard Berncharacter")
     (is (= 2 (count (:discard (get-challenger)))) "Challenger took 1 meat damage")))
 
 (deftest breaker-bay-grid
@@ -232,7 +232,7 @@
       (card-ability state :contestant ct 0)
       (prompt-select :contestant pj)
       (is (= 1 (:advance-counter (refresh pj))) "Project Junebug advanced")
-      (is (= 1 (count (:discard (get-contestant)))) "Calibration Testing trashed"))
+      (is (= 1 (count (:discard (get-contestant)))) "Calibration Testing discarded"))
     (play-from-hand state :contestant "Calibration Testing" "New party")
     (play-from-hand state :contestant "PAD Campaign" "Locale 2")
     (let [ct (get-content state :party2 0)
@@ -241,7 +241,7 @@
       (card-ability state :contestant ct 0)
       (prompt-select :contestant pad)
       (is (= 1 (:advance-counter (refresh pad))) "PAD Campaign advanced")
-      (is (= 2 (count (:discard (get-contestant)))) "Calibration Testing trashed"))))
+      (is (= 2 (count (:discard (get-contestant)))) "Calibration Testing discarded"))))
 
 (deftest caprcharacter-nisei
   ;; Caprcharacter Nisei - Psi game for ETR after challenger passes last character
@@ -311,7 +311,7 @@
           "Challenger took 1 tag given from successful trace during run on ChiLo locale"))))
 
 (deftest contestantorate-troubleshooter
-  ;; Contestantorate Troubleshooter - Pay X credits and trash to add X strength to a piece of revealed Character
+  ;; Contestantorate Troubleshooter - Pay X credits and discard to add X strength to a piece of revealed Character
   (do-game
     (new-game (default-contestant [(qty "Quandary" 2) (qty "Contestantorate Troubleshooter" 1)])
               (default-challenger))
@@ -332,7 +332,7 @@
       (prompt-select :contestant q1)
       (is (= 5 (:current-strength (refresh q1))) "Inner Quandary boosted to 5 strength")
       (is (empty? (get-content state :hq))
-          "Contestantorate Troubleshooter trashed from root of HQ")
+          "Contestantorate Troubleshooter discarded from root of HQ")
       (take-credits state :contestant)
       (is (= 0 (:current-strength (refresh q1)))
           "Inner Quandary back to default 0 strength after turn ends"))))
@@ -362,7 +362,7 @@
     (play-from-hand state :contestant "Cyberdex Virus Suite" "HQ")
     (take-credits state :contestant 2)
     ;; challenger's turn
-    ;; install cache and medium
+    ;; place cache and medium
     (play-from-hand state :challenger "Cache")
     (let [virus-counters (fn [card] (core/get-virus-counters state :challenger (refresh card)))
           cache (find-card "Cache" (get-in @state [:challenger :rig :resource]))
@@ -373,7 +373,7 @@
       (core/reveal state :contestant cvs)
       (card-ability state :contestant cvs 0)
       ;; nothing in hq content
-      (is (empty? (get-content state :hq)) "CVS was trashed")
+      (is (empty? (get-content state :hq)) "CVS was discarded")
       ;; purged counters
       (is (zero? (virus-counters cache))
           "Cache has no counters")
@@ -388,7 +388,7 @@
     (play-from-hand state :contestant "Cyberdex Virus Suite" "New party")
     (take-credits state :contestant 2)
     ;; challenger's turn
-    ;; install cache and medium
+    ;; place cache and medium
     (play-from-hand state :challenger "Cache")
     (let [virus-counters (fn [card] (core/get-virus-counters state :challenger (refresh card)))
           cache (find-card "Cache" (get-in @state [:challenger :rig :resource]))
@@ -398,7 +398,7 @@
       (run-empty-locale state "Locale 1")
       ;; contestant now has optional prompt to trigger virus purge
       (prompt-choice :contestant "Yes")
-      ;; challenger has prompt to trash CVS
+      ;; challenger has prompt to discard CVS
       (prompt-choice :challenger "Yes")
       ;; purged counters
       (is (zero? (virus-counters cache))
@@ -411,11 +411,11 @@
   (do-game
     (new-game (default-contestant [(qty "Cyberdex Virus Suite" 1) (qty "Braintrust" 1)])
               (default-challenger [(qty "Cache" 1)]))
-    (trash-from-hand state :contestant "Cyberdex Virus Suite")
-    (trash-from-hand state :contestant "Braintrust")
+    (discard-from-hand state :contestant "Cyberdex Virus Suite")
+    (discard-from-hand state :contestant "Braintrust")
     (take-credits state :contestant)
     ;; challenger's turn
-    ;; install cache
+    ;; place cache
     (play-from-hand state :challenger "Cache")
     (let [cache (get-resource state 0)]
       (is (= 3 (get-counters (refresh cache) :virus)))
@@ -439,14 +439,14 @@
     (run-empty-locale state :party1)
     (prompt-choice :contestant 0)
     (prompt-choice :challenger 0)
-    (prompt-choice :challenger "Yes") ; trash
+    (prompt-choice :challenger "Yes") ; discard
     (is (= 2 (:tag (get-challenger))) "Challenger took two tags")
     (run-empty-locale state "Archives")
     (is (= 2 (:tag (get-challenger))) "Challenger doesn't take tags when accessed from Archives")
     (run-empty-locale state "HQ")
     (prompt-choice :contestant 0)
     (prompt-choice :challenger 3)
-    (prompt-choice :challenger "Yes") ; trash
+    (prompt-choice :challenger "Yes") ; discard
     (is (= 2 (:tag (get-challenger))) "Challenger doesn't take tags when trace won")))
 
 (deftest ghost-branch-dedicated-response-team
@@ -544,7 +544,7 @@
     (is (= 1 (count (:discard (get-challenger)))) "1 net damage done for successful run on HQ")))
 
 (deftest jinja-city-grid
-  ;; Jinja City Grid - install drawn character, lowering install cost by 4
+  ;; Jinja City Grid - place drawn character, lowering place cost by 4
   (do-game
     (new-game (default-contestant [(qty "Jinja City Grid" 1) (qty "Vanilla" 3) (qty "Ice Wall" 3)])
               (default-challenger))
@@ -555,15 +555,15 @@
     (dotimes [n 5]
       (core/click-draw state :contestant 1)
       (prompt-choice :contestant "Yes")
-      (is (= 4 (:credit (get-contestant))) "Not charged to install character")
+      (is (= 4 (:credit (get-contestant))) "Not charged to place character")
       (is (= (inc n) (count (get-in @state [:contestant :locales :party1 :characters]))) (str n " Character protecting Party1")))
     (core/click-draw state :contestant 1)
     (prompt-choice :contestant "Yes")
-    (is (= 3 (:credit (get-contestant))) "Charged to install character")
+    (is (= 3 (:credit (get-contestant))) "Charged to place character")
     (is (= 6 (count (get-in @state [:contestant :locales :party1 :characters]))) "6 Character protecting Party1")))
 
 (deftest keegan-lane
-  ;; Keegan Lane - Trash self and remove 1 Challenger tag to trash a resource
+  ;; Keegan Lane - Discard self and remove 1 Challenger tag to discard a resource
   (do-game
     (new-game (default-contestant [(qty "Keegan Lane" 1)])
               (default-challenger [(qty "Corroder" 1)]))
@@ -579,8 +579,8 @@
       (card-ability state :contestant keeg 0)
       (prompt-select :contestant (get-resource state 0))
       (is (= 1 (:tag (get-challenger))) "1 tag removed")
-      (is (= 1 (count (:discard (get-contestant)))) "Keegan trashed")
-      (is (= 1 (count (:discard (get-challenger)))) "Corroder trashed"))))
+      (is (= 1 (count (:discard (get-contestant)))) "Keegan discarded")
+      (is (= 1 (count (:discard (get-challenger)))) "Corroder discarded"))))
 
 (deftest manta-grid
   ;; If the Challenger has fewer than 6 or no unspent clicks on successful run, contestant gains a click next turn.
@@ -595,10 +595,10 @@
     (core/click-draw state :challenger nil)
     (core/click-draw state :challenger nil)
     (run-empty-locale state "HQ")
-    (prompt-choice :challenger "No") ; don't trash Manta Grid
+    (prompt-choice :challenger "No") ; don't discard Manta Grid
     (is (= 1 (:click (get-challenger))) "Running last click")
     (run-empty-locale state "HQ")
-    (prompt-choice :challenger "No") ; don't trash Manta Grid
+    (prompt-choice :challenger "No") ; don't discard Manta Grid
     (take-credits state :challenger)
     (is (= 5 (:click (get-contestant))) "Contestant gained 2 clicks due to 2 runs with < 6 Challenger credits")
     (take-credits state :contestant)
@@ -607,7 +607,7 @@
     (take-credits state :contestant)
     (take-credits state :challenger 3)
     (run-empty-locale state "HQ")
-    (prompt-choice :challenger "No") ; don't trash Manta Grid
+    (prompt-choice :challenger "No") ; don't discard Manta Grid
     (take-credits state :challenger)
     (is (= 4 (:click (get-contestant))) "Contestant gained a click due to running last click")))
 
@@ -637,25 +637,25 @@
       (is (prompt-is-card? :contestant sn) "Contestant prompt is on Security Nexus")
       (is (prompt-is-type? :challenger :waiting) "Challenger prompt is waiting for Contestant"))))
 
-(deftest mumbad-virtual-tour-force-trash
-  ;; Tests that Mumbad Virtual Tour forces trash when no :slow-trash
+(deftest mumbad-virtual-tour-force-discard
+  ;; Tests that Mumbad Virtual Tour forces discard when no :slow-discard
   (do-game
     (new-game (default-contestant [(qty "Mumbad Virtual Tour" 2)])
               (default-challenger))
     (play-from-hand state :contestant "Mumbad Virtual Tour" "New party")
     (take-credits state :contestant)
     (run-empty-locale state "HQ")
-    ;; MVT does not force trash when not installed
+    ;; MVT does not force discard when not placed
     (prompt-choice :challenger "No")
-    (is (= 5 (:credit (get-challenger))) "Challenger not forced to trash MVT in HQ")
-    (is (empty? (:discard (get-contestant))) "MVT in HQ is not trashed")
+    (is (= 5 (:credit (get-challenger))) "Challenger not forced to discard MVT in HQ")
+    (is (empty? (:discard (get-contestant))) "MVT in HQ is not discarded")
     (run-empty-locale state "Locale 1")
-    ;; Toast should show at this point to notify challenger they were forced to trash MVT
-    (is (= 0 (:credit (get-challenger))) "Challenger forced to trash MVT")
-    (is (= "Mumbad Virtual Tour" (:title (first (:discard (get-contestant))))) "MVT trashed")))
+    ;; Toast should show at this point to notify challenger they were forced to discard MVT
+    (is (= 0 (:credit (get-challenger))) "Challenger forced to discard MVT")
+    (is (= "Mumbad Virtual Tour" (:title (first (:discard (get-contestant))))) "MVT discarded")))
 
-(deftest mumbad-virtual-tour-slow-trash
-  ;; Tests that Mumbad Virtual Tour does not force trash with :slow-trash
+(deftest mumbad-virtual-tour-slow-discard
+  ;; Tests that Mumbad Virtual Tour does not force discard with :slow-discard
   (do-game
     (new-game (default-contestant [(qty "Mumbad Virtual Tour" 2)])
               (default-challenger [(qty "Imp" 1)]))
@@ -666,16 +666,16 @@
     ;; Reset credits to 5
     (core/gain state :challenger :credit 2)
     (run-empty-locale state "Locale 1")
-    ;; Challenger not force to trash since Imp is installed
-    (is (= 5 (:credit (get-challenger))) "Challenger not forced to trash MVT when Imp installed")
-    (is (empty? (:discard (get-contestant))) "MVT is not force-trashed when Imp installed")
+    ;; Challenger not force to discard since Imp is placed
+    (is (= 5 (:credit (get-challenger))) "Challenger not forced to discard MVT when Imp placed")
+    (is (empty? (:discard (get-contestant))) "MVT is not force-discarded when Imp placed")
     (let [imp (get-resource state 0)]
       (card-ability state :challenger imp 0)
       (is (= "Mumbad Virtual Tour" (:title (first (:discard (get-contestant)))))
-          "MVT trashed with Imp")
-      ;; Trash Imp to reset :slow-trash flag
+          "MVT discarded with Imp")
+      ;; Discard Imp to reset :slow-discard flag
       (core/move state :challenger (refresh imp) :discard)
-      (is (not (core/any-flag-fn? state :challenger :slow-trash true))))))
+      (is (not (core/any-flag-fn? state :challenger :slow-discard true))))))
 
 (deftest neotokyo-grid
   ;; NeoTokyo Grid - Gain 1c the first time per turn a card in this locale gets an advancement
@@ -722,7 +722,7 @@
      (is (not (core/can-run-locale? state "Locale 1")) "Off the Grid prevention persisted")
      (run-empty-locale state "HQ")
      (is (boolean (core/can-run-locale? state "Locale 1")) "Challenger can run on Locale 1")
-     (is (= nil (refresh otg)) "Off the Grid trashed"))))
+     (is (= nil (refresh otg)) "Off the Grid discarded"))))
 
 (deftest old-hollywood-grid
   ;; Old Hollywood Grid - Ability
@@ -767,7 +767,7 @@
       (prompt-choice :challenger "OK")
       (is (= 0 (count (:scored (get-challenger)))) "No stolen agendas")
       (prompt-choice :challenger "Old Hollywood Grid")
-      ;; trash OHG
+      ;; discard OHG
       (prompt-choice :challenger "Yes")
       (run-empty-locale state "HQ")
       (prompt-choice :challenger "Steal")
@@ -792,7 +792,7 @@
     (is (= 0 (count (:scored (get-challenger)))) "No stolen agendas")))
 
 (deftest port-anson-grid
-  ;; Port Anson Grid - Prevent the Challenger from jacking out until they trash a resource
+  ;; Port Anson Grid - Prevent the Challenger from jacking out until they discard a resource
   (do-game
     (new-game (default-contestant [(qty "Port Anson Grid" 1) (qty "Data Raven" 1)])
               (default-challenger [(qty "Faerie" 1) (qty "Technical Writer" 1)]))
@@ -807,15 +807,15 @@
       (run-on state "Locale 1")
       (core/reveal state :contestant pag)
       (is (:cannot-jack-out (get-in @state [:run])) "Jack out disabled for Challenger") ; UI button greyed out
-      (core/trash state :challenger tw)
-      (is (:cannot-jack-out (get-in @state [:run])) "Muthereff trash didn't disable jack out prevention")
-      (core/trash state :challenger fae)
-      (is (nil? (:cannot-jack-out (get-in @state [:run]))) "Jack out enabled by resource trash")
+      (core/discard state :challenger tw)
+      (is (:cannot-jack-out (get-in @state [:run])) "Muthereff discard didn't disable jack out prevention")
+      (core/discard state :challenger fae)
+      (is (nil? (:cannot-jack-out (get-in @state [:run]))) "Jack out enabled by resource discard")
       (run-on state "Locale 1")
       (is (:cannot-jack-out (get-in @state [:run])) "Prevents jack out when region is revealed prior to run"))))
 
 (deftest prisec
-  ;; Prisec - Pay 2 credits to give challenger 1 tag and do 1 meat damage, only when installed
+  ;; Prisec - Pay 2 credits to give challenger 1 tag and do 1 meat damage, only when placed
   (do-game
     (new-game (default-contestant [(qty "Prisec" 2)])
               (default-challenger))
@@ -827,7 +827,7 @@
       (is (= (- pre-creds 2) (:credit (get-contestant))) "Pay 2 [Credits] to pay for Prisec"))
     (is (= 1 (:tag (get-challenger))) "Give challenger 1 tag")
     (is (= 1 (count (:discard (get-challenger)))) "Prisec does 1 damage")
-    ;; Challenger trashes Prisec
+    ;; Challenger discards Prisec
     (prompt-choice :challenger "Yes")
     (run-empty-locale state "HQ")
     (is (not (:prompt @state)) "Prisec does not trigger from HQ")))
@@ -849,11 +849,11 @@
     (prompt-choice :challenger "Unrevealed region in Archives")
     (prompt-select :challenger (get-content state :archives 0))
     (prompt-choice :contestant "Yes") ; contestant pay for PriSec
-    (prompt-choice :challenger "No") ; challenger don't pay to trash
+    (prompt-choice :challenger "No") ; challenger don't pay to discard
     (is (:run @state) "Run still active")
     (prompt-choice :challenger "Unrevealed region in Archives")
     (prompt-choice :contestant "Yes") ; contestant pay for PriSec
-    (prompt-choice :challenger "No") ; challenger don't pay to trash
+    (prompt-choice :challenger "No") ; challenger don't pay to discard
     (is (not (:run @state)) "Run ended")
     (is (= 4 (count (:discard (get-challenger)))) "Challenger took 4 meat damage")))
 
@@ -868,7 +868,7 @@
     (let [pp (get-content state :party1 0)]
       (run-empty-locale state "Locale 1")
       (is (= 9 (:credit (get-contestant))) "Gained 2 credits from Challenger accessing Product Placement")
-      (prompt-choice :challenger "Yes") ; Challenger trashes PP
+      (prompt-choice :challenger "Yes") ; Challenger discards PP
       (run-empty-locale state "Archives")
       (is (= 9 (:credit (get-contestant)))
           "No credits gained when Product Placement accessed in Archives"))))
@@ -902,8 +902,8 @@
       (is (= 0 (:credit (get-challenger))) "Challenger was charged 5cr")
       (is (= 1 (count (:scored (get-challenger)))) "1 scored agenda"))))
 
-(deftest red-herrings-trash
-  ;; Red Herrings - Cost increase even when trashed
+(deftest red-herrings-discard
+  ;; Red Herrings - Cost increase even when discarded
   (do-game
     (new-game (default-contestant [(qty "Red Herrings" 3) (qty "House of Knives" 3)])
               (default-challenger))
@@ -917,19 +917,19 @@
       (run-empty-locale state "Locale 1")
       ;; challenger now chooses which to access.
       (prompt-select :challenger rh)
-      (prompt-choice :challenger "Yes") ; pay to trash
+      (prompt-choice :challenger "Yes") ; pay to discard
       (prompt-select :challenger hok)
       ;; should now have prompt to pay 5cr for HoK
       (prompt-choice :challenger "Yes")
       (is (= 0 (:credit (get-challenger))) "Challenger was charged 5cr")
       (is (= 1 (count (:scored (get-challenger)))) "1 scored agenda"))))
 
-(deftest red-herrings-trash-from-hand
-  ;; Red Herrings - Trashed from Hand
+(deftest red-herrings-discard-from-hand
+  ;; Red Herrings - Discarded from Hand
   (do-game
     (new-game (default-contestant [(qty "Red Herrings" 1) (qty "House of Knives" 1)])
               (default-challenger))
-    (trash-from-hand state :contestant "Red Herrings")
+    (discard-from-hand state :contestant "Red Herrings")
     (is (= 1 (count (:discard (get-contestant)))) "1 card in Archives")
     (take-credits state :contestant)
 
@@ -977,7 +977,7 @@
       (is (= 7 (:credit (get-challenger))))
       (run-on state :hq)
       (run-successful state)
-      (prompt-choice :challenger "Yes") ; pay to trash / 7 cr - 4 cr
+      (prompt-choice :challenger "Yes") ; pay to discard / 7 cr - 4 cr
       (is (= 2 (:click (get-challenger))))
       (is (= 3 (:credit (get-challenger))))
       (run-on state :hq)
@@ -985,7 +985,7 @@
       (is (= 1 (:click (get-challenger)))))))
 
 (deftest ruhr-valley-enable-state
-  ;; Ruhr Valley - If the challenger trashes with one click left, the ability to run is enabled
+  ;; Ruhr Valley - If the challenger discards with one click left, the ability to run is enabled
   (do-game
     (new-game (default-contestant [(qty "Ruhr Valley" 1)])
               (default-challenger))
@@ -999,12 +999,12 @@
       (is (= 3 (:click (get-challenger))))
       (run-on state :hq)
       (run-successful state)
-      (prompt-choice :challenger "Yes") ; pay to trash / 6 cr - 4 cr
+      (prompt-choice :challenger "Yes") ; pay to discard / 6 cr - 4 cr
       (is (= 1 (:click (get-challenger))))
       (run-on state :hq))))
 
 (deftest ryon-knight
-  ;; Ryon Knight - Trash during run to do 1 brain damage if Challenger has no clicks remaining
+  ;; Ryon Knight - Discard during run to do 1 brain damage if Challenger has no clicks remaining
   (do-game
     (new-game (default-contestant [(qty "Ryon Knight" 1)])
               (default-challenger))
@@ -1023,7 +1023,7 @@
       (card-ability state :contestant ryon 0)
       (is (= 0 (:click (get-challenger))))
       (is (= 1 (:brain-damage (get-challenger))) "Did 1 brain damage")
-      (is (= 1 (count (:discard (get-contestant)))) "Ryon trashed"))))
+      (is (= 1 (count (:discard (get-contestant)))) "Ryon discarded"))))
 
 (deftest satellite-grid
   ;; Satellite Grid - Add 1 fake advancement on all Character protecting locale
@@ -1049,7 +1049,7 @@
       (is (= 2 (:current-strength (refresh iw1))) "Ice Wall strength boost only from real advancement"))))
 
 (deftest signal-jamming
-  ;; Trash to stop installs for the rest of the run
+  ;; Discard to stop places for the rest of the run
   (do-game
     (new-game (default-contestant [(qty "Signal Jamming" 3)])
               (default-challenger [(qty "Self-modifying Code" 3) (qty "Reaver" 1)]))
@@ -1098,8 +1098,8 @@
       (is (= 1 (:click (get-challenger))) "Challenger was charged 1click")
       (is (= 1 (count (:scored (get-challenger)))) "1 scored agenda"))))
 
-(deftest strongbox-trash
-  ;; Strongbox - Click cost even when trashed
+(deftest strongbox-discard
+  ;; Strongbox - Click cost even when discarded
   (do-game
     (new-game (default-contestant [(qty "Strongbox" 3) (qty "House of Knives" 3)])
               (default-challenger))
@@ -1113,7 +1113,7 @@
       (core/reveal state :contestant sb)
       (run-empty-locale state "Locale 1")
       (prompt-select :challenger sb)
-      (prompt-choice :challenger "Yes") ; pay to trash
+      (prompt-choice :challenger "Yes") ; pay to discard
       (prompt-select :challenger hok)
       (prompt-choice :challenger "Yes")
       (is (= 2 (:click (get-challenger))) "Challenger was charged 1click")
@@ -1229,10 +1229,10 @@
     (let [eve1 (get-content state :party1 1)]
       (play-from-hand state :challenger "Drive By")
       (prompt-select :challenger eve1)
-      (is (empty? (:discard (get-contestant))) "Expose and trash prevented"))))
+      (is (empty? (:discard (get-contestant))) "Expose and discard prevented"))))
 
-(deftest valley-grid-trash
-  ;; Valley Grid - Reduce Challenger max hand size and restore it even if trashed
+(deftest valley-grid-discard
+  ;; Valley Grid - Reduce Challenger max hand size and restore it even if discarded
   (do-game
     (new-game (default-contestant [(qty "Valley Grid" 3) (qty "Ice Wall" 3)])
               (default-challenger))
@@ -1246,6 +1246,6 @@
       (is (= 3 (core/hand-size state :challenger)) "Challenger max hand size reduced by 2")
       (is (= 2 (get-in (refresh vg) [:times-used])) "Saved number of times Valley Grid used")
       (run-successful state)
-      (prompt-choice :challenger "Yes") ; pay to trash
+      (prompt-choice :challenger "Yes") ; pay to discard
       (take-credits state :challenger 3)
       (is (= 5 (core/hand-size state :challenger)) "Challenger max hand size increased by 2 at start of Contestant turn"))))

@@ -12,7 +12,17 @@
     :effect (effect (update-breaker-strength (:host card)))
     :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
                                     :effect (effect (breaker-strength-bonus 1))}}}
+   "Cast from the Order"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
    "Covetous Thoughts"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Cruel Claw Perceived"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
     :effect (effect (update-breaker-strength (:host card)))
     :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
@@ -22,12 +32,67 @@
     :effect (effect (update-breaker-strength (:host card)))
     :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
                                     :effect (effect (breaker-strength-bonus 1))}}}
-   "Dragon's Curse"
+   "Diminish and Depart"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Dragons Curse"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Enchanted Stream"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Eyes of the Shadow"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Fear of Kin"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Fled into Darkness"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Flies and Spiders"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
     :effect (effect (update-breaker-strength (:host card)))
     :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
                                     :effect (effect (breaker-strength-bonus 1))}}}
    "Foes Shall Fall"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Fools Bane"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Foolish Words"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "He is Lost to Us"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Heritage Forsaken"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Icy Touch"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
     :effect (effect (update-breaker-strength (:host card)))
     :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
@@ -67,7 +132,57 @@
     :effect (effect (update-breaker-strength (:host card)))
     :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
                                     :effect (effect (breaker-strength-bonus 1))}}}
+   "Many Burdens"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Memories Stolen"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Morgul-knife"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Nothing to Eat or Drink"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Out of Practice"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
    "Pale Dream-maker"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Plague"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Politics"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Power Relinquished to Artifice"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Ransom"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Rebel-talk"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
     :effect (effect (update-breaker-strength (:host card)))
     :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
@@ -79,7 +194,52 @@
                                 (resolve-ability state side
                                                  {:msg (msg "to draw 3 cards.")
                                                   :effect (effect (set-hand-aside :hand))} card nil)))}]}
+   "Shut Yer Mouth"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "So Youve Come Back"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Something Else at Work"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Something Has Slipped"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Spells of the Barrow-wights"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
    "The Burden of Time"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "The Pale Sword"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Wielders Curse"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Will You Not Come Down?"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Wound of Long Burden"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
     :effect (effect (update-breaker-strength (:host card)))
     :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))

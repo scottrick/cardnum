@@ -12,8 +12,8 @@
     (core/reveal state :contestant (get-content state :rd 0))
     (is (not (:revealed (get-content state :rd 0))) "Second Caprcharacter could not be revealed")))
 
-(deftest challenger-install-resource
-  ;; challenger-install - Resource; ensure costs are paid
+(deftest challenger-place-resource
+  ;; challenger-place - Resource; ensure costs are paid
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Gordian Blade" 1)]))
@@ -23,8 +23,8 @@
       (is (= (- 5 (:cost gord)) (:credit (get-challenger))) "Resource cost was applied")
       (is (= (- 4 (:memoryunits gord)) (:memory (get-challenger))) "Resource MU was applied"))))
 
-(deftest challenger-installing-uniques
-  ;; Installing a copy of an active unique Challenger card is prevented
+(deftest challenger-placing-uniques
+  ;; Placing a copy of an active unique Challenger card is prevented
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Kati Jones" 2) (qty "Scheherazade" 2)
@@ -42,13 +42,13 @@
       (is (= "Hivemind" (:title (first (:hosted (refresh scheh))))) "Hivemind hosted on Scheherazade")
       (play-from-hand state :challenger "Kati Jones")
       (is (= 1 (:click (get-challenger))) "Not charged a click")
-      (is (= 2 (count (get-in @state [:challenger :rig :muthereff]))) "2nd copy of Kati couldn't install")
+      (is (= 2 (count (get-in @state [:challenger :rig :muthereff]))) "2nd copy of Kati couldn't place")
       (card-ability state :challenger oca 0)
       (prompt-select :challenger (find-card "Kati Jones" (:hand (get-challenger))))
       (is (empty? (:hosted (refresh oca))) "2nd copy of Kati couldn't be hosted on OCA")
       (is (= 1 (:click (get-challenger))) "Not charged a click")
       (play-from-hand state :challenger "Hivemind")
-      (is (= 1 (count (get-in @state [:challenger :rig :resource]))) "2nd copy of Hivemind couldn't install")
+      (is (= 1 (count (get-in @state [:challenger :rig :resource]))) "2nd copy of Hivemind couldn't place")
       (card-ability state :challenger scheh 0)
       (prompt-select :challenger (find-card "Hivemind" (:hand (get-challenger))))
       (is (= 1 (count (:hosted (refresh scheh)))) "2nd copy of Hivemind couldn't be hosted on Scheherazade")
@@ -62,8 +62,8 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Gordian Blade")
     (let [gord (get-in @state [:challenger :rig :resource 0])]
-      (core/trash state :challenger gord)
-      (is (= 4 (:memory (get-challenger))) "Trashing the resource restored MU"))))
+      (core/discard state :challenger gord)
+      (is (= 4 (:memory (get-challenger))) "Discarding the resource restored MU"))))
 
 (deftest agenda-forfeit-challenger
   ;; forfeit - Don't deactivate agenda to trigger leave play effects if Challenger forfeits a stolen agenda
@@ -95,7 +95,7 @@
       (is (= 3 (:click-per-turn (get-contestant))) "Back down to 3 clicks per turn"))))
 
 (deftest refresh-recurring-credits-hosted
-  ;; host - Recurring credits on cards hosted after install refresh properly
+  ;; host - Recurring credits on cards hosted after place refresh properly
   (do-game
     (new-game (default-contestant [(qty "Ice Wall" 3) (qty "Hedge Fund" 3)])
               (default-challenger [(qty "Compromised Employee" 1) (qty "Off-Campus Apartment" 1)]))
@@ -105,7 +105,7 @@
     (play-from-hand state :challenger "Compromised Employee")
     (let [iwall (get-character state :hq 0)
           apt (get-in @state [:challenger :rig :muthereff 0])]
-      (card-ability state :challenger apt 1) ; use Off-Campus option to host an installed card
+      (card-ability state :challenger apt 1) ; use Off-Campus option to host an placed card
       (prompt-select :challenger (find-card "Compromised Employee"
                                         (get-in @state [:challenger :rig :muthereff])))
       (let [cehosted (first (:hosted (refresh apt)))]
@@ -177,8 +177,8 @@
       (core/score state :contestant {:card (refresh ai)})
       (is (not (nil? (get-content state :party1 0)))))))
 
-(deftest trash-contestant-hosted
-  ;; Hosted Contestant cards are included in all-installed and fire leave-play effects when trashed
+(deftest discard-contestant-hosted
+  ;; Hosted Contestant cards are included in all-placed and fire leave-play effects when discarded
   (do-game
     (new-game (default-contestant [(qty "Full Immersion RecStudio" 1) (qty "Worlds Plaza" 1) (qty "Director Haas" 1)])
               (default-challenger))
@@ -195,16 +195,16 @@
           (is (:revealed dh) "Director Haas was revealed")
           (is (= 0 (:credit (get-contestant))) "Contestant has 0 credits")
           (is (= 4 (:click-per-turn (get-contestant))) "Contestant has 4 clicks per turn")
-          (is (= 3 (count (core/all-installed state :contestant))) "all-installed counting hosted Contestant cards")
+          (is (= 3 (count (core/all-placed state :contestant))) "all-placed counting hosted Contestant cards")
           (take-credits state :contestant)
           (run-empty-locale state "Locale 1")
           (prompt-select :challenger dh)
-          (prompt-choice :challenger "Yes") ; trash Director Haas
+          (prompt-choice :challenger "Yes") ; discard Director Haas
           (prompt-choice :challenger "Done")
           (is (= 3 (:click-per-turn (get-contestant))) "Contestant down to 3 clicks per turn"))))))
 
-(deftest trash-remove-per-turn-restriction
-  ;; Trashing a card should remove it from [:per-turn] - Issue #1345
+(deftest discard-remove-per-turn-restriction
+  ;; Discarding a card should remove it from [:per-turn] - Issue #1345
   (do-game
     (new-game (default-contestant [(qty "Hedge Fund" 3)])
               (default-challenger [(qty "Imp" 2) (qty "Scavenge" 1)]))
@@ -214,22 +214,22 @@
     (let [imp (get-resource state 0)]
       (run-empty-locale state "HQ")
       (card-ability state :challenger imp 0)
-      (is (= 1 (count (:discard (get-contestant)))) "Accessed Hedge Fund is trashed")
+      (is (= 1 (count (:discard (get-contestant)))) "Accessed Hedge Fund is discarded")
       (run-empty-locale state "HQ")
       (card-ability state :challenger imp 0)
-      (is (= 1 (count (:discard (get-contestant)))) "Card can't be trashed, Imp already used this turn")
+      (is (= 1 (count (:discard (get-contestant)))) "Card can't be discarded, Imp already used this turn")
       (prompt-choice :challenger "OK")
       (play-from-hand state :challenger "Scavenge")
       (prompt-select :challenger imp)
       (prompt-select :challenger (find-card "Imp" (:discard (get-challenger)))))
     (let [imp (get-resource state 0)]
-      (is (= 2 (get-counters (refresh imp) :virus)) "Reinstalled Imp has 2 counters")
+      (is (= 2 (get-counters (refresh imp) :virus)) "Replaced Imp has 2 counters")
       (run-empty-locale state "HQ")
       (card-ability state :challenger imp 0))
-    (is (= 2 (count (:discard (get-contestant)))) "Hedge Fund trashed, reinstalled Imp used on same turn")))
+    (is (= 2 (count (:discard (get-contestant)))) "Hedge Fund discarded, replaced Imp used on same turn")))
 
-(deftest trash-seen-and-unseen
-  ;; Trash installed sites that are both seen and unseen by challenger
+(deftest discard-seen-and-unseen
+  ;; Discard placed sites that are both seen and unseen by challenger
   (do-game
     (new-game (default-contestant [(qty "PAD Campaign" 3)])
               (default-challenger))
@@ -238,37 +238,37 @@
     (take-credits state :contestant 1)
     (run-empty-locale state "Locale 1")
     (prompt-choice :challenger "No")
-    ;; run and trash the second site
+    ;; run and discard the second site
     (run-empty-locale state "Locale 2")
     (prompt-choice :challenger "Yes")
     (take-credits state :challenger 2)
     (play-from-hand state :contestant "PAD Campaign" "Locale 1")
     (prompt-choice :contestant "OK")
-    (is (= 2 (count (:discard (get-contestant)))) "Trashed existing site")
-    (is (:seen (first (get-in @state [:contestant :discard]))) "Site trashed by challenger is Seen")
+    (is (= 2 (count (:discard (get-contestant)))) "Discarded existing site")
+    (is (:seen (first (get-in @state [:contestant :discard]))) "Site discarded by challenger is Seen")
     (is (not (:seen (second (get-in @state [:contestant :discard]))))
-        "Site trashed by contestant is Unseen")
+        "Site discarded by contestant is Unseen")
     (is (not (:seen (get-content state :party1 0))) "New site is unseen")))
 
-(deftest reinstall-seen-site
-  ;; Install a faceup card in Archives, make sure it is not :seen
+(deftest replace-seen-site
+  ;; Place a faceup card in Archives, make sure it is not :seen
   (do-game
     (new-game (default-contestant [(qty "PAD Campaign" 1) (qty "Interns" 1)])
               (default-challenger))
     (play-from-hand state :contestant "PAD Campaign" "New party")
     (take-credits state :contestant 2)
-    ;; run and trash the site
+    ;; run and discard the site
     (run-empty-locale state "Locale 1")
     (prompt-choice :challenger "Yes")
-    (is (:seen (first (get-in @state [:contestant :discard]))) "Site trashed by challenger is Seen")
+    (is (:seen (first (get-in @state [:contestant :discard]))) "Site discarded by challenger is Seen")
     (take-credits state :challenger 3)
     (play-from-hand state :contestant "Interns")
     (prompt-select :contestant (first (get-in @state [:contestant :discard])))
     (prompt-choice :contestant "New party")
     (is (not (:seen (get-content state :party2 0))) "New site is unseen")))
 
-(deftest all-installed-challenger-test
-  ;; Tests all-installed for resources hosted on Character, nested hosted resources, and non-installed hosted resources
+(deftest all-placed-challenger-test
+  ;; Tests all-placed for resources hosted on Character, nested hosted resources, and non-placed hosted resources
   (do-game
     (new-game (default-contestant [(qty "Wraparound" 1)])
               (default-challenger [(qty "Omni-drive" 1) (qty "Personal Workshop" 1) (qty "Leprechaun" 1) (qty "Corroder" 1) (qty "Mimic" 1) (qty "Knight" 1)]))
@@ -298,14 +298,14 @@
               mi (find-card "Mimic" (:hand (get-challenger)))]
           (card-ability state :challenger le 0)
           (prompt-select :challenger mi)
-          (let [all-installed (core/all-installed state :challenger)]
-            (is (= 5 (count all-installed)) "Number of installed challenger cards is correct")
-            (is (not-empty (filter #(= (:title %) "Leprechaun") all-installed)) "Leprechaun is in all-installed")
-            (is (not-empty (filter #(= (:title %) "Personal Workshop") all-installed)) "Personal Workshop is in all-installed")
-            (is (not-empty (filter #(= (:title %) "Mimic") all-installed)) "Mimic is in all-installed")
-            (is (not-empty (filter #(= (:title %) "Omni-drive") all-installed)) "Omni-drive is in all-installed")
-            (is (not-empty (filter #(= (:title %) "Knight") all-installed)) "Knight is in all-installed")
-            (is (empty (filter #(= (:title %) "Corroder") all-installed)) "Corroder is not in all-installed")))))))
+          (let [all-placed (core/all-placed state :challenger)]
+            (is (= 5 (count all-placed)) "Number of placed challenger cards is correct")
+            (is (not-empty (filter #(= (:title %) "Leprechaun") all-placed)) "Leprechaun is in all-placed")
+            (is (not-empty (filter #(= (:title %) "Personal Workshop") all-placed)) "Personal Workshop is in all-placed")
+            (is (not-empty (filter #(= (:title %) "Mimic") all-placed)) "Mimic is in all-placed")
+            (is (not-empty (filter #(= (:title %) "Omni-drive") all-placed)) "Omni-drive is in all-placed")
+            (is (not-empty (filter #(= (:title %) "Knight") all-placed)) "Knight is in all-placed")
+            (is (empty (filter #(= (:title %) "Corroder") all-placed)) "Corroder is not in all-placed")))))))
 
 (deftest log-accessed-names
   ;; Check that accessed card names are logged - except those on R&D, and no logs on archives
@@ -314,15 +314,15 @@
       (default-contestant [(qty "PAD Campaign" 7)])
       (default-challenger))
     (play-from-hand state :contestant "PAD Campaign" "New party")
-    (trash-from-hand state :contestant "PAD Campaign")
+    (discard-from-hand state :contestant "PAD Campaign")
     (take-credits state :contestant)
     (run-empty-locale state :hq)
-    (prompt-choice :challenger "No") ; Dismiss trash prompt
+    (prompt-choice :challenger "No") ; Dismiss discard prompt
     (is (last-log-contains? state "PAD Campaign") "Accessed card name was logged")
     (run-empty-locale state :rd)
     (is (last-log-contains? state "an unseen card") "Accessed card name was not logged")
     (run-empty-locale state :party1)
-    (prompt-choice :challenger "No") ; Dismiss trash prompt
+    (prompt-choice :challenger "No") ; Dismiss discard prompt
     (is (last-log-contains? state "PAD Campaign") "Accessed card name was logged")))
 
 (deftest counter-manipulation-commands
@@ -332,7 +332,7 @@
                              (qty "Public Support" 2)
                              (qty "Oaktown Renovation" 1)])
               (default-challenger))
-    ;; Turn 1 Contestant, install oaktown and sites
+    ;; Turn 1 Contestant, place oaktown and sites
     (core/gain state :contestant :click 4)
     (play-from-hand state :contestant "Adonis Campaign" "New party")
     (play-from-hand state :contestant "Public Support" "New party")
@@ -428,15 +428,15 @@
     (run-empty-locale state :party1)
     (prompt-choice :contestant "No")
     (prompt-choice :challenger "Yes")
-    (is (= 5 (:credit (get-challenger))) "1 BP credit spent to trash CVS")
+    (is (= 5 (:credit (get-challenger))) "1 BP credit spent to discard CVS")
     (run-empty-locale state :hq)
     (prompt-choice :contestant "No")
     (prompt-choice :challenger "Yes")
-    (is (= 5 (:credit (get-challenger))) "1 BP credit spent to trash CVS")
+    (is (= 5 (:credit (get-challenger))) "1 BP credit spent to discard CVS")
     (run-empty-locale state :rd)
     (prompt-choice :contestant "No")
     (prompt-choice :challenger "Yes")
-    (is (= 5 (:credit (get-challenger))) "1 BP credit spent to trash CVS")))
+    (is (= 5 (:credit (get-challenger))) "1 BP credit spent to discard CVS")))
 
 (deftest run-psi-bad-publicity-credits
   ;; Should pay from Bad Pub for Psi games during run #2374
@@ -521,9 +521,9 @@
   (do-game
     (new-game (default-contestant [(qty "Breaking News" 3)])
               (default-challenger))
-    (trash-from-hand state :contestant "Breaking News")
-    (trash-from-hand state :contestant "Breaking News")
-    (trash-from-hand state :contestant "Breaking News")
+    (discard-from-hand state :contestant "Breaking News")
+    (discard-from-hand state :contestant "Breaking News")
+    (discard-from-hand state :contestant "Breaking News")
     (take-credits state :contestant)
     (run-empty-locale state :archives)
     (prompt-choice :challenger "Breaking News")

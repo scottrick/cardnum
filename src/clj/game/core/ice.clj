@@ -34,7 +34,7 @@
   (doseq [character (:characters locale)] (update-character-strength state side character) ))
 
 (defn update-all-character
-  "Updates all installed character."
+  "Updates all placed character."
   [state side]
   (doseq [locale (get-in @state [:contestant :locales])]
     (update-character-in-locale state side (second locale))))

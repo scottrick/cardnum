@@ -13,16 +13,16 @@
   "Function for constructing a Shard card"
   ([target-locale message effect-fn] (shard-constructor target-locale message nil effect-fn))
   ([target-locale message ability-options effect-fn]
-   (letfn [(can-install-shard? [state run] (and run
+   (letfn [(can-place-shard? [state run] (and run
                                                 (= (:locale run) [target-locale])
                                                 (zero? (:position run))
                                                 (not (:access @state))))]
-     {:implementation "Click Shard to install when last Character is passed, but before hitting Successful Run button"
-      :abilities [(merge {:effect (effect (trash card {:cause :ability-cost}) (effect-fn eid card target))
+     {:implementation "Click Shard to place when last Character is passed, but before hitting Successful Run button"
+      :abilities [(merge {:effect (effect (discard card {:cause :ability-cost}) (effect-fn eid card target))
                           :msg message}
                          ability-options)]
-      :install-cost-bonus (req (when (can-install-shard? state run) [:credit -15 :click -1]))
-      :effect (req (when (can-install-shard? state run)
+      :place-cost-bonus (req (when (can-place-shard? state run) [:credit -15 :click -1]))
+      :effect (req (when (can-place-shard? state run)
                      (when-completed (register-successful-run state side (:locale run))
                                      (do (clear-wait-prompt state :contestant)
                                          (swap! state update-in [:challenger :prompt] rest)

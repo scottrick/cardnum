@@ -1,7 +1,7 @@
 (in-ns 'game.core)
 
-(declare active? all-installed cards card-init deactivate card-flag? get-card-hosted handle-end-run hazard? has-subtype? character?
-         make-eid resource? register-events remove-from-host remove-icon reset-card muthereff? revealed? trash trigger-event update-hosted!
+(declare active? all-placed cards card-init deactivate card-flag? get-card-hosted handle-end-run hazard? has-subtype? character?
+         make-eid resource? register-events remove-from-host remove-icon reset-card muthereff? revealed? discard trigger-event update-hosted!
          update-character-strength unregister-events)
 
 ;;; Functions for loading card information.
@@ -58,7 +58,7 @@
 (defn move
   "Moves the given card to the given new zone."
   ([state side card to] (move state side card to nil))
-  ([state side {:keys [zone cid host installed] :as card} to {:keys [front keep-locale-alive force] :as options}]
+  ([state side {:keys [zone cid host placed] :as card} to {:keys [front keep-locale-alive force] :as options}]
    (let [zone (if host (map to-keyword (:zone host)) zone)
          src-zone (first zone)
          target-zone (if (vector? to) (first to) to)
@@ -70,13 +70,13 @@
                     force))
        (trigger-event state side :pre-card-moved card src-zone target-zone)
        (let [dest (if (sequential? to) (vec to) [to])
-             trash-hosted (fn [h]
-                             (trash state side
+             discard-hosted (fn [h]
+                             (discard state side
                                     (update-in h [:zone] #(map to-keyword %))
                                     {:unpreventable true
                                      :suppress-event true
-                                     ;; this handles executives getting trashed before World's Plaza #2949
-                                     :host-trashed true})
+                                     ;; this handles executives getting discarded before World's Plaza #2949
+                                     :host-discarded true})
                                ())
              update-hosted (fn [h]
                              (let [newz (flatten (list (if (vector? to) to [to])))
@@ -88,17 +88,17 @@
                                (register-events state side (:events (card-def newh)) newh)
                                newh))
              hosted (seq (flatten (map
-                      (if same-zone? update-hosted trash-hosted)
+                      (if same-zone? update-hosted discard-hosted)
                       (:hosted card))))
              c (if (and (= side :contestant) (= (first dest) :discard) (revealed? card))
                  (assoc card :seen true) card)
-             c (if (and (or installed host (#{:locales :scored :current} (first zone)))
+             c (if (and (or placed host (#{:locales :scored :current} (first zone)))
                         (#{:hand :deck :discard :rfg} (first dest))
                         (not (:facedown c)))
                  (deactivate state side c) c)
-             c (if (= dest [:rig :facedown]) (assoc c :facedown true :installed true) (dissoc c :facedown))
+             c (if (= dest [:rig :facedown]) (assoc c :facedown true :placed true) (dissoc c :facedown))
              moved-card (assoc c :zone dest :host nil :hosted hosted :previous-zone (:zone c))
-             moved-card (if (and (:facedown moved-card) (:installed moved-card))
+             moved-card (if (and (:facedown moved-card) (:placed moved-card))
                           (deactivate state side moved-card) moved-card)
              moved-card (if (and (= side :contestant) (#{:hand :deck} (first dest)))
                           (dissoc moved-card :seen) moved-card)
@@ -203,11 +203,11 @@
 (defn get-virus-counters
   "Calculate the number of virus countes on the given card, taking Hivemind into account."
   [state side card]
-  (let [hiveminds (filter #(= (:title %) "Hivemind") (all-installed state :challenger))]
+  (let [hiveminds (filter #(= (:title %) "Hivemind") (all-placed state :challenger))]
     (reduce + (map #(get-in % [:counter :virus] 0) (cons card hiveminds)))))
 
 (defn card->locale
-  "Returns the locale map that this card is installed in or protecting."
+  "Returns the locale map that this card is placed in or protecting."
   [state card]
   (let [z (:zone card)]
     (get-in @state [:contestant :locales (second z)])))

@@ -6,8 +6,8 @@
             [clojure.test :refer :all]))
 
 
-(deftest atman-install-0
-  ;; Atman - Installing with 0 power counters
+(deftest atman-place-0
+  ;; Atman - Placing with 0 power counters
   (do-game
     (new-game (default-contestant) (default-challenger [(qty "Atman" 1)]))
     (take-credits state :contestant)
@@ -18,8 +18,8 @@
       (is (= 0 (get-counters atman :power)) "0 power counters")
       (is (= 0 (:current-strength atman)) "0 current strength"))))
 
-(deftest atman-install-2
-  ;; Atman - Installing with 2 power counters
+(deftest atman-place-2
+  ;; Atman - Placing with 2 power counters
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Atman" 1)]))
@@ -48,8 +48,8 @@
       (card-ability state :challenger (refresh baba) 0)
       (prompt-select :challenger (find-card "Yog.0" (:hand (get-challenger))))
       (is (= (+ 3 base-abicount) (count (:abilities (refresh baba)))) "Baba Yaga gained 1 subroutine from Yog.0")
-      (core/trash state :challenger (first (:hosted (refresh baba))))
-      (is (= (inc base-abicount) (count (:abilities (refresh baba)))) "Baba Yaga lost 2 subroutines from trashed Faerie")
+      (core/discard state :challenger (first (:hosted (refresh baba))))
+      (is (= (inc base-abicount) (count (:abilities (refresh baba)))) "Baba Yaga lost 2 subroutines from discarded Faerie")
       (card-ability state :challenger baba 1)
       (prompt-select :challenger (find-card "Sharpshooter" (:resource (:rig (get-challenger)))))
       (is (= 2 (count (:hosted (refresh baba)))) "Faerie and Sharpshooter hosted on Baba Yaga")
@@ -57,7 +57,7 @@
       (is (= 4 (:credit (get-challenger))) "-5 from Baba, -1 from Sharpshooter played into Rig, -5 from Yog"))))
 
 (deftest chameleon-clonechip
-  ;; Chameleon - Install on contestant turn, only returns to hand at end of challenger's turn
+  ;; Chameleon - Place on contestant turn, only returns to hand at end of challenger's turn
   (do-game
     (new-game (default-contestant) (default-challenger [(qty "Chameleon" 1) (qty "Clone Chip" 1)]))
     (take-credits state :contestant)
@@ -65,7 +65,7 @@
     (core/move state :challenger (find-card "Chameleon" (:hand (get-challenger))) :discard)
     (take-credits state :challenger)
     (is (= 0 (count (:hand (get-challenger)))))
-    ;; Install Chameleon on contestant turn
+    ;; Place Chameleon on contestant turn
     (take-credits state :contestant 1)
     (let [chip (get-in @state [:challenger :rig :hazard 0])]
       (card-ability state :challenger chip 0)
@@ -87,15 +87,15 @@
     ;; Host the Chameleon on Scheherazade that was just played (as in Personal Workshop/Hayley ability scenarios)
     (play-from-hand state :challenger "Scheherazade")
     (let [scheherazade (get-in @state [:challenger :rig :resource 1])]
-      (card-ability state :challenger scheherazade 1) ; Host an installed resource
+      (card-ability state :challenger scheherazade 1) ; Host an placed resource
       (prompt-select :challenger (find-card "Chameleon" (:resource (:rig (get-challenger)))))
       (is (= 4 (:credit (get-challenger))) "+1 from hosting onto Scheherazade")
-      ;; Install another Chameleon directly onto Scheherazade
-      (card-ability state :challenger scheherazade 0) ; Install and host a resource from Grip
+      ;; Place another Chameleon directly onto Scheherazade
+      (card-ability state :challenger scheherazade 0) ; Place and host a resource from Grip
       (prompt-select :challenger (find-card "Chameleon" (:hand (get-challenger))))
       (prompt-choice :challenger "Code Gate")
       (is (= 2 (count (:hosted (refresh scheherazade)))) "2 Chameleons hosted on Scheherazade")
-      (is (= 3 (:credit (get-challenger))) "-2 from playing Chameleon, +1 from installing onto Scheherazade"))
+      (is (= 3 (:credit (get-challenger))) "-2 from playing Chameleon, +1 from placing onto Scheherazade"))
     (is (= 0 (count (:hand (get-challenger)))) "Both Chameleons in play - hand size 0")
     (take-credits state :challenger)
     (is (= 2 (count (:hand (get-challenger)))) "Both Chameleons returned to hand - hand size 2")))
@@ -107,7 +107,7 @@
              (default-challenger [(qty "Cerberus \"Rex\" H2" 1)]))
    (take-credits state :contestant)
    (play-from-hand state :challenger "Cerberus \"Rex\" H2")
-   (is (= 2 (:credit (get-challenger))) "2 credits left after install")
+   (is (= 2 (:credit (get-challenger))) "2 credits left after place")
    (let [rex (get-in @state [:challenger :rig :resource 0])]
      (is (= 4 (get-counters rex :power)) "Start with 4 counters")
      ;; boost strength
@@ -153,7 +153,7 @@
           "Crypsis has 0 virus counters")
       (run-jack-out state)
       (is (= "Crypsis" (:title (first (:discard (get-challenger)))))
-          "Crypsis was trashed"))
+          "Crypsis was discarded"))
 
     (take-credits state :challenger)
     (take-credits state :contestant)
@@ -167,7 +167,7 @@
           "Crypsis has nil virus counters")
       (run-jack-out state)
       (is (= "Crypsis" (:title (first (:discard (get-challenger)))))
-          "Crypsis was trashed"))))
+          "Crypsis was discarded"))))
 
 (deftest deus-x-multiple-hostile-infrastructure
   ;; Multiple Hostile Infrastructure vs. Deus X
@@ -211,8 +211,8 @@
       (is (= 3 (count (:hand (get-challenger)))) "Deus X prevented net damage from accessing Fetal AI, but not from Personal Evolution")
       (is (= 1 (count (:scored (get-challenger)))) "Fetal AI stolen"))))
 
-(deftest faerie-auto-trash
-  ;; Faerie - trash after encounter is over, not before.
+(deftest faerie-auto-discard
+  ;; Faerie - discard after encounter is over, not before.
   (do-game
     (new-game
       (default-contestant [(qty "Caduceus" 1)])
@@ -224,9 +224,9 @@
       (run-on state :archives)
       (core/reveal state :contestant (get-character state :archives 0))
       (card-ability state :challenger fae 0)
-      (is (refresh fae) "Faerie not trashed until encounter over")
+      (is (refresh fae) "Faerie not discarded until encounter over")
       (run-continue state)
-      (is (find-card "Faerie" (:discard (get-challenger))) "Faerie trashed"))))
+      (is (find-card "Faerie" (:discard (get-challenger))) "Faerie discarded"))))
 
 (deftest faust-pump
   ;; Faust - Pump by discarding
@@ -239,10 +239,10 @@
       (card-ability state :challenger faust 1)
       (prompt-card :challenger (first (:hand (get-challenger))))
       (is (= 4 (:current-strength (refresh faust))) "4 current strength")
-      (is (= 1 (count (:discard (get-challenger)))) "1 card trashed"))))
+      (is (= 1 (count (:discard (get-challenger)))) "1 card discarded"))))
 
 (deftest faust-pump
-  ;; Faust - Pump does not trigger trash prevention. #760
+  ;; Faust - Pump does not trigger discard prevention. #760
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Faust" 1)
@@ -256,17 +256,17 @@
     (play-from-hand state :challenger "Faust")
     (play-from-hand state :challenger "Fall Guy")
     (play-from-hand state :challenger "Sacrificial Construct")
-    (is (= 2 (count (get-in @state [:challenger :rig :muthereff]))) "Muthereffs installed")
+    (is (= 2 (count (get-in @state [:challenger :rig :muthereff]))) "Muthereffs placed")
     (let [faust (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger faust 1)
       (prompt-card :challenger (find-card "Astrolabe" (:hand (get-challenger))))
-      (is (empty? (:prompt (get-challenger))) "No trash-prevention prompt for hazard")
+      (is (empty? (:prompt (get-challenger))) "No discard-prevention prompt for hazard")
       (card-ability state :challenger faust 1)
       (prompt-card :challenger (find-card "Gordian Blade" (:hand (get-challenger))))
-      (is (empty? (:prompt (get-challenger))) "No trash-prevention prompt for resource")
+      (is (empty? (:prompt (get-challenger))) "No discard-prevention prompt for resource")
       (card-ability state :challenger faust 1)
       (prompt-card :challenger (find-card "Armitage Codebusting" (:hand (get-challenger))))
-      (is (empty? (:prompt (get-challenger))) "No trash-prevention prompt for muthereff"))))
+      (is (empty? (:prompt (get-challenger))) "No discard-prevention prompt for muthereff"))))
 
 (deftest femme-counter
   ;; Femme Fatale counter test
@@ -280,16 +280,16 @@
     (play-from-hand state :challenger "Femme Fatale")
     (prompt-select :challenger iw)
     (is (:icon (refresh iw)) "Ice Wall has an icon")
-    (core/trash state :challenger (get-in @state [:challenger :rig :resource 0]))
-    (is (not (:icon (refresh iw))) "Ice Wall does not have an icon after Femme trashed")
+    (core/discard state :challenger (get-in @state [:challenger :rig :resource 0]))
+    (is (not (:icon (refresh iw))) "Ice Wall does not have an icon after Femme discarded")
     (play-from-hand state :challenger "Femme Fatale")
     (prompt-select :challenger iw)
     (is (:icon (refresh iw)) "Ice Wall has an icon")
-    (core/trash state :contestant iw)
-    (is (not (:icon (refresh iw))) "Ice Wall does not have an icon after itself trashed"))))
+    (core/discard state :contestant iw)
+    (is (not (:icon (refresh iw))) "Ice Wall does not have an icon after itself discarded"))))
 
-(deftest nanotk-install-character-during-run
-  ;; Na'Not'K - Strength adjusts accordingly when character installed during run
+(deftest nanotk-place-character-during-run
+  ;; Na'Not'K - Strength adjusts accordingly when character placed during run
   (do-game
     (new-game (default-contestant [(qty "Architect" 1) (qty "Eli 1.0" 1)])
               (default-challenger [(qty "Na'Not'K" 1)]))
@@ -346,34 +346,34 @@
       (is (= 5 (get-counters (refresh ov) :power)) "Overmind has 5 counters"))))
 
 (deftest paperclip
-  ;; Paperclip - prompt to install on encounter, but not if another is installed
+  ;; Paperclip - prompt to place on encounter, but not if another is placed
   (do-game
     (new-game (default-contestant [(qty "Vanilla" 1)])
               (default-challenger [(qty "Paperclip" 2)]))
     (play-from-hand state :contestant "Vanilla" "Archives")
     (take-credits state :contestant)
-    (trash-from-hand state :challenger "Paperclip")
+    (discard-from-hand state :challenger "Paperclip")
     (run-on state "Archives")
     (core/reveal state :contestant (get-character state :archives 0))
-    (prompt-choice :challenger "Yes") ; install paperclip
+    (prompt-choice :challenger "Yes") ; place paperclip
     (run-continue state)
     (run-successful state)
     (is (not (:run @state)) "Run ended")
-    (trash-from-hand state :challenger "Paperclip")
+    (discard-from-hand state :challenger "Paperclip")
     (run-on state "Archives")
-    (is (empty? (:prompt (get-challenger))) "No prompt to install second Paperclip")))
+    (is (empty? (:prompt (get-challenger))) "No prompt to place second Paperclip")))
 
 (deftest paperclip-multiple
-  ;; Paperclip - do not show a second install prompt if user said No to first, when multiple are in heap
+  ;; Paperclip - do not show a second place prompt if user said No to first, when multiple are in heap
   (do-game
     (new-game (default-contestant [(qty "Vanilla" 2)])
               (default-challenger [(qty "Paperclip" 3)]))
     (play-from-hand state :contestant "Vanilla" "Archives")
     (play-from-hand state :contestant "Vanilla" "Archives")
     (take-credits state :contestant)
-    (trash-from-hand state :challenger "Paperclip")
-    (trash-from-hand state :challenger "Paperclip")
-    (trash-from-hand state :challenger "Paperclip")
+    (discard-from-hand state :challenger "Paperclip")
+    (discard-from-hand state :challenger "Paperclip")
+    (discard-from-hand state :challenger "Paperclip")
     (run-on state "Archives")
     (core/reveal state :contestant (get-character state :archives 1))
     (prompt-choice :challenger "No")
@@ -384,13 +384,13 @@
     (prompt-choice :challenger "No")
     (is (empty? (:prompt (get-challenger))) "No additional prompts to reveal other copies of Paperclip")
     (core/jack-out state :challenger)
-    ;; Run again, make sure we get the prompt to install again.
+    ;; Run again, make sure we get the prompt to place again.
     (run-on state "Archives")
     (prompt-choice :challenger "No")
     (is (empty? (:prompt (get-challenger))) "No additional prompts to reveal other copies of Paperclip")))
 
 (deftest shiv
-  ;; Shiv - Gain 1 strength for each installed breaker; no MU cost when 2+ link
+  ;; Shiv - Gain 1 strength for each placed breaker; no MU cost when 2+ link
   (do-game
     (new-game
       (default-contestant)
@@ -400,11 +400,11 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Shiv")
     (let [shiv (get-resource state 0)]
-      (is (= 1 (:current-strength (refresh shiv))) "1 installed breaker; 1 strength")
+      (is (= 1 (:current-strength (refresh shiv))) "1 placed breaker; 1 strength")
       (play-from-hand state :challenger "Inti")
-      (is (= 2 (:current-strength (refresh shiv))) "2 installed breakers; 2 strength")
+      (is (= 2 (:current-strength (refresh shiv))) "2 placed breakers; 2 strength")
       (play-from-hand state :challenger "Inti")
-      (is (= 3 (:current-strength (refresh shiv))) "3 installed breakers; 3 strength")
+      (is (= 3 (:current-strength (refresh shiv))) "3 placed breakers; 3 strength")
       (is (= 1 (:memory (get-challenger))) "3 MU consumed")
       (play-from-hand state :challenger "Access to Globalsec")
       (is (= 2 (:link (get-challenger))) "2 link")
@@ -480,7 +480,7 @@
      (is (= -1 (:current-strength (refresh character-wall))) "Strength of Ice Wall reduced to -1"))))
 
 (deftest yusuf
-  ;; Yusuf gains virus counters on successful runs and can spend virus counters from any installed card
+  ;; Yusuf gains virus counters on successful runs and can spend virus counters from any placed card
   (do-game
     (new-game (default-contestant)
               (default-challenger [(qty "Yusuf" 1) (qty "Cache" 1)]))

@@ -1,34 +1,34 @@
 (in-ns 'game.core)
 
-(def trash-resource {:prompt "Select a resource to trash"
-                    :label "Trash a resource"
-                    :msg (msg "trash " (:title target))
-                    :choices {:req #(and (installed? %)
+(def discard-resource {:prompt "Select a resource to discard"
+                    :label "Discard a resource"
+                    :msg (msg "discard " (:title target))
+                    :choices {:req #(and (placed? %)
                                          (is-type? % "Resource"))}
-                    :effect (effect (trash target {:cause :subroutine})
+                    :effect (effect (discard target {:cause :subroutine})
                                     (clear-wait-prompt :challenger))})
 
-(def trash-hazard {:prompt "Select a piece of hazard to trash"
-                     :label "Trash a piece of hazard"
-                     :msg (msg "trash " (:title target))
-                     :choices {:req #(and (installed? %)
+(def discard-hazard {:prompt "Select a piece of hazard to discard"
+                     :label "Discard a piece of hazard"
+                     :msg (msg "discard " (:title target))
+                     :choices {:req #(and (placed? %)
                                           (is-type? % "Hazard"))}
-                     :effect (effect (trash target {:cause :subroutine}))})
+                     :effect (effect (discard target {:cause :subroutine}))})
 
-(def trash-muthereff-sub {:prompt "Select a muthereff to trash"
-                         :label "Trash a muthereff"
-                         :msg (msg "trash " (:title target))
-                         :choices {:req #(and (installed? %)
+(def discard-muthereff-sub {:prompt "Select a muthereff to discard"
+                         :label "Discard a muthereff"
+                         :msg (msg "discard " (:title target))
+                         :choices {:req #(and (placed? %)
                                               (is-type? % "Muthereff"))}
-                         :effect (effect (trash target {:cause :subroutine}))})
+                         :effect (effect (discard target {:cause :subroutine}))})
 
-(def trash-installed {:prompt "Select an installed card to trash"
+(def discard-placed {:prompt "Select an placed card to discard"
                       :player :challenger
-                      :label "Force the Challenger to trash an installed card"
-                      :msg (msg "force the Challenger to trash " (:title target))
-                      :choices {:req #(and (installed? %)
+                      :label "Force the Challenger to discard an placed card"
+                      :msg (msg "force the Challenger to discard " (:title target))
+                      :choices {:req #(and (placed? %)
                                            (= (:side %) "Challenger"))}
-                      :effect (effect (trash target {:cause :subroutine}))})
+                      :effect (effect (discard target {:cause :subroutine}))})
 
 (def contestant-reveal-toast
   "Effect to be placed with `:challenger-turn-ends` to remind players of 'when turn begins'
@@ -51,7 +51,7 @@
   ([reorder-side wait-side remaining chosen n original dest]
   {:prompt (str "Select a card to move next "
                 (if (= dest "bottom") "under " "onto ")
-                (if (= reorder-side :contestant) "R&D" "your Stack"))
+                (if (= reorder-side :contestant) "your Play Deck" "your Play Deck"))
    :choices remaining
    :delayed-completion true
    :effect (req (let [chosen (cons target chosen)]
@@ -67,9 +67,9 @@
   ([reorder-side wait-side chosen original] (reorder-final reorder-side wait-side chosen original nil))
   ([reorder-side wait-side chosen original dest]
    {:prompt (if (= dest "bottom")
-              (str "The bottom cards of " (if (= reorder-side :contestant) "R&D" "your Stack")
+              (str "The bottom cards of " (if (= reorder-side :contestant) "your Play Deck" "your Play Deck")
                    " will be " (join  ", " (map :title (reverse chosen))) ".")
-              (str "The top cards of " (if (= reorder-side :contestant) "R&D" "your Stack")
+              (str "The top cards of " (if (= reorder-side :contestant) "your Play Deck" "your Play Deck")
                    " will be " (join  ", " (map :title chosen)) "."))
    :choices ["Done" "Start over"]
    :delayed-completion true
@@ -115,8 +115,8 @@
   [state card]
   (first (keep-indexed #(when (= (:cid %2) (:cid card)) %1) (get-in @state (cons :contestant (:zone card))))))
 
-(defn swap-installed
-  "Swaps two installed contestant cards - like swap Character except no strength update"
+(defn swap-placed
+  "Swaps two placed contestant cards - like swap Character except no strength update"
   [state side a b]
   (let [a-index (card-index state a)
         b-index (card-index state b)

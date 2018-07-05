@@ -40,7 +40,7 @@
 
 (defn enforce-msg
   "Prints a message related to a rules enforcement on a given card.
-  Example: 'Architect cannot be trashed while installed.'"
+  Example: 'Architect cannot be discarded while placed.'"
   [state card text]
   (say state nil {:user (get-in card [:title]) :text (str (:title card) " " text ".")}))
 
@@ -75,7 +75,7 @@
 
 ;;; "ToString"-like methods
 (defn card-str
-  "Gets a string description of an installed card, reflecting whether it is revealed,
+  "Gets a string description of an placed card, reflecting whether it is revealed,
   in/protecting a locale, facedown, or hosted."
   ([state card] (card-str state card nil))
   ([state card {:keys [visible] :as args}]
@@ -96,17 +96,18 @@
   "Gets a string representation for the given zone."
   [side zone]
   (match (vec zone)
-         [:hand] (if (= side "Challenger") "Grip" "HQ")
-         [:discard] (if (= side "Challenger") "Heap" "Archives")
-         [:deck] (if (= side "Challenger") "Stack" "R&D")
-         [:sideboard] (if (= side "Challenger") "Ch-board" "Co-board")
-         [:sites] (if (= side "Challenger") "Sites2" "Sites")
-         [:rig _] "Rig"
-         [:locales :hq _] "the root of HQ"
-         [:locales :rd _] "the root of R&D"
-         [:locales :archives _] "the root of Archives"
+         [:hand] "Hand"
+         [:discard] "Discard"
+         [:deck] "Play Deck"
+         [:sideboard] "Sideboard"
+         [:fw-dc-sb] "FW-DC-SB"
+         [:location] "Location Deck"
+         [:rig _] "in play"
+         [:locales :hq _] "the root of Hand"
+         [:locales :rd _] "the root of Deck"
+         [:locales :archives _] "the root of Discard"
+         [:locales :sites _] "the root of Location"
          :else (zone->name (second zone))))
-
 
 ;;; In-game chat commands
 (defn set-adv-counter [state side target value]
@@ -144,9 +145,9 @@
 
 (defn command-facedown [state side]
   (resolve-ability state side
-                   {:prompt "Select a card to install facedown"
+                   {:prompt "Select a card to place facedown"
                     :choices {:req #(in-hand? %)}
-                    :effect (effect (challenger-install target {:facedown true}))}
+                    :effect (effect (challenger-place target {:facedown true}))}
                    {:title "/facedown command"} nil))
 
 (defn command-counter [state side args]
@@ -173,10 +174,10 @@
 
 (defn command-revealall [state side value]
   (resolve-ability state side
-    {:optional {:prompt "Reveal all cards and turn cards in archives faceup?"
+    {:optional {:prompt "Reveal all cards and turn cards in discard faceup?"
                 :yes-ability {:effect (req
                                         (swap! state update-in [:contestant :discard] #(map (fn [c] (assoc c :seen true)) %))
-                                        (doseq [c (all-installed state side)]
+                                        (doseq [c (all-placed state side)]
                                           (when-not (:revealed c)
                                             (reveal state side c {:ignore-cost :all-costs :force true}))))}}}
     {:title "/reveal-all command"} nil))
@@ -217,7 +218,13 @@
           "/counter"    #(command-counter %1 %2 args)
           "/credit"     #(swap! %1 assoc-in [%2 :credit] (max 0 value))
           "/deck"       #(toast %1 %2 "/deck number takes the format #n")
-          "/discard"    #(toast %1 %2 "/discard number takes the format #n")
+          "/discard"        #(resolve-ability %1 %2
+                                          {:prompt "Select a card to discard"
+                                           :effect (req (let [c (deactivate %1 %2 target)]
+                                                          (move %1 %2 c :discard)))
+                                           :choices {:req (fn [t] (card-is? t :side %2))}}
+                                          {:title "/discard command"} nil)
+          "/discard-n"    #(toast %1 %2 "/discard number takes the format #n")
           "/discard-random" #(move %1 %2 (rand-nth (get-in @%1 [%2 :hand])) :discard)
           "/draw"       #(draw %1 %2 (max 0 value))
           "/end-run"    #(when (= %2 :contestant) (end-run %1 %2))
@@ -238,9 +245,9 @@
                                            :choices {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/move-hand command"} nil)
           "/move-site"  #(resolve-ability %1 %2
-                                          {:prompt "Select a site to move to your sites"
+                                          {:prompt "Select a site to move to your Location Deck"
                                            :effect (req (let [c (deactivate %1 %2 target)]
-                                                          (move %1 %2 c :sites)))
+                                                          (move %1 %2 c :location)))
                                            :choices {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/move-site command"} nil)
           "/move-sb"  #(resolve-ability %1 %2
@@ -249,6 +256,12 @@
                                                           (move %1 %2 c :sideboard)))
                                            :choices {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/move-sb command"} nil)
+          "/move-fw-sb"  #(resolve-ability %1 %2
+                                        {:prompt "Select a site to move to your FW-Sideboard"
+                                         :effect (req (let [c (deactivate %1 %2 target)]
+                                                        (move %1 %2 c :fw-dc-sb)))
+                                         :choices {:req (fn [t] (card-is? t :side %2))}}
+                                        {:title "/move-fw-sb command"} nil)
           "/re-deck"  #(resolve-ability %1 %2
                                         {:effect (effect (shuffle-into-deck {} :discard))}
                                         {:title "/re-deck command"} nil)
@@ -273,7 +286,7 @@
                                                           (move %1 %2 c :scored)))
                                            :choices {:req (fn [t] true)}}
                                           {:title "/score command"} nil)
-          "/facedown"   #(command-facedown %1 %2)
+          "/og"         #(command-facedown %1 %2)
           "/roll"       #(command-roll %1 %2 value)
           "/r"          #(basic-roll %1 %2)
           "/tag"        #(swap! %1 assoc-in [%2 :tag] (max 0 value))
@@ -286,10 +299,10 @@
                                                                 :msg "resolve successful trace effect"}))
           nil)))))
 
-(defn contestant-install-msg
-  "Gets a message describing where a card has been installed from. Example: Interns. "
+(defn contestant-place-msg
+  "Gets a message describing where a card has been placed from. Example: Interns. "
   [card]
-  (str "install " (if (:seen card) (:title card) "an unseen card") " from " (name-zone :contestant (:zone card))))
+  (str "place " (if (:seen card) (:title card) "an unseen card") " from " (name-zone :contestant (:zone card))))
 
 (defn turn-message
   "Prints a message for the start or end of a turn, summarizing credits and cards in hand."

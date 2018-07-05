@@ -6,8 +6,8 @@
             [clojure.test :refer :all]))
 
 
-(deftest minigame-prevent-netdmg-mutherefftrash
-  "Mini-game testing prevention of net damage and muthereff trashing, with hosted Fall Guy"
+(deftest minigame-prevent-netdmg-muthereffdiscard
+  "Mini-game testing prevention of net damage and muthereff discarding, with hosted Fall Guy"
   (do-game
     (new-game
       (default-contestant [(qty "Neural EMP" 1) (qty "Hedge Fund" 3) (qty "SEA Source" 1)])
@@ -39,13 +39,13 @@
         (prompt-choice :challenger 0)
         (is (= 1 (:tag (get-challenger))) "Challenger took tag from SEA Source")
         (is (= 7 (:credit (get-contestant))))
-        (core/trash-muthereff state :contestant nil)
+        (core/discard-muthereff state :contestant nil)
         (prompt-select :contestant (find-card "Off-Campus Apartment" (:rig (get-challenger))))
-        (is (= 3 (:credit (get-contestant))) "WNP increased cost to trash a muthereff by 2")
-        (card-ability state :challenger fg 0)                   ; Trash Fall Guy to save the Apartment!
+        (is (= 3 (:credit (get-contestant))) "WNP increased cost to discard a muthereff by 2")
+        (card-ability state :challenger fg 0)                   ; Discard Fall Guy to save the Apartment!
         (is (= (:title (get-muthereff state 0)) "Off-Campus Apartment")
             "Apartment still standing")
-        (is (= (:title (last (:discard (get-challenger)))) "Fall Guy") "Fall Guy trashed")))))
+        (is (= (:title (last (:discard (get-challenger)))) "Fall Guy") "Fall Guy discarded")))))
 
 (deftest hb-glacier
   "HB Glacier econ and locale protection with regions - Ash, Caprcharacter, Breaker Bay Grid, positional character strength boost"
@@ -81,7 +81,7 @@
       (core/draw state :challenger 1)
       (play-from-hand state :challenger "Career Fair")
       (prompt-select :challenger (find-card "Data Folding" (:hand (get-challenger))))
-      (is (= 5 (:credit (get-challenger))) "Data Folding installed for free by Career Fair")
+      (is (= 5 (:credit (get-challenger))) "Data Folding placed for free by Career Fair")
       (play-from-hand state :challenger "Lamprey")
       (play-from-hand state :challenger "Desperado")
       (is (= 1 (:credit (get-challenger))))
@@ -92,7 +92,7 @@
       (prompt-choice :challenger 0)
       (is (and (= 2 (:credit (get-challenger))) (= 7 (:credit (get-contestant))))
           "Desperado paid 1 to Challenger, Lamprey took 1 from Contestant")
-      (prompt-choice :challenger "No") ; can't afford to trash Ash
+      (prompt-choice :challenger "No") ; can't afford to discard Ash
       (take-credits state :challenger)
       (play-from-hand state :contestant "Caprcharacter Nisei" "Locale 1")
       (is (= 11 (:credit (get-contestant))) "Gained 3 from Adonis and 1 from HB:EtF")
@@ -103,7 +103,7 @@
       (run-empty-locale state "HQ")
       (prompt-choice :contestant 0)
       (prompt-choice :challenger 0)
-      (prompt-choice :challenger "Yes") ; trash Ash
+      (prompt-choice :challenger "Yes") ; discard Ash
       (is (and (= 1 (:credit (get-challenger))) (= 11 (:credit (get-contestant)))))
       (core/gain state :challenger :credit 1)
       (play-from-hand state :challenger "Dirty Laundry")

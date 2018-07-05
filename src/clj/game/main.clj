@@ -59,15 +59,17 @@
    "ability" core/play-ability
    "challenger-ability" core/play-challenger-ability
    "subroutine" core/play-subroutine
-   "trash-muthereff" core/trash-muthereff
+   "discard-muthereff" core/discard-muthereff
    "dynamic-ability" core/play-dynamic-ability
    "toast" core/toast
    "view-deck" core/view-deck
    "close-deck" core/close-deck
    "view-sideboard" core/view-sideboard
    "close-sideboard" core/close-sideboard
-   "view-sites" core/view-sites
-   "close-sites" core/close-sites})
+   "view-fw-dc-sb" core/view-fw-dc-sb
+   "close-fw-dc-sb" core/close-fw-dc-sb
+   "view-location" core/view-location
+   "close-location" core/close-location})
 
 (defn convert [args]
   (try
@@ -108,12 +110,13 @@
       (update-in [:discard] #(private-card-vector state :challenger %))
       (update-in [:deck] #(private-card-vector state :challenger %))
       (update-in [:sideboard] #(private-card-vector state :challenger %))
-      (update-in [:sites] #(private-card-vector state :challenger %))
+      (update-in [:fw-dc-sb] #(private-card-vector state :challenger %))
+      (update-in [:location] #(private-card-vector state :challenger %))
       (update-in [:rig :facedown] #(private-card-vector state :challenger %))
       (update-in [:rig :muthereff] #(private-card-vector state :challenger %))))
 
 (defn- make-private-contestant [state]
-  (let [zones (concat [[:hand]] [[:discard]] [[:deck]] [[:sideboard]] [[:sites]]
+  (let [zones (concat [[:hand]] [[:discard]] [[:deck]] [[:sideboard]] [[:fw-dc-sb]] [[:location]]
                       (for [locale (keys (:locales (:contestant @state)))] [:locales locale :characters])
                       (for [locale (keys (:locales (:contestant @state)))] [:locales locale :content]))]
     (loop [s (:contestant @state)
@@ -132,11 +135,16 @@
     sideboard
     (private-card-vector state side sideboard)))
 
-(defn- make-private-sites [state side sites]
+(defn- make-private-fw-dc-sb [state side sideboard]
+  (if (:view-fw-dc-sb (side @state))
+    sideboard
+    (private-card-vector state side sideboard)))
+
+(defn- make-private-location [state side location]
   (let [sorted (if (:cut-region (side @state))
-                 (filter #(= (:Region %) (:cut-region (side @state))) sites)
+                 (filter #(= (:Region %) (:cut-region (side @state))) location)
                  nil)]
-    (if (:view-sites (side @state))
+    (if (:view-location (side @state))
       sorted
       (private-card-vector state side sorted))))
 
@@ -150,15 +158,19 @@
         challenger-deck (update-in (:challenger @state) [:deck] #(make-private-deck state :challenger %))
         contestant-sideboard (update-in (:contestant @state) [:sideboard] #(make-private-sideboard state :contestant %))
         challenger-sideboard (update-in (:challenger @state) [:sideboard] #(make-private-sideboard state :challenger %))
-        contestant-sites (update-in (:contestant @state) [:sites] #(make-private-sites state :contestant %))
-        challenger-sites (update-in (:challenger @state) [:sites] #(make-private-sites state :challenger %))]
-    [(assoc @state :challenger challenger-private
-                   :contestant contestant-deck :contestant contestant-sideboard :contestant contestant-sites)
-     (assoc @state :contestant contestant-private
-                   :challenger challenger-deck :challenger challenger-sideboard :challenger challenger-sites)
+        contestant-fw-dc-sb (update-in (:contestant @state) [:fw-dc-sb] #(make-private-fw-dc-sb state :contestant %))
+        challenger-fw-dc-sb (update-in (:challenger @state) [:fw-dc-sb] #(make-private-fw-dc-sb state :challenger %))
+        contestant-location (update-in (:contestant @state) [:location] #(make-private-location state :contestant %))
+        challenger-location (update-in (:challenger @state) [:location] #(make-private-location state :challenger %))]
+    [(assoc @state :challenger challenger-private :contestant contestant-deck
+                   :contestant contestant-sideboard :contestant contestant-fw-dc-sb :contestant contestant-location)
+     (assoc @state :contestant contestant-private :challenger challenger-deck
+                   :challenger challenger-sideboard :challenger challenger-fw-dc-sb :challenger challenger-location)
      (if (get-in @state [:options :spectatorhands])
-       (assoc @state :contestant contestant-deck :contestant contestant-sideboard :contestant contestant-sites
-                     :challenger challenger-deck :challenger challenger-sideboard :challenger challenger-sites)
+       (assoc @state :contestant contestant-deck :contestant contestant-sideboard
+                     :contestant contestant-location :contestant contestant-sideboard
+                     :challenger challenger-deck :challenger challenger-fw-dc-sb
+                     :challenger challenger-location :challenger challenger-fw-dc-sb)
        (assoc @state :contestant contestant-private :challenger challenger-private))]))
 
 (defn- reset-all-cards

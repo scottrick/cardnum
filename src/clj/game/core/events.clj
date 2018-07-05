@@ -1,7 +1,7 @@
 (in-ns 'game.core)
 
 (declare can-trigger? card-def clear-wait-prompt effect-completed event-title get-card get-nested-host get-party-names
-         get-runnable-zones get-zones get-zones-challenger installed? make-eid register-effect-completed register-suppress resolve-ability
+         get-runnable-zones get-zones get-zones-challenger placed? make-eid register-effect-completed register-suppress resolve-ability
          show-wait-prompt trigger-suppress unregister-suppress)
 
 ; Functions for registering and dispatching events.
@@ -145,7 +145,7 @@
   event: the event keyword to trigger handlers for
   first-ability: an ability map (fed to resolve-ability) that should be resolved after the list of handlers is determined
                  but before any of them is actually fired. Typically used for core rules that happen in the same window
-                 as triggering handlers, such as trashing a contestant Current when an agenda is stolen. Necessary for
+                 as triggering handlers, such as discarding a contestant Current when an agenda is stolen. Necessary for
                  interaction with New Angeles Sol and Employee Strike
   card-ability:  a card's ability that triggers at the same time as the event trigger, but is coded as a card ability
                  and not an event handler. (For example, :stolen on agendas happens in the same window as :agenda-stolen
@@ -237,20 +237,20 @@
   [state side]
   (apply + (map #(nth % 2) (turn-events state :challenger :damage))))
 
-(defn get-installed-trashed
-  "Returns list of cards trashed this turn owned by side that were installed"
+(defn get-placed-discarded
+  "Returns list of cards discarded this turn owned by side that were placed"
   [state side]
-  (filter #(-> % first installed?) (turn-events state side (keyword (str (name side) "-trash")))))
+  (filter #(-> % first placed?) (turn-events state side (keyword (str (name side) "-discard")))))
 
-(defn first-installed-trash?
-  "Returns true if this is the first trash of an installed card this turn by this side"
+(defn first-placed-discard?
+  "Returns true if this is the first discard of an placed card this turn by this side"
   [state side]
-  (empty? (get-installed-trashed state side)))
+  (empty? (get-placed-discarded state side)))
 
-(defn first-installed-trash-own?
-  "Returns true if this is the first trash of an owned installed card this turn by this side"
+(defn first-placed-discard-own?
+  "Returns true if this is the first discard of an owned placed card this turn by this side"
   [state side]
-  (empty? (filter #(= (:side (first %)) (side-str side)) (get-installed-trashed state side))))
+  (empty? (filter #(= (:side (first %)) (side-str side)) (get-placed-discarded state side))))
 
 ;;; Effect completion triggers
 (defn register-effect-completed

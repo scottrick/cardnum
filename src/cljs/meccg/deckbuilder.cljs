@@ -242,7 +242,7 @@
           regions (into wizard-sites (parse-deck-string all-regions))]
       (assoc deck :resources resources :hazards hazards :sideboard sideboard
                   :characters characters :pool pool :fwsb fwsb :cards cards
-                  :sites regions
+                  :location regions
                   :identity identity))))
 
 (defn distinct-by [f coll]
@@ -677,7 +677,7 @@
   (om/set-state! owner :deck {:name "New deck" :resources [] :hazards [] :sideboard []
                               :characters [] :pool [] :fwsb [] :cards [] :regions []
                               :wizard-sites [] :minion-sites [] :balrog-sites []
-                              :fallen-sites [] :elf-sites [] :dwarf-sites [] :sites []
+                              :fallen-sites [] :elf-sites [] :dwarf-sites [] :location []
                               :identity (-> alignment alignment-identities first)})
   (try (js/ga "send" "event" "deckbuilder" "new" alignment) (catch js/Error e))
   (edit-deck owner))

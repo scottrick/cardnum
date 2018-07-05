@@ -23,7 +23,7 @@
 
 (defn locale-list [state card]
   (concat
-    (if (#{"Site" "Agenda"} (:type card))
+    (if (#{"Site"} (:type card))
       (get-party-names @state)
       (zones->sorted-names (get-zones @state)))
     ["New party"]))
@@ -35,6 +35,7 @@
       "HQ" [:locales :hq]
       "R&D" [:locales :rd]
       "Archives" [:locales :archives]
+      "Sites" [:locales :sites]
       "New party" [:locales (keyword (str "party" (make-rid state)))]
       [:locales (->> (split locale #" ") last (str "party") keyword)])))
 
@@ -52,7 +53,7 @@
          (= :characters (last zone2)))))
 
 (defn in-same-locale? [card1 card2]
-  "True if the two cards are installed IN the same locale, or hosted on cards IN the same locale."
+  "True if the two cards are placed IN the same locale, or hosted on cards IN the same locale."
   (let [zone1 (get-nested-zone card1)
         zone2 (get-nested-zone card2)]
     (and (= zone1 zone2)
@@ -64,53 +65,53 @@
   (= (central->zone (:zone target))
      (butlast (get-nested-zone region))))
 
-(defn all-installed
-  "Returns a vector of all installed cards for the given side, including those hosted on other cards,
+(defn all-placed
+  "Returns a vector of all placed cards for the given side, including those hosted on other cards,
   but not including 'inactive hosting' like Personal Workshop."
   [state side]
   (if (= side :challenger)
     (let [top-level-cards (flatten (for [t [:resource :hazard :muthereff]] (get-in @state [:challenger :rig t])))
           hosted-on-character (->> (:contestant @state) :locales seq flatten (mapcat :characters) (mapcat :hosted))]
-      (loop [unchecked (concat top-level-cards (filter #(= (:side %) "Challenger") hosted-on-character)) installed ()]
+      (loop [unchecked (concat top-level-cards (filter #(= (:side %) "Challenger") hosted-on-character)) placed ()]
         (if (empty? unchecked)
-          (filter :installed installed)
+          (filter :placed placed)
           (let [[card & remaining] unchecked]
-            (recur (filter identity (into remaining (:hosted card))) (into installed [card]))))))
+            (recur (filter identity (into remaining (:hosted card))) (into placed [card]))))))
     (let [locales (->> (:contestant @state) :locales seq flatten)
           content (mapcat :content locales)
           character (mapcat :characters locales)
           top-level-cards (concat character content)]
-      (loop [unchecked top-level-cards installed ()]
+      (loop [unchecked top-level-cards placed ()]
         (if (empty? unchecked)
-          (filter #(= (:side %) "Contestant") installed)
+          (filter #(= (:side %) "Contestant") placed)
           (let [[card & remaining] unchecked]
-            (recur (filter identity (into remaining (:hosted card))) (into installed [card]))))))))
+            (recur (filter identity (into remaining (:hosted card))) (into placed [card]))))))))
 
-(defn get-all-installed
-  "Returns a list of all installed cards"
+(defn get-all-placed
+  "Returns a list of all placed cards"
   [state]
-  (concat (all-installed state :contestant) (all-installed state :challenger)))
+  (concat (all-placed state :contestant) (all-placed state :challenger)))
 
 (defn all-active
-  "Returns a vector of all active cards for the given side. Active cards are either installed, the identity,
+  "Returns a vector of all active cards for the given side. Active cards are either placed, the identity,
   currents, or the contestant's scored area."
   [state side]
   (if (= side :challenger)
-    (cons (get-in @state [:challenger :identity]) (concat (get-in @state [:challenger :current]) (all-installed state side)))
+    (cons (get-in @state [:challenger :identity]) (concat (get-in @state [:challenger :current]) (all-placed state side)))
     (cons (get-in @state [:contestant :identity]) (filter #(not (:disabled %))
-                                                    (concat (all-installed state side)
+                                                    (concat (all-placed state side)
                                                             (get-in @state [:contestant :current])
                                                             (get-in @state [:contestant :scored]))))))
 
-(defn installed-byname
-  "Returns a truthy card map if a card matching title is installed"
+(defn placed-byname
+  "Returns a truthy card map if a card matching title is placed"
   [state side title]
-  (some #(when (= (:title %) title) %) (all-installed state side)))
+  (some #(when (= (:title %) title) %) (all-placed state side)))
 
 (defn in-play?
-  "Returns a truthy card map if the given card is in play (installed)."
+  "Returns a truthy card map if the given card is in play (placed)."
   [state card]
-  (installed-byname state (to-keyword (:side card)) (:title card)))
+  (placed-byname state (to-keyword (:side card)) (:title card)))
 
 (defn hand-size
   "Returns the current maximum handsize of the specified side."
@@ -166,7 +167,7 @@
 
 (defn remove-icon
   "Remove the icon associated with the card and target."
-  ([state side card] (remove-icon state side card (find-cid (-> card :icon-target :cid) (get-all-installed state))))
+  ([state side card] (remove-icon state side card (find-cid (-> card :icon-target :cid) (get-all-placed state))))
   ([state side card target]
    (set-prop state side target :icon nil)
    (set-prop state side card :icon-target nil)))
