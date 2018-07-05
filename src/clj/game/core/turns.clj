@@ -253,8 +253,7 @@
   (system-msg state side "keeps their hand")
   (trigger-event state side :pre-first-turn)
   (when (and (= side :contestant) (-> @state :challenger :identity :title))
-    (clear-wait-prompt state :challenger)
-    (show-wait-prompt state :contestant "Challenger to keep hand or mulligan"))
+    (clear-wait-prompt state :challenger))
   (when (and (= side :challenger)  (-> @state :contestant :identity :title))
     (clear-wait-prompt state :contestant)))
 
