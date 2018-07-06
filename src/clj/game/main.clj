@@ -30,6 +30,31 @@
    "mulligan" core/mulligan
    "keep" core/keep-hand
    "start-turn" core/start-turn
+
+   "untap-all" core/untap-all
+   "org-phase" core/org-phase
+   "m-h-phase" core/m-h-phase
+   "back-org" core/back-org
+   "next-m-h" core/next-m-h
+   "site-phase" core/site-phase
+   "back-m-h" core/back-m-h
+   "next-site" core/next-site
+   "eot-phase" core/eot-phase
+   "back-site" core/back-site
+   "eot-discard" core/eot-discard
+   "eot-resolve" core/eot-resolve
+
+   "reset-org" core/reset-org
+   "wait-alert" core/wait-alert
+   "on-guard" core/on-guard
+   "no-hazards" core/no-hazards
+   "reset-m-h" core/reset-m-h
+   "reveal-o-g" core/reveal-o-g
+   "bluff-o-g" core/bluff-o-g
+   "reset-site" core/reset-site
+   "reset-done" core/reset-done
+   "haz-play-done" core/haz-play-done
+
    "end-phase-12" core/end-phase-12
    "end-turn" core/end-turn
    "draw" core/click-draw

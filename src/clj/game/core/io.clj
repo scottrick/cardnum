@@ -308,10 +308,9 @@
   "Prints a message for the start or end of a turn, summarizing credits and cards in hand."
   [state side start-of-turn]
   (let [pre (if start-of-turn "started" "is ending")
-        hand (if (= side :challenger) "their Grip" "HQ")
+        hand "Hand"
         cards (count (get-in @state [side :hand]))
-        credits (get-in @state [side :credit])
-        text (str pre " their turn " (:turn @state) " with " credits " [Credit] and " cards " cards in " hand)]
+        text (str pre " their turn " (:turn @state) " with " cards " cards in " hand)]
     (system-msg state side text {:hr (not start-of-turn)})))
 
 (defn event-title
