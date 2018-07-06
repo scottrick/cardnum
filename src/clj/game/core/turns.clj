@@ -80,14 +80,14 @@
                               :discard [] :scored [] :rfg [] :play-area []
                               :locales {}
                               :rig {:resource [] :muthereff [] :hazard []}
-                              :click 5 :credit 5 :bad-publicity 0 :has-bad-pub 0
+                              :click 110 :credit 20 :bad-publicity 0 :has-bad-pub 0
                               :free_gi 0 :total_mp 0 :stage_pt 0
                               :char_mp 0 :ally_mp 0 :item_mp 0
                               :fact_mp 0 :kill_mp 0 :misc_mp 0
                               :toast []
                               :hand-size-base 8 :hand-size-modification 0
                               :agenda-point 0
-                              :click-per-turn 3 :agenda-point-req 7 :keep false}
+                              :click-per-turn -10 :agenda-point-req 7 :keep false}
                  :challenger {:user (:user challenger) :identity challenger-identity
                               :options challenger-options
                               :deck (zone :deck challenger-deck)
@@ -100,14 +100,14 @@
                               :locales {}
                               :rig {:resource [] :muthereff [] :hazard []}
                               :toast []
-                              :click 5 :credit 5 :run-credit 0 :memory 4 :link 0 :tag 0
+                              :click 50 :credit 20 :run-credit 0 :memory 4 :link 0 :tag 0
                               :free_gi 0 :total_mp 0 :stage_pt 0
                               :char_mp 0 :ally_mp 0 :item_mp 0
                               :fact_mp 0 :kill_mp 0 :misc_mp 0
                               :hand-size-base 8 :hand-size-modification 0
                               :agenda-point 0
                               :hq-access 1 :rd-access 1 :tagged 0
-                              :brain-damage 0 :click-per-turn 4 :agenda-point-req 7 :keep false}})]
+                              :brain-damage 0 :click-per-turn -10 :agenda-point-req 7 :keep false}})]
     (init-identity state :contestant contestant-identity)
     (init-identity state :challenger challenger-identity)
     (swap! game-states assoc gameid state)
