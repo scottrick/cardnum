@@ -11,6 +11,9 @@
 (defn get-party-zones [state]
   (filter is-party? (get-zones state)))
 
+(defn get-party-zones-challenger [state]
+  (filter is-party? (get-zones-challenger state)))
+
 (defn get-runnable-zones [state]
   (let [restricted-zones (keys (get-in state [:challenger :register :cannot-run-on-locale]))]
     (remove (set restricted-zones) (get-zones state))))

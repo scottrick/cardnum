@@ -78,7 +78,7 @@
                               :fw-dc-sb (zone :fw-dc-sb contestant-fw-dc)
                               :location (zone :location contestant-location)
                               :discard [] :scored [] :rfg [] :play-area []
-                              :locales {}
+                              :locales {:hq {} :rd {} :archives {} :sites {}}
                               :rig {:resource [] :muthereff [] :hazard []}
                               :click 0 :credit 20 :bad-publicity 0 :has-bad-pub 0
                               :free_gi 0 :total_mp 0 :stage_pt 0
@@ -97,7 +97,7 @@
                               :fw-dc-sb (zone :fw-dc-sb challenger-fw-dc)
                               :location (zone :location challenger-location)
                               :discard [] :scored [] :rfg [] :play-area []
-                              :locales {}
+                              :locales {:hq {} :rd {} :archives {} :sites {}}
                               :rig {:resource [] :muthereff [] :hazard []}
                               :toast []
                               :click 0 :credit 20 :run-credit 0 :memory 4 :link 0 :tag 0

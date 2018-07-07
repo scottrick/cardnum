@@ -2,8 +2,8 @@
 
 ;; These functions are called by main.clj in response to commands sent by users.
 
-(declare card-str can-reveal? can-advance? contestant-place effect-as-handler enforce-msg gain-agenda-point get-party-names
-         get-run-characters jack-out move name-zone play-instant purge resolve-select run has-subtype? get-zones locale->zone
+(declare card-str can-reveal? can-advance? contestant-place effect-as-handler enforce-msg gain-agenda-point get-party-zones-challenger
+         get-run-characters jack-out move name-zone play-instant purge resolve-select run has-subtype? get-party-zones locale->zone
          challenger-place discard update-breaker-strength update-character-in-locale update-run-character win can-run?
          can-run-locale? can-score? play-sfx)
 
@@ -365,7 +365,7 @@
      (continue-ability state side
                        {:prompt (str "Choose a character for " (:title card) " to follow or not." )
                         :choices (concat ["New party"] (zones->sorted-names
-                                   (if (= (:side card) "Contestant") (get-zones @state) (get-zones-challenger @state))))
+                                   (if (= (:side card) "Contestant") (get-party-zones @state) (get-zones-challenger @state))))
                         :delayed-completion true
                         :effect (effect (organize eid card target args))}
                        card nil)
