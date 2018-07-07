@@ -1167,7 +1167,11 @@
         (when (not-empty content)
           (for [card content
                 :let [is-first (= card (first content))]]
-            [:div.locale-card {:class (when (:tapped card) "tapped")}
+            [:div.locale-card {:class (str (when (:tapped card) "tapped ")
+                                           (when (or central-view
+                                                     (and (< 1 (count content))
+                                                          (not is-first)))
+                                             "shift"))}
              (om/build card-view card {:opts {:flipped (not (:revealed card)) :location true}})
              (when (and (not central-view) is-first)
                (om/build label-without content {:opts opts}))]))]]))))
