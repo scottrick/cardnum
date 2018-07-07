@@ -368,15 +368,14 @@
   )
 (defn eot-resolve
   [state side args]
-  (system-msg state side "acknowledges End-of-turn")
-  (gain state side :click -70)
   )
 
 ;;--- Hazard Phase Replies
 ;; Organization Phase
 (defn reset-org
   [state side args]
-  (gain state side :click -60)
+  (let [offset (* -1 (get-in @state [side :click]))]
+    (gain state side :click offset))
   )
 (defn wait-alert
   [state side args]
@@ -390,34 +389,38 @@
 (defn no-hazards
   [state side args]
   (system-msg state side "says no more hazards for this company")
-  (if (= (get-in @state [side :click]) 45)
-    (gain state side :click -10)
-    (gain state side :click -5)
-    )
+  (let [offset (- 35 (get-in @state [side :click]))]
+    (gain state side :click offset))
   )
 (defn reset-m-h
   [state side args]
-  (if (= (get-in @state [side :click]) 35)
-    (gain state side :click 10)
-    (gain state side :click 45)
-    )
+  (let [offset (- 45 (get-in @state [side :click]))]
+    (gain state side :click offset))
   )
+
 ;; Site Phase
 (defn reveal-o-g
-  []
+  [state side args]
+  (gain state side :click -5)
   )
 (defn bluff-o-g
-  []
+  [state side args]
+  (gain state side :click -5)
   )
 (defn reset-site
-  []
+  [state side args]
+  (let [offset (- 25 (get-in @state [side :click]))]
+    (gain state side :click offset))
   )
 ;; End of Turn Phase
 (defn reset-done
-  []
+  [state side args]
+  (let [offset (* -1 (get-in @state [side :click]))]
+    (gain state side :click offset))
   )
 (defn haz-play-done
-  []
+  [state side args]
+  (system-msg state side "has nothing else")
   )
 
 (defn end-turn [state side args]

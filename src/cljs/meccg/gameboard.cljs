@@ -1461,18 +1461,24 @@
 
                 ;;------BREAK to Hazard Player
 
+              (cond ;;hazard click resets
+                (and (> (:click me) 0) (<= 90 (:click opponent) 100)) (send-command "reset-org")
+                (and (zero? (:click me)) (= (:click opponent) 85)) (send-command "reset-m-h")
+                (and (<= 20 (:click me) 25) (= (:click opponent) 85)) (send-command "reset-m-h")
+                (and (zero? (:click me)) (= (:click opponent) 80)) (send-command "reset-site")
+                (and (<= 35 (:click me) 45) (= (:click opponent) 80)) (send-command "reset-site")
+                (and (<= 20 (:click me) 45) (< 65 (:click opponent) 80)) (send-command "reset-done")
+                )
               (when (<= 90 (:click opponent) 100);; set to 50, by me
                 [:div
                  (cond-button "Wait!!!" (zero? (:click me)) #(send-command "wait-alert"))
                  (cond-button "Nothing" false nil)
                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                  (cond-button "Waiting" false nil)])
-              (if (and (zero? (:click me)) (= (:click opponent) 85))
-                (send-command "reset-m-h"));; set to 45, by me
               (when (= (:click opponent) 85);; set to 45, by me
                 [:div
                  (cond-button "On-guard" (= (:click me) 45) #(send-command "on-guard")) ;; -5
-                 (cond-button "No Hazards" (or (= (:click me) 45) (= (:click me) 40)) #(send-command "no-hazards"))
+                 (cond-button "No Hazards" (or (= (:click me) 40) (= (:click me) 45)) #(send-command "no-hazards"))
                  ;; set to 35
                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                  (cond-button "Next M/H" (= (:click me) 35) #(send-command "reset-m-h"))
@@ -1484,17 +1490,16 @@
                  (cond-button "Reveal On-guard" (= (:click me) 25) #(send-command "reveal-o-g")) ;;-5
                  (cond-button "Bluff On-guard" (= (:click me) 25) #(send-command "bluff-o-g")) ;;-5
                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
-                 (cond-button "Next Site" (or (= (:click me) 25) (= (:click me) 20)) #(send-command "reset-site"))
+                 (cond-button "Next Site" (or (= (:click me) 20) (= (:click me) 25)) #(send-command "reset-site"))
                  ;; set to 25, by me
                  ])
-              (when (< 65 (:click opponent) 80) ;; set to 15, by me
+              (when (< 65 (:click opponent) 80) ;; set to 0, by me
                 [:div
-                 ;;(when (> (:click me) 15) (send-command "reset-done"))
+                 ;;(when (> (:click me) 0) (send-command "reset-done"))
                  (cond-button "EOT Phase" false nil)
                  (cond-button "EOT Discard" false nil)
                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
-                 (cond-button "Done" (= (:click me) 15) #(send-command "haz-play-done"))]) ;;-5
-
+                 (cond-button "Done" (zero? (:click me)) #(send-command "haz-play-done"))]) ;;-5
          ]))]))))
 
 (defn update-audio [{:keys [gameid sfx sfx-current-id] :as cursor} owner]
