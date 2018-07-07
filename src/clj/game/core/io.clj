@@ -286,7 +286,7 @@
                                                           (move %1 %2 c :scored)))
                                            :choices {:req (fn [t] true)}}
                                           {:title "/score command"} nil)
-          "/og"         #(command-facedown %1 %2)
+          "/facedown"   #(command-facedown %1 %2)
           "/roll"       #(command-roll %1 %2 value)
           "/r"          #(basic-roll %1 %2)
           "/tag"        #(swap! %1 assoc-in [%2 :tag] (max 0 value))

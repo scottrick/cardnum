@@ -42,7 +42,6 @@
    "eot-phase" core/eot-phase
    "back-site" core/back-site
    "eot-discard" core/eot-discard
-   "eot-resolve" core/eot-resolve
 
    "reset-org" core/reset-org
    "wait-alert" core/wait-alert

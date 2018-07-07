@@ -1,6 +1,7 @@
 (in-ns 'game.core)
 
-(declare all-active card-flag-fn? clear-turn-register! clear-wait-prompt create-pool create-deck create-board create-fw-dc create-location hand-size keep-hand interrupt mulligan
+(declare all-active card-flag-fn? clear-turn-register! clear-wait-prompt create-pool create-deck create-board create-fw-dc create-location
+         in-hand? challenger-place reveal hand-size keep-hand interrupt mulligan
          show-wait-prompt turn-message)
 
 (def game-states (atom {}))
@@ -366,9 +367,6 @@
   (system-msg state side "acknowledges EOT discard")
   (gain state side :click -5)
   )
-(defn eot-resolve
-  [state side args]
-  )
 
 ;;--- Hazard Phase Replies
 ;; Organization Phase
@@ -384,6 +382,12 @@
 ;; Movement/Hazard Phase
 (defn on-guard
   [state side args]
+  (resolve-ability state side
+                   {:prompt "Select a card to place facedown"
+                    :choices {:req #(in-hand? %)}
+                    :effect (effect (challenger-place target {:facedown true}))}
+                   nil nil)
+  (system-msg state side "plays an on-guard card")
   (gain state side :click -5)
   )
 (defn no-hazards
@@ -401,10 +405,22 @@
 ;; Site Phase
 (defn reveal-o-g
   [state side args]
+  (resolve-ability state side
+                   {:effect (effect (reveal target {:ignore-cost :all-costs :force true}))
+                    :choices {:req (fn [t] (card-is? t :side side))}}
+                   nil nil)
+  (system-msg state side "reveals an on-guard card")
   (gain state side :click -5)
   )
 (defn bluff-o-g
   [state side args]
+  (resolve-ability state side
+                   {:prompt "Select a card to move to your hand"
+                    :effect (req (let [c (deactivate state side target)]
+                                   (move state side c :hand)))
+                    :choices {:req (fn [t] (card-is? t :side side))}}
+                   nil nil)
+  (system-msg state side "returns a bluff to his hand")
   (gain state side :click -5)
   )
 (defn reset-site

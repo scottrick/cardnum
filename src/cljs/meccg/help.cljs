@@ -62,7 +62,7 @@
                         [:li [:code "/re-deck"] " - Use this to move all cards from your discard back to your deck"]
                         [:li [:code "/reveal"] " - Select a card to reveal, ignoring all costs (Contestant only)"]
                         [:li [:code "/rfg"] " - Select a card to remove from the game"]
-                        [:li [:code "/og"] " - Select a card to play on-guard"]
+                        [:li [:code "/facedown"] " - Select a card to play on-guard"]
                         [:li [:code "/roll n"] " - Roll an n-sided die"]
                         [:li [:code "/r"] " - Roll 2d6"]]]}
             {:id "documentation"
