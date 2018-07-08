@@ -81,10 +81,8 @@
           (let [[card & remaining] unchecked]
             (recur (filter identity (into remaining (:hosted card))) (into placed [card]))))))
     (let [locales (->> (:contestant @state) :locales seq flatten)
-          content (mapcat :content locales)
-          character (mapcat :characters locales)
-          top-level-cards (concat character content)]
-      (loop [unchecked top-level-cards placed ()]
+          character (mapcat :characters locales)]
+      (loop [unchecked character placed ()]
         (if (empty? unchecked)
           (filter #(= (:side %) "Contestant") placed)
           (let [[card & remaining] unchecked]
@@ -103,10 +101,8 @@
           (let [[card & remaining] unchecked]
             (recur (filter identity (into remaining (:hosted card))) (into placed [card]))))))
     (let [locales (->> (:challenger @state) :locales seq flatten)
-          content (mapcat :content locales)
-          character (mapcat :characters locales)
-          top-level-cards (concat character content)]
-      (loop [unchecked top-level-cards placed ()]
+          character (mapcat :characters locales)]
+      (loop [unchecked character placed ()]
         (if (empty? unchecked)
           (filter #(= (:side %) "Challenger") placed)
           (let [[card & remaining] unchecked]
