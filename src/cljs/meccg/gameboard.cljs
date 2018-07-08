@@ -1344,11 +1344,9 @@
         opp (if (= (:side @game-state) :contestant) (:challenger @game-state) (:contestant @game-state))
         max-size (max (+ (:hand-size-base me) (:hand-size-modification me)) 0)
         opp-max-size (max (+ (:hand-size-base opp) (:hand-size-modification opp)) 0)]
-    (if (> (count (:hand me)) max-size)
-      (toast (str "Resolve hand to " max-size " card" (when (not= 1 max-size) "s")) "warning" nil)
-      (if (> (count (:hand opp)) opp-max-size)
-        (toast (str "Hazard player needs to get to " opp-max-size " card" (when (not= 1 opp-max-size) "s")) "warning" nil)
-        (send-command "end-turn")))))
+    (if (not= (count (:hand opp)) opp-max-size)
+      (toast (str "Hazard player needs to get to " opp-max-size " card" (when (not= 1 opp-max-size) "s")) "warning" nil)
+      (send-command "end-turn"))))
 
 (defn runnable-locales
   "List of locales the challenger can run on."
