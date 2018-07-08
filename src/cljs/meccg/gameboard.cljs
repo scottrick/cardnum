@@ -164,13 +164,13 @@
          (build-report-url error)
          "');\">Report on GitHub</button></div>")))
 
-(defn toast
+(defn toast-new
   "Display a toast warning with the specified message.
   Sends a command to clear any server side toasts."
   [msg type options]
   true)
 
-(defn toast-old
+(defn toast
   "Display a toast warning with the specified message.
   Sends a command to clear any server side toasts."
   [msg type options]
@@ -1328,19 +1328,27 @@
      [:button {:on-click f} text]
      [:button.disabled text])))
 
-(defn handle-end-phase []
+(defn handle-end-of-phase [resolve]
   (let [me ((:side @game-state) @game-state)
-        max-size (max (+ (:hand-size-base me) (:hand-size-modification me)) 0)]
-    (if (> (count (:hand me)) max-size)
-      (toast (str "Discard to " max-size " card" (when (not= 1 max-size) "s")) "warning" nil)
-      (send-command "end-turn"))))
+        opp (if (= (:side @game-state) :contestant) (:challenger @game-state) (:contestant @game-state))
+        max-size (max (+ (:hand-size-base me) (:hand-size-modification me)) 0)
+        opp-max-size (max (+ (:hand-size-base opp) (:hand-size-modification opp)) 0)]
+    (if (not= (count (:hand me)) max-size)
+      (toast (str "Resolve hand to " max-size " card" (when (not= 1 max-size) "s")) "warning" nil)
+      (if (not= (count (:hand opp)) opp-max-size)
+        (toast (str "Hazard player needs to get to " opp-max-size " card" (when (not= 1 opp-max-size) "s")) "warning" nil)
+        (send-command resolve)))))
 
 (defn handle-end-turn []
   (let [me ((:side @game-state) @game-state)
-        max-size (max (+ (:hand-size-base me) (:hand-size-modification me)) 0)]
+        opp (if (= (:side @game-state) :contestant) (:challenger @game-state) (:contestant @game-state))
+        max-size (max (+ (:hand-size-base me) (:hand-size-modification me)) 0)
+        opp-max-size (max (+ (:hand-size-base opp) (:hand-size-modification opp)) 0)]
     (if (> (count (:hand me)) max-size)
-      (toast (str "Discard to " max-size " card" (when (not= 1 max-size) "s")) "warning" nil)
-      (send-command "end-turn"))))
+      (toast (str "Resolve hand to " max-size " card" (when (not= 1 max-size) "s")) "warning" nil)
+      (if (> (count (:hand opp)) opp-max-size)
+        (toast (str "Hazard player needs to get to " opp-max-size " card" (when (not= 1 opp-max-size) "s")) "warning" nil)
+        (send-command "end-turn")))))
 
 (defn runnable-locales
   "List of locales the challenger can run on."
@@ -1456,9 +1464,9 @@
                 [:div
                  [:button {:on-click #(send-command "back-org")} "Back to Organize"]
                  ;; set to 100, and opponent to 50
-                 [:button {:on-click #(send-command "next-m-h")} "Next M/H"]
+                 [:button {:on-click #(handle-end-of-phase "next-m-h")} "Next M/H"]
                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
-                 [:button {:on-click #(send-command "site-phase")} "Site Phase"] ;; -5
+                 [:button {:on-click #(handle-end-of-phase "site-phase")} "Site Phase"] ;; -5
                  ])
               (when (= (:click me) 80)
                 [:div
@@ -1472,7 +1480,7 @@
                 [:div
                  [:button {:on-click #(send-command "back-site")} "Back to Site"]
                  ;; set to 80, and opponent to 25
-                 (cond-button "EOT Discard" (= (:click me) 75) #(send-command "eot-discard"));; -5
+                 (cond-button "EOT Discard" (= (:click me) 75) #(handle-end-of-phase "eot-discard"));; -5
                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                  (cond-button "End of Turn" (and (= (:click me) 70)
                                            (= (keyword active-player) side) (not end-turn)
