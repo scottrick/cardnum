@@ -1057,7 +1057,9 @@
                                     :on-click (when popup #(-> (om/get-node owner "rfg-popup") js/$ .fadeToggle))}
          (map-indexed (fn [i card]
                         [:div.card-wrapper {:style {:left (* (/ 128 size) i)}}
-                         [:div (om/build card-view card)]])
+                         [:div (if (:hide card)
+                                 (facedown-card "challenger")
+                                 (om/build card-view card))]])
                       cards)
          (om/build label cards {:opts {:name name}})
 
@@ -1066,7 +1068,9 @@
             [:div
              [:a {:on-click #(close-popup % owner "rfg-popup" nil false false false false false)} "Close"]
              [:label (str size " card" (when (not= 1 size) "s") ".")]]
-            (for [c cards] (om/build card-view c))])])))))
+            (for [c cards] (if (:hide c)
+                             (facedown-card "challenger")
+                             (om/build card-view c)))])])))))
 
 (defn play-area-view [{:keys [name player] :as cursor}]
   (om/component

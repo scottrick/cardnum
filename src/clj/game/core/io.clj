@@ -280,6 +280,11 @@
                                                           (move %1 %2 c :rfg)))
                                            :choices {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/rfg command"} nil)
+          "/rfgh"       #(resolve-ability %1 %2
+                                          {:prompt "Select a card to rfg facedown"
+                                           :effect (req (move %1 %2 (assoc target :hide true) :rfg))
+                                           :choices {:req (fn [t] (card-is? t :side %2))}}
+                                          {:title "/rfgh command"} nil)
           "/score"      #(resolve-ability %1 %2
                                           {:prompt "Select a card to score"
                                            :effect (req (let [c  target]
