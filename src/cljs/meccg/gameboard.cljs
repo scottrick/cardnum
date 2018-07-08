@@ -215,6 +215,11 @@
                  (or tapped wounded))
           (cons "untap" %) %))
       (#(if (and (and (= type "Resource")
+                      (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Special Item"])
+                      (#{"locales" "onhost"} (first zone)))
+                 (and (not rotated) (or (not tapped) inverted)))
+          (cons "transfer" %) %))
+      (#(if (and (and (= type "Resource")
                       (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Special Item" "Permanent-event" "Ally"])
                       (#{"locales" "onhost"} (first zone)))
                  (and (not rotated) (or (not tapped) inverted)))
@@ -251,7 +256,7 @@
           (send-command "ability" {:card card :ability 0})
           (send-command (first actions) {:card card})))))
 
-(defn handle-card-click [{:keys [type zone root] :as card} owner]
+(defn handle-card-click [{:keys [type Secondary zone root] :as card} owner]
   (let [side (:side @game-state)]
     (when (not-spectator? game-state app-state)
       (cond
@@ -272,6 +277,10 @@
                    ("Region" "Site") (if (< (count (get-in @game-state [:challenger :locales])) 4)
                                        (send-command "play" {:card card :locale "New party"})
                                        (-> (om/get-node owner "locales") js/$ .toggle))
+                   ("Resource") (if (some (partial = Secondary) ["Permanent-event"
+                                                                 "Long-event" "Short-event"])
+                                  (send-command "play" {:card card})
+                                  (send-command "equip" {:card card}))
                    (send-command "play" {:card card}))
           ("rig" "current" "onhost" "play-area" "locales") (handle-abilities card owner)
           nil)
@@ -285,6 +294,10 @@
                    ("Region" "Site") (if (< (count (get-in @game-state [:contestant :locales])) 4)
                                        (send-command "play" {:card card :locale "New party"})
                                        (-> (om/get-node owner "locales") js/$ .toggle))
+                   ("Resource") (if (some (partial = Secondary) ["Permanent-event"
+                                                                 "Long-event" "Short-event"])
+                                  (send-command "play" {:card card})
+                                  (send-command "equip" {:card card}))
                    (send-command "play" {:card card}))
           ("rig" "locales" "scored" "play-area" "current" "onhost") (handle-abilities card owner)
           nil)))))

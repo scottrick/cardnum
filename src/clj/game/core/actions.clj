@@ -3,7 +3,7 @@
 ;; These functions are called by main.clj in response to commands sent by users.
 
 (declare card-str can-reveal? can-advance? contestant-place effect-as-handler enforce-msg gain-agenda-point get-party-zones-challenger
-         get-run-characters jack-out move name-zone play-instant purge resolve-select run has-subtype? get-party-zones locale->zone
+         get-run-characters host can-host? jack-out move name-zone play-instant purge resolve-select run has-subtype? get-party-zones locale->zone
          challenger-place discard update-breaker-strength update-character-in-locale update-run-character win can-run?
          can-run-locale? can-score? play-sfx)
 
@@ -354,6 +354,24 @@
       (when-let [dre (:hidden-events cdef)]
         (register-events state side dre card)))
     (trigger-event state side :hide card side)))
+
+(defn equip
+  [state side card]
+  (resolve-ability state side
+                   {:prompt  (str "Choose a character to carry " (:title card))
+                    :choices {:req #(or (character? %) (revealed? %))}
+                    :effect (effect (host target card))
+                    } card nil))
+
+(defn transfer
+  [state side card]
+  (resolve-ability state side
+                   {:prompt (msg "Transfer " (:title card) " to a different character")
+                    :choices {:req #(and (= (last (:zone %)) :characters)
+                                         (character? %)
+                                         (can-host? %))}
+                    :msg (msg "place it on " (card-str state target))
+                    :effect (effect (host target card))} card nil))
 
 (defn organize
   ([state side card locale] (organize state side (make-eid state) card locale nil))
