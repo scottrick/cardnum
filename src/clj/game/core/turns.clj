@@ -1,7 +1,7 @@
 (in-ns 'game.core)
 
 (declare all-active card-flag-fn? clear-turn-register! clear-wait-prompt create-pool create-deck create-board create-fw-dc create-location
-         in-hand? challenger-place contestant-place reveal hand-size keep-hand interrupt mulligan
+         in-hand? challenger-place contestant-place all-placed-challenger reveal untap hand-size keep-hand interrupt mulligan
          show-wait-prompt turn-message)
 
 (def game-states (atom {}))
@@ -313,6 +313,16 @@
 ;; Organization Phase
 (defn untap-all
   [state side args]
+    (resolve-ability state side
+                     {:effect (req
+                                (if (= side :contestant)
+                                (doseq [c (all-placed state side)]
+                                    (untap state side c))
+                                (doseq [c (all-placed-challenger state side)]
+                                  (untap state side c)))
+                                )}
+                     nil nil)
+
   (system-msg state side "untaps")
   (gain state side :click -5)
   )

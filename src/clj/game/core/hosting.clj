@@ -63,7 +63,7 @@
      (swap! state update-in (cons side (vec zone)) (fn [coll] (remove-once #(not= (:cid %) cid) coll)))
      (let [card (assoc-host-zones card)
            c (assoc target :host (dissoc card :hosted)
-                           :facedown true
+                           :facedown (if (is-type? card "Site") true false)
                            :zone '(:onhost) ;; hosted cards should not be in :discard or :hand etc
                            :previous-zone (:zone target))
            ;; Update any cards hosted by the target, so their :host has the updated zone.

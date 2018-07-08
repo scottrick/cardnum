@@ -73,7 +73,7 @@
   but not including 'inactive hosting' like Personal Workshop."
   [state side]
   (if (= side :challenger)
-    (let [top-level-cards (flatten (for [t [:resource :hazard :muthereff]] (get-in @state [:challenger :rig t])))
+    (let [top-level-cards (flatten (for [t [:resource :hazard :muthereff]] (get-in @state [:contestant :rig t])))
           hosted-on-character (->> (:contestant @state) :locales seq flatten (mapcat :characters) (mapcat :hosted))]
       (loop [unchecked (concat top-level-cards (filter #(= (:side %) "Challenger") hosted-on-character)) placed ()]
         (if (empty? unchecked)
@@ -89,6 +89,29 @@
           (filter #(= (:side %) "Contestant") placed)
           (let [[card & remaining] unchecked]
             (recur (filter identity (into remaining (:hosted card))) (into placed [card]))))))))
+
+(defn all-placed-challenger
+  "Returns a vector of all placed cards for the given side, including those hosted on other cards,
+  but not including 'inactive hosting' like Personal Workshop."
+  [state side]
+  (if (= side :contestant)
+    (let [top-level-cards (flatten (for [t [:resource :hazard :muthereff]] (get-in @state [:challenger :rig t])))
+          hosted-on-character (->> (:challenger @state) :locales seq flatten (mapcat :characters) (mapcat :hosted))]
+      (loop [unchecked (concat top-level-cards (filter #(= (:side %) "Contestant") hosted-on-character)) placed ()]
+        (if (empty? unchecked)
+          (filter :placed placed)
+          (let [[card & remaining] unchecked]
+            (recur (filter identity (into remaining (:hosted card))) (into placed [card]))))))
+    (let [locales (->> (:challenger @state) :locales seq flatten)
+          content (mapcat :content locales)
+          character (mapcat :characters locales)
+          top-level-cards (concat character content)]
+      (loop [unchecked top-level-cards placed ()]
+        (if (empty? unchecked)
+          (filter #(= (:side %) "Challenger") placed)
+          (let [[card & remaining] unchecked]
+            (recur (filter identity (into remaining (:hosted card))) (into placed [card]))))))))
+
 
 (defn get-all-placed
   "Returns a list of all placed cards"
