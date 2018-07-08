@@ -1,7 +1,7 @@
 (in-ns 'game.core)
 
 (declare all-active card-flag-fn? clear-turn-register! clear-wait-prompt create-pool create-deck create-board create-fw-dc create-location
-         in-hand? challenger-place reveal hand-size keep-hand interrupt mulligan
+         in-hand? challenger-place contestant-place reveal hand-size keep-hand interrupt mulligan
          show-wait-prompt turn-message)
 
 (def game-states (atom {}))
@@ -383,10 +383,16 @@
 (defn on-guard
   [state side args]
   (resolve-ability state side
-                   {:prompt "Select a card to place facedown"
-                    :choices {:req #(in-hand? %)}
-                    :effect (effect (challenger-place target {:facedown true}))}
-                   nil nil)
+                   {:prompt "Select a site for on-guard card"
+                    :choices {:req #(is-type? % "Site")}
+                    :msg (msg "host " (:title target))
+                    :effect (effect (resolve-ability (let [site target] {:req (req (zero? (count (:hosted target))))
+                                                      :prompt "Select a Hazard"
+                                                      :choices {:req #(and (is-type? % "Hazard")
+                                                                           (in-hand? %))}
+                                                      :effect (req (contestant-place state side target site) ;; install target onto card
+                                                                   )
+                                                      }) nil nil))} nil nil)
   (system-msg state side "plays an on-guard card")
   (gain state side :click -5)
   )

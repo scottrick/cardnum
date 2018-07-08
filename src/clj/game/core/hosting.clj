@@ -63,7 +63,7 @@
      (swap! state update-in (cons side (vec zone)) (fn [coll] (remove-once #(not= (:cid %) cid) coll)))
      (let [card (assoc-host-zones card)
            c (assoc target :host (dissoc card :hosted)
-                           :facedown facedown
+                           :facedown true
                            :zone '(:onhost) ;; hosted cards should not be in :discard or :hand etc
                            :previous-zone (:zone target))
            ;; Update any cards hosted by the target, so their :host has the updated zone.
@@ -73,10 +73,10 @@
        (update! state side (update-in card [:hosted] #(conj % c)))
 
        ;; events should be registered for: challenger cards that are placed; contestant cards that are Operations, or are placed and revealed
-       (when (or (is-type? target "Operation")
-                 (and (is-type? target "Event") (not facedown))
+       (when (or (is-type? target "Hazard")
+                 (and (is-type? target "Hazard") facedown)
                  (and placed (card-is? target :side :challenger))
-                 (and placed (card-is? target :side :contestant) (:revealed target)))
+                 (and placed (card-is? target :side :contestant)))
          (when-let [events (:events tdef)]
            (register-events state side events c))
          (when (or (:recurring tdef) (:prevent tdef))

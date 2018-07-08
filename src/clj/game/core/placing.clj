@@ -244,7 +244,7 @@
                    (play-sfx state side "place-contestant")
 
                    (let [moved-card (if host-card
-                                      (host state side host-card (assoc c :placed true))
+                                      (host state side host-card (assoc c :placed true :revealed false))
                                       (move state side c slot))]
                      (trigger-event state side :contestant-place moved-card)
                      (when (is-type? c "Agenda")
@@ -280,7 +280,6 @@
                                            (when-not (:revealed (get-card state moved-card))
                                              (register-events state side dre moved-card))))))))))
          (clear-place-cost-bonus state side))))))
-
 
 ;;; Placing a challenger card
 (defn- challenger-can-place-reason
