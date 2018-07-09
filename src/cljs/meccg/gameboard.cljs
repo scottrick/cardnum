@@ -188,7 +188,7 @@
       (.play (sfx-key soundbank)))
     (play-sfx (rest sfx) soundbank)))
 
-(defn action-list [{:keys [type Secondary zone revealed tapped wounded rotated inverted advanceable advance-counter advancementcost current-cost] :as card}]
+(defn action-list [{:keys [type Secondary zone revealed tapped wounded rotated inverted] :as card}]
   (-> []
       (#(if (and (and (#{"Character" "Site" "Region"} type)
                       (#{"locales" "onhost"} (first zone)))
@@ -277,8 +277,9 @@
                    ("Region" "Site") (if (< (count (get-in @game-state [:challenger :locales])) 4)
                                        (send-command "play" {:card card :locale "New party"})
                                        (-> (om/get-node owner "locales") js/$ .toggle))
-                   ("Resource") (if (some (partial = Secondary) ["Permanent-event"
-                                                                 "Long-event" "Short-event"])
+                   ("Resource") (if (some (partial = Secondary) ["Permanent-event" "Long-event"
+                                                                 "Permanent-event/Short-event"
+                                                                  "Short-event" "Faction"])
                                   (send-command "play" {:card card})
                                   (send-command "equip" {:card card}))
                    (send-command "play" {:card card}))
@@ -1278,7 +1279,13 @@
          (for [zone [:resource :hazard :muthereff :facedown]]
            [:div
             (for [c (zone (:rig player))]
-              [:div.card-wrapper {:class (when (playable? c) "playable")}
+              [:div.card-wrapper {:class (if (and (:tapped c) (not (:inverted c)))
+                                           "tapped"
+                                           (if (and (:inverted c) (not (:rotated c)))
+                                             "inverted"
+                                             (if (:rotated c)
+                                               "rotated"
+                                               nil)))}
                (om/build card-view c)])])
          ]))))
 
@@ -1654,9 +1661,7 @@
                 (om/build rfg-view {:cards (:rfg opponent) :name "Removed from play/game" :popup true})
                 (om/build rfg-view {:cards (:rfg me) :name "Removed from play/game" :popup true})
                 (om/build play-area-view {:player opponent :name "Temporary Zone"})
-                (om/build play-area-view {:player me :name "Temporary Zone"})
-                (om/build rfg-view {:cards (:current opponent) :name "Current" :popup false})
-                (om/build rfg-view {:cards (:current me) :name "Current" :popup false})]
+                (om/build play-area-view {:player me :name "Temporary Zone"})]
                [:div
                (when-not (= side :spectator)
                  (om/build button-pane {:side side :active-player active-player :run run :end-turn end-turn :challenger-phase-12 challenger-phase-12 :contestant-phase-12 contestant-phase-12 :contestant contestant :challenger challenger :me me :opponent opponent}))
