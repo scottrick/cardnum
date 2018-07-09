@@ -2,8 +2,8 @@
 
 ;; These functions are called by main.clj in response to commands sent by users.
 
-(declare card-str can-reveal? can-advance? contestant-place effect-as-handler enforce-msg gain-agenda-point get-party-names
-         get-run-characters jack-out move name-zone play-instant purge resolve-select run has-subtype?
+(declare card-str can-reveal? can-advance? contestant-place effect-as-handler enforce-msg gain-agenda-point get-party-zones-challenger
+         get-run-characters host can-host? jack-out move name-zone play-instant purge resolve-select run has-subtype? get-party-zones locale->zone
          challenger-place discard update-breaker-strength update-character-in-locale update-run-character win can-run?
          can-run-locale? can-score? play-sfx)
 
@@ -354,6 +354,68 @@
       (when-let [dre (:hidden-events cdef)]
         (register-events state side dre card)))
     (trigger-event state side :hide card side)))
+
+(defn equip
+  [state side card]
+  (resolve-ability state side
+                   {:prompt  (str "Choose a character to carry " (:title card))
+                    :choices {:req #(or (character? %) (revealed? %))}
+                    :effect (effect (host target card))
+                    } card nil))
+
+(defn transfer
+  [state side card]
+  (resolve-ability state side
+                   {:prompt (msg "Transfer " (:title card) " to a different character")
+                    :choices {:req #(and (= (last (:zone %)) :characters)
+                                         (character? %)
+                                         (can-host? %))}
+                    :msg (msg "place it on " (card-str state target))
+                    :effect (effect (host target card))} card nil))
+
+(defn organize
+  ([state side card locale] (organize state side (make-eid state) card locale nil))
+  ([state side card locale args] (organize state side (make-eid state) card locale args))
+  ([state side eid card locale {:keys [extra-cost no-place-cost place-state host-card action] :as args}]
+   (cond
+     ;; No locale selected; show prompt to select an place site (Interns, Lateral Growth, etc.)
+     (not locale)
+     (continue-ability state side
+                       {:prompt (str "Choose a character for " (:title card) " to follow or not." )
+                        :choices (concat ["New party"] (zones->sorted-names
+                                   (if (= (:side card) "Contestant") (get-party-zones @state) (get-zones-challenger @state))))
+                        :delayed-completion true
+                        :effect (effect (organize eid card target args))}
+                       card nil)
+     ;; A card was selected as the locale; recurse, with the :host-card parameter set.
+     (and (map? locale) (not host-card))
+     (organize state side eid card locale (assoc args :host-card locale))
+     ;; A locale was selected
+     :else
+     (let [cdef (card-def card)
+           slot (if host-card
+                  (:zone host-card)
+                  (conj (locale->zone state locale) (if (character? card) :characters :content)))
+           dest-zone (get-in @state (cons :contestant slot))]
+       ;; trigger :pre-contestant-place before computing place costs so that
+       ;; event handlers may adjust the cost.
+       (trigger-event state side :pre-contestant-place card {:locale locale :dest-zone dest-zone})
+       (let [character-cost (if (and (character? card)
+                                     (not no-place-cost)
+                                     (not (ignore-place-cost? state side)))
+                              (count dest-zone) 0)
+             all-cost (concat extra-cost [:credit character-cost])
+             end-cost (if no-place-cost 0 (place-cost state side card all-cost))
+             place-state (or place-state (:place-state cdef))]
+           (if-let [cost-str (pay state side card end-cost action)]
+             (do (let [c (-> card
+                             (assoc :advanceable (:advanceable cdef) :new true)
+                             (dissoc :seen :disabled))]
+                   (when (= locale "New party")
+                     (trigger-event state side :locale-created card))
+                   (let [moved-card (move state side c slot)]
+                     (trigger-event state side :contestant-place moved-card)))))
+         (clear-place-cost-bonus state side))))))
 
 (defn rotate
   "Rotate a card."

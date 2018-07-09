@@ -1719,6 +1719,15 @@ align-radio
       .card-wrapper
         margin: 3px 6px
 
+      .card-wrapper.tapped
+        transform(rotate(90deg))
+
+      .card-wrapper.inverted
+        transform(rotate(180deg))
+
+      .card-wrapper.rotated
+        transform(rotate(270deg))
+
     .contestant-board, .challenger-board
       flex(1)
       display-flex()
@@ -1908,6 +1917,9 @@ align-radio
           .locale-card.tapped
             transform(rotate(-90deg))
 
+            &.shift
+              margin-left: -36px
+
             .abilities
               top: 0
               bottom: auto
@@ -1917,6 +1929,9 @@ align-radio
           .locale-card
             margin: -7px 0
             cursor: pointer
+
+            &.shift
+              margin-left: -36px
 
     .contestant-board.opponent, .challenger-board.opponent
       transform(initial)

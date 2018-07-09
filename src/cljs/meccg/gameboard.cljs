@@ -164,13 +164,13 @@
          (build-report-url error)
          "');\">Report on GitHub</button></div>")))
 
-(defn toast
+(defn toast-new
   "Display a toast warning with the specified message.
   Sends a command to clear any server side toasts."
   [msg type options]
   true)
 
-(defn toast-old
+(defn toast
   "Display a toast warning with the specified message.
   Sends a command to clear any server side toasts."
   [msg type options]
@@ -188,12 +188,16 @@
       (.play (sfx-key soundbank)))
     (play-sfx (rest sfx) soundbank)))
 
-(defn action-list [{:keys [type Secondary zone revealed tapped wounded rotated inverted advanceable advance-counter advancementcost current-cost] :as card}]
+(defn action-list [{:keys [type Secondary zone revealed tapped wounded rotated inverted] :as card}]
   (-> []
       (#(if (and (and (#{"Character" "Site" "Region"} type)
                       (#{"locales" "onhost"} (first zone)))
                  (not revealed))
           (cons "reveal" %) %))
+      (#(if (and (#{"Character"} type)
+                 (#{"locales" "onhost"} (first zone))
+                 revealed)
+          (cons "organize" %) %))
       (#(if (and (and (or (#{"Character"} type)
                           (#{"Ally"} Secondary))
                  (#{"locales" "onhost"} (first zone)))
@@ -210,6 +214,10 @@
                       (#{"locales" "onhost"} (first zone)))
                  (or tapped wounded))
           (cons "untap" %) %))
+      (#(if (and (= type "Resource")
+                      (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Special Item"])
+                      (#{"locales" "onhost"} (first zone)))
+          (cons "transfer" %) %))
       (#(if (and (and (= type "Resource")
                       (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Special Item" "Permanent-event" "Ally"])
                       (#{"locales" "onhost"} (first zone)))
@@ -247,7 +255,7 @@
           (send-command "ability" {:card card :ability 0})
           (send-command (first actions) {:card card})))))
 
-(defn handle-card-click [{:keys [type zone root] :as card} owner]
+(defn handle-card-click [{:keys [type Secondary zone root] :as card} owner]
   (let [side (:side @game-state)]
     (when (not-spectator? game-state app-state)
       (cond
@@ -268,6 +276,11 @@
                    ("Region" "Site") (if (< (count (get-in @game-state [:challenger :locales])) 4)
                                        (send-command "play" {:card card :locale "New party"})
                                        (-> (om/get-node owner "locales") js/$ .toggle))
+                   ("Resource") (if (some (partial = Secondary) ["Permanent-event" "Long-event"
+                                                                 "Permanent-event/Short-event"
+                                                                  "Short-event" "Faction"])
+                                  (send-command "play" {:card card})
+                                  (send-command "equip" {:card card}))
                    (send-command "play" {:card card}))
           ("rig" "current" "onhost" "play-area" "locales") (handle-abilities card owner)
           nil)
@@ -281,6 +294,10 @@
                    ("Region" "Site") (if (< (count (get-in @game-state [:contestant :locales])) 4)
                                        (send-command "play" {:card card :locale "New party"})
                                        (-> (om/get-node owner "locales") js/$ .toggle))
+                   ("Resource") (if (some (partial = Secondary) ["Permanent-event"
+                                                                 "Long-event" "Short-event"])
+                                  (send-command "play" {:card card})
+                                  (send-command "equip" {:card card}))
                    (send-command "play" {:card card}))
           ("rig" "locales" "scored" "play-area" "current" "onhost") (handle-abilities card owner)
           nil)))))
@@ -1040,7 +1057,9 @@
                                     :on-click (when popup #(-> (om/get-node owner "rfg-popup") js/$ .fadeToggle))}
          (map-indexed (fn [i card]
                         [:div.card-wrapper {:style {:left (* (/ 128 size) i)}}
-                         [:div (om/build card-view card)]])
+                         [:div (if (:hide card)
+                                 (facedown-card "challenger")
+                                 (om/build card-view card))]])
                       cards)
          (om/build label cards {:opts {:name name}})
 
@@ -1049,7 +1068,9 @@
             [:div
              [:a {:on-click #(close-popup % owner "rfg-popup" nil false false false false false)} "Close"]
              [:label (str size " card" (when (not= 1 size) "s") ".")]]
-            (for [c cards] (om/build card-view c))])])))))
+            (for [c cards] (if (:hide c)
+                             (facedown-card "challenger")
+                             (om/build card-view c)))])])))))
 
 (defn play-area-view [{:keys [name player] :as cursor}]
   (om/component
@@ -1163,7 +1184,11 @@
         (when (not-empty content)
           (for [card content
                 :let [is-first (= card (first content))]]
-            [:div.locale-card {:class (when (:tapped card) "tapped")}
+            [:div.locale-card {:class (str (when (:tapped card) "tapped ")
+                                           (when (or central-view
+                                                     (and (< 1 (count content))
+                                                          (not is-first)))
+                                             "shift"))}
              (om/build card-view card {:opts {:flipped (not (:revealed card)) :location true}})
              (when (and (not central-view) is-first)
                (om/build label-without content {:opts opts}))]))]]))))
@@ -1253,7 +1278,13 @@
          (for [zone [:resource :hazard :muthereff :facedown]]
            [:div
             (for [c (zone (:rig player))]
-              [:div.card-wrapper {:class (when (playable? c) "playable")}
+              [:div.card-wrapper {:class (if (and (:tapped c) (not (:inverted c)))
+                                           "tapped"
+                                           (if (and (:inverted c) (not (:rotated c)))
+                                             "inverted"
+                                             (if (:rotated c)
+                                               "rotated"
+                                               nil)))}
                (om/build card-view c)])])
          ]))))
 
@@ -1303,11 +1334,24 @@
      [:button {:on-click f} text]
      [:button.disabled text])))
 
+(defn handle-end-of-phase [resolve]
+  (let [me ((:side @game-state) @game-state)
+        opp (if (= (:side @game-state) :contestant) (:challenger @game-state) (:contestant @game-state))
+        max-size (max (+ (:hand-size-base me) (:hand-size-modification me)) 0)
+        opp-max-size (max (+ (:hand-size-base opp) (:hand-size-modification opp)) 0)]
+    (if (not= (count (:hand me)) max-size)
+      (toast (str "Resolve hand to " max-size " card" (when (not= 1 max-size) "s")) "warning" nil)
+      (if (not= (count (:hand opp)) opp-max-size)
+        (toast (str "Hazard player needs to get to " opp-max-size " card" (when (not= 1 opp-max-size) "s")) "warning" nil)
+        (send-command resolve)))))
+
 (defn handle-end-turn []
   (let [me ((:side @game-state) @game-state)
-        max-size (max (+ (:hand-size-base me) (:hand-size-modification me)) 0)]
-    (if (> (count (:hand me)) max-size)
-      (toast (str "Discard to " max-size " card" (when (not= 1 max-size) "s")) "warning" nil)
+        opp (if (= (:side @game-state) :contestant) (:challenger @game-state) (:contestant @game-state))
+        max-size (max (+ (:hand-size-base me) (:hand-size-modification me)) 0)
+        opp-max-size (max (+ (:hand-size-base opp) (:hand-size-modification opp)) 0)]
+    (if (not= (count (:hand opp)) opp-max-size)
+      (toast (str "Hazard player needs to get to " opp-max-size " card" (when (not= 1 opp-max-size) "s")) "warning" nil)
       (send-command "end-turn"))))
 
 (defn runnable-locales
@@ -1390,63 +1434,106 @@
                       (let [[title fullCode] (extract-card-info (add-image-codes (:title c)))]
                         [:button {:class (when (:rotated c) :rotated)
                                   :on-click #(send-command "choice" {:card @c}) :id fullCode} title]))))))]
-           (if run
-             (let [s (:locale run)
-                   kw (keyword (first s))
-                   locale (if-let [n (second s)]
-                            (get-in contestant [:locales kw n])
-                            (get-in contestant [:locales kw]))]
-               (if (= side :challenger)
-                 [:div.panel.blue-shade
-                  (when-not (:no-action run) [:h4 "Waiting for Contestant's actions"])
-                  (if (zero? (:position run))
-                    (cond-button "Successful Run" (:no-action run) #(send-command "access"))
-                    (cond-button "Continue" (:no-action run) #(send-command "continue")))
-                  (cond-button "Jack Out" (not (:cannot-jack-out run))
-                               #(send-command "jack-out"))]
-                 [:div.panel.blue-shade
-                  (when (zero? (:position run))
-                    (cond-button "Action before access" (not (:no-action run))
-                                 #(send-command "contestant-phase-43")))
-                  (cond-button "No more action" (not (:no-action run))
-                               #(send-command "no-action"))]))
+           (do
              [:div.panel.blue-shade
-              (if (= (keyword active-player) side)
-                (when (and (zero? (:click me)) (not end-turn) (not challenger-phase-12) (not contestant-phase-12))
-                  [:button {:on-click #(handle-end-turn)} "End Turn"])
-                (when end-turn
-                  [:button {:on-click #(send-command "start-turn")} "Start Turn"]))
-              (when (and (= (keyword active-player) side)
-                         (or challenger-phase-12 contestant-phase-12))
-                [:button {:on-click #(send-command "end-phase-12")}
-                 (if (= side :contestant) "Mandatory Draw" "Take Clicks")])
-              (when (= side :challenger)
+                  ;; --- Start Turn ---
+              (if (and (not= (keyword active-player) side)
+                       (zero? (:click me)) end-turn)
+                (do
                 [:div
-                 (cond-button "Remove Tag"
-                              (and (pos? (:click me))
-                                   (>= (:credit me) (- 2 (or (:tag-remove-bonus me) 0)))
-                                   (pos? (:tag me)))
-                              #(send-command "remove-tag"))
-                 [:div.run-button
-                  (cond-button "Run" (and (pos? (:click me))
-                                          (not (get-in me [:register :cannot-run])))
-                               #(-> (om/get-node owner "locales") js/$ .toggle))
-                  [:div.panel.blue-shade.locales-menu {:ref "locales"}
-                   (map (fn [label]
-                          [:div {:on-click #(do (send-command "run" {:locale label})
-                                                (-> (om/get-node owner "locales") js/$ .fadeOut))}
-                           label])
-                        (zones->sorted-names (runnable-locales contestant challenger)))]]])
-              (when (= side :contestant)
-                (cond-button "Purge" (>= (:click me) 3) #(send-command "purge")))
-              (when (= side :contestant)
-                (cond-button "Discard Muthereff" (and (pos? (:click me))
-                                                   (>= (:credit me) (- 2 (or (:discard-cost-bonus me) 0)))
-                                                   (or (pos? (:tagged opponent))
-                                                       (pos? (:tag opponent))))
-                             #(send-command "discard-muthereff")))
-              (cond-button "Draw" (and (pos? (:click me)) (not-empty (:deck me))) #(send-command "draw"))
-              (cond-button "Gain Credit" (pos? (:click me)) #(send-command "credit"))]))]))))
+                 [:button {:on-click #(send-command "start-turn")} "Start Turn"]
+                 (cond-button "Untap All" nil nil)
+                 (cond-button "Organization" nil nil)
+                 (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                 (cond-button "M/H Phase" nil nil)
+                 ])
+                (if (and (zero? (:click opponent))
+                         (zero? (:click me)))
+                  [:div
+                   (cond-button "Wait!!!" nil nil)
+                   (cond-button "Nothing" nil nil)
+                   (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                   (cond-button "Waiting" nil nil)
+                   ]
+                  )
+                )
+              (when (<= 90 (:click me) 100) ;; set to 100, opponent at 50
+                [:div
+                 (cond-button "Untap All" (= (:click me) 100) #(send-command "untap-all")) ;;-5
+                 (cond-button "Organization" (= (:click me) 95) #(send-command "org-phase")) ;; -5
+                 (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                 (cond-button "M/H Phase" (= (:click me) 90) #(send-command "m-h-phase")) ;; -5
+                 ])
+              (when (= (:click me) 85)
+                [:div
+                 [:button {:on-click #(send-command "back-org")} "Back to Organize"]
+                 ;; set to 100, and opponent to 50
+                 [:button {:on-click #(handle-end-of-phase "next-m-h")} "Next M/H"]
+                 (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                 [:button {:on-click #(handle-end-of-phase "site-phase")} "Site Phase"] ;; -5
+                 ])
+              (when (= (:click me) 80)
+                [:div
+                 [:button {:on-click #(send-command "back-m-h")} "Back to M/H"]
+                 ;; set to 85, and opponent to 45
+                 [:button {:on-click #(send-command "next-site")} "Next Site"]
+                 (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                 [:button {:on-click #(send-command "eot-phase")} "EOT Phase"]; -5
+                 ])
+              (when (< 65 (:click me) 80)
+                [:div
+                 [:button {:on-click #(send-command "back-site")} "Back to Site"]
+                 ;; set to 80, and opponent to 25
+                 (cond-button "EOT Discard" (= (:click me) 75) #(handle-end-of-phase "eot-discard"));; -5
+                 (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                 (cond-button "End of Turn" (and (= (:click me) 70)
+                                           (= (keyword active-player) side) (not end-turn)
+                                              (not contestant-phase-12) (not challenger-phase-12)
+                                           ) #(handle-end-turn))
+                 ])
+
+                ;;------BREAK to Hazard Player
+
+              (cond ;;hazard click resets
+                (and (> (:click me) 0) (<= 90 (:click opponent) 100)) (send-command "reset-org")
+                (and (zero? (:click me)) (= (:click opponent) 85)) (send-command "reset-m-h")
+                (and (<= 20 (:click me) 25) (= (:click opponent) 85)) (send-command "reset-m-h")
+                (and (zero? (:click me)) (= (:click opponent) 80)) (send-command "reset-site")
+                (and (<= 35 (:click me) 45) (= (:click opponent) 80)) (send-command "reset-site")
+                (and (<= 20 (:click me) 45) (< 65 (:click opponent) 80)) (send-command "reset-done")
+                )
+              (when (<= 90 (:click opponent) 100);; set to 50, by me
+                [:div
+                 (cond-button "Wait!!!" (zero? (:click me)) #(send-command "wait-alert"))
+                 (cond-button "Nothing" false nil)
+                 (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                 (cond-button "Waiting" false nil)])
+              (when (= (:click opponent) 85);; set to 45, by me
+                [:div
+                 (cond-button "On-guard" (= (:click me) 45) #(send-command "on-guard")) ;; -5
+                 (cond-button "No Hazards" (or (= (:click me) 40) (= (:click me) 45)) #(send-command "no-hazards"))
+                 ;; set to 35
+                 (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                 (cond-button "Next M/H" (= (:click me) 35) #(send-command "reset-m-h"))
+                 ;; set to 45, by me
+                 ])
+              (when (= (:click opponent) 80) ;; set to 25, by me
+                [:div
+                 ;;(when (> (:click me) 25) (send-command "reset-site"))
+                 (cond-button "Reveal On-guard" (= (:click me) 25) #(send-command "reveal-o-g")) ;;-5
+                 (cond-button "Bluff On-guard" (= (:click me) 25) #(send-command "bluff-o-g")) ;;-5
+                 (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                 (cond-button "Next Site" (or (= (:click me) 20) (= (:click me) 25)) #(send-command "reset-site"))
+                 ;; set to 25, by me
+                 ])
+              (when (< 65 (:click opponent) 80) ;; set to 0, by me
+                [:div
+                 ;;(when (> (:click me) 0) (send-command "reset-done"))
+                 (cond-button "EOT Phase" false nil)
+                 (cond-button "EOT Discard" false nil)
+                 (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                 (cond-button "Done" (zero? (:click me)) #(send-command "haz-play-done"))]) ;;-5
+         ]))]))))
 
 (defn update-audio [{:keys [gameid sfx sfx-current-id] :as cursor} owner]
   ;; When it's the first game played with this state or when the sound history comes from different game, we skip the cacophony
@@ -1573,9 +1660,7 @@
                 (om/build rfg-view {:cards (:rfg opponent) :name "Removed from play/game" :popup true})
                 (om/build rfg-view {:cards (:rfg me) :name "Removed from play/game" :popup true})
                 (om/build play-area-view {:player opponent :name "Temporary Zone"})
-                (om/build play-area-view {:player me :name "Temporary Zone"})
-                (om/build rfg-view {:cards (:current opponent) :name "Current" :popup false})
-                (om/build rfg-view {:cards (:current me) :name "Current" :popup false})]
+                (om/build play-area-view {:player me :name "Temporary Zone"})]
                [:div
                (when-not (= side :spectator)
                  (om/build button-pane {:side side :active-player active-player :run run :end-turn end-turn :challenger-phase-12 challenger-phase-12 :contestant-phase-12 contestant-phase-12 :contestant contestant :challenger challenger :me me :opponent opponent}))

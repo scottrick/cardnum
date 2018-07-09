@@ -280,13 +280,18 @@
                                                           (move %1 %2 c :rfg)))
                                            :choices {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/rfg command"} nil)
+          "/rfgh"       #(resolve-ability %1 %2
+                                          {:prompt "Select a card to rfg facedown"
+                                           :effect (req (move %1 %2 (assoc target :hide true) :rfg))
+                                           :choices {:req (fn [t] (card-is? t :side %2))}}
+                                          {:title "/rfgh command"} nil)
           "/score"      #(resolve-ability %1 %2
                                           {:prompt "Select a card to score"
                                            :effect (req (let [c  target]
                                                           (move %1 %2 c :scored)))
                                            :choices {:req (fn [t] true)}}
                                           {:title "/score command"} nil)
-          "/og"         #(command-facedown %1 %2)
+          "/facedown"   #(command-facedown %1 %2)
           "/roll"       #(command-roll %1 %2 value)
           "/r"          #(basic-roll %1 %2)
           "/tag"        #(swap! %1 assoc-in [%2 :tag] (max 0 value))
@@ -308,10 +313,9 @@
   "Prints a message for the start or end of a turn, summarizing credits and cards in hand."
   [state side start-of-turn]
   (let [pre (if start-of-turn "started" "is ending")
-        hand (if (= side :challenger) "their Grip" "HQ")
+        hand "Hand"
         cards (count (get-in @state [side :hand]))
-        credits (get-in @state [side :credit])
-        text (str pre " their turn " (:turn @state) " with " credits " [Credit] and " cards " cards in " hand)]
+        text (str pre " their turn " (:turn @state) " with " cards " cards in " hand)]
     (system-msg state side text {:hr (not start-of-turn)})))
 
 (defn event-title
