@@ -229,6 +229,11 @@
     :effect (effect (update-breaker-strength (:host card)))
     :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
                                     :effect (effect (breaker-strength-bonus 1))}}}
+   "Tookish Blood"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
    "Wielders Curse"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
     :effect (effect (update-breaker-strength (:host card)))
