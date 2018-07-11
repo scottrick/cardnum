@@ -317,9 +317,11 @@
                      {:effect (req
                                 (if (= side :contestant)
                                 (doseq [c (all-placed state side)]
-                                  (when (not (boolean (re-find #"Permanent" (:Secondary c)))) (untap state side c)))
+                                  (when (and (not (:wounded c))
+                                             (not (boolean (re-find #"Permanent" (:Secondary c)))) (untap state side c))))
                                 (doseq [c (all-placed-challenger state side)]
-                                  (when (not (boolean (re-find #"Permanent" (:Secondary c)))) (untap state side c))))
+                                  (when (and (not (:wounded c))
+                                             (not (boolean (re-find #"Permanent" (:Secondary c)))) (untap state side c)))))
                                 )}
                      nil nil)
 

@@ -66,6 +66,7 @@
    "hide" #(core/hide %1 %2 (:card %3))
    "equip" #(core/equip %1 %2 (:card %3))
    "transfer" #(core/transfer %1 %2 (:card %3))
+   "move-to-sb" #(core/move-to-sb %1 %2 (:card %3))
    "organize" #(core/organize %1 %2 (:card %3) nil)
    "tap" #(core/tap %1 %2 (:card %3))
    "untap" #(core/untap %1 %2 (:card %3))

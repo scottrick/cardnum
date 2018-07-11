@@ -373,6 +373,16 @@
                     :msg (msg "place it on " (card-str state target))
                     :effect (effect (host target card))} card nil))
 
+(defn move-to-sb
+  [state side card]
+  (resolve-ability state side
+                   {:prompt "Select a site to move to your sideboard"
+                    :effect (req (let [c (deactivate state side target)]
+                                   (move state side c :sideboard)))
+                    :choices {:req (fn [t] (card-is? t :side side))}}
+                   nil nil)
+  )
+
 (defn organize
   ([state side card locale] (organize state side (make-eid state) card locale nil))
   ([state side card locale args] (organize state side (make-eid state) card locale args))
@@ -383,7 +393,7 @@
      (continue-ability state side
                        {:prompt (str "Choose a character for " (:title card) " to follow or not." )
                         :choices (concat ["New party"] (zones->sorted-names
-                                   (if (= (:side card) "Contestant") (get-party-zones @state) (get-zones-challenger @state))))
+                                   (if (= (:side card) "Contestant") (get-party-zones @state) (get-party-zones-challenger @state))))
                         :delayed-completion true
                         :effect (effect (organize eid card target args))}
                        card nil)

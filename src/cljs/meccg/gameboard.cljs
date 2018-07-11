@@ -74,10 +74,10 @@
 (def socket (.connect js/io (str js/iourl "/lobby")))
 (def socket-channel (chan))
 (.on socket "meccg" #(put! socket-channel (js->clj % :keywordize-keys true)))
-(.on socket "disconnect" #(notify "Connection to the locale lost. Attempting to reconnect."
+(.on socket "disconnect" #(notify "Connection to the server lost. Attempting to reconnect."
                                   "error"))
 (.on socket "reconnect" #(when (.-onbeforeunload js/window)
-                           (notify "Reconnected to the locale." "success")
+                           (notify "Reconnected to the server." "success")
                            (.emit socket "meccg" #js {:action "reconnect" :gameid (:gameid @app-state)})))
 
 (def anr-icons {"[Credits]" "credit"
@@ -986,6 +986,8 @@
           [:div {:on-click #(do (send-command "shuffle")
                                 (-> (om/get-node owner menu-ref) js/$ .fadeOut))} "Shuffle"]
           [:div {:on-click #(show-deck % owner deck-ref)} "Show Deck"]
+          [:div {:on-click #(do (send-command "move-to-sb")
+                                (-> (om/get-node owner side-ref) js/$ .fadeOut))} "Move to SB"]
           [:div {:on-click #(show-sideboard % owner side-ref)} "Sideboard"]
           [:div {:on-click #(show-fw-dc-sb % owner fwdc-ref)} "FW-DC-SB"]])
        (when (= (:side @game-state) side)
