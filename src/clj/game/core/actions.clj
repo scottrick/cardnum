@@ -15,7 +15,7 @@
     (case (:type card)
       ("Event" "Operation") (play-instant state side card {:extra-cost [:click 0]})
       ("Hazard" "Muthereff" "Resource") (challenger-place state side (make-eid state) card {:extra-cost [:click 0]})
-      ("Character" "Region" "Site" "Agenda") (contestant-place state side card locale {:extra-cost [:click 0] :action :contestant-click-place}))
+      ("Character" "Region" "Site") (contestant-place state side card locale {:extra-cost [:click 0] :action :contestant-click-place}))
     (trigger-event state side :play card)))
 
 (defn shuffle-deck
@@ -96,7 +96,7 @@
                            (revealed? c)
                            (:seen c)
                            (= last-zone :deck)))
-                (:title c)
+                "a card";;(:title c)
                 "a card")
         s (if (#{"HQ" "R&D" "Archives" "Sites"} locale) :contestant :challenger)]
     ;; allow moving from play-area always, otherwise only when same side, and to valid zone
