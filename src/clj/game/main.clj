@@ -49,6 +49,7 @@
    "no-hazards" core/no-hazards
    "reset-m-h" core/reset-m-h
    "reveal-o-g" core/reveal-o-g
+   "pre-bluff" core/pre-bluff
    "bluff-o-g" core/bluff-o-g
    "reset-site" core/reset-site
    "reset-done" core/reset-done

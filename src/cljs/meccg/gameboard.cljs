@@ -1544,8 +1544,15 @@
               (when (= (:click opponent) 80) ;; set to 25, by me
                 [:div
                  ;;(when (> (:click me) 25) (send-command "reset-site"))
-                 (cond-button "Reveal On-guard" (= (:click me) 25) #(send-command "reveal-o-g")) ;;-5
-                 (cond-button "Bluff On-guard" (= (:click me) 25) #(send-command "bluff-o-g")) ;;-5
+                 (cond-button "Reveal On-guard" (<= 21 (:click me) 25) #(send-command "reveal-o-g")) ;;-5
+
+                 (cond
+                   (= (:click me) 22)
+                   (cond-button "Bluff On-guard" (= (:click me) 22) #(send-command "bluff-o-g")) ;;-2
+                   :else
+                   (cond-button "Possible Effect" (= (:click me) 25) #(send-command "pre-bluff")) ;;-3
+                   )
+
                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                  (cond-button "Next Site" (or (= (:click me) 20) (= (:click me) 25)) #(send-command "reset-site"))
                  ;; set to 25, by me
