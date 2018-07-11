@@ -4,7 +4,7 @@
 
 (def cards-resources
   {"A Flush of Air"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -17,7 +17,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "A New Ringlord"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -30,7 +30,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Against All Counsel"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -43,7 +43,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Align Palantír"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -56,7 +56,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Ancient Knowledge"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -69,7 +69,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Ancient Skill and Wisdom"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -82,7 +82,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Arcane School"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -95,7 +95,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Await the Advent of Allies"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -108,7 +108,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Balin, Dwarf of All Trades"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -121,7 +121,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Blood of Huan"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -134,7 +134,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Bow of Alatar"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -147,7 +147,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "By the Ringwraiths Word"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -160,7 +160,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Captain of the House"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -173,7 +173,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Choice of Lúthien"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -186,7 +186,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Crimson Hood"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -206,7 +206,7 @@
                                                  {:msg (msg "to draw 3 cards.")
                                                   :effect (effect (draw 3) (move card :rfg))} card nil)))}]}
    "Dreams of Lore"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -219,7 +219,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Durins Day"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -232,7 +232,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Dwarf-friend"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -245,7 +245,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Dwarven Alchemist"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -258,7 +258,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Dwarven Art of War"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -271,7 +271,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Elf-friend"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -283,8 +283,18 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Fate of the Ithil-stone"
+   {:abilities [{:label "Place"
+                 :effect (req (let [r (get-card state card)
+                                    hosted? (character? (:host r))]
+                                (resolve-ability state side
+                                                 {:prompt (msg "Which character represents the company")
+                                                  :choices {:req #(and (character? %)
+                                                                       (can-host? %))}
+                                                  :msg (msg "host it on " (card-str state target))
+                                                  :effect (effect (host target card))} card nil)))}]}
    "Fellowship"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -297,7 +307,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Fosterhome of Royal Heirs"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -310,7 +320,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Gandalfs Friend"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -323,7 +333,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Gimlis Axe"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -336,7 +346,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Give Welcome to the Unexpected"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -349,7 +359,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Great Achievement"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -362,7 +372,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Great Bow of Lórien"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -375,7 +385,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Great Friendship"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -388,7 +398,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Grey Embassy"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -401,7 +411,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Grim Voiced and Grim Faced"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -414,7 +424,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Helm of Her Secrecy"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -427,7 +437,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Herb-lore"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -440,7 +450,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "His Beard Long and Forked"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -453,7 +463,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Hobbit-lore"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -466,7 +476,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Huntsmans Garb"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -478,8 +488,18 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Into the Smoking Cone"
+   {:abilities [{:label "Place"
+                 :effect (req (let [r (get-card state card)
+                                    hosted? (character? (:host r))]
+                                (resolve-ability state side
+                                                 {:prompt (msg "Which character represents the company")
+                                                  :choices {:req #(and (character? %)
+                                                                       (can-host? %))}
+                                                  :msg (msg "host it on " (card-str state target))
+                                                  :effect (effect (host target card))} card nil)))}]}
    "Ironfoot"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -492,7 +512,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "King of Seven Houses"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -505,7 +525,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "King under the Mountain"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -518,7 +538,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Kinsman and Ambassador"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -531,7 +551,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Knowledge of Ardas Treasures"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -544,7 +564,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Knowledge of the Enemy"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -557,7 +577,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Lady of Many Gifts"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -570,7 +590,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Lady of Many Songs"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -583,7 +603,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Lady of Many Visions"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -596,7 +616,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Last of the Seven"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -609,7 +629,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Light of Lothlórien"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -622,7 +642,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Long-time Visitor"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -635,7 +655,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Looking from Mind to Mind"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -648,7 +668,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Lord of Dwarrowdelf"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -661,7 +681,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Lore of the Ages"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -674,7 +694,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Many-coloured Robes"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -687,7 +707,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Master of Shapes"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -700,20 +720,17 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Mithrandir"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
-                                                 {:prompt (if hosted?
-                                                            (msg "You may not play this on a different character")
-                                                            (msg "Place this card with a character"))
-                                                  :choices {:req #(if (not hosted?)
-                                                                    (and (character? %)
-                                                                         (can-host? %)))}
+                                                 {:prompt (msg "Which character represents the company")
+                                                  :choices {:req #(and (character? %)
+                                                                       (can-host? %))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Moon-runes"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -726,7 +743,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "More Than Meets the Eye"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -738,8 +755,18 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Morinehtar"
+   {:abilities [{:label "Place"
+                 :effect (req (let [r (get-card state card)
+                                    hosted? (character? (:host r))]
+                                (resolve-ability state side
+                                                 {:prompt (msg "Which character represents the company")
+                                                  :choices {:req #(and (character? %)
+                                                                       (can-host? %))}
+                                                  :msg (msg "host it on " (card-str state target))
+                                                  :effect (effect (host target card))} card nil)))}]}
    "New Closeness to His Kin"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -752,7 +779,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Of the Race of Dale"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -766,7 +793,7 @@
                                                   :effect (effect (host target card))} card nil)))}]}
 
    "Open to the Summons"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -779,7 +806,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Orders from Lugbúrz"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -792,7 +819,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Oakenshield"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -805,7 +832,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Pallandos Apprentice"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -818,7 +845,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Pallandos Hood"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -831,7 +858,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Pocketed Robes"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -844,7 +871,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Prince of Mirkwood"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -857,7 +884,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Promise of Treasure"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -870,7 +897,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Promptings of Wisdom"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -883,7 +910,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Reforging"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -896,7 +923,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Rescue Prisoners"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -909,7 +936,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Return of the King"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -922,7 +949,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Ring of Air"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -935,7 +962,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Ring of Fire"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -948,7 +975,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Ring of Water"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -960,8 +987,18 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Rómestámo"
+   {:abilities [{:label "Place"
+                 :effect (req (let [r (get-card state card)
+                                    hosted? (character? (:host r))]
+                                (resolve-ability state side
+                                                 {:prompt (msg "Which character represents the company")
+                                                  :choices {:req #(and (character? %)
+                                                                       (can-host? %))}
+                                                  :msg (msg "host it on " (card-str state target))
+                                                  :effect (effect (host target card))} card nil)))}]}
    "Royal Duo"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -974,7 +1011,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Sacrifice of Form"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -987,7 +1024,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Saruman's Ring"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1000,7 +1037,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Shifter of Hues"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1013,7 +1050,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Son of Dáin"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1026,7 +1063,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Son of Fundin"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1039,7 +1076,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Son of Náin"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1052,7 +1089,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Son of Thráin"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1065,7 +1102,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Son of Thrór"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1078,7 +1115,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Squire of the Hunt"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1091,7 +1128,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Stave of Pallando"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1104,7 +1141,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Swordmaster"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1117,7 +1154,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Sworn to the Lord"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1130,7 +1167,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "The Forge-master"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1143,7 +1180,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "The Grey Hat"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1156,7 +1193,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "The Kings Hunting"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1169,7 +1206,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "The Seas Prowess"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1182,7 +1219,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "The Three Are Together"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1195,7 +1232,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "The Three Hunters"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1208,7 +1245,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "The White Wizard"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1221,7 +1258,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "The Windlord Found Me"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1234,7 +1271,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Thrall to the Voice"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1248,7 +1285,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Three Golden Hairs"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1261,7 +1298,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "To Fealty Sworn"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1274,20 +1311,17 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Towers Destroyed"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
-                                                 {:prompt (if hosted?
-                                                            (msg "You may not play this on a different character")
-                                                            (msg "Place this card on a character"))
-                                                  :choices {:req #(if (not hosted?)
-                                                                    (and (character? %)
-                                                                         (can-host? %)))}
+                                                 {:prompt (msg "Which character represents the company")
+                                                  :choices {:req #(and (character? %)
+                                                                       (can-host? %))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "True-hearted Man"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1300,7 +1334,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Trusted Counsellor"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1313,7 +1347,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Value Food and Cheer"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1326,7 +1360,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Vein of Arda"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1339,7 +1373,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Very Active Governess"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1352,7 +1386,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "War Preparations"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1365,7 +1399,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "When I Know Anything"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1378,7 +1412,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "When You Know More"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1391,7 +1425,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Winged Change-master"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
@@ -1404,7 +1438,7 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Wizards Myrmidon"
-   {:abilities [{:label "Can't Move"
+   {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side

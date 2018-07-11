@@ -21,7 +21,7 @@
       (put! cards-channel cards)))
 
 (defn make-span [text symbol class]
-  (.replace text (apply str symbol) (str "<img src='" class "'style=\"width:16px;height:16px;\"></img>")))
+  (.replace text (apply str symbol) (str "<img src='" class "'style=\"height:16px;\"></img>")))
 
 (defn show-alt-art?
   "Is the current user allowed to use alternate art cards and do they want to see them?"
@@ -69,6 +69,7 @@
       (make-span "CP" "img/dc/me_cp.png")
       (make-span "corruption points" "img/dc/me_cp.png")
       (make-span "corruption point" "img/dc/me_cp.png")
+      (make-span "Coastal Seas [ccc]" "img/dc/me_tc.png")
       (make-span "Coastal Seas [c]" "img/dc/me_cs.png")
       (make-span "Coastal Sea [c]" "img/dc/me_cs.png")
       (make-span "Dark-domains [d]" "img/dc/me_dd.png")
@@ -78,6 +79,11 @@
       (make-span "Darkhavens [V]" "img/dc/me_dha.png")
       (make-span "Darkhaven [V]" "img/dc/me_dha.png")
       (make-span "Darkhaven" "img/dc/me_dha.png")
+      (make-span "Darkhaven" "img/dc/me_dha.png")
+      (make-span "Deserts [ee]" "img/dc/me_ee.png")
+      (make-span "Deserts" "img/dc/me_ee.png")
+      (make-span "Desert [e]" "img/dc/me_er.png")
+      (make-span "Desert" "img/dc/me_er.png")
       (make-span "Direct influence" "img/dc/me_di.png")
       (make-span "direct influence" "img/dc/me_di.png")
       (make-span "DI" "img/dc/me_di.png")
@@ -114,9 +120,18 @@
       (make-span " tap." "img/dc/me_tap.png")
       (make-span "Wildernesses [w]" "img/dc/me_wi.png")
       (make-span "Wilderness [w]" "img/dc/me_wi.png")
+      (make-span "Wildernesses [ww]" "img/dc/me_dw.png")
+      (make-span "Wilderness [ww]" "img/dc/me_dw.png")
+      (make-span "Wildernesses [www]" "img/dc/me_tw.png")
+      (make-span "Wilderness [www]" "img/dc/me_tw.png")
+      (make-span "[ccc]" "img/dc/me_tc.png")
+      (make-span "[ee]" "img/dc/me_ee.png")
+      (make-span "[www]" "img/dc/me_tw.png")
+      (make-span "[ww]" "img/dc/me_dw.png")
       (make-span "[b]" "img/dc/me_bl.png")
       (make-span "[c]" "img/dc/me_cs.png")
       (make-span "[d]" "img/dc/me_dd.png")
+      (make-span "[e]" "img/dc/me_er.png")
       (make-span "[f]" "img/dc/me_fd.png")
       (make-span "[j]" "img/dc/me_ju.png")
       (make-span "[s]" "img/dc/me_sl.png")

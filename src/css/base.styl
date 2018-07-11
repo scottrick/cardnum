@@ -1719,14 +1719,44 @@ align-radio
       .card-wrapper
         margin: 3px 6px
 
+        .abilities, .challenger-abilities, .contestant-abilities
+          left: 0%
+          margin: -1px 25px
+
+        .abilities
+          top: 0
+          bottom: auto
+          transform-origin(0 0)
+
+        .challenger-abilities, .contestant-abilities
+          bottom: 0
+          transform-origin(0 100%)
+
       .card-wrapper.tapped
         transform(rotate(90deg))
+
+        .abilities
+          transform-origin(0 0)
+          transform(rotate(-90deg) translateX(-25%))
 
       .card-wrapper.inverted
         transform(rotate(180deg))
 
+        .abilities
+          top: 0
+          right: 25
+          bottom: auto
+          transform(rotate(180deg) translateY(-100%))
+          transform-origin(0 0)
+
       .card-wrapper.rotated
         transform(rotate(270deg))
+
+        .abilities
+          top: 0
+          bottom: auto
+          transform(rotate(90deg) translateY(-50%))
+          transform-origin(0 0)
 
     .contestant-board, .challenger-board
       flex(1)
