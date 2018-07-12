@@ -9,6 +9,7 @@
                                     :effect (effect (breaker-strength-bonus 1))}}}
    "Aware of Their Ways"
    {:abilities [{:effect (req
+                           (move state side card :discard)
                            (let [opp-side (if (= side :contestant)
                                             :challenger
                                             side)
