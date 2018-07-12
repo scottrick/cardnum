@@ -1108,9 +1108,7 @@
         [:div.panel.blue-shade.rfg {:class (when (> size 2) "squeeze")}
          (map-indexed (fn [i card]
                         [:div.card-wrapper {:style {:left (* (/ 128 size) i)}}
-                         (if (= (:user player) (:user @app-state))
-                           (om/build card-view card)
-                           (facedown-card side))])
+                           (om/build card-view card)])
                       cards)
          (om/build label cards {:opts {:name name}})])))))
 
