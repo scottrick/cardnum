@@ -207,7 +207,7 @@
 (def resource-secondaries ["Ally" "Faction" "Greater Item" "Major Item" "Minor Item" "Special Item"])
 (def shared-secondaries ["Permanent-event" "Short-event" "Long-event" "Permanent-event/Short-event" "Permanent-event/Long-event" "Short-event/Long-event"])
 (def hazard-secondaries ["Creature" "Creature/Permanent-event" "Creature/Short-event" "Creature/Long-event"])
-(def general-alignments ["Hero" "Minion" "Balrog" "Lord" "Fallen-wizard" "Elf-lord" "Dwarf-lord" "Atani-lord" "Dragon-lord" "FW/DL" "Dual"])
+(def general-alignments ["Hero" "Minion" "Balrog" "Fallen-wizard" "Fallen/Lord" "Lord" "Elf-lord" "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord" "Grey" "Dual"])
 (def set-order ["METW" "METD" "MEDM" "MELE" "MEAS" "MEWH" "MEBA"])
 (def set-order-dc ["MEFB" "MEDF" "MENE" "MEBO" "MECA" "MECP" "MEDS"
                    "MEGW" "MEKN" "MEML" "MEMM" "MENW" "MERN" "MERS"
