@@ -164,7 +164,7 @@
          (build-report-url error)
          "');\">Report on GitHub</button></div>")))
 
-(defn toast-new
+(defn toast-old
   "Display a toast warning with the specified message.
   Sends a command to clear any server side toasts."
   [msg type options]
@@ -1382,7 +1382,7 @@
   "List of locales the challenger can run on."
   [contestant challenger]
   (let [locales (keys (:locales contestant))
-        restricted-locales (keys (get-in challenger [:register :cannot-run-on-locale]))]
+        restricted-locales (keys {:hq true :rd true :archives true :sites true})]
     ;; remove restricted locales from all locales to just return allowed locales
     (remove (set restricted-locales) locales)))
 
@@ -1458,6 +1458,61 @@
                       (let [[title fullCode] (extract-card-info (add-image-codes (:title c)))]
                         [:button {:class (when (:rotated c) :rotated)
                                   :on-click #(send-command "choice" {:card @c}) :id fullCode} title]))))))]
+           (if run
+             (let [s (:locale run)
+                   n (:rerun run)
+                   kw (keyword (first s))
+                   locale (if-let [n (second s)]
+                            (get-in contestant [:locales kw n])
+                            (get-in contestant [:locales kw]))]
+
+               [:div.panel.blue-shade
+                (when (or (= (:click me) 85) (= (:click me) 80))
+                 [:div
+                  (cond-button "Next Character" (> n 1) #(send-command "continue"))
+                  [:div.run-button
+                   (cond-button "Other Locale" (and (pos? (:click me))
+                                                      (not (get-in me [:register :cannot-run])))
+                                #(-> (om/get-node owner "locales") js/$ .toggle))
+                   [:div.panel.blue-shade.locales-menu {:ref "locales"}
+                    (map (fn [label]
+                           [:div {:on-click #(do (send-command "run" {:locale label})
+                                                 (-> (om/get-node owner "locales") js/$ .fadeOut))}
+                            label])
+                         (zones->sorted-names (if (= side :contestant)
+                                                (runnable-locales contestant challenger)
+                                                (runnable-locales challenger contestant))))]]
+                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                  (cond-button "Done Facing" (not (:cannot-jack-out run))
+                                #(send-command "jack-out"))
+                  ])
+
+               (when (= (:click opponent) 85);; set to 45, by me
+                 [:div
+                  (cond-button "On-guard" (= (:click me) 45) #(send-command "on-guard")) ;; -5
+                  (cond-button "No Hazards" (or (= (:click me) 40) (= (:click me) 45)) #(send-command "no-hazards"))
+                  ;; set to 35
+                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                  (cond-button "Next M/H" (= (:click me) 35) #(send-command "reset-m-h"))
+                  ;; set to 45, by me
+                  ])
+               (when (= (:click opponent) 80) ;; set to 25, by me
+                 [:div
+                  ;;(when (> (:click me) 25) (send-command "reset-site"))
+                  (cond-button "Reveal On-guard" (<= 21 (:click me) 25) #(send-command "reveal-o-g")) ;;-5
+
+                  (cond
+                    (= (:click me) 22)
+                    (cond-button "Bluff On-guard" (= (:click me) 22) #(send-command "bluff-o-g")) ;;-2
+                    :else
+                    (cond-button "Possible Effect" (= (:click me) 25) #(send-command "pre-bluff")) ;;-3
+                    )
+
+                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                  (cond-button "Next Site" (or (= (:click me) 20) (= (:click me) 25)) #(send-command "reset-site"))
+                  ;; set to 25, by me
+                  ])
+               ])
            (do
              [:div.panel.blue-shade
                   ;; --- Start Turn ---
@@ -1492,7 +1547,18 @@
                 [:div
                  [:button {:on-click #(send-command "back-org")} "Back to Organize"]
                  ;; set to 100, and opponent to 50
-                 [:button {:on-click #(handle-end-of-phase "next-m-h")} "Next M/H"]
+                 [:div.run-button
+                  (cond-button "Face Attack(s)" (and (pos? (:click me))
+                                                  (not (get-in me [:register :cannot-run])))
+                               #(-> (om/get-node owner "locales") js/$ .toggle))
+                  [:div.panel.blue-shade.locales-menu {:ref "locales"}
+                   (map (fn [label]
+                          [:div {:on-click #(do (send-command "run" {:locale label})
+                                                (-> (om/get-node owner "locales") js/$ .fadeOut))}
+                           label])
+                        (zones->sorted-names (if (= side :contestant)
+                                               (runnable-locales contestant challenger)
+                                               (runnable-locales challenger contestant))))]]
                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                  [:button {:on-click #(handle-end-of-phase "site-phase")} "Site Phase"] ;; -5
                  ])
@@ -1500,7 +1566,18 @@
                 [:div
                  [:button {:on-click #(send-command "back-m-h")} "Back to M/H"]
                  ;; set to 85, and opponent to 45
-                 [:button {:on-click #(send-command "next-site")} "Next Site"]
+                 [:div.run-button
+                  (cond-button "Face Attack(s)" (and (pos? (:click me))
+                                                  (not (get-in me [:register :cannot-run])))
+                               #(-> (om/get-node owner "locales") js/$ .toggle))
+                  [:div.panel.blue-shade.locales-menu {:ref "locales"}
+                   (map (fn [label]
+                          [:div {:on-click #(do (send-command "run" {:locale label})
+                                                (-> (om/get-node owner "locales") js/$ .fadeOut))}
+                           label])
+                        (zones->sorted-names (if (= side :contestant)
+                                               (runnable-locales contestant challenger)
+                                               (runnable-locales challenger contestant))))]]
                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                  [:button {:on-click #(send-command "eot-phase")} "EOT Phase"]; -5
                  ])
@@ -1564,7 +1641,7 @@
                  (cond-button "EOT Discard" false nil)
                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                  (cond-button "Done" (zero? (:click me)) #(send-command "haz-play-done"))]) ;;-5
-         ]))]))))
+         ])))]))))
 
 (defn update-audio [{:keys [gameid sfx sfx-current-id] :as cursor} owner]
   ;; When it's the first game played with this state or when the sound history comes from different game, we skip the cacophony
