@@ -53,6 +53,7 @@
    "bluff-o-g" core/bluff-o-g
    "reset-site" core/reset-site
    "reset-done" core/reset-done
+   "return-o-g" core/return-o-g
    "haz-play-done" core/haz-play-done
 
    "end-phase-12" core/end-phase-12

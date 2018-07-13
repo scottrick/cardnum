@@ -1638,7 +1638,7 @@
                 [:div
                  ;;(when (> (:click me) 0) (send-command "reset-done"))
                  (cond-button "EOT Phase" false nil)
-                 (cond-button "EOT Discard" false nil)
+                 [:button {:on-click #(send-command "return-o-g")} "Return On-guard"]
                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                  (cond-button "Done" (zero? (:click me)) #(send-command "haz-play-done"))]) ;;-5
          ])))]))))

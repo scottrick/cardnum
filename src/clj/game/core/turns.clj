@@ -433,13 +433,11 @@
   (let [offset (- 20 (get-in @state [side :click]))]
     (gain state side :click offset))
   )
-
 (defn pre-bluff
   [state side args]
   (system-msg state side "says on-guard is possible effect")
   (gain state side :click -3)
   )
-
 (defn bluff-o-g
   [state side args]
   (resolve-ability state side
@@ -461,6 +459,16 @@
   [state side args]
   (let [offset (* -1 (get-in @state [side :click]))]
     (gain state side :click offset))
+  )
+(defn return-o-g
+  [state side args]
+  (resolve-ability state side
+                   {:prompt "Select a card to move to your hand"
+                    :effect (req (let [c (deactivate state side target)]
+                                   (move state side c :hand)))
+                    :choices {:req (fn [t] (card-is? t :side side))}}
+                   nil nil)
+  (system-msg state side "returns an on-guard card to his hand")
   )
 (defn haz-play-done
   [state side args]
