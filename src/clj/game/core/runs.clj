@@ -720,7 +720,7 @@
 (defn- resolve-jack-out
   [state side eid]
   (end-run state side)
-  (system-msg state side "jacks out")
+  (system-msg state side "is done facing attack(s)")
   (trigger-event-sync state side (make-result eid true) :jack-out))
 
 (defn jack-out

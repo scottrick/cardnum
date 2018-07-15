@@ -215,26 +215,26 @@
                  (or tapped wounded))
           (cons "untap" %) %))
       (#(if (and (= type "Resource")
-                      (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Special Item"])
+                      (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
                       (#{"locales" "onhost"} (first zone)))
           (cons "transfer" %) %))
       (#(if (and (= type "Resource")
-                 (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Special Item" "Ally"])
+                 (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item" "Ally"])
                  (#{"locales" "onhost"} (first zone))
                  (not rotated))
           (cons "rotate" %) %))
       (#(if (and (and (= type "Resource")
-                      (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Special Item"])
+                      (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
                       (#{"locales" "onhost"} (first zone)))
                  (and (not inverted) (not rotated)))
           (cons "invert" %) %))
       (#(if (and (and (= type "Resource")
-                      (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Special Item"])
+                      (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
                       (#{"locales" "onhost"} (first zone)))
                  (and (not tapped) (not inverted) (not rotated)))
           (cons "tap" %) %))
       (#(if (and (and (= type "Resource")
-                      (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Special Item"])
+                      (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
                       (#{"locales" "onhost"} (first zone)))
                  (or tapped inverted rotated))
           (cons "untap" %) %))
@@ -1522,7 +1522,7 @@
                 [:div
                  [:button {:on-click #(send-command "start-turn")} "Start Turn"]
                  (cond-button "Untap All" nil nil)
-                 (cond-button "Organization" nil nil)
+                 (cond-button "Organized" nil nil)
                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                  (cond-button "M/H Phase" nil nil)
                  ])
@@ -1539,7 +1539,7 @@
               (when (<= 90 (:click me) 100) ;; set to 100, opponent at 50
                 [:div
                  (cond-button "Untap All" (= (:click me) 100) #(send-command "untap-all")) ;;-5
-                 (cond-button "Organization" (= (:click me) 95) #(send-command "org-phase")) ;; -5
+                 (cond-button "Organized" (= (:click me) 95) #(send-command "org-phase")) ;; -5
                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                  (cond-button "M/H Phase" (= (:click me) 90) #(send-command "m-h-phase")) ;; -5
                  ])

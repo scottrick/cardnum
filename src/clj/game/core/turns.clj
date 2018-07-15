@@ -412,7 +412,7 @@
   )
 (defn no-hazards
   [state side args]
-  (system-msg state side "says no more hazards for this company")
+  (system-msg state side "says NO MORE HAZARDS for this company")
   (let [offset (- 35 (get-in @state [side :click]))]
     (gain state side :click offset))
   )
@@ -472,7 +472,7 @@
   )
 (defn haz-play-done
   [state side args]
-  (system-msg state side "has nothing else")
+  (system-msg state side "has NOTHING ELSE")
   )
 
 (defn end-turn [state side args]
