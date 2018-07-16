@@ -1198,6 +1198,7 @@
              current-character (when (and run (pos? run-pos) (<= run-pos (count characters)))
                            (nth characters (dec run-pos)))
              run-arrow (sab/html [:div.run-arrow [:div]])
+             tap-arrow (sab/html [:div.tap-arrow [:div]])
              max-hosted (apply max (map #(count (:hosted %)) characters))]
          [:div.characters {:style {:width (when (pos? max-hosted)
                                       (+ 84 3 (* 42 (dec max-hosted))))}}
@@ -1211,7 +1212,9 @@
                                         nil))}
              (om/build card-view character {:opts {:flipped (not (:revealed character))}})
              (when (and current-character (= (:cid current-character) (:cid character)))
-               run-arrow)])
+               (if (:tapped character)
+                 tap-arrow
+                 run-arrow))])
           (when (and run (not current-character))
             run-arrow)])
        [:div.content
