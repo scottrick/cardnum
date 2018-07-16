@@ -497,6 +497,11 @@ nav ul
   background-color: transparent-blue
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1)
 
+.blue-shade.region
+  background-color: transparent-blue
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1)
+  transform(rotate(-90deg) translateY(-20%))
+
 .active-player
   border: 1px solid #ffa500
 
@@ -529,7 +534,7 @@ nav ul
 
 align-radio
   float: left
-  width: 25%
+  width: 33%
 
 #regiones_x5F_vector_1_ {fill: transparent;}
   .st0:hover{stroke:#000000;opacity:0.5;stroke-width:5.0;stroke-miterlimit:10;}
@@ -1719,14 +1724,44 @@ align-radio
       .card-wrapper
         margin: 3px 6px
 
+        .abilities, .challenger-abilities, .contestant-abilities
+          left: 0%
+          margin: -1px 25px
+
+        .abilities
+          top: 0
+          bottom: auto
+          transform-origin(0 0)
+
+        .challenger-abilities, .contestant-abilities
+          bottom: 0
+          transform-origin(0 100%)
+
       .card-wrapper.tapped
         transform(rotate(90deg))
+
+        .abilities
+          transform-origin(0 0)
+          transform(rotate(-90deg) translateX(-25%))
 
       .card-wrapper.inverted
         transform(rotate(180deg))
 
+        .abilities
+          top: 0
+          right: 25
+          bottom: auto
+          transform(rotate(180deg) translateY(-100%))
+          transform-origin(0 0)
+
       .card-wrapper.rotated
         transform(rotate(270deg))
+
+        .abilities
+          top: 0
+          bottom: auto
+          transform(rotate(90deg) translateY(-50%))
+          transform-origin(0 0)
 
     .contestant-board, .challenger-board
       flex(1)
@@ -1770,7 +1805,7 @@ align-radio
               top: 0
               bottom: -70px
               width: 16px
-              background-color: transparent-orange
+              background-color: transparent-green
               transform(translateX(-50%))
               border-radius: 0 0 4px 4px
 
@@ -1786,7 +1821,36 @@ align-radio
                 bottom: 100%
                 left: 50%
                 transform(translateX(-50%))
-                border-bottom: 22px solid transparent-orange
+                border-bottom: 22px solid transparent-green
+
+          .tap-arrow
+            position: relative
+            bottom: 168px
+            animation: fadein 0.5s
+
+            > div
+              position: absolute
+              left: 50%
+              top: 0
+              bottom: -70px
+              width: 16px
+              background-color: transparent-green
+              transform(translateX(-50%))
+              border-radius: 0 0 4px 4px
+
+              &:before
+                content: ""
+                display: block
+                position: absolute
+                right: 8px
+                width: 0
+                height: 0
+                border-left: 16px solid transparent
+                border-right: 16px solid transparent
+                bottom: -31%
+                left: 50%
+                transform (translateX(-50%)) (rotate(180deg))
+                border-bottom: 22px solid transparent-green
 
           .character.wounded
             transform(rotate(0deg))

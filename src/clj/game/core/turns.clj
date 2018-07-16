@@ -286,8 +286,7 @@
 (defn start-turn
   "Start turn."
   [state side args]
-  (when (= side :contestant)
-    (swap! state update-in [:turn] inc))
+    (swap! state update-in [:turn] inc)
 
   (doseq [c (filter #(:new %) (all-placed state side))]
     (update! state side (dissoc c :new)))
@@ -311,15 +310,26 @@
 
 ;; --- For what goes on between Start/End ;)
 ;; Organization Phase
+(defn not-first
+  [state side args]
+  (start-turn state side args)
+  (swap! state update-in [:turn] dec)
+  (system-msg state side "passes first turn")
+  (let [offset (- 70 (get-in @state [side :click]))]
+    (gain state side :click offset))
+  )
+
 (defn untap-all
   [state side args]
     (resolve-ability state side
                      {:effect (req
                                 (if (= side :contestant)
                                 (doseq [c (all-placed state side)]
-                                    (untap state side c))
+                                  (when (and (not (:wounded c))
+                                             (not (boolean (re-find #"Permanent" (:Secondary c)))) (untap state side c))))
                                 (doseq [c (all-placed-challenger state side)]
-                                  (untap state side c)))
+                                  (when (and (not (:wounded c))
+                                             (not (boolean (re-find #"Permanent" (:Secondary c)))) (untap state side c)))))
                                 )}
                      nil nil)
 
@@ -340,7 +350,8 @@
 (defn back-org
   [state side args]
   (system-msg state side "goes back to the Organization Phase")
-  (gain state side :click 15)
+  (let [offset (- 100 (get-in @state [side :click]))]
+    (gain state side :click offset))
   )
 (defn next-m-h
   [state side args]
@@ -355,7 +366,8 @@
 (defn back-m-h
   [state side args]
   (system-msg state side "goes back the M/H Phase")
-  (gain state side :click 5)
+  (let [offset (- 85 (get-in @state [side :click]))]
+    (gain state side :click offset))
   )
 (defn next-site
   [state side args]
@@ -370,7 +382,8 @@
 (defn back-site
   [state side args]
   (system-msg state side "goes back the Site Phase")
-  (gain state side :click 5)
+  (let [offset (- 80 (get-in @state [side :click]))]
+    (gain state side :click offset))
   )
 (defn eot-discard
   [state side args]
@@ -397,9 +410,8 @@
                     :choices {:req #(is-type? % "Site")}
                     :msg (msg "host " (:title target))
                     :effect (effect (resolve-ability (let [site target] {:req (req (zero? (count (:hosted target))))
-                                                      :prompt "Select a Hazard"
-                                                      :choices {:req #(and (is-type? % "Hazard")
-                                                                           (in-hand? %))}
+                                                      :prompt "Select a card for on-guard"
+                                                      :choices {:req #(in-hand? %)}
                                                       :effect (req (contestant-place state side target site) ;; install target onto card
                                                                    )
                                                       }) nil nil))} nil nil)
@@ -408,7 +420,7 @@
   )
 (defn no-hazards
   [state side args]
-  (system-msg state side "says no more hazards for this company")
+  (system-msg state side "says NO MORE HAZARDS for this company")
   (let [offset (- 35 (get-in @state [side :click]))]
     (gain state side :click offset))
   )
@@ -426,7 +438,13 @@
                     :choices {:req (fn [t] (card-is? t :side side))}}
                    nil nil)
   (system-msg state side "reveals an on-guard card")
-  (gain state side :click -5)
+  (let [offset (- 20 (get-in @state [side :click]))]
+    (gain state side :click offset))
+  )
+(defn pre-bluff
+  [state side args]
+  (system-msg state side "says on-guard is possible effect")
+  (gain state side :click -3)
   )
 (defn bluff-o-g
   [state side args]
@@ -436,8 +454,8 @@
                                    (move state side c :hand)))
                     :choices {:req (fn [t] (card-is? t :side side))}}
                    nil nil)
-  (system-msg state side "returns a bluff to his hand")
-  (gain state side :click -5)
+  (system-msg state side "nope, returns a bluff to his hand")
+  (gain state side :click -2)
   )
 (defn reset-site
   [state side args]
@@ -450,9 +468,19 @@
   (let [offset (* -1 (get-in @state [side :click]))]
     (gain state side :click offset))
   )
+(defn return-o-g
+  [state side args]
+  (resolve-ability state side
+                   {:prompt "Select a card to move to your hand"
+                    :effect (req (let [c (deactivate state side target)]
+                                   (move state side c :hand)))
+                    :choices {:req (fn [t] (card-is? t :side side))}}
+                   nil nil)
+  (system-msg state side "returns an on-guard card to his hand")
+  )
 (defn haz-play-done
   [state side args]
-  (system-msg state side "has nothing else")
+  (system-msg state side "has NOTHING ELSE")
   )
 
 (defn end-turn [state side args]

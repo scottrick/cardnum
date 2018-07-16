@@ -164,7 +164,7 @@
   (core/successful-run state :challenger nil))
 
 (defn run-jack-out
-  "Jacks out in run."
+  "is done facing attack(s)"
   [state]
   (core/jack-out state :challenger nil))
 

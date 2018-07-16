@@ -245,7 +245,7 @@
         [:div.gameline {:class (when (= current-game gameid) "active")}
          [:section
           [:h3 "Alignment"]
-          (for [option ["Hero" "Minion" "Balrog" "Fallen-wizard" "Elf-lord" "Dwarf-lord" "Dragon-lord" "Atani-lord"]]
+          (for [option ["Hero" "Minion" "Balrog" "Fallen-wizard" "Elf-lord" "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord"]]
             [:align-radio
              [:label [:input {:type "radio"
                               :name "alignment"
@@ -374,7 +374,7 @@
 
               [:section
                [:h3 "Alignment"]
-               (for [option ["Hero" "Minion" "Balrog" "Fallen-wizard" "Elf-lord" "Dwarf-lord" "Dragon-lord" "Atani-lord"]]
+               (for [option ["Hero" "Minion" "Balrog" "Fallen-wizard" "Elf-lord" "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord"]]
                  [:align-radio
                   [:label [:input {:type "radio"
                                    :name "alignment"

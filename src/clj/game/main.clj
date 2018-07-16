@@ -31,6 +31,7 @@
    "keep" core/keep-hand
    "start-turn" core/start-turn
 
+   "not-first" core/not-first
    "untap-all" core/untap-all
    "org-phase" core/org-phase
    "m-h-phase" core/m-h-phase
@@ -49,9 +50,11 @@
    "no-hazards" core/no-hazards
    "reset-m-h" core/reset-m-h
    "reveal-o-g" core/reveal-o-g
+   "pre-bluff" core/pre-bluff
    "bluff-o-g" core/bluff-o-g
    "reset-site" core/reset-site
    "reset-done" core/reset-done
+   "return-o-g" core/return-o-g
    "haz-play-done" core/haz-play-done
 
    "end-phase-12" core/end-phase-12
@@ -65,6 +68,7 @@
    "hide" #(core/hide %1 %2 (:card %3))
    "equip" #(core/equip %1 %2 (:card %3))
    "transfer" #(core/transfer %1 %2 (:card %3))
+   "move-to-sb" #(core/move-to-sb %1 %2 (:card %3))
    "organize" #(core/organize %1 %2 (:card %3) nil)
    "tap" #(core/tap %1 %2 (:card %3))
    "untap" #(core/untap %1 %2 (:card %3))
@@ -72,6 +76,7 @@
    "invert" #(core/invert %1 %2 (:card %3))
    "rotate" #(core/rotate %1 %2 (:card %3))
    "fix-tap" #(core/fix-tap %1 %2 (:card %3))
+   "regionize" #(core/regionize %1 %2 (:card %3))
    "run" core/click-run
    "no-action" core/no-action
    "contestant-phase-43" core/contestant-phase-43

@@ -7,6 +7,25 @@
     :effect (effect (update-breaker-strength (:host card)))
     :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
                                     :effect (effect (breaker-strength-bonus 1))}}}
+   "Aware of Their Ways"
+   {:abilities [{:effect (req
+                           (move state side card :discard)
+                           (let [opp-side (if (= side :contestant)
+                                            :challenger
+                                            side)
+                                 kount (count (get-in @state [opp-side :discard]))]
+                             (loop [k (if (< kount 4) kount 4)]
+                               (when (> k 0)
+                                 (move state opp-side (rand-nth (get-in @state [opp-side :discard])) :play-area)
+                                 (recur (- k 1))))
+                           (resolve-ability state side
+                                            {:prompt "Select a card to remove from the game"
+                                             :choices {:req (fn [t] (card-is? t :side opp-side))}
+                                             :effect (req (doseq [c (get-in @state [opp-side :play-area])]
+                                                            (if (= c target)
+                                                              (move state opp-side c :rfg)
+                                                              (move state opp-side c :discard)
+                                                              )))} nil nil)))}]}
    "Bring Our Curses Home"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
     :effect (effect (update-breaker-strength (:host card)))
@@ -225,6 +244,11 @@
     :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
                                     :effect (effect (breaker-strength-bonus 1))}}}
    "The Pale Sword"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
+    :effect (effect (update-breaker-strength (:host card)))
+    :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))
+                                    :effect (effect (breaker-strength-bonus 1))}}}
+   "Tookish Blood"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}
     :effect (effect (update-breaker-strength (:host card)))
     :events {:pre-breaker-strength {:req (req (= (:cid target) (:cid (:host card))))

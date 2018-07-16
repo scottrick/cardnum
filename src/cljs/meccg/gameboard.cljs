@@ -74,10 +74,10 @@
 (def socket (.connect js/io (str js/iourl "/lobby")))
 (def socket-channel (chan))
 (.on socket "meccg" #(put! socket-channel (js->clj % :keywordize-keys true)))
-(.on socket "disconnect" #(notify "Connection to the locale lost. Attempting to reconnect."
+(.on socket "disconnect" #(notify "Connection to the server lost. Attempting to reconnect."
                                   "error"))
 (.on socket "reconnect" #(when (.-onbeforeunload js/window)
-                           (notify "Reconnected to the locale." "success")
+                           (notify "Reconnected to the server." "success")
                            (.emit socket "meccg" #js {:action "reconnect" :gameid (:gameid @app-state)})))
 
 (def anr-icons {"[Credits]" "credit"
@@ -164,7 +164,7 @@
          (build-report-url error)
          "');\">Report on GitHub</button></div>")))
 
-(defn toast-new
+(defn toast-old
   "Display a toast warning with the specified message.
   Sends a command to clear any server side toasts."
   [msg type options]
@@ -188,7 +188,7 @@
       (.play (sfx-key soundbank)))
     (play-sfx (rest sfx) soundbank)))
 
-(defn action-list [{:keys [type Secondary zone revealed tapped wounded rotated inverted] :as card}]
+(defn action-list [{:keys [type Secondary Home zone revealed tapped wounded rotated inverted] :as card}]
   (-> []
       (#(if (and (and (#{"Character" "Site" "Region"} type)
                       (#{"locales" "onhost"} (first zone)))
@@ -203,41 +203,74 @@
                  (#{"locales" "onhost"} (first zone)))
                  (and revealed (not wounded)))
           (cons "wound" %) %))
-      (#(if (and (and (or (#{"Character" "Site" "Region"} type)
+      (#(if (and (#{"Region"} type)
+                 (re-find #"tap" Home)
+                 revealed
+                 (not tapped))
+          (cons "tap" %) %))
+      (#(if (and (#{"Region"} type)
+                 (or (and (re-find #"tap" Home) tapped)
+                     (and (not (re-find #"tap" Home)) (not tapped)))
+                 revealed)
+          (cons "regionize" %) %))
+      (#(if (and (and (or (#{"Character" "Site"} type)
                           (#{"Ally"} Secondary))
                       (#{"locales" "onhost"} (first zone)))
                  revealed
                  (or (not tapped) wounded))
           (cons "tap" %) %))
-      (#(if (and (and (or (#{"Character" "Site" "Region"} type)
+      (#(if (and (and (or (#{"Character" "Site"} type)
                           (#{"Ally"} Secondary))
                       (#{"locales" "onhost"} (first zone)))
                  (or tapped wounded))
           (cons "untap" %) %))
       (#(if (and (= type "Resource")
-                      (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Special Item"])
+                      (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
                       (#{"locales" "onhost"} (first zone)))
           (cons "transfer" %) %))
-      (#(if (and (and (= type "Resource")
-                      (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Special Item" "Permanent-event" "Ally"])
-                      (#{"locales" "onhost"} (first zone)))
-                 (and (not rotated) (or (not tapped) inverted)))
+      (#(if (and (= type "Resource")
+                 (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item" "Ally"])
+                 (#{"locales" "onhost"} (first zone))
+                 (not rotated))
           (cons "rotate" %) %))
       (#(if (and (and (= type "Resource")
-                      (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Special Item" "Permanent-event"])
+                      (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
                       (#{"locales" "onhost"} (first zone)))
-                 (and (not inverted) (not rotated) tapped))
+                 (and (not inverted) (not rotated)))
           (cons "invert" %) %))
       (#(if (and (and (= type "Resource")
-                      (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Special Item" "Permanent-event"])
+                      (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
                       (#{"locales" "onhost"} (first zone)))
-                 (and (not tapped) (not rotated)))
+                 (and (not tapped) (not inverted) (not rotated)))
           (cons "tap" %) %))
       (#(if (and (and (= type "Resource")
-                      (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Special Item" "Permanent-event"])
+                      (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
                       (#{"locales" "onhost"} (first zone)))
-                 (or tapped rotated))
-          (cons "untap" %) %))))
+                 (or tapped inverted rotated))
+          (cons "untap" %) %))
+      (#(if (and (and (= Secondary "Permanent-event")
+                      (re-find #"rotate" Home)
+                      (#{"rig" "onhost"} (first zone)))
+                 (and (not rotated)))
+          (cons "rotate" %) %))
+      (#(if (and (and (= Secondary "Permanent-event")
+                      (re-find #"invert" Home)
+                      (#{"rig" "onhost"} (first zone)))
+                 (and (not inverted) (not rotated)))
+          (cons "invert" %) %))
+      (#(if (and (and (= Secondary "Permanent-event")
+                      (re-find #"tap" Home)
+                      (#{"rig" "onhost"} (first zone)))
+                 (and (not tapped) (not inverted) (not rotated)))
+          (cons "tap" %) %))
+      (#(if (and (and (= Secondary "Permanent-event")
+                      (or (boolean (re-find #"tap" Home))
+                          (boolean (re-find #"invert" Home))
+                          (boolean (re-find #"rotate" Home)))
+                      (#{"rig" "onhost"} (first zone)))
+                 (or tapped inverted rotated))
+          (cons "untap" %) %))
+      ))
 
 (defn handle-abilities [{:keys [abilities facedown side type] :as card} owner]
   (let [actions (action-list card)
@@ -294,8 +327,9 @@
                    ("Region" "Site") (if (< (count (get-in @game-state [:contestant :locales])) 4)
                                        (send-command "play" {:card card :locale "New party"})
                                        (-> (om/get-node owner "locales") js/$ .toggle))
-                   ("Resource") (if (some (partial = Secondary) ["Permanent-event"
-                                                                 "Long-event" "Short-event"])
+                   ("Resource") (if (some (partial = Secondary) ["Permanent-event" "Long-event"
+                                                                 "Permanent-event/Short-event"
+                                                                 "Short-event" "Faction"])
                                   (send-command "play" {:card card})
                                   (send-command "equip" {:card card}))
                    (send-command "play" {:card card}))
@@ -688,9 +722,11 @@
 (defn card-zoom [card owner]
   (om/component
    (sab/html
-    [:div.card-preview.blue-shade
+    [:div.card-preview.blue-shade {:class (if (and (#{"Region"} (:type card))
+                                                   (re-find #"tap" (:Home card)))
+                                            "region")}
      (when-let [url (image-url card)]
-       [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])])))
+         [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])])))
 
 (defn card-view [{:keys [zone fullCode type abilities counter advance-counter advancementcost current-cost subtype
                          advanceable revealed tapped rotated strength current-strength title parties selected hosted
@@ -962,6 +998,8 @@
           [:div {:on-click #(do (send-command "shuffle")
                                 (-> (om/get-node owner menu-ref) js/$ .fadeOut))} "Shuffle"]
           [:div {:on-click #(show-deck % owner deck-ref)} "Show Deck"]
+          [:div {:on-click #(do (send-command "move-to-sb")
+                                (-> (om/get-node owner side-ref) js/$ .fadeOut))} "Move to SB"]
           [:div {:on-click #(show-sideboard % owner side-ref)} "Sideboard"]
           [:div {:on-click #(show-fw-dc-sb % owner fwdc-ref)} "FW-DC-SB"]])
        (when (= (:side @game-state) side)
@@ -1082,9 +1120,7 @@
         [:div.panel.blue-shade.rfg {:class (when (> size 2) "squeeze")}
          (map-indexed (fn [i card]
                         [:div.card-wrapper {:style {:left (* (/ 128 size) i)}}
-                         (if (= (:user player) (:user @app-state))
-                           (om/build card-view card)
-                           (facedown-card side))])
+                           (om/build card-view card)])
                       cards)
          (om/build label cards {:opts {:name name}})])))))
 
@@ -1162,6 +1198,7 @@
              current-character (when (and run (pos? run-pos) (<= run-pos (count characters)))
                            (nth characters (dec run-pos)))
              run-arrow (sab/html [:div.run-arrow [:div]])
+             tap-arrow (sab/html [:div.tap-arrow [:div]])
              max-hosted (apply max (map #(count (:hosted %)) characters))]
          [:div.characters {:style {:width (when (pos? max-hosted)
                                       (+ 84 3 (* 42 (dec max-hosted))))}}
@@ -1175,7 +1212,9 @@
                                         nil))}
              (om/build card-view character {:opts {:flipped (not (:revealed character))}})
              (when (and current-character (= (:cid current-character) (:cid character)))
-               run-arrow)])
+               (if (:tapped character)
+                 tap-arrow
+                 run-arrow))])
           (when (and run (not current-character))
             run-arrow)])
        [:div.content
@@ -1358,7 +1397,7 @@
   "List of locales the challenger can run on."
   [contestant challenger]
   (let [locales (keys (:locales contestant))
-        restricted-locales (keys (get-in challenger [:register :cannot-run-on-locale]))]
+        restricted-locales (keys {:hq true :rd true :archives true :sites true})]
     ;; remove restricted locales from all locales to just return allowed locales
     (remove (set restricted-locales) locales)))
 
@@ -1434,6 +1473,61 @@
                       (let [[title fullCode] (extract-card-info (add-image-codes (:title c)))]
                         [:button {:class (when (:rotated c) :rotated)
                                   :on-click #(send-command "choice" {:card @c}) :id fullCode} title]))))))]
+           (if run
+             (let [s (:locale run)
+                   n (:rerun run)
+                   kw (keyword (first s))
+                   locale (if-let [n (second s)]
+                            (get-in contestant [:locales kw n])
+                            (get-in contestant [:locales kw]))]
+
+               [:div.panel.blue-shade
+                (when (or (= (:click me) 85) (= (:click me) 80))
+                 [:div
+                  (cond-button "Next Character" (> n 1) #(send-command "continue"))
+                  [:div.run-button
+                   (cond-button "Other Locale" (and (pos? (:click me))
+                                                      (not (get-in me [:register :cannot-run])))
+                                #(-> (om/get-node owner "locales") js/$ .toggle))
+                   [:div.panel.blue-shade.locales-menu {:ref "locales"}
+                    (map (fn [label]
+                           [:div {:on-click #(do (send-command "run" {:locale label})
+                                                 (-> (om/get-node owner "locales") js/$ .fadeOut))}
+                            label])
+                         (zones->sorted-names (if (= side :contestant)
+                                                (runnable-locales contestant challenger)
+                                                (runnable-locales challenger contestant))))]]
+                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                  (cond-button "Done Facing" (not (:cannot-jack-out run))
+                                #(send-command "jack-out"))
+                  ])
+
+               (when (= (:click opponent) 85);; set to 45, by me
+                 [:div
+                  (cond-button "On-guard" (= (:click me) 45) #(send-command "on-guard")) ;; -5
+                  (cond-button "No Hazards" (or (= (:click me) 40) (= (:click me) 45)) #(send-command "no-hazards"))
+                  ;; set to 35
+                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                  (cond-button "Next M/H" (= (:click me) 35) #(send-command "reset-m-h"))
+                  ;; set to 45, by me
+                  ])
+               (when (= (:click opponent) 80) ;; set to 25, by me
+                 [:div
+                  ;;(when (> (:click me) 25) (send-command "reset-site"))
+                  (cond-button "Reveal On-guard" (<= 21 (:click me) 25) #(send-command "reveal-o-g")) ;;-5
+
+                  (cond
+                    (= (:click me) 22)
+                    (cond-button "Bluff On-guard" (= (:click me) 22) #(send-command "bluff-o-g")) ;;-2
+                    :else
+                    (cond-button "Possible Effect" (= (:click me) 25) #(send-command "pre-bluff")) ;;-3
+                    )
+
+                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                  (cond-button "Next Site" (or (= (:click me) 20) (= (:click me) 25)) #(send-command "reset-site"))
+                  ;; set to 25, by me
+                  ])
+               ])
            (do
              [:div.panel.blue-shade
                   ;; --- Start Turn ---
@@ -1441,9 +1535,12 @@
                        (zero? (:click me)) end-turn)
                 (do
                 [:div
+                 (if (and (= (get-in @game-state [:turn]) 0)
+                         (= side :contestant))
+                   [:button {:on-click #(send-command "not-first")} "Pass 1st Turn"])
                  [:button {:on-click #(send-command "start-turn")} "Start Turn"]
                  (cond-button "Untap All" nil nil)
-                 (cond-button "Organization" nil nil)
+                 (cond-button "Organized" nil nil)
                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                  (cond-button "M/H Phase" nil nil)
                  ])
@@ -1460,7 +1557,7 @@
               (when (<= 90 (:click me) 100) ;; set to 100, opponent at 50
                 [:div
                  (cond-button "Untap All" (= (:click me) 100) #(send-command "untap-all")) ;;-5
-                 (cond-button "Organization" (= (:click me) 95) #(send-command "org-phase")) ;; -5
+                 (cond-button "Organized" (= (:click me) 95) #(send-command "org-phase")) ;; -5
                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                  (cond-button "M/H Phase" (= (:click me) 90) #(send-command "m-h-phase")) ;; -5
                  ])
@@ -1468,7 +1565,18 @@
                 [:div
                  [:button {:on-click #(send-command "back-org")} "Back to Organize"]
                  ;; set to 100, and opponent to 50
-                 [:button {:on-click #(handle-end-of-phase "next-m-h")} "Next M/H"]
+                 [:div.run-button
+                  (cond-button "Face Attack(s)" (and (pos? (:click me))
+                                                  (not (get-in me [:register :cannot-run])))
+                               #(-> (om/get-node owner "locales") js/$ .toggle))
+                  [:div.panel.blue-shade.locales-menu {:ref "locales"}
+                   (map (fn [label]
+                          [:div {:on-click #(do (send-command "run" {:locale label})
+                                                (-> (om/get-node owner "locales") js/$ .fadeOut))}
+                           label])
+                        (zones->sorted-names (if (= side :contestant)
+                                               (runnable-locales contestant challenger)
+                                               (runnable-locales challenger contestant))))]]
                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                  [:button {:on-click #(handle-end-of-phase "site-phase")} "Site Phase"] ;; -5
                  ])
@@ -1476,7 +1584,18 @@
                 [:div
                  [:button {:on-click #(send-command "back-m-h")} "Back to M/H"]
                  ;; set to 85, and opponent to 45
-                 [:button {:on-click #(send-command "next-site")} "Next Site"]
+                 [:div.run-button
+                  (cond-button "Face Attack(s)" (and (pos? (:click me))
+                                                  (not (get-in me [:register :cannot-run])))
+                               #(-> (om/get-node owner "locales") js/$ .toggle))
+                  [:div.panel.blue-shade.locales-menu {:ref "locales"}
+                   (map (fn [label]
+                          [:div {:on-click #(do (send-command "run" {:locale label})
+                                                (-> (om/get-node owner "locales") js/$ .fadeOut))}
+                           label])
+                        (zones->sorted-names (if (= side :contestant)
+                                               (runnable-locales contestant challenger)
+                                               (runnable-locales challenger contestant))))]]
                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                  [:button {:on-click #(send-command "eot-phase")} "EOT Phase"]; -5
                  ])
@@ -1520,8 +1639,15 @@
               (when (= (:click opponent) 80) ;; set to 25, by me
                 [:div
                  ;;(when (> (:click me) 25) (send-command "reset-site"))
-                 (cond-button "Reveal On-guard" (= (:click me) 25) #(send-command "reveal-o-g")) ;;-5
-                 (cond-button "Bluff On-guard" (= (:click me) 25) #(send-command "bluff-o-g")) ;;-5
+                 (cond-button "Reveal On-guard" (<= 21 (:click me) 25) #(send-command "reveal-o-g")) ;;-5
+
+                 (cond
+                   (= (:click me) 22)
+                   (cond-button "Bluff On-guard" (= (:click me) 22) #(send-command "bluff-o-g")) ;;-2
+                   :else
+                   (cond-button "Possible Effect" (= (:click me) 25) #(send-command "pre-bluff")) ;;-3
+                   )
+
                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                  (cond-button "Next Site" (or (= (:click me) 20) (= (:click me) 25)) #(send-command "reset-site"))
                  ;; set to 25, by me
@@ -1530,10 +1656,10 @@
                 [:div
                  ;;(when (> (:click me) 0) (send-command "reset-done"))
                  (cond-button "EOT Phase" false nil)
-                 (cond-button "EOT Discard" false nil)
+                 [:button {:on-click #(send-command "return-o-g")} "Return On-guard"]
                  (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                  (cond-button "Done" (zero? (:click me)) #(send-command "haz-play-done"))]) ;;-5
-         ]))]))))
+         ])))]))))
 
 (defn update-audio [{:keys [gameid sfx sfx-current-id] :as cursor} owner]
   ;; When it's the first game played with this state or when the sound history comes from different game, we skip the cacophony

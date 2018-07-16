@@ -15,7 +15,7 @@
     (case (:type card)
       ("Event" "Operation") (play-instant state side card {:extra-cost [:click 0]})
       ("Hazard" "Muthereff" "Resource") (challenger-place state side (make-eid state) card {:extra-cost [:click 0]})
-      ("Character" "Region" "Site" "Agenda") (contestant-place state side card locale {:extra-cost [:click 0] :action :contestant-click-place}))
+      ("Character" "Region" "Site") (contestant-place state side card locale {:extra-cost [:click 0] :action :contestant-click-place}))
     (trigger-event state side :play card)))
 
 (defn shuffle-deck
@@ -96,7 +96,7 @@
                            (revealed? c)
                            (:seen c)
                            (= last-zone :deck)))
-                (:title c)
+                "a card";;(:title c)
                 "a card")
         s (if (#{"HQ" "R&D" "Archives" "Sites"} locale) :contestant :challenger)]
     ;; allow moving from play-area always, otherwise only when same side, and to valid zone
@@ -222,7 +222,7 @@
   "Use the 'match strength with character' function of icebreakers."
   [state side args]
   (let [run (:run @state) card (get-card state (:card args))
-        current-character (when (and run (> (or (:position run) 0) 0)) (get-card state ((get-run-characters state) (dec (:position run)))))
+        current-character (when (and run (> (or (:position run) 0) 0)) (get-card state ((get-run-characters state side) (dec (:position run)))))
         pumpabi (some #(when (:pump %) %) (:abilities (card-def card)))
         pumpcst (when pumpabi (second (drop-while #(and (not= % :credit) (not= % "credit")) (:cost pumpabi))))
         strdif (when current-character (max 0 (- (or (:current-strength current-character) (:strength current-character))
@@ -373,6 +373,16 @@
                     :msg (msg "place it on " (card-str state target))
                     :effect (effect (host target card))} card nil))
 
+(defn move-to-sb
+  [state side card]
+  (resolve-ability state side
+                   {:prompt "Select a site to move to your sideboard"
+                    :effect (req (let [c (deactivate state side target)]
+                                   (move state side c :sideboard)))
+                    :choices {:req (fn [t] (card-is? t :side side))}}
+                   nil nil)
+  )
+
 (defn organize
   ([state side card locale] (organize state side (make-eid state) card locale nil))
   ([state side card locale args] (organize state side (make-eid state) card locale args))
@@ -383,7 +393,7 @@
      (continue-ability state side
                        {:prompt (str "Choose a character for " (:title card) " to follow or not." )
                         :choices (concat ["New party"] (zones->sorted-names
-                                   (if (= (:side card) "Contestant") (get-party-zones @state) (get-zones-challenger @state))))
+                                   (if (= (:side card) "Contestant") (get-party-zones @state) (get-party-zones-challenger @state))))
                         :delayed-completion true
                         :effect (effect (organize eid card target args))}
                        card nil)
@@ -458,6 +468,10 @@
     (untap state side card)
     (tap state side card)))
 
+(defn regionize
+  [state side card]
+  (system-msg state side (str (:RPath card) " " (:title card))))
+
 (defn advance
   "Advance a contestant card that can be advanced.
    If you pass in a truthy value as the 4th parameter, it will advance at no cost (for the card Success)."
@@ -514,7 +528,7 @@
   (swap! state assoc-in [:run :no-action] true)
   (system-msg state side "has no further action")
   (trigger-event state side :no-action)
-  (let [run-character (get-run-characters state)
+  (let [run-character (get-run-characters state side)
         pos (get-in @state [:run :position])
         character (when (and pos (pos? pos) (<= pos (count run-character)))
               (get-card state (nth run-character (dec pos))))]
@@ -526,17 +540,8 @@
 (defn click-run
   "Click to start a run."
   [state side {:keys [locale] :as args}]
-  (let [cost-bonus (get-in @state [:bonus :run-cost])
-        click-cost-bonus (get-in @state [:bonus :click-run-cost])]
-    (when (and (can-run? state side)
-               (can-run-locale? state locale)
-               (can-pay? state :challenger "a run" :click 1 cost-bonus click-cost-bonus))
-      (swap! state assoc-in [:challenger :register :made-click-run] true)
-      (run state side locale)
-      (when-let [cost-str (pay state :challenger nil :click 1 cost-bonus click-cost-bonus)]
-        (system-msg state :challenger
-                    (str (build-spend-msg cost-str "make a run on") locale))
-        (play-sfx state side "click-run")))))
+  (swap! state assoc-in [side :register :made-click-run] true)
+  (run state side locale))
 
 (defn remove-tag
   "Click to remove a tag."
@@ -550,26 +555,26 @@
 (defn continue
   "The challenger decides to approach the next character, or the locale itself."
   [state side args]
-  (when (get-in @state [:run :no-action])
-    (let [run-character (get-run-characters state)
-          pos (get-in @state [:run :position])
-          cur-character (when (and pos (pos? pos) (<= pos (count run-character)))
-                    (get-card state (nth run-character (dec pos))))
-          next-character (when (and pos (< 1 pos) (<= (dec pos) (count run-character)))
-                     (get-card state (nth run-character (- pos 2))))]
-      (when-completed (trigger-event-sync state side :pass-character cur-character)
-                      (do (update-character-in-locale
-                            state side (get-in @state (concat [:contestant :locales] (get-in @state [:run :locale]))))
-                          (swap! state update-in [:run :position] dec)
-                          (swap! state assoc-in [:run :no-action] false)
-                          (system-msg state side "continues the run")
-                          (when cur-character
-                            (update-character-strength state side cur-character))
-                          (when next-character
-                            (trigger-event-sync state side (make-eid state) :approach-character next-character))
-                          (doseq [p (filter #(has-subtype? % "Icebreaker") (all-placed state :challenger))]
-                            (update! state side (update-in (get-card state p) [:pump] dissoc :encounter))
-                            (update-breaker-strength state side p)))))))
+  (let [run-character (get-run-characters state side )
+        pos (get-in @state [:run :position])
+        cur-character (when (and pos (pos? pos) (<= pos (count run-character)))
+                        (get-card state (nth run-character (dec pos))))
+        next-character (when (and pos (< 1 pos) (<= (dec pos) (count run-character)))
+                         (get-card state (nth run-character (- pos 2))))]
+    (when-completed (trigger-event-sync state side :pass-character cur-character)
+                    (do ;;(update-character-in-locale
+                      ;;state side (get-in @state (concat [:contestant :locales] (get-in @state [:run :locale]))))
+                      (if (= pos 1)
+                        (swap! state assoc-in [:run :position] (get-in @state [:run :rerun]))
+                        (swap! state update-in [:run :position] dec)
+                        )
+                      ;;(swap! state assoc-in [:run :no-action] false)
+                      ;;(system-msg state side (str "a4 character" (count (get-run-characters state))))
+                      ;;(when cur-character
+                      ;; (update-character-strength state side cur-character))
+                      ;;(when next-character
+                      ;;(trigger-event-sync state side (make-eid state) :approach-character next-character))
+                      ))))
 
 (defn view-deck
   "Allows the player to view their deck by making the cards in the deck public."

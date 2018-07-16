@@ -13,20 +13,36 @@
   ([state side eid locale] (run state side eid locale nil nil))
   ([state side locale run-effect card] (run state side (make-eid state) locale run-effect card))
   ([state side eid locale run-effect card]
-   (when (can-run? state :challenger)
-     (let [s [(if (keyword? locale) locale (last (locale->zone state locale)))]
-           characters (get-in @state (concat [:contestant :locales] s [:characters]))
-           n (count characters)]
-       ;; s is a keyword for the locale, like :hq or :party1
-       (swap! state assoc :per-run nil
-              :run {:locale s :position n :access-bonus 0
-                    :run-effect (assoc run-effect :card card)
-                    :eid eid})
-       (gain-run-credits state side (+ (get-in @state [:contestant :bad-publicity]) (get-in @state [:contestant :has-bad-pub])))
-       (swap! state update-in [:challenger :register :made-run] #(conj % (first s)))
-       (update-all-character state :contestant)
-       (trigger-event-sync state :challenger (make-eid state) :run s)
-       (when (>= n 2) (trigger-event state :challenger :run-big s n))))))
+   (if (= side :contestant)
+     (when (can-run? state :challenger)
+       (let [s [(if (keyword? locale) locale (last (locale->zone state locale)))]
+             characters (get-in @state (concat [:contestant :locales] s [:characters]))
+             n (count characters)]
+         ;; s is a keyword for the locale, like :hq or :party1
+         (swap! state assoc :per-run nil
+                :run {:locale s :position n :rerun n :access-bonus 0
+                      :run-effect (assoc run-effect :card card)
+                      :eid eid})
+         (gain-run-credits state side (+ (get-in @state [:contestant :bad-publicity]) (get-in @state [:contestant :has-bad-pub])))
+         (swap! state update-in [:challenger :register :made-run] #(conj % (first s)))
+         (update-all-character state :contestant)
+         (trigger-event-sync state :challenger (make-eid state) :run s)
+         (when (>= n 2) (trigger-event state :challenger :run-big s n))))
+     (when (can-run? state :contestant)
+       (let [s [(if (keyword? locale) locale (last (locale->zone state locale)))]
+             characters (get-in @state (concat [:challenger :locales] s [:characters]))
+             n (count characters)]
+         ;; s is a keyword for the locale, like :hq or :party1
+         (swap! state assoc :per-run nil
+                :run {:locale s :position n :rerun n :access-bonus 0
+                      :run-effect (assoc run-effect :card card)
+                      :eid eid})
+         ;;(gain-run-credits state side (+ (get-in @state [:challenger :bad-publicity]) (get-in @state [:challenger :has-bad-pub])))
+         (swap! state update-in [:contestant :register :made-run] #(conj % (first s)))
+         (update-all-character state :challenger)
+         (trigger-event-sync state :contestant (make-eid state) :run s)
+         (when (>= n 2) (trigger-event state :contestant :run-big s n)))))
+   ))
 
 (defn gain-run-credits
   "Add temporary credits that will disappear when the run is over."
@@ -704,7 +720,7 @@
 (defn- resolve-jack-out
   [state side eid]
   (end-run state side)
-  (system-msg state side "jacks out")
+  (system-msg state side "is done facing attack(s)")
   (trigger-event-sync state side (make-result eid true) :jack-out))
 
 (defn jack-out
@@ -788,5 +804,5 @@
         (handle-end-run state :challenger)))))
 
 (defn get-run-characters
-  [state]
-  (get-in @state (concat [:contestant :locales] (:locale (:run @state)) [:characters])))
+  [state side]
+  (get-in @state (concat [side :locales] (:locale (:run @state)) [:characters])))
