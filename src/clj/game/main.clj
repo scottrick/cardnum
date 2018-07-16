@@ -31,6 +31,7 @@
    "keep" core/keep-hand
    "start-turn" core/start-turn
 
+   "not-first" core/not-first
    "untap-all" core/untap-all
    "org-phase" core/org-phase
    "m-h-phase" core/m-h-phase

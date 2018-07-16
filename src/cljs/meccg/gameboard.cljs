@@ -1520,6 +1520,9 @@
                        (zero? (:click me)) end-turn)
                 (do
                 [:div
+                 (if (and (= (get-in @game-state [:turn]) 0)
+                         (= side :contestant))
+                   [:button {:on-click #(send-command "not-first")} "Pass 1st Turn"])
                  [:button {:on-click #(send-command "start-turn")} "Start Turn"]
                  (cond-button "Untap All" nil nil)
                  (cond-button "Organized" nil nil)

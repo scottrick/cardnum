@@ -286,8 +286,7 @@
 (defn start-turn
   "Start turn."
   [state side args]
-  (when (= side :contestant)
-    (swap! state update-in [:turn] inc))
+    (swap! state update-in [:turn] inc)
 
   (doseq [c (filter #(:new %) (all-placed state side))]
     (update! state side (dissoc c :new)))
@@ -311,6 +310,15 @@
 
 ;; --- For what goes on between Start/End ;)
 ;; Organization Phase
+(defn not-first
+  [state side args]
+  (start-turn state side args)
+  (swap! state update-in [:turn] dec)
+  (system-msg state side "passes first turn")
+  (let [offset (- 70 (get-in @state [side :click]))]
+    (gain state side :click offset))
+  )
+
 (defn untap-all
   [state side args]
     (resolve-ability state side
