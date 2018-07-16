@@ -468,6 +468,10 @@
     (untap state side card)
     (tap state side card)))
 
+(defn regionize
+  [state side card]
+  (system-msg state side (str (:RPath card) " " (:title card))))
+
 (defn advance
   "Advance a contestant card that can be advanced.
    If you pass in a truthy value as the 4th parameter, it will advance at no cost (for the card Success)."

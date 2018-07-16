@@ -203,13 +203,23 @@
                  (#{"locales" "onhost"} (first zone)))
                  (and revealed (not wounded)))
           (cons "wound" %) %))
-      (#(if (and (and (or (#{"Character" "Site" "Region"} type)
+      (#(if (and (#{"Region"} type)
+                 (re-find #"tap" Home)
+                 revealed
+                 (not tapped))
+          (cons "tap" %) %))
+      (#(if (and (#{"Region"} type)
+                 (or (and (re-find #"tap" Home) tapped)
+                     (and (not (re-find #"tap" Home)) (not tapped)))
+                 revealed)
+          (cons "regionize" %) %))
+      (#(if (and (and (or (#{"Character" "Site"} type)
                           (#{"Ally"} Secondary))
                       (#{"locales" "onhost"} (first zone)))
                  revealed
                  (or (not tapped) wounded))
           (cons "tap" %) %))
-      (#(if (and (and (or (#{"Character" "Site" "Region"} type)
+      (#(if (and (and (or (#{"Character" "Site"} type)
                           (#{"Ally"} Secondary))
                       (#{"locales" "onhost"} (first zone)))
                  (or tapped wounded))
@@ -712,9 +722,11 @@
 (defn card-zoom [card owner]
   (om/component
    (sab/html
-    [:div.card-preview.blue-shade
+    [:div.card-preview.blue-shade {:class (if (and (#{"Region"} (:type card))
+                                                   (re-find #"tap" (:Home card)))
+                                            "region")}
      (when-let [url (image-url card)]
-       [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])])))
+         [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])])))
 
 (defn card-view [{:keys [zone fullCode type abilities counter advance-counter advancementcost current-cost subtype
                          advanceable revealed tapped rotated strength current-strength title parties selected hosted
