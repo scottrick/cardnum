@@ -6,11 +6,21 @@ Play Middle-earth:CCG in the browser.
 
 http://www.cardnum.net
 
+[Ch 1 - Basics](https://www.youtube.com/watch?v=NVUjf6YrL_A)
+
+[Ch 2 - Games](https://www.youtube.com/watch?v=kMNXLibDVGE)
+
+[Ch 3 - Drafting](https://www.youtube.com/watch?v=r5tFzhFe6-E)
+
+[Ch 4 - Resources](https://www.youtube.com/watch?v=3-DuGG2NNAc)
+
+[Ch 5 - Hazards](https://www.youtube.com/watch?v=cy8lLzPUBlE)
+
+[Ch 6 - Item Tips](https://www.youtube.com/watch?v=r5tFzhFe6-E)
 
 ![screenshot](/resources/public/img/meccg_shot2.jpg)
 
 ## Card implementation status
-
 
 [Card rules implementation status](https://docs.google.com/spreadsheets/d/1Ly2RVe4QZRhN6TUfV1YO9DuuYvywzMnnaCunQapzzfs/edit?usp=sharing)
 
