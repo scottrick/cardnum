@@ -16,7 +16,7 @@ http://www.cardnum.net
 
 [Ch 5 - Hazards](https://www.youtube.com/watch?v=cy8lLzPUBlE)
 
-[Ch 6 - Item Tips](https://www.youtube.com/watch?v=r5tFzhFe6-E)
+[Ch 6 - Item Tips](https://www.youtube.com/watch?v=QCURuej2IsY)
 
 ![screenshot](/resources/public/img/meccg_shot2.jpg)
 
