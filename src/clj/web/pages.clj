@@ -13,11 +13,11 @@
   (hiccup/html5
     [:head
      [:meta {:charset "utf-8"}]
-     [:meta {:name "viewport" :content "width=device-width, initial-scale=0.6, minimal-ui"}]
+     [:meta {:name "viewport" :content "width=devcharacter-width, initial-scale=0.6, minimal-ui"}]
      [:meta {:name "apple-mobile-web-app-capable" :content "yes"}]
-     [:title "Jinteki"]
+     [:title "Cardnum"]
      (hiccup/include-css "/css/carousel.css")
-     (hiccup/include-css (str "/css/netrunner.css?v=" version))
+     (hiccup/include-css (str "/css/meccg.css?v=" version))
      (hiccup/include-css "/lib/toastr/toastr.min.css")
      (hiccup/include-css "/lib/jqueryui/themes/base/jquery-ui.min.css")]
     [:body
@@ -41,7 +41,7 @@
        (list (hiccup/include-js (str "js/app10.js?v=" version))
              [:script
               "(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-              ga('create', 'UA-20250150-2', 'www.jinteki.net');"]))
+              ga('create', 'UA-20250150-2', 'www.cardnum.net');"]))
      (when user
        (str "ga('set', '&uid', '" (:username user) "');"))
      "ga('send', 'pageview');"]))
@@ -61,7 +61,7 @@
        [:div.item.active
         [:div.home-bg]
         [:div.container
-         [:h1 "Play Android: Netrunner in your browser"]
+         [:h1 "Play MECCG:CCG in your browser"]
          [:div#news]
          [:div#chat]]]
        [:div.item
@@ -94,7 +94,7 @@
   (hiccup/html5
     [:head
      [:title "Announce"]
-     (hiccup/include-css "/css/netrunner.css")]
+     (hiccup/include-css "/css/meccg.css")]
     [:body
      [:div.reset-bg]
      [:form.panel.blue-shade.reset-form {:method "POST"}
@@ -109,7 +109,7 @@
   (hiccup/html5
     [:head
      [:title "App Version"]
-     (hiccup/include-css "/css/netrunner.css")]
+     (hiccup/include-css "/css/meccg.css")]
     [:body
      [:div.reset-bg]
      [:form.panel.blue-shade.reset-form {:method "POST"}
@@ -125,8 +125,8 @@
                                                 :resetPasswordExpires {"$gt" (c/to-date (t/now))}})]
     (hiccup/html5
       [:head
-       [:title "Jinteki"]
-       (hiccup/include-css "/css/netrunner.css")]
+       [:title "Cardnum"]
+       (hiccup/include-css "/css/meccg.css")]
       [:body
        [:div.reset-bg]
        [:form.panel.blue-shade.reset-form {:method "POST"}

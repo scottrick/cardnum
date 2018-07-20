@@ -1,179 +1,179 @@
-(ns game-test.cards.assets
+(ns game-test.cards.sites
   (:require [game.core :as core]
             [game-test.core :refer :all]
             [game-test.utils :refer :all]
             [game-test.macros :refer :all]
             [clojure.test :refer :all]))
 
-(use-fixtures :once load-all-cards (partial reset-card-defs "assets"))
+(use-fixtures :once load-all-cards (partial reset-card-defs "sites"))
 
 (deftest adonis-campaign
   ;; Adonis Campaign
   (do-game
-    (new-game (default-corp ["Adonis Campaign"])
-              (default-runner))
-    (play-from-hand state :corp "Adonis Campaign" "New remote")
-    (let [ac (get-content state :remote1 0)]
-      (core/rez state :corp ac)
-      (is (= 1 (:credit (get-corp))))
+    (new-game (default-contestant ["Adonis Campaign"])
+              (default-challenger))
+    (play-from-hand state :contestant "Adonis Campaign" "New party")
+    (let [ac (get-content state :party1 0)]
+      (core/reveal state :contestant ac)
+      (is (= 1 (:credit (get-contestant))))
       (is (= 12 (get-counters (refresh ac) :credit)) "12 counters on Adonis")
-      (take-credits state :corp)
-      (let [credits (:credit (get-corp))
+      (take-credits state :contestant)
+      (let [credits (:credit (get-contestant))
             counters (get-counters (refresh ac) :credit)]
-        (take-credits state :runner)
-        (is (= (:credit (get-corp)) (+ credits 3)) "Gain 3 from Adonis")
+        (take-credits state :challenger)
+        (is (= (:credit (get-contestant)) (+ credits 3)) "Gain 3 from Adonis")
         (is (= (get-counters (refresh ac) :credit) (- counters 3)) "9 counter remaining on Adonis")))))
 
 (deftest advanced-assembly-lines
   ;; Advanced Assembly Lines
   (do-game
-    (new-game (default-corp ["Advanced Assembly Lines"
+    (new-game (default-contestant ["Advanced Assembly Lines"
                              "PAD Campaign"])
-              (default-runner))
-    (play-from-hand state :corp "Advanced Assembly Lines" "New remote")
-    (let [aal (get-content state :remote1 0)
-          credits (:credit (get-corp))
-          hq (count (:hand (get-corp)))]
-      (core/rez state :corp aal)
-      (is (= (+ credits 2) (:credit (get-corp))) "Spend 1 gain 3")
-      (card-ability state :corp aal 0)
-      (click-card state :corp (find-card "PAD Campaign" (:hand (get-corp))))
-      (click-prompt state :corp "New remote")
-      (is (= (- hq 1) (count (:hand (get-corp)))) "Installed 1 card, hq is empty"))))
+              (default-challenger))
+    (play-from-hand state :contestant "Advanced Assembly Lines" "New party")
+    (let [aal (get-content state :party1 0)
+          credits (:credit (get-contestant))
+          hq (count (:hand (get-contestant)))]
+      (core/reveal state :contestant aal)
+      (is (= (+ credits 2) (:credit (get-contestant))) "Spend 1 gain 3")
+      (card-ability state :contestant aal 0)
+      (click-card state :contestant (find-card "PAD Campaign" (:hand (get-contestant))))
+      (click-prompt state :contestant "New party")
+      (is (= (- hq 1) (count (:hand (get-contestant)))) "Placed 1 card, hq is empty"))))
 
 (deftest aggressive-secretary
   ;; Aggressive Secretary
   (do-game
     (new-game
-      (default-corp ["Aggressive Secretary"])
-      (default-runner [(qty "Cache" 3)]))
-    (play-from-hand state :corp "Aggressive Secretary" "New remote")
-    (let [as (get-content state :remote1 0)]
+      (default-contestant ["Aggressive Secretary"])
+      (default-challenger [(qty "Cache" 3)]))
+    (play-from-hand state :contestant "Aggressive Secretary" "New party")
+    (let [as (get-content state :party1 0)]
       ;; Single advance AggSec
-      (core/advance state :corp {:card (refresh as)})
-      (take-credits state :corp)
-      ;; Run on AggSec with 3 programs
-      (play-from-hand state :runner "Cache")
-      (play-from-hand state :runner "Cache")
-      (play-from-hand state :runner "Cache")
-      (run-empty-server state "Server 1")
-      (click-prompt state :corp "Yes")
-      (is (= 3 (:credit (get-corp))))
-      ;; Corp can trash one program
-      (click-card state :corp (get-program state 1))
+      (core/advance state :contestant {:card (refresh as)})
+      (take-credits state :contestant)
+      ;; Run on AggSec with 3 resources
+      (play-from-hand state :challenger "Cache")
+      (play-from-hand state :challenger "Cache")
+      (play-from-hand state :challenger "Cache")
+      (run-empty-locale state "Locale 1")
+      (click-prompt state :contestant "Yes")
+      (is (= 3 (:credit (get-contestant))))
+      ;; Contestant can discard one resource
+      (click-card state :contestant (get-resource state 1))
       ;; There should be two Caches left
-      (is (= 3 (:credit (get-corp))))
-      (is (= 2 (count (get-program state)))))))
+      (is (= 3 (:credit (get-contestant))))
+      (is (= 2 (count (get-resource state)))))))
 
 (deftest alexa-belsky
   ;; Alexa Belsky
   (do-game
     (new-game
-      (default-corp ["Alexa Belsky" "Hedge Fund" "Breaking News"
+      (default-contestant ["Alexa Belsky" "Hedge Fund" "Breaking News"
                      "Gutenberg" "Product Placement" "Jackson Howard"])
-      (default-runner))
-    (play-from-hand state :corp "Alexa Belsky" "New remote")
-    (let [alexa (get-content state :remote1 0)]
-      (core/rez state :corp alexa)
-      (card-ability state :corp alexa 0)
-      (is (= 1 (count (:discard (get-corp)))) "Alexa Belsky trashed")
-      (is (= 5 (count (:hand (get-corp)))))
-      (is (zero? (count (:deck (get-corp)))))
-      (click-prompt state :runner "5") ;Runner chooses to pay 5 credits so 2 cards are prevented from being shuffled
-      (is (= 2 (count (:hand (get-corp)))))
-      (is (= 3 (count (:deck (get-corp)))))
-      (is (zero? (:credit (get-runner)))))))
+      (default-challenger))
+    (play-from-hand state :contestant "Alexa Belsky" "New party")
+    (let [alexa (get-content state :party1 0)]
+      (core/reveal state :contestant alexa)
+      (card-ability state :contestant alexa 0)
+      (is (= 1 (count (:discard (get-contestant)))) "Alexa Belsky discarded")
+      (is (= 5 (count (:hand (get-contestant)))))
+      (is (zero? (count (:deck (get-contestant)))))
+      (click-prompt state :challenger "5") ;Challenger chooses to pay 5 credits so 2 cards are prevented from being shuffled
+      (is (= 2 (count (:hand (get-contestant)))))
+      (is (= 3 (count (:deck (get-contestant)))))
+      (is (zero? (:credit (get-challenger)))))))
 
 (deftest alix-t4lb07
   ;; Alix T4LB07
   (do-game
     (new-game
-      (default-corp ["Alix T4LB07" (qty "PAD Campaign" 3)])
-      (default-runner))
-    (play-from-hand state :corp "Alix T4LB07" "New remote")
-    (let [alix (get-content state :remote1 0)]
-      (core/rez state :corp alix)
-      (play-from-hand state :corp "PAD Campaign" "New remote")
-      (play-from-hand state :corp "PAD Campaign" "New remote")
-      (take-credits state :corp)
-      (take-credits state :runner)
+      (default-contestant ["Alix T4LB07" (qty "PAD Campaign" 3)])
+      (default-challenger))
+    (play-from-hand state :contestant "Alix T4LB07" "New party")
+    (let [alix (get-content state :party1 0)]
+      (core/reveal state :contestant alix)
+      (play-from-hand state :contestant "PAD Campaign" "New party")
+      (play-from-hand state :contestant "PAD Campaign" "New party")
+      (take-credits state :contestant)
+      (take-credits state :challenger)
       (is (= 2 (get-counters (refresh alix) :power)) "Two counters on Alix")
-      (is (= 4 (:credit (get-corp))))
-      (card-ability state :corp alix 0)
-      (is (= 8 (:credit (get-corp))) "Gain 4 credits from Alix"))))
+      (is (= 4 (:credit (get-contestant))))
+      (card-ability state :contestant alix 0)
+      (is (= 8 (:credit (get-contestant))) "Gain 4 credits from Alix"))))
 
 (deftest allele-repression
   ;; Allele Repression
   (do-game
-    (new-game (default-corp ["Allele Repression"])
-              (default-runner))
-    (play-from-hand state :corp "Allele Repression" "New remote")
-    (let [ar (get-content state :remote1 0)]
-      (core/advance state :corp (refresh ar))
-      (core/advance state :corp (refresh ar))
-      (card-ability state :corp ar 0)
-      (is (= 1 (count (:discard (get-corp)))) "Allele Repression is trashed"))))
+    (new-game (default-contestant ["Allele Repression"])
+              (default-challenger))
+    (play-from-hand state :contestant "Allele Repression" "New party")
+    (let [ar (get-content state :party1 0)]
+      (core/advance state :contestant (refresh ar))
+      (core/advance state :contestant (refresh ar))
+      (card-ability state :contestant ar 0)
+      (is (= 1 (count (:discard (get-contestant)))) "Allele Repression is discarded"))))
 
 (deftest amani-senai
   ;; Amani Senai - trace on score/steal to bounce, with base strength = advancement req of the agenda
   (do-game
-    (new-game (default-corp ["Amani Senai"
+    (new-game (default-contestant ["Amani Senai"
                              (qty "Medical Breakthrough" 2)])
-              (default-runner ["Analog Dreamers"]))
-    (play-from-hand state :corp "Amani Senai" "New remote")
-    (play-from-hand state :corp "Medical Breakthrough" "New remote")
-    (play-from-hand state :corp "Medical Breakthrough" "New remote")
-    (take-credits state :corp)
-    (let [senai (get-content state :remote1 0)
-          breakthrough (get-content state :remote3 0)]
-      (core/rez state :corp senai)
-      (play-from-hand state :runner "Analog Dreamers")
-      (run-empty-server state "Server 2")
-      (click-prompt state :runner "Steal")
-      (is (zero? (count (get-content state :remote2))) "Agenda was stolen")
-      (click-prompt state :corp "Medical Breakthrough") ; simult. effect resolution
-      (click-prompt state :corp "Yes")
-      (click-prompt state :corp "0")
-      (is (= 3 (-> (get-runner) :prompt first :strength)) "Trace base strength is 3 after stealing first Breakthrough")
-      (click-prompt state :runner "0")
-      (let [grip (-> (get-runner) :hand count)]
-        (is (= 1 (count (get-program state))) "There is an Analog Dreamers installed")
-        (click-card state :corp (get-program state 0))
-        (is (zero? (count (get-program state))) "Analog Dreamers was uninstalled")
-        (is (= (+ grip 1) (-> (get-runner) :hand count)) "Analog Dreamers was added to hand"))
-      (take-credits state :runner)
-      (score-agenda state :corp breakthrough)
-      ;; (click-prompt state :corp "Medical Breakthrough") ; there is no simult. effect resolution on score for some reason
-      (click-prompt state :corp "Yes") ; corp should get to trigger trace even when no runner cards are installed
-      (click-prompt state :corp "0")
-      (is (= 2 (-> (get-runner) :prompt first :strength)) "Trace base strength is 2 after scoring second Breakthrough"))))
+              (default-challenger ["Analog Dreamers"]))
+    (play-from-hand state :contestant "Amani Senai" "New party")
+    (play-from-hand state :contestant "Medical Breakthrough" "New party")
+    (play-from-hand state :contestant "Medical Breakthrough" "New party")
+    (take-credits state :contestant)
+    (let [senai (get-content state :party1 0)
+          breakthrough (get-content state :party3 0)]
+      (core/reveal state :contestant senai)
+      (play-from-hand state :challenger "Analog Dreamers")
+      (run-empty-locale state "Locale 2")
+      (click-prompt state :challenger "Steal")
+      (is (zero? (count (get-content state :party2))) "Agenda was stolen")
+      (click-prompt state :contestant "Medical Breakthrough") ; simult. effect resolution
+      (click-prompt state :contestant "Yes")
+      (click-prompt state :contestant "0")
+      (is (= 3 (-> (get-challenger) :prompt first :strength)) "Trace base strength is 3 after stealing first Breakthrough")
+      (click-prompt state :challenger "0")
+      (let [grip (-> (get-challenger) :hand count)]
+        (is (= 1 (count (get-resource state))) "There is an Analog Dreamers placed")
+        (click-card state :contestant (get-resource state 0))
+        (is (zero? (count (get-resource state))) "Analog Dreamers was unplaced")
+        (is (= (+ grip 1) (-> (get-challenger) :hand count)) "Analog Dreamers was added to hand"))
+      (take-credits state :challenger)
+      (score-agenda state :contestant breakthrough)
+      ;; (click-prompt state :contestant "Medical Breakthrough") ; there is no simult. effect resolution on score for some reason
+      (click-prompt state :contestant "Yes") ; contestant should get to trigger trace even when no challenger cards are placed
+      (click-prompt state :contestant "0")
+      (is (= 2 (-> (get-challenger) :prompt first :strength)) "Trace base strength is 2 after scoring second Breakthrough"))))
 
 (deftest anson-rose
   ;; Anson Rose
   (do-game
     (new-game
-      (default-corp ["Anson Rose" "Ice Wall"])
-      (default-runner))
-    (play-from-hand state :corp "Anson Rose" "New remote")
-    (play-from-hand state :corp "Ice Wall" "HQ")
-    (let [ar (get-content state :remote1 0)
-          iw (get-ice state :hq 0)]
-      (core/rez state :corp (refresh ar))
+      (default-contestant ["Anson Rose" "Ice Wall"])
+      (default-challenger))
+    (play-from-hand state :contestant "Anson Rose" "New party")
+    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (let [ar (get-content state :party1 0)
+          iw (get-character state :hq 0)]
+      (core/reveal state :contestant (refresh ar))
       (is (zero? (get-counters (refresh ar) :advancement)) "Anson Rose should start with 0 advancement counters")
       (is (zero? (get-counters (refresh iw) :advancement)) "Ice Wall should start with 0 advancement counters")
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (core/end-phase-12 state :corp nil)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (core/end-phase-12 state :contestant nil)
       (is (= 1 (get-counters (refresh ar) :advancement)) "Anson Rose should gain 1 advancement counter at start of turn")
       (is (zero? (get-counters (refresh iw) :advancement)) "Ice Wall should still have 0 counters so far")
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (core/end-phase-12 state :corp nil)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (core/end-phase-12 state :contestant nil)
       (is (= 2 (get-counters (refresh ar) :advancement)) "Anson Rose should gain 1 advancement counter at start of turn")
       (is (zero? (get-counters (refresh iw) :advancement)) "Ice Wall should still have 0 counters so far")
-      (core/rez state :corp (refresh iw))
-      (click-prompt state :corp "Yes")
-      (click-prompt state :corp "2")
+      (core/reveal state :contestant (refresh iw))
+      (click-prompt state :contestant "Yes")
+      (click-prompt state :contestant "2")
       (is (zero? (get-counters (refresh ar) :advancement)) "Anson Rose should lose all advancement counters")
       (is (= 2 (get-counters (refresh iw) :advancement)) "Ice Wall should gain 2 advancement counter"))))
 
@@ -181,97 +181,97 @@
    ;; API-S Keeper Isobel
    (do-game
      (new-game
-       (default-corp ["API-S Keeper Isobel" "Ice Wall"])
-       (default-runner))
-    (play-from-hand state :corp "API-S Keeper Isobel" "New remote")
-    (play-from-hand state :corp "Ice Wall" "HQ")
-    (let [ap (get-content state :remote1 0)
-          iw (get-ice state :hq 0)]
-      (core/rez state :corp (refresh ap))
-      (core/rez state :corp (refresh iw))
-      (core/advance state :corp {:card (refresh iw)})
+       (default-contestant ["API-S Keeper Isobel" "Ice Wall"])
+       (default-challenger))
+    (play-from-hand state :contestant "API-S Keeper Isobel" "New party")
+    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (let [ap (get-content state :party1 0)
+          iw (get-character state :hq 0)]
+      (core/reveal state :contestant (refresh ap))
+      (core/reveal state :contestant (refresh iw))
+      (core/advance state :contestant {:card (refresh iw)})
       (is (= 1 (get-counters (refresh iw) :advancement)) "Ice Wall has 1 advancement token")
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (is (= 1 (:credit (get-corp))) "Corp starts with 1 credits")
-      (card-ability state :corp (refresh ap) 0)
-      (click-card state :corp (refresh iw))
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (is (= 1 (:credit (get-contestant))) "Contestant starts with 1 credits")
+      (card-ability state :contestant (refresh ap) 0)
+      (click-card state :contestant (refresh iw))
       (is (zero? (get-counters (refresh iw) :advancement)) "Ice Wall loses an advancement token")
-      (is (= 4 (:credit (get-corp))) "Corp gains 3 credits"))))
+      (is (= 4 (:credit (get-contestant))) "Contestant gains 3 credits"))))
 
 (deftest aryabhata-tech
   ;; Aryabhata Tech
   (do-game
     (new-game
-      (default-corp ["Aryabhata Tech"
+      (default-contestant ["Aryabhata Tech"
                      "Hunter"])
-      (default-runner))
-    (play-from-hand state :corp "Aryabhata Tech" "New remote")
-    (play-from-hand state :corp "Hunter" "HQ")
-    (let [at (get-content state :remote1 0)
-          h (get-ice state :hq 0)]
-      (core/rez state :corp (refresh at))
-      (core/rez state :corp (refresh h))
-      (take-credits state :corp)
+      (default-challenger))
+    (play-from-hand state :contestant "Aryabhata Tech" "New party")
+    (play-from-hand state :contestant "Hunter" "HQ")
+    (let [at (get-content state :party1 0)
+          h (get-character state :hq 0)]
+      (core/reveal state :contestant (refresh at))
+      (core/reveal state :contestant (refresh h))
+      (take-credits state :contestant)
       (run-on state :hq)
-      (let [c-credits (:credit (get-corp))
-            r-credits (:credit (get-runner))]
-        (card-subroutine state :corp h 0)
-        (click-prompt state :corp "0")
-        (click-prompt state :runner "0")
-        (is (= 1 (- (:credit (get-corp)) c-credits)))
-        (is (= -1 (- (:credit (get-runner)) r-credits)))))))
+      (let [c-credits (:credit (get-contestant))
+            r-credits (:credit (get-challenger))]
+        (card-subroutine state :contestant h 0)
+        (click-prompt state :contestant "0")
+        (click-prompt state :challenger "0")
+        (is (= 1 (- (:credit (get-contestant)) c-credits)))
+        (is (= -1 (- (:credit (get-challenger)) r-credits)))))))
 
 (deftest bio-ethics-association
   ;; Bio-Ethics Association
   (testing "Basic test"
     (do-game
       (new-game
-        (default-corp ["Bio-Ethics Association"])
-        (default-runner))
-      (play-from-hand state :corp "Bio-Ethics Association" "New remote")
-      (core/rez state :corp (get-content state :remote1 0))
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (is (= 1 (count (:discard (get-runner)))))))
+        (default-contestant ["Bio-Ethics Association"])
+        (default-challenger))
+      (play-from-hand state :contestant "Bio-Ethics Association" "New party")
+      (core/reveal state :contestant (get-content state :party1 0))
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (is (= 1 (count (:discard (get-challenger)))))))
   (testing "should be able to prevent damage from multiple copies"
     (do-game
       (new-game
-        (default-corp [(qty "Bio-Ethics Association" 2)])
-        (default-runner ["Feedback Filter" (qty "Sure Gamble" 3)]))
-      (play-from-hand state :corp "Bio-Ethics Association" "New remote")
-      (play-from-hand state :corp "Bio-Ethics Association" "New remote")
-      (core/rez state :corp (get-content state :remote1 0))
-      (core/rez state :corp (get-content state :remote2 0))
-      (take-credits state :corp)
-      (play-from-hand state :runner "Feedback Filter")
-      (take-credits state :runner)
-      (let [filter (get-hardware state 0)]
-        (is (= 1 (count (:prompt (get-runner)))) "Runner has a single damage prevention prompt")
-        (card-ability state :runner filter 0)
-        (click-prompt state :runner "Done")
-        (is (zero? (count (:discard (get-runner)))) "Runner prevented damage")
-        (is (= 1 (count (:prompt (get-runner)))) "Runner has a next damage prevention prompt")
-        (click-prompt state :runner "Done")
-        (is (= 1 (count (:discard (get-runner)))) "Runner took 1 net damage")))))
+        (default-contestant [(qty "Bio-Ethics Association" 2)])
+        (default-challenger ["Feedback Filter" (qty "Sure Gamble" 3)]))
+      (play-from-hand state :contestant "Bio-Ethics Association" "New party")
+      (play-from-hand state :contestant "Bio-Ethics Association" "New party")
+      (core/reveal state :contestant (get-content state :party1 0))
+      (core/reveal state :contestant (get-content state :party2 0))
+      (take-credits state :contestant)
+      (play-from-hand state :challenger "Feedback Filter")
+      (take-credits state :challenger)
+      (let [filter (get-hazard state 0)]
+        (is (= 1 (count (:prompt (get-challenger)))) "Challenger has a single damage prevention prompt")
+        (card-ability state :challenger filter 0)
+        (click-prompt state :challenger "Done")
+        (is (zero? (count (:discard (get-challenger)))) "Challenger prevented damage")
+        (is (= 1 (count (:prompt (get-challenger)))) "Challenger has a next damage prevention prompt")
+        (click-prompt state :challenger "Done")
+        (is (= 1 (count (:discard (get-challenger)))) "Challenger took 1 net damage")))))
 
 (deftest bioroid-work-crew
   ;; Bioroid Work Crew
   (letfn [(bwc-test [card]
             (do-game
               (new-game
-                (default-corp ["Bioroid Work Crew" card])
-                (default-runner))
-              (play-from-hand state :corp "Bioroid Work Crew" "New remote")
-              (let [bwc (get-content state :remote1 0)]
-                (core/rez state :corp bwc)
-                (card-ability state :corp bwc 0)
-                (click-card state :corp card)
+                (default-contestant ["Bioroid Work Crew" card])
+                (default-challenger))
+              (play-from-hand state :contestant "Bioroid Work Crew" "New party")
+              (let [bwc (get-content state :party1 0)]
+                (core/reveal state :contestant bwc)
+                (card-ability state :contestant bwc 0)
+                (click-card state :contestant card)
                 (if (= "Research Station" card)
-                  (click-prompt state :corp "HQ")
-                  (click-prompt state :corp "New remote"))
-                (is (zero? (count (:hand (get-corp)))))
-                (is (= 1 (count (:discard (get-corp)))) "Card should be discarded now"))))]
+                  (click-prompt state :contestant "HQ")
+                  (click-prompt state :contestant "New party"))
+                (is (zero? (count (:hand (get-contestant)))))
+                (is (= 1 (count (:discard (get-contestant)))) "Card should be discarded now"))))]
     (doall (map bwc-test
                 ["Hostile Takeover"
                  "Dedicated Response Team"
@@ -282,992 +282,992 @@
   ;; Blacklist
   (testing "#2426.  Need to allow steal."
     (do-game
-      (new-game (default-corp [(qty "Fetal AI" 3) "Blacklist"])
-                (default-runner))
-      (trash-from-hand state :corp "Fetal AI")
-      (play-from-hand state :corp "Blacklist" "New remote")
-      (core/rez state :corp (get-content state :remote1 0))
-      (is (= 1 (count (:discard (get-corp)))))
-      (take-credits state :corp)
-      (run-empty-server state :archives)
-      (click-prompt state :runner "Pay 2 [Credits] to steal")
-      (is (= 2 (:agenda-point (get-runner))) "Runner has 2 agenda points")
-      (is (= 1 (count (:scored (get-runner))))))))
+      (new-game (default-contestant [(qty "Fetal AI" 3) "Blacklist"])
+                (default-challenger))
+      (discard-from-hand state :contestant "Fetal AI")
+      (play-from-hand state :contestant "Blacklist" "New party")
+      (core/reveal state :contestant (get-content state :party1 0))
+      (is (= 1 (count (:discard (get-contestant)))))
+      (take-credits state :contestant)
+      (run-empty-locale state :archives)
+      (click-prompt state :challenger "Pay 2 [Credits] to steal")
+      (is (= 2 (:agenda-point (get-challenger))) "Challenger has 2 agenda points")
+      (is (= 1 (count (:scored (get-challenger))))))))
 
 (deftest brain-taping-warehouse
-  ;; Brain-Taping Warehouse - Lower rez cost of Bioroid ICE by 1 for each unspent Runner click
+  ;; Brain-Taping Warehouse - Lower reveal cost of Bioroid Character by 1 for each unspent Challenger click
   (do-game
-    (new-game (default-corp ["Brain-Taping Warehouse" "Ichi 1.0"
+    (new-game (default-contestant ["Brain-Taping Warehouse" "Ichi 1.0"
                              "Eli 1.0"])
-              (default-runner))
-    (play-from-hand state :corp "Brain-Taping Warehouse" "New remote")
-    (play-from-hand state :corp "Ichi 1.0" "Server 1")
-    (play-from-hand state :corp "Eli 1.0" "HQ")
-    (let [ichi (get-ice state :remote1 0)
-          eli (get-ice state :hq 0)]
-      (take-credits state :corp)
-      (run-on state :remote1)
-      (core/rez state :corp (get-content state :remote1 0))
-      (is (= 3 (:click (get-runner))))
-      (core/rez state :corp ichi)
-      (is (= 2 (:credit (get-corp))) "Paid only 2c to rez Ichi; reduction of 3c")
+              (default-challenger))
+    (play-from-hand state :contestant "Brain-Taping Warehouse" "New party")
+    (play-from-hand state :contestant "Ichi 1.0" "Locale 1")
+    (play-from-hand state :contestant "Eli 1.0" "HQ")
+    (let [ichi (get-character state :party1 0)
+          eli (get-character state :hq 0)]
+      (take-credits state :contestant)
+      (run-on state :party1)
+      (core/reveal state :contestant (get-content state :party1 0))
+      (is (= 3 (:click (get-challenger))))
+      (core/reveal state :contestant ichi)
+      (is (= 2 (:credit (get-contestant))) "Paid only 2c to reveal Ichi; reduction of 3c")
       (run-jack-out state)
       (run-on state :hq)
-      (is (= 2 (:click (get-runner))))
-      (core/rez state :corp eli)
-      (is (= 1 (:credit (get-corp))) "Paid only 1c to rez Eli; reduction of 2c"))))
+      (is (= 2 (:click (get-challenger))))
+      (core/reveal state :contestant eli)
+      (is (= 1 (:credit (get-contestant))) "Paid only 1c to reveal Eli; reduction of 2c"))))
 
 (deftest breached-dome
   ;; Breached Dome
   (do-game
-    (new-game (default-corp [(qty "Breached Dome" 10)])
-              (default-runner [(qty "Sure Gamble" 10)]))
-    (trash-from-hand state :corp "Breached Dome")
-    (play-from-hand state :corp "Breached Dome" "New remote")
-    (take-credits state :corp)
-    (run-empty-server state "R&D")
-    (click-prompt state :runner "No action")
-    (is (= 4 (count (:hand (get-runner)))) "Runner took 1 meat damage")
-    (is (= 4 (count (:deck (get-runner)))) "Runner milled 1 card")
-    (is (= 2 (count (:discard (get-runner)))) "Runner's discard grew by 2")
-    (run-empty-server state "Server 1")
-    (click-prompt state :runner "No action")
-    (is (= 3 (count (:hand (get-runner)))) "Runner took 1 meat damage")
-    (is (= 3 (count (:deck (get-runner)))) "Runner milled 1 card")
-    (is (= 4 (count (:discard (get-runner)))) "Runner's discard grew by 2")
-    (run-empty-server state "Archives")
-    (is (= 2 (count (:hand (get-runner)))) "Runner took 1 meat damage")
-    (is (= 2 (count (:deck (get-runner)))) "Runner milled 1 card")
-    (is (= 6 (count (:discard (get-runner)))) "Runner's discard grew by 2")))
+    (new-game (default-contestant [(qty "Breached Dome" 10)])
+              (default-challenger [(qty "Sure Gamble" 10)]))
+    (discard-from-hand state :contestant "Breached Dome")
+    (play-from-hand state :contestant "Breached Dome" "New party")
+    (take-credits state :contestant)
+    (run-empty-locale state "R&D")
+    (click-prompt state :challenger "No action")
+    (is (= 4 (count (:hand (get-challenger)))) "Challenger took 1 meat damage")
+    (is (= 4 (count (:deck (get-challenger)))) "Challenger milled 1 card")
+    (is (= 2 (count (:discard (get-challenger)))) "Challenger's discard grew by 2")
+    (run-empty-locale state "Locale 1")
+    (click-prompt state :challenger "No action")
+    (is (= 3 (count (:hand (get-challenger)))) "Challenger took 1 meat damage")
+    (is (= 3 (count (:deck (get-challenger)))) "Challenger milled 1 card")
+    (is (= 4 (count (:discard (get-challenger)))) "Challenger's discard grew by 2")
+    (run-empty-locale state "Archives")
+    (is (= 2 (count (:hand (get-challenger)))) "Challenger took 1 meat damage")
+    (is (= 2 (count (:deck (get-challenger)))) "Challenger milled 1 card")
+    (is (= 6 (count (:discard (get-challenger)))) "Challenger's discard grew by 2")))
 
 (deftest broadcast-square
   ;; Broadcast Square - Trace 3: Prevent all bad publicity
   (do-game
-    (new-game (default-corp ["Profiteering" "Hostile Takeover" "Broadcast Square"])
-              (default-runner))
-    (play-from-hand state :corp "Broadcast Square" "New remote")
-    (core/rez state :corp (get-content state :remote1 0))
-    (is (= 3 (:credit (get-corp))) "Corp should have spent 2 credits")
-    (play-from-hand state :corp "Profiteering" "New remote")
-    (score-agenda state :corp (get-content state :remote2 0))
-    (click-prompt state :corp "3")  ;; Take 3 bad publicity from Profiteering, gain 15 (if bad publicity actually taken)
-    (click-prompt state :corp "0")  ;; Corp doesn't pump trace, base 3
-    (click-prompt state :runner "0")  ;; Runner doesn't pump trace; loses trace
-    (is (= 1 (:agenda-point (get-corp))) "Corp should score a 1-point agenda")
-    (is (zero? (:bad-publicity (get-corp))) "Corp should gain 0 bad publicity")
-    (is (= 3 (:credit (get-corp))) "Corp should gain 0 credits")
-    (play-from-hand state :corp "Hostile Takeover" "New remote")
-    (score-agenda state :corp (get-content state :remote3 0))
-    (click-prompt state :corp "0")  ;; Corp doesn't pump trace, base 3
-    (click-prompt state :runner "3")  ;; Runner pumps trace; wins trace
-    (is (= 2 (:agenda-point (get-corp))) "Corp should score a 1-point agenda")
-    (is (= 1 (:bad-publicity (get-corp))) "Corp should gain 1 bad publicity from failed trace")
-    (is (= 10 (:credit (get-corp))) "Corp should gain 7 credits")))
+    (new-game (default-contestant ["Profiteering" "Hostile Takeover" "Broadcast Square"])
+              (default-challenger))
+    (play-from-hand state :contestant "Broadcast Square" "New party")
+    (core/reveal state :contestant (get-content state :party1 0))
+    (is (= 3 (:credit (get-contestant))) "Contestant should have spent 2 credits")
+    (play-from-hand state :contestant "Profiteering" "New party")
+    (score-agenda state :contestant (get-content state :party2 0))
+    (click-prompt state :contestant "3")  ;; Take 3 bad publicity from Profiteering, gain 15 (if bad publicity actually taken)
+    (click-prompt state :contestant "0")  ;; Contestant doesn't pump trace, base 3
+    (click-prompt state :challenger "0")  ;; Challenger doesn't pump trace; loses trace
+    (is (= 1 (:agenda-point (get-contestant))) "Contestant should score a 1-point agenda")
+    (is (zero? (:bad-publicity (get-contestant))) "Contestant should gain 0 bad publicity")
+    (is (= 3 (:credit (get-contestant))) "Contestant should gain 0 credits")
+    (play-from-hand state :contestant "Hostile Takeover" "New party")
+    (score-agenda state :contestant (get-content state :party3 0))
+    (click-prompt state :contestant "0")  ;; Contestant doesn't pump trace, base 3
+    (click-prompt state :challenger "3")  ;; Challenger pumps trace; wins trace
+    (is (= 2 (:agenda-point (get-contestant))) "Contestant should score a 1-point agenda")
+    (is (= 1 (:bad-publicity (get-contestant))) "Contestant should gain 1 bad publicity from failed trace")
+    (is (= 10 (:credit (get-contestant))) "Contestant should gain 7 credits")))
 
 (deftest capital-investors
   ;; Capital Investors - Click for 2 credits
   (do-game
-    (new-game (default-corp ["Capital Investors"])
-              (default-runner))
-    (play-from-hand state :corp "Capital Investors" "New remote")
-    (let [cap (get-content state :remote1 0)]
-      (core/rez state :corp cap)
-      (card-ability state :corp cap 0)
-      (card-ability state :corp cap 0)
-      (is (zero? (:click (get-corp))) "Used twice, spent 2 clicks")
-      (is (= 7 (:credit (get-corp))) "Used twice, gained 4 credits"))))
+    (new-game (default-contestant ["Capital Investors"])
+              (default-challenger))
+    (play-from-hand state :contestant "Capital Investors" "New party")
+    (let [cap (get-content state :party1 0)]
+      (core/reveal state :contestant cap)
+      (card-ability state :contestant cap 0)
+      (card-ability state :contestant cap 0)
+      (is (zero? (:click (get-contestant))) "Used twcharacter, spent 2 clicks")
+      (is (= 7 (:credit (get-contestant))) "Used twcharacter, gained 4 credits"))))
 
 (deftest cerebral-overwriter
   ;; Cerebral Overwriter
   (do-game
-    (new-game (default-corp ["Cerebral Overwriter"])
-              (default-runner))
-    (play-from-hand state :corp "Cerebral Overwriter" "New remote")
-    (let [co (get-content state :remote1 0)]
-      (core/advance state :corp {:card (refresh co)})
-      (core/advance state :corp {:card (refresh co)})
+    (new-game (default-contestant ["Cerebral Overwriter"])
+              (default-challenger))
+    (play-from-hand state :contestant "Cerebral Overwriter" "New party")
+    (let [co (get-content state :party1 0)]
+      (core/advance state :contestant {:card (refresh co)})
+      (core/advance state :contestant {:card (refresh co)})
       (is (= 2 (get-counters (refresh co) :advancement)))
-      (take-credits state :corp)
-      (run-empty-server state "Server 1")
-      (click-prompt state :corp "Yes") ; choose to do the optional ability
-      (is (= 2 (:brain-damage (get-runner))) "Runner takes 2 brain damage"))))
+      (take-credits state :contestant)
+      (run-empty-locale state "Locale 1")
+      (click-prompt state :contestant "Yes") ; choose to do the optional ability
+      (is (= 2 (:brain-damage (get-challenger))) "Challenger takes 2 brain damage"))))
 
 (deftest chairman-hiro
-  ;; Chairman Hiro - Reduce Runner max hand size; add as 2 agenda points if Runner trashes him
+  ;; Chairman Hiro - Reduce Challenger max hand size; add as 2 agenda points if Challenger discards him
   (do-game
-    (new-game (default-corp [(qty "Chairman Hiro" 2)])
-              (default-runner))
-    (play-from-hand state :corp "Chairman Hiro" "New remote")
-    (play-from-hand state :corp "Chairman Hiro" "Server 1")
-    (click-prompt state :corp "OK")
-    (is (= 1 (count (:discard (get-corp)))) "First Hiro trashed")
-    (is (zero? (:agenda-point (get-runner))) "No points for Runner if trashed by Corp")
-    (let [hiro (get-content state :remote1 0)]
-      (core/rez state :corp hiro)
-      (is (= 3 (core/hand-size state :runner)) "Runner max hand size reduced by 2")
-      (take-credits state :corp)
-      (take-credits state :runner 3)
-      (run-empty-server state "Server 1")
-      (click-prompt state :runner "Pay 6 [Credits] to trash")
-      (is (= 2 (:credit (get-runner))) "Runner paid 6 credits to trash")
-      (is (= 5 (core/hand-size state :runner)) "Runner max hand size restored to 5")
-      (is (= 1 (count (get-scored state :runner)))
-          "Chairman Hiro added to Runner score area")
-      (is (= 2 (:agenda-point (get-runner))) "Runner gained 2 agenda points"))))
+    (new-game (default-contestant [(qty "Chairman Hiro" 2)])
+              (default-challenger))
+    (play-from-hand state :contestant "Chairman Hiro" "New party")
+    (play-from-hand state :contestant "Chairman Hiro" "Locale 1")
+    (click-prompt state :contestant "OK")
+    (is (= 1 (count (:discard (get-contestant)))) "First Hiro discarded")
+    (is (zero? (:agenda-point (get-challenger))) "No points for Challenger if discarded by Contestant")
+    (let [hiro (get-content state :party1 0)]
+      (core/reveal state :contestant hiro)
+      (is (= 3 (core/hand-size state :challenger)) "Challenger max hand size reduced by 2")
+      (take-credits state :contestant)
+      (take-credits state :challenger 3)
+      (run-empty-locale state "Locale 1")
+      (click-prompt state :challenger "Pay 6 [Credits] to discard")
+      (is (= 2 (:credit (get-challenger))) "Challenger paid 6 credits to discard")
+      (is (= 5 (core/hand-size state :challenger)) "Challenger max hand size restored to 5")
+      (is (= 1 (count (get-scored state :challenger)))
+          "Chairman Hiro added to Challenger score area")
+      (is (= 2 (:agenda-point (get-challenger))) "Challenger gained 2 agenda points"))))
 
 (deftest chief-slee
   ;; Chief Slee
   (do-game
-    (new-game (default-corp ["Chief Slee" "Hive" "Hedge Fund"])
-              (default-runner [(qty "Sure Gamble" 5)]))
-    (play-from-hand state :corp "Hedge Fund")
-    (play-from-hand state :corp "Hive" "HQ")
-    (play-from-hand state :corp "Chief Slee" "New remote")
+    (new-game (default-contestant ["Chief Slee" "Hive" "Hedge Fund"])
+              (default-challenger [(qty "Sure Gamble" 5)]))
+    (play-from-hand state :contestant "Hedge Fund")
+    (play-from-hand state :contestant "Hive" "HQ")
+    (play-from-hand state :contestant "Chief Slee" "New party")
     (run-on state :hq)
-    (let [slee (get-content state :remote1 0)
-          hive (get-ice state :hq 0)]
-      (core/rez state :corp hive)
-      (card-subroutine state :corp hive 0)
+    (let [slee (get-content state :party1 0)
+          hive (get-character state :hq 0)]
+      (core/reveal state :contestant hive)
+      (card-subroutine state :contestant hive 0)
       (dotimes [_ 5]
-        (card-ability state :corp slee 0))
-      (take-credits state :runner)
-      (card-ability state :corp slee 1)
-      (is (= 5 (count (:discard (get-runner)))) "Chief Slee should do 5 meat damage"))))
+        (card-ability state :contestant slee 0))
+      (take-credits state :challenger)
+      (card-ability state :contestant slee 1)
+      (is (= 5 (count (:discard (get-challenger)))) "Chief Slee should do 5 meat damage"))))
 
 (deftest c.i.-fund
   ;; C.I. Fund
   (do-game
-    (new-game (default-corp ["C.I. Fund" "Hedge Fund"])
-              (default-runner))
-    (play-from-hand state :corp "Hedge Fund")
-    (play-from-hand state :corp "C.I. Fund" "New remote")
-    (take-credits state :corp)
-    (let [ci (get-content state :remote1 0)]
-      (core/rez state :corp ci)
-      (take-credits state :runner)
-      (card-ability state :corp ci 0)
-      (click-prompt state :corp "3")
+    (new-game (default-contestant ["C.I. Fund" "Hedge Fund"])
+              (default-challenger))
+    (play-from-hand state :contestant "Hedge Fund")
+    (play-from-hand state :contestant "C.I. Fund" "New party")
+    (take-credits state :contestant)
+    (let [ci (get-content state :party1 0)]
+      (core/reveal state :contestant ci)
+      (take-credits state :challenger)
+      (card-ability state :contestant ci 0)
+      (click-prompt state :contestant "3")
       (is (= 3 (get-counters (refresh ci) :credit)))
-      (core/end-phase-12 state :corp nil)
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (card-ability state :corp ci 0)
-      (click-prompt state :corp "3")
+      (core/end-phase-12 state :contestant nil)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (card-ability state :contestant ci 0)
+      (click-prompt state :contestant "3")
       (is (= 6 (get-counters (refresh ci) :credit)))
-      (core/end-phase-12 state :corp nil)
+      (core/end-phase-12 state :contestant nil)
       (is (= 8 (get-counters (refresh ci) :credit)))
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (core/end-phase-12 state :corp nil)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (core/end-phase-12 state :contestant nil)
       (is (= 10 (get-counters (refresh ci) :credit)))
-      (let [credits (:credit (get-corp))]
-        (card-ability state :corp ci 1)
-        (is (= 8 (- (:credit (get-corp)) credits)))
+      (let [credits (:credit (get-contestant))]
+        (card-ability state :contestant ci 1)
+        (is (= 8 (- (:credit (get-contestant)) credits)))
         (is (zero? (get-counters (refresh ci) :credit)))))))
 
 (deftest city-surveillance
-  ;; City Surveillance - Runner chooses to pay 1 credit or take 1 tag at start of their turn
+  ;; City Surveillance - Challenger chooses to pay 1 credit or take 1 tag at start of their turn
   (do-game
-    (new-game (default-corp ["City Surveillance"])
-              (default-runner))
-    (play-from-hand state :corp "City Surveillance" "New remote")
-    (let [surv (get-content state :remote1 0)]
-      (core/rez state :corp surv)
-      (take-credits state :corp)
-      (is (some #{"Pay 1 [Credits]" "Take 1 tag"} (-> (get-runner) :prompt first :choices)))
-      (click-prompt state :runner "Pay 1 [Credits]")
-      (is (= 4 (:credit (get-runner))) "Runner paid 1 credit")
-      (is (zero? (:tag (get-runner))) "Runner didn't take a tag")
-      (is (empty? (:prompt (get-runner))) "City Surveillance only fired once")
-      (take-credits state :runner)
-      (core/lose state :runner :credit (:credit (get-runner))) ;; Set Runner's credits to 0 so they can't choose to pay
-      (take-credits state :corp)
-      (is (some #{"Take 1 tag"} (-> (get-runner) :prompt first :choices)))
-      (click-prompt state :runner "Take 1 tag")
-      (is (zero? (:credit (get-runner))) "Runner paid no credits")
-      (is (= 1 (:tag (get-runner))) "Runner took 1 tag"))
-      (is (empty? (:prompt (get-runner))) "City Surveillance only fired once")))
+    (new-game (default-contestant ["City Surveillance"])
+              (default-challenger))
+    (play-from-hand state :contestant "City Surveillance" "New party")
+    (let [surv (get-content state :party1 0)]
+      (core/reveal state :contestant surv)
+      (take-credits state :contestant)
+      (is (some #{"Pay 1 [Credits]" "Take 1 tag"} (-> (get-challenger) :prompt first :choices)))
+      (click-prompt state :challenger "Pay 1 [Credits]")
+      (is (= 4 (:credit (get-challenger))) "Challenger paid 1 credit")
+      (is (zero? (:tag (get-challenger))) "Challenger didn't take a tag")
+      (is (empty? (:prompt (get-challenger))) "City Surveillance only fired once")
+      (take-credits state :challenger)
+      (core/lose state :challenger :credit (:credit (get-challenger))) ;; Set Challenger's credits to 0 so they can't choose to pay
+      (take-credits state :contestant)
+      (is (some #{"Take 1 tag"} (-> (get-challenger) :prompt first :choices)))
+      (click-prompt state :challenger "Take 1 tag")
+      (is (zero? (:credit (get-challenger))) "Challenger paid no credits")
+      (is (= 1 (:tag (get-challenger))) "Challenger took 1 tag"))
+      (is (empty? (:prompt (get-challenger))) "City Surveillance only fired once")))
 
 (deftest clone-suffrage-movement
   ;; Clone Suffrage Movement
   (do-game
-    (new-game (default-corp ["Clone Suffrage Movement" (qty "Hedge Fund" 2) "Ice Wall"])
-              (default-runner))
-    (core/gain state :corp :click 1)
-    (play-from-hand state :corp "Clone Suffrage Movement" "New remote")
-    (play-from-hand state :corp "Hedge Fund")
-    (play-from-hand state :corp "Hedge Fund")
-    (let [csm (get-content state :remote1 0)]
-      (core/rez state :corp (refresh csm))
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (is (= 2 (-> (get-corp) :discard count)) "Clone Suffrage Movement should activate")
-      (is (:corp-phase-12 @state) "Corp should get option to fire Clone Suffrage Movement")
-      ;; Runner has 1+ credit and chooses to pay 1 credit
-      (card-ability state :corp csm 0)
-      (click-card state :corp (find-card "Hedge Fund" (:discard (get-corp))))
-      (core/end-phase-12 state :corp nil)
-      (play-from-hand state :corp "Ice Wall" "Server 1")
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (is (not (:corp-phase-12 @state)) "Clone Suffrage Movement didn't activate cuz of the ice"))))
+    (new-game (default-contestant ["Clone Suffrage Movement" (qty "Hedge Fund" 2) "Ice Wall"])
+              (default-challenger))
+    (core/gain state :contestant :click 1)
+    (play-from-hand state :contestant "Clone Suffrage Movement" "New party")
+    (play-from-hand state :contestant "Hedge Fund")
+    (play-from-hand state :contestant "Hedge Fund")
+    (let [csm (get-content state :party1 0)]
+      (core/reveal state :contestant (refresh csm))
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (is (= 2 (-> (get-contestant) :discard count)) "Clone Suffrage Movement should activate")
+      (is (:contestant-phase-12 @state) "Contestant should get option to fire Clone Suffrage Movement")
+      ;; Challenger has 1+ credit and chooses to pay 1 credit
+      (card-ability state :contestant csm 0)
+      (click-card state :contestant (find-card "Hedge Fund" (:discard (get-contestant))))
+      (core/end-phase-12 state :contestant nil)
+      (play-from-hand state :contestant "Ice Wall" "Locale 1")
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (is (not (:contestant-phase-12 @state)) "Clone Suffrage Movement didn't activate cuz of the character"))))
 
 (deftest clyde-van-rite
-  ;; Clyde Van Rite - Multiple scenarios involving Runner not having credits/cards to trash
+  ;; Clyde Van Rite - Multiple scenarios involving Challenger not having credits/cards to discard
   (do-game
-    (new-game (default-corp ["Clyde Van Rite"])
-              (default-runner [(qty "Sure Gamble" 3) (qty "Restructure" 2) (qty "John Masanori" 2)]))
-    (play-from-hand state :corp "Clyde Van Rite" "New remote")
-    (let [clyde (get-content state :remote1 0)]
-      (core/rez state :corp clyde)
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (is (:corp-phase-12 @state) "Corp in Step 1.2")
-      ;; Runner has 1+ credit and chooses to pay 1 credit
-      (card-ability state :corp clyde 0)
-      (is (= 9 (:credit (get-runner))))
-      (is (= 2 (count (:deck (get-runner)))))
-      (is (some #{"Pay 1 [Credits]" "Trash top card"} (-> (get-runner) :prompt first :choices)))
-      (click-prompt state :runner "Pay 1 [Credits]")
-      (is (= 8 (:credit (get-runner))))
-      (is (= 2 (count (:deck (get-runner)))))
-      (core/end-phase-12 state :corp nil)
-      (take-credits state :corp)
-      (take-credits state :runner)
-      ;; Runner can't pay 1 credit so must trash top card
-      (core/lose state :runner :credit (:credit (get-runner)))
-      (card-ability state :corp clyde 0)
-      (is (zero? (:credit (get-runner))))
-      (is (= 2 (count (:deck (get-runner)))))
-      (is (some #{"Trash top card"} (-> (get-runner) :prompt first :choices)))
-      (click-prompt state :runner "Trash top card")
-      (is (zero? (:credit (get-runner))))
-      (is (= 1 (count (:deck (get-runner)))))
-      (core/end-phase-12 state :corp nil)
-      (take-credits state :corp)
-      (take-credits state :runner)
-      ;; Runner has 1+ card in Stack and chooses to trash 1 card
-      (card-ability state :corp clyde 0)
-      (is (= 4 (:credit (get-runner))))
-      (is (= 1 (count (:deck (get-runner)))))
-      (is (some #{"Pay 1 [Credits]" "Trash top card"} (-> (get-runner) :prompt first :choices)))
-      (click-prompt state :runner "Trash top card")
-      (is (= 4 (:credit (get-runner))))
-      (is (zero? (count (:deck (get-runner)))))
-      (core/end-phase-12 state :corp nil)
-      (take-credits state :corp)
-      (take-credits state :runner)
-      ;; Runner has no cards in Stack so must pay 1 credit
-      (card-ability state :corp clyde 0)
-      (is (= 8 (:credit (get-runner))))
-      (is (zero? (count (:deck (get-runner)))))
-      (is (some #{"Pay 1 [Credits]"} (-> (get-runner) :prompt first :choices)))
-      (click-prompt state :runner "Pay 1 [Credits]")
-      (is (= 7 (:credit (get-runner))))
-      (is (zero? (count (:deck (get-runner)))))
-      (take-credits state :corp)
+    (new-game (default-contestant ["Clyde Van Rite"])
+              (default-challenger [(qty "Sure Gamble" 3) (qty "Restructure" 2) (qty "John Masanori" 2)]))
+    (play-from-hand state :contestant "Clyde Van Rite" "New party")
+    (let [clyde (get-content state :party1 0)]
+      (core/reveal state :contestant clyde)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (is (:contestant-phase-12 @state) "Contestant in Step 1.2")
+      ;; Challenger has 1+ credit and chooses to pay 1 credit
+      (card-ability state :contestant clyde 0)
+      (is (= 9 (:credit (get-challenger))))
+      (is (= 2 (count (:deck (get-challenger)))))
+      (is (some #{"Pay 1 [Credits]" "Discard top card"} (-> (get-challenger) :prompt first :choices)))
+      (click-prompt state :challenger "Pay 1 [Credits]")
+      (is (= 8 (:credit (get-challenger))))
+      (is (= 2 (count (:deck (get-challenger)))))
+      (core/end-phase-12 state :contestant nil)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      ;; Challenger can't pay 1 credit so must discard top card
+      (core/lose state :challenger :credit (:credit (get-challenger)))
+      (card-ability state :contestant clyde 0)
+      (is (zero? (:credit (get-challenger))))
+      (is (= 2 (count (:deck (get-challenger)))))
+      (is (some #{"Discard top card"} (-> (get-challenger) :prompt first :choices)))
+      (click-prompt state :challenger "Discard top card")
+      (is (zero? (:credit (get-challenger))))
+      (is (= 1 (count (:deck (get-challenger)))))
+      (core/end-phase-12 state :contestant nil)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      ;; Challenger has 1+ card in Stack and chooses to discard 1 card
+      (card-ability state :contestant clyde 0)
+      (is (= 4 (:credit (get-challenger))))
+      (is (= 1 (count (:deck (get-challenger)))))
+      (is (some #{"Pay 1 [Credits]" "Discard top card"} (-> (get-challenger) :prompt first :choices)))
+      (click-prompt state :challenger "Discard top card")
+      (is (= 4 (:credit (get-challenger))))
+      (is (zero? (count (:deck (get-challenger)))))
+      (core/end-phase-12 state :contestant nil)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      ;; Challenger has no cards in Stack so must pay 1 credit
+      (card-ability state :contestant clyde 0)
+      (is (= 8 (:credit (get-challenger))))
+      (is (zero? (count (:deck (get-challenger)))))
+      (is (some #{"Pay 1 [Credits]"} (-> (get-challenger) :prompt first :choices)))
+      (click-prompt state :challenger "Pay 1 [Credits]")
+      (is (= 7 (:credit (get-challenger))))
+      (is (zero? (count (:deck (get-challenger)))))
+      (take-credits state :contestant)
       (dotimes [_ 4]
-        (core/click-credit state :runner nil))
-      (core/lose state :runner :credit (:credit (get-runner)))
-      (core/end-turn state :runner nil)
-      ;; Runner has no credits and no cards so nothing happens
-      (card-ability state :corp clyde 0)
-      (is (zero? (:credit (get-runner))))
-      (is (zero? (count (:deck (get-runner)))))
-      (is (empty? (-> @state :corp :prompt))))))
+        (core/click-credit state :challenger nil))
+      (core/lose state :challenger :credit (:credit (get-challenger)))
+      (core/end-turn state :challenger nil)
+      ;; Challenger has no credits and no cards so nothing happens
+      (card-ability state :contestant clyde 0)
+      (is (zero? (:credit (get-challenger))))
+      (is (zero? (count (:deck (get-challenger)))))
+      (is (empty? (-> @state :contestant :prompt))))))
 
 (deftest commercial-bankers-group
-  ;; Commercial Bankers Group - Gain 3 credits at turn start if unprotected by ice
+  ;; Commercial Bankers Group - Gain 3 credits at turn start if unprotected by character
   (do-game
-    (new-game (default-corp ["Commercial Bankers Group" "Ice Wall"])
-              (default-runner))
-    (play-from-hand state :corp "Commercial Bankers Group" "New remote")
-    (let [cbg (get-content state :remote1 0)]
-      (core/rez state :corp cbg)
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (is (= 9 (:credit (get-corp))) "Bankers Group paid 3 credits")
-      (play-from-hand state :corp "Ice Wall" "Server 1")
-      (take-credits state :corp)
-      (is (= 11 (:credit (get-corp))))
-      (take-credits state :runner)
-      (is (= 11 (:credit (get-corp))) "Bankers Group didn't pay credits"))))
+    (new-game (default-contestant ["Commercial Bankers Group" "Ice Wall"])
+              (default-challenger))
+    (play-from-hand state :contestant "Commercial Bankers Group" "New party")
+    (let [cbg (get-content state :party1 0)]
+      (core/reveal state :contestant cbg)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (is (= 9 (:credit (get-contestant))) "Bankers Group paid 3 credits")
+      (play-from-hand state :contestant "Ice Wall" "Locale 1")
+      (take-credits state :contestant)
+      (is (= 11 (:credit (get-contestant))))
+      (take-credits state :challenger)
+      (is (= 11 (:credit (get-contestant))) "Bankers Group didn't pay credits"))))
 
 (deftest constellation-protocol
   ;; Constellation Protocol
   (testing "Basic test"
     (do-game
-      (new-game (default-corp ["Constellation Protocol" "Ice Wall" "Fire Wall"])
-                (default-runner))
-      (core/gain state :corp :credit 100 :click 10)
-      (play-from-hand state :corp "Constellation Protocol" "New remote")
-      (play-from-hand state :corp "Ice Wall" "New remote")
-      (play-from-hand state :corp "Fire Wall" "New remote")
-      (let [cp (get-content state :remote1 0)
-            iw (get-ice state :remote2 0)
-            fw (get-ice state :remote3 0)]
-        (core/rez state :corp cp)
-        (core/rez state :corp iw)
-        (core/rez state :corp fw)
+      (new-game (default-contestant ["Constellation Protocol" "Ice Wall" "Fire Wall"])
+                (default-challenger))
+      (core/gain state :contestant :credit 100 :click 10)
+      (play-from-hand state :contestant "Constellation Protocol" "New party")
+      (play-from-hand state :contestant "Ice Wall" "New party")
+      (play-from-hand state :contestant "Fire Wall" "New party")
+      (let [cp (get-content state :party1 0)
+            iw (get-character state :party2 0)
+            fw (get-character state :party3 0)]
+        (core/reveal state :contestant cp)
+        (core/reveal state :contestant iw)
+        (core/reveal state :contestant fw)
         (advance state iw 1)
         (advance state fw 1)
-        (take-credits state :corp)
-        (take-credits state :runner)
-        (is (:corp-phase-12 @state) "Should be waiting for Constellation Protocol to be fired")
-        (card-ability state :corp cp 0)
+        (take-credits state :contestant)
+        (take-credits state :challenger)
+        (is (:contestant-phase-12 @state) "Should be waiting for Constellation Protocol to be fired")
+        (card-ability state :contestant cp 0)
         (is (= 1 (get-counters (refresh iw) :advancement)))
         (is (= 1 (get-counters (refresh fw) :advancement)))
-        (click-card state :corp (refresh iw))
-        (click-card state :corp (refresh fw))
+        (click-card state :contestant (refresh iw))
+        (click-card state :contestant (refresh fw))
         (is (zero? (get-counters (refresh iw) :advancement)))
         (is (= 2 (get-counters (refresh fw) :advancement)))
-        (core/end-phase-12 state :corp nil))))
+        (core/end-phase-12 state :contestant nil))))
   (testing "Variable number of advanceable cards"
     (do-game
-      (new-game (default-corp ["Constellation Protocol" "Ice Wall" "Hive"])
-                (default-runner))
-      (core/gain state :corp :credit 100 :click 10)
-      (play-from-hand state :corp "Constellation Protocol" "New remote")
-      (let [cp (get-content state :remote1 0)]
-        (core/rez state :corp cp))
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (is (not (:corp-phase-12 @state)) "Constellation Protocol shouldn't fire with no advanceable ice")
-      (play-from-hand state :corp "Ice Wall" "New remote")
-      (let [iw (get-ice state :remote2 0)]
-        (core/rez state :corp iw)
+      (new-game (default-contestant ["Constellation Protocol" "Ice Wall" "Hive"])
+                (default-challenger))
+      (core/gain state :contestant :credit 100 :click 10)
+      (play-from-hand state :contestant "Constellation Protocol" "New party")
+      (let [cp (get-content state :party1 0)]
+        (core/reveal state :contestant cp))
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (is (not (:contestant-phase-12 @state)) "Constellation Protocol shouldn't fire with no advanceable character")
+      (play-from-hand state :contestant "Ice Wall" "New party")
+      (let [iw (get-character state :party2 0)]
+        (core/reveal state :contestant iw)
         (advance state iw 1)
-        (take-credits state :corp)
-        (take-credits state :runner)
-        (is (not (:corp-phase-12 @state)) "Constellation Protocol shouldn't fire with only a single ice"))
-      (play-from-hand state :corp "Hive" "New remote")
-      (let [hive (get-ice state :remote3 0)]
-        (core/rez state :corp hive)
-        (take-credits state :corp)
-        (take-credits state :runner)
-        (is (not (:corp-phase-12 @state)) "Constellation Protocol shouldn't fire when the target ice can't be advanced"))))
-  (testing "Can't advance assets"
+        (take-credits state :contestant)
+        (take-credits state :challenger)
+        (is (not (:contestant-phase-12 @state)) "Constellation Protocol shouldn't fire with only a single character"))
+      (play-from-hand state :contestant "Hive" "New party")
+      (let [hive (get-character state :party3 0)]
+        (core/reveal state :contestant hive)
+        (take-credits state :contestant)
+        (take-credits state :challenger)
+        (is (not (:contestant-phase-12 @state)) "Constellation Protocol shouldn't fire when the target character can't be advanced"))))
+  (testing "Can't advance sites"
     (do-game
-      (new-game (default-corp ["Constellation Protocol" "Ice Wall" "Contract Killer"])
-                (default-runner))
-      (core/gain state :corp :credit 100 :click 10)
-      (play-from-hand state :corp "Constellation Protocol" "New remote")
-      (play-from-hand state :corp "Ice Wall" "New remote")
-      (play-from-hand state :corp "Contract Killer" "New remote")
-      (let [cp (get-content state :remote1 0)
-            iw (get-ice state :remote2 0)
-            ck (get-content state :remote3 0)]
-        (core/rez state :corp cp)
-        (core/rez state :corp iw)
-        (core/rez state :corp ck)
+      (new-game (default-contestant ["Constellation Protocol" "Ice Wall" "Contract Killer"])
+                (default-challenger))
+      (core/gain state :contestant :credit 100 :click 10)
+      (play-from-hand state :contestant "Constellation Protocol" "New party")
+      (play-from-hand state :contestant "Ice Wall" "New party")
+      (play-from-hand state :contestant "Contract Killer" "New party")
+      (let [cp (get-content state :party1 0)
+            iw (get-character state :party2 0)
+            ck (get-content state :party3 0)]
+        (core/reveal state :contestant cp)
+        (core/reveal state :contestant iw)
+        (core/reveal state :contestant ck)
         (advance state iw 1))
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (is (not (:corp-phase-12 @state)) "Constellation Protocol shouldn't fire when only target is asset"))))
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (is (not (:contestant-phase-12 @state)) "Constellation Protocol shouldn't fire when only target is site"))))
 
 (deftest contract-killer
   ;; Contract Killer
   (do-game
-    (new-game (default-corp ["Contract Killer"])
-              (default-runner [(qty "Sure Gamble" 2) "Data Dealer"]))
-    (core/gain state :corp :credit 10)
-    (play-from-hand state :corp "Contract Killer" "New remote")
-    (take-credits state :corp)
-    (play-from-hand state :runner "Data Dealer")
-    (take-credits state :runner)
-    (let [ck (get-content state :remote1 0)]
+    (new-game (default-contestant ["Contract Killer"])
+              (default-challenger [(qty "Sure Gamble" 2) "Data Dealer"]))
+    (core/gain state :contestant :credit 10)
+    (play-from-hand state :contestant "Contract Killer" "New party")
+    (take-credits state :contestant)
+    (play-from-hand state :challenger "Data Dealer")
+    (take-credits state :challenger)
+    (let [ck (get-content state :party1 0)]
       (advance state ck 2)
-      (card-ability state :corp ck 0)
-      (click-card state :corp (get-resource state 0))
-      (is (= 1 (-> (get-corp) :discard count)) "Contract Killer should be trashed as an ability cost")
-      (is (= 1 (-> (get-runner) :discard count)) "Contract Killer should trash Data Dealer"))
-    (take-credits state :corp)
-    (take-credits state :runner)
-    (core/gain state :corp :click 1)
-    (core/move state :corp (find-card "Contract Killer" (:discard (get-corp))) :hand)
-    (play-from-hand state :corp "Contract Killer" "New remote")
-    (let [ck (get-content state :remote2 0)]
+      (card-ability state :contestant ck 0)
+      (click-card state :contestant (get-radicle state 0))
+      (is (= 1 (-> (get-contestant) :discard count)) "Contract Killer should be discarded as an ability cost")
+      (is (= 1 (-> (get-challenger) :discard count)) "Contract Killer should discard Data Dealer"))
+    (take-credits state :contestant)
+    (take-credits state :challenger)
+    (core/gain state :contestant :click 1)
+    (core/move state :contestant (find-card "Contract Killer" (:discard (get-contestant))) :hand)
+    (play-from-hand state :contestant "Contract Killer" "New party")
+    (let [ck (get-content state :party2 0)]
       (advance state ck 2)
-      (card-ability state :corp ck 1)
-      (is (= 1 (-> (get-corp) :discard count)) "Contract Killer should be trashed as an ability cost")
-      (is (= 3 (-> (get-runner) :discard count)) "Contract Killer should do 2 meat damage"))))
+      (card-ability state :contestant ck 1)
+      (is (= 1 (-> (get-contestant) :discard count)) "Contract Killer should be discarded as an ability cost")
+      (is (= 3 (-> (get-challenger) :discard count)) "Contract Killer should do 2 meat damage"))))
 
-(deftest corporate-town
-  ;; Corporate Town
+(deftest contestantorate-town
+  ;; Contestantorate Town
   (do-game
-    (new-game (default-corp ["Corporate Town" "Hostile Takeover"])
-              (default-runner ["Data Dealer"]))
-    (core/gain state :corp :click 1)
+    (new-game (default-contestant ["Contestantorate Town" "Hostile Takeover"])
+              (default-challenger ["Data Dealer"]))
+    (core/gain state :contestant :click 1)
     (play-and-score state "Hostile Takeover")
-    (play-from-hand state :corp "Corporate Town" "New remote")
-    (let [ct (get-content state :remote2 0)
-          ht (get-scored state :corp 0)]
-      (core/rez state :corp ct)
-      (click-card state :corp ht)
-      (take-credits state :corp)
-      (play-from-hand state :runner "Data Dealer")
-      (take-credits state :runner)
-      (card-ability state :corp ct 0)
-      (click-card state :corp (get-resource state 0))
-      (is (= 1 (-> (get-runner) :discard count)) "Corporate Town should trash Data Dealer")
-      (core/end-phase-12 state :corp nil)
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (is (not (:corp-phase-12 @state)) "Corporate Town shouldn't activate if there are no resources"))))
+    (play-from-hand state :contestant "Contestantorate Town" "New party")
+    (let [ct (get-content state :party2 0)
+          ht (get-scored state :contestant 0)]
+      (core/reveal state :contestant ct)
+      (click-card state :contestant ht)
+      (take-credits state :contestant)
+      (play-from-hand state :challenger "Data Dealer")
+      (take-credits state :challenger)
+      (card-ability state :contestant ct 0)
+      (click-card state :contestant (get-radicle state 0))
+      (is (= 1 (-> (get-challenger) :discard count)) "Contestantorate Town should discard Data Dealer")
+      (core/end-phase-12 state :contestant nil)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (is (not (:contestant-phase-12 @state)) "Contestantorate Town shouldn't activate if there are no radicles"))))
 
 (deftest cpc-generator
   ;; CPC Generator
   (do-game
-    (new-game (default-corp ["CPC Generator"])
-              (default-runner))
-    (play-from-hand state :corp "CPC Generator" "New remote")
-    (core/rez state :corp (get-content state :remote1 0))
-    (take-credits state :corp)
-    (let [credits (:credit (get-corp))]
-      (core/click-credit state :runner nil)
-      (is (= 1 (- (:credit (get-corp)) credits)) "Should gain one from CPC Generator"))
-    (let [credits (:credit (get-corp))]
-      (core/click-credit state :runner nil)
-      (is (zero? (- (:credit (get-corp)) credits)) "Shouldn't gain another credit from CPC Generator"))))
+    (new-game (default-contestant ["CPC Generator"])
+              (default-challenger))
+    (play-from-hand state :contestant "CPC Generator" "New party")
+    (core/reveal state :contestant (get-content state :party1 0))
+    (take-credits state :contestant)
+    (let [credits (:credit (get-contestant))]
+      (core/click-credit state :challenger nil)
+      (is (= 1 (- (:credit (get-contestant)) credits)) "Should gain one from CPC Generator"))
+    (let [credits (:credit (get-contestant))]
+      (core/click-credit state :challenger nil)
+      (is (zero? (- (:credit (get-contestant)) credits)) "Shouldn't gain another credit from CPC Generator"))))
 
 (deftest cybernetics-court
   ;; Cybernetics Court
   (do-game
-    (new-game (default-corp ["Cybernetics Court"])
-              (default-runner))
-    (play-from-hand state :corp "Cybernetics Court" "New remote")
-    (core/rez state :corp (get-content state :remote1 0))
-    (is (= 9 (get-hand-size :corp)) "Corp should have hand size of 9")))
+    (new-game (default-contestant ["Cybernetics Court"])
+              (default-challenger))
+    (play-from-hand state :contestant "Cybernetics Court" "New party")
+    (core/reveal state :contestant (get-content state :party1 0))
+    (is (= 9 (get-hand-size :contestant)) "Contestant should have hand size of 9")))
 
 (deftest daily-business-show
   ;; Daily Business Show
   (testing "Full test"
     (do-game
-      (new-game (default-corp [(qty "Daily Business Show" 3) "Hedge Fund" "Jackson Howard"
+      (new-game (default-contestant [(qty "Daily Business Show" 3) "Hedge Fund" "Jackson Howard"
                                "Resistor" "Product Placement" "Breaking News"])
-                (default-runner))
-      (starting-hand state :corp ["Daily Business Show" "Daily Business Show" "Daily Business Show" "Hedge Fund"])
-      (core/gain state :corp :credit 1)
-      (play-from-hand state :corp "Daily Business Show" "New remote")
-      (play-from-hand state :corp "Daily Business Show" "New remote")
-      (play-from-hand state :corp "Daily Business Show" "New remote")
-      (core/rez state :corp (get-content state :remote1 0))
-      (core/rez state :corp (get-content state :remote2 0))
-      (core/rez state :corp (get-content state :remote3 0))
-      (take-credits state :corp)
-      (is (= 1 (count (:hand (get-corp)))))
-      (take-credits state :runner)
-      (is (= 5 (count (:hand (get-corp)))) "Drew an additional 3 cards with 3 DBS")
-      (is (not-empty (:prompt (get-runner))) "Runner is waiting for Corp to use DBS")
-      (click-card state :corp (find-card "Hedge Fund" (:hand (get-corp)))) ;invalid target
-      (click-card state :corp (find-card "Resistor" (:hand (get-corp))))
-      (click-card state :corp (find-card "Product Placement" (:hand (get-corp))))
-      (click-card state :corp (find-card "Breaking News" (:hand (get-corp))))
-      (is (empty? (:prompt (get-runner))) "Runner prompt cleared")
-      (is (= 2 (count (:hand (get-corp)))))
-      (is (= "Hedge Fund" (:title (first (:hand (get-corp))))))
-      (is (= "Jackson Howard" (:title (second (:hand (get-corp))))))
-      (is (= "Resistor" (:title (last (:deck (get-corp))))) "Resistor last card in deck")
-      (is (= "Product Placement" (:title (last (butlast (:deck (get-corp))))))
+                (default-challenger))
+      (starting-hand state :contestant ["Daily Business Show" "Daily Business Show" "Daily Business Show" "Hedge Fund"])
+      (core/gain state :contestant :credit 1)
+      (play-from-hand state :contestant "Daily Business Show" "New party")
+      (play-from-hand state :contestant "Daily Business Show" "New party")
+      (play-from-hand state :contestant "Daily Business Show" "New party")
+      (core/reveal state :contestant (get-content state :party1 0))
+      (core/reveal state :contestant (get-content state :party2 0))
+      (core/reveal state :contestant (get-content state :party3 0))
+      (take-credits state :contestant)
+      (is (= 1 (count (:hand (get-contestant)))))
+      (take-credits state :challenger)
+      (is (= 5 (count (:hand (get-contestant)))) "Drew an additional 3 cards with 3 DBS")
+      (is (not-empty (:prompt (get-challenger))) "Challenger is waiting for Contestant to use DBS")
+      (click-card state :contestant (find-card "Hedge Fund" (:hand (get-contestant)))) ;invalid target
+      (click-card state :contestant (find-card "Resistor" (:hand (get-contestant))))
+      (click-card state :contestant (find-card "Product Placement" (:hand (get-contestant))))
+      (click-card state :contestant (find-card "Breaking News" (:hand (get-contestant))))
+      (is (empty? (:prompt (get-challenger))) "Challenger prompt cleared")
+      (is (= 2 (count (:hand (get-contestant)))))
+      (is (= "Hedge Fund" (:title (first (:hand (get-contestant))))))
+      (is (= "Jackson Howard" (:title (second (:hand (get-contestant))))))
+      (is (= "Resistor" (:title (last (:deck (get-contestant))))) "Resistor last card in deck")
+      (is (= "Product Placement" (:title (last (butlast (:deck (get-contestant))))))
           "Product Placement second last card in deck")
-      (is (= "Breaking News" (:title (last (butlast (butlast (:deck (get-corp)))))))
+      (is (= "Breaking News" (:title (last (butlast (butlast (:deck (get-contestant)))))))
           "Breaking News third last card in deck")))
   (testing "Sensie Actors Union interaction"
     (do-game
-      (new-game (default-corp ["Daily Business Show" (qty "Sensie Actors Union" 2)
+      (new-game (default-contestant ["Daily Business Show" (qty "Sensie Actors Union" 2)
                                "Hedge Fund" "Jackson Howard"
                                "Resistor" "Product Placement" "Breaking News"])
-                (default-runner))
-      (starting-hand state :corp ["Daily Business Show" "Sensie Actors Union" "Sensie Actors Union" "Hedge Fund"])
-      (play-from-hand state :corp "Daily Business Show" "New remote")
-      (play-from-hand state :corp "Sensie Actors Union" "New remote")
-      (play-from-hand state :corp "Sensie Actors Union" "New remote")
-      (let [sensie1 (get-content state :remote2 0)
-            sensie2 (get-content state :remote3 0)]
-        (core/rez state :corp (get-content state :remote1 0))
-        (core/rez state :corp sensie1)
-        (core/rez state :corp sensie2)
-        (take-credits state :corp)
-        (take-credits state :runner)
+                (default-challenger))
+      (starting-hand state :contestant ["Daily Business Show" "Sensie Actors Union" "Sensie Actors Union" "Hedge Fund"])
+      (play-from-hand state :contestant "Daily Business Show" "New party")
+      (play-from-hand state :contestant "Sensie Actors Union" "New party")
+      (play-from-hand state :contestant "Sensie Actors Union" "New party")
+      (let [sensie1 (get-content state :party2 0)
+            sensie2 (get-content state :party3 0)]
+        (core/reveal state :contestant (get-content state :party1 0))
+        (core/reveal state :contestant sensie1)
+        (core/reveal state :contestant sensie2)
+        (take-credits state :contestant)
+        (take-credits state :challenger)
         ;; Use first Sensie
-        (is (= 1 (count (:hand (get-corp)))))
-        (card-ability state :corp sensie1 0)
-        (is (= 5 (count (:hand (get-corp)))) "Drew 3 cards with Sensie, +1 with DBS")
-        (click-card state :corp (find-card "Resistor" (:hand (get-corp)))) ; DBS target
-        (click-card state :corp (find-card "Hedge Fund" (:hand (get-corp)))) ; Sensie target
-        (is (= 3 (count (:hand (get-corp)))))
-        (is (= "Hedge Fund" (:title (last (:deck (get-corp))))) "Hedge Fund last card in deck")
-        (is (= "Resistor" (:title (last (butlast (:deck (get-corp))))))
+        (is (= 1 (count (:hand (get-contestant)))))
+        (card-ability state :contestant sensie1 0)
+        (is (= 5 (count (:hand (get-contestant)))) "Drew 3 cards with Sensie, +1 with DBS")
+        (click-card state :contestant (find-card "Resistor" (:hand (get-contestant)))) ; DBS target
+        (click-card state :contestant (find-card "Hedge Fund" (:hand (get-contestant)))) ; Sensie target
+        (is (= 3 (count (:hand (get-contestant)))))
+        (is (= "Hedge Fund" (:title (last (:deck (get-contestant))))) "Hedge Fund last card in deck")
+        (is (= "Resistor" (:title (last (butlast (:deck (get-contestant))))))
             "Resistor second last card in deck")
         ;; Try to use first Sensie again
-        (card-ability state :corp sensie1 0)
-        (is (empty? (-> @state :corp :prompt)) "Sensie didn't activate")
-        (is (= 3 (count (:hand (get-corp)))))
+        (card-ability state :contestant sensie1 0)
+        (is (empty? (-> @state :contestant :prompt)) "Sensie didn't activate")
+        (is (= 3 (count (:hand (get-contestant)))))
         ;; Use second Sensie
-        (starting-hand state :corp ["Hedge Fund" "Jackson Howard"])
-        (is (= 2 (count (:hand (get-corp)))))
-        (card-ability state :corp sensie2 0)
-        (is (= 5 (count (:hand (get-corp)))) "Drew 3 cards with Sensie, DBS didn't activate")
-        (click-card state :corp (find-card "Breaking News" (:hand (get-corp)))) ; Sensie target
-        (is (= "Breaking News" (:title (last (:deck (get-corp))))) "Breaking News last card in deck"))))
-  (testing "Should not trigger if rezzed after mandatory draw"
+        (starting-hand state :contestant ["Hedge Fund" "Jackson Howard"])
+        (is (= 2 (count (:hand (get-contestant)))))
+        (card-ability state :contestant sensie2 0)
+        (is (= 5 (count (:hand (get-contestant)))) "Drew 3 cards with Sensie, DBS didn't activate")
+        (click-card state :contestant (find-card "Breaking News" (:hand (get-contestant)))) ; Sensie target
+        (is (= "Breaking News" (:title (last (:deck (get-contestant))))) "Breaking News last card in deck"))))
+  (testing "Should not trigger if revealed after mandatory draw"
     (do-game
-      (new-game (default-corp [(qty "Daily Business Show" 3) "Hedge Fund" "Jackson Howard"
+      (new-game (default-contestant [(qty "Daily Business Show" 3) "Hedge Fund" "Jackson Howard"
                                "Resistor" "Product Placement" "Breaking News"])
-                (default-runner))
-      (starting-hand state :corp ["Daily Business Show"])
-      (play-from-hand state :corp "Daily Business Show" "New remote")
-      (core/rez state :corp (get-content state :remote1 0))
-      (core/draw state :corp)
-      (is (= 1 (count (:hand (get-corp)))) "DBS did not fire on manual draw")
-      (is (empty? (:prompt (get-corp))) "Corp is not being asked to bury a card with DBS")))
-  (testing "Fire on Runner turn"
+                (default-challenger))
+      (starting-hand state :contestant ["Daily Business Show"])
+      (play-from-hand state :contestant "Daily Business Show" "New party")
+      (core/reveal state :contestant (get-content state :party1 0))
+      (core/draw state :contestant)
+      (is (= 1 (count (:hand (get-contestant)))) "DBS did not fire on manual draw")
+      (is (empty? (:prompt (get-contestant))) "Contestant is not being asked to bury a card with DBS")))
+  (testing "Fire on Challenger turn"
     (do-game
-      (new-game (default-corp ["Daily Business Show" "Hedge Fund"
+      (new-game (default-contestant ["Daily Business Show" "Hedge Fund"
                                "Resistor" "Product Placement" "Breaking News"])
-                (default-runner ["Fisk Investment Seminar"]))
-      (starting-hand state :corp ["Daily Business Show"])
-      (play-from-hand state :corp "Daily Business Show" "New remote")
-      (core/rez state :corp (get-content state :remote1 0))
-      (take-credits state :corp)
-      (is (empty? (:hand (get-corp))) "Corp hand is empty")
-      (play-from-hand state :runner "Fisk Investment Seminar")
-      (is (= 4 (count (:hand (get-corp)))) "Drew an additional card from FIS")
-      (is (not-empty (:prompt (get-runner))) "Runner is waiting for Corp to use DBS")
-      (click-card state :corp (find-card "Resistor" (:hand (get-corp))))
-      (is (empty? (:prompt (get-runner))) "Runner prompt cleared")
-      (is (= 3 (count (:hand (get-corp))))))))
+                (default-challenger ["Fisk Investment Seminar"]))
+      (starting-hand state :contestant ["Daily Business Show"])
+      (play-from-hand state :contestant "Daily Business Show" "New party")
+      (core/reveal state :contestant (get-content state :party1 0))
+      (take-credits state :contestant)
+      (is (empty? (:hand (get-contestant))) "Contestant hand is empty")
+      (play-from-hand state :challenger "Fisk Investment Seminar")
+      (is (= 4 (count (:hand (get-contestant)))) "Drew an additional card from FIS")
+      (is (not-empty (:prompt (get-challenger))) "Challenger is waiting for Contestant to use DBS")
+      (click-card state :contestant (find-card "Resistor" (:hand (get-contestant))))
+      (is (empty? (:prompt (get-challenger))) "Challenger prompt cleared")
+      (is (= 3 (count (:hand (get-contestant))))))))
 
 
 (deftest dedicated-response-team
-  ;; Dedicated Response Team - Do 2 meat damage when successful run ends if Runner is tagged
+  ;; Dedicated Response Team - Do 2 meat damage when successful run ends if Challenger is tagged
   (do-game
-    (new-game (default-corp ["Dedicated Response Team"])
-              (default-runner))
-    (play-from-hand state :corp "Dedicated Response Team" "New remote")
-    (let [drt (get-content state :remote1 0)]
-      (core/rez state :corp drt)
-      (take-credits state :corp)
-      (run-empty-server state :rd)
-      (is (empty? (:discard (get-runner))) "Not tagged, no damage done")
-      (core/gain state :runner :tag 1)
+    (new-game (default-contestant ["Dedicated Response Team"])
+              (default-challenger))
+    (play-from-hand state :contestant "Dedicated Response Team" "New party")
+    (let [drt (get-content state :party1 0)]
+      (core/reveal state :contestant drt)
+      (take-credits state :contestant)
+      (run-empty-locale state :rd)
+      (is (empty? (:discard (get-challenger))) "Not tagged, no damage done")
+      (core/gain state :challenger :tag 1)
       (run-on state :rd)
       (run-jack-out state)
-      (is (empty? (:discard (get-runner))) "Tagged but run unsuccessful, no damage done")
-      (run-empty-server state :rd)
-      (is (= 2 (count (:discard (get-runner)))) "Suffered 2 damage for successful run w/ tag"))))
+      (is (empty? (:discard (get-challenger))) "Tagged but run unsuccessful, no damage done")
+      (run-empty-locale state :rd)
+      (is (= 2 (count (:discard (get-challenger)))) "Suffered 2 damage for successful run w/ tag"))))
 
-(deftest dedicated-server
-  ;; Dedicated Servers
+(deftest dedicated-locale
+  ;; Dedicated Locales
   (do-game
-    (new-game (default-corp ["Dedicated Server"])
-              (default-runner))
-    (play-from-hand state :corp "Dedicated Server" "New remote")
-    (let [servers (get-content state :remote1 0)]
-      (core/rez state :corp servers)
-      (is (= 2 (get-counters (refresh servers) :recurring)) "Should have 2 recurring credits"))))
+    (new-game (default-contestant ["Dedicated Locale"])
+              (default-challenger))
+    (play-from-hand state :contestant "Dedicated Locale" "New party")
+    (let [locales (get-content state :party1 0)]
+      (core/reveal state :contestant locales)
+      (is (= 2 (get-counters (refresh locales) :recurring)) "Should have 2 recurring credits"))))
 
 (deftest director-haas
   ;; Director Haas
   (do-game
-    (new-game (default-corp [(qty "Director Haas" 2)])
-              (default-runner))
-    (play-from-hand state :corp "Director Haas" "New remote")
-    (play-from-hand state :corp "Director Haas" "Server 1")
-    (click-prompt state :corp "OK")
-    (is (= 1 (count (:discard (get-corp)))) "First Haas trashed")
-    (is (zero? (:agenda-point (get-runner))) "No points for Runner if trashed by Corp")
-    (let [dh (get-content state :remote1 0)]
-      (core/rez state :corp dh))
-    (is (= 2 (:click (get-corp))) "Corp should immediately gain a click")
-    (take-credits state :corp)
-    (take-credits state :runner)
-    (is (= 4 (:click (get-corp))) "Corp should have an extra click each turn")
-    (take-credits state :corp)
-    (take-credits state :runner 3)
-    (run-empty-server state "Server 1")
-    (click-prompt state :runner "Pay 5 [Credits] to trash")
-    (take-credits state :runner)
-    (is (= 3 (:click (get-corp))) "Corp should be back to 3 clicks")
-    (is (= 1 (count (get-scored state :runner))) "Director Haas added to Runner score area")
-    (is (= 2 (:agenda-point (get-runner))) "Runner gained 2 agenda points")))
+    (new-game (default-contestant [(qty "Director Haas" 2)])
+              (default-challenger))
+    (play-from-hand state :contestant "Director Haas" "New party")
+    (play-from-hand state :contestant "Director Haas" "Locale 1")
+    (click-prompt state :contestant "OK")
+    (is (= 1 (count (:discard (get-contestant)))) "First Haas discarded")
+    (is (zero? (:agenda-point (get-challenger))) "No points for Challenger if discarded by Contestant")
+    (let [dh (get-content state :party1 0)]
+      (core/reveal state :contestant dh))
+    (is (= 2 (:click (get-contestant))) "Contestant should immediately gain a click")
+    (take-credits state :contestant)
+    (take-credits state :challenger)
+    (is (= 4 (:click (get-contestant))) "Contestant should have an extra click each turn")
+    (take-credits state :contestant)
+    (take-credits state :challenger 3)
+    (run-empty-locale state "Locale 1")
+    (click-prompt state :challenger "Pay 5 [Credits] to discard")
+    (take-credits state :challenger)
+    (is (= 3 (:click (get-contestant))) "Contestant should be back to 3 clicks")
+    (is (= 1 (count (get-scored state :challenger))) "Director Haas added to Challenger score area")
+    (is (= 2 (:agenda-point (get-challenger))) "Challenger gained 2 agenda points")))
 
 (deftest docklands-crackdown
   ;; Docklands Crackdown
   (letfn [(dlcd-test [number]
             (do-game
-              (new-game (default-corp ["Docklands Crackdown"])
-                        (default-runner ["Cache"]))
-              (play-from-hand state :corp "Docklands Crackdown" "New remote")
-              (let [dlcd (get-content state :remote1 0)]
-                (core/rez state :corp dlcd)
-                (core/add-counter state :corp dlcd :power number)
-                (take-credits state :corp)
-                (play-from-hand state :runner "Cache")
-                (is (= (- 4 number) (:credit (get-runner)))))))]
+              (new-game (default-contestant ["Docklands Crackdown"])
+                        (default-challenger ["Cache"]))
+              (play-from-hand state :contestant "Docklands Crackdown" "New party")
+              (let [dlcd (get-content state :party1 0)]
+                (core/reveal state :contestant dlcd)
+                (core/add-counter state :contestant dlcd :power number)
+                (take-credits state :contestant)
+                (play-from-hand state :challenger "Cache")
+                (is (= (- 4 number) (:credit (get-challenger)))))))]
     (doall (map dlcd-test [0 1 2 3 4]))))
 
 (deftest drudge-work
   ;; Drudge Work - Shuffle agenda from HQ or Archives into R&D, and gain credits = to agenda points
   ;; TODO: do some Noah magic on this test to test several agendas from several locations
   (do-game
-    (new-game (default-corp ["Drudge Work"
+    (new-game (default-contestant ["Drudge Work"
                              "Hostile Takeover" "Standoff" "Global Food Initiative" "Armed Intimidation"
                              "Hedge Fund"])
-              (default-runner))
-    (core/gain state :corp :click 2)
-    (play-from-hand state :corp "Drudge Work" "New remote")
-    (play-from-hand state :corp "Armed Intimidation" "New remote")
-    (trash-from-hand state :corp "Hostile Takeover")
-    (let [hand (:hand (get-corp))
-          drudge-work (get-content state :remote1 0)
-          ai (get-content state :remote2 0)
-          ht (find-card "Hostile Takeover" (:discard (get-corp)))
+              (default-challenger))
+    (core/gain state :contestant :click 2)
+    (play-from-hand state :contestant "Drudge Work" "New party")
+    (play-from-hand state :contestant "Armed Intimidation" "New party")
+    (discard-from-hand state :contestant "Hostile Takeover")
+    (let [hand (:hand (get-contestant))
+          drudge-work (get-content state :party1 0)
+          ai (get-content state :party2 0)
+          ht (find-card "Hostile Takeover" (:discard (get-contestant)))
           standoff (find-card "Standoff" hand)
           gfi (find-card "Global Food Initiative" hand)
           hf (find-card "Hedge Fund" hand)]
-      (core/rez state :corp drudge-work)
-      (testing "Rez cost and placing counters on Drudge Work on rez"
-        (is (= (- 5 2) (:credit (get-corp))) "Cost 2 credits to rez Drudge Work")
-        (is (= 3 (get-counters (refresh drudge-work) :power)) "Drudge Work gained 3 power counters on rez"))
-      (testing "Selecting installed agenda, or Operation in hand"
-        (card-ability state :corp (refresh drudge-work) 0)
-        (click-card state :corp ai)
-        (is (some? (get-content state :remote2 0)) "Armed Intimidation still installed in a remote server")
+      (core/reveal state :contestant drudge-work)
+      (testing "Reveal cost and placing counters on Drudge Work on reveal"
+        (is (= (- 5 2) (:credit (get-contestant))) "Cost 2 credits to reveal Drudge Work")
+        (is (= 3 (get-counters (refresh drudge-work) :power)) "Drudge Work gained 3 power counters on reveal"))
+      (testing "Selecting placed agenda, or Operation in hand"
+        (card-ability state :contestant (refresh drudge-work) 0)
+        (click-card state :contestant ai)
+        (is (some? (get-content state :party2 0)) "Armed Intimidation still placed in a party locale")
         (is (= 3 (get-counters (refresh drudge-work) :power)) "Did not use a counter when selecting incorrect target")
-        (is (= (- 5 2) (:credit (get-corp))) "Did not gain credits when selecting installed Agenda")
-        (is (empty? (:deck (get-corp))) "No cards in R&D")
-        (click-card state :corp hf)
-        (is (= 3 (count (:hand (get-corp)))) "Hedge Fund still in HQ")
+        (is (= (- 5 2) (:credit (get-contestant))) "Did not gain credits when selecting placed Agenda")
+        (is (empty? (:deck (get-contestant))) "No cards in R&D")
+        (click-card state :contestant hf)
+        (is (= 3 (count (:hand (get-contestant)))) "Hedge Fund still in HQ")
         (is (= 3 (get-counters (refresh drudge-work) :power)) "Did not use a counter when selecting incorrect target")
-        (is (= (- 5 2) (:credit (get-corp))) "Did not gain credits when selecting operation")
-        (is (empty? (:deck (get-corp))) "No cards in R&D"))
+        (is (= (- 5 2) (:credit (get-contestant))) "Did not gain credits when selecting operation")
+        (is (empty? (:deck (get-contestant))) "No cards in R&D"))
       (testing "Gaining credits and shuffling in agenda from HQ"
-        (click-card state :corp gfi)
-        (is (= 1 (count (:deck (get-corp)))) "One card (the GFI) shuffled into R&D")
-        (is (= 2 (count (:hand (get-corp)))) "Two cards left in HQ (Standoff and Hedge Fund)")
-        (is (= 2 (:click (get-corp))) "Used a click to activate Drudge Work")
+        (click-card state :contestant gfi)
+        (is (= 1 (count (:deck (get-contestant)))) "One card (the GFI) shuffled into R&D")
+        (is (= 2 (count (:hand (get-contestant)))) "Two cards left in HQ (Standoff and Hedge Fund)")
+        (is (= 2 (:click (get-contestant))) "Used a click to activate Drudge Work")
         (is (= 2 (get-counters (refresh drudge-work) :power)) "Used a counter when selecting GFI from HQ")
-        (is (= (+ 5 -2 3) (:credit (get-corp))) "Gained 3 credits when revealing GFI"))
+        (is (= (+ 5 -2 3) (:credit (get-contestant))) "Gained 3 credits when revealing GFI"))
       (testing "Gaining credits and shuffling in agenda from Archives"
-        (card-ability state :corp (refresh drudge-work) 0)
-        (click-card state :corp ht)
-        (is (= 2 (count (:deck (get-corp)))) "One more card (the Hostile Takeover) shuffled into R&D")
-        (is (= 2 (count (:hand (get-corp)))) "Two cards left in HQ (Standoff and Hedge Fund)")
-        (is (= 1 (:click (get-corp))) "Used a click to activate Drudge Work")
+        (card-ability state :contestant (refresh drudge-work) 0)
+        (click-card state :contestant ht)
+        (is (= 2 (count (:deck (get-contestant)))) "One more card (the Hostile Takeover) shuffled into R&D")
+        (is (= 2 (count (:hand (get-contestant)))) "Two cards left in HQ (Standoff and Hedge Fund)")
+        (is (= 1 (:click (get-contestant))) "Used a click to activate Drudge Work")
         (is (= 1 (get-counters (refresh drudge-work) :power)) "Used a counter when selecting Hostile Takeover from Archives")
-        (is (= (+ 5 -2 3 1) (:credit (get-corp))) "Gained 1 credits when revealing Hostile Takeover"))
-      (testing "Gain 0 credits when shuffling in Standoff, trashing Drudge Work after 3 uses"
-        (card-ability state :corp (refresh drudge-work) 0)
-        (click-card state :corp standoff)
-        (is (= 3 (count (:deck (get-corp)))) "One more card (the Standoff) shuffled into R&D")
-        (is (= 1 (count (:hand (get-corp)))) "Only the Hedge Fund left in HQ")
-        (is (= 0 (:click (get-corp))) "Used a click to activate Drudge Work")
-        (is (= "Drudge Work" (-> (get-corp) :discard first :title)) "Drudge Work trashed after no counters left")
-        (is (= (+ 5 -2 3 1) (:credit (get-corp))) "Gained 0 credits when revealing Standoff")))))
+        (is (= (+ 5 -2 3 1) (:credit (get-contestant))) "Gained 1 credits when revealing Hostile Takeover"))
+      (testing "Gain 0 credits when shuffling in Standoff, discarding Drudge Work after 3 uses"
+        (card-ability state :contestant (refresh drudge-work) 0)
+        (click-card state :contestant standoff)
+        (is (= 3 (count (:deck (get-contestant)))) "One more card (the Standoff) shuffled into R&D")
+        (is (= 1 (count (:hand (get-contestant)))) "Only the Hedge Fund left in HQ")
+        (is (= 0 (:click (get-contestant))) "Used a click to activate Drudge Work")
+        (is (= "Drudge Work" (-> (get-contestant) :discard first :title)) "Drudge Work discarded after no counters left")
+        (is (= (+ 5 -2 3 1) (:credit (get-contestant))) "Gained 0 credits when revealing Standoff")))))
 
 (deftest early-premiere
-  ;; Early Premiere - Pay 1c at start of turn to place an advancement on a card in a server
+  ;; Early Premiere - Pay 1c at start of turn to place an advancement on a card in a locale
   (do-game
-    (new-game (default-corp ["Early Premiere" "Ice Wall"
+    (new-game (default-contestant ["Early Premiere" "Ice Wall"
                              "Ghost Branch" "Blacklist"])
-              (default-runner))
-    (core/gain state :corp :click 1)
-    (play-from-hand state :corp "Early Premiere" "New remote")
-    (play-from-hand state :corp "Blacklist" "New remote")
-    (play-from-hand state :corp "Ghost Branch" "New remote")
-    (play-from-hand state :corp "Ice Wall" "HQ")
-    (let [ep (get-content state :remote1 0)
-          bl (get-content state :remote2 0)
-          gb (get-content state :remote3 0)
-          iw (get-ice state :hq 0)]
-      (core/rez state :corp ep)
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (card-ability state :corp ep 0)
-      (click-card state :corp iw)
-      (is (zero? (get-counters (refresh iw) :advancement)) "Ice Wall can't targeted, not in server")
-      (click-card state :corp bl)
+              (default-challenger))
+    (core/gain state :contestant :click 1)
+    (play-from-hand state :contestant "Early Premiere" "New party")
+    (play-from-hand state :contestant "Blacklist" "New party")
+    (play-from-hand state :contestant "Ghost Branch" "New party")
+    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (let [ep (get-content state :party1 0)
+          bl (get-content state :party2 0)
+          gb (get-content state :party3 0)
+          iw (get-character state :hq 0)]
+      (core/reveal state :contestant ep)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (card-ability state :contestant ep 0)
+      (click-card state :contestant iw)
+      (is (zero? (get-counters (refresh iw) :advancement)) "Ice Wall can't targeted, not in locale")
+      (click-card state :contestant bl)
       (is (zero? (get-counters (refresh bl) :advancement)) "Blacklist can't targeted, can't be advanced")
-      (click-card state :corp gb)
+      (click-card state :contestant gb)
       (is (= 1 (get-counters (refresh gb) :advancement)) "1 advancement on Ghost Branch")
-      (is (= 4 (:credit (get-corp)))))))
+      (is (= 4 (:credit (get-contestant)))))))
 
 (deftest echo-chamber
   ;; Echo Chamber - 3 clicks to become 1 point agenda
   (do-game
-    (new-game (default-corp ["Echo Chamber"])
-              (default-runner))
-    (core/gain state :corp :click 1)
-    (play-from-hand state :corp "Echo Chamber" "New remote")
-    (let [ec (get-content state :remote1 0)]
-      (core/rez state :corp ec)
-      (card-ability state :corp ec 0))
-    (is (= 1 (:agendapoints (get-scored state :corp 0))) "Echo Chamber added to Corp score area")))
+    (new-game (default-contestant ["Echo Chamber"])
+              (default-challenger))
+    (core/gain state :contestant :click 1)
+    (play-from-hand state :contestant "Echo Chamber" "New party")
+    (let [ec (get-content state :party1 0)]
+      (core/reveal state :contestant ec)
+      (card-ability state :contestant ec 0))
+    (is (= 1 (:agendapoints (get-scored state :contestant 0))) "Echo Chamber added to Contestant score area")))
 
 (deftest edge-of-world
   ;; Edge of World
   (do-game
-    (new-game (default-corp [(qty "Edge of World" 3) (qty "Ice Wall" 3)])
-              (default-runner))
-    (core/gain state :corp :credit 6 :click 1)
-    (play-from-hand state :corp "Edge of World" "New remote")
-    (play-from-hand state :corp "Edge of World" "New remote")
-    (play-from-hand state :corp "Ice Wall" "Server 1")
-    (play-from-hand state :corp "Ice Wall" "Server 1")
-    (take-credits state :corp)
-    (run-empty-server state "Server 1")
-    (is (= :waiting (-> @state :runner :prompt first :prompt-type))
-        "Runner waiting for Corp to act")
-    (click-prompt state :corp "Yes")
-    (click-prompt state :runner "Pay 0 [Credits] to trash")
-    (is (= 2 (:brain-damage (get-runner))) "Runner took 2 brain damage")
-    (run-empty-server state "Server 2")
-    (click-prompt state :corp "Yes")
-    (click-prompt state :runner "Pay 0 [Credits] to trash")
-    (is (= 2 (:brain-damage (get-runner))) "Runner did not take brain damage when no ICE protected Edge of World")))
+    (new-game (default-contestant [(qty "Edge of World" 3) (qty "Ice Wall" 3)])
+              (default-challenger))
+    (core/gain state :contestant :credit 6 :click 1)
+    (play-from-hand state :contestant "Edge of World" "New party")
+    (play-from-hand state :contestant "Edge of World" "New party")
+    (play-from-hand state :contestant "Ice Wall" "Locale 1")
+    (play-from-hand state :contestant "Ice Wall" "Locale 1")
+    (take-credits state :contestant)
+    (run-empty-locale state "Locale 1")
+    (is (= :waiting (-> @state :challenger :prompt first :prompt-type))
+        "Challenger waiting for Contestant to act")
+    (click-prompt state :contestant "Yes")
+    (click-prompt state :challenger "Pay 0 [Credits] to discard")
+    (is (= 2 (:brain-damage (get-challenger))) "Challenger took 2 brain damage")
+    (run-empty-locale state "Locale 2")
+    (click-prompt state :contestant "Yes")
+    (click-prompt state :challenger "Pay 0 [Credits] to discard")
+    (is (= 2 (:brain-damage (get-challenger))) "Challenger did not take brain damage when no Character protected Edge of World")))
 
 (deftest eliza's-toybox
-  ;; Eliza's Toybox - Rez a card ignoring all costs
+  ;; Eliza's Toybox - Reveal a card ignoring all costs
   (do-game
-    (new-game (default-corp ["Eliza's Toybox" "Wotan" "Archer"])
-              (default-runner))
-    (play-from-hand state :corp "Wotan" "R&D")
-    (play-from-hand state :corp "Archer" "HQ")
-    (play-from-hand state :corp "Eliza's Toybox" "New remote")
-    (let [wotan (get-ice state :rd 0)
-          archer (get-ice state :hq 0)
-          eliza (get-content state :remote1 0)]
-      (core/rez state :corp eliza)
-      (is (= 1 (:credit (get-corp))))
-      (is (zero? (:click (get-corp))) "3 clicks spent")
-      (core/gain state :corp :click 6)
-      (card-ability state :corp eliza 0)
-      (click-card state :corp wotan)
-      (is (:rezzed (refresh wotan)))
-      (is (= 3 (:click (get-corp))) "3 clicks spent")
-      (is (= 1 (:credit (get-corp))) "No credits spent")
-      (card-ability state :corp eliza 0)
-      (click-card state :corp archer)
-      (is (:rezzed (refresh archer)))
-      (is (zero? (:click (get-corp))) "3 clicks spent")
-      (is (= 1 (:credit (get-corp))) "No credits or agendas spent"))))
+    (new-game (default-contestant ["Eliza's Toybox" "Wotan" "Archer"])
+              (default-challenger))
+    (play-from-hand state :contestant "Wotan" "R&D")
+    (play-from-hand state :contestant "Archer" "HQ")
+    (play-from-hand state :contestant "Eliza's Toybox" "New party")
+    (let [wotan (get-character state :rd 0)
+          archer (get-character state :hq 0)
+          eliza (get-content state :party1 0)]
+      (core/reveal state :contestant eliza)
+      (is (= 1 (:credit (get-contestant))))
+      (is (zero? (:click (get-contestant))) "3 clicks spent")
+      (core/gain state :contestant :click 6)
+      (card-ability state :contestant eliza 0)
+      (click-card state :contestant wotan)
+      (is (:revealed (refresh wotan)))
+      (is (= 3 (:click (get-contestant))) "3 clicks spent")
+      (is (= 1 (:credit (get-contestant))) "No credits spent")
+      (card-ability state :contestant eliza 0)
+      (click-card state :contestant archer)
+      (is (:revealed (refresh archer)))
+      (is (zero? (:click (get-contestant))) "3 clicks spent")
+      (is (= 1 (:credit (get-contestant))) "No credits or agendas spent"))))
 
 (deftest elizabeth-mills
-  ;; Elizabeth Mills - Remove 1 bad publicity when rezzed; click-trash to trash a location
+  ;; Elizabeth Mills - Remove 1 bad publicity when revealed; click-discard to discard a location
   (do-game
-    (new-game (default-corp ["Elizabeth Mills"])
-              (default-runner ["Earthrise Hotel"]))
-    (core/gain state :corp :bad-publicity 1)
-    (play-from-hand state :corp "Elizabeth Mills" "New remote")
-    (take-credits state :corp)
-    (play-from-hand state :runner "Earthrise Hotel")
-    (take-credits state :runner)
-    (let [liz (get-content state :remote1 0)
-          hotel (get-resource state 0)]
-      (core/rez state :corp liz)
-      (is (zero? (:bad-publicity (get-corp))) "1 bad publicity removed")
-      (card-ability state :corp liz 0)
-      (click-card state :corp hotel)
-      (is (= 1 (count (:discard (get-runner)))) "Earthrise trashed")
-      (is (= 1 (count (:discard (get-corp)))) "Elizabeth Mills trashed")
-      (is (= 1 (:bad-publicity (get-corp))) "1 bad publicity taken from trashing a location"))))
+    (new-game (default-contestant ["Elizabeth Mills"])
+              (default-challenger ["Earthrise Hotel"]))
+    (core/gain state :contestant :bad-publicity 1)
+    (play-from-hand state :contestant "Elizabeth Mills" "New party")
+    (take-credits state :contestant)
+    (play-from-hand state :challenger "Earthrise Hotel")
+    (take-credits state :challenger)
+    (let [liz (get-content state :party1 0)
+          hotel (get-radicle state 0)]
+      (core/reveal state :contestant liz)
+      (is (zero? (:bad-publicity (get-contestant))) "1 bad publicity removed")
+      (card-ability state :contestant liz 0)
+      (click-card state :contestant hotel)
+      (is (= 1 (count (:discard (get-challenger)))) "Earthrise discarded")
+      (is (= 1 (count (:discard (get-contestant)))) "Elizabeth Mills discarded")
+      (is (= 1 (:bad-publicity (get-contestant))) "1 bad publicity taken from discarding a location"))))
 
 (deftest encryption-protocol
-  ;; Encryption Protocol - Trash cost of installed cards increased by 1
+  ;; Encryption Protocol - Discard cost of placed cards increased by 1
   (do-game
-    (new-game (default-corp [(qty "Encryption Protocol" 2)])
-              (default-runner))
-    (play-from-hand state :corp "Encryption Protocol" "New remote")
-    (play-from-hand state :corp "Encryption Protocol" "New remote")
-    (let [ep1 (get-content state :remote1 0)
-          ep2 (get-content state :remote2 0)]
-      (core/rez state :corp ep1)
-      (core/rez state :corp ep2)
-      (take-credits state :corp)
-      (run-empty-server state "Server 1")
-      (is (= 4 (core/trash-cost state :runner (refresh ep1)))
-          "Trash cost increased to 4 by two active Encryption Protocols")
-      (click-prompt state :runner "Pay 4 [Credits] to trash")
-      (run-empty-server state "Server 2")
-      (is (= 3 (core/trash-cost state :runner (refresh ep2)))
-          "Trash cost increased to 3 by one active Encryption Protocol"))))
+    (new-game (default-contestant [(qty "Encryption Protocol" 2)])
+              (default-challenger))
+    (play-from-hand state :contestant "Encryption Protocol" "New party")
+    (play-from-hand state :contestant "Encryption Protocol" "New party")
+    (let [ep1 (get-content state :party1 0)
+          ep2 (get-content state :party2 0)]
+      (core/reveal state :contestant ep1)
+      (core/reveal state :contestant ep2)
+      (take-credits state :contestant)
+      (run-empty-locale state "Locale 1")
+      (is (= 4 (core/discard-cost state :challenger (refresh ep1)))
+          "Discard cost increased to 4 by two active Encryption Protocols")
+      (click-prompt state :challenger "Pay 4 [Credits] to discard")
+      (run-empty-locale state "Locale 2")
+      (is (= 3 (core/discard-cost state :challenger (refresh ep2)))
+          "Discard cost increased to 3 by one active Encryption Protocol"))))
 
 (deftest estelle-moon
   ;; Estelle Moon
   (letfn [(estelle-test [number]
             (do-game
-              (new-game (default-corp ["Estelle Moon" (qty "Encryption Protocol" 20)])
-                        (default-runner))
-              (starting-hand state :corp (repeat 9 "Encryption Protocol"))
-              (core/move state :corp (find-card "Estelle Moon" (:deck (get-corp))) :hand)
-              (play-from-hand state :corp "Estelle Moon" "New remote")
-              (let [em (get-content state :remote1 0)]
-                (core/rez state :corp (refresh em))
-                (core/gain state :corp :click 10)
+              (new-game (default-contestant ["Estelle Moon" (qty "Encryption Protocol" 20)])
+                        (default-challenger))
+              (starting-hand state :contestant (repeat 9 "Encryption Protocol"))
+              (core/move state :contestant (find-card "Estelle Moon" (:deck (get-contestant))) :hand)
+              (play-from-hand state :contestant "Estelle Moon" "New party")
+              (let [em (get-content state :party1 0)]
+                (core/reveal state :contestant (refresh em))
+                (core/gain state :contestant :click 10)
                 (dotimes [_ number]
-                  (play-from-hand state :corp "Encryption Protocol" "New remote"))
-                (let [credits (:credit (get-corp))
-                      hand (count (:hand (get-corp)))]
-                  (card-ability state :corp (refresh em) 0)
-                  (is (= (* 2 number) (- (:credit (get-corp)) credits)) (str "Should gain " (* 2 number) " credits"))
-                  (is (= number (- (count (:hand (get-corp))) hand)) (str "Should draw " number " cards"))
-                  (is (= 1 (-> (get-corp) :discard count)) "Estelle Moon should be trashed")))))]
+                  (play-from-hand state :contestant "Encryption Protocol" "New party"))
+                (let [credits (:credit (get-contestant))
+                      hand (count (:hand (get-contestant)))]
+                  (card-ability state :contestant (refresh em) 0)
+                  (is (= (* 2 number) (- (:credit (get-contestant)) credits)) (str "Should gain " (* 2 number) " credits"))
+                  (is (= number (- (count (:hand (get-contestant))) hand)) (str "Should draw " number " cards"))
+                  (is (= 1 (-> (get-contestant) :discard count)) "Estelle Moon should be discarded")))))]
     (doall (map estelle-test (range 10)))))
 
 (deftest eve-campaign
   ;; Eve Campaign
   (do-game
-    (new-game (default-corp ["Eve Campaign"])
-              (default-runner))
-    (play-from-hand state :corp "Eve Campaign" "New remote")
-    (let [eve (get-content state :remote1 0)]
-      (core/rez state :corp eve)
-      (is (zero? (:credit (get-corp))))
+    (new-game (default-contestant ["Eve Campaign"])
+              (default-challenger))
+    (play-from-hand state :contestant "Eve Campaign" "New party")
+    (let [eve (get-content state :party1 0)]
+      (core/reveal state :contestant eve)
+      (is (zero? (:credit (get-contestant))))
       (is (= 16 (get-counters (refresh eve) :credit)))
-      (take-credits state :corp 2)
-      (take-credits state :runner)
-      (is (= 4 (:credit (get-corp))))
+      (take-credits state :contestant 2)
+      (take-credits state :challenger)
+      (is (= 4 (:credit (get-contestant))))
       (is (= 14 (get-counters (refresh eve) :credit))))))
 
 (deftest executive-boot-camp
   ;; Executive Boot Camp
-  (testing "suppress the start-of-turn event on a rezzed card. Issue #1346"
+  (testing "suppress the start-of-turn event on a revealed card. Issue #1346"
     (do-game
-      (new-game (default-corp ["Eve Campaign" "Executive Boot Camp"])
-                (default-runner))
-      (play-from-hand state :corp "Eve Campaign" "New remote")
-      (play-from-hand state :corp "Executive Boot Camp" "New remote")
-      (take-credits state :corp)
-      (is (= 6 (:credit (get-corp))) "Corp ends turn with 6 credits")
-      (let [eve (get-content state :remote1 0)
-            ebc (get-content state :remote2 0)]
-        (core/rez state :corp ebc)
-        (take-credits state :runner)
-        (is (:corp-phase-12 @state) "Corp in Step 1.2")
-        (card-ability state :corp ebc 0)
-        (click-card state :corp eve)
-        (is (= 2 (:credit (get-corp))) "EBC saved 1 credit on the rez of Eve")
+      (new-game (default-contestant ["Eve Campaign" "Executive Boot Camp"])
+                (default-challenger))
+      (play-from-hand state :contestant "Eve Campaign" "New party")
+      (play-from-hand state :contestant "Executive Boot Camp" "New party")
+      (take-credits state :contestant)
+      (is (= 6 (:credit (get-contestant))) "Contestant ends turn with 6 credits")
+      (let [eve (get-content state :party1 0)
+            ebc (get-content state :party2 0)]
+        (core/reveal state :contestant ebc)
+        (take-credits state :challenger)
+        (is (:contestant-phase-12 @state) "Contestant in Step 1.2")
+        (card-ability state :contestant ebc 0)
+        (click-card state :contestant eve)
+        (is (= 2 (:credit (get-contestant))) "EBC saved 1 credit on the reveal of Eve")
         (is (= 16 (get-counters (refresh eve) :credit)))
-        (core/end-phase-12 state :corp nil)
-        (is (= 2 (:credit (get-corp))) "Corp did not gain credits from Eve")
+        (core/end-phase-12 state :contestant nil)
+        (is (= 2 (:credit (get-contestant))) "Contestant did not gain credits from Eve")
         (is (= 16 (get-counters (refresh eve) :credit)) "Did not take counters from Eve")
-        (take-credits state :corp)
-        (take-credits state :runner)
-        (is (not (:corp-phase-12 @state)) "With nothing to rez, EBC does not trigger Step 1.2")
+        (take-credits state :contestant)
+        (take-credits state :challenger)
+        (is (not (:contestant-phase-12 @state)) "With nothing to reveal, EBC does not trigger Step 1.2")
         (is (= 14 (get-counters (refresh eve) :credit)) "Took counters from Eve"))))
-  (testing "works with Ice that has alternate rez costs"
+  (testing "works with Ice that has alternate reveal costs"
     (do-game
-      (new-game (default-corp ["15 Minutes" "Executive Boot Camp"
+      (new-game (default-contestant ["15 Minutes" "Executive Boot Camp"
                                "Tithonium"])
-                (default-runner))
-      (core/gain state :corp :credit 3)
-      (score-agenda state :corp (find-card "15 Minutes" (:hand (get-corp))))
-      (play-from-hand state :corp "Tithonium" "HQ")
-      (play-from-hand state :corp "Executive Boot Camp" "New remote")
-      (let [ebc (get-content state :remote1 0)
-            tith (get-ice state :hq 0)]
-        (core/rez state :corp ebc)
-        (take-credits state :corp)
-        (is (= 9 (:credit (get-corp))) "Corp ends turn with 9 credits")
-        (take-credits state :runner)
-        (is (not (:rezzed (refresh tith))) "Tithonium not rezzed")
-        (is (:corp-phase-12 @state) "Corp in Step 1.2")
-        (card-ability state :corp ebc 0)
-        (click-card state :corp tith)
-        (click-prompt state :corp "No")
-        (is (and (:installed (refresh tith)) (:rezzed (refresh tith))) "Rezzed Tithonium")
-        (is (= 1 (:credit (get-corp))) "EBC saved 1 credit on the rez of Tithonium")))))
+                (default-challenger))
+      (core/gain state :contestant :credit 3)
+      (score-agenda state :contestant (find-card "15 Minutes" (:hand (get-contestant))))
+      (play-from-hand state :contestant "Tithonium" "HQ")
+      (play-from-hand state :contestant "Executive Boot Camp" "New party")
+      (let [ebc (get-content state :party1 0)
+            tith (get-character state :hq 0)]
+        (core/reveal state :contestant ebc)
+        (take-credits state :contestant)
+        (is (= 9 (:credit (get-contestant))) "Contestant ends turn with 9 credits")
+        (take-credits state :challenger)
+        (is (not (:revealed (refresh tith))) "Tithonium not revealed")
+        (is (:contestant-phase-12 @state) "Contestant in Step 1.2")
+        (card-ability state :contestant ebc 0)
+        (click-card state :contestant tith)
+        (click-prompt state :contestant "No")
+        (is (and (:placed (refresh tith)) (:revealed (refresh tith))) "Revealed Tithonium")
+        (is (= 1 (:credit (get-contestant))) "EBC saved 1 credit on the reveal of Tithonium")))))
 
 (deftest executive-search-firm
   ;; Executive Search Firm
   (do-game
-    (new-game (default-corp ["Executive Search Firm" "Elizabeth Mills"
+    (new-game (default-contestant ["Executive Search Firm" "Elizabeth Mills"
                              "Midori" "Shannon Claire"])
-              (default-runner))
-    (starting-hand state :corp ["Executive Search Firm"])
-    (core/gain state :corp :click 4)
-    (play-from-hand state :corp "Executive Search Firm" "New remote")
+              (default-challenger))
+    (starting-hand state :contestant ["Executive Search Firm"])
+    (core/gain state :contestant :click 4)
+    (play-from-hand state :contestant "Executive Search Firm" "New party")
     (doseq [card ["Elizabeth Mills" "Midori" "Shannon Claire"]]
-      (let [esf (get-content state :remote1 0)
-            number-of-shuffles (count (core/turn-events state :corp :corp-shuffle-deck))]
-        (card-ability state :corp esf 0)
-        (click-prompt state :corp (find-card card (:deck (get-corp))))
-        (is (= card (-> (get-corp) :hand first :title)) (str card " should be in hand"))
-        (core/move state :corp (find-card card (:hand (get-corp))) :deck)
-        (is (< number-of-shuffles (count (core/turn-events state :corp :corp-shuffle-deck))) "Should be shuffled")))))
+      (let [esf (get-content state :party1 0)
+            number-of-shuffles (count (core/turn-events state :contestant :contestant-shuffle-deck))]
+        (card-ability state :contestant esf 0)
+        (click-prompt state :contestant (find-card card (:deck (get-contestant))))
+        (is (= card (-> (get-contestant) :hand first :title)) (str card " should be in hand"))
+        (core/move state :contestant (find-card card (:hand (get-contestant))) :deck)
+        (is (< number-of-shuffles (count (core/turn-events state :contestant :contestant-shuffle-deck))) "Should be shuffled")))))
 
 (deftest expose
   ;; Exposé
   (do-game
-    (new-game (default-corp ["Exposé"])
-              (default-runner))
-    (core/gain state :corp :click 100 :credit 100)
+    (new-game (default-contestant ["Exposé"])
+              (default-challenger))
+    (core/gain state :contestant :click 100 :credit 100)
     (dotimes [i 5]
-      (play-from-hand state :corp "Exposé" "New remote")
-      (let [expose (get-content state (keyword (str "remote" (inc i))) 0)]
-        (core/rez state :corp (refresh expose))
-        (is (zero? (:bad-publicity (get-corp))) "Corp should have 0 bad publicity to start with")
+      (play-from-hand state :contestant "Exposé" "New party")
+      (let [expose (get-content state (keyword (str "party" (inc i))) 0)]
+        (core/reveal state :contestant (refresh expose))
+        (is (zero? (:bad-publicity (get-contestant))) "Contestant should have 0 bad publicity to start with")
         (when (pos? i)
-          (core/gain-bad-publicity state :corp i)
-          (is (= i (:bad-publicity (get-corp))) (str "Corp should gain " i " bad publicity"))
+          (core/gain-bad-publicity state :contestant i)
+          (is (= i (:bad-publicity (get-contestant))) (str "Contestant should gain " i " bad publicity"))
           (advance state (refresh expose) i))
-        (card-ability state :corp (refresh expose) 0)
-        (is (zero? (:bad-publicity (get-corp))) "Corp should have 0 bad publicity after using Exposé's ability")
-        (is (= 1 (-> (get-corp) :discard count)) "Archives should have 1 card in it")
-        (is (= "Exposé" (-> (get-corp) :discard first :title)) "Only card in Archives should be Exposé")
-        (core/move state :corp (find-card "Exposé" (:discard (get-corp))) :hand)))))
+        (card-ability state :contestant (refresh expose) 0)
+        (is (zero? (:bad-publicity (get-contestant))) "Contestant should have 0 bad publicity after using Exposé's ability")
+        (is (= 1 (-> (get-contestant) :discard count)) "Archives should have 1 card in it")
+        (is (= "Exposé" (-> (get-contestant) :discard first :title)) "Only card in Archives should be Exposé")
+        (core/move state :contestant (find-card "Exposé" (:discard (get-contestant))) :hand)))))
 
 (deftest false-flag
   ;; False Flag
-  (testing "when the corp attempts to score False Flag"
+  (testing "when the contestant attempts to score False Flag"
     (testing "and False Flag has 7 advancements"
       (do-game
-       (new-game (default-corp ["False Flag"])
-                 (default-runner))
-       (play-from-hand state :corp "False Flag" "New remote")
-       (let [ff (get-content state :remote1 0)]
-         (core/add-counter state :corp ff :advancement 7)
-         (core/rez state :corp (refresh ff))
-         (card-ability state :corp (refresh ff) 0)
-         (is (nil? (get-content state :remote1 0))
-             "False Flag is no longer in remote")
-         (is (= 3 (:agendapoints (get-scored state :corp 0)))
-             "the corp can score False Flag")
-         (is (= 1 (:click (get-corp)))
+       (new-game (default-contestant ["False Flag"])
+                 (default-challenger))
+       (play-from-hand state :contestant "False Flag" "New party")
+       (let [ff (get-content state :party1 0)]
+         (core/add-counter state :contestant ff :advancement 7)
+         (core/reveal state :contestant (refresh ff))
+         (card-ability state :contestant (refresh ff) 0)
+         (is (nil? (get-content state :party1 0))
+             "False Flag is no longer in party")
+         (is (= 3 (:agendapoints (get-scored state :contestant 0)))
+             "the contestant can score False Flag")
+         (is (= 1 (:click (get-contestant)))
              "scoring False Flag costs one click"))))
     (testing "and False Flag has less than 7 advancements"
       (do-game
-       (new-game (default-corp ["False Flag"])
-                 (default-runner))
-       (play-from-hand state :corp "False Flag" "New remote")
-       (let [ff (get-content state :remote1 0)]
-         (core/add-counter state :corp ff :advancement 6)
-         (core/rez state :corp (refresh ff))
-         (card-ability state :corp (refresh ff) 0)
-         (is (not (nil? (get-content state :remote1 0)))
-             "False Flag remains in the remote")
-         (is (nil? (:agendapoints (get-scored state :corp 0)))
-             "the corp cannot score false flag")
-         (is (= 2 (:click (get-corp)))
-             "the corp does not lose a click")))))
-  (testing "when the runner accesses False Flag"
+       (new-game (default-contestant ["False Flag"])
+                 (default-challenger))
+       (play-from-hand state :contestant "False Flag" "New party")
+       (let [ff (get-content state :party1 0)]
+         (core/add-counter state :contestant ff :advancement 6)
+         (core/reveal state :contestant (refresh ff))
+         (card-ability state :contestant (refresh ff) 0)
+         (is (not (nil? (get-content state :party1 0)))
+             "False Flag remains in the party")
+         (is (nil? (:agendapoints (get-scored state :contestant 0)))
+             "the contestant cannot score false flag")
+         (is (= 2 (:click (get-contestant)))
+             "the contestant does not lose a click")))))
+  (testing "when the challenger accesses False Flag"
     (letfn [(false-flag-tags-test
               [[advancements expected-tags]]
               (testing (str "and False Flag has " advancements " advancements")
                 (do-game
-                 (new-game (default-corp ["False Flag"])
-                           (default-runner))
-                 (play-from-hand state :corp "False Flag" "New remote")
-                 (core/add-prop state :corp
-                                (get-content state :remote1 0)
+                 (new-game (default-contestant ["False Flag"])
+                           (default-challenger))
+                 (play-from-hand state :contestant "False Flag" "New party")
+                 (core/add-prop state :contestant
+                                (get-content state :party1 0)
                                 :advance-counter advancements)
-                 (take-credits state :corp)
-                 (run-empty-server state "Server 1")
-                 (click-prompt state :runner "No action")
-                 (let [tags (:tag (get-runner))]
+                 (take-credits state :contestant)
+                 (run-empty-locale state "Locale 1")
+                 (click-prompt state :challenger "No action")
+                 (let [tags (:tag (get-challenger))]
                    (is (= expected-tags tags)
-                       (str "the runner recieves " tags " tags"))))))]
+                       (str "the challenger recieves " tags " tags"))))))]
       (doall (map false-flag-tags-test
                   [[0 0]
                    [2 1]
@@ -1277,2779 +1277,2779 @@
 (deftest franchise-city
   ;; Franchise City
   (do-game
-    (new-game (default-corp ["Franchise City" "Accelerated Beta Test"])
-              (default-runner))
-    (play-from-hand state :corp "Franchise City" "New remote")
-    (play-from-hand state :corp "Accelerated Beta Test" "New remote")
-    (core/rez state :corp (get-content state :remote1 0))
-    (take-credits state :corp 1)
-    (run-empty-server state "Server 2")
-    (click-prompt state :runner "Steal")
-    (is (zero? (count (get-content state :remote2))) "Agenda was stolen")
-    (is (= 2 (:agenda-point (get-runner))) "Runner stole 2 points")
-    (is (zero? (count (get-content state :remote2)))
-        "Franchise City no longer installed")
-    (is (find-card "Franchise City" (:scored (get-corp))) "Franchise City in corp scored area")
-    (is (= 1 (:agenda-point (get-corp))) "Corp has 1 point")))
+    (new-game (default-contestant ["Franchise City" "Accelerated Beta Test"])
+              (default-challenger))
+    (play-from-hand state :contestant "Franchise City" "New party")
+    (play-from-hand state :contestant "Accelerated Beta Test" "New party")
+    (core/reveal state :contestant (get-content state :party1 0))
+    (take-credits state :contestant 1)
+    (run-empty-locale state "Locale 2")
+    (click-prompt state :challenger "Steal")
+    (is (zero? (count (get-content state :party2))) "Agenda was stolen")
+    (is (= 2 (:agenda-point (get-challenger))) "Challenger stole 2 points")
+    (is (zero? (count (get-content state :party2)))
+        "Franchise City no longer placed")
+    (is (find-card "Franchise City" (:scored (get-contestant))) "Franchise City in contestant scored area")
+    (is (= 1 (:agenda-point (get-contestant))) "Contestant has 1 point")))
 
 (deftest full-immersion-recstudio
-  ;; Full Immmersion RecStudio - install directly, and via Interns
+  ;; Full Immmersion RecStudio - place directly, and via Interns
   (testing "Full test"
     (do-game
       (new-game
-        (default-corp ["Full Immersion RecStudio"
+        (default-contestant ["Full Immersion RecStudio"
                        (qty "Interns" 2)
                        (qty "Launch Campaign" 3)])
-        (default-runner))
-      (play-from-hand state :corp "Full Immersion RecStudio" "New remote")
-      (let [fir (get-content state :remote1 0)]
-        (core/rez state :corp fir)
-        (card-ability state :corp fir 0)
-        (click-card state :corp (find-card "Launch Campaign" (:hand (get-corp))))
+        (default-challenger))
+      (play-from-hand state :contestant "Full Immersion RecStudio" "New party")
+      (let [fir (get-content state :party1 0)]
+        (core/reveal state :contestant fir)
+        (card-ability state :contestant fir 0)
+        (click-card state :contestant (find-card "Launch Campaign" (:hand (get-contestant))))
         (let [lc (first (:hosted (refresh fir)))]
           (is lc "Launch Campaign hosted on Full Immersion RecStudio")
-          (core/rez state :corp lc)
-          (is (and (:installed (refresh lc)) (:rezzed (refresh lc))) "Rezzed Launch Campaign")
-          (take-credits state :corp)
-          (take-credits state :runner)
-          (is (= 5 (:credit (get-corp))) "Gained 2cr from Launch Campaign")
+          (core/reveal state :contestant lc)
+          (is (and (:placed (refresh lc)) (:revealed (refresh lc))) "Revealed Launch Campaign")
+          (take-credits state :contestant)
+          (take-credits state :challenger)
+          (is (= 5 (:credit (get-contestant))) "Gained 2cr from Launch Campaign")
           (is (= 4 (get-counters (refresh lc) :credit)) "4cr left on Launch Campaign")
-          (play-from-hand state :corp "Interns")
-          (click-card state :corp (find-card "Launch Campaign" (:hand (get-corp))))
-          (click-prompt state :corp (refresh fir))
-          (is (= 2 (count (:hosted (refresh fir)))) "Interns installed onto FIR")))))
-  (testing "hosting an asset with events does not double-register events. Issue #1827"
+          (play-from-hand state :contestant "Interns")
+          (click-card state :contestant (find-card "Launch Campaign" (:hand (get-contestant))))
+          (click-prompt state :contestant (refresh fir))
+          (is (= 2 (count (:hosted (refresh fir)))) "Interns placed onto FIR")))))
+  (testing "hosting an site with events does not double-register events. Issue #1827"
     (do-game
       (new-game
-        (default-corp ["Full Immersion RecStudio" "Sandburg" "Vanilla"
+        (default-contestant ["Full Immersion RecStudio" "Sandburg" "Vanilla"
                        "Oaktown Renovation"])
-        (default-runner))
-      (play-from-hand state :corp "Full Immersion RecStudio" "New remote")
-      (play-from-hand state :corp "Vanilla" "HQ")
-      (let [fir (get-content state :remote1 0)
-            van (get-ice state :hq 0)]
-        (core/rez state :corp fir)
-        (core/rez state :corp van)
-        (card-ability state :corp fir 0)
-        (click-card state :corp (find-card "Sandburg" (:hand (get-corp))))
-        (core/gain state :corp :credit 7 :click 3)
-        (core/rez state :corp (first (:hosted (refresh fir))))
+        (default-challenger))
+      (play-from-hand state :contestant "Full Immersion RecStudio" "New party")
+      (play-from-hand state :contestant "Vanilla" "HQ")
+      (let [fir (get-content state :party1 0)
+            van (get-character state :hq 0)]
+        (core/reveal state :contestant fir)
+        (core/reveal state :contestant van)
+        (card-ability state :contestant fir 0)
+        (click-card state :contestant (find-card "Sandburg" (:hand (get-contestant))))
+        (core/gain state :contestant :credit 7 :click 3)
+        (core/reveal state :contestant (first (:hosted (refresh fir))))
         (is (= 2 (:current-strength (refresh van))) "Vanilla at 2 strength")
-        (card-ability state :corp fir 0)
-        (click-card state :corp (find-card "Oaktown Renovation" (:hand (get-corp))))
-        (core/advance state :corp {:card (last (:hosted (refresh fir)))})
-        (is (= 11 (:credit (get-corp))) "Gained 1cr from advancing Oaktown")))))
+        (card-ability state :contestant fir 0)
+        (click-card state :contestant (find-card "Oaktown Renovation" (:hand (get-contestant))))
+        (core/advance state :contestant {:card (last (:hosted (refresh fir)))})
+        (is (= 11 (:credit (get-contestant))) "Gained 1cr from advancing Oaktown")))))
 
 (deftest fumiko-yamamori
   ;; Fumiko Yamamori
   (do-game
     (new-game
-      (default-corp ["Fumiko Yamamori"])
-      (default-runner))
-    (core/gain state :corp :credit 10)
-    (play-from-hand state :corp "Fumiko Yamamori" "New remote")
-    (let [fumiko (get-content state :remote1 0)]
-      (core/rez state :corp (refresh fumiko))
-      (core/psi-game state :corp (refresh fumiko)
+      (default-contestant ["Fumiko Yamamori"])
+      (default-challenger))
+    (core/gain state :contestant :credit 10)
+    (play-from-hand state :contestant "Fumiko Yamamori" "New party")
+    (let [fumiko (get-content state :party1 0)]
+      (core/reveal state :contestant (refresh fumiko))
+      (core/psi-game state :contestant (refresh fumiko)
                      {:equal  {:msg "resolve equal bets effect"}
                       :not-equal {:msg "resolve unequal bets effect"}})
-      (click-prompt state :corp "2 [Credits]")
-      (click-prompt state :runner "0 [Credits]")
-      (is (= 1 (-> (get-runner) :discard count)) "Runner should discard a card to meat damage"))))
+      (click-prompt state :contestant "2 [Credits]")
+      (click-prompt state :challenger "0 [Credits]")
+      (is (= 1 (-> (get-challenger) :discard count)) "Challenger should discard a card to meat damage"))))
 
-(deftest gene-splicer
-  ;; Gene Splicer
-  (testing "Runner accesses an unadvanced Gene Splicer and doesn't trash
-           ;; No net damage is dealt and Gene Splicer remains installed"
+(deftest gene-splcharacterr
+  ;; Gene Splcharacterr
+  (testing "Challenger accesses an unadvanced Gene Splcharacterr and doesn't discard
+           ;; No net damage is dealt and Gene Splcharacterr remains placed"
     (do-game
       (new-game
-        (default-corp ["Gene Splicer"])
-        (default-runner [(qty "Sure Gamble" 3)]))
-      (play-from-hand state :corp "Gene Splicer" "New remote")
-      (take-credits state :corp)
-      (run-empty-server state "Server 1")
-      (click-prompt state :runner "No action")
-      (is (zero? (count (:discard (get-runner)))) "Runner took no net damage")
-      (is (= "Gene Splicer" (:title (get-content state :remote1 0))) "Gene Splicer was not trashed")
-      (is (= 5 (:credit (get-runner))) "Runner spent no credits")))
-  (testing "Runner accesses an unadvanced Gene Splicer and trashes it.
-           No net damage is dealt and Gene Splicer is trashed"
+        (default-contestant ["Gene Splcharacterr"])
+        (default-challenger [(qty "Sure Gamble" 3)]))
+      (play-from-hand state :contestant "Gene Splcharacterr" "New party")
+      (take-credits state :contestant)
+      (run-empty-locale state "Locale 1")
+      (click-prompt state :challenger "No action")
+      (is (zero? (count (:discard (get-challenger)))) "Challenger took no net damage")
+      (is (= "Gene Splcharacterr" (:title (get-content state :party1 0))) "Gene Splcharacterr was not discarded")
+      (is (= 5 (:credit (get-challenger))) "Challenger spent no credits")))
+  (testing "Challenger accesses an unadvanced Gene Splcharacterr and discards it.
+           No net damage is dealt and Gene Splcharacterr is discarded"
     (do-game
       (new-game
-        (default-corp ["Gene Splicer"])
-        (default-runner [(qty "Sure Gamble" 3)]))
-      (play-from-hand state :corp "Gene Splicer" "New remote")
-      (take-credits state :corp)
-      (run-empty-server state "Server 1")
-      (click-prompt state :runner "Pay 1 [Credits] to trash")
-      (is (zero? (count (:discard (get-runner)))) "Runner took no net damage")
-      (is (= nil (get-content state :remote1 0)) "Gene Splicer is no longer in remote")
-      (is (= (:title (last (:discard (get-corp)))) "Gene Splicer") "Gene Splicer trashed")
-      (is (= 4 (:credit (get-runner))) "Runner spent 1 credit to trash Gene Splicer")))
-  (testing "Runner accesses a single-advanced Gene Splicer and doesn't trash.
-           1 net damage is dealt and Gene Splicer remains installed"
+        (default-contestant ["Gene Splcharacterr"])
+        (default-challenger [(qty "Sure Gamble" 3)]))
+      (play-from-hand state :contestant "Gene Splcharacterr" "New party")
+      (take-credits state :contestant)
+      (run-empty-locale state "Locale 1")
+      (click-prompt state :challenger "Pay 1 [Credits] to discard")
+      (is (zero? (count (:discard (get-challenger)))) "Challenger took no net damage")
+      (is (= nil (get-content state :party1 0)) "Gene Splcharacterr is no longer in party")
+      (is (= (:title (last (:discard (get-contestant)))) "Gene Splcharacterr") "Gene Splcharacterr discarded")
+      (is (= 4 (:credit (get-challenger))) "Challenger spent 1 credit to discard Gene Splcharacterr")))
+  (testing "Challenger accesses a single-advanced Gene Splcharacterr and doesn't discard.
+           1 net damage is dealt and Gene Splcharacterr remains placed"
     (do-game
       (new-game
-        (default-corp ["Gene Splicer"])
-        (default-runner [(qty "Sure Gamble" 3)]))
-      (play-from-hand state :corp "Gene Splicer" "New remote")
-      (core/add-counter state :corp (get-content state :remote1 0) :advancement 1)
-      (take-credits state :corp)
-      (run-empty-server state "Server 1")
-      (click-prompt state :runner "No action")
-      (is (= 1 (count (:discard (get-runner)))) "Runner took 1 net damage")
-      (is (= "Gene Splicer" (:title (get-content state :remote1 0))) "Gene Splicer was not trashed")
-      (is (= 5 (:credit (get-runner))) "Runner spent no credits")))
-  (testing "Runner accesses a single-advanced Gene Splicer and trashes it.
-           1 net damage is dealt and Gene Splicer is trashed"
+        (default-contestant ["Gene Splcharacterr"])
+        (default-challenger [(qty "Sure Gamble" 3)]))
+      (play-from-hand state :contestant "Gene Splcharacterr" "New party")
+      (core/add-counter state :contestant (get-content state :party1 0) :advancement 1)
+      (take-credits state :contestant)
+      (run-empty-locale state "Locale 1")
+      (click-prompt state :challenger "No action")
+      (is (= 1 (count (:discard (get-challenger)))) "Challenger took 1 net damage")
+      (is (= "Gene Splcharacterr" (:title (get-content state :party1 0))) "Gene Splcharacterr was not discarded")
+      (is (= 5 (:credit (get-challenger))) "Challenger spent no credits")))
+  (testing "Challenger accesses a single-advanced Gene Splcharacterr and discards it.
+           1 net damage is dealt and Gene Splcharacterr is discarded"
     (do-game
       (new-game
-        (default-corp ["Gene Splicer"])
-        (default-runner [(qty "Sure Gamble" 3)]))
-      (play-from-hand state :corp "Gene Splicer" "New remote")
-      (core/add-counter state :corp (get-content state :remote1 0) :advancement 1)
-      (take-credits state :corp)
-      (run-empty-server state "Server 1")
-      (click-prompt state :runner "Pay 1 [Credits] to trash")
-      (is (= 1 (count (:discard (get-runner)))) "Runner took 1 net damage")
-      (is (= nil (get-content state :remote1 0)) "Gene Splicer is no longer in remote")
-      (is (= (:title (last (:discard (get-corp)))) "Gene Splicer") "Gene Splicer trashed")
-      (is (= 4 (:credit (get-runner))) "Runner spent 1 credit to trash Gene Splicer")))
-  (testing "Runner accesses a double-advanced Gene Splicer and doesn't trash
-           2 net damage is dealt and Gene Splicer remains installed"
+        (default-contestant ["Gene Splcharacterr"])
+        (default-challenger [(qty "Sure Gamble" 3)]))
+      (play-from-hand state :contestant "Gene Splcharacterr" "New party")
+      (core/add-counter state :contestant (get-content state :party1 0) :advancement 1)
+      (take-credits state :contestant)
+      (run-empty-locale state "Locale 1")
+      (click-prompt state :challenger "Pay 1 [Credits] to discard")
+      (is (= 1 (count (:discard (get-challenger)))) "Challenger took 1 net damage")
+      (is (= nil (get-content state :party1 0)) "Gene Splcharacterr is no longer in party")
+      (is (= (:title (last (:discard (get-contestant)))) "Gene Splcharacterr") "Gene Splcharacterr discarded")
+      (is (= 4 (:credit (get-challenger))) "Challenger spent 1 credit to discard Gene Splcharacterr")))
+  (testing "Challenger accesses a double-advanced Gene Splcharacterr and doesn't discard
+           2 net damage is dealt and Gene Splcharacterr remains placed"
     (do-game
       (new-game
-        (default-corp ["Gene Splicer"])
-        (default-runner [(qty "Sure Gamble" 3)]))
-      (play-from-hand state :corp "Gene Splicer" "New remote")
-      (core/add-counter state :corp (get-content state :remote1 0) :advancement 2)
-      (take-credits state :corp)
-      (run-empty-server state "Server 1")
-      (click-prompt state :runner "No action")
-      (is (= 2 (count (:discard (get-runner)))) "Runner took 2 net damage")
-      (is (= "Gene Splicer" (:title (get-content state :remote1 0))) "Gene Splicer was not trashed")
-      (is (= 5 (:credit (get-runner))) "Runner spent no credits")))
-  (testing "Runner accesses a double-advanced Gene Splicer and trashes it.
-           2 net damage is dealt and Gene Splicer is trashed"
+        (default-contestant ["Gene Splcharacterr"])
+        (default-challenger [(qty "Sure Gamble" 3)]))
+      (play-from-hand state :contestant "Gene Splcharacterr" "New party")
+      (core/add-counter state :contestant (get-content state :party1 0) :advancement 2)
+      (take-credits state :contestant)
+      (run-empty-locale state "Locale 1")
+      (click-prompt state :challenger "No action")
+      (is (= 2 (count (:discard (get-challenger)))) "Challenger took 2 net damage")
+      (is (= "Gene Splcharacterr" (:title (get-content state :party1 0))) "Gene Splcharacterr was not discarded")
+      (is (= 5 (:credit (get-challenger))) "Challenger spent no credits")))
+  (testing "Challenger accesses a double-advanced Gene Splcharacterr and discards it.
+           2 net damage is dealt and Gene Splcharacterr is discarded"
     (do-game
       (new-game
-        (default-corp ["Gene Splicer"])
-        (default-runner [(qty "Sure Gamble" 3)]))
-      (play-from-hand state :corp "Gene Splicer" "New remote")
-      (core/add-counter state :corp (get-content state :remote1 0) :advancement 2)
-      (take-credits state :corp)
-      (run-empty-server state "Server 1")
-      (click-prompt state :runner "Pay 1 [Credits] to trash")
-      (is (= 2 (count (:discard (get-runner)))) "Runner took 2 net damage")
-      (is (= nil (get-content state :remote1 0)) "Gene Splicer is no longer in remote")
-      (is (= (:title (last (:discard (get-corp)))) "Gene Splicer") "Gene Splicer trashed")
-      (is (= 4 (:credit (get-runner))) "Runner spent 1 credit to trash Gene Splicer")))
-  (testing "Corp triple-advances a Gene Splicer and uses its ability to add to their score area as a 1 point agenda"
+        (default-contestant ["Gene Splcharacterr"])
+        (default-challenger [(qty "Sure Gamble" 3)]))
+      (play-from-hand state :contestant "Gene Splcharacterr" "New party")
+      (core/add-counter state :contestant (get-content state :party1 0) :advancement 2)
+      (take-credits state :contestant)
+      (run-empty-locale state "Locale 1")
+      (click-prompt state :challenger "Pay 1 [Credits] to discard")
+      (is (= 2 (count (:discard (get-challenger)))) "Challenger took 2 net damage")
+      (is (= nil (get-content state :party1 0)) "Gene Splcharacterr is no longer in party")
+      (is (= (:title (last (:discard (get-contestant)))) "Gene Splcharacterr") "Gene Splcharacterr discarded")
+      (is (= 4 (:credit (get-challenger))) "Challenger spent 1 credit to discard Gene Splcharacterr")))
+  (testing "Contestant triple-advances a Gene Splcharacterr and uses its ability to add to their score area as a 1 point agenda"
     (do-game
       (new-game
-        (default-corp [(qty "Gene Splicer" 2) (qty "Ice Wall" 3) (qty "Vanilla" 2)])
-        (default-runner [(qty "Sure Gamble" 3)]))
-      (play-from-hand state :corp "Gene Splicer" "New remote")
-      (let [gs (get-content state :remote1 0)]
-        (core/add-counter state :corp gs :advancement 2)
-        (take-credits state :runner)
-        (core/add-counter state :corp (refresh gs) :advancement 1)
-        (core/rez state :corp (refresh gs))
-        (card-ability state :corp (refresh gs) 0)
-        (is (= nil (get-content state :remote1 0)) "Gene Splicer is no longer in remote")
-        (is (= 1 (:agendapoints (get-scored state :corp 0))) "Gene Splicer added to Corp score area")))))
+        (default-contestant [(qty "Gene Splcharacterr" 2) (qty "Ice Wall" 3) (qty "Vanilla" 2)])
+        (default-challenger [(qty "Sure Gamble" 3)]))
+      (play-from-hand state :contestant "Gene Splcharacterr" "New party")
+      (let [gs (get-content state :party1 0)]
+        (core/add-counter state :contestant gs :advancement 2)
+        (take-credits state :challenger)
+        (core/add-counter state :contestant (refresh gs) :advancement 1)
+        (core/reveal state :contestant (refresh gs))
+        (card-ability state :contestant (refresh gs) 0)
+        (is (= nil (get-content state :party1 0)) "Gene Splcharacterr is no longer in party")
+        (is (= 1 (:agendapoints (get-scored state :contestant 0))) "Gene Splcharacterr added to Contestant score area")))))
 
 (deftest genetics-pavilion
-  ;; Genetics Pavilion - Limit Runner to 2 draws per turn, but only during Runner's turn
+  ;; Genetics Pavilion - Limit Challenger to 2 draws per turn, but only during Challenger's turn
   (testing "Basic test"
     (do-game
-      (new-game (default-corp ["Genetics Pavilion"])
-                (default-runner ["Diesel" (qty "Sure Gamble" 3) "Sports Hopper"]))
-      (play-from-hand state :corp "Genetics Pavilion" "New remote")
-      (let [gp (get-content state :remote1 0)]
-        (take-credits state :corp)
-        (core/rez state :corp gp)
-        (core/move state :runner (find-card "Sure Gamble" (:hand (get-runner))) :deck)
-        (core/move state :runner (find-card "Sure Gamble" (:hand (get-runner))) :deck)
-        (core/move state :runner (find-card "Sure Gamble" (:hand (get-runner))) :deck)
-        (play-from-hand state :runner "Sports Hopper")
-        (play-from-hand state :runner "Diesel")
-        (is (= 2 (count (:hand (get-runner)))) "Drew only 2 cards because of Genetics Pavilion")
-        (take-credits state :runner)
-        (core/move state :runner (find-card "Sure Gamble" (:hand (get-runner))) :deck)
-        (core/move state :runner (find-card "Sure Gamble" (:hand (get-runner))) :deck)
-        (let [hopper (get-hardware state 0)]
-          (card-ability state :runner hopper 0)
-          (is (= 3 (count (:hand (get-runner)))) "Able to draw 3 cards during Corp's turn")
-          (core/derez state :corp (refresh gp))
-          (take-credits state :corp)
-          (core/move state :runner (find-card "Sure Gamble" (:hand (get-runner))) :deck)
-          (core/move state :runner (find-card "Sure Gamble" (:hand (get-runner))) :deck)
-          (core/move state :runner (find-card "Sure Gamble" (:hand (get-runner))) :deck)
-          (core/move state :runner (find-card "Diesel" (:discard (get-runner))) :hand)
-          (is (= 1 (count (:hand (get-runner)))))
-          (play-from-hand state :runner "Diesel")
-          (is (= 3 (count (:hand (get-runner)))) "Drew 3 cards with Diesel")
-          (core/move state :runner (find-card "Sure Gamble" (:hand (get-runner))) :deck)
-          (core/rez state :corp (refresh gp))
-          (core/draw state :runner)
-          (is (= 2 (count (:hand (get-runner)))) "No card drawn; GP counts cards drawn prior to rez")))))
+      (new-game (default-contestant ["Genetics Pavilion"])
+                (default-challenger ["Diesel" (qty "Sure Gamble" 3) "Sports Hopper"]))
+      (play-from-hand state :contestant "Genetics Pavilion" "New party")
+      (let [gp (get-content state :party1 0)]
+        (take-credits state :contestant)
+        (core/reveal state :contestant gp)
+        (core/move state :challenger (find-card "Sure Gamble" (:hand (get-challenger))) :deck)
+        (core/move state :challenger (find-card "Sure Gamble" (:hand (get-challenger))) :deck)
+        (core/move state :challenger (find-card "Sure Gamble" (:hand (get-challenger))) :deck)
+        (play-from-hand state :challenger "Sports Hopper")
+        (play-from-hand state :challenger "Diesel")
+        (is (= 2 (count (:hand (get-challenger)))) "Drew only 2 cards because of Genetics Pavilion")
+        (take-credits state :challenger)
+        (core/move state :challenger (find-card "Sure Gamble" (:hand (get-challenger))) :deck)
+        (core/move state :challenger (find-card "Sure Gamble" (:hand (get-challenger))) :deck)
+        (let [hopper (get-hazard state 0)]
+          (card-ability state :challenger hopper 0)
+          (is (= 3 (count (:hand (get-challenger)))) "Able to draw 3 cards during Contestant's turn")
+          (core/hide state :contestant (refresh gp))
+          (take-credits state :contestant)
+          (core/move state :challenger (find-card "Sure Gamble" (:hand (get-challenger))) :deck)
+          (core/move state :challenger (find-card "Sure Gamble" (:hand (get-challenger))) :deck)
+          (core/move state :challenger (find-card "Sure Gamble" (:hand (get-challenger))) :deck)
+          (core/move state :challenger (find-card "Diesel" (:discard (get-challenger))) :hand)
+          (is (= 1 (count (:hand (get-challenger)))))
+          (play-from-hand state :challenger "Diesel")
+          (is (= 3 (count (:hand (get-challenger)))) "Drew 3 cards with Diesel")
+          (core/move state :challenger (find-card "Sure Gamble" (:hand (get-challenger))) :deck)
+          (core/reveal state :contestant (refresh gp))
+          (core/draw state :challenger)
+          (is (= 2 (count (:hand (get-challenger)))) "No card drawn; GP counts cards drawn prior to reveal")))))
   (testing "vs Fisk Investment Seminar"
     (do-game
-      (new-game (default-corp ["Genetics Pavilion" (qty "Hedge Fund" 3)])
-                (default-runner ["Fisk Investment Seminar" (qty "Sure Gamble" 3)]))
-      (play-from-hand state :corp "Genetics Pavilion" "New remote")
-      (let [gp (get-content state :remote1 0)]
-        (take-credits state :corp)
-        (core/rez state :corp gp)
-        (core/move state :corp (find-card "Hedge Fund" (:hand (get-corp))) :deck)
-        (core/move state :corp (find-card "Hedge Fund" (:hand (get-corp))) :deck)
-        (core/move state :corp (find-card "Hedge Fund" (:hand (get-corp))) :deck)
-        (core/move state :runner (find-card "Sure Gamble" (:hand (get-runner))) :deck)
-        (core/move state :runner (find-card "Sure Gamble" (:hand (get-runner))) :deck)
-        (core/move state :runner (find-card "Sure Gamble" (:hand (get-runner))) :deck)
-        (is (= 1 (count (:hand (get-runner)))))
-        (is (zero? (count (:hand (get-corp)))))
-        (play-from-hand state :runner "Fisk Investment Seminar")
-        (is (= 2 (count (:hand (get-runner)))) "Drew only 2 cards because of Genetics Pavilion")
-        (is (= 3 (count (:hand (get-corp)))) "Drew all 3 cards"))))
+      (new-game (default-contestant ["Genetics Pavilion" (qty "Hedge Fund" 3)])
+                (default-challenger ["Fisk Investment Seminar" (qty "Sure Gamble" 3)]))
+      (play-from-hand state :contestant "Genetics Pavilion" "New party")
+      (let [gp (get-content state :party1 0)]
+        (take-credits state :contestant)
+        (core/reveal state :contestant gp)
+        (core/move state :contestant (find-card "Hedge Fund" (:hand (get-contestant))) :deck)
+        (core/move state :contestant (find-card "Hedge Fund" (:hand (get-contestant))) :deck)
+        (core/move state :contestant (find-card "Hedge Fund" (:hand (get-contestant))) :deck)
+        (core/move state :challenger (find-card "Sure Gamble" (:hand (get-challenger))) :deck)
+        (core/move state :challenger (find-card "Sure Gamble" (:hand (get-challenger))) :deck)
+        (core/move state :challenger (find-card "Sure Gamble" (:hand (get-challenger))) :deck)
+        (is (= 1 (count (:hand (get-challenger)))))
+        (is (zero? (count (:hand (get-contestant)))))
+        (play-from-hand state :challenger "Fisk Investment Seminar")
+        (is (= 2 (count (:hand (get-challenger)))) "Drew only 2 cards because of Genetics Pavilion")
+        (is (= 3 (count (:hand (get-contestant)))) "Drew all 3 cards"))))
   (testing "Mr. Li interaction. #1594"
     (do-game
-      (new-game (default-corp ["Genetics Pavilion"])
-                (default-runner ["Mr. Li" "Account Siphon" "Faerie"
+      (new-game (default-contestant ["Genetics Pavilion"])
+                (default-challenger ["Mr. Li" "Account Siphon" "Faerie"
                                  "Sure Gamble" "John Masanori" "Desperado"]))
-      (starting-hand state :runner ["Mr. Li"])
-      (play-from-hand state :corp "Genetics Pavilion" "New remote")
-      (core/rez state :corp (get-content state :remote1 0))
-      (take-credits state :corp)
-      (play-from-hand state :runner "Mr. Li")
-      (let [mrli (get-resource state 0)]
-        (is (zero? (count (:hand (get-runner)))))
+      (starting-hand state :challenger ["Mr. Li"])
+      (play-from-hand state :contestant "Genetics Pavilion" "New party")
+      (core/reveal state :contestant (get-content state :party1 0))
+      (take-credits state :contestant)
+      (play-from-hand state :challenger "Mr. Li")
+      (let [mrli (get-radicle state 0)]
+        (is (zero? (count (:hand (get-challenger)))))
         ; use Mr. Li with 2 draws allowed
-        (card-ability state :runner mrli 0)
-        (is (= 2 (count (:hand (get-runner)))))
-        (click-card state :runner (first (:hand (get-runner))))
-        (is (= 1 (count (:hand (get-runner)))))
+        (card-ability state :challenger mrli 0)
+        (is (= 2 (count (:hand (get-challenger)))))
+        (click-card state :challenger (first (:hand (get-challenger))))
+        (is (= 1 (count (:hand (get-challenger)))))
         ; use Mr. Li with 0 draws allowed
-        (card-ability state :runner mrli 0)
-        (is (= 1 (count (:hand (get-runner)))))
-        (click-card state :runner (first (:hand (get-runner)))) ; will fail because not a valid target
-        (click-prompt state :runner "Done") ; cancel out
-        (take-credits state :runner)
-        (take-credits state :corp)
-        (core/draw state :runner)
-        (is (= 2 (count (:hand (get-runner)))))
+        (card-ability state :challenger mrli 0)
+        (is (= 1 (count (:hand (get-challenger)))))
+        (click-card state :challenger (first (:hand (get-challenger)))) ; will fail because not a valid target
+        (click-prompt state :challenger "Done") ; cancel out
+        (take-credits state :challenger)
+        (take-credits state :contestant)
+        (core/draw state :challenger)
+        (is (= 2 (count (:hand (get-challenger)))))
         ; use Mr. Li with 1 draw allowed
-        (card-ability state :runner mrli 0)
-        (is (= 3 (count (:hand (get-runner)))))
-        (click-card state :runner (first (:hand (get-runner)))) ; will fail
-        (click-card state :runner (second (:hand (get-runner)))) ; will fail
-        (click-card state :runner (second (rest (:hand (get-runner)))))
-        (is (= 2 (count (:hand (get-runner)))))))))
+        (card-ability state :challenger mrli 0)
+        (is (= 3 (count (:hand (get-challenger)))))
+        (click-card state :challenger (first (:hand (get-challenger)))) ; will fail
+        (click-card state :challenger (second (:hand (get-challenger)))) ; will fail
+        (click-card state :challenger (second (rest (:hand (get-challenger)))))
+        (is (= 2 (count (:hand (get-challenger)))))))))
 
 (deftest ghost-branch
-  ;; Ghost Branch - Advanceable; give the Runner tags equal to advancements when accessed
+  ;; Ghost Branch - Advanceable; give the Challenger tags equal to advancements when accessed
   (testing "Basic test"
     (do-game
-      (new-game (default-corp ["Ghost Branch"])
-                (default-runner))
-      (play-from-hand state :corp "Ghost Branch" "New remote")
-      (let [gb (get-content state :remote1 0)]
-        (core/advance state :corp {:card (refresh gb)})
-        (core/advance state :corp {:card (refresh gb)})
+      (new-game (default-contestant ["Ghost Branch"])
+                (default-challenger))
+      (play-from-hand state :contestant "Ghost Branch" "New party")
+      (let [gb (get-content state :party1 0)]
+        (core/advance state :contestant {:card (refresh gb)})
+        (core/advance state :contestant {:card (refresh gb)})
         (is (= 2 (get-counters (refresh gb) :advancement)))
-        (take-credits state :corp)
-        (run-empty-server state "Server 1")
-        (click-prompt state :corp "Yes") ; choose to do the optional ability
-        (is (= 2 (:tag (get-runner))) "Runner given 2 tags"))))
+        (take-credits state :contestant)
+        (run-empty-locale state "Locale 1")
+        (click-prompt state :contestant "Yes") ; choose to do the optional ability
+        (is (= 2 (:tag (get-challenger))) "Challenger given 2 tags"))))
   (testing "with Dedicated Response Team"
     (do-game
-      (new-game (default-corp ["Ghost Branch" "Dedicated Response Team"])
-                (default-runner))
-      (play-from-hand state :corp "Ghost Branch" "New remote")
-      (play-from-hand state :corp "Dedicated Response Team" "New remote")
-      (core/gain state :corp :click 1)
-      (let [gb (get-content state :remote1 0)
-            drt (get-content state :remote2 0)]
-        (core/advance state :corp {:card gb})
-        (core/advance state :corp {:card (refresh gb)})
-        (is (= 2 (get-counters (refresh gb) :advancement)) "Ghost Branch advanced twice")
-        (take-credits state :corp)
-        (run-on state "Server 1")
-        (core/rez state :corp drt)
+      (new-game (default-contestant ["Ghost Branch" "Dedicated Response Team"])
+                (default-challenger))
+      (play-from-hand state :contestant "Ghost Branch" "New party")
+      (play-from-hand state :contestant "Dedicated Response Team" "New party")
+      (core/gain state :contestant :click 1)
+      (let [gb (get-content state :party1 0)
+            drt (get-content state :party2 0)]
+        (core/advance state :contestant {:card gb})
+        (core/advance state :contestant {:card (refresh gb)})
+        (is (= 2 (get-counters (refresh gb) :advancement)) "Ghost Branch advanced twcharacter")
+        (take-credits state :contestant)
+        (run-on state "Locale 1")
+        (core/reveal state :contestant drt)
         (run-successful state)
-        (is (prompt-is-type? state :runner :waiting) "Runner has prompt to wait for Ghost Branch")
-        (click-prompt state :corp "Yes")
-        (is (= 2 (:tag (get-runner))) "Runner has 2 tags")
-        (click-prompt state :runner "Pay 0 [Credits] to trash")
-        (is (= 2 (count (:discard (get-runner)))) "Runner took 2 meat damage")))))
+        (is (prompt-is-type? state :challenger :waiting) "Challenger has prompt to wait for Ghost Branch")
+        (click-prompt state :contestant "Yes")
+        (is (= 2 (:tag (get-challenger))) "Challenger has 2 tags")
+        (click-prompt state :challenger "Pay 0 [Credits] to discard")
+        (is (= 2 (count (:discard (get-challenger)))) "Challenger took 2 meat damage")))))
 
 (deftest grndl-refinery
   ;; GRNDL Refinery
   (do-game
-    (new-game (default-corp ["GRNDL Refinery"])
-              (default-runner))
-    (core/gain state :corp :click 100 :credit 100)
+    (new-game (default-contestant ["GRNDL Refinery"])
+              (default-challenger))
+    (core/gain state :contestant :click 100 :credit 100)
     (dotimes [i 5]
-      (play-from-hand state :corp "GRNDL Refinery" "New remote")
-      (let [grndl (get-content state (keyword (str "remote" (inc i))) 0)
-            credits (- (:credit (get-corp)) i)]
+      (play-from-hand state :contestant "GRNDL Refinery" "New party")
+      (let [grndl (get-content state (keyword (str "party" (inc i))) 0)
+            credits (- (:credit (get-contestant)) i)]
         (when (pos? i)
           (advance state (refresh grndl) i)
           (is (= i (get-counters (refresh grndl) :advancement)) (str "GRNDL Refinery should have " i " advancement counters on it")))
-        (card-ability state :corp (refresh grndl) 0)
-        (is (= (+ credits (* i 4)) (:credit (get-corp))) (str "Corp should gain " (* i 4) " credits"))
-        (is (= 1 (-> (get-corp) :discard count)) "Archives should have 1 card in it")
-        (is (= "GRNDL Refinery" (-> (get-corp) :discard first :title)) "Only card in Archives should be GRNDL Refinery")
-        (core/move state :corp (find-card "GRNDL Refinery" (:discard (get-corp))) :hand)))))
+        (card-ability state :contestant (refresh grndl) 0)
+        (is (= (+ credits (* i 4)) (:credit (get-contestant))) (str "Contestant should gain " (* i 4) " credits"))
+        (is (= 1 (-> (get-contestant) :discard count)) "Archives should have 1 card in it")
+        (is (= "GRNDL Refinery" (-> (get-contestant) :discard first :title)) "Only card in Archives should be GRNDL Refinery")
+        (core/move state :contestant (find-card "GRNDL Refinery" (:discard (get-contestant))) :hand)))))
 
 (deftest haas-arcology-ai
   ;; Haas Arcology AI - Click and advancement to gain 2 clicks, once per turn
   (do-game
-    (new-game (default-corp ["Haas Arcology AI"])
-              (default-runner))
-    (core/gain state :corp :click 1)
-    (play-from-hand state :corp "Haas Arcology AI" "New remote")
-    (let [haa (get-content state :remote1 0)]
+    (new-game (default-contestant ["Haas Arcology AI"])
+              (default-challenger))
+    (core/gain state :contestant :click 1)
+    (play-from-hand state :contestant "Haas Arcology AI" "New party")
+    (let [haa (get-content state :party1 0)]
       (advance state haa 2)
-      (core/rez state :corp (refresh haa))
-      (is (= 1 (:click (get-corp))))
+      (core/reveal state :contestant (refresh haa))
+      (is (= 1 (:click (get-contestant))))
       (is (= 2 (get-counters (refresh haa) :advancement)))
-      (card-ability state :corp (refresh haa) 0)
+      (card-ability state :contestant (refresh haa) 0)
       (is (= 1 (get-counters (refresh haa) :advancement)) "Spent 1 advancement")
-      (is (= 2 (:click (get-corp))) "Spent last click to gain 2 clicks")
-      (card-ability state :corp (refresh haa) 0)
-      (is (= 1 (get-counters (refresh haa) :advancement)) "Can't use twice in a turn")
-      (is (= 2 (:click (get-corp))) "Didn't spend a click"))))
+      (is (= 2 (:click (get-contestant))) "Spent last click to gain 2 clicks")
+      (card-ability state :contestant (refresh haa) 0)
+      (is (= 1 (get-counters (refresh haa) :advancement)) "Can't use twcharacter in a turn")
+      (is (= 2 (:click (get-contestant))) "Didn't spend a click"))))
 
 (deftest honeyfarm
   ;; Honeyfarm - lose one credit on access
   (do-game
-    (new-game (default-corp [(qty "Honeyfarm" 3)])
-              (default-runner))
-    (trash-from-hand state :corp "Honeyfarm")
-    (play-from-hand state :corp "Honeyfarm" "New remote")
-    (take-credits state :corp)
-    (run-empty-server state "Server 1")
-    (is (= 4 (:credit (get-runner))))
-    (run-empty-server state "Archives")
-    (is (= 3 (:credit (get-runner))))
-    (run-empty-server state "HQ")
-    (is (= 2 (:credit (get-runner))))))
+    (new-game (default-contestant [(qty "Honeyfarm" 3)])
+              (default-challenger))
+    (discard-from-hand state :contestant "Honeyfarm")
+    (play-from-hand state :contestant "Honeyfarm" "New party")
+    (take-credits state :contestant)
+    (run-empty-locale state "Locale 1")
+    (is (= 4 (:credit (get-challenger))))
+    (run-empty-locale state "Archives")
+    (is (= 3 (:credit (get-challenger))))
+    (run-empty-locale state "HQ")
+    (is (= 2 (:credit (get-challenger))))))
 
 (deftest hostile-infrastructure
-  ;; Hostile Infrastructure - do 1 net damage when runner trashes a corp card
+  ;; Hostile Infrastructure - do 1 net damage when challenger discards a contestant card
   (do-game
-    (new-game (default-corp [(qty "Hostile Infrastructure" 3)])
-              (default-runner))
-    (core/gain state :runner :credit 50)
-    (play-from-hand state :corp "Hostile Infrastructure" "New remote")
-    (core/rez state :corp (get-content state :remote1 0))
-    (take-credits state :corp)
-    (run-empty-server state :hq)
-    (click-prompt state :runner "Pay 5 [Credits] to trash")
-    (is (= 1 (count (:discard (get-runner)))) "Took 1 net damage")
-    (run-empty-server state :remote1)
-    (click-prompt state :runner "Pay 5 [Credits] to trash")
-    (is (= 2 (count (:discard (get-runner)))) "Took 1 net damage")))
+    (new-game (default-contestant [(qty "Hostile Infrastructure" 3)])
+              (default-challenger))
+    (core/gain state :challenger :credit 50)
+    (play-from-hand state :contestant "Hostile Infrastructure" "New party")
+    (core/reveal state :contestant (get-content state :party1 0))
+    (take-credits state :contestant)
+    (run-empty-locale state :hq)
+    (click-prompt state :challenger "Pay 5 [Credits] to discard")
+    (is (= 1 (count (:discard (get-challenger)))) "Took 1 net damage")
+    (run-empty-locale state :party1)
+    (click-prompt state :challenger "Pay 5 [Credits] to discard")
+    (is (= 2 (count (:discard (get-challenger)))) "Took 1 net damage")))
 
 (deftest hyoubu-research-facility
   ;; Hyoubu Research Facility
   (do-game
-    (new-game (default-corp ["Hyoubu Research Facility" "Snowflake"])
-              (default-runner))
-    (play-from-hand state :corp "Hyoubu Research Facility" "New remote")
-    (play-from-hand state :corp "Snowflake" "HQ")
-    (let [hrf (get-content state :remote1 0)
-          sf (get-ice state :hq 0)]
-      (take-credits state :corp)
+    (new-game (default-contestant ["Hyoubu Research Facility" "Snowflake"])
+              (default-challenger))
+    (play-from-hand state :contestant "Hyoubu Research Facility" "New party")
+    (play-from-hand state :contestant "Snowflake" "HQ")
+    (let [hrf (get-content state :party1 0)
+          sf (get-character state :hq 0)]
+      (take-credits state :contestant)
       (run-on state "HQ")
-      (core/rez state :corp hrf)
-      (core/rez state :corp sf)
-      (card-subroutine state :corp sf 0)
-      (click-prompt state :corp "2 [Credits]")
-      (click-prompt state :runner "0 [Credits]")
-      (is (= 5 (:credit (get-corp))) "Gained 2c from Hyoubu")
+      (core/reveal state :contestant hrf)
+      (core/reveal state :contestant sf)
+      (card-subroutine state :contestant sf 0)
+      (click-prompt state :contestant "2 [Credits]")
+      (click-prompt state :challenger "0 [Credits]")
+      (is (= 5 (:credit (get-contestant))) "Gained 2c from Hyoubu")
       (run-on state "HQ")
-      (card-subroutine state :corp sf 0)
-      (click-prompt state :corp "2 [Credits]")
-      (click-prompt state :runner "0 [Credits]")
-      (is (= 3 (:credit (get-corp))) "No credits gained from Hyoubu"))))
+      (card-subroutine state :contestant sf 0)
+      (click-prompt state :contestant "2 [Credits]")
+      (click-prompt state :challenger "0 [Credits]")
+      (is (= 3 (:credit (get-contestant))) "No credits gained from Hyoubu"))))
 
 (deftest ibrahim-salem
   ;; Ibrahim Salem
   (do-game
-    (new-game (default-corp ["Hostile Takeover" "Ibrahim Salem"])
-              (default-runner ["Sure Gamble" "Astrolabe" "Paperclip" "Daily Casts"]))
+    (new-game (default-contestant ["Hostile Takeover" "Ibrahim Salem"])
+              (default-challenger ["Sure Gamble" "Astrolabe" "Paperclip" "Daily Casts"]))
     (play-and-score state "Hostile Takeover")
-    (play-from-hand state :corp "Ibrahim Salem" "New remote")
-    (let [is (get-content state :remote2 0)]
-      (core/rez state :corp (refresh is))
-      (click-card state :corp (-> (get-corp) :scored first))
+    (play-from-hand state :contestant "Ibrahim Salem" "New party")
+    (let [is (get-content state :party2 0)]
+      (core/reveal state :contestant (refresh is))
+      (click-card state :contestant (-> (get-contestant) :scored first))
       (doseq [[i [card-type card-name]]
               (map-indexed vector ['("Event" "Sure Gamble")
-                                   '("Hardware" "Astrolabe")
-                                   '("Program" "Paperclip")
-                                   '("Resource" "Daily Casts")])]
-        (take-credits state :corp)
-        (take-credits state :runner)
-        (is (:corp-phase-12 @state) "Corp is in Step 1.2")
-        (card-ability state :corp is 0)
-        (click-prompt state :corp card-type)
-        (click-prompt state :corp (find-card card-name (:hand (get-runner))))
-        (core/end-phase-12 state :corp nil)
-        (is (= (inc i) (-> (get-runner) :discard count)))))))
+                                   '("Hazard" "Astrolabe")
+                                   '("Resource" "Paperclip")
+                                   '("Radicle" "Daily Casts")])]
+        (take-credits state :contestant)
+        (take-credits state :challenger)
+        (is (:contestant-phase-12 @state) "Contestant is in Step 1.2")
+        (card-ability state :contestant is 0)
+        (click-prompt state :contestant card-type)
+        (click-prompt state :contestant (find-card card-name (:hand (get-challenger))))
+        (core/end-phase-12 state :contestant nil)
+        (is (= (inc i) (-> (get-challenger) :discard count)))))))
 
 (deftest illegal-arms-factory
-  ;; Illegal Arms Factory; draw a card, gain a credit, bad pub when trashed while rezzed
+  ;; Illegal Arms Factory; draw a card, gain a credit, bad pub when discarded while revealed
   (do-game
-    (new-game (default-corp ["Hedge Fund"
+    (new-game (default-contestant ["Hedge Fund"
                              "Beanstalk Royalties"
                              "IPO"
                              (qty "Illegal Arms Factory" 3)])
-              (default-runner))
-    (core/gain state :runner :credit 20)
-    (core/move state :corp (find-card "IPO" (:hand (get-corp))) :deck)
-    (core/move state :corp (find-card "Hedge Fund" (:hand (get-corp))) :deck)
-    (core/move state :corp (find-card "Beanstalk Royalties" (:hand (get-corp))) :deck)
-    (play-from-hand state :corp "Illegal Arms Factory" "New remote")
-    (play-from-hand state :corp "Illegal Arms Factory" "New remote")
-    (let [iaf (get-content state :remote2 0)]
-      (core/rez state :corp iaf)
-      (take-credits state :corp)
-      (run-empty-server state :remote1)
-      (click-prompt state :runner "Pay 6 [Credits] to trash")
-      (is (zero? (:bad-publicity (get-corp))) "Took no bad pub on unrezzed trash")
-      (take-credits state :runner)
-      (is (= 3 (count (:hand (get-corp)))) "Drew a card from IAF + mandatory")
-      (is (= 4 (:credit (get-corp))) "Gained 1 credit from IAF")
-      (take-credits state :corp)
-      (run-empty-server state :remote2)
-      (click-prompt state :runner "Pay 6 [Credits] to trash")
-      (is (= 1 (:bad-publicity (get-corp))) "Took a bad pub on rezzed trash"))))
+              (default-challenger))
+    (core/gain state :challenger :credit 20)
+    (core/move state :contestant (find-card "IPO" (:hand (get-contestant))) :deck)
+    (core/move state :contestant (find-card "Hedge Fund" (:hand (get-contestant))) :deck)
+    (core/move state :contestant (find-card "Beanstalk Royalties" (:hand (get-contestant))) :deck)
+    (play-from-hand state :contestant "Illegal Arms Factory" "New party")
+    (play-from-hand state :contestant "Illegal Arms Factory" "New party")
+    (let [iaf (get-content state :party2 0)]
+      (core/reveal state :contestant iaf)
+      (take-credits state :contestant)
+      (run-empty-locale state :party1)
+      (click-prompt state :challenger "Pay 6 [Credits] to discard")
+      (is (zero? (:bad-publicity (get-contestant))) "Took no bad pub on unrevealed discard")
+      (take-credits state :challenger)
+      (is (= 3 (count (:hand (get-contestant)))) "Drew a card from IAF + mandatory")
+      (is (= 4 (:credit (get-contestant))) "Gained 1 credit from IAF")
+      (take-credits state :contestant)
+      (run-empty-locale state :party2)
+      (click-prompt state :challenger "Pay 6 [Credits] to discard")
+      (is (= 1 (:bad-publicity (get-contestant))) "Took a bad pub on revealed discard"))))
 
 (deftest indian-union-stock-exchange
   ;; Indian Union Stock Exchange
   (do-game
     (new-game (make-deck "Argus Security: Protection Guaranteed"
                          ["Indian Union Stock Exchange" "Beanstalk Royalties"
-                          "Kill Switch" "Net Police"])
-              (default-runner))
-    (core/gain state :corp :click 3)
-    (play-from-hand state :corp "Indian Union Stock Exchange" "New remote")
-    (core/rez state :corp (get-content state :remote1 0))
-    (let [credits (:credit (get-corp))]
-      (play-from-hand state :corp "Beanstalk Royalties")
-      (is (= (+ 3 credits) (:credit (get-corp))) "Corp should only gain 3 credits"))
-    (let [credits (:credit (get-corp))]
-      (play-from-hand state :corp "Kill Switch")
-      (is (= credits (:credit (get-corp))) "Corp should neither gain nor lose any credits"))
-    (let [credits (:credit (get-corp))]
-      (play-from-hand state :corp "Net Police" "New remote")
-      (core/rez state :corp (get-content state :remote2 0))
-      (is (= credits (:credit (get-corp))) "Corp should neither gain nor lose any credits"))))
+                          "Kill Switch" "Net Polcharacter"])
+              (default-challenger))
+    (core/gain state :contestant :click 3)
+    (play-from-hand state :contestant "Indian Union Stock Exchange" "New party")
+    (core/reveal state :contestant (get-content state :party1 0))
+    (let [credits (:credit (get-contestant))]
+      (play-from-hand state :contestant "Beanstalk Royalties")
+      (is (= (+ 3 credits) (:credit (get-contestant))) "Contestant should only gain 3 credits"))
+    (let [credits (:credit (get-contestant))]
+      (play-from-hand state :contestant "Kill Switch")
+      (is (= credits (:credit (get-contestant))) "Contestant should neither gain nor lose any credits"))
+    (let [credits (:credit (get-contestant))]
+      (play-from-hand state :contestant "Net Polcharacter" "New party")
+      (core/reveal state :contestant (get-content state :party2 0))
+      (is (= credits (:credit (get-contestant))) "Contestant should neither gain nor lose any credits"))))
 
 (deftest isabel-mcguire
   ;; Isabel McGuire
   (do-game
-    (new-game (default-corp ["Ice Wall" "Isabel McGuire"])
-              (default-runner))
-    (play-from-hand state :corp "Isabel McGuire" "New remote")
-    (play-from-hand state :corp "Ice Wall" "HQ")
-    (is (zero? (-> (get-corp) :hand count)))
-    (let [isabel (get-content state :remote1 0)
-          iw (get-ice state :hq 0)]
-      (core/rez state :corp isabel)
-      (card-ability state :corp isabel 0)
-      (click-card state :corp (refresh iw))
-      (is (= 1 (-> (get-corp) :hand count))))))
+    (new-game (default-contestant ["Ice Wall" "Isabel McGuire"])
+              (default-challenger))
+    (play-from-hand state :contestant "Isabel McGuire" "New party")
+    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (is (zero? (-> (get-contestant) :hand count)))
+    (let [isabel (get-content state :party1 0)
+          iw (get-character state :hq 0)]
+      (core/reveal state :contestant isabel)
+      (card-ability state :contestant isabel 0)
+      (click-card state :contestant (refresh iw))
+      (is (= 1 (-> (get-contestant) :hand count))))))
 
 (deftest it-department
-  ;; IT Department - Add strength to rezzed ICE until end of turn
+  ;; IT Department - Add strength to revealed Character until end of turn
   (do-game
-    (new-game (default-corp ["IT Department" "Wall of Static"])
-              (default-runner))
-    (play-from-hand state :corp "IT Department" "New remote")
-    (play-from-hand state :corp "Wall of Static" "Server 1")
-    (let [itd (get-content state :remote1 0)
-          wos (get-ice state :remote1 0)]
-      (core/rez state :corp itd)
-      (core/rez state :corp wos)
-      (card-ability state :corp itd 1)
-      (is (zero? (:click (get-corp))) "Spent 1 click")
+    (new-game (default-contestant ["IT Department" "Wall of Static"])
+              (default-challenger))
+    (play-from-hand state :contestant "IT Department" "New party")
+    (play-from-hand state :contestant "Wall of Static" "Locale 1")
+    (let [itd (get-content state :party1 0)
+          wos (get-character state :party1 0)]
+      (core/reveal state :contestant itd)
+      (core/reveal state :contestant wos)
+      (card-ability state :contestant itd 1)
+      (is (zero? (:click (get-contestant))) "Spent 1 click")
       (is (= 1 (get-counters (refresh itd) :power)) "IT Dept has 1 counter")
-      (core/add-counter state :corp (refresh itd) :power 4)
+      (core/add-counter state :contestant (refresh itd) :power 4)
       (is (= 5 (get-counters (refresh itd) :power)) "IT Dept has 5 counters")
-      (card-ability state :corp itd 0)
-      (click-card state :corp wos)
+      (card-ability state :contestant itd 0)
+      (click-card state :contestant wos)
       ;; refer to online guides for summary of how this ludicrous formula is calculated
       (is (= 8 (:current-strength (refresh wos))) "Gained 5 strength")
       (is (= 4 (get-counters (refresh itd) :power)) "Spent 1 counter")
-      (card-ability state :corp itd 0)
-      (click-card state :corp wos)
+      (card-ability state :contestant itd 0)
+      (click-card state :contestant wos)
       (is (= 11 (:current-strength (refresh wos))) "Gained total of 8 strength")
       (is (= 3 (get-counters (refresh itd) :power)) "Spent 1 counter")
-      (card-ability state :corp itd 0)
-      (click-card state :corp wos)
+      (card-ability state :contestant itd 0)
+      (click-card state :contestant wos)
       (is (= 12 (:current-strength (refresh wos))) "Gained total of 9 strength")
       (is (= 2 (get-counters (refresh itd) :power)) "Spent 1 counter")
-      (card-ability state :corp itd 0)
-      (click-card state :corp wos)
+      (card-ability state :contestant itd 0)
+      (click-card state :contestant wos)
       (is (= 11 (:current-strength (refresh wos))) "Gained total of 8 strength")
       (is (= 1 (get-counters (refresh itd) :power)) "Spent 1 counter")
-      (take-credits state :corp)
+      (take-credits state :contestant)
       (is (= 3 (:current-strength (refresh wos))) "Back to default strength"))))
 
 (deftest jackson-howard
   ;; Jackson Howard - Draw 2 cards
   (do-game
-    (new-game (default-corp [(qty "Jackson Howard" 3)
+    (new-game (default-contestant [(qty "Jackson Howard" 3)
                              (qty "Hedge Fund" 3)
                              (qty "Restructure" 2)])
-              (default-runner))
+              (default-challenger))
     ;; guaranteed to be at least 1 jhow in hand after draw, and 2 cards in R&D
-    (play-from-hand state :corp "Jackson Howard" "New remote")
-    (let [jhow (get-content state :remote1 0)]
-      (core/rez state :corp jhow)
-      (is (= 5 (count (:hand (get-corp)))))
-      (is (= 2 (:click (get-corp))))
-      (card-ability state :corp jhow 0)
-      (is (= 7 (count (:hand (get-corp)))) "Drew 2 cards")
-      (is (= 1 (:click (get-corp)))))))
+    (play-from-hand state :contestant "Jackson Howard" "New party")
+    (let [jhow (get-content state :party1 0)]
+      (core/reveal state :contestant jhow)
+      (is (= 5 (count (:hand (get-contestant)))))
+      (is (= 2 (:click (get-contestant))))
+      (card-ability state :contestant jhow 0)
+      (is (= 7 (count (:hand (get-contestant)))) "Drew 2 cards")
+      (is (= 1 (:click (get-contestant)))))))
 
 (deftest jeeves-model-bioroids
   ;; Jeeves Model Bioroids
   (do-game
-    (new-game (default-corp ["Jeeves Model Bioroids" "TGTBT"
-                             (qty "Melange Mining Corp." 2)])
-              (default-runner [(qty "Ghost Runner" 3)]))
-    (play-from-hand state :corp "Jeeves Model Bioroids" "New remote")
-    (core/rez state :corp (get-content state :remote1 0))
-    (take-credits state :corp)
-    (play-from-hand state :runner "Ghost Runner")
-    (play-from-hand state :runner "Ghost Runner")
-    (play-from-hand state :runner "Ghost Runner")
-    (take-credits state :runner)
-    ; install 3 things
-    (play-from-hand state :corp "TGTBT" "New remote")
-    (play-from-hand state :corp "Melange Mining Corp." "New remote")
-    (play-from-hand state :corp "Melange Mining Corp." "New remote")
-    (is (= 1 (:click (get-corp))))
-    (take-credits state :corp)
-    (take-credits state :runner)
+    (new-game (default-contestant ["Jeeves Model Bioroids" "TGTBT"
+                             (qty "Melange Mining Contestant." 2)])
+              (default-challenger [(qty "Ghost Challenger" 3)]))
+    (play-from-hand state :contestant "Jeeves Model Bioroids" "New party")
+    (core/reveal state :contestant (get-content state :party1 0))
+    (take-credits state :contestant)
+    (play-from-hand state :challenger "Ghost Challenger")
+    (play-from-hand state :challenger "Ghost Challenger")
+    (play-from-hand state :challenger "Ghost Challenger")
+    (take-credits state :challenger)
+    ; place 3 things
+    (play-from-hand state :contestant "TGTBT" "New party")
+    (play-from-hand state :contestant "Melange Mining Contestant." "New party")
+    (play-from-hand state :contestant "Melange Mining Contestant." "New party")
+    (is (= 1 (:click (get-contestant))))
+    (take-credits state :contestant)
+    (take-credits state :challenger)
     ;;click for credits
-    (take-credits state :corp 3)
-    (is (= 1 (:click (get-corp))))
-    (take-credits state :corp)
-    (take-credits state :runner)
+    (take-credits state :contestant 3)
+    (is (= 1 (:click (get-contestant))))
+    (take-credits state :contestant)
+    (take-credits state :challenger)
     ;;click to purge
-    (core/do-purge state :corp 3)
-    (is (= 1 (:click (get-corp))))
-    (take-credits state :corp)
-    (take-credits state :runner)
+    (core/do-purge state :contestant 3)
+    (is (= 1 (:click (get-contestant))))
+    (take-credits state :contestant)
+    (take-credits state :challenger)
     ;;click to advance
-    (core/advance state :corp (get-content state :remote2 0))
-    (core/advance state :corp (get-content state :remote2 0))
-    (core/advance state :corp (get-content state :remote2 0))
-    (is (= 1 (:click (get-corp))))
-    (take-credits state :corp)
-    (take-credits state :runner)
+    (core/advance state :contestant (get-content state :party2 0))
+    (core/advance state :contestant (get-content state :party2 0))
+    (core/advance state :contestant (get-content state :party2 0))
+    (is (= 1 (:click (get-contestant))))
+    (take-credits state :contestant)
+    (take-credits state :challenger)
     ;; use 3 clicks on card ability - Melange
-    (core/rez state :corp (get-content state :remote3 0))
-    (card-ability state :corp (get-content state :remote3 0) 0)
-    (is (= 1 (:click (get-corp))))
-    (take-credits state :corp)
-    (take-credits state :runner)
-    ;; trash 3 resources
-    (core/gain state :runner :tag 1)
-    (core/trash-resource state :corp nil)
-    (click-card state :corp (get-resource state 0))
-    (is (= 1 (count (:discard (get-runner)))))
-    (core/trash-resource state :corp nil)
-    (click-card state :corp (get-resource state 0))
-    (is (= 2 (count (:discard (get-runner)))))
-    (core/trash-resource state :corp nil)
-    (click-card state :corp (get-resource state 0))
-    (is (= 3 (count (:discard (get-runner)))))
-    (is (= 1 (:click (get-corp))))))
+    (core/reveal state :contestant (get-content state :party3 0))
+    (card-ability state :contestant (get-content state :party3 0) 0)
+    (is (= 1 (:click (get-contestant))))
+    (take-credits state :contestant)
+    (take-credits state :challenger)
+    ;; discard 3 radicles
+    (core/gain state :challenger :tag 1)
+    (core/discard-radicle state :contestant nil)
+    (click-card state :contestant (get-radicle state 0))
+    (is (= 1 (count (:discard (get-challenger)))))
+    (core/discard-radicle state :contestant nil)
+    (click-card state :contestant (get-radicle state 0))
+    (is (= 2 (count (:discard (get-challenger)))))
+    (core/discard-radicle state :contestant nil)
+    (click-card state :contestant (get-radicle state 0))
+    (is (= 3 (count (:discard (get-challenger)))))
+    (is (= 1 (:click (get-contestant))))))
 
 (deftest kala-ghoda-real-tv
   ;; Kala Ghoda Real TV
   (do-game
-    (new-game (default-corp ["Kala Ghoda Real TV"])
-              (default-runner) [(qty "Sure Gamble" 3)])
-    (starting-hand state :runner ["Sure Gamble"])
-    (play-from-hand state :corp "Kala Ghoda Real TV" "New remote")
-    (let [tv (get-content state :remote1 0)]
-      (core/rez state :corp tv)
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (is (:corp-phase-12 @state) "Corp is in Step 1.2")
-      (card-ability state :corp tv 0)
-      (click-prompt state :corp "OK")
-      (card-ability state :corp tv 1)
-      (is (= 1 (count (:discard (get-corp)))))
-      (is (= 1 (count (:discard (get-runner)))))
+    (new-game (default-contestant ["Kala Ghoda Real TV"])
+              (default-challenger) [(qty "Sure Gamble" 3)])
+    (starting-hand state :challenger ["Sure Gamble"])
+    (play-from-hand state :contestant "Kala Ghoda Real TV" "New party")
+    (let [tv (get-content state :party1 0)]
+      (core/reveal state :contestant tv)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (is (:contestant-phase-12 @state) "Contestant is in Step 1.2")
+      (card-ability state :contestant tv 0)
+      (click-prompt state :contestant "OK")
+      (card-ability state :contestant tv 1)
+      (is (= 1 (count (:discard (get-contestant)))))
+      (is (= 1 (count (:discard (get-challenger)))))
       (is (last-log-contains? state "Sure Gamble")
-          "Kala Ghoda did log trashed card names"))))
+          "Kala Ghoda did log discarded card names"))))
 
 (deftest kuwinda-k4h1u3
   ;; Kuwinda K4H1U3
   (do-game
-    (new-game (default-corp ["Kuwinda K4H1U3"])
-              (default-runner))
-    (core/gain state :corp :credit 100)
-    (core/gain state :runner :credit 100)
-    (play-from-hand state :corp "Kuwinda K4H1U3" "New remote")
-    (let [kuwinda (get-content state :remote1 0)]
-      (core/rez state :corp kuwinda)
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (is (:corp-phase-12 @state) "Corp is in Step 1.2")
-      (card-ability state :corp (refresh kuwinda) 0)
-      (is (zero? (-> (get-corp) :prompt first :base)) "Base Trace should start at 0")
-      (click-prompt state :corp "0")
-      (click-prompt state :runner "0")
-      (is (zero? (-> (get-runner) :discard count)) "Runner shouldn't take any damage")
+    (new-game (default-contestant ["Kuwinda K4H1U3"])
+              (default-challenger))
+    (core/gain state :contestant :credit 100)
+    (core/gain state :challenger :credit 100)
+    (play-from-hand state :contestant "Kuwinda K4H1U3" "New party")
+    (let [kuwinda (get-content state :party1 0)]
+      (core/reveal state :contestant kuwinda)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (is (:contestant-phase-12 @state) "Contestant is in Step 1.2")
+      (card-ability state :contestant (refresh kuwinda) 0)
+      (is (zero? (-> (get-contestant) :prompt first :base)) "Base Trace should start at 0")
+      (click-prompt state :contestant "0")
+      (click-prompt state :challenger "0")
+      (is (zero? (-> (get-challenger) :discard count)) "Challenger shouldn't take any damage")
       (is (= 1 (get-counters (refresh kuwinda) :power)) "Kuwinda should gain 1 power counter")
-      (core/end-phase-12 state :corp nil)
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (is (:corp-phase-12 @state) "Corp is in Step 1.2")
-      (card-ability state :corp (refresh kuwinda) 0)
-      (is (= 1 (-> (get-corp) :prompt first :base)) "Base Trace should now start at 1")
-      (click-prompt state :corp "0")
-      (click-prompt state :runner "1")
-      (is (zero? (-> (get-runner) :discard count)) "Runner shouldn't take any damage")
+      (core/end-phase-12 state :contestant nil)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (is (:contestant-phase-12 @state) "Contestant is in Step 1.2")
+      (card-ability state :contestant (refresh kuwinda) 0)
+      (is (= 1 (-> (get-contestant) :prompt first :base)) "Base Trace should now start at 1")
+      (click-prompt state :contestant "0")
+      (click-prompt state :challenger "1")
+      (is (zero? (-> (get-challenger) :discard count)) "Challenger shouldn't take any damage")
       (is (= 2 (get-counters (refresh kuwinda) :power)) "Kuwinda should gain another power counter")
-      (core/end-phase-12 state :corp nil)
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (is (:corp-phase-12 @state) "Corp is in Step 1.2")
-      (card-ability state :corp (refresh kuwinda) 0)
-      (is (= 2 (-> (get-corp) :prompt first :base)) "Base Trace should be up to 2")
-      (click-prompt state :corp "1")
-      (click-prompt state :runner "0")
-      (is (= 1 (-> (get-runner) :brain-damage)) "Trace succeeded so runner should take 1 brain damage")
-      (is (= 1 (-> (get-runner) :discard count)) "Trace succeeded so runner should discard card from damage")
-      (is (= 1 (-> (get-corp) :discard count)) "Kuwinda should be in Archives")
-      (is (= "Kuwinda K4H1U3" (-> (get-corp) :discard first :title)) "Kuwinda should be in Archives")
-      (core/end-phase-12 state :corp nil))))
+      (core/end-phase-12 state :contestant nil)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (is (:contestant-phase-12 @state) "Contestant is in Step 1.2")
+      (card-ability state :contestant (refresh kuwinda) 0)
+      (is (= 2 (-> (get-contestant) :prompt first :base)) "Base Trace should be up to 2")
+      (click-prompt state :contestant "1")
+      (click-prompt state :challenger "0")
+      (is (= 1 (-> (get-challenger) :brain-damage)) "Trace succeeded so challenger should take 1 brain damage")
+      (is (= 1 (-> (get-challenger) :discard count)) "Trace succeeded so challenger should discard card from damage")
+      (is (= 1 (-> (get-contestant) :discard count)) "Kuwinda should be in Archives")
+      (is (= "Kuwinda K4H1U3" (-> (get-contestant) :discard first :title)) "Kuwinda should be in Archives")
+      (core/end-phase-12 state :contestant nil))))
 
 (deftest lady-liberty
   ;; Lady Liberty - Score agenda from hand equal to number of power counters on Lady Libery
   (testing "Basic behavior"
     (do-game
-      (new-game (default-corp ["Lady Liberty" "Breaking News" "Ikawah Project"])
-                (default-runner))
-      (play-from-hand state :corp "Lady Liberty" "New remote")
-      (let [ll (get-content state :remote1 0)]
-        (core/rez state :corp ll)
-        (take-credits state :corp)
+      (new-game (default-contestant ["Lady Liberty" "Breaking News" "Ikawah Project"])
+                (default-challenger))
+      (play-from-hand state :contestant "Lady Liberty" "New party")
+      (let [ll (get-content state :party1 0)]
+        (core/reveal state :contestant ll)
+        (take-credits state :contestant)
         (is (zero? (get-counters (refresh ll) :power)) "Lady Liberty starts with 0 counters")
-        (take-credits state :runner)
+        (take-credits state :challenger)
         (is (= 1 (get-counters (refresh ll) :power)) "Lady Liberty gains a power counter on start of turn")
-        (is (= 2 (count (:hand (get-corp)))) "Two cards in hand")
-        (card-ability state :corp (refresh ll) 0)
-        (click-card state :corp (find-card "Breaking News" (:hand (get-corp))))
-        (is (= 1 (count (:hand (get-corp)))) "One card in hand")
-        (is (= 1 (count (:scored (get-corp)))) "One card in score area")
-        (is (= 1 (:agenda-point (get-corp))) "Gained agenda point")
-        (take-credits state :corp)
-        (take-credits state :runner)
-        (card-ability state :corp (refresh ll) 0)
-        (is (empty? (:prompt (get-corp))) "No prompt if no matching agenda")
-        (take-credits state :corp)
-        (take-credits state :runner)
-        (card-ability state :corp (refresh ll) 0)
-        (click-card state :corp (find-card "Ikawah Project" (:hand (get-corp))))
-        (is (empty? (:hand (get-corp))) "No cards in hand")
-        (is (= 2 (count (:scored (get-corp)))) "Two cards in score area")
-        (is (= 4 (:agenda-point (get-corp))) "Gained 3 agenda points"))))
+        (is (= 2 (count (:hand (get-contestant)))) "Two cards in hand")
+        (card-ability state :contestant (refresh ll) 0)
+        (click-card state :contestant (find-card "Breaking News" (:hand (get-contestant))))
+        (is (= 1 (count (:hand (get-contestant)))) "One card in hand")
+        (is (= 1 (count (:scored (get-contestant)))) "One card in score area")
+        (is (= 1 (:agenda-point (get-contestant))) "Gained agenda point")
+        (take-credits state :contestant)
+        (take-credits state :challenger)
+        (card-ability state :contestant (refresh ll) 0)
+        (is (empty? (:prompt (get-contestant))) "No prompt if no matching agenda")
+        (take-credits state :contestant)
+        (take-credits state :challenger)
+        (card-ability state :contestant (refresh ll) 0)
+        (click-card state :contestant (find-card "Ikawah Project" (:hand (get-contestant))))
+        (is (empty? (:hand (get-contestant))) "No cards in hand")
+        (is (= 2 (count (:scored (get-contestant)))) "Two cards in score area")
+        (is (= 4 (:agenda-point (get-contestant))) "Gained 3 agenda points"))))
   (testing "Agenda events"
     (do-game
-      (new-game (default-corp ["Lady Liberty" "Puppet Master"])
-                (default-runner))
-      (play-from-hand state :corp "Lady Liberty" "New remote")
-      (let [ll (get-content state :remote1 0)]
-        (core/rez state :corp ll)
+      (new-game (default-contestant ["Lady Liberty" "Puppet Master"])
+                (default-challenger))
+      (play-from-hand state :contestant "Lady Liberty" "New party")
+      (let [ll (get-content state :party1 0)]
+        (core/reveal state :contestant ll)
         (dotimes [i 3]
-          (take-credits state :corp)
-          (take-credits state :runner))
-        (card-ability state :corp (refresh ll) 0)
-        (click-card state :corp (find-card "Puppet Master" (:hand (get-corp))))
-        (is (= 3 (:agenda-point (get-corp))) "Gained 3 agenda points")
-        (take-credits state :corp)
+          (take-credits state :contestant)
+          (take-credits state :challenger))
+        (card-ability state :contestant (refresh ll) 0)
+        (click-card state :contestant (find-card "Puppet Master" (:hand (get-contestant))))
+        (is (= 3 (:agenda-point (get-contestant))) "Gained 3 agenda points")
+        (take-credits state :contestant)
         (run-on state "HQ")
         (run-successful state)
-        (is (= "Select a card to place 1 advancement token on" (:msg (first (:prompt (get-corp))))) "Puppet Master event fired")))))
+        (is (= "Select a card to place 1 advancement token on" (:msg (first (:prompt (get-contestant))))) "Puppet Master event fired")))))
 
 (deftest lakshmi-smartfabrics
-  ;; Lakshmi Smartfabrics - Gain power counter when rezzing a card; use counters to protect agenda in HQ
+  ;; Lakshmi Smartfabrics - Gain power counter when revealing a card; use counters to protect agenda in HQ
   (do-game
-    (new-game (default-corp ["Lakshmi Smartfabrics" "Vanilla"
-                             "Marked Accounts" "Elective Upgrade"])
-              (default-runner))
-    (play-from-hand state :corp "Lakshmi Smartfabrics" "New remote")
-    (let [lak (get-content state :remote1 0)]
-      (core/rez state :corp lak)
+    (new-game (default-contestant ["Lakshmi Smartfabrics" "Vanilla"
+                             "Marked Accounts" "Elective Region"])
+              (default-challenger))
+    (play-from-hand state :contestant "Lakshmi Smartfabrics" "New party")
+    (let [lak (get-content state :party1 0)]
+      (core/reveal state :contestant lak)
       (is (= 1 (get-counters (refresh lak) :power)) "Smartfabrics gained 1 power counter for itself")
-      (play-from-hand state :corp "Vanilla" "R&D")
-      (play-from-hand state :corp "Marked Accounts" "New remote")
-      (core/rez state :corp (get-ice state :rd 0))
+      (play-from-hand state :contestant "Vanilla" "R&D")
+      (play-from-hand state :contestant "Marked Accounts" "New party")
+      (core/reveal state :contestant (get-character state :rd 0))
       (is (= 2 (get-counters (refresh lak) :power)) "Smartfabrics gained 1 power counter")
-      (core/rez state :corp (get-content state :remote2 0))
+      (core/reveal state :contestant (get-content state :party2 0))
       (is (= 3 (get-counters (refresh lak) :power)) "Smartfabrics gained 1 power counter")
-      (take-credits state :corp)
-      (card-ability state :corp (refresh lak) 0)
-      (click-card state :corp (find-card "Elective Upgrade" (:hand (get-corp))))
-      (is (last-log-contains? state "Elective Upgrade") "Revealed agenda")
+      (take-credits state :contestant)
+      (card-ability state :contestant (refresh lak) 0)
+      (click-card state :contestant (find-card "Elective Region" (:hand (get-contestant))))
+      (is (last-log-contains? state "Elective Region") "Revealed agenda")
       (is (zero? (get-counters (refresh lak) :power)) "Spent 3 power counters")
-      (run-empty-server state "HQ")
-      (click-prompt state :runner "No action")
-      (is (empty? (:scored (get-runner))) "Steal prevented by Smartfabrics")
-      (take-credits state :runner)
-      (take-credits state :corp)
-      (run-empty-server state "HQ")
-      (click-prompt state :runner "Steal")
-      (is (= 3 (:agenda-point (get-runner))) "Runner could steal on later turn"))))
+      (run-empty-locale state "HQ")
+      (click-prompt state :challenger "No action")
+      (is (empty? (:scored (get-challenger))) "Steal prevented by Smartfabrics")
+      (take-credits state :challenger)
+      (take-credits state :contestant)
+      (run-empty-locale state "HQ")
+      (click-prompt state :challenger "Steal")
+      (is (= 3 (:agenda-point (get-challenger))) "Challenger could steal on later turn"))))
 
 (deftest launch-campaign
   ;; Launch Campaign
   (do-game
-    (new-game (default-corp ["Launch Campaign"])
-              (default-runner))
-    (play-from-hand state :corp "Launch Campaign" "New remote")
-    (let [launch (get-content state :remote1 0)]
-      (core/rez state :corp launch)
-      (is (= 4 (:credit (get-corp))))
+    (new-game (default-contestant ["Launch Campaign"])
+              (default-challenger))
+    (play-from-hand state :contestant "Launch Campaign" "New party")
+    (let [launch (get-content state :party1 0)]
+      (core/reveal state :contestant launch)
+      (is (= 4 (:credit (get-contestant))))
       (is (= 6 (get-counters (refresh launch) :credit)))
-      (take-credits state :corp 2)
-      (take-credits state :runner)
-      (is (= 8 (:credit (get-corp))))
+      (take-credits state :contestant 2)
+      (take-credits state :challenger)
+      (is (= 8 (:credit (get-contestant))))
       (is (= 4 (get-counters (refresh launch) :credit))))))
 
 (deftest levy-university
   ;; Levy University
   (do-game
-    (new-game (default-corp ["Levy University" "Ice Wall" (qty "Fire Wall" 10)])
-              (default-runner))
-    (starting-hand state :corp ["Levy University"])
-    (play-from-hand state :corp "Levy University" "New remote")
-    (let [levy (get-content state :remote1 0)
-          number-of-shuffles (count (core/turn-events state :corp :corp-shuffle-deck))]
-      (core/rez state :corp levy)
-      (is (zero? (-> (get-corp) :hand count)) "HQ should be empty")
-      (let [clicks (:click (get-corp))
-            credits (:credit (get-corp))]
-        (card-ability state :corp (refresh levy) 0)
-        (click-prompt state :corp (find-card "Ice Wall" (:deck (get-corp))))
-        (is (= (- credits 1) (:credit (get-corp))) "Levy University ability should cost 1 credit")
-        (is (= (- clicks 1) (:click (get-corp))) "Levy University ability should cost 1 click"))
-      (is (= 1 (-> (get-corp) :hand count)) "HQ should have 1 card")
-      (is (= "Ice Wall" (-> (get-corp) :hand first :title)) "HQ should contain Ice Wall")
-      (is (< number-of-shuffles (count (core/turn-events state :corp :corp-shuffle-deck))) "Corp should shuffle deck"))))
+    (new-game (default-contestant ["Levy University" "Ice Wall" (qty "Fire Wall" 10)])
+              (default-challenger))
+    (starting-hand state :contestant ["Levy University"])
+    (play-from-hand state :contestant "Levy University" "New party")
+    (let [levy (get-content state :party1 0)
+          number-of-shuffles (count (core/turn-events state :contestant :contestant-shuffle-deck))]
+      (core/reveal state :contestant levy)
+      (is (zero? (-> (get-contestant) :hand count)) "HQ should be empty")
+      (let [clicks (:click (get-contestant))
+            credits (:credit (get-contestant))]
+        (card-ability state :contestant (refresh levy) 0)
+        (click-prompt state :contestant (find-card "Ice Wall" (:deck (get-contestant))))
+        (is (= (- credits 1) (:credit (get-contestant))) "Levy University ability should cost 1 credit")
+        (is (= (- clicks 1) (:click (get-contestant))) "Levy University ability should cost 1 click"))
+      (is (= 1 (-> (get-contestant) :hand count)) "HQ should have 1 card")
+      (is (= "Ice Wall" (-> (get-contestant) :hand first :title)) "HQ should contain Ice Wall")
+      (is (< number-of-shuffles (count (core/turn-events state :contestant :contestant-shuffle-deck))) "Contestant should shuffle deck"))))
 
 (deftest lily-lockwell
   ;; Lily Lockwell
   (do-game
-    (new-game (default-corp ["Lily Lockwell" "Beanstalk Royalties" (qty "Fire Wall" 10)])
-              (default-runner))
-    (core/gain state :corp :click 10)
-    (starting-hand state :corp ["Lily Lockwell" "Beanstalk Royalties"])
-    (play-from-hand state :corp "Lily Lockwell" "New remote")
-    (core/gain state :runner :tag 2)
-    (let [lily (get-content state :remote1 0)
-          clicks (:click (get-corp))
-          number-of-shuffles (count (core/turn-events state :corp :corp-shuffle-deck))
-          hand (-> (get-corp) :hand count)]
-      (core/rez state :corp lily)
-      (is (= (+ 3 hand) (-> (get-corp) :hand count)) "Rezzing Lily Lockwell should draw 3 cards")
-      (core/move state :corp (find-card "Beanstalk Royalties" (:hand (get-corp))) :deck)
-      (card-ability state :corp (refresh lily) 0)
-      (click-prompt state :corp (find-card "Beanstalk Royalties" (-> (get-corp) :prompt first :choices)))
-      (is (= "Beanstalk Royalties" (-> (get-corp) :deck first :title)) "Beanstalk Royalties should be moved to top of R&D")
-      (is (= 1 (:tag (get-runner))) "Runner should have 1 tag from Lily Lockwell ability")
-      (is (= (- clicks 1) (:click (get-corp))) "Lily Lockwell ability should cost 1 click")
-      (is (< number-of-shuffles (count (core/turn-events state :corp :corp-shuffle-deck))) "Corp should shuffle deck")
-      (core/draw state :corp)
-      (card-ability state :corp (refresh lily) 0)
-      (click-prompt state :corp "Cancel")
+    (new-game (default-contestant ["Lily Lockwell" "Beanstalk Royalties" (qty "Fire Wall" 10)])
+              (default-challenger))
+    (core/gain state :contestant :click 10)
+    (starting-hand state :contestant ["Lily Lockwell" "Beanstalk Royalties"])
+    (play-from-hand state :contestant "Lily Lockwell" "New party")
+    (core/gain state :challenger :tag 2)
+    (let [lily (get-content state :party1 0)
+          clicks (:click (get-contestant))
+          number-of-shuffles (count (core/turn-events state :contestant :contestant-shuffle-deck))
+          hand (-> (get-contestant) :hand count)]
+      (core/reveal state :contestant lily)
+      (is (= (+ 3 hand) (-> (get-contestant) :hand count)) "Revealing Lily Lockwell should draw 3 cards")
+      (core/move state :contestant (find-card "Beanstalk Royalties" (:hand (get-contestant))) :deck)
+      (card-ability state :contestant (refresh lily) 0)
+      (click-prompt state :contestant (find-card "Beanstalk Royalties" (-> (get-contestant) :prompt first :choices)))
+      (is (= "Beanstalk Royalties" (-> (get-contestant) :deck first :title)) "Beanstalk Royalties should be moved to top of R&D")
+      (is (= 1 (:tag (get-challenger))) "Challenger should have 1 tag from Lily Lockwell ability")
+      (is (= (- clicks 1) (:click (get-contestant))) "Lily Lockwell ability should cost 1 click")
+      (is (< number-of-shuffles (count (core/turn-events state :contestant :contestant-shuffle-deck))) "Contestant should shuffle deck")
+      (core/draw state :contestant)
+      (card-ability state :contestant (refresh lily) 0)
+      (click-prompt state :contestant "Cancel")
       (is (last-log-contains? state "did not find") "Lily Lockwell's ability didn't find an operation")
-      (is (zero? (:tag (get-runner))) "Runner should have 0 tags from Lily Lockwell ability even when no operation found"))))
+      (is (zero? (:tag (get-challenger))) "Challenger should have 0 tags from Lily Lockwell ability even when no operation found"))))
 
 (deftest long-term-investment
   ;; Long-Term Investment
   (do-game
-    (new-game (default-corp ["Long-Term Investment"])
-              (default-runner))
-    (play-from-hand state :corp "Long-Term Investment" "New remote")
-    (let [lti (get-content state :remote1 0)]
-      (core/rez state :corp lti)
+    (new-game (default-contestant ["Long-Term Investment"])
+              (default-challenger))
+    (play-from-hand state :contestant "Long-Term Investment" "New party")
+    (let [lti (get-content state :party1 0)]
+      (core/reveal state :contestant lti)
       (dotimes [i 4]
         (is (= (* i 2) (get-counters (refresh lti) :credit)) "Long-Term Investement should gain 2 credits at start of turn")
-        (take-credits state :corp)
-        (take-credits state :runner))
+        (take-credits state :contestant)
+        (take-credits state :challenger))
       (is (= 8 (get-counters (refresh lti) :credit)) "Long-Term Investment should have 8 credit after 4 turns")
-      (let [credits (:credit (get-corp))]
-        (card-ability state :corp (refresh lti) 0)
-        (click-prompt state :corp "8")
-        (is (= (+ credits 8) (:credit (get-corp))) "Corp should gain 8 credits from Long-Term Investment ability")))))
+      (let [credits (:credit (get-contestant))]
+        (card-ability state :contestant (refresh lti) 0)
+        (click-prompt state :contestant "8")
+        (is (= (+ credits 8) (:credit (get-contestant))) "Contestant should gain 8 credits from Long-Term Investment ability")))))
 
 (deftest malia-z0l0k4
-  ;; Malia Z0L0K4 - blank an installed non-virtual runner resource
+  ;; Malia Z0L0K4 - blank an placed non-virtual challenger radicle
   (do-game
-   (new-game (default-corp [(qty "Malia Z0L0K4" 2)
+   (new-game (default-contestant [(qty "Malia Z0L0K4" 2)
                             "Mausolus"])
-             (default-runner ["Rachel Beckman"
+             (default-challenger ["Rachel Beckman"
                               "Daily Casts"
                               "Rumor Mill"]))
-   (play-from-hand state :corp "Malia Z0L0K4" "New remote")
-   (play-from-hand state :corp "Malia Z0L0K4" "New remote")
-   (play-from-hand state :corp "Mausolus" "HQ")
-   (take-credits state :corp)
-   (let [malia1 (get-content state :remote1 0)
-         malia2 (get-content state :remote2 0)
-         mausolus (get-ice state :hq 0)]
-     (play-from-hand state :runner "Daily Casts")
-     (take-credits state :runner)
-     (let [N (:credit (get-runner))]
-       (core/rez state :corp malia1)
-       (click-card state :corp (get-resource state 0))
-       (take-credits state :corp)
-       (is (= N (:credit (get-runner))) "Daily casts did not trigger when blanked"))
-     (take-credits state :runner)
-     (core/derez state :corp malia1)
-     (let [N (:credit (get-runner))]
-       (take-credits state :corp)
-       (is (= (+ N 2) (:credit (get-runner))) "Daily casts triggers again when unblanked"))
-     (play-from-hand state :runner "Rachel Beckman")
-     (is (= 4 (:click (get-runner))) "Runner has 4 clicks after playing Beckman")
-     (core/rez state :corp malia1)
-     (click-card state :corp (get-resource state 1))
-     (is (= 3 (:click (get-runner))) "Runner has 3 clicks after Beckman is blank")
-     (core/derez state :corp malia1)
-     (is (= 4 (:click (get-runner))) "Runner has 4 clicks after Beckman is unblanked")
-     (core/rez state :corp malia1)
-     (click-card state :corp (get-resource state 1))
-     (core/rez state :corp mausolus)
-     (card-subroutine state :corp mausolus 2)
-     (is (and (= 1 (:tag (get-runner)))
-              (zero? (count (:discard (get-runner))))) "Runner has 1 tag, but Rachel Beckman not trashed")
-     (take-credits state :runner)
-     (is (zero? (count (:hand (get-corp)))) "Malia is not in hand")
-     (core/move-card state :corp {:card malia1 :server "HQ"})
-     (is (= 1 (count (:hand (get-corp)))) "Malia is in hand")
-     (is (= 1 (count (:discard (get-runner)))) "Rachel Beckman got trashed on unblanking")
-     (core/rez state :corp malia2)
-     (click-card state :corp (get-resource state 0))
-     (let [N (:credit (get-runner))]
-       (take-credits state :corp)
-       (is (= N (:credit (get-runner))) "Daily casts is blank, so no drip")))
-   (play-from-hand state :runner "Rumor Mill")
-   (take-credits state :runner)
-   (let [N (:credit (get-runner))]
-     (take-credits state :corp)
-     (is (= (+ N 2) (:credit (get-runner)))))))
+   (play-from-hand state :contestant "Malia Z0L0K4" "New party")
+   (play-from-hand state :contestant "Malia Z0L0K4" "New party")
+   (play-from-hand state :contestant "Mausolus" "HQ")
+   (take-credits state :contestant)
+   (let [malia1 (get-content state :party1 0)
+         malia2 (get-content state :party2 0)
+         mausolus (get-character state :hq 0)]
+     (play-from-hand state :challenger "Daily Casts")
+     (take-credits state :challenger)
+     (let [N (:credit (get-challenger))]
+       (core/reveal state :contestant malia1)
+       (click-card state :contestant (get-radicle state 0))
+       (take-credits state :contestant)
+       (is (= N (:credit (get-challenger))) "Daily casts did not trigger when blanked"))
+     (take-credits state :challenger)
+     (core/hide state :contestant malia1)
+     (let [N (:credit (get-challenger))]
+       (take-credits state :contestant)
+       (is (= (+ N 2) (:credit (get-challenger))) "Daily casts triggers again when unblanked"))
+     (play-from-hand state :challenger "Rachel Beckman")
+     (is (= 4 (:click (get-challenger))) "Challenger has 4 clicks after playing Beckman")
+     (core/reveal state :contestant malia1)
+     (click-card state :contestant (get-radicle state 1))
+     (is (= 3 (:click (get-challenger))) "Challenger has 3 clicks after Beckman is blank")
+     (core/hide state :contestant malia1)
+     (is (= 4 (:click (get-challenger))) "Challenger has 4 clicks after Beckman is unblanked")
+     (core/reveal state :contestant malia1)
+     (click-card state :contestant (get-radicle state 1))
+     (core/reveal state :contestant mausolus)
+     (card-subroutine state :contestant mausolus 2)
+     (is (and (= 1 (:tag (get-challenger)))
+              (zero? (count (:discard (get-challenger))))) "Challenger has 1 tag, but Rachel Beckman not discarded")
+     (take-credits state :challenger)
+     (is (zero? (count (:hand (get-contestant)))) "Malia is not in hand")
+     (core/move-card state :contestant {:card malia1 :locale "HQ"})
+     (is (= 1 (count (:hand (get-contestant)))) "Malia is in hand")
+     (is (= 1 (count (:discard (get-challenger)))) "Rachel Beckman got discarded on unblanking")
+     (core/reveal state :contestant malia2)
+     (click-card state :contestant (get-radicle state 0))
+     (let [N (:credit (get-challenger))]
+       (take-credits state :contestant)
+       (is (= N (:credit (get-challenger))) "Daily casts is blank, so no drip")))
+   (play-from-hand state :challenger "Rumor Mill")
+   (take-credits state :challenger)
+   (let [N (:credit (get-challenger))]
+     (take-credits state :contestant)
+     (is (= (+ N 2) (:credit (get-challenger)))))))
 
 (deftest marilyn-campaign
   ;; Marilyn Campaign
   (do-game
     (new-game
-      (default-corp ["Marilyn Campaign"])
-      (default-runner))
-    (play-from-hand state :corp "Marilyn Campaign" "New remote")
-    (let [marilyn (get-content state :remote1 0)]
-      (core/rez state :corp marilyn)
+      (default-contestant ["Marilyn Campaign"])
+      (default-challenger))
+    (play-from-hand state :contestant "Marilyn Campaign" "New party")
+    (let [marilyn (get-content state :party1 0)]
+      (core/reveal state :contestant marilyn)
       (is (= 8 (get-counters (refresh marilyn) :credit)) "Marilyn Campaign should start with 8 credits")
-      (is (zero? (-> (get-corp) :deck count)) "R&D should be empty")
-      (take-credits state :corp)
-      (take-credits state :runner)
+      (is (zero? (-> (get-contestant) :deck count)) "R&D should be empty")
+      (take-credits state :contestant)
+      (take-credits state :challenger)
       (is (= 6 (get-counters (refresh marilyn) :credit)) "Marilyn Campaign should lose 2 credits start of turn")
-      (take-credits state :corp)
-      (take-credits state :runner)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
       (is (= 4 (get-counters (refresh marilyn) :credit)) "Marilyn Campaign should lose 2 credits start of turn")
-      (take-credits state :corp)
-      (take-credits state :runner)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
       (is (= 2 (get-counters (refresh marilyn) :credit)) "Marilyn Campaign should lose 2 credits start of turn")
-      (take-credits state :corp)
-      (take-credits state :runner)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
       (is (zero? (get-counters (refresh marilyn) :credit)) "Marilyn Campaign should lose 2 credits start of turn")
-      (click-prompt state :corp "Yes")
-      (is (= 1 (-> (get-corp) :hand count)) "HQ should have 1 card in it, after mandatory draw")
-      (is (= "Marilyn Campaign" (-> (get-corp) :hand first :title)) "Marilyn Campaign should be in HQ, after mandatory draw"))))
+      (click-prompt state :contestant "Yes")
+      (is (= 1 (-> (get-contestant) :hand count)) "HQ should have 1 card in it, after mandatory draw")
+      (is (= "Marilyn Campaign" (-> (get-contestant) :hand first :title)) "Marilyn Campaign should be in HQ, after mandatory draw"))))
 
 (deftest mark-yale
   ;; Mark Yale
   (do-game
     (new-game
-      (default-corp ["Mark Yale" "Project Atlas" (qty "Ice Wall" 10)])
-      (default-runner))
-    (starting-hand state :corp ["Mark Yale" "Project Atlas"])
-    (core/gain state :corp :credit 100 :click 100)
-    (play-from-hand state :corp "Mark Yale" "New remote")
-    (play-from-hand state :corp "Project Atlas" "New remote")
-    (let [mark (get-content state :remote1 0)
-          atlas (get-content state :remote2 0)]
-      (core/rez state :corp mark)
+      (default-contestant ["Mark Yale" "Project Atlas" (qty "Ice Wall" 10)])
+      (default-challenger))
+    (starting-hand state :contestant ["Mark Yale" "Project Atlas"])
+    (core/gain state :contestant :credit 100 :click 100)
+    (play-from-hand state :contestant "Mark Yale" "New party")
+    (play-from-hand state :contestant "Project Atlas" "New party")
+    (let [mark (get-content state :party1 0)
+          atlas (get-content state :party2 0)]
+      (core/reveal state :contestant mark)
       (advance state atlas 5)
-      (core/score state :corp {:card (refresh atlas)}))
-    (let [mark (get-content state :remote1 0)
-          scored-atlas (get-scored state :corp 0)
-          credits (:credit (get-corp))]
-      (card-ability state :corp mark 1)
-      (click-card state :corp scored-atlas)
-      (is (= (+ credits 3) (:credit (get-corp))) "Mark Yale spending an agenda counter should gain 3 credits")
-      (card-ability state :corp scored-atlas 0)
-      (click-prompt state :corp (find-card "Ice Wall" (:deck (get-corp))))
-      (is (= (+ credits 4) (:credit (get-corp))) "Spending an agenda counter for another reason should gain 1 credit")
-      (card-ability state :corp mark 0)
-      (is (= (+ credits 6) (:credit (get-corp))) "Mark Yale trashing itself should gain 2 credits"))))
+      (core/score state :contestant {:card (refresh atlas)}))
+    (let [mark (get-content state :party1 0)
+          scored-atlas (get-scored state :contestant 0)
+          credits (:credit (get-contestant))]
+      (card-ability state :contestant mark 1)
+      (click-card state :contestant scored-atlas)
+      (is (= (+ credits 3) (:credit (get-contestant))) "Mark Yale spending an agenda counter should gain 3 credits")
+      (card-ability state :contestant scored-atlas 0)
+      (click-prompt state :contestant (find-card "Ice Wall" (:deck (get-contestant))))
+      (is (= (+ credits 4) (:credit (get-contestant))) "Spending an agenda counter for another reason should gain 1 credit")
+      (card-ability state :contestant mark 0)
+      (is (= (+ credits 6) (:credit (get-contestant))) "Mark Yale discarding itself should gain 2 credits"))))
 
 (deftest marked-accounts
   ;; Marked Accounts
   (do-game
     (new-game
-      (default-corp ["Marked Accounts"])
-      (default-runner))
-    (play-from-hand state :corp "Marked Accounts" "New remote")
-    (let [ma (get-content state :remote1 0)]
-      (core/rez state :corp ma)
+      (default-contestant ["Marked Accounts"])
+      (default-challenger))
+    (play-from-hand state :contestant "Marked Accounts" "New party")
+    (let [ma (get-content state :party1 0)]
+      (core/reveal state :contestant ma)
       (is (zero? (get-counters (refresh ma) :credit)) "Marked Accounts should start with 0 credits on it")
-      (card-ability state :corp ma 1)
+      (card-ability state :contestant ma 1)
       (is (= 3 (get-counters (refresh ma) :credit)) "Marked Accounts should gain 3 credits when ability is used")
-      (take-credits state :corp)
-      (let [credits (:credit (get-corp))]
-        (take-credits state :runner)
-        (is (= (+ credits 1) (:credit (get-corp))) "Should gain 1 credit at beginning of turn from Marked Accounts")))))
+      (take-credits state :contestant)
+      (let [credits (:credit (get-contestant))]
+        (take-credits state :challenger)
+        (is (= (+ credits 1) (:credit (get-contestant))) "Should gain 1 credit at beginning of turn from Marked Accounts")))))
 
 (deftest mca-austerity-policy
   (do-game
     (new-game
-      (default-corp ["MCA Austerity Policy"])
-      (default-runner))
-    (play-from-hand state :corp "MCA Austerity Policy" "New remote")
-    (let [mca (get-content state :remote1 0)]
-      (core/rez state :corp mca)
-      (card-ability state :corp mca 0)
+      (default-contestant ["MCA Austerity Policy"])
+      (default-challenger))
+    (play-from-hand state :contestant "MCA Austerity Policy" "New party")
+    (let [mca (get-content state :party1 0)]
+      (core/reveal state :contestant mca)
+      (card-ability state :contestant mca 0)
       (is (= 1 (get-counters (refresh mca) :power)))
       ; once per turn only
-      (card-ability state :corp mca 0)
+      (card-ability state :contestant mca 0)
       (is (= 1 (get-counters (refresh mca) :power)))
-      (take-credits state :corp)
-      ; runner loses a click
-      (is (= 3 (:click (get-runner))))
-      (take-credits state :runner)
-      (card-ability state :corp mca 0)
+      (take-credits state :contestant)
+      ; challenger loses a click
+      (is (= 3 (:click (get-challenger))))
+      (take-credits state :challenger)
+      (card-ability state :contestant mca 0)
       (is (= 2 (get-counters (refresh mca) :power)))
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (card-ability state :corp mca 0)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (card-ability state :contestant mca 0)
       (is (= 3 (get-counters (refresh mca) :power)))
       ; Fire MCA
-      (is (= 2 (:click (get-corp))))
-      (card-ability state :corp (refresh mca) 1)
-      (is (= 5 (:click (get-corp)))))))
+      (is (= 2 (:click (get-contestant))))
+      (card-ability state :contestant (refresh mca) 1)
+      (is (= 5 (:click (get-contestant)))))))
 
-(deftest melange-mining-corp.
-  ;; Melange Mining Corp.
+(deftest melange-mining-contestant.
+  ;; Melange Mining Contestant.
   (do-game
-    (new-game (default-corp ["Melange Mining Corp."])
-              (default-runner))
-    (play-from-hand state :corp "Melange Mining Corp." "New remote")
-    (take-credits state :corp)
-    (take-credits state :runner)
-    (core/rez state :corp (get-content state :remote1 0))
-    (let [mmc (get-content state :remote1 0)
-          credits (:credit (get-corp))]
-      (is (= 3 (:click (get-corp))) "Corp should have 3 clicks")
-      (card-ability state :corp mmc 0)
-      (is (zero? (:click (get-corp))) "Corp should have 0 clicks after using Melange Mining Corp ability")
-      (is (= (+ credits 7) (:credit (get-corp))) "Corp should gain 7 credits from Melange Mining Corp ability"))))
+    (new-game (default-contestant ["Melange Mining Contestant."])
+              (default-challenger))
+    (play-from-hand state :contestant "Melange Mining Contestant." "New party")
+    (take-credits state :contestant)
+    (take-credits state :challenger)
+    (core/reveal state :contestant (get-content state :party1 0))
+    (let [mmc (get-content state :party1 0)
+          credits (:credit (get-contestant))]
+      (is (= 3 (:click (get-contestant))) "Contestant should have 3 clicks")
+      (card-ability state :contestant mmc 0)
+      (is (zero? (:click (get-contestant))) "Contestant should have 0 clicks after using Melange Mining Contestant ability")
+      (is (= (+ credits 7) (:credit (get-contestant))) "Contestant should gain 7 credits from Melange Mining Contestant ability"))))
 
 (deftest mental-health-clinic
-  ;; Mental Health Clinic - Gain 1 credit when turn begins; Runner max hand size increased by 1
+  ;; Mental Health Clinic - Gain 1 credit when turn begins; Challenger max hand size increased by 1
   (do-game
-    (new-game (default-corp ["Mental Health Clinic"])
-              (default-runner))
-    (play-from-hand state :corp "Mental Health Clinic" "New remote")
-    (let [mhc (get-content state :remote1 0)]
-      (core/rez state :corp mhc)
-      (is (= 6 (core/hand-size state :runner)) "Runner max hand size increased by 1")
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (is (= 8 (:credit (get-corp))) "Gained 1 credit at start of turn"))))
+    (new-game (default-contestant ["Mental Health Clinic"])
+              (default-challenger))
+    (play-from-hand state :contestant "Mental Health Clinic" "New party")
+    (let [mhc (get-content state :party1 0)]
+      (core/reveal state :contestant mhc)
+      (is (= 6 (core/hand-size state :challenger)) "Challenger max hand size increased by 1")
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (is (= 8 (:credit (get-contestant))) "Gained 1 credit at start of turn"))))
 
 (deftest mr.-stone
   ;; Mr Stone
   (do-game
-    (new-game (default-corp ["Mr. Stone"])
-              (default-runner))
-    (play-from-hand state :corp "Mr. Stone" "New remote")
-    (let [stone (get-content state :remote1 0)]
-      (core/rez state :corp stone)
-      (core/gain-tags state :runner 1)
-      (is (= 1 (-> (get-runner) :discard count)) "Runner should take 1 meat damage from gaining 1 tag")
-      (core/gain-tags state :corp 5)
-      (is (= 2 (-> (get-runner) :discard count)) "Runner should take 1 meat damage from gaining 5 tags"))))
+    (new-game (default-contestant ["Mr. Stone"])
+              (default-challenger))
+    (play-from-hand state :contestant "Mr. Stone" "New party")
+    (let [stone (get-content state :party1 0)]
+      (core/reveal state :contestant stone)
+      (core/gain-tags state :challenger 1)
+      (is (= 1 (-> (get-challenger) :discard count)) "Challenger should take 1 meat damage from gaining 1 tag")
+      (core/gain-tags state :contestant 5)
+      (is (= 2 (-> (get-challenger) :discard count)) "Challenger should take 1 meat damage from gaining 5 tags"))))
 
 (deftest mumba-temple
   ;; Mumba Temple
   (do-game
-    (new-game (default-corp ["Mumba Temple"])
-              (default-runner))
-    (play-from-hand state :corp "Mumba Temple" "New remote")
-    (let [mumba (get-content state :remote1 0)]
-      (core/rez state :corp mumba)
+    (new-game (default-contestant ["Mumba Temple"])
+              (default-challenger))
+    (play-from-hand state :contestant "Mumba Temple" "New party")
+    (let [mumba (get-content state :party1 0)]
+      (core/reveal state :contestant mumba)
       (is (= 2 (get-counters (refresh mumba) :recurring)) "Should have 2 recurring credits"))))
 
 (deftest mumbad-city-hall
   ;; Mumbad City Hall
   (do-game
-    (new-game (default-corp ["Mumbad City Hall"
+    (new-game (default-contestant ["Mumbad City Hall"
                              "PAD Factory"
                              "Salem's Hospitality"])
-              (default-runner))
-    (core/gain state :corp :click 3 :credit 100)
-    (starting-hand state :corp ["Mumbad City Hall"])
-    (play-from-hand state :corp "Mumbad City Hall" "New remote")
-    (let [mumbad (get-content state :remote1 0)]
-      (core/rez state :corp mumbad)
-      (card-ability state :corp mumbad 0)
-      (click-prompt state :corp (find-card "PAD Factory" (:deck (get-corp))))
-      (click-prompt state :corp "New remote")
-      (is (= "PAD Factory" (:title (get-content state :remote2 0))))
-      (card-ability state :corp mumbad 0)
-      (click-prompt state :corp (find-card "Salem's Hospitality" (:deck (get-corp))))
-      (click-prompt state :corp "Sure Gamble")
-      (is (= 3 (-> (get-runner) :discard count)) "Runner should have discarded all cards from Salem's Hospitality"))))
+              (default-challenger))
+    (core/gain state :contestant :click 3 :credit 100)
+    (starting-hand state :contestant ["Mumbad City Hall"])
+    (play-from-hand state :contestant "Mumbad City Hall" "New party")
+    (let [mumbad (get-content state :party1 0)]
+      (core/reveal state :contestant mumbad)
+      (card-ability state :contestant mumbad 0)
+      (click-prompt state :contestant (find-card "PAD Factory" (:deck (get-contestant))))
+      (click-prompt state :contestant "New party")
+      (is (= "PAD Factory" (:title (get-content state :party2 0))))
+      (card-ability state :contestant mumbad 0)
+      (click-prompt state :contestant (find-card "Salem's Hospitality" (:deck (get-contestant))))
+      (click-prompt state :contestant "Sure Gamble")
+      (is (= 3 (-> (get-challenger) :discard count)) "Challenger should have discarded all cards from Salem's Hospitality"))))
 
 (deftest mumbad-construction-co.
   ;; Mumbad Construction Co.
   (do-game
-    (new-game (default-corp ["Mumbad Construction Co."
+    (new-game (default-contestant ["Mumbad Construction Co."
                              "Oaktown Renovation"])
-              (default-runner))
-    (play-from-hand state :corp "Mumbad Construction Co." "New remote")
-    (play-from-hand state :corp "Oaktown Renovation" "New remote")
-    (let [mcc (get-content state :remote1 0)
-          oak (get-content state :remote2 0)]
-      (core/rez state :corp mcc)
+              (default-challenger))
+    (play-from-hand state :contestant "Mumbad Construction Co." "New party")
+    (play-from-hand state :contestant "Oaktown Renovation" "New party")
+    (let [mcc (get-content state :party1 0)
+          oak (get-content state :party2 0)]
+      (core/reveal state :contestant mcc)
       (is (zero? (get-counters (refresh mcc) :advancement)) "Mumbad Construction Co should start with 0 counters")
       (is (zero? (get-counters (refresh oak) :advancement)) "Oaktown Renovation should start with 0 counters")
-      (take-credits state :corp)
-      (take-credits state :runner)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
       (is (= 1 (get-counters (refresh mcc) :advancement)) "Mumbad Construction Co should gain 1 counter at start of turn")
-      (let [credits (:credit (get-corp))]
-        (card-ability state :corp mcc 0)
-        (click-card state :corp (refresh oak))
+      (let [credits (:credit (get-contestant))]
+        (card-ability state :contestant mcc 0)
+        (click-card state :contestant (refresh oak))
         (is (zero? (get-counters (refresh mcc) :advancement)) "Mumbad Construction Co should lose 1 counter when using ability")
         (is (= 1 (get-counters (refresh oak) :advancement)) "Oaktown Renovation should gain 1 counter from MCC ability")
-        (is (= (- credits 2) (:credit (get-corp))) "Mumbad Construction Co ability should cost 2 [Credits]")))))
+        (is (= (- credits 2) (:credit (get-contestant))) "Mumbad Construction Co ability should cost 2 [Credits]")))))
 
 (deftest museum-of-history
   ;; Museum of History
   (do-game
-    (new-game (default-corp ["Museum of History" "Beanstalk Royalties"
+    (new-game (default-contestant ["Museum of History" "Beanstalk Royalties"
                              (qty "Ice Wall" 10)])
-              (default-runner))
-    (starting-hand state :corp ["Beanstalk Royalties" "Museum of History"])
-    (play-from-hand state :corp "Beanstalk Royalties")
-    (play-from-hand state :corp "Museum of History" "New remote")
-    (let [museum (get-content state :remote1 0)
-          number-of-shuffles (count (core/turn-events state :corp :corp-shuffle-deck))]
-      (core/rez state :corp museum)
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (card-ability state :corp museum 0)
-      (click-card state :corp (find-card "Beanstalk Royalties" (:discard (get-corp))))
-      (is (< number-of-shuffles (count (core/turn-events state :corp :corp-shuffle-deck))) "Corp should shuffle deck")
-      (is (zero? (-> (get-corp) :discard count)) "Archives should be empty after shuffling Beanstalk into R&D"))))
+              (default-challenger))
+    (starting-hand state :contestant ["Beanstalk Royalties" "Museum of History"])
+    (play-from-hand state :contestant "Beanstalk Royalties")
+    (play-from-hand state :contestant "Museum of History" "New party")
+    (let [museum (get-content state :party1 0)
+          number-of-shuffles (count (core/turn-events state :contestant :contestant-shuffle-deck))]
+      (core/reveal state :contestant museum)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (card-ability state :contestant museum 0)
+      (click-card state :contestant (find-card "Beanstalk Royalties" (:discard (get-contestant))))
+      (is (< number-of-shuffles (count (core/turn-events state :contestant :contestant-shuffle-deck))) "Contestant should shuffle deck")
+      (is (zero? (-> (get-contestant) :discard count)) "Archives should be empty after shuffling Beanstalk into R&D"))))
 
 (deftest nasx
   ;; NASX
   (do-game
-    (new-game (default-corp ["NASX"])
-              (default-runner))
-    (play-from-hand state :corp "NASX" "New remote")
-    (let [nasx (get-content state :remote1 0)]
-      (core/rez state :corp nasx)
-      (take-credits state :corp)
-      (let [credits (:credit (get-corp))]
-        (take-credits state :runner)
-        (is (= (+ credits 1) (:credit (get-corp))) "Corp should gain 1 credit at start of turn from NASX"))
-      (let [credits (:credit (get-corp))]
-        (card-ability state :corp nasx 1)
-        (is (= (- credits 1) (:credit (get-corp))) "Corp should spend 1 credit on NASX ability")
+    (new-game (default-contestant ["NASX"])
+              (default-challenger))
+    (play-from-hand state :contestant "NASX" "New party")
+    (let [nasx (get-content state :party1 0)]
+      (core/reveal state :contestant nasx)
+      (take-credits state :contestant)
+      (let [credits (:credit (get-contestant))]
+        (take-credits state :challenger)
+        (is (= (+ credits 1) (:credit (get-contestant))) "Contestant should gain 1 credit at start of turn from NASX"))
+      (let [credits (:credit (get-contestant))]
+        (card-ability state :contestant nasx 1)
+        (is (= (- credits 1) (:credit (get-contestant))) "Contestant should spend 1 credit on NASX ability")
         (is (= 1 (get-counters (refresh nasx) :power)) "NASX should gain 1 power counter from spent credits"))
-      (let [credits (:credit (get-corp))]
-        (card-ability state :corp nasx 2)
-        (is (= (- credits 2) (:credit (get-corp))) "Corp should spend 2 credit on NASX ability")
+      (let [credits (:credit (get-contestant))]
+        (card-ability state :contestant nasx 2)
+        (is (= (- credits 2) (:credit (get-contestant))) "Contestant should spend 2 credit on NASX ability")
         (is (= 3 (get-counters (refresh nasx) :power)) "NASX should gain 2 power counter from spent credits"))
-      (let [credits (:credit (get-corp))
+      (let [credits (:credit (get-contestant))
             counters (get-counters (refresh nasx) :power)]
-        (card-ability state :corp nasx 3)
-        (is (= (+ credits (* 2 counters)) (:credit (get-corp))) (str "Corp should gain " (* 2 counters) " from NASX trash ability"))
-        (is (= 1 (-> (get-corp) :discard count)) "Corp should trash NASX for ability")
-        (is (= "NASX" (-> (get-corp) :discard first :title)) "NASX should be in archives")))))
+        (card-ability state :contestant nasx 3)
+        (is (= (+ credits (* 2 counters)) (:credit (get-contestant))) (str "Contestant should gain " (* 2 counters) " from NASX discard ability"))
+        (is (= 1 (-> (get-contestant) :discard count)) "Contestant should discard NASX for ability")
+        (is (= "NASX" (-> (get-contestant) :discard first :title)) "NASX should be in archives")))))
 
 (deftest net-analytics
-  ;; Draw a card when runner avoids or removes 1 or more tags
+  ;; Draw a card when challenger avoids or removes 1 or more tags
   (do-game
-    (new-game (default-corp [(qty "Ghost Branch" 3) (qty "Net Analytics" 3)])
-              (default-runner [(qty "New Angeles City Hall" 3)]))
-    (starting-hand state :corp ["Net Analytics" "Ghost Branch"])
-    (play-from-hand state :corp "Ghost Branch" "New remote")
-    (play-from-hand state :corp "Net Analytics" "New remote")
-    (take-credits state :corp)
-    (play-from-hand state :runner "New Angeles City Hall")
-    (take-credits state :runner)
-    (let [gb (get-content state :remote1 0)
-          net (get-content state :remote2 0)
-          nach (get-resource state 0)]
-      (core/rez state :corp (refresh net))
-      (core/advance state :corp {:card (refresh gb)})
+    (new-game (default-contestant [(qty "Ghost Branch" 3) (qty "Net Analytics" 3)])
+              (default-challenger [(qty "New Angeles City Hall" 3)]))
+    (starting-hand state :contestant ["Net Analytics" "Ghost Branch"])
+    (play-from-hand state :contestant "Ghost Branch" "New party")
+    (play-from-hand state :contestant "Net Analytics" "New party")
+    (take-credits state :contestant)
+    (play-from-hand state :challenger "New Angeles City Hall")
+    (take-credits state :challenger)
+    (let [gb (get-content state :party1 0)
+          net (get-content state :party2 0)
+          nach (get-radicle state 0)]
+      (core/reveal state :contestant (refresh net))
+      (core/advance state :contestant {:card (refresh gb)})
       (is (= 1 (get-counters (refresh gb) :advancement)))
-      (take-credits state :corp)
-      (is (= 1 (count (:hand (get-corp)))) "Corp hand size is 1 before run")
-      (run-empty-server state "Server 1")
-      (click-prompt state :corp "Yes") ; Ghost Branch ability
-      (card-ability state :runner nach 0)
-      (click-prompt state :runner "Done")
-      (click-prompt state :corp "Yes") ; Draw from Net Analytics
-      (click-prompt state :runner "No action")
-      (is (empty? (:prompt (get-runner))) "Runner waiting prompt is cleared")
-      (is (zero? (:tag (get-runner))) "Avoided 1 Ghost Branch tag")
-      (is (= 2 (count (:hand (get-corp)))) "Corp draw from NA")
+      (take-credits state :contestant)
+      (is (= 1 (count (:hand (get-contestant)))) "Contestant hand size is 1 before run")
+      (run-empty-locale state "Locale 1")
+      (click-prompt state :contestant "Yes") ; Ghost Branch ability
+      (card-ability state :challenger nach 0)
+      (click-prompt state :challenger "Done")
+      (click-prompt state :contestant "Yes") ; Draw from Net Analytics
+      (click-prompt state :challenger "No action")
+      (is (empty? (:prompt (get-challenger))) "Challenger waiting prompt is cleared")
+      (is (zero? (:tag (get-challenger))) "Avoided 1 Ghost Branch tag")
+      (is (= 2 (count (:hand (get-contestant)))) "Contestant draw from NA")
       ; tag removal
-      (core/gain-tags state :runner 1)
-      (click-prompt state :runner "Done") ; Don't prevent the tag
-      (core/remove-tag state :runner 1)
-      (click-prompt state :corp "Yes") ; Draw from Net Analytics
-      (is (= 3 (count (:hand (get-corp)))) "Corp draw from NA"))))
+      (core/gain-tags state :challenger 1)
+      (click-prompt state :challenger "Done") ; Don't prevent the tag
+      (core/remove-tag state :challenger 1)
+      (click-prompt state :contestant "Yes") ; Draw from Net Analytics
+      (is (= 3 (count (:hand (get-contestant)))) "Contestant draw from NA"))))
 
-(deftest net-police
-  ;; Net Police - Recurring credits equal to Runner's link
+(deftest net-polcharacter
+  ;; Net Polcharacter - Recurring credits equal to Challenger's link
   (do-game
     (new-game
-      (default-corp ["Net Police"])
+      (default-contestant ["Net Polcharacter"])
       (make-deck "Sunny Lebeau: Security Specialist" ["Dyson Mem Chip"
                                                       "Access to Globalsec"]))
-    (play-from-hand state :corp "Net Police" "New remote")
-    (is (= 2 (:link (get-runner))))
-    (let [netpol (get-content state :remote1 0)]
-      (core/rez state :corp netpol)
-      (is (= 2 (get-counters (refresh netpol) :recurring)) "2 recurring for Runner's 2 link")
-      (take-credits state :corp)
-      (play-from-hand state :runner "Dyson Mem Chip")
-      (take-credits state :runner)
-      (is (= 3 (get-counters (refresh netpol) :recurring)) "3 recurring for Runner's 3 link")
-      (take-credits state :corp)
-      (play-from-hand state :runner "Access to Globalsec")
-      (take-credits state :runner)
-      (is (= 4 (get-counters (refresh netpol) :recurring)) "4 recurring for Runner's 4 link"))))
+    (play-from-hand state :contestant "Net Polcharacter" "New party")
+    (is (= 2 (:link (get-challenger))))
+    (let [netpol (get-content state :party1 0)]
+      (core/reveal state :contestant netpol)
+      (is (= 2 (get-counters (refresh netpol) :recurring)) "2 recurring for Challenger's 2 link")
+      (take-credits state :contestant)
+      (play-from-hand state :challenger "Dyson Mem Chip")
+      (take-credits state :challenger)
+      (is (= 3 (get-counters (refresh netpol) :recurring)) "3 recurring for Challenger's 3 link")
+      (take-credits state :contestant)
+      (play-from-hand state :challenger "Access to Globalsec")
+      (take-credits state :challenger)
+      (is (= 4 (get-counters (refresh netpol) :recurring)) "4 recurring for Challenger's 4 link"))))
 
 (deftest neurostasis
   ;; Neurostasis - ambush, shuffle cards into the stack
   (do-game
     (new-game
-      (default-corp ["Neurostasis"])
-      (default-runner [(qty "Cache" 3)]))
-    (play-from-hand state :corp "Neurostasis" "New remote")
-    (let [neuro (get-content state :remote1 0)]
+      (default-contestant ["Neurostasis"])
+      (default-challenger [(qty "Cache" 3)]))
+    (play-from-hand state :contestant "Neurostasis" "New party")
+    (let [neuro (get-content state :party1 0)]
       ;; Single advance Neurostasis
-      (core/advance state :corp {:card (refresh neuro)})
-      (take-credits state :corp)
-      ;; Run on Neurostasis with 3 programs
-      (play-from-hand state :runner "Cache")
-      (play-from-hand state :runner "Cache")
-      (play-from-hand state :runner "Cache")
-      (run-empty-server state "Server 1")
-      (is (= 5 (:credit (get-corp))) "Corp starts with 5 credits")
-      (click-prompt state :corp "Yes")
-      ;; Corp can shuffle one program
-      (click-card state :corp (get-program state 1))
+      (core/advance state :contestant {:card (refresh neuro)})
+      (take-credits state :contestant)
+      ;; Run on Neurostasis with 3 resources
+      (play-from-hand state :challenger "Cache")
+      (play-from-hand state :challenger "Cache")
+      (play-from-hand state :challenger "Cache")
+      (run-empty-locale state "Locale 1")
+      (is (= 5 (:credit (get-contestant))) "Contestant starts with 5 credits")
+      (click-prompt state :contestant "Yes")
+      ;; Contestant can shuffle one resource
+      (click-card state :contestant (get-resource state 1))
       ;; There should be two Caches left
-      (is (= 2 (:credit (get-corp))) "Spent 3 credits to fire ambush")
-      (is (= 2 (count (get-program state))) "Removed one installed program")
-      (is (= 1 (count (:deck (get-runner)))) "Shuffled one program into the stack")
-      (take-credits state :runner)
-      (core/advance state :corp {:card (refresh neuro)})
-      (take-credits state :corp)
-      (run-empty-server state "Server 1")
-      (is (= 3 (:credit (get-corp))) "Corp starts with 3 credits")
-      (click-prompt state :corp "Yes")
-      ;; Corp can shuffle two programs
-      (click-card state :corp (get-program state 1))
-      (click-card state :corp (get-program state 0))
-      (is (= 0 (:credit (get-corp))) "Spent 3 credits to fire ambush")
-      (is (empty? (get-program state)) "Removed one installed program")
-      (is (= 3 (count (:deck (get-runner)))) "Shuffled two programs into the stack"))))
+      (is (= 2 (:credit (get-contestant))) "Spent 3 credits to fire ambush")
+      (is (= 2 (count (get-resource state))) "Removed one placed resource")
+      (is (= 1 (count (:deck (get-challenger)))) "Shuffled one resource into the stack")
+      (take-credits state :challenger)
+      (core/advance state :contestant {:card (refresh neuro)})
+      (take-credits state :contestant)
+      (run-empty-locale state "Locale 1")
+      (is (= 3 (:credit (get-contestant))) "Contestant starts with 3 credits")
+      (click-prompt state :contestant "Yes")
+      ;; Contestant can shuffle two resources
+      (click-card state :contestant (get-resource state 1))
+      (click-card state :contestant (get-resource state 0))
+      (is (= 0 (:credit (get-contestant))) "Spent 3 credits to fire ambush")
+      (is (empty? (get-resource state)) "Removed one placed resource")
+      (is (= 3 (count (:deck (get-challenger)))) "Shuffled two resources into the stack"))))
 
 (deftest news-team
   ;; News Team - on access take 2 tags or take as agenda worth -1
   (do-game
-    (new-game (default-corp [(qty "News Team" 3) "Blacklist"])
-              (default-runner))
-    (trash-from-hand state :corp "News Team")
-    (play-from-hand state :corp "Blacklist" "New remote")
-    (take-credits state :corp)
-    (run-empty-server state :archives)
-    (click-prompt state :runner "Take 2 tags")
-    (is (= 2 (:tag (get-runner))) "Runner has 2 tags")
-    (run-empty-server state :archives)
-    (click-prompt state :runner "Add News Team to score area")
-    (is (= 1 (count (:scored (get-runner)))) "News Team added to Runner score area")
-    (trash-from-hand state :corp "News Team")
-    (core/rez state :corp (get-content state :remote1 0))
-    (run-empty-server state :archives)
-    (click-prompt state :runner "Add News Team to score area")
-    (is (= 2 (count (:scored (get-runner)))) "News Team added to Runner score area with Blacklist rez")))
+    (new-game (default-contestant [(qty "News Team" 3) "Blacklist"])
+              (default-challenger))
+    (discard-from-hand state :contestant "News Team")
+    (play-from-hand state :contestant "Blacklist" "New party")
+    (take-credits state :contestant)
+    (run-empty-locale state :archives)
+    (click-prompt state :challenger "Take 2 tags")
+    (is (= 2 (:tag (get-challenger))) "Challenger has 2 tags")
+    (run-empty-locale state :archives)
+    (click-prompt state :challenger "Add News Team to score area")
+    (is (= 1 (count (:scored (get-challenger)))) "News Team added to Challenger score area")
+    (discard-from-hand state :contestant "News Team")
+    (core/reveal state :contestant (get-content state :party1 0))
+    (run-empty-locale state :archives)
+    (click-prompt state :challenger "Add News Team to score area")
+    (is (= 2 (count (:scored (get-challenger)))) "News Team added to Challenger score area with Blacklist reveal")))
 
 (deftest ngo-front
   ;; NGO Front - full test
   (do-game
-    (new-game (default-corp [(qty "NGO Front" 3)])
-              (default-runner))
-    (core/gain state :corp :click 3)
-    (play-from-hand state :corp "NGO Front" "New remote")
-    (play-from-hand state :corp "NGO Front" "New remote")
-    (play-from-hand state :corp "NGO Front" "New remote")
-    (let [ngo1 (get-content state :remote1 0)
-          ngo2 (get-content state :remote2 0)
-          ngo3 (get-content state :remote3 0)]
-      (core/advance state :corp {:card ngo2})
-      (core/advance state :corp {:card (refresh ngo3)})
-      (core/advance state :corp {:card (refresh ngo3)})
-      (core/rez state :corp (refresh ngo1))
-      (core/rez state :corp (refresh ngo2))
-      (core/rez state :corp (refresh ngo3))
-      (is (= 2 (:credit (get-corp))) "Corp at 2 credits")
-      (card-ability state :corp ngo1 1)
-      (card-ability state :corp ngo1 0)
-      (is (= 2 (:credit (get-corp))) "Corp still 2 credits")
-      (is (zero? (count (:discard (get-corp)))) "Nothing trashed")
-      (card-ability state :corp ngo2 1)
-      (is (= 2 (:credit (get-corp))) "Corp still 2 credits")
-      (is (zero? (count (:discard (get-corp)))) "Nothing trashed")
-      (card-ability state :corp ngo2 0)
-      (is (= 7 (:credit (get-corp))) "Corp gained 5 credits")
-      (is (= 1 (count (:discard (get-corp)))) "1 NGO Front Trashed")
-      (card-ability state :corp ngo3 1)
-      (is (= 15 (:credit (get-corp))) "Corp gained 8 credits")
-      (is (= 2 (count (:discard (get-corp)))) "2 NGO Front Trashed"))))
+    (new-game (default-contestant [(qty "NGO Front" 3)])
+              (default-challenger))
+    (core/gain state :contestant :click 3)
+    (play-from-hand state :contestant "NGO Front" "New party")
+    (play-from-hand state :contestant "NGO Front" "New party")
+    (play-from-hand state :contestant "NGO Front" "New party")
+    (let [ngo1 (get-content state :party1 0)
+          ngo2 (get-content state :party2 0)
+          ngo3 (get-content state :party3 0)]
+      (core/advance state :contestant {:card ngo2})
+      (core/advance state :contestant {:card (refresh ngo3)})
+      (core/advance state :contestant {:card (refresh ngo3)})
+      (core/reveal state :contestant (refresh ngo1))
+      (core/reveal state :contestant (refresh ngo2))
+      (core/reveal state :contestant (refresh ngo3))
+      (is (= 2 (:credit (get-contestant))) "Contestant at 2 credits")
+      (card-ability state :contestant ngo1 1)
+      (card-ability state :contestant ngo1 0)
+      (is (= 2 (:credit (get-contestant))) "Contestant still 2 credits")
+      (is (zero? (count (:discard (get-contestant)))) "Nothing discarded")
+      (card-ability state :contestant ngo2 1)
+      (is (= 2 (:credit (get-contestant))) "Contestant still 2 credits")
+      (is (zero? (count (:discard (get-contestant)))) "Nothing discarded")
+      (card-ability state :contestant ngo2 0)
+      (is (= 7 (:credit (get-contestant))) "Contestant gained 5 credits")
+      (is (= 1 (count (:discard (get-contestant)))) "1 NGO Front Discarded")
+      (card-ability state :contestant ngo3 1)
+      (is (= 15 (:credit (get-contestant))) "Contestant gained 8 credits")
+      (is (= 2 (count (:discard (get-contestant)))) "2 NGO Front Discarded"))))
 
 (deftest open-forum
   ;; Open Forum
   (do-game
-    (new-game (default-corp ["Open Forum" "Ice Wall" "Fire Wall" "Enigma"])
-              (default-runner))
-    (play-from-hand state :corp "Open Forum" "New remote")
-    (core/move state :corp (find-card "Ice Wall" (:hand (get-corp))) :deck)
-    (core/move state :corp (find-card "Fire Wall" (:hand (get-corp))) :deck)
-    (core/move state :corp (find-card "Enigma" (:hand (get-corp))) :deck)
-    (is (-> @state :corp :hand count zero?))
-    (let [forum (get-content state :remote1 0)]
-      (core/rez state :corp forum)
-      (take-credits state :corp)
-      (take-credits state :runner)
+    (new-game (default-contestant ["Open Forum" "Ice Wall" "Fire Wall" "Enigma"])
+              (default-challenger))
+    (play-from-hand state :contestant "Open Forum" "New party")
+    (core/move state :contestant (find-card "Ice Wall" (:hand (get-contestant))) :deck)
+    (core/move state :contestant (find-card "Fire Wall" (:hand (get-contestant))) :deck)
+    (core/move state :contestant (find-card "Enigma" (:hand (get-contestant))) :deck)
+    (is (-> @state :contestant :hand count zero?))
+    (let [forum (get-content state :party1 0)]
+      (core/reveal state :contestant forum)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
       (is (last-log-contains? state "Fire Wall") "Mandatory Draw was Ice Wall, Open Forum should reveal Fire Wall")
-      (click-card state :corp (find-card "Ice Wall" (:hand (get-corp))))
-      (is (= 2 (-> @state :corp :deck count)) "Two cards should remain in R&D")
-      (is (= "Ice Wall" (-> @state :corp :deck first :title)) "Top card in R&D should be Ice Wall"))))
+      (click-card state :contestant (find-card "Ice Wall" (:hand (get-contestant))))
+      (is (= 2 (-> @state :contestant :deck count)) "Two cards should remain in R&D")
+      (is (= "Ice Wall" (-> @state :contestant :deck first :title)) "Top card in R&D should be Ice Wall"))))
 
 (deftest pad-campaign
   ;; PAD Campaign
   (do-game
-    (new-game (default-corp ["PAD Campaign"])
-              (default-runner))
-    (play-from-hand state :corp "PAD Campaign" "New remote")
-    (let [pad (get-content state :remote1 0)]
-      (core/rez state :corp pad)
-      (take-credits state :corp)
-      (let [credits (:credit (get-corp))]
-        (take-credits state :runner)
-        (is (= (+ 1 credits) (:credit (get-corp))) "Should gain 1 credit at start of turn from PAD Campaign")))))
+    (new-game (default-contestant ["PAD Campaign"])
+              (default-challenger))
+    (play-from-hand state :contestant "PAD Campaign" "New party")
+    (let [pad (get-content state :party1 0)]
+      (core/reveal state :contestant pad)
+      (take-credits state :contestant)
+      (let [credits (:credit (get-contestant))]
+        (take-credits state :challenger)
+        (is (= (+ 1 credits) (:credit (get-contestant))) "Should gain 1 credit at start of turn from PAD Campaign")))))
 
 (deftest pad-factory
   ;; PAD Factory - Click to place an advancement, cannot score target until next turn
   (do-game
-    (new-game (default-corp ["PAD Factory" "15 Minutes"])
-              (default-runner))
-    (core/gain state :corp :click 1)
-    (play-from-hand state :corp "PAD Factory" "New remote")
-    (play-from-hand state :corp "15 Minutes" "New remote")
-    (let [pf (get-content state :remote1 0)
-          fif (get-content state :remote2 0)]
-      (core/rez state :corp pf)
-      (card-ability state :corp (refresh pf) 0)
-      (click-card state :corp fif)
-      (card-ability state :corp (refresh pf) 0)
-      (click-card state :corp (refresh fif))
-      (is (zero? (:click (get-corp))) "Spent 2 clicks using PAD Factory twice")
+    (new-game (default-contestant ["PAD Factory" "15 Minutes"])
+              (default-challenger))
+    (core/gain state :contestant :click 1)
+    (play-from-hand state :contestant "PAD Factory" "New party")
+    (play-from-hand state :contestant "15 Minutes" "New party")
+    (let [pf (get-content state :party1 0)
+          fif (get-content state :party2 0)]
+      (core/reveal state :contestant pf)
+      (card-ability state :contestant (refresh pf) 0)
+      (click-card state :contestant fif)
+      (card-ability state :contestant (refresh pf) 0)
+      (click-card state :contestant (refresh fif))
+      (is (zero? (:click (get-contestant))) "Spent 2 clicks using PAD Factory twcharacter")
       (is (= 2 (get-counters (refresh fif) :advancement)) "Agenda has 2 advancements")
-      (core/score state :corp {:card (refresh fif)})
-      (is (empty? (:scored (get-corp))) "Prevented from scoring this turn")
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (core/score state :corp {:card (refresh fif)})
-      (is (= 1 (count (:scored (get-corp)))) "Scored agenda"))))
+      (core/score state :contestant {:card (refresh fif)})
+      (is (empty? (:scored (get-contestant))) "Prevented from scoring this turn")
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (core/score state :contestant {:card (refresh fif)})
+      (is (= 1 (count (:scored (get-contestant)))) "Scored agenda"))))
 
 (deftest palana-agroplex
-  ;; Pālanā Agroplex - Both players draw 1 at start of Corp turn
+  ;; Pālanā Agroplex - Both players draw 1 at start of Contestant turn
   (do-game
-    (new-game (default-corp ["Pālanā Agroplex" (qty "Hedge Fund" 3)])
-              (default-runner))
-    (starting-hand state :corp ["Pālanā Agroplex"])
-    (starting-hand state :runner ["Sure Gamble"])
-    (play-from-hand state :corp "Pālanā Agroplex" "New remote")
-    (core/rez state :corp (get-content state :remote1 0))
-    (take-credits state :corp)
-    (take-credits state :runner)
-    (core/end-phase-12 state :corp nil)
-    (is (= 2 (count (:hand (get-corp)))) "Corp drew 1 from Agroplex")
-    (is (= 2 (count (:hand (get-runner)))) "Runner drew 1 from Agroplex")))
+    (new-game (default-contestant ["Pālanā Agroplex" (qty "Hedge Fund" 3)])
+              (default-challenger))
+    (starting-hand state :contestant ["Pālanā Agroplex"])
+    (starting-hand state :challenger ["Sure Gamble"])
+    (play-from-hand state :contestant "Pālanā Agroplex" "New party")
+    (core/reveal state :contestant (get-content state :party1 0))
+    (take-credits state :contestant)
+    (take-credits state :challenger)
+    (core/end-phase-12 state :contestant nil)
+    (is (= 2 (count (:hand (get-contestant)))) "Contestant drew 1 from Agroplex")
+    (is (= 2 (count (:hand (get-challenger)))) "Challenger drew 1 from Agroplex")))
 
 (deftest personalized-portal
-  ;; Personalized Portal - on corp turn start, force the runner to draw 1 card
-  ;; and then gain 1 credit for every 2 cards in the runners hand
+  ;; Personalized Portal - on contestant turn start, force the challenger to draw 1 card
+  ;; and then gain 1 credit for every 2 cards in the challengers hand
   (do-game
-    (new-game (default-corp ["Personalized Portal"])
-              (default-runner [(qty "Daily Casts" 3) (qty "Dyson Mem Chip" 3)]))
-    (play-from-hand state :corp "Personalized Portal" "New remote")
-    (core/rez state :corp (get-content state :remote1 0))
-    (take-credits state :corp)
-    (starting-hand state :runner [])
-    (is (empty? (:hand (get-runner))) "Runner's grip is empty to start")
-    (is (= 4 (:credit (get-corp))) "Corp starts with 4 credits")
-    (take-credits state :runner)
-    (is (= 1 (count (:hand (get-runner)))) "Runner drew 1 card")
-    (is (= 4 (:credit (get-corp))) "Corp gained 0 credits")
-    (take-credits state :corp)
-    (take-credits state :runner)
-    (is (= 2 (count (:hand (get-runner)))) "Runner drew 1 card")
-    (is (= 8 (:credit (get-corp))) "Corp gained 1 credit")
-    (take-credits state :corp)
-    (take-credits state :runner)
-    (is (= 3 (count (:hand (get-runner)))) "Runner drew 1 card")
-    (is (= 12 (:credit (get-corp))) "Corp gained 1 credit")))
+    (new-game (default-contestant ["Personalized Portal"])
+              (default-challenger [(qty "Daily Casts" 3) (qty "Dyson Mem Chip" 3)]))
+    (play-from-hand state :contestant "Personalized Portal" "New party")
+    (core/reveal state :contestant (get-content state :party1 0))
+    (take-credits state :contestant)
+    (starting-hand state :challenger [])
+    (is (empty? (:hand (get-challenger))) "Challenger's grip is empty to start")
+    (is (= 4 (:credit (get-contestant))) "Contestant starts with 4 credits")
+    (take-credits state :challenger)
+    (is (= 1 (count (:hand (get-challenger)))) "Challenger drew 1 card")
+    (is (= 4 (:credit (get-contestant))) "Contestant gained 0 credits")
+    (take-credits state :contestant)
+    (take-credits state :challenger)
+    (is (= 2 (count (:hand (get-challenger)))) "Challenger drew 1 card")
+    (is (= 8 (:credit (get-contestant))) "Contestant gained 1 credit")
+    (take-credits state :contestant)
+    (take-credits state :challenger)
+    (is (= 3 (count (:hand (get-challenger)))) "Challenger drew 1 card")
+    (is (= 12 (:credit (get-contestant))) "Contestant gained 1 credit")))
 
 (deftest plan-b
   ;; Plan B - score agenda with adv cost <= # of adv counters
   (do-game
-    (new-game (default-corp ["Plan B"
+    (new-game (default-contestant ["Plan B"
                              "Braintrust"
                              "The Future Perfect"
                              "Mushin No Shin"])
-              (default-runner))
-    (play-from-hand state :corp "Mushin No Shin")
-    (click-card state :corp (find-card "Plan B" (:hand (get-corp))))
-    (take-credits state :corp)
-    (run-empty-server state :remote1)
-    ;; prompt for corp to use Plan B
-    (click-prompt state :corp "Yes")
+              (default-challenger))
+    (play-from-hand state :contestant "Mushin No Shin")
+    (click-card state :contestant (find-card "Plan B" (:hand (get-contestant))))
+    (take-credits state :contestant)
+    (run-empty-locale state :party1)
+    ;; prompt for contestant to use Plan B
+    (click-prompt state :contestant "Yes")
     ;; Pick TFP, does not score
-    (click-card state :corp (find-card "The Future Perfect" (:hand (get-corp))))
-    (is (find-card "The Future Perfect" (:hand (get-corp))) "TFP is not scored")
+    (click-card state :contestant (find-card "The Future Perfect" (:hand (get-contestant))))
+    (is (find-card "The Future Perfect" (:hand (get-contestant))) "TFP is not scored")
     ;; Pick Brain Trust, scores
-    (click-card state :corp (find-card "Braintrust" (:hand (get-corp))))
-    (is (find-card "Braintrust" (:scored (get-corp))) "Braintrust is scored")))
+    (click-card state :contestant (find-card "Braintrust" (:hand (get-contestant))))
+    (is (find-card "Braintrust" (:scored (get-contestant))) "Braintrust is scored")))
 
 (deftest political-dealings
   ;; Political Dealings
   (testing "Full test"
     (do-game
-      (new-game (default-corp ["Political Dealings" "Medical Breakthrough" "Oaktown Renovation"])
-                (default-runner))
-      (core/move state :corp (find-card "Medical Breakthrough" (:hand (get-corp))) :deck)
-      (core/move state :corp (find-card "Oaktown Renovation" (:hand (get-corp))) :deck)
-      (play-from-hand state :corp "Political Dealings" "New remote")
-      (core/rez state :corp (get-content state :remote1 0))
-      ;; Install Medical Breakthrough
-      (core/draw state :corp)
-      (click-prompt state :corp "Yes")
-      (click-prompt state :corp "New remote")
-      (is (= "Medical Breakthrough" (:title (get-content state :remote2 0)))
-          "Medical Breakthrough installed by Political Dealings")
-      ;; Install Oaktown Renovation
-      (core/draw state :corp)
-      (click-prompt state :corp "Yes")
-      (click-prompt state :corp "New remote")
-      (is (= "Oaktown Renovation" (:title (get-content state :remote3 0)))
-          "Oaktown Renovation installed by Political Dealings")
-      (is (:rezzed (get-content state :remote3 0))
-          "Oaktown Renovation installed face up")))
-  (testing "Daily Business Show interaction - Draw 2 agendas, install both of them but return 1 to bottom of R&D"
+      (new-game (default-contestant ["Political Dealings" "Medical Breakthrough" "Oaktown Renovation"])
+                (default-challenger))
+      (core/move state :contestant (find-card "Medical Breakthrough" (:hand (get-contestant))) :deck)
+      (core/move state :contestant (find-card "Oaktown Renovation" (:hand (get-contestant))) :deck)
+      (play-from-hand state :contestant "Political Dealings" "New party")
+      (core/reveal state :contestant (get-content state :party1 0))
+      ;; Place Medical Breakthrough
+      (core/draw state :contestant)
+      (click-prompt state :contestant "Yes")
+      (click-prompt state :contestant "New party")
+      (is (= "Medical Breakthrough" (:title (get-content state :party2 0)))
+          "Medical Breakthrough placed by Political Dealings")
+      ;; Place Oaktown Renovation
+      (core/draw state :contestant)
+      (click-prompt state :contestant "Yes")
+      (click-prompt state :contestant "New party")
+      (is (= "Oaktown Renovation" (:title (get-content state :party3 0)))
+          "Oaktown Renovation placed by Political Dealings")
+      (is (:revealed (get-content state :party3 0))
+          "Oaktown Renovation placed face up")))
+  (testing "Daily Business Show interaction - Draw 2 agendas, place both of them but return 1 to bottom of R&D"
     (do-game
-      (new-game (default-corp ["Political Dealings" "Daily Business Show" "Turtlebacks"
+      (new-game (default-contestant ["Political Dealings" "Daily Business Show" "Turtlebacks"
                                "Breaking News" "Project Beale"])
-                (default-runner))
-      (starting-hand state :corp ["Political Dealings" "Daily Business Show" "Turtlebacks"])
-      (core/gain state :corp :credit 3)
-      (play-from-hand state :corp "Political Dealings" "New remote")
-      (play-from-hand state :corp "Daily Business Show" "New remote")
-      (play-from-hand state :corp "Turtlebacks" "New remote")
-      (core/rez state :corp (get-content state :remote1 0))
-      (core/rez state :corp (get-content state :remote2 0))
-      (core/rez state :corp (get-content state :remote3 0))
-      (take-credits state :corp)
-      (is (zero? (count (:hand (get-corp)))))
-      (let [agenda1 (first (:deck (get-corp)))
-            agenda2 (second (:deck (get-corp)))]
-        (take-credits state :runner)
-        ;; Install first agenda
-        (is (= 2 (count (:hand (get-corp)))))
-        (is (zero? (:credit (get-corp))))
-        (click-prompt state :corp "Yes")
-        (click-prompt state :corp "New remote")
-        (is (= (:cid agenda1) (:cid (get-content state :remote4 0))))
-        (is (= 1 (:credit (get-corp))) "Turtlebacks triggered")
-        ;; Install second agenda
-        (click-prompt state :corp "Yes")
-        (click-prompt state :corp "New remote")
-        (is (= (:cid agenda2) (:cid (get-content state :remote5 0))))
-        (is (= 2 (:credit (get-corp))) "Turtlebacks triggered")
+                (default-challenger))
+      (starting-hand state :contestant ["Political Dealings" "Daily Business Show" "Turtlebacks"])
+      (core/gain state :contestant :credit 3)
+      (play-from-hand state :contestant "Political Dealings" "New party")
+      (play-from-hand state :contestant "Daily Business Show" "New party")
+      (play-from-hand state :contestant "Turtlebacks" "New party")
+      (core/reveal state :contestant (get-content state :party1 0))
+      (core/reveal state :contestant (get-content state :party2 0))
+      (core/reveal state :contestant (get-content state :party3 0))
+      (take-credits state :contestant)
+      (is (zero? (count (:hand (get-contestant)))))
+      (let [agenda1 (first (:deck (get-contestant)))
+            agenda2 (second (:deck (get-contestant)))]
+        (take-credits state :challenger)
+        ;; Place first agenda
+        (is (= 2 (count (:hand (get-contestant)))))
+        (is (zero? (:credit (get-contestant))))
+        (click-prompt state :contestant "Yes")
+        (click-prompt state :contestant "New party")
+        (is (= (:cid agenda1) (:cid (get-content state :party4 0))))
+        (is (= 1 (:credit (get-contestant))) "Turtlebacks triggered")
+        ;; Place second agenda
+        (click-prompt state :contestant "Yes")
+        (click-prompt state :contestant "New party")
+        (is (= (:cid agenda2) (:cid (get-content state :party5 0))))
+        (is (= 2 (:credit (get-contestant))) "Turtlebacks triggered")
         ;; DBS - put first agenda at bottom of R&D
-        (click-card state :corp (get-content state :remote4 0))
-        (is (zero? (count (:hand (get-corp)))))
-        (is (= (:cid agenda1) (:cid (last (:deck (get-corp))))))))))
+        (click-card state :contestant (get-content state :party4 0))
+        (is (zero? (count (:hand (get-contestant)))))
+        (is (= (:cid agenda1) (:cid (last (:deck (get-contestant))))))))))
 
 (deftest primary-transmission-dish
   ;; Primary Transmission Dish
   (do-game
-    (new-game (default-corp ["Primary Transmission Dish"])
-              (default-runner))
-    (play-from-hand state :corp "Primary Transmission Dish" "New remote")
-    (let [dish (get-content state :remote1 0)]
-      (core/rez state :corp dish)
+    (new-game (default-contestant ["Primary Transmission Dish"])
+              (default-challenger))
+    (play-from-hand state :contestant "Primary Transmission Dish" "New party")
+    (let [dish (get-content state :party1 0)]
+      (core/reveal state :contestant dish)
       (is (= 3 (get-counters (refresh dish) :recurring)) "Should have 3 recurring credits"))))
 
 (deftest private-contracts
   ;; Private Contracts
   (do-game
-    (new-game (default-corp ["Private Contracts"])
-              (default-runner))
-    (play-from-hand state :corp "Private Contracts" "New remote")
-    (let [pri (get-content state :remote1 0)]
-      (core/rez state :corp pri)
+    (new-game (default-contestant ["Private Contracts"])
+              (default-challenger))
+    (play-from-hand state :contestant "Private Contracts" "New party")
+    (let [pri (get-content state :party1 0)]
+      (core/reveal state :contestant pri)
       (is (= 14 (get-counters (refresh pri) :credit)) "Should start with 14 credits")
-      (is (zero? (-> (get-corp) :discard count)) "Corp should have 0 cards in Archives")
-      (core/gain state :corp :click 7)
-      (core/lose state :corp :credit 2)
+      (is (zero? (-> (get-contestant) :discard count)) "Contestant should have 0 cards in Archives")
+      (core/gain state :contestant :click 7)
+      (core/lose state :contestant :credit 2)
       (dotimes [_ 7]
-        (card-ability state :corp pri 0))
-      (is (= 1 (-> (get-corp) :discard count)) "Private Contracts should be in discard")
-      (is (= 14 (:credit (get-corp))) "Corp should now have 14 credits"))))
+        (card-ability state :contestant pri 0))
+      (is (= 1 (-> (get-contestant) :discard count)) "Private Contracts should be in discard")
+      (is (= 14 (:credit (get-contestant))) "Contestant should now have 14 credits"))))
 
 (deftest project-junebug
   ;; Project Junebug
   (do-game
-    (new-game (default-corp ["Project Junebug"])
-              (default-runner [(qty "Sure Gamble" 100)]))
-    (play-from-hand state :corp "Project Junebug" "New remote")
-    (advance state (get-content state :remote1 0) 2)
-    (take-credits state :corp)
-    (run-empty-server state "Server 1")
-    (let [credits (:credit (get-corp))]
-      (click-prompt state :corp "Yes")
-      (is (= (- credits 1) (:credit (get-corp))) "Corp should pay 1 for Project Junebug ability")
-      (is (= 4 (-> (get-runner) :discard count)) "Project Junebug should do 4 net damage"))))
+    (new-game (default-contestant ["Project Junebug"])
+              (default-challenger [(qty "Sure Gamble" 100)]))
+    (play-from-hand state :contestant "Project Junebug" "New party")
+    (advance state (get-content state :party1 0) 2)
+    (take-credits state :contestant)
+    (run-empty-locale state "Locale 1")
+    (let [credits (:credit (get-contestant))]
+      (click-prompt state :contestant "Yes")
+      (is (= (- credits 1) (:credit (get-contestant))) "Contestant should pay 1 for Project Junebug ability")
+      (is (= 4 (-> (get-challenger) :discard count)) "Project Junebug should do 4 net damage"))))
 
 (deftest psychic-field
   (testing "Basic test"
-    ;; Psychic Field - Do 1 net damage for every card in Runner's hand when accessed/exposed
+    ;; Psychic Field - Do 1 net damage for every card in Challenger's hand when accessed/exposed
     (do-game
-      (new-game (default-corp [(qty "Psychic Field" 2)])
-                (default-runner [(qty "Infiltration" 3) (qty "Sure Gamble" 3)]))
-      (play-from-hand state :corp "Psychic Field" "New remote")
-      (play-from-hand state :corp "Psychic Field" "New remote")
-      (let [psyf1 (get-content state :remote1 0)
-            psyf2 (get-content state :remote2 0)]
-        (take-credits state :corp)
-        (starting-hand state :runner ["Infiltration" "Sure Gamble" "Sure Gamble"])
-        (play-from-hand state :runner "Infiltration")
-        (click-prompt state :runner "Expose a card")
-        (click-card state :runner psyf1)
-        (is (= 2 (count (:hand (get-runner)))))
-        (click-prompt state :corp "2 [Credits]")
-        (click-prompt state :runner "0 [Credits]")
-        (is (= 3 (count (:discard (get-runner)))) "Suffered 2 net damage on expose and psi loss")
-        (core/gain state :runner :click 3)
-        (core/draw state :runner 3)
-        (is (= 3 (count (:hand (get-runner)))))
-        (run-empty-server state :remote2)
-        (click-prompt state :corp "1 [Credits]")
-        (click-prompt state :runner "0 [Credits]")
-        (is (= 6 (count (:discard (get-runner)))) "Suffered 3 net damage on access and psi loss"))))
+      (new-game (default-contestant [(qty "Psychic Field" 2)])
+                (default-challenger [(qty "Infiltration" 3) (qty "Sure Gamble" 3)]))
+      (play-from-hand state :contestant "Psychic Field" "New party")
+      (play-from-hand state :contestant "Psychic Field" "New party")
+      (let [psyf1 (get-content state :party1 0)
+            psyf2 (get-content state :party2 0)]
+        (take-credits state :contestant)
+        (starting-hand state :challenger ["Infiltration" "Sure Gamble" "Sure Gamble"])
+        (play-from-hand state :challenger "Infiltration")
+        (click-prompt state :challenger "Expose a card")
+        (click-card state :challenger psyf1)
+        (is (= 2 (count (:hand (get-challenger)))))
+        (click-prompt state :contestant "2 [Credits]")
+        (click-prompt state :challenger "0 [Credits]")
+        (is (= 3 (count (:discard (get-challenger)))) "Suffered 2 net damage on expose and psi loss")
+        (core/gain state :challenger :click 3)
+        (core/draw state :challenger 3)
+        (is (= 3 (count (:hand (get-challenger)))))
+        (run-empty-locale state :party2)
+        (click-prompt state :contestant "1 [Credits]")
+        (click-prompt state :challenger "0 [Credits]")
+        (is (= 6 (count (:discard (get-challenger)))) "Suffered 3 net damage on access and psi loss"))))
   (testing "when in Archives. #1965"
     (do-game
-      (new-game (default-corp [(qty "Psychic Field" 2) (qty "Shock!" 2) (qty "Clone Retirement" 2)])
-                (default-runner))
-      (trash-from-hand state :corp "Psychic Field")
-      (trash-from-hand state :corp "Shock!")
-      (trash-from-hand state :corp "Clone Retirement")
-      (take-credits state :corp)
-      ;; Runner run on archives to trigger access choice
-      (run-empty-server state :archives)
-      (is (not-any? #{"Psychic Field"} (-> @state :runner :prompt first :choices))
+      (new-game (default-contestant [(qty "Psychic Field" 2) (qty "Shock!" 2) (qty "Clone Retirement" 2)])
+                (default-challenger))
+      (discard-from-hand state :contestant "Psychic Field")
+      (discard-from-hand state :contestant "Shock!")
+      (discard-from-hand state :contestant "Clone Retirement")
+      (take-credits state :contestant)
+      ;; Challenger run on archives to trigger access choice
+      (run-empty-locale state :archives)
+      (is (not-any? #{"Psychic Field"} (-> @state :challenger :prompt first :choices))
           "Psychic Field is not a choice to access in Archives")))
   (testing "Interaction with Neutralize All Threats and Hostile Infrastructure, #1208"
     (do-game
-      (new-game (default-corp [(qty "Psychic Field" 3) (qty "Hostile Infrastructure" 3)])
-                (default-runner ["Neutralize All Threats" (qty "Sure Gamble" 3)]))
-      (play-from-hand state :corp "Psychic Field" "New remote")
-      (play-from-hand state :corp "Hostile Infrastructure" "New remote")
-      (core/rez state :corp (get-content state :remote2 0))
-      (take-credits state :corp)
-      (play-from-hand state :runner "Neutralize All Threats")
-      (run-empty-server state :remote1)
-      (click-prompt state :corp "0 [Credits]")
-      (click-prompt state :runner "1 [Credits]")
-      (click-prompt state :runner "Pay 2 [Credits] to trash")
-      (is (not (get-content state :remote1)) "Psychic Field trashed by Neutralize All Threats")
+      (new-game (default-contestant [(qty "Psychic Field" 3) (qty "Hostile Infrastructure" 3)])
+                (default-challenger ["Neutralize All Threats" (qty "Sure Gamble" 3)]))
+      (play-from-hand state :contestant "Psychic Field" "New party")
+      (play-from-hand state :contestant "Hostile Infrastructure" "New party")
+      (core/reveal state :contestant (get-content state :party2 0))
+      (take-credits state :contestant)
+      (play-from-hand state :challenger "Neutralize All Threats")
+      (run-empty-locale state :party1)
+      (click-prompt state :contestant "0 [Credits]")
+      (click-prompt state :challenger "1 [Credits]")
+      (click-prompt state :challenger "Pay 2 [Credits] to discard")
+      (is (not (get-content state :party1)) "Psychic Field discarded by Neutralize All Threats")
       (is (= "Flatline" (:reason @state)) "Win condition reports flatline"))))
 
 (deftest public-support
-  ;; Public support scoring and trashing
+  ;; Public support scoring and discarding
   ;; TODO could also test for NOT triggering "when scored" events
   (do-game
-    (new-game (default-corp [(qty "Public Support" 2)])
-              (default-runner))
-    ;; Corp turn 1, install and rez public supports
-    (play-from-hand state :corp "Public Support" "New remote")
-    (play-from-hand state :corp "Public Support" "New remote")
-    (let [publics1 (get-content state :remote1 0)
-          publics2 (get-content state :remote2 0)]
-      (core/rez state :corp (refresh publics1))
-      (core/rez state :corp (refresh publics2))
-      (take-credits state :corp)
-      ;; Runner turn 1, creds
-      (is (= 2 (:credit (get-corp))))
+    (new-game (default-contestant [(qty "Public Support" 2)])
+              (default-challenger))
+    ;; Contestant turn 1, place and reveal public supports
+    (play-from-hand state :contestant "Public Support" "New party")
+    (play-from-hand state :contestant "Public Support" "New party")
+    (let [publics1 (get-content state :party1 0)
+          publics2 (get-content state :party2 0)]
+      (core/reveal state :contestant (refresh publics1))
+      (core/reveal state :contestant (refresh publics2))
+      (take-credits state :contestant)
+      ;; Challenger turn 1, creds
+      (is (= 2 (:credit (get-contestant))))
       (is (= 3 (get-counters (refresh publics1) :power)))
-      (take-credits state :runner)
-      ;; Corp turn 2, creds, check if supports are ticking
+      (take-credits state :challenger)
+      ;; Contestant turn 2, creds, check if supports are ticking
       (is (= 2 (get-counters (refresh publics1) :power)))
-      (is (zero? (:agenda-point (get-corp))))
+      (is (zero? (:agenda-point (get-contestant))))
       (is (nil? (:agendapoints (refresh publics1))))
-      (take-credits state :corp)
-      ;; Runner turn 2, run and trash publics2
-      (run-empty-server state "Server 2")
-      (click-prompt state :runner "Pay 4 [Credits] to trash") ; pay to trash
-      (is (= 5 (:credit (get-runner))))
-      (take-credits state :runner)
-      ;; Corp turn 3, check how publics1 is doing
+      (take-credits state :contestant)
+      ;; Challenger turn 2, run and discard publics2
+      (run-empty-locale state "Locale 2")
+      (click-prompt state :challenger "Pay 4 [Credits] to discard") ; pay to discard
+      (is (= 5 (:credit (get-challenger))))
+      (take-credits state :challenger)
+      ;; Contestant turn 3, check how publics1 is doing
       (is (= 1 (get-counters (refresh publics1) :power)))
-      (is (zero? (:agenda-point (get-corp))))
-      (take-credits state :corp)
-      ;; Runner turn 3, boring
-      (take-credits state :runner)
-      ;; Corp turn 4, check the delicious agenda points
-      (let [scored-pub (get-scored state :corp 0)]
-        (is (= 1 (:agenda-point (get-corp))) "Gained 1 agenda point")
+      (is (zero? (:agenda-point (get-contestant))))
+      (take-credits state :contestant)
+      ;; Challenger turn 3, boring
+      (take-credits state :challenger)
+      ;; Contestant turn 4, check the delicious agenda points
+      (let [scored-pub (get-scored state :contestant 0)]
+        (is (= 1 (:agenda-point (get-contestant))) "Gained 1 agenda point")
         (is (= "Public Support" (:title scored-pub)))
         (is (= 1 (:agendapoints scored-pub)))))))
 
 (deftest quarantine-system
-  ;; Forfeit agenda to rez up to 3 ICE with 2 credit discount per agenda point
+  ;; Forfeit agenda to reveal up to 3 Character with 2 credit discount per agenda point
   (do-game
     (new-game
-      (default-corp [(qty "Chiyashi" 3) "Quarantine System" "Project Beale"])
-      (default-runner))
-    (core/gain state :corp :credit 100)
-    (core/gain state :corp :click 100)
-    (play-from-hand state :corp "Chiyashi" "HQ")
-    (play-from-hand state :corp "Chiyashi" "HQ")
-    (play-from-hand state :corp "Chiyashi" "HQ")
-    (play-from-hand state :corp "Quarantine System" "New remote")
-    (play-from-hand state :corp "Project Beale" "New remote")
-    (is (= 102 (:credit (get-corp))) "Corp has 102 creds")
-    (let [ch1 (get-ice state :hq 0)
-          ch2 (get-ice state :hq 1)
-          ch3 (get-ice state :hq 2)
-          qs (get-content state :remote1 0)
-          beale (get-content state :remote2 0)]
-      (core/rez state :corp qs)
-      (card-ability state :corp qs 0)
-      (is (empty? (:prompt (get-corp))) "No prompt to rez ICE")
-      (score-agenda state :corp beale)
-      ; 1 on rez
-      (is (= 101 (:credit (get-corp))) "Corp has 101 creds")
-      (card-ability state :corp qs 0)
-      (click-card state :corp (get-scored state :corp 0))
-      (click-card state :corp ch1)
-      (click-card state :corp ch2)
-      (click-card state :corp ch3)
+      (default-contestant [(qty "Chiyashi" 3) "Quarantine System" "Project Beale"])
+      (default-challenger))
+    (core/gain state :contestant :credit 100)
+    (core/gain state :contestant :click 100)
+    (play-from-hand state :contestant "Chiyashi" "HQ")
+    (play-from-hand state :contestant "Chiyashi" "HQ")
+    (play-from-hand state :contestant "Chiyashi" "HQ")
+    (play-from-hand state :contestant "Quarantine System" "New party")
+    (play-from-hand state :contestant "Project Beale" "New party")
+    (is (= 102 (:credit (get-contestant))) "Contestant has 102 creds")
+    (let [ch1 (get-character state :hq 0)
+          ch2 (get-character state :hq 1)
+          ch3 (get-character state :hq 2)
+          qs (get-content state :party1 0)
+          beale (get-content state :party2 0)]
+      (core/reveal state :contestant qs)
+      (card-ability state :contestant qs 0)
+      (is (empty? (:prompt (get-contestant))) "No prompt to reveal Character")
+      (score-agenda state :contestant beale)
+      ; 1 on reveal
+      (is (= 101 (:credit (get-contestant))) "Contestant has 101 creds")
+      (card-ability state :contestant qs 0)
+      (click-card state :contestant (get-scored state :contestant 0))
+      (click-card state :contestant ch1)
+      (click-card state :contestant ch2)
+      (click-card state :contestant ch3)
       ; pay 8 per Chiyashi - 24 total
-      (is (= 77 (:credit (get-corp))) "Corp has 77 creds")
-      (is (empty? (:prompt (get-corp))) "No prompt to rez ICE"))))
+      (is (= 77 (:credit (get-contestant))) "Contestant has 77 creds")
+      (is (empty? (:prompt (get-contestant))) "No prompt to reveal Character"))))
 
 (deftest raman-rai
   ;; Raman Rai
   (do-game
-    (new-game (default-corp ["Raman Rai" "Ice Wall" "Fire Wall"])
-              (default-runner))
-    (play-from-hand state :corp "Raman Rai" "New remote")
-    (let [raman (get-content state :remote1 0)]
-      (core/move state :corp (find-card "Ice Wall" (:hand (get-corp))) :deck)
-      (trash-from-hand state :corp "Fire Wall")
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (card-ability state :corp raman 0)
-      (click-card state :corp (find-card "Ice Wall" (:hand (get-corp))))
-      (click-card state :corp (find-card "Fire Wall" (:discard (get-corp))))
-      (is (= "Fire Wall" (-> (get-corp) :hand first :title)))
-      (is (= "Ice Wall" (-> (get-corp) :discard first :title))))))
+    (new-game (default-contestant ["Raman Rai" "Ice Wall" "Fire Wall"])
+              (default-challenger))
+    (play-from-hand state :contestant "Raman Rai" "New party")
+    (let [raman (get-content state :party1 0)]
+      (core/move state :contestant (find-card "Ice Wall" (:hand (get-contestant))) :deck)
+      (discard-from-hand state :contestant "Fire Wall")
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (card-ability state :contestant raman 0)
+      (click-card state :contestant (find-card "Ice Wall" (:hand (get-contestant))))
+      (click-card state :contestant (find-card "Fire Wall" (:discard (get-contestant))))
+      (is (= "Fire Wall" (-> (get-contestant) :hand first :title)))
+      (is (= "Ice Wall" (-> (get-contestant) :discard first :title))))))
 
 (deftest rashida-jaheem
   ;; Rashida Jaheem
   (testing "when there are enough cards in R&D"
     (do-game
-      (new-game (default-corp ["Rashida Jaheem" (qty "Hedge Fund" 3)])
-                (default-runner))
-      (starting-hand state :corp ["Rashida Jaheem"])
-      (play-from-hand state :corp "Rashida Jaheem" "New remote")
-      (core/rez state :corp (get-content state :remote1 0))
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (let [credits (:credit (get-corp))
-            cards (count (:hand (get-corp)))
-            rj (get-content state :remote1 0)]
-        (card-ability state :corp rj 0)
-        (click-prompt state :corp "Yes")
-        (is (= (+ 3 credits) (:credit (get-corp))))
-        (is (= (+ 3 cards) (count (:hand (get-corp))))))))
+      (new-game (default-contestant ["Rashida Jaheem" (qty "Hedge Fund" 3)])
+                (default-challenger))
+      (starting-hand state :contestant ["Rashida Jaheem"])
+      (play-from-hand state :contestant "Rashida Jaheem" "New party")
+      (core/reveal state :contestant (get-content state :party1 0))
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (let [credits (:credit (get-contestant))
+            cards (count (:hand (get-contestant)))
+            rj (get-content state :party1 0)]
+        (card-ability state :contestant rj 0)
+        (click-prompt state :contestant "Yes")
+        (is (= (+ 3 credits) (:credit (get-contestant))))
+        (is (= (+ 3 cards) (count (:hand (get-contestant))))))))
   (testing "when there aren't enough cards in R&D"
     (do-game
-      (new-game (default-corp ["Rashida Jaheem" (qty "Hedge Fund" 4)])
-                (default-runner))
-      (starting-hand state :corp ["Rashida Jaheem"])
-      (play-from-hand state :corp "Rashida Jaheem" "New remote")
-      (core/rez state :corp (get-content state :remote1 0))
-      (core/draw state :corp)
-      (core/draw state :corp)
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (let [credits (:credit (get-corp))
-            cards (count (:hand (get-corp)))
-            rj (get-content state :remote1 0)]
-        (card-ability state :corp rj 0)
-        (click-prompt state :corp "Yes")
-        (is (= (+ 3 credits) (:credit (get-corp))))
-        (is (= (+ 2 cards) (count (:hand (get-corp)))))
-        (is (= :runner (:winner @state)) "Runner wins")))))
+      (new-game (default-contestant ["Rashida Jaheem" (qty "Hedge Fund" 4)])
+                (default-challenger))
+      (starting-hand state :contestant ["Rashida Jaheem"])
+      (play-from-hand state :contestant "Rashida Jaheem" "New party")
+      (core/reveal state :contestant (get-content state :party1 0))
+      (core/draw state :contestant)
+      (core/draw state :contestant)
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (let [credits (:credit (get-contestant))
+            cards (count (:hand (get-contestant)))
+            rj (get-content state :party1 0)]
+        (card-ability state :contestant rj 0)
+        (click-prompt state :contestant "Yes")
+        (is (= (+ 3 credits) (:credit (get-contestant))))
+        (is (= (+ 2 cards) (count (:hand (get-contestant)))))
+        (is (= :challenger (:winner @state)) "Challenger wins")))))
 
 (deftest reality-threedee
-  ;; Reality Threedee - Take 1 bad pub on rez; gain 1c at turn start (2c if Runner tagged)
+  ;; Reality Threedee - Take 1 bad pub on reveal; gain 1c at turn start (2c if Challenger tagged)
   (do-game
-    (new-game (default-corp ["Reality Threedee"])
-              (default-runner))
-    (play-from-hand state :corp "Reality Threedee" "New remote")
-    (let [r3d (get-content state :remote1 0)]
-      (core/rez state :corp r3d)
-      (is (= 1 (:bad-publicity (get-corp))) "Took 1 bad pub on rez")
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (is (= 8 (:credit (get-corp))) "Gained 1 credit")
-      (take-credits state :corp)
-      (core/gain state :runner :tag 1)
-      (take-credits state :runner)
-      (is (= 13 (:credit (get-corp))) "Gained 2 credits because Runner is tagged"))))
+    (new-game (default-contestant ["Reality Threedee"])
+              (default-challenger))
+    (play-from-hand state :contestant "Reality Threedee" "New party")
+    (let [r3d (get-content state :party1 0)]
+      (core/reveal state :contestant r3d)
+      (is (= 1 (:bad-publicity (get-contestant))) "Took 1 bad pub on reveal")
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (is (= 8 (:credit (get-contestant))) "Gained 1 credit")
+      (take-credits state :contestant)
+      (core/gain state :challenger :tag 1)
+      (take-credits state :challenger)
+      (is (= 13 (:credit (get-contestant))) "Gained 2 credits because Challenger is tagged"))))
 
 (deftest reconstruction-contract
-  ;; Reconstruction Contract - place advancement token when runner takes meat damage
+  ;; Reconstruction Contract - place advancement token when challenger takes meat damage
   (do-game
-    (new-game (default-corp ["Reconstruction Contract" "Scorched Earth" "Pup"])
-              (default-runner [(qty "Sure Gamble" 3) (qty "Imp" 3)]))
-    (core/gain state :runner :tag 1)
-    (core/gain state :corp :credit 5)
-    (starting-hand state :runner ["Sure Gamble" "Sure Gamble" "Sure Gamble" "Imp" "Imp"])
-    (play-from-hand state :corp "Reconstruction Contract" "New remote")
-    (let [rc (get-content state :remote1 0)]
-      (core/rez state :corp (refresh rc))
-      (play-from-hand state :corp "Scorched Earth")
-      (is (= 4 (count (:discard (get-runner)))))
+    (new-game (default-contestant ["Reconstruction Contract" "Scorched Earth" "Pup"])
+              (default-challenger [(qty "Sure Gamble" 3) (qty "Imp" 3)]))
+    (core/gain state :challenger :tag 1)
+    (core/gain state :contestant :credit 5)
+    (starting-hand state :challenger ["Sure Gamble" "Sure Gamble" "Sure Gamble" "Imp" "Imp"])
+    (play-from-hand state :contestant "Reconstruction Contract" "New party")
+    (let [rc (get-content state :party1 0)]
+      (core/reveal state :contestant (refresh rc))
+      (play-from-hand state :contestant "Scorched Earth")
+      (is (= 4 (count (:discard (get-challenger)))))
       (is (= 1 (get-counters (refresh rc) :advancement)) "Reconstruction Contract has 1 advancement token")
-      (starting-hand state :runner ["Imp" "Imp"])
-      (play-from-hand state :corp "Pup" "HQ")
-      (core/rez state :corp (get-ice state :hq 0))
-      (card-subroutine state :corp (get-ice state :hq 0) 0)
-      (is (= 5 (count (:discard (get-runner)))))
+      (starting-hand state :challenger ["Imp" "Imp"])
+      (play-from-hand state :contestant "Pup" "HQ")
+      (core/reveal state :contestant (get-character state :hq 0))
+      (card-subroutine state :contestant (get-character state :hq 0) 0)
+      (is (= 5 (count (:discard (get-challenger)))))
       (is (= 1 (get-counters (refresh rc) :advancement)) "Reconstruction Contract doesn't get advancement token for net damage"))))
 
 (deftest reversed-accounts
-  ;; Reversed Accounts - Trash to make Runner lose 4 credits per advancement
+  ;; Reversed Accounts - Discard to make Challenger lose 4 credits per advancement
   (do-game
-    (new-game (default-corp ["Reversed Accounts"])
-              (default-runner))
-    (play-from-hand state :corp "Reversed Accounts" "New remote")
-    (let [rev (get-content state :remote1 0)]
-      (core/advance state :corp {:card (refresh rev)})
-      (core/advance state :corp {:card (refresh rev)})
-      (take-credits state :corp)
-      (play-from-hand state :runner "Sure Gamble")
-      (play-from-hand state :runner "Sure Gamble")
-      (play-from-hand state :runner "Sure Gamble")
-      (take-credits state :runner)
-      (is (= 18 (:credit (get-runner))))
-      (core/advance state :corp {:card (refresh rev)})
-      (core/advance state :corp {:card (refresh rev)})
+    (new-game (default-contestant ["Reversed Accounts"])
+              (default-challenger))
+    (play-from-hand state :contestant "Reversed Accounts" "New party")
+    (let [rev (get-content state :party1 0)]
+      (core/advance state :contestant {:card (refresh rev)})
+      (core/advance state :contestant {:card (refresh rev)})
+      (take-credits state :contestant)
+      (play-from-hand state :challenger "Sure Gamble")
+      (play-from-hand state :challenger "Sure Gamble")
+      (play-from-hand state :challenger "Sure Gamble")
+      (take-credits state :challenger)
+      (is (= 18 (:credit (get-challenger))))
+      (core/advance state :contestant {:card (refresh rev)})
+      (core/advance state :contestant {:card (refresh rev)})
       (is (= 4 (get-counters (refresh rev) :advancement)))
-      (core/rez state :corp (refresh rev))
-      (card-ability state :corp rev 0)
-      (is (= 1 (count (:discard (get-corp)))) "Reversed Accounts trashed")
-      (is (= 2 (:credit (get-runner))) "Runner lost 16 credits"))))
+      (core/reveal state :contestant (refresh rev))
+      (card-ability state :contestant rev 0)
+      (is (= 1 (count (:discard (get-contestant)))) "Reversed Accounts discarded")
+      (is (= 2 (:credit (get-challenger))) "Challenger lost 16 credits"))))
 
 (deftest rex-campaign
   ;; Rex Campaign
   (testing "Gain 5 credits"
     (do-game
-      (new-game (default-corp ["Rex Campaign"])
-                (default-runner))
-      (play-from-hand state :corp "Rex Campaign" "New remote")
-      (let [rex (get-content state :remote1 0)]
-        (core/rez state :corp rex)
+      (new-game (default-contestant ["Rex Campaign"])
+                (default-challenger))
+      (play-from-hand state :contestant "Rex Campaign" "New party")
+      (let [rex (get-content state :party1 0)]
+        (core/reveal state :contestant rex)
         (is (= 3 (get-counters (refresh rex) :power)))
-        (take-credits state :corp)
-        (take-credits state :runner)
+        (take-credits state :contestant)
+        (take-credits state :challenger)
         (is (= 2 (get-counters (refresh rex) :power)))
-        (take-credits state :corp)
-        (take-credits state :runner)
+        (take-credits state :contestant)
+        (take-credits state :challenger)
         (is (= 1 (get-counters (refresh rex) :power)))
-        (take-credits state :corp)
-        (take-credits state :runner)
-        (let [credits (:credit (get-corp))]
+        (take-credits state :contestant)
+        (take-credits state :challenger)
+        (let [credits (:credit (get-contestant))]
           (is (zero? (get-counters (refresh rex) :power)))
-          (click-prompt state :corp "Gain 5 [Credits]")
-          (is (= (+ 5 credits) (:credit (get-corp))))
-          (is (= "Rex Campaign" (-> (get-corp) :discard first :title)))))))
+          (click-prompt state :contestant "Gain 5 [Credits]")
+          (is (= (+ 5 credits) (:credit (get-contestant))))
+          (is (= "Rex Campaign" (-> (get-contestant) :discard first :title)))))))
   (testing "Lose 1 bad publicity"
     (do-game
-      (new-game (default-corp ["Rex Campaign"])
-                (default-runner))
-      (core/gain-bad-publicity state :corp 1)
-      (play-from-hand state :corp "Rex Campaign" "New remote")
-      (let [rex (get-content state :remote1 0)]
-        (core/rez state :corp rex)
+      (new-game (default-contestant ["Rex Campaign"])
+                (default-challenger))
+      (core/gain-bad-publicity state :contestant 1)
+      (play-from-hand state :contestant "Rex Campaign" "New party")
+      (let [rex (get-content state :party1 0)]
+        (core/reveal state :contestant rex)
         (is (= 3 (get-counters (refresh rex) :power)))
-        (take-credits state :corp)
-        (take-credits state :runner)
+        (take-credits state :contestant)
+        (take-credits state :challenger)
         (is (= 2 (get-counters (refresh rex) :power)))
-        (take-credits state :corp)
-        (take-credits state :runner)
+        (take-credits state :contestant)
+        (take-credits state :challenger)
         (is (= 1 (get-counters (refresh rex) :power)))
-        (take-credits state :corp)
-        (take-credits state :runner)
+        (take-credits state :contestant)
+        (take-credits state :challenger)
         (is (zero? (get-counters (refresh rex) :power)))
-        (click-prompt state :corp "Remove 1 bad publicity")
-        (is (zero? (:bad-publicity (get-corp))) "Should not have the same amount of bad publicity")
-        (is (= "Rex Campaign" (-> (get-corp) :discard first :title)))))))
+        (click-prompt state :contestant "Remove 1 bad publicity")
+        (is (zero? (:bad-publicity (get-contestant))) "Should not have the same amount of bad publicity")
+        (is (= "Rex Campaign" (-> (get-contestant) :discard first :title)))))))
 
 (deftest ronald-five
-  ;; Ronald Five - Runner loses a click every time they trash a Corp card
+  ;; Ronald Five - Challenger loses a click every time they discard a Contestant card
   (do-game
-    (new-game (default-corp ["Ronald Five" "Melange Mining Corp."])
-              (default-runner))
-    (play-from-hand state :corp "Ronald Five" "New remote")
-    (play-from-hand state :corp "Melange Mining Corp." "New remote")
-    (take-credits state :corp)
-    (core/rez state :corp (get-content state :remote1 0))
-    (run-empty-server state :remote2)
-    (click-prompt state :runner "Pay 1 [Credits] to trash")
-    (is (= 2 (:click (get-runner))) "Lost 1 click")
-    (run-empty-server state :remote1)
-    (click-prompt state :runner "Pay 3 [Credits] to trash")
-    (is (zero? (:click (get-runner))) "Lost 1 click")))
+    (new-game (default-contestant ["Ronald Five" "Melange Mining Contestant."])
+              (default-challenger))
+    (play-from-hand state :contestant "Ronald Five" "New party")
+    (play-from-hand state :contestant "Melange Mining Contestant." "New party")
+    (take-credits state :contestant)
+    (core/reveal state :contestant (get-content state :party1 0))
+    (run-empty-locale state :party2)
+    (click-prompt state :challenger "Pay 1 [Credits] to discard")
+    (is (= 2 (:click (get-challenger))) "Lost 1 click")
+    (run-empty-locale state :party1)
+    (click-prompt state :challenger "Pay 3 [Credits] to discard")
+    (is (zero? (:click (get-challenger))) "Lost 1 click")))
 
 (deftest ronin
-  ;; Ronin - Click-trash to do 3 net damage when it has 4 or more advancements
+  ;; Ronin - Click-discard to do 3 net damage when it has 4 or more advancements
   (testing "Basic test"
     (do-game
-      (new-game (default-corp ["Ronin" "Mushin No Shin"])
-                (default-runner))
-      (play-from-hand state :corp "Mushin No Shin")
-      (click-card state :corp (find-card "Ronin" (:hand (get-corp))))
-      (let [ron (get-content state :remote1 0)]
+      (new-game (default-contestant ["Ronin" "Mushin No Shin"])
+                (default-challenger))
+      (play-from-hand state :contestant "Mushin No Shin")
+      (click-card state :contestant (find-card "Ronin" (:hand (get-contestant))))
+      (let [ron (get-content state :party1 0)]
         (is (= 3 (get-counters (refresh ron) :advancement)))
-        (core/rez state :corp (refresh ron))
-        (card-ability state :corp ron 0)
-        (is (= 3 (count (:hand (get-runner)))) "Ronin ability didn't fire with only 3 advancements")
-        (take-credits state :corp)
-        (take-credits state :runner)
-        (core/advance state :corp {:card (refresh ron)})
+        (core/reveal state :contestant (refresh ron))
+        (card-ability state :contestant ron 0)
+        (is (= 3 (count (:hand (get-challenger)))) "Ronin ability didn't fire with only 3 advancements")
+        (take-credits state :contestant)
+        (take-credits state :challenger)
+        (core/advance state :contestant {:card (refresh ron)})
         (is (= 4 (get-counters (refresh ron) :advancement)))
-        (card-ability state :corp ron 0)
-        (is (= 3 (count (:discard (get-runner)))) "Ronin did 3 net damage")
-        (is (= 2 (count (:discard (get-corp)))) "Ronin trashed"))))
+        (card-ability state :contestant ron 0)
+        (is (= 3 (count (:discard (get-challenger)))) "Ronin did 3 net damage")
+        (is (= 2 (count (:discard (get-contestant)))) "Ronin discarded"))))
   (testing "doesn't fire (or crash) if no advance counters"
     (do-game
-      (new-game (default-corp ["Ronin"])
-                (default-runner))
-      (play-from-hand state :corp "Ronin" "New remote")
-      (let [ron (get-content state :remote1 0)]
+      (new-game (default-contestant ["Ronin"])
+                (default-challenger))
+      (play-from-hand state :contestant "Ronin" "New party")
+      (let [ron (get-content state :party1 0)]
         (is (zero? (get-counters (refresh ron) :advancement)) "Ronin starts with no counters")
-        (core/rez state :corp (refresh ron))
-        (card-ability state :corp (refresh ron) 0)
+        (core/reveal state :contestant (refresh ron))
+        (card-ability state :contestant (refresh ron) 0)
         (is (zero? (get-counters (refresh ron) :advancement)) "Ronin didn't gain counters")
-        (is (= 3 (count (:hand (get-runner)))) "Ronin ability didn't fire with 0 advancements")))))
+        (is (= 3 (count (:hand (get-challenger)))) "Ronin ability didn't fire with 0 advancements")))))
 
 (deftest sandburg
-  ;; Sandburg - +1 strength to all ICE for every 5c when Corp has over 10c
+  ;; Sandburg - +1 strength to all Character for every 5c when Contestant has over 10c
   (do-game
-    (new-game (default-corp ["Sandburg" (qty "Ice Wall" 2) (qty "Hedge Fund" 3)])
-              (default-runner))
-    (core/gain state :corp :click 3 :credit 3)
-    (play-from-hand state :corp "Sandburg" "New remote")
-    (play-from-hand state :corp "Ice Wall" "HQ")
-    (play-from-hand state :corp "Ice Wall" "R&D")
-    (let [sb (get-content state :remote1 0)
-          iwall1 (get-ice state :hq 0)
-          iwall2 (get-ice state :rd 0)]
-      (core/rez state :corp iwall1)
-      (core/rez state :corp iwall2)
-      (core/rez state :corp sb)
-      (is (= 6 (:credit (get-corp))))
-      (play-from-hand state :corp "Hedge Fund")
-      (is (= 10 (:credit (get-corp))))
+    (new-game (default-contestant ["Sandburg" (qty "Ice Wall" 2) (qty "Hedge Fund" 3)])
+              (default-challenger))
+    (core/gain state :contestant :click 3 :credit 3)
+    (play-from-hand state :contestant "Sandburg" "New party")
+    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Ice Wall" "R&D")
+    (let [sb (get-content state :party1 0)
+          iwall1 (get-character state :hq 0)
+          iwall2 (get-character state :rd 0)]
+      (core/reveal state :contestant iwall1)
+      (core/reveal state :contestant iwall2)
+      (core/reveal state :contestant sb)
+      (is (= 6 (:credit (get-contestant))))
+      (play-from-hand state :contestant "Hedge Fund")
+      (is (= 10 (:credit (get-contestant))))
       (is (= 3 (:current-strength (refresh iwall1))) "Strength boosted by 2")
       (is (= 3 (:current-strength (refresh iwall2))) "Strength boosted by 2")
-      (play-from-hand state :corp "Hedge Fund")
-      (play-from-hand state :corp "Hedge Fund")
-      (is (= 18 (:credit (get-corp))))
+      (play-from-hand state :contestant "Hedge Fund")
+      (play-from-hand state :contestant "Hedge Fund")
+      (is (= 18 (:credit (get-contestant))))
       (is (= 4 (:current-strength (refresh iwall1))) "Strength boosted by 3")
       (is (= 4 (:current-strength (refresh iwall2))) "Strength boosted by 3")
-      (take-credits state :corp)
-      (run-empty-server state "Server 1")
-      (click-prompt state :runner "Pay 4 [Credits] to trash")
+      (take-credits state :contestant)
+      (run-empty-locale state "Locale 1")
+      (click-prompt state :challenger "Pay 4 [Credits] to discard")
       (is (= 1 (:current-strength (refresh iwall1))) "Strength back to default")
       (is (= 1 (:current-strength (refresh iwall2))) "Strength back to default"))))
 
 (deftest sealed-vault
-  ;; Sealed Vault - Store credits for 1c, retrieve credits by trashing or spending click
+  ;; Sealed Vault - Store credits for 1c, retrieve credits by discarding or spending click
   (do-game
-    (new-game (default-corp ["Sealed Vault" "Hedge Fund"])
-              (default-runner))
-    (play-from-hand state :corp "Sealed Vault" "New remote")
-    (play-from-hand state :corp "Hedge Fund")
-    (let [sv (get-content state :remote1 0)]
-      (core/rez state :corp sv)
-      (card-ability state :corp sv 0)
-      (click-prompt state :corp "8")
+    (new-game (default-contestant ["Sealed Vault" "Hedge Fund"])
+              (default-challenger))
+    (play-from-hand state :contestant "Sealed Vault" "New party")
+    (play-from-hand state :contestant "Hedge Fund")
+    (let [sv (get-content state :party1 0)]
+      (core/reveal state :contestant sv)
+      (card-ability state :contestant sv 0)
+      (click-prompt state :contestant "8")
       (is (= 8 (get-counters (refresh sv) :credit)) "8 credits stored on Sealed Vault")
-      (is (zero? (:credit (get-corp))))
-      (card-ability state :corp sv 1)
-      (click-prompt state :corp "8")
+      (is (zero? (:credit (get-contestant))))
+      (card-ability state :contestant sv 1)
+      (click-prompt state :contestant "8")
       (is (zero? (get-counters (refresh sv) :credit)) "Credits removed from Sealed Vault")
-      (is (= 8 (:credit (get-corp))))
-      (is (zero? (:click (get-corp))) "Spent a click")
-      (card-ability state :corp sv 0)
-      (click-prompt state :corp "7")
+      (is (= 8 (:credit (get-contestant))))
+      (is (zero? (:click (get-contestant))) "Spent a click")
+      (card-ability state :contestant sv 0)
+      (click-prompt state :contestant "7")
       (is (= 7 (get-counters (refresh sv) :credit)) "7 credits stored on Sealed Vault")
-      (is (zero? (:credit (get-corp))))
-      (card-ability state :corp sv 2)
-      (click-prompt state :corp "7")
-      (is (= 7 (:credit (get-corp))))
-      (is (= 2 (count (:discard (get-corp)))) "Sealed Vault trashed"))))
+      (is (zero? (:credit (get-contestant))))
+      (card-ability state :contestant sv 2)
+      (click-prompt state :contestant "7")
+      (is (= 7 (:credit (get-contestant))))
+      (is (= 2 (count (:discard (get-contestant)))) "Sealed Vault discarded"))))
 
 (deftest security-subcontract
   ;; Security Subcontract
   (do-game
-    (new-game (default-corp ["Security Subcontract" "Ice Wall"])
-              (default-runner))
-    (play-from-hand state :corp "Security Subcontract" "New remote")
-    (play-from-hand state :corp "Ice Wall" "HQ")
-    (let [ss (get-content state :remote1 0)
-          iw (get-ice state :hq 0)]
-      (core/rez state :corp ss)
-      (core/rez state :corp iw)
-      (card-ability state :corp ss 0)
-      (let [credits (:credit (get-corp))
-            clicks (:click (get-corp))]
-        (click-card state :corp iw)
-        (is (= (+ credits 4) (:credit (get-corp))) "Corp should gain 4 from Security Subcontract ability")
-        (is (= "Ice Wall" (-> (get-corp) :discard first :title)) "Ice Wall should be in Archives from Security Subcontract ability")
-        (is (= (- clicks 1) (:click (get-corp))) "Corp should lose 1 click from Security Subcontract ability")))))
+    (new-game (default-contestant ["Security Subcontract" "Ice Wall"])
+              (default-challenger))
+    (play-from-hand state :contestant "Security Subcontract" "New party")
+    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (let [ss (get-content state :party1 0)
+          iw (get-character state :hq 0)]
+      (core/reveal state :contestant ss)
+      (core/reveal state :contestant iw)
+      (card-ability state :contestant ss 0)
+      (let [credits (:credit (get-contestant))
+            clicks (:click (get-contestant))]
+        (click-card state :contestant iw)
+        (is (= (+ credits 4) (:credit (get-contestant))) "Contestant should gain 4 from Security Subcontract ability")
+        (is (= "Ice Wall" (-> (get-contestant) :discard first :title)) "Ice Wall should be in Archives from Security Subcontract ability")
+        (is (= (- clicks 1) (:click (get-contestant))) "Contestant should lose 1 click from Security Subcontract ability")))))
 
 (deftest sensie-actors-union
   ;; Sensie Actors Union
   (do-game
-    (new-game (default-corp ["Sensie Actors Union" "Ronin" (qty "Ice Wall" 10)])
-              (default-runner))
-    (starting-hand state :corp ["Sensie Actors Union" "Ronin"])
-    (core/move state :corp (find-card "Ronin" (:hand (get-corp))) :deck {:front true})
-    (play-from-hand state :corp "Sensie Actors Union" "New remote")
-    (let [sau (get-content state :remote1 0)]
-      (core/rez state :corp sau)
-      (take-credits state :corp)
-      (is (zero? (count (:hand (get-corp)))) "Corp should have no cards in hand before starting turn")
-      (take-credits state :runner)
-      (is (:corp-phase-12 @state) "Corp is in Step 1.2")
-      (card-ability state :corp sau 0)
-      (is (= 3 (count (:hand (get-corp)))) "Corp should draw 3 cards from Sensie Actors Union's ability")
-      (click-card state :corp (find-card "Ronin" (:hand (get-corp))))
-      (is (= "Ronin" (-> (get-corp) :deck last :title)) "Ronin should be on bottom of deck")
-      (core/end-phase-12 state :corp nil)
-      (is (= 3 (count (:hand (get-corp)))) "Corp should have 3 cards in hand after putting one on bottom of R&D and mandatory draw")
-      (play-from-hand state :corp "Ice Wall" "Server 1")
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (is (nil? (:corp-phase-12 @state)) "Sensie Actors Union doesn't trigger if protected by ice"))))
+    (new-game (default-contestant ["Sensie Actors Union" "Ronin" (qty "Ice Wall" 10)])
+              (default-challenger))
+    (starting-hand state :contestant ["Sensie Actors Union" "Ronin"])
+    (core/move state :contestant (find-card "Ronin" (:hand (get-contestant))) :deck {:front true})
+    (play-from-hand state :contestant "Sensie Actors Union" "New party")
+    (let [sau (get-content state :party1 0)]
+      (core/reveal state :contestant sau)
+      (take-credits state :contestant)
+      (is (zero? (count (:hand (get-contestant)))) "Contestant should have no cards in hand before starting turn")
+      (take-credits state :challenger)
+      (is (:contestant-phase-12 @state) "Contestant is in Step 1.2")
+      (card-ability state :contestant sau 0)
+      (is (= 3 (count (:hand (get-contestant)))) "Contestant should draw 3 cards from Sensie Actors Union's ability")
+      (click-card state :contestant (find-card "Ronin" (:hand (get-contestant))))
+      (is (= "Ronin" (-> (get-contestant) :deck last :title)) "Ronin should be on bottom of deck")
+      (core/end-phase-12 state :contestant nil)
+      (is (= 3 (count (:hand (get-contestant)))) "Contestant should have 3 cards in hand after putting one on bottom of R&D and mandatory draw")
+      (play-from-hand state :contestant "Ice Wall" "Locale 1")
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (is (nil? (:contestant-phase-12 @state)) "Sensie Actors Union doesn't trigger if protected by character"))))
 
-(deftest server-diagnostics
-  ;; Server Diagnostics - Gain 2c when turn begins; trashed when ICE is installed
+(deftest locale-diagnostics
+  ;; Locale Diagnostics - Gain 2c when turn begins; discarded when Character is placed
   (do-game
-    (new-game (default-corp ["Server Diagnostics" "Pup"
+    (new-game (default-contestant ["Locale Diagnostics" "Pup"
                              "Launch Campaign"])
-              (default-runner))
-    (play-from-hand state :corp "Server Diagnostics" "New remote")
-    (core/rez state :corp (get-content state :remote1 0))
-    (play-from-hand state :corp "Launch Campaign" "New remote")
-    (is (= 1 (count (get-content state :remote1))) "Non-ICE install didn't trash Serv Diag")
-    (take-credits state :corp)
-    (take-credits state :runner)
-    (is (= 5 (:credit (get-corp))) "Gained 2c at start of turn")
-    (play-from-hand state :corp "Pup" "HQ")
-    (is (= 1 (count (:discard (get-corp)))) "Server Diagnostics trashed by ICE install")))
+              (default-challenger))
+    (play-from-hand state :contestant "Locale Diagnostics" "New party")
+    (core/reveal state :contestant (get-content state :party1 0))
+    (play-from-hand state :contestant "Launch Campaign" "New party")
+    (is (= 1 (count (get-content state :party1))) "Non-Character place didn't discard Serv Diag")
+    (take-credits state :contestant)
+    (take-credits state :challenger)
+    (is (= 5 (:credit (get-contestant))) "Gained 2c at start of turn")
+    (play-from-hand state :contestant "Pup" "HQ")
+    (is (= 1 (count (:discard (get-contestant)))) "Locale Diagnostics discarded by Character place")))
 
 (deftest shannon-claire
   ;; Shannon Claire
   (do-game
-    (new-game (default-corp ["Shannon Claire" "Hostile Takeover" "Ronin" (qty "Ice Wall" 10)])
-              (default-runner))
-    (starting-hand state :corp ["Shannon Claire" "Ronin"])
-    (core/move state :corp (find-card "Ronin" (:hand (get-corp))) :deck)
-    (play-from-hand state :corp "Shannon Claire" "New remote")
-    (let [shannon (get-content state :remote1 0)]
-      (core/rez state :corp shannon)
-      (is (zero? (count (:hand (get-corp)))) "Corp should have 0 cards in hand to start")
-      (card-ability state :corp shannon 0)
-      (is (= "Ronin" (-> (get-corp) :hand first :title)) "Corp should draw Ronin with Shannon's click ability")
-      (let [number-of-shuffles (count (core/turn-events state :corp :corp-shuffle-deck))]
-        (card-ability state :corp shannon 1)
-        (click-prompt state :corp (find-card "Hostile Takeover" (:deck (get-corp))))
-        (is (= "Hostile Takeover" (-> (get-corp) :deck last :title))
+    (new-game (default-contestant ["Shannon Claire" "Hostile Takeover" "Ronin" (qty "Ice Wall" 10)])
+              (default-challenger))
+    (starting-hand state :contestant ["Shannon Claire" "Ronin"])
+    (core/move state :contestant (find-card "Ronin" (:hand (get-contestant))) :deck)
+    (play-from-hand state :contestant "Shannon Claire" "New party")
+    (let [shannon (get-content state :party1 0)]
+      (core/reveal state :contestant shannon)
+      (is (zero? (count (:hand (get-contestant)))) "Contestant should have 0 cards in hand to start")
+      (card-ability state :contestant shannon 0)
+      (is (= "Ronin" (-> (get-contestant) :hand first :title)) "Contestant should draw Ronin with Shannon's click ability")
+      (let [number-of-shuffles (count (core/turn-events state :contestant :contestant-shuffle-deck))]
+        (card-ability state :contestant shannon 1)
+        (click-prompt state :contestant (find-card "Hostile Takeover" (:deck (get-contestant))))
+        (is (= "Hostile Takeover" (-> (get-contestant) :deck last :title))
             "Agenda selected with Shannon's R&D ability should be on bottom of deck")
-        (is (< number-of-shuffles (count (core/turn-events state :corp :corp-shuffle-deck))) "Searching R&D should shuffle deck")))
-    (core/move state :corp (find-card "Hostile Takeover" (:deck (get-corp))) :discard)
-    (core/move state :corp (find-card "Shannon Claire" (:discard (get-corp))) :hand)
-    (play-from-hand state :corp "Shannon Claire" "New remote")
-    (let [shannon (get-content state :remote2 0)
-          number-of-shuffles (count (core/turn-events state :corp :corp-shuffle-deck))]
-      (core/rez state :corp shannon)
-      (card-ability state :corp shannon 2)
-      (click-prompt state :corp (find-card "Hostile Takeover" (:discard (get-corp))))
-      (is (= "Hostile Takeover" (-> (get-corp) :deck last :title))
+        (is (< number-of-shuffles (count (core/turn-events state :contestant :contestant-shuffle-deck))) "Searching R&D should shuffle deck")))
+    (core/move state :contestant (find-card "Hostile Takeover" (:deck (get-contestant))) :discard)
+    (core/move state :contestant (find-card "Shannon Claire" (:discard (get-contestant))) :hand)
+    (play-from-hand state :contestant "Shannon Claire" "New party")
+    (let [shannon (get-content state :party2 0)
+          number-of-shuffles (count (core/turn-events state :contestant :contestant-shuffle-deck))]
+      (core/reveal state :contestant shannon)
+      (card-ability state :contestant shannon 2)
+      (click-prompt state :contestant (find-card "Hostile Takeover" (:discard (get-contestant))))
+      (is (= "Hostile Takeover" (-> (get-contestant) :deck last :title))
           "Agenda selected with Shannon's Archives ability should be on bottom of deck")
-      (is (= number-of-shuffles (count (core/turn-events state :corp :corp-shuffle-deck)))
+      (is (= number-of-shuffles (count (core/turn-events state :contestant :contestant-shuffle-deck)))
           "Searching Archives shouldn't shuffle deck"))))
 
 (deftest shattered-remains
   ;; Shattered Remains
   (do-game
-    (new-game (default-corp [(qty "Shattered Remains" 2)])
-              (default-runner ["Cyberfeeder" "Lemuria Codecracker"]))
-    (play-from-hand state :corp "Shattered Remains" "New remote")
-    (play-from-hand state :corp "Shattered Remains" "New remote")
-    (take-credits state :corp)
-    (play-from-hand state :runner "Cyberfeeder")
-    (play-from-hand state :runner "Lemuria Codecracker")
-    (take-credits state :runner)
-    (let [remains1 (get-content state :remote1 0)
-          remains2 (get-content state :remote2 0)
-          cyber (get-hardware state 0)
-          lemuria (get-hardware state 1)]
-      (core/rez state :corp remains1)
+    (new-game (default-contestant [(qty "Shattered Remains" 2)])
+              (default-challenger ["Cyberfeeder" "Lemuria Codecracker"]))
+    (play-from-hand state :contestant "Shattered Remains" "New party")
+    (play-from-hand state :contestant "Shattered Remains" "New party")
+    (take-credits state :contestant)
+    (play-from-hand state :challenger "Cyberfeeder")
+    (play-from-hand state :challenger "Lemuria Codecracker")
+    (take-credits state :challenger)
+    (let [remains1 (get-content state :party1 0)
+          remains2 (get-content state :party2 0)
+          cyber (get-hazard state 0)
+          lemuria (get-hazard state 1)]
+      (core/reveal state :contestant remains1)
       (advance state remains2 1)
-      (take-credits state :corp)
-      (run-empty-server state :remote1)
-      (click-prompt state :corp "Yes")
-      (is (empty? (-> (get-corp) :prompt)) "Corp shouldn't get Shattered Remains ability prompt when no counters")
-      (click-prompt state :runner "No action")
-      (run-empty-server state :remote2)
-      (let [credits (:credit (get-corp))]
-        (click-prompt state :corp "Yes")
-        (click-card state :corp cyber)
-        (is (= (- credits 1) (:credit (get-corp))) "Shattered Remains ability should cost 1")
-        (is (count (:discard (get-runner))) "Cyberfeeder should be in discard from Shattered Remains")))))
+      (take-credits state :contestant)
+      (run-empty-locale state :party1)
+      (click-prompt state :contestant "Yes")
+      (is (empty? (-> (get-contestant) :prompt)) "Contestant shouldn't get Shattered Remains ability prompt when no counters")
+      (click-prompt state :challenger "No action")
+      (run-empty-locale state :party2)
+      (let [credits (:credit (get-contestant))]
+        (click-prompt state :contestant "Yes")
+        (click-card state :contestant cyber)
+        (is (= (- credits 1) (:credit (get-contestant))) "Shattered Remains ability should cost 1")
+        (is (count (:discard (get-challenger))) "Cyberfeeder should be in discard from Shattered Remains")))))
 
 (deftest shi.kyu
   ;; Shi.Kyū
   (do-game
-    (new-game (default-corp ["Shi.Kyū"])
-              (default-runner [(qty "Sure Gamble" 5)]))
-    (play-from-hand state :corp "Shi.Kyū" "New remote")
-    (take-credits state :corp)
-    (run-empty-server state "Server 1")
-    (click-prompt state :corp "Yes")
-    (click-prompt state :corp "5")
-    (is (= "Take 5 net damage" (-> (prompt-map :runner) :choices first)))
-    (click-prompt state :runner "Take 5 net damage")
-    (click-prompt state :runner "No action")
-    (is (zero? (count (:hand (get-runner)))) "Runner took 5 net damage from Shi.Kyū")
-    (run-empty-server state "Server 1")
-    (click-prompt state :corp "Yes")
-    (click-prompt state :corp "2")
-    (is (= "Take 2 net damage" (-> (prompt-map :runner) :choices first)))
-    (click-prompt state :runner "Add Shi.Kyū to score area")
-    (is (empty? (prompt-map :runner)) "Runner shouldn't get the option to trash Shi.Kyū as it was added to agenda area")
-    (is (= -1 (:agenda-point (get-runner))) "Runner should be at -1 agenda points after adding Shi.Kyū to agenda area")))
+    (new-game (default-contestant ["Shi.Kyū"])
+              (default-challenger [(qty "Sure Gamble" 5)]))
+    (play-from-hand state :contestant "Shi.Kyū" "New party")
+    (take-credits state :contestant)
+    (run-empty-locale state "Locale 1")
+    (click-prompt state :contestant "Yes")
+    (click-prompt state :contestant "5")
+    (is (= "Take 5 net damage" (-> (prompt-map :challenger) :choices first)))
+    (click-prompt state :challenger "Take 5 net damage")
+    (click-prompt state :challenger "No action")
+    (is (zero? (count (:hand (get-challenger)))) "Challenger took 5 net damage from Shi.Kyū")
+    (run-empty-locale state "Locale 1")
+    (click-prompt state :contestant "Yes")
+    (click-prompt state :contestant "2")
+    (is (= "Take 2 net damage" (-> (prompt-map :challenger) :choices first)))
+    (click-prompt state :challenger "Add Shi.Kyū to score area")
+    (is (empty? (prompt-map :challenger)) "Challenger shouldn't get the option to discard Shi.Kyū as it was added to agenda area")
+    (is (= -1 (:agenda-point (get-challenger))) "Challenger should be at -1 agenda points after adding Shi.Kyū to agenda area")))
 
 (deftest shock!
   ;; Shock! - do 1 net damage on access
   (testing "Basic test"
     (do-game
-      (new-game (default-corp [(qty "Shock!" 3)])
-                (default-runner))
-      (trash-from-hand state :corp "Shock!")
-      (play-from-hand state :corp "Shock!" "New remote")
-      (take-credits state :corp)
-      (run-empty-server state "Server 1")
-      (is (= 2 (count (:hand (get-runner)))) "Runner took 1 net damage")
-      (run-empty-server state "Archives")
-      (is (= 1 (count (:hand (get-runner)))) "Runner took 1 net damage")))
+      (new-game (default-contestant [(qty "Shock!" 3)])
+                (default-challenger))
+      (discard-from-hand state :contestant "Shock!")
+      (play-from-hand state :contestant "Shock!" "New party")
+      (take-credits state :contestant)
+      (run-empty-locale state "Locale 1")
+      (is (= 2 (count (:hand (get-challenger)))) "Challenger took 1 net damage")
+      (run-empty-locale state "Archives")
+      (is (= 1 (count (:hand (get-challenger)))) "Challenger took 1 net damage")))
   (testing "ensure :access flag is cleared on run end. Issue #2319"
     (do-game
-      (new-game (default-corp [(qty "Shock!" 3) "Chairman Hiro"])
-                (default-runner))
-      (trash-from-hand state :corp "Shock!")
-      (play-from-hand state :corp "Shock!" "New remote")
-      (take-credits state :corp)
-      (run-empty-server state "Archives")
-      (is (= 2 (count (:hand (get-runner)))) "Runner took 1 net damage")
+      (new-game (default-contestant [(qty "Shock!" 3) "Chairman Hiro"])
+                (default-challenger))
+      (discard-from-hand state :contestant "Shock!")
+      (play-from-hand state :contestant "Shock!" "New party")
+      (take-credits state :contestant)
+      (run-empty-locale state "Archives")
+      (is (= 2 (count (:hand (get-challenger)))) "Challenger took 1 net damage")
       (is (not (:run @state)) "Run is complete")
-      (trash-from-hand state :corp "Chairman Hiro")
-      (is (= 2 (count (:discard (get-corp)))) "Hiro and Shock still in archives")
-      (is (zero? (count (:scored (get-runner)))) "Hiro not scored by Runner"))))
+      (discard-from-hand state :contestant "Chairman Hiro")
+      (is (= 2 (count (:discard (get-contestant)))) "Hiro and Shock still in archives")
+      (is (zero? (count (:scored (get-challenger)))) "Hiro not scored by Challenger"))))
 
 (deftest siu
   ;; SIU
   (testing "Flags 1.2 and trace for tag with base 3"
     (do-game
-     (new-game (default-corp [(qty "SIU" 10)])
-               (default-runner))
-     (play-from-hand state :corp "SIU" "New remote")
-     (let [siu (get-content state :remote1 0)]
-       (core/rez state :corp siu)
-       (card-ability state :corp (refresh siu) 0) ; try to trigger SIU outside phase 1.2
-       (is (= 0 (-> (get-corp) :discard count)) "SIU should not trigger because it's not 1.2")
-       (take-credits state :corp)
-       (take-credits state :runner)
-       (is (:corp-phase-12 @state) "Corp is in Step 1.2 because SIU is on the table")
-       (card-ability state :corp (refresh siu) 0)
-       (is (= 1 (-> (get-corp) :discard count)) "SIU should discard to fire trace")
-       (is (= 3 (-> (get-corp) :prompt first :base)) "Base Trace should be 3")
-       (click-prompt state :corp "0")
-       (click-prompt state :runner "0")
-       (is (= 1 (:tag (get-runner))) "Runner has 1 tag")))))
+     (new-game (default-contestant [(qty "SIU" 10)])
+               (default-challenger))
+     (play-from-hand state :contestant "SIU" "New party")
+     (let [siu (get-content state :party1 0)]
+       (core/reveal state :contestant siu)
+       (card-ability state :contestant (refresh siu) 0) ; try to trigger SIU outside phase 1.2
+       (is (= 0 (-> (get-contestant) :discard count)) "SIU should not trigger because it's not 1.2")
+       (take-credits state :contestant)
+       (take-credits state :challenger)
+       (is (:contestant-phase-12 @state) "Contestant is in Step 1.2 because SIU is on the table")
+       (card-ability state :contestant (refresh siu) 0)
+       (is (= 1 (-> (get-contestant) :discard count)) "SIU should discard to fire trace")
+       (is (= 3 (-> (get-contestant) :prompt first :base)) "Base Trace should be 3")
+       (click-prompt state :contestant "0")
+       (click-prompt state :challenger "0")
+       (is (= 1 (:tag (get-challenger))) "Challenger has 1 tag")))))
 
 (deftest snare!
   (testing "Basic test"
     ;; pay 4 on access, and do 3 net damage and give 1 tag
     (do-game
-      (new-game (default-corp [(qty "Snare!" 3)])
-                (default-runner))
-      (play-from-hand state :corp "Snare!" "New remote")
-      (take-credits state :corp)
-      (run-empty-server state "Server 1")
-      (is (= :waiting (-> @state :runner :prompt first :prompt-type))
-          "Runner has prompt to wait for Snare!")
-      (click-prompt state :corp "Yes")
-      (is (= 3 (:credit (get-corp))) "Corp had 7 and paid 4 for Snare! 1 left")
-      (is (= 1 (:tag (get-runner))) "Runner has 1 tag")
-      (is (zero? (count (:hand (get-runner)))) "Runner took 3 net damage")))
+      (new-game (default-contestant [(qty "Snare!" 3)])
+                (default-challenger))
+      (play-from-hand state :contestant "Snare!" "New party")
+      (take-credits state :contestant)
+      (run-empty-locale state "Locale 1")
+      (is (= :waiting (-> @state :challenger :prompt first :prompt-type))
+          "Challenger has prompt to wait for Snare!")
+      (click-prompt state :contestant "Yes")
+      (is (= 3 (:credit (get-contestant))) "Contestant had 7 and paid 4 for Snare! 1 left")
+      (is (= 1 (:tag (get-challenger))) "Challenger has 1 tag")
+      (is (zero? (count (:hand (get-challenger)))) "Challenger took 3 net damage")))
   (testing "Can't afford"
     (do-game
-      (new-game (default-corp ["Snare!"])
-                (default-runner [(qty "Sure Gamble" 3) (qty "Diesel" 3)]))
-      (play-from-hand state :corp "Snare!" "New remote")
-      (take-credits state :corp)
-      (core/lose state :corp :credit 7)
-      (run-empty-server state "Server 1")
-      (is (= :waiting (-> @state :runner :prompt first :prompt-type))
-          "Runner has prompt to wait for Snare!")
-      (click-prompt state :corp "Yes")
-      (is (zero? (:tag (get-runner))) "Runner has 0 tags")
-      (click-prompt state :runner "Pay 0 [Credits] to trash")
-      (is (empty? (:prompt (get-runner))) "Runner waiting prompt is cleared")
-      (is (zero? (count (:discard (get-runner)))) "Runner took no damage")))
+      (new-game (default-contestant ["Snare!"])
+                (default-challenger [(qty "Sure Gamble" 3) (qty "Diesel" 3)]))
+      (play-from-hand state :contestant "Snare!" "New party")
+      (take-credits state :contestant)
+      (core/lose state :contestant :credit 7)
+      (run-empty-locale state "Locale 1")
+      (is (= :waiting (-> @state :challenger :prompt first :prompt-type))
+          "Challenger has prompt to wait for Snare!")
+      (click-prompt state :contestant "Yes")
+      (is (zero? (:tag (get-challenger))) "Challenger has 0 tags")
+      (click-prompt state :challenger "Pay 0 [Credits] to discard")
+      (is (empty? (:prompt (get-challenger))) "Challenger waiting prompt is cleared")
+      (is (zero? (count (:discard (get-challenger)))) "Challenger took no damage")))
   (testing "with Dedicated Response Team"
     (do-game
-      (new-game (default-corp ["Snare!" "Dedicated Response Team"])
-                (default-runner [(qty "Sure Gamble" 3) (qty "Diesel" 3)]))
-      (play-from-hand state :corp "Snare!" "New remote")
-      (play-from-hand state :corp "Dedicated Response Team" "New remote")
-      (core/gain state :corp :click 1 :credit 4)
-      (let [drt (get-content state :remote2 0)]
-        (take-credits state :corp)
-        (run-on state "Server 1")
-        (core/rez state :corp drt)
+      (new-game (default-contestant ["Snare!" "Dedicated Response Team"])
+                (default-challenger [(qty "Sure Gamble" 3) (qty "Diesel" 3)]))
+      (play-from-hand state :contestant "Snare!" "New party")
+      (play-from-hand state :contestant "Dedicated Response Team" "New party")
+      (core/gain state :contestant :click 1 :credit 4)
+      (let [drt (get-content state :party2 0)]
+        (take-credits state :contestant)
+        (run-on state "Locale 1")
+        (core/reveal state :contestant drt)
         (run-successful state)
-        (is (= :waiting (-> @state :runner :prompt first :prompt-type))
-            "Runner has prompt to wait for Snare!")
-        (click-prompt state :corp "Yes")
-        (is (= 1 (:tag (get-runner))) "Runner has 1 tag")
-        (click-prompt state :runner "Pay 0 [Credits] to trash")
-        (is (= 5 (count (:discard (get-runner)))) "Runner took 5 damage")))))
+        (is (= :waiting (-> @state :challenger :prompt first :prompt-type))
+            "Challenger has prompt to wait for Snare!")
+        (click-prompt state :contestant "Yes")
+        (is (= 1 (:tag (get-challenger))) "Challenger has 1 tag")
+        (click-prompt state :challenger "Pay 0 [Credits] to discard")
+        (is (= 5 (count (:discard (get-challenger)))) "Challenger took 5 damage")))))
 
 (deftest space-camp
   (testing "when in Archives. #1929"
     (do-game
-      (new-game (default-corp ["Space Camp" "News Team" "Breaking News"])
-                (default-runner))
-      (trash-from-hand state :corp "Space Camp")
-      (trash-from-hand state :corp "News Team")
-      (play-from-hand state :corp "Breaking News" "New remote")
-      (take-credits state :corp)
-      (run-empty-server state :archives)
-      (click-prompt state :runner "News Team")
-      (click-prompt state :runner "Take 2 tags")
-      (click-prompt state :runner "Space Camp")
-      (click-prompt state :corp "Yes")
-      (click-card state :corp (get-content state :remote1 0))
-      (is (= 1 (get-counters (get-content state :remote1 0) :advancement)) "Agenda advanced once from Space Camp")
-      (is (= 2 (:tag (get-runner))) "Runner has 2 tags")
+      (new-game (default-contestant ["Space Camp" "News Team" "Breaking News"])
+                (default-challenger))
+      (discard-from-hand state :contestant "Space Camp")
+      (discard-from-hand state :contestant "News Team")
+      (play-from-hand state :contestant "Breaking News" "New party")
+      (take-credits state :contestant)
+      (run-empty-locale state :archives)
+      (click-prompt state :challenger "News Team")
+      (click-prompt state :challenger "Take 2 tags")
+      (click-prompt state :challenger "Space Camp")
+      (click-prompt state :contestant "Yes")
+      (click-card state :contestant (get-content state :party1 0))
+      (is (= 1 (get-counters (get-content state :party1 0) :advancement)) "Agenda advanced once from Space Camp")
+      (is (= 2 (:tag (get-challenger))) "Challenger has 2 tags")
       (is (not (:run @state)) "Run completed"))))
 
 (deftest student-loans
-  ;; Student Loans - costs Runner 2c extra to play event if already same one in discard
+  ;; Student Loans - costs Challenger 2c extra to play event if already same one in discard
   (do-game
-    (new-game (default-corp ["Student Loans" (qty "Hedge Fund" 2)])
-              (default-runner))
-    (core/gain state :corp :credit 2)
-    (play-from-hand state :corp "Student Loans" "New remote")
-    (core/rez state :corp (get-content state :remote1 0))
-    (is (= 5 (:credit (get-corp))) "Corp has 5c")
-    (play-from-hand state :corp "Hedge Fund")
-    (is (= 9 (:credit (get-corp))) "Corp has 9c - no penalty from Student Loans")
-    (play-from-hand state :corp "Hedge Fund")
-    (is (= 13 (:credit (get-corp))) "Corp has 13c - no penalty from Student Loans")
-    (take-credits state :corp)
-    (play-from-hand state :runner "Sure Gamble")
-    (is (= 9 (:credit (get-runner))) "1st Gamble played for 4c")
-    (play-from-hand state :runner "Sure Gamble")
-    (is (= 11 (:credit (get-runner))) "2nd Gamble played for 2c")
-    (play-from-hand state :runner "Sure Gamble")
-    (is (= 13 (:credit (get-runner))) "3rd Gamble played for 2c")))
+    (new-game (default-contestant ["Student Loans" (qty "Hedge Fund" 2)])
+              (default-challenger))
+    (core/gain state :contestant :credit 2)
+    (play-from-hand state :contestant "Student Loans" "New party")
+    (core/reveal state :contestant (get-content state :party1 0))
+    (is (= 5 (:credit (get-contestant))) "Contestant has 5c")
+    (play-from-hand state :contestant "Hedge Fund")
+    (is (= 9 (:credit (get-contestant))) "Contestant has 9c - no penalty from Student Loans")
+    (play-from-hand state :contestant "Hedge Fund")
+    (is (= 13 (:credit (get-contestant))) "Contestant has 13c - no penalty from Student Loans")
+    (take-credits state :contestant)
+    (play-from-hand state :challenger "Sure Gamble")
+    (is (= 9 (:credit (get-challenger))) "1st Gamble played for 4c")
+    (play-from-hand state :challenger "Sure Gamble")
+    (is (= 11 (:credit (get-challenger))) "2nd Gamble played for 2c")
+    (play-from-hand state :challenger "Sure Gamble")
+    (is (= 13 (:credit (get-challenger))) "3rd Gamble played for 2c")))
 
 (deftest-pending sundew
   ;; Sundew
   (testing "Basic test"
     (do-game
-      (new-game (default-corp ["Sundew"])
-                (default-runner))
-      (play-from-hand state :corp "Sundew" "New remote")
-      (let [sund (get-content state :remote1 0)]
-        (core/rez state :corp sund)
-        (take-credits state :corp 2)
-        (is (= 5 (:credit (get-corp))) "Cost 2cr to rez")
+      (new-game (default-contestant ["Sundew"])
+                (default-challenger))
+      (play-from-hand state :contestant "Sundew" "New party")
+      (let [sund (get-content state :party1 0)]
+        (core/reveal state :contestant sund)
+        (take-credits state :contestant 2)
+        (is (= 5 (:credit (get-contestant))) "Cost 2cr to reveal")
         ;; spend a click not on a run
-        (take-credits state :runner)
-        (is (= 7 (:credit (get-corp))) "Corp gained 2cr from Sundew")
-        (take-credits state :corp)
-        (run-on state "Server 1")
-        (is (= 10 (:credit (get-corp))) "Corp did not gain 2cr from run on Sundew")
-        (is (= 3 (:click (get-runner))) "Runner spent 1 click to start run"))))
+        (take-credits state :challenger)
+        (is (= 7 (:credit (get-contestant))) "Contestant gained 2cr from Sundew")
+        (take-credits state :contestant)
+        (run-on state "Locale 1")
+        (is (= 10 (:credit (get-contestant))) "Contestant did not gain 2cr from run on Sundew")
+        (is (= 3 (:click (get-challenger))) "Challenger spent 1 click to start run"))))
   ; (testing "Sundew - Dirty Laundry"
   ;   (do-game
-  ;     (new-game (default-corp ["Sundew"])
-  ;               (default-runner ["Dirty Laundry"]))
-  ;     (play-from-hand state :corp "Sundew" "New remote")
-  ;     (let [sund (get-content state :remote1 0)]
-  ;       (core/rez state :corp (refresh sund))
-  ;       (is (= 3 (:credit (get-corp))) "Cost 2cr to rez")
-  ;       (take-credits state :corp)
-  ;       (play-from-hand state :runner "Dirty Laundry")
-  ;       (click-prompt state :runner "Server 1")
+  ;     (new-game (default-contestant ["Sundew"])
+  ;               (default-challenger ["Dirty Laundry"]))
+  ;     (play-from-hand state :contestant "Sundew" "New party")
+  ;     (let [sund (get-content state :party1 0)]
+  ;       (core/reveal state :contestant (refresh sund))
+  ;       (is (= 3 (:credit (get-contestant))) "Cost 2cr to reveal")
+  ;       (take-credits state :contestant)
+  ;       (play-from-hand state :challenger "Dirty Laundry")
+  ;       (click-prompt state :challenger "Locale 1")
   ;       ;; spend a click on a run through a card, not through click-run
-  ;       (is (= 5 (:credit (get-corp))) "Corp did not gain 2cr from run on Sundew"))))
+  ;       (is (= 5 (:credit (get-contestant))) "Contestant did not gain 2cr from run on Sundew"))))
   )
 
 (deftest synth-dna-modification
   ;; Synth DNA Modification
   (do-game
-    (new-game (default-corp ["Synth DNA Modification" "Data Mine"])
-              (default-runner))
-    (play-from-hand state :corp "Synth DNA Modification" "New remote")
-    (play-from-hand state :corp "Data Mine" "HQ")
-    (let [dna (get-content state :remote1 0)
-          data (get-ice state :hq 0)]
-      (core/rez state :corp dna)
-      (core/rez state :corp data)
-      (take-credits state :corp)
+    (new-game (default-contestant ["Synth DNA Modification" "Data Mine"])
+              (default-challenger))
+    (play-from-hand state :contestant "Synth DNA Modification" "New party")
+    (play-from-hand state :contestant "Data Mine" "HQ")
+    (let [dna (get-content state :party1 0)
+          data (get-character state :hq 0)]
+      (core/reveal state :contestant dna)
+      (core/reveal state :contestant data)
+      (take-credits state :contestant)
       (run-on state "HQ")
-      (card-subroutine state :corp data 0)
-      (is (= 1 (count (:discard (get-runner)))) "Runner should take 1 net damage from Data Mine")
-      (is (= 1 (count (:discard (get-corp)))) "Data Mine should trash self after subroutine fires")
-      (card-ability state :corp dna 0)
-      (is (= 2 (count (:discard (get-runner))))
-          "Runner should take 1 net damage from Synth DNA Modification after Data Mine subroutine"))))
+      (card-subroutine state :contestant data 0)
+      (is (= 1 (count (:discard (get-challenger)))) "Challenger should take 1 net damage from Data Mine")
+      (is (= 1 (count (:discard (get-contestant)))) "Data Mine should discard self after subroutine fires")
+      (card-ability state :contestant dna 0)
+      (is (= 2 (count (:discard (get-challenger))))
+          "Challenger should take 1 net damage from Synth DNA Modification after Data Mine subroutine"))))
 
 (deftest team-sponsorship
   ;; Team Sponsorship
-  (testing "Install from HQ"
+  (testing "Place from HQ"
     (do-game
-      (new-game (default-corp ["Domestic Sleepers"
+      (new-game (default-contestant ["Domestic Sleepers"
                                "Team Sponsorship"
                                "Adonis Campaign"])
-                (default-runner))
-      (play-from-hand state :corp "Team Sponsorship" "New remote")
-      (play-from-hand state :corp "Domestic Sleepers" "New remote")
-      (let [ag1 (get-content state :remote2 0)
-            tsp (get-content state :remote1 0)]
-        (core/rez state :corp tsp)
-        (score-agenda state :corp ag1)
-        (click-card state :corp (find-card "Adonis Campaign" (:hand (get-corp))))
-        (click-prompt state :corp "New remote")
-        (is (= "Adonis Campaign" (:title (get-content state :remote3 0)))
-            "Adonis installed by Team Sponsorship")
-        (is (nil? (find-card "Adonis Campaign" (:hand (get-corp)))) "No Adonis in hand"))))
-  (testing "Install from Archives"
+                (default-challenger))
+      (play-from-hand state :contestant "Team Sponsorship" "New party")
+      (play-from-hand state :contestant "Domestic Sleepers" "New party")
+      (let [ag1 (get-content state :party2 0)
+            tsp (get-content state :party1 0)]
+        (core/reveal state :contestant tsp)
+        (score-agenda state :contestant ag1)
+        (click-card state :contestant (find-card "Adonis Campaign" (:hand (get-contestant))))
+        (click-prompt state :contestant "New party")
+        (is (= "Adonis Campaign" (:title (get-content state :party3 0)))
+            "Adonis placed by Team Sponsorship")
+        (is (nil? (find-card "Adonis Campaign" (:hand (get-contestant)))) "No Adonis in hand"))))
+  (testing "Place from Archives"
     (do-game
-      (new-game (default-corp ["Domestic Sleepers"
+      (new-game (default-contestant ["Domestic Sleepers"
                                "Team Sponsorship"
                                "Adonis Campaign"])
-                (default-runner))
-      (play-from-hand state :corp "Team Sponsorship" "New remote")
-      (play-from-hand state :corp "Domestic Sleepers" "New remote")
-      (trash-from-hand state :corp "Adonis Campaign")
-      (let [ag1 (get-content state :remote2 0)
-            tsp (get-content state :remote1 0)]
-        (core/rez state :corp tsp)
-        (score-agenda state :corp ag1)
-        (click-card state :corp (find-card "Adonis Campaign" (:discard (get-corp))))
-        (click-prompt state :corp "New remote")
-        (is (= "Adonis Campaign" (:title (get-content state :remote3 0)))
-            "Adonis installed by Team Sponsorship")
-        (is (nil? (find-card "Adonis Campaign" (:discard (get-corp)))) "No Adonis in discard"))))
-  (testing "Multiple installs"
+                (default-challenger))
+      (play-from-hand state :contestant "Team Sponsorship" "New party")
+      (play-from-hand state :contestant "Domestic Sleepers" "New party")
+      (discard-from-hand state :contestant "Adonis Campaign")
+      (let [ag1 (get-content state :party2 0)
+            tsp (get-content state :party1 0)]
+        (core/reveal state :contestant tsp)
+        (score-agenda state :contestant ag1)
+        (click-card state :contestant (find-card "Adonis Campaign" (:discard (get-contestant))))
+        (click-prompt state :contestant "New party")
+        (is (= "Adonis Campaign" (:title (get-content state :party3 0)))
+            "Adonis placed by Team Sponsorship")
+        (is (nil? (find-card "Adonis Campaign" (:discard (get-contestant)))) "No Adonis in discard"))))
+  (testing "Multiple places"
     (do-game
-      (new-game (default-corp ["Domestic Sleepers"
+      (new-game (default-contestant ["Domestic Sleepers"
                                (qty "Team Sponsorship" 2)
                                (qty "Adonis Campaign" 2)])
-                (default-runner))
-      (play-from-hand state :corp "Team Sponsorship" "New remote")
-      (play-from-hand state :corp "Team Sponsorship" "New remote")
-      (play-from-hand state :corp "Domestic Sleepers" "New remote")
-      (trash-from-hand state :corp "Adonis Campaign")
-      (let [ag1 (get-content state :remote3 0)
-            tsp2 (get-content state :remote2 0)
-            tsp1 (get-content state :remote1 0)]
-        (core/rez state :corp tsp1)
-        (core/rez state :corp tsp2)
-        (score-agenda state :corp ag1)
-        (click-prompt state :corp "Team Sponsorship")
-        (click-card state :corp (find-card "Adonis Campaign" (:discard (get-corp))))
-        (click-prompt state :corp "New remote")
-        (click-card state :corp (find-card "Adonis Campaign" (:hand (get-corp))))
-        (click-prompt state :corp "New remote")
-        (is (= "Adonis Campaign" (:title (get-content state :remote4 0)))
-            "Adonis installed by Team Sponsorship")
-        (is (= "Adonis Campaign" (:title (get-content state :remote5 0)))
-            "Adonis installed by Team Sponsorship"))))
+                (default-challenger))
+      (play-from-hand state :contestant "Team Sponsorship" "New party")
+      (play-from-hand state :contestant "Team Sponsorship" "New party")
+      (play-from-hand state :contestant "Domestic Sleepers" "New party")
+      (discard-from-hand state :contestant "Adonis Campaign")
+      (let [ag1 (get-content state :party3 0)
+            tsp2 (get-content state :party2 0)
+            tsp1 (get-content state :party1 0)]
+        (core/reveal state :contestant tsp1)
+        (core/reveal state :contestant tsp2)
+        (score-agenda state :contestant ag1)
+        (click-prompt state :contestant "Team Sponsorship")
+        (click-card state :contestant (find-card "Adonis Campaign" (:discard (get-contestant))))
+        (click-prompt state :contestant "New party")
+        (click-card state :contestant (find-card "Adonis Campaign" (:hand (get-contestant))))
+        (click-prompt state :contestant "New party")
+        (is (= "Adonis Campaign" (:title (get-content state :party4 0)))
+            "Adonis placed by Team Sponsorship")
+        (is (= "Adonis Campaign" (:title (get-content state :party5 0)))
+            "Adonis placed by Team Sponsorship"))))
   (testing "Score 5 points in one window"
     (do-game
-      (new-game (default-corp [(qty "AstroScript Pilot Program" 3)
+      (new-game (default-contestant [(qty "AstroScript Pilot Resource" 3)
                                "Team Sponsorship"
                                "Breaking News"
                                "SanSan City Grid"])
-                (default-runner))
-      (play-from-hand state :corp "SanSan City Grid" "New remote")
-      (core/gain state :corp :credit 100 :click 5)
-      (core/rez state :corp (get-content state :remote1 0))
-      (play-from-hand state :corp "AstroScript Pilot Program" "New remote")
-      (score-agenda state :corp (get-content state :remote2 0))
-      (play-from-hand state :corp "AstroScript Pilot Program" "Server 1")
-      (play-from-hand state :corp "Team Sponsorship" "New remote")
-      (core/rez state :corp (get-content state :remote3 0))
-      (score-agenda state :corp (get-content state :remote1 1))
-      (click-card state :corp (find-card "AstroScript Pilot Program" (:hand (get-corp))))
-      (is (zero? (get-counters (second (:scored (get-corp))) :agenda)) "AstroScript not resolved yet")
-      (click-prompt state :corp "Server 1")
-      (is (= 1 (get-counters (second (:scored (get-corp))) :agenda)) "AstroScript resolved")
-      (card-ability state :corp (first (:scored (get-corp))) 0)
-      (click-card state :corp (get-content state :remote1 1))
-      (card-ability state :corp (second (:scored (get-corp))) 0)
-      (click-card state :corp (get-content state :remote1 1))
-      (core/score state :corp {:card (get-content state :remote1 1)})
-      (click-card state :corp (find-card "Breaking News" (:hand (get-corp))))
-      (click-prompt state :corp "Server 1")
-      (card-ability state :corp (second (next (:scored (get-corp)))) 0)
-      (click-card state :corp (get-content state :remote1 1))
-      (core/score state :corp {:card (get-content state :remote1 1)})
-      (click-prompt state :corp "Done")
-      (is (= 7 (:agenda-point (get-corp))) "Scored 5 points in one turn"))))
+                (default-challenger))
+      (play-from-hand state :contestant "SanSan City Grid" "New party")
+      (core/gain state :contestant :credit 100 :click 5)
+      (core/reveal state :contestant (get-content state :party1 0))
+      (play-from-hand state :contestant "AstroScript Pilot Resource" "New party")
+      (score-agenda state :contestant (get-content state :party2 0))
+      (play-from-hand state :contestant "AstroScript Pilot Resource" "Locale 1")
+      (play-from-hand state :contestant "Team Sponsorship" "New party")
+      (core/reveal state :contestant (get-content state :party3 0))
+      (score-agenda state :contestant (get-content state :party1 1))
+      (click-card state :contestant (find-card "AstroScript Pilot Resource" (:hand (get-contestant))))
+      (is (zero? (get-counters (second (:scored (get-contestant))) :agenda)) "AstroScript not resolved yet")
+      (click-prompt state :contestant "Locale 1")
+      (is (= 1 (get-counters (second (:scored (get-contestant))) :agenda)) "AstroScript resolved")
+      (card-ability state :contestant (first (:scored (get-contestant))) 0)
+      (click-card state :contestant (get-content state :party1 1))
+      (card-ability state :contestant (second (:scored (get-contestant))) 0)
+      (click-card state :contestant (get-content state :party1 1))
+      (core/score state :contestant {:card (get-content state :party1 1)})
+      (click-card state :contestant (find-card "Breaking News" (:hand (get-contestant))))
+      (click-prompt state :contestant "Locale 1")
+      (card-ability state :contestant (second (next (:scored (get-contestant)))) 0)
+      (click-card state :contestant (get-content state :party1 1))
+      (core/score state :contestant {:card (get-content state :party1 1)})
+      (click-prompt state :contestant "Done")
+      (is (= 7 (:agenda-point (get-contestant))) "Scored 5 points in one turn"))))
 
 (deftest tech-startup
   ;; Tech Startup
   (do-game
-    (new-game (default-corp ["Tech Startup" "TechnoCo" (qty "Ice Wall" 10)])
-              (default-runner))
-    (starting-hand state :corp ["Tech Startup"])
-    (play-from-hand state :corp "Tech Startup" "New remote")
-    (let [tech (get-content state :remote1 0)]
-      (core/rez state :corp (refresh tech))
-      (take-credits state :corp)
-      (take-credits state :runner)
-      (is (zero? (-> (get-corp) :discard count)) "Corp should start with 0 cards in Archives")
-      (card-ability state :corp tech 0)
-      (click-prompt state :corp (find-card "TechnoCo" (:deck (get-corp))))
-      (click-prompt state :corp "New remote")
-      (is (= "TechnoCo" (:title (get-content state :remote2 0)))
-          "TechnoCo should be installed in a new remote from Tech Startup's ability")
-      (is (= 1 (-> (get-corp) :discard count)) "Tech Startup should now be in discard"))))
+    (new-game (default-contestant ["Tech Startup" "TechnoCo" (qty "Ice Wall" 10)])
+              (default-challenger))
+    (starting-hand state :contestant ["Tech Startup"])
+    (play-from-hand state :contestant "Tech Startup" "New party")
+    (let [tech (get-content state :party1 0)]
+      (core/reveal state :contestant (refresh tech))
+      (take-credits state :contestant)
+      (take-credits state :challenger)
+      (is (zero? (-> (get-contestant) :discard count)) "Contestant should start with 0 cards in Archives")
+      (card-ability state :contestant tech 0)
+      (click-prompt state :contestant (find-card "TechnoCo" (:deck (get-contestant))))
+      (click-prompt state :contestant "New party")
+      (is (= "TechnoCo" (:title (get-content state :party2 0)))
+          "TechnoCo should be placed in a new party from Tech Startup's ability")
+      (is (= 1 (-> (get-contestant) :discard count)) "Tech Startup should now be in discard"))))
 
 (deftest technoco
-  ;; TechnoCo - Increase program / hardware / virtual cost by 1 and gain 1 when they are installed
+  ;; TechnoCo - Increase resource / hazard / virtual cost by 1 and gain 1 when they are placed
   (do-game
-    (new-game (default-corp ["TechnoCo"])
-              (default-runner ["Misdirection"       ;; 0 cost program
-                               "Bookmark"           ;; 0 cost hardware
-                               "Ice Analyzer"       ;; 0 cost virtual resource
-                               "Fall Guy"]))        ;; 0 cost non-virtual resource
-    (play-from-hand state :corp "TechnoCo" "New remote")
-    (core/rez state :corp (get-content state :remote1 0))
-    (take-credits state :corp)
-    (is (= 5 (:credit (get-corp))) "Corp at 5 credits")
-    (is (= 5 (:credit (get-runner))) "Runner at 5 credits")
-    (play-from-hand state :runner "Misdirection")
-    (is (= 6 (:credit (get-corp))) "Corp gained a credit")
-    (is (= 4 (:credit (get-runner))) "Runner spent an extra credit")
-    (play-from-hand state :runner "Bookmark")
-    (is (= 7 (:credit (get-corp))) "Corp gained a credit")
-    (is (= 3 (:credit (get-runner))) "Runner spent an extra credit")
-    (play-from-hand state :runner "Ice Analyzer")
-    (is (= 8 (:credit (get-corp))) "Corp gained a credit")
-    (is (= 2 (:credit (get-runner))) "Runner spent an extra credit")
-    (play-from-hand state :runner "Fall Guy")
-    (is (= 8 (:credit (get-corp))) "Corp did not gain a credit")
-    (is (= 2 (:credit (get-runner))) "Runner did not spend an extra credit")))
+    (new-game (default-contestant ["TechnoCo"])
+              (default-challenger ["Misdirection"       ;; 0 cost resource
+                               "Bookmark"           ;; 0 cost hazard
+                               "Ice Analyzer"       ;; 0 cost virtual radicle
+                               "Fall Guy"]))        ;; 0 cost non-virtual radicle
+    (play-from-hand state :contestant "TechnoCo" "New party")
+    (core/reveal state :contestant (get-content state :party1 0))
+    (take-credits state :contestant)
+    (is (= 5 (:credit (get-contestant))) "Contestant at 5 credits")
+    (is (= 5 (:credit (get-challenger))) "Challenger at 5 credits")
+    (play-from-hand state :challenger "Misdirection")
+    (is (= 6 (:credit (get-contestant))) "Contestant gained a credit")
+    (is (= 4 (:credit (get-challenger))) "Challenger spent an extra credit")
+    (play-from-hand state :challenger "Bookmark")
+    (is (= 7 (:credit (get-contestant))) "Contestant gained a credit")
+    (is (= 3 (:credit (get-challenger))) "Challenger spent an extra credit")
+    (play-from-hand state :challenger "Ice Analyzer")
+    (is (= 8 (:credit (get-contestant))) "Contestant gained a credit")
+    (is (= 2 (:credit (get-challenger))) "Challenger spent an extra credit")
+    (play-from-hand state :challenger "Fall Guy")
+    (is (= 8 (:credit (get-contestant))) "Contestant did not gain a credit")
+    (is (= 2 (:credit (get-challenger))) "Challenger did not spend an extra credit")))
 
 (deftest tenma-line
-  ;; Tenma Line - Swap 2 pieces of installed ICE
+  ;; Tenma Line - Swap 2 pieces of placed Character
   (do-game
-    (new-game (default-corp ["Tenma Line" "Harvester"
+    (new-game (default-contestant ["Tenma Line" "Harvester"
                              "Aimor" "Lockdown"])
-              (default-runner))
-    (core/gain state :corp :click 2)
-    (play-from-hand state :corp "Tenma Line" "New remote")
-    (play-from-hand state :corp "Harvester" "HQ")
-    (play-from-hand state :corp "Aimor" "HQ")
-    (play-from-hand state :corp "Lockdown" "R&D")
-    (core/rez state :corp (get-content state :rd 0))
-    (core/rez state :corp (get-content state :remote1 0))
-    (is (= 1 (:click (get-corp))))
-    (card-ability state :corp (get-content state :remote1 0) 0)
-    (click-card state :corp (get-ice state :rd 0))
-    (click-card state :corp (get-ice state :hq 1))
-    (is (empty? (:prompt (get-corp))))
-    (is (zero? (:click (get-corp))) "Spent 1 click")
-    (is (= "Aimor" (:title (get-ice state :rd 0))) "Aimor swapped to R&D")
-    (is (= "Lockdown" (:title (get-ice state :hq 1))) "Lockdown swapped to HQ outer position")))
+              (default-challenger))
+    (core/gain state :contestant :click 2)
+    (play-from-hand state :contestant "Tenma Line" "New party")
+    (play-from-hand state :contestant "Harvester" "HQ")
+    (play-from-hand state :contestant "Aimor" "HQ")
+    (play-from-hand state :contestant "Lockdown" "R&D")
+    (core/reveal state :contestant (get-content state :rd 0))
+    (core/reveal state :contestant (get-content state :party1 0))
+    (is (= 1 (:click (get-contestant))))
+    (card-ability state :contestant (get-content state :party1 0) 0)
+    (click-card state :contestant (get-character state :rd 0))
+    (click-card state :contestant (get-character state :hq 1))
+    (is (empty? (:prompt (get-contestant))))
+    (is (zero? (:click (get-contestant))) "Spent 1 click")
+    (is (= "Aimor" (:title (get-character state :rd 0))) "Aimor swapped to R&D")
+    (is (= "Lockdown" (:title (get-character state :hq 1))) "Lockdown swapped to HQ outer position")))
 
 (deftest test-ground
   ;; Test Ground
   (do-game
-    (new-game (default-corp ["Test Ground" "Ice Wall" "News Team"])
-              (default-runner))
-    (core/gain state :corp :credit 100 :click 100)
-    (play-from-hand state :corp "Test Ground" "New remote")
-    (play-from-hand state :corp "Ice Wall" "New remote")
-    (play-from-hand state :corp "News Team" "New remote")
-    (let [ground (get-content state :remote1 0)
-          iw (get-ice state :remote2 0)
-          news (get-content state :remote3 0)]
-      (core/rez state :corp ground)
-      (core/rez state :corp iw)
-      (core/rez state :corp news)
+    (new-game (default-contestant ["Test Ground" "Ice Wall" "News Team"])
+              (default-challenger))
+    (core/gain state :contestant :credit 100 :click 100)
+    (play-from-hand state :contestant "Test Ground" "New party")
+    (play-from-hand state :contestant "Ice Wall" "New party")
+    (play-from-hand state :contestant "News Team" "New party")
+    (let [ground (get-content state :party1 0)
+          iw (get-character state :party2 0)
+          news (get-content state :party3 0)]
+      (core/reveal state :contestant ground)
+      (core/reveal state :contestant iw)
+      (core/reveal state :contestant news)
       (advance state ground 2)
-      (is (:rezzed (refresh iw)) "Ice Wall should be rezzed")
-      (is (:rezzed (refresh news)) "News Team should be rezzed")
-      (is (zero? (-> (get-corp) :discard count)) "Corp should start with 0 cards in Archives")
-      (card-ability state :corp ground 0)
-      (click-card state :corp iw)
-      (click-card state :corp news)
-      (is (not (:rezzed (refresh iw))) "Ice Wall should be rezzed")
-      (is (not (:rezzed (refresh news))) "News Team should be rezzed")
-      (is (= 1 (-> (get-corp) :discard count)) "Corp should now have 1 card in discard"))))
+      (is (:revealed (refresh iw)) "Ice Wall should be revealed")
+      (is (:revealed (refresh news)) "News Team should be revealed")
+      (is (zero? (-> (get-contestant) :discard count)) "Contestant should start with 0 cards in Archives")
+      (card-ability state :contestant ground 0)
+      (click-card state :contestant iw)
+      (click-card state :contestant news)
+      (is (not (:revealed (refresh iw))) "Ice Wall should be revealed")
+      (is (not (:revealed (refresh news))) "News Team should be revealed")
+      (is (= 1 (-> (get-contestant) :discard count)) "Contestant should now have 1 card in discard"))))
 
 (deftest the-board
   ;; The Board
   (testing "Modify everything in the score area (regression test for #1938)"
     (do-game
-      (new-game (default-corp ["The Board" "News Team" (qty "Firmware Updates" 2)])
-                (default-runner [(qty "Artist Colony" 3) (qty "Fan Site" 3)]))
-      (starting-hand state :runner ["Artist Colony" "Fan Site"])
-      (play-from-hand state :corp "The Board" "New remote")
-      (play-from-hand state :corp "News Team" "New remote")
-      (play-from-hand state :corp "Firmware Updates" "New remote")
-      (take-credits state :corp)
-      (play-from-hand state :runner "Artist Colony")
-      (play-from-hand state :runner "Fan Site")
-      (take-credits state :runner)
-      (play-from-hand state :corp "Firmware Updates" "New remote")
-      (score-agenda state :corp (get-content state :remote4 0))
-      (is (= 1 (count (:scored (get-runner)))) "Fan Site added to Runner score area")
-      (is (zero? (:agenda-point (get-runner))) "Runner has 0 agenda points")
-      (take-credits state :corp)
-      (run-empty-server state :remote3)
-      (click-prompt state :runner "Steal")
-      (is (= 2 (count (:scored (get-runner)))) "Firmware Updates stolen")
-      (is (= 1 (:agenda-point (get-runner))) "Runner has 1 agenda point")
-      (core/rez state :corp (get-content state :remote1 0))
-      (is (= -1 (:agenda-point (get-runner))) "Runner has -1 agenda points")
-      (run-empty-server state :remote2)
-      (click-prompt state :runner "Add News Team to score area")
-      (is (= 3 (count (:scored (get-runner)))) "News Team added to Runner score area")
-      (is (= -3 (:agenda-point (get-runner))) "Runner has -3 agenda points")
-      (card-ability state :runner (get-resource state 0) 0)
-      (click-prompt state :runner (find-card "Fan Site" (:deck (get-runner))))
-      (click-card state :runner (first (:scored (get-runner))))
-      (is (= 2 (count (:scored (get-runner)))) "Fan Site removed from Runner score area")
-      (is (= -2 (:agenda-point (get-runner))) "Runner has -2 agenda points")
-      (run-empty-server state :remote1)
-      (click-prompt state :runner "Pay 7 [Credits] to trash")
-      (is (= 3 (count (:scored (get-runner)))) "The Board added to Runner score area")
-      (is (= 2 (:agenda-point (get-runner))) "Runner has 2 agenda points")))
-  (testing "handle Fifteen Minutes clicked out of Runner's score area"
+      (new-game (default-contestant ["The Board" "News Team" (qty "Firmware Updates" 2)])
+                (default-challenger [(qty "Artist Colony" 3) (qty "Fan Site" 3)]))
+      (starting-hand state :challenger ["Artist Colony" "Fan Site"])
+      (play-from-hand state :contestant "The Board" "New party")
+      (play-from-hand state :contestant "News Team" "New party")
+      (play-from-hand state :contestant "Firmware Updates" "New party")
+      (take-credits state :contestant)
+      (play-from-hand state :challenger "Artist Colony")
+      (play-from-hand state :challenger "Fan Site")
+      (take-credits state :challenger)
+      (play-from-hand state :contestant "Firmware Updates" "New party")
+      (score-agenda state :contestant (get-content state :party4 0))
+      (is (= 1 (count (:scored (get-challenger)))) "Fan Site added to Challenger score area")
+      (is (zero? (:agenda-point (get-challenger))) "Challenger has 0 agenda points")
+      (take-credits state :contestant)
+      (run-empty-locale state :party3)
+      (click-prompt state :challenger "Steal")
+      (is (= 2 (count (:scored (get-challenger)))) "Firmware Updates stolen")
+      (is (= 1 (:agenda-point (get-challenger))) "Challenger has 1 agenda point")
+      (core/reveal state :contestant (get-content state :party1 0))
+      (is (= -1 (:agenda-point (get-challenger))) "Challenger has -1 agenda points")
+      (run-empty-locale state :party2)
+      (click-prompt state :challenger "Add News Team to score area")
+      (is (= 3 (count (:scored (get-challenger)))) "News Team added to Challenger score area")
+      (is (= -3 (:agenda-point (get-challenger))) "Challenger has -3 agenda points")
+      (card-ability state :challenger (get-radicle state 0) 0)
+      (click-prompt state :challenger (find-card "Fan Site" (:deck (get-challenger))))
+      (click-card state :challenger (first (:scored (get-challenger))))
+      (is (= 2 (count (:scored (get-challenger)))) "Fan Site removed from Challenger score area")
+      (is (= -2 (:agenda-point (get-challenger))) "Challenger has -2 agenda points")
+      (run-empty-locale state :party1)
+      (click-prompt state :challenger "Pay 7 [Credits] to discard")
+      (is (= 3 (count (:scored (get-challenger)))) "The Board added to Challenger score area")
+      (is (= 2 (:agenda-point (get-challenger))) "Challenger has 2 agenda points")))
+  (testing "handle Fifteen Minutes clicked out of Challenger's score area"
     (do-game
-      (new-game (default-corp ["The Board" "15 Minutes"])
-                (default-runner))
-      (play-from-hand state :corp "The Board" "New remote")
-      (play-from-hand state :corp "15 Minutes" "New remote")
-      (core/rez state :corp (get-content state :remote1 0))
-      (take-credits state :corp)
-      (is (zero? (:agenda-point (get-runner))) "Runner has 0 agenda points")
-      (run-empty-server state :remote2)
-      (click-prompt state :runner "Steal")
-      (is (zero? (:agenda-point (get-runner))) "Runner stays at 1 agenda point")
-      (is (= 1 (count (:scored (get-runner)))) "Runner has 1 agenda in scored area")
-      (take-credits state :runner)
-      (let [fifm (first (:scored (get-runner)))]
-        (card-ability state :corp (refresh fifm) 0)
-        (is (zero? (:agenda-point (get-runner))) "Runner drops to 0 agenda points")
-        (is (empty? (:scored (get-runner))) "Runner has no agendas in scored area"))))
-  (testing "Corp scoring agenda shouldn't trigger The Board to lower Runner points"
+      (new-game (default-contestant ["The Board" "15 Minutes"])
+                (default-challenger))
+      (play-from-hand state :contestant "The Board" "New party")
+      (play-from-hand state :contestant "15 Minutes" "New party")
+      (core/reveal state :contestant (get-content state :party1 0))
+      (take-credits state :contestant)
+      (is (zero? (:agenda-point (get-challenger))) "Challenger has 0 agenda points")
+      (run-empty-locale state :party2)
+      (click-prompt state :challenger "Steal")
+      (is (zero? (:agenda-point (get-challenger))) "Challenger stays at 1 agenda point")
+      (is (= 1 (count (:scored (get-challenger)))) "Challenger has 1 agenda in scored area")
+      (take-credits state :challenger)
+      (let [fifm (first (:scored (get-challenger)))]
+        (card-ability state :contestant (refresh fifm) 0)
+        (is (zero? (:agenda-point (get-challenger))) "Challenger drops to 0 agenda points")
+        (is (empty? (:scored (get-challenger))) "Challenger has no agendas in scored area"))))
+  (testing "Contestant scoring agenda shouldn't trigger The Board to lower Challenger points"
     (do-game
-      (new-game (default-corp ["The Board" (qty "Hostile Takeover" 2)])
-                (default-runner))
-      (core/gain state :corp :credit 6)
-      (play-from-hand state :corp "The Board" "New remote")
-      (play-from-hand state :corp "Hostile Takeover" "New remote")
-      (play-from-hand state :corp "Hostile Takeover" "New remote")
-      (take-credits state :corp)
-      (is (zero? (:agenda-point (get-runner))) "Runner has 0 agenda points")
-      (run-empty-server state :remote3)
-      (click-prompt state :runner "Steal")
-      (is (= 1 (:agenda-point (get-runner))) "Runner has 1 agenda point")
-      (is (= 1 (count (:scored (get-runner)))) "Runner has 1 agenda in scored area")
-      (take-credits state :runner)
-      (core/rez state :corp (get-content state :remote1 0))
-      (is (zero? (:agenda-point (get-runner))) "Runner loses 1 agenda point")
-      (is (= 1 (count (:scored (get-runner)))) "Runner still has 1 agenda in scored area")
-      (score-agenda state :corp (get-content state :remote2 0))
-      (is (zero? (:agenda-point (get-runner))) "Runner still has 0 agenda points")
-      (is (= 1 (count (:scored (get-runner)))) "Runner still has 1 agenda in scored area")))
+      (new-game (default-contestant ["The Board" (qty "Hostile Takeover" 2)])
+                (default-challenger))
+      (core/gain state :contestant :credit 6)
+      (play-from-hand state :contestant "The Board" "New party")
+      (play-from-hand state :contestant "Hostile Takeover" "New party")
+      (play-from-hand state :contestant "Hostile Takeover" "New party")
+      (take-credits state :contestant)
+      (is (zero? (:agenda-point (get-challenger))) "Challenger has 0 agenda points")
+      (run-empty-locale state :party3)
+      (click-prompt state :challenger "Steal")
+      (is (= 1 (:agenda-point (get-challenger))) "Challenger has 1 agenda point")
+      (is (= 1 (count (:scored (get-challenger)))) "Challenger has 1 agenda in scored area")
+      (take-credits state :challenger)
+      (core/reveal state :contestant (get-content state :party1 0))
+      (is (zero? (:agenda-point (get-challenger))) "Challenger loses 1 agenda point")
+      (is (= 1 (count (:scored (get-challenger)))) "Challenger still has 1 agenda in scored area")
+      (score-agenda state :contestant (get-content state :party2 0))
+      (is (zero? (:agenda-point (get-challenger))) "Challenger still has 0 agenda points")
+      (is (= 1 (count (:scored (get-challenger)))) "Challenger still has 1 agenda in scored area")))
   (testing "Scoring two copies should be 4 agenda points"
     (do-game
-      (new-game (default-corp [(qty "The Board" 2)])
-                (default-runner))
-      (core/gain state :corp :credit 6)
-      (play-from-hand state :corp "The Board" "New remote")
-      (play-from-hand state :corp "The Board" "New remote")
-      (core/rez state :corp (get-content state :remote1 0))
-      (core/rez state :corp (get-content state :remote2 0))
-      (take-credits state :corp)
-      (core/gain state :runner :credit 14)
-      (is (zero? (:agenda-point (get-runner))) "Runner has 0 agenda points")
-      (is (empty? (:scored (get-runner))) "Runner has no agendas")
-      (run-empty-server state :remote2)
-      (click-prompt state :runner "Pay 7 [Credits] to trash")
-      (is (= 1 (:agenda-point (get-runner))) "Runner has 1 agenda point")
-      (is (= 1 (count (:scored (get-runner)))) "Runner has 1 agenda in scored area")
-      (run-empty-server state :remote1)
-      (click-prompt state :runner "Pay 7 [Credits] to trash")
-      (is (= 4 (:agenda-point (get-runner))) "Runner has 4 agenda points")
-      (is (= 2 (count (:scored (get-runner)))) "Runner has 2 agendas in scored area"))))
+      (new-game (default-contestant [(qty "The Board" 2)])
+                (default-challenger))
+      (core/gain state :contestant :credit 6)
+      (play-from-hand state :contestant "The Board" "New party")
+      (play-from-hand state :contestant "The Board" "New party")
+      (core/reveal state :contestant (get-content state :party1 0))
+      (core/reveal state :contestant (get-content state :party2 0))
+      (take-credits state :contestant)
+      (core/gain state :challenger :credit 14)
+      (is (zero? (:agenda-point (get-challenger))) "Challenger has 0 agenda points")
+      (is (empty? (:scored (get-challenger))) "Challenger has no agendas")
+      (run-empty-locale state :party2)
+      (click-prompt state :challenger "Pay 7 [Credits] to discard")
+      (is (= 1 (:agenda-point (get-challenger))) "Challenger has 1 agenda point")
+      (is (= 1 (count (:scored (get-challenger)))) "Challenger has 1 agenda in scored area")
+      (run-empty-locale state :party1)
+      (click-prompt state :challenger "Pay 7 [Credits] to discard")
+      (is (= 4 (:agenda-point (get-challenger))) "Challenger has 4 agenda points")
+      (is (= 2 (count (:scored (get-challenger)))) "Challenger has 2 agendas in scored area"))))
 
 (deftest the-news-now-hour
   ;; The News Now Hour
   (do-game
-    (new-game (default-corp ["The News Now Hour"])
-              (default-runner ["Rumor Mill"]))
-    (play-from-hand state :corp "The News Now Hour" "New remote")
-    (core/rez state :corp (get-content state :remote1 0))
-    (take-credits state :corp)
-    (play-from-hand state :runner "Rumor Mill")
-    (is (= 1 (-> (get-runner) :hand count)) "Rumor Mill should still be in hand after trying to play it")))
+    (new-game (default-contestant ["The News Now Hour"])
+              (default-challenger ["Rumor Mill"]))
+    (play-from-hand state :contestant "The News Now Hour" "New party")
+    (core/reveal state :contestant (get-content state :party1 0))
+    (take-credits state :contestant)
+    (play-from-hand state :challenger "Rumor Mill")
+    (is (= 1 (-> (get-challenger) :hand count)) "Rumor Mill should still be in hand after trying to play it")))
 
 (deftest the-root
   ;; The Root - recurring credits refill at Step 1.2
   (do-game
     (new-game (make-deck "Blue Sun: Powering the Future" ["The Root"])
-              (default-runner))
-    (play-from-hand state :corp "The Root" "New remote")
-    (core/gain state :corp :credit 6)
-    (let [root (get-content state :remote1 0)]
-      (core/rez state :corp root)
-      (card-ability state :corp (refresh root) 0)
+              (default-challenger))
+    (play-from-hand state :contestant "The Root" "New party")
+    (core/gain state :contestant :credit 6)
+    (let [root (get-content state :party1 0)]
+      (core/reveal state :contestant root)
+      (card-ability state :contestant (refresh root) 0)
       (is (= 2 (get-counters (refresh root) :recurring)) "Took 1 credit from The Root")
-       (is (= 6 (:credit (get-corp))) "Corp took Root credit into credit pool")
-      (take-credits state :corp)
-      (take-credits state :runner)
+       (is (= 6 (:credit (get-contestant))) "Contestant took Root credit into credit pool")
+      (take-credits state :contestant)
+      (take-credits state :challenger)
       ;; we expect Step 1.2 to have triggered because of Blue Sun
-      (is (:corp-phase-12 @state) "Corp is in Step 1.2")
+      (is (:contestant-phase-12 @state) "Contestant is in Step 1.2")
       (is (= 3 (get-counters (refresh root) :recurring)) "Recurring credits were refilled before Step 1.2 window"))))
 
 (deftest thomas-haas
   ;; Thomas Haas
   (letfn [(haas-test [number]
             (do-game
-              (new-game (default-corp ["Thomas Haas"])
-                        (default-runner))
-              (core/gain state :corp :credit 10 :click 10)
-              (play-from-hand state :corp "Thomas Haas" "New remote")
-              (let [haas (get-content state :remote1 0)]
-                (core/rez state :corp haas)
+              (new-game (default-contestant ["Thomas Haas"])
+                        (default-challenger))
+              (core/gain state :contestant :credit 10 :click 10)
+              (play-from-hand state :contestant "Thomas Haas" "New party")
+              (let [haas (get-content state :party1 0)]
+                (core/reveal state :contestant haas)
                 (advance state (refresh haas) number)
-                (core/lose state :corp :credit (:credit (get-corp)))
-                (is (zero? (-> (get-corp) :discard count)) "Corp should start with 0 cards in Archives")
-                (is (zero? (:credit (get-corp))) "Corp should fire ability with 0 credits")
+                (core/lose state :contestant :credit (:credit (get-contestant)))
+                (is (zero? (-> (get-contestant) :discard count)) "Contestant should start with 0 cards in Archives")
+                (is (zero? (:credit (get-contestant))) "Contestant should fire ability with 0 credits")
                 (is (= number (get-counters (refresh haas) :advancement))
                     (str "Thomas Haas should have " number " advancement tokens"))
-                (card-ability state :corp (refresh haas) 0)
-                (is (= (* 2 number) (:credit (get-corp)))
-                    (str "Corp should gain " (* 2 number) " credits from Thomas Haas' ability"))
-                (is (= 1 (-> (get-corp) :discard count)) "Thomas Haas should be in Archives after ability"))))]
+                (card-ability state :contestant (refresh haas) 0)
+                (is (= (* 2 number) (:credit (get-contestant)))
+                    (str "Contestant should gain " (* 2 number) " credits from Thomas Haas' ability"))
+                (is (= 1 (-> (get-contestant) :discard count)) "Thomas Haas should be in Archives after ability"))))]
     (doall (map haas-test [1 2 3 4 5]))))
 
 (deftest toshiyuki-sakai
-  ;; Toshiyuki Sakai - Swap with an asset/agenda from HQ; Runner can choose to access new card or not
+  ;; Toshiyuki Sakai - Swap with an site/agenda from HQ; Challenger can choose to access new card or not
   (do-game
-    (new-game (default-corp ["Toshiyuki Sakai" "Project Junebug" "Hedge Fund"])
-              (default-runner [(qty "Sure Gamble" 3) (qty "Easy Mark" 2)]))
-    (play-from-hand state :corp "Toshiyuki Sakai" "New remote")
-    (let [toshi (get-content state :remote1 0)]
-      (core/advance state :corp {:card (refresh toshi)})
-      (core/advance state :corp {:card (refresh toshi)})
-      (take-credits state :corp)
+    (new-game (default-contestant ["Toshiyuki Sakai" "Project Junebug" "Hedge Fund"])
+              (default-challenger [(qty "Sure Gamble" 3) (qty "Easy Mark" 2)]))
+    (play-from-hand state :contestant "Toshiyuki Sakai" "New party")
+    (let [toshi (get-content state :party1 0)]
+      (core/advance state :contestant {:card (refresh toshi)})
+      (core/advance state :contestant {:card (refresh toshi)})
+      (take-credits state :contestant)
       (is (= 2 (get-counters (refresh toshi) :advancement)) "Toshiyuki has 2 advancements")
-      (run-empty-server state "Server 1")
-      (is (= :waiting (-> @state :runner :prompt first :prompt-type))
-          "Runner has prompt to wait for Toshiyuki")
-      (click-prompt state :corp "Yes") ; choose to do a swap
-      (click-card state :corp (find-card "Hedge Fund" (:hand (get-corp))))
-      (is (= (refresh toshi) (get-content state :remote1 0)) "Toshiyuki still in remote; can't target an operation in hand")
-      (click-card state :corp (find-card "Project Junebug" (:hand (get-corp))))
-      (let [june (get-content state :remote1 0)]
-        (is (= "Project Junebug" (:title (refresh june))) "Project Junebug swapped into Server 1")
+      (run-empty-locale state "Locale 1")
+      (is (= :waiting (-> @state :challenger :prompt first :prompt-type))
+          "Challenger has prompt to wait for Toshiyuki")
+      (click-prompt state :contestant "Yes") ; choose to do a swap
+      (click-card state :contestant (find-card "Hedge Fund" (:hand (get-contestant))))
+      (is (= (refresh toshi) (get-content state :party1 0)) "Toshiyuki still in party; can't target an operation in hand")
+      (click-card state :contestant (find-card "Project Junebug" (:hand (get-contestant))))
+      (let [june (get-content state :party1 0)]
+        (is (= "Project Junebug" (:title (refresh june))) "Project Junebug swapped into Locale 1")
         (is (= 2 (get-counters (refresh june) :advancement)) "Project Junebug has 2 advancements")
-        (click-prompt state :runner "Yes") ; choose to access new card
-        (click-prompt state :corp "Yes") ; pay 1c to fire Junebug
-        (is (= 4 (count (:discard (get-runner)))) "Runner took 4 net damage")))))
+        (click-prompt state :challenger "Yes") ; choose to access new card
+        (click-prompt state :contestant "Yes") ; pay 1c to fire Junebug
+        (is (= 4 (count (:discard (get-challenger)))) "Challenger took 4 net damage")))))
 
 (deftest turtlebacks
-  ;; Turtlebacks - Gain 1 credit for every new server created
+  ;; Turtlebacks - Gain 1 credit for every new locale created
   (do-game
-    (new-game (default-corp ["Turtlebacks" (qty "PAD Campaign" 2) "Wraparound"])
-              (default-runner))
-    (core/gain state :corp :click 1)
-    (play-from-hand state :corp "Turtlebacks" "New remote")
-    (let [tb (get-content state :remote1 0)]
-      (core/rez state :corp tb)
-      (play-from-hand state :corp "PAD Campaign" "New remote")
-      (is (= 4 (:credit (get-corp))) "Gained 1 credit for new server created")
-      (play-from-hand state :corp "Wraparound" "Server 1")
-      (is (= 4 (:credit (get-corp))) "No credit gained for install into existing server")
-      (play-from-hand state :corp "PAD Campaign" "New remote")
-      (is (= 5 (:credit (get-corp))) "Gained 1 credit for new server created"))))
+    (new-game (default-contestant ["Turtlebacks" (qty "PAD Campaign" 2) "Wraparound"])
+              (default-challenger))
+    (core/gain state :contestant :click 1)
+    (play-from-hand state :contestant "Turtlebacks" "New party")
+    (let [tb (get-content state :party1 0)]
+      (core/reveal state :contestant tb)
+      (play-from-hand state :contestant "PAD Campaign" "New party")
+      (is (= 4 (:credit (get-contestant))) "Gained 1 credit for new locale created")
+      (play-from-hand state :contestant "Wraparound" "Locale 1")
+      (is (= 4 (:credit (get-contestant))) "No credit gained for place into existing locale")
+      (play-from-hand state :contestant "PAD Campaign" "New party")
+      (is (= 5 (:credit (get-contestant))) "Gained 1 credit for new locale created"))))
 
 (deftest urban-renewal
   ;; Urban renewal meat damage
   (do-game
-    (new-game (default-corp ["Urban Renewal"])
-              (default-runner [(qty "Sure Gamble" 3) (qty "Easy Mark" 2)]))
-    ;; Corp turn 1, install and rez urban renewal
-    (play-from-hand state :corp "Urban Renewal" "New remote")
-    (let [ur (get-content state :remote1 0)]
-      (core/rez state :corp (refresh ur))
-      (take-credits state :corp)
-      ;; Runner turn 1, creds
+    (new-game (default-contestant ["Urban Renewal"])
+              (default-challenger [(qty "Sure Gamble" 3) (qty "Easy Mark" 2)]))
+    ;; Contestant turn 1, place and reveal urban renewal
+    (play-from-hand state :contestant "Urban Renewal" "New party")
+    (let [ur (get-content state :party1 0)]
+      (core/reveal state :contestant (refresh ur))
+      (take-credits state :contestant)
+      ;; Challenger turn 1, creds
       (is (= 3 (get-counters (refresh ur) :power)))
-      (take-credits state :runner)
-      ;; Corp turn 2
+      (take-credits state :challenger)
+      ;; Contestant turn 2
       (is (= 2 (get-counters (refresh ur) :power)))
-      (take-credits state :corp)
-      ;; Runner turn 2
+      (take-credits state :contestant)
+      ;; Challenger turn 2
       (is (= 2 (get-counters (refresh ur) :power)))
-      (take-credits state :runner)
-      ;; Corp turn 3
+      (take-credits state :challenger)
+      ;; Contestant turn 3
       (is (= 1 (get-counters (refresh ur) :power)))
-      (take-credits state :corp)
-      ;; Runner turn 3
-      (is (zero? (count (:discard (get-corp)))) "Nothing in Corp trash")
-      (is (zero? (count (:discard (get-runner)))) "Nothing in Runner trash")
-      (take-credits state :runner)
-      ;; Corp turn 4 - damage fires
-      (is (= 1 (count (:discard (get-corp)))) "Urban Renewal got trashed")
-      (is (= 4 (count (:discard (get-runner)))) "Urban Renewal did 4 meat damage"))))
+      (take-credits state :contestant)
+      ;; Challenger turn 3
+      (is (zero? (count (:discard (get-contestant)))) "Nothing in Contestant discard")
+      (is (zero? (count (:discard (get-challenger)))) "Nothing in Challenger discard")
+      (take-credits state :challenger)
+      ;; Contestant turn 4 - damage fires
+      (is (= 1 (count (:discard (get-contestant)))) "Urban Renewal got discarded")
+      (is (= 4 (count (:discard (get-challenger)))) "Urban Renewal did 4 meat damage"))))
 
 (deftest victoria-jenkins
   ;; Victoria Jenkins
   (do-game
-    (new-game (default-corp ["Victoria Jenkins"])
-              (default-runner))
-    (play-from-hand state :corp "Victoria Jenkins" "New remote")
-    (take-credits state :corp)
-    (is (= 4 (:click (get-runner))) "Runner should have 4 clicks by default")
-    (let [victoria (get-content state :remote1 0)]
-      (core/rez state :corp victoria)
-      (is (= 3 (:click (get-runner))) "Runner should have 3 clicks when Victoria Jenkins is rezzed")
-      (run-empty-server state "Server 1")
-      (click-prompt state :runner "Pay 5 [Credits] to trash")
-      (is (= 3 (:click (get-runner))) "Runner should have 3 clicks again after trashing Victoria Jenkins")
-      (is (= 2 (:agenda-point (get-runner))) "Runner should gain 2 agenda points from trashing Victoria Jenkins")
-      (is (= 1 (count (get-scored state :runner))) "Runner should have 1 card in score area")
-      (is (zero? (-> (get-corp) :discard count)) "Victoria Jenkins shouldn't go to Archives when trashed"))))
+    (new-game (default-contestant ["Victoria Jenkins"])
+              (default-challenger))
+    (play-from-hand state :contestant "Victoria Jenkins" "New party")
+    (take-credits state :contestant)
+    (is (= 4 (:click (get-challenger))) "Challenger should have 4 clicks by default")
+    (let [victoria (get-content state :party1 0)]
+      (core/reveal state :contestant victoria)
+      (is (= 3 (:click (get-challenger))) "Challenger should have 3 clicks when Victoria Jenkins is revealed")
+      (run-empty-locale state "Locale 1")
+      (click-prompt state :challenger "Pay 5 [Credits] to discard")
+      (is (= 3 (:click (get-challenger))) "Challenger should have 3 clicks again after discarding Victoria Jenkins")
+      (is (= 2 (:agenda-point (get-challenger))) "Challenger should gain 2 agenda points from discarding Victoria Jenkins")
+      (is (= 1 (count (get-scored state :challenger))) "Challenger should have 1 card in score area")
+      (is (zero? (-> (get-contestant) :discard count)) "Victoria Jenkins shouldn't go to Archives when discarded"))))
 
 (deftest warden-fatuma
-  ;; Warden Fatuma - rezzed bioroid ice gains an additional sub
+  ;; Warden Fatuma - revealed bioroid character gains an additional sub
   (do-game
-    (new-game (default-corp ["Warden Fatuma" "Kakugo"
+    (new-game (default-contestant ["Warden Fatuma" "Kakugo"
                              "Eli 2.0" "Ichi 2.0"])
-              (default-runner))
-    (core/gain state :corp :credit 20 :click 5)
-    (play-from-hand state :corp "Kakugo" "Archives")
-    (play-from-hand state :corp "Eli 2.0" "HQ")
-    (play-from-hand state :corp "Ichi 2.0" "R&D")
-    (play-from-hand state :corp "Warden Fatuma" "New remote")
-    (let [wf (get-content state :remote1 0)
-          kak (get-ice state :archives 0)
-          eli (get-ice state :hq 0)
-          ichi (get-ice state :rd 0)]
-      (core/rez state :corp kak)
+              (default-challenger))
+    (core/gain state :contestant :credit 20 :click 5)
+    (play-from-hand state :contestant "Kakugo" "Archives")
+    (play-from-hand state :contestant "Eli 2.0" "HQ")
+    (play-from-hand state :contestant "Ichi 2.0" "R&D")
+    (play-from-hand state :contestant "Warden Fatuma" "New party")
+    (let [wf (get-content state :party1 0)
+          kak (get-character state :archives 0)
+          eli (get-character state :hq 0)
+          ichi (get-character state :rd 0)]
+      (core/reveal state :contestant kak)
       (is (= 1 (count (:subroutines (refresh kak)))) "Kakugo starts with 1 sub")
-      (core/rez state :corp eli)
+      (core/reveal state :contestant eli)
       (is (= 2 (count (:subroutines (refresh eli)))) "Eli 2.0 starts with 2 subs")
-      (is (zero? (count (:subroutines (refresh ichi)))) "Unrezzed Ichi 2.0 starts with 0 subs")
-      (core/rez state :corp wf)
+      (is (zero? (count (:subroutines (refresh ichi)))) "Unrevealed Ichi 2.0 starts with 0 subs")
+      (core/reveal state :contestant wf)
       (is (= 1 (count (:subroutines (refresh kak)))) "Kakugo stays at 1 sub")
       (is (= 3 (count (:subroutines (refresh eli)))) "Eli 2.0 gains 1 sub")
-      (is (zero? (count (:subroutines (refresh ichi)))) "Unrezzed Ichi 2.0 stays at 0 subs")
-      (core/rez state :corp ichi)
+      (is (zero? (count (:subroutines (refresh ichi)))) "Unrevealed Ichi 2.0 stays at 0 subs")
+      (core/reveal state :contestant ichi)
       (is (= 1 (count (:subroutines (refresh kak)))) "Kakugo stays at 1 sub")
       (is (= 3 (count (:subroutines (refresh eli)))) "Eli 2.0 stays at 1 sub")
-      (is (= 3 (count (:subroutines (refresh ichi)))) "Ichi 2.0 rezzes with 3 subs")
-      (core/derez state :corp (refresh wf))
+      (is (= 3 (count (:subroutines (refresh ichi)))) "Ichi 2.0 reveals with 3 subs")
+      (core/hide state :contestant (refresh wf))
       (is (= 1 (count (:subroutines (refresh kak)))) "Kakugo stays at 1 sub")
       (is (= 2 (count (:subroutines (refresh eli)))) "Eli 2.0 reverts")
       (is (= 2 (count (:subroutines (refresh ichi)))) "Ichi 2.0 reverts"))))
 
 (deftest watchdog
-  ;; Watchdog - Reduce rez cost of first ICE per turn by number of Runner tags
+  ;; Watchdog - Reduce reveal cost of first Character per turn by number of Challenger tags
   (do-game
-    (new-game (default-corp ["Watchdog" "Architect" "Wraparound"])
-              (default-runner))
-    (play-from-hand state :corp "Watchdog" "New remote")
-    (play-from-hand state :corp "Wraparound" "HQ")
-    (play-from-hand state :corp "Architect" "HQ")
-    (let [wd (get-content state :remote1 0)
-          arch (get-ice state :hq 1)
-          wrap (get-ice state :hq 0)]
-      (take-credits state :corp)
-      (is (= 4 (:credit (get-corp))))
-      (core/gain state :runner :tag 2)
+    (new-game (default-contestant ["Watchdog" "Architect" "Wraparound"])
+              (default-challenger))
+    (play-from-hand state :contestant "Watchdog" "New party")
+    (play-from-hand state :contestant "Wraparound" "HQ")
+    (play-from-hand state :contestant "Architect" "HQ")
+    (let [wd (get-content state :party1 0)
+          arch (get-character state :hq 1)
+          wrap (get-character state :hq 0)]
+      (take-credits state :contestant)
+      (is (= 4 (:credit (get-contestant))))
+      (core/gain state :challenger :tag 2)
       (run-on state "HQ")
-      (core/rez state :corp wd)
-      (core/rez state :corp arch)
-      (is (= 2 (:credit (get-corp))) "Only 2 credits to rez Architect")
-      (core/rez state :corp wrap)
-      (is (zero? (:credit (get-corp))) "No rez discount on Wraparound"))))
+      (core/reveal state :contestant wd)
+      (core/reveal state :contestant arch)
+      (is (= 2 (:credit (get-contestant))) "Only 2 credits to reveal Architect")
+      (core/reveal state :contestant wrap)
+      (is (zero? (:credit (get-contestant))) "No reveal discount on Wraparound"))))
 
 (deftest whampoa-reclamation
-  ;; Whampoa Reclamation: Enable trashing a card from HQ to place a card in Archives on the bottom of R&D
+  ;; Whampoa Reclamation: Enable discarding a card from HQ to place a card in Archives on the bottom of R&D
   (do-game
-    (new-game (default-corp [(qty "Whampoa Reclamation" 3)
+    (new-game (default-contestant [(qty "Whampoa Reclamation" 3)
                              (qty "Global Food Initiative" 3)])
-              (default-runner))
-    (play-from-hand state :corp "Whampoa Reclamation" "New remote")
-    (core/trash state :corp (find-card "Whampoa Reclamation" (:hand (get-corp))))
-    (let [wr (get-content state :remote1 0)
-          gfi (find-card "Global Food Initiative" (:hand (get-corp)))]
-      (core/rez state :corp wr)
-      (take-credits state :corp)
-      (card-ability state :corp wr 0)
-      (click-card state :corp gfi)
-      (click-card state :corp (find-card "Global Food Initiative" (:discard (get-corp))))
-      (is (= 1 (count (:discard (get-corp)))) "Only card in discard placed in bottom of R&D")
-      (is (= "Global Food Initiative" (-> (get-corp) :deck last :title)) "GFI last card in deck"))))
+              (default-challenger))
+    (play-from-hand state :contestant "Whampoa Reclamation" "New party")
+    (core/discard state :contestant (find-card "Whampoa Reclamation" (:hand (get-contestant))))
+    (let [wr (get-content state :party1 0)
+          gfi (find-card "Global Food Initiative" (:hand (get-contestant)))]
+      (core/reveal state :contestant wr)
+      (take-credits state :contestant)
+      (card-ability state :contestant wr 0)
+      (click-card state :contestant gfi)
+      (click-card state :contestant (find-card "Global Food Initiative" (:discard (get-contestant))))
+      (is (= 1 (count (:discard (get-contestant)))) "Only card in discard placed in bottom of R&D")
+      (is (= "Global Food Initiative" (-> (get-contestant) :deck last :title)) "GFI last card in deck"))))
 
 (deftest worlds-plaza
   ;; Worlds Plaza
   (do-game
-    (new-game (default-corp ["Worlds Plaza"
+    (new-game (default-contestant ["Worlds Plaza"
                              "Personalized Portal"
                              "Dedicated Response Team"
                              "Honeyfarm"])
-              (default-runner))
-    (core/gain state :corp :credit 10 :click 10)
-    (play-from-hand state :corp "Worlds Plaza" "New remote")
-    (let [plaza (get-content state :remote1 0)]
-      (core/rez state :corp plaza)
-      (card-ability state :corp plaza 0)
-      (let [credits (:credit (get-corp))]
-        (card-ability state :corp plaza 0)
-        (click-card state :corp (find-card "Personalized Portal" (:hand (get-corp))))
-        (is (= (- credits 1) (:credit (get-corp))) "Corp should only spend 1 credit to rez Personalized Portal"))
-      (let [credits (:credit (get-corp))]
-        (card-ability state :corp plaza 0)
-        (click-card state :corp (find-card "Dedicated Response Team" (:hand (get-corp))))
-        (is (= credits (:credit (get-corp))) "Corp should spend 0 credit to rez Dedicated Response Team"))
-      (let [credits (:credit (get-corp))]
-        (card-ability state :corp plaza 0)
-        (click-card state :corp (find-card "Honeyfarm" (:hand (get-corp))))
-        (is (= credits (:credit (get-corp))) "Corp should spend 0 credit to rez Honeyfarm")))))
+              (default-challenger))
+    (core/gain state :contestant :credit 10 :click 10)
+    (play-from-hand state :contestant "Worlds Plaza" "New party")
+    (let [plaza (get-content state :party1 0)]
+      (core/reveal state :contestant plaza)
+      (card-ability state :contestant plaza 0)
+      (let [credits (:credit (get-contestant))]
+        (card-ability state :contestant plaza 0)
+        (click-card state :contestant (find-card "Personalized Portal" (:hand (get-contestant))))
+        (is (= (- credits 1) (:credit (get-contestant))) "Contestant should only spend 1 credit to reveal Personalized Portal"))
+      (let [credits (:credit (get-contestant))]
+        (card-ability state :contestant plaza 0)
+        (click-card state :contestant (find-card "Dedicated Response Team" (:hand (get-contestant))))
+        (is (= credits (:credit (get-contestant))) "Contestant should spend 0 credit to reveal Dedicated Response Team"))
+      (let [credits (:credit (get-contestant))]
+        (card-ability state :contestant plaza 0)
+        (click-card state :contestant (find-card "Honeyfarm" (:hand (get-contestant))))
+        (is (= credits (:credit (get-contestant))) "Contestant should spend 0 credit to reveal Honeyfarm")))))
 
 (deftest zaibatsu-loyalty
   ;; Zaibatsu Loyalty
   (do-game
-    (new-game (default-corp ["Zaibatsu Loyalty" "Ice Wall"])
-              (default-runner ["Lemuria Codecracker"]))
-    (core/gain state :corp :click 10 :click 10)
-    (play-from-hand state :corp "Zaibatsu Loyalty" "New remote")
-    (play-from-hand state :corp "Ice Wall" "New remote")
-    (take-credits state :corp)
-    (core/gain state :runner :click 10 :click 10)
-    (play-from-hand state :runner "Lemuria Codecracker")
-    (let [code (get-hardware state 0)
-          iw (get-ice state :remote2 0)
-          zai (get-content state :remote1 0)]
-      (run-empty-server state "HQ")
-      (card-ability state :runner code 0)
-      (click-card state :runner (refresh iw))
-      (is (some? (-> (get-corp) :prompt first)) "Corp should get the option to rez Zaibatsu Loyalty before expose")
-      (click-prompt state :corp "Yes")
-      (is (:rezzed (refresh zai)) "Zaibatsu Loyalty should be rezzed")
-      (let [credits (:credit (get-corp))]
-        (card-ability state :corp zai 0)
-        (is (= (- credits 1) (:credit (get-corp))) "Corp should lose 1 credit for stopping the expose")
-        (click-prompt state :corp "Done"))
-      (card-ability state :runner code 0)
-      (click-card state :runner (refresh iw))
-      (is (some? (-> (get-corp) :prompt first)) "Corp should be prompted to prevent")
-      (is (= 0 (-> (get-corp) :discard count)) "No trashed cards")
-      (card-ability state :corp zai 1)
-      (is (= 1 (-> (get-corp) :discard count)) "Zaibatsu Loyalty should be in discard after using ability"))))
+    (new-game (default-contestant ["Zaibatsu Loyalty" "Ice Wall"])
+              (default-challenger ["Lemuria Codecracker"]))
+    (core/gain state :contestant :click 10 :click 10)
+    (play-from-hand state :contestant "Zaibatsu Loyalty" "New party")
+    (play-from-hand state :contestant "Ice Wall" "New party")
+    (take-credits state :contestant)
+    (core/gain state :challenger :click 10 :click 10)
+    (play-from-hand state :challenger "Lemuria Codecracker")
+    (let [code (get-hazard state 0)
+          iw (get-character state :party2 0)
+          zai (get-content state :party1 0)]
+      (run-empty-locale state "HQ")
+      (card-ability state :challenger code 0)
+      (click-card state :challenger (refresh iw))
+      (is (some? (-> (get-contestant) :prompt first)) "Contestant should get the option to reveal Zaibatsu Loyalty before expose")
+      (click-prompt state :contestant "Yes")
+      (is (:revealed (refresh zai)) "Zaibatsu Loyalty should be revealed")
+      (let [credits (:credit (get-contestant))]
+        (card-ability state :contestant zai 0)
+        (is (= (- credits 1) (:credit (get-contestant))) "Contestant should lose 1 credit for stopping the expose")
+        (click-prompt state :contestant "Done"))
+      (card-ability state :challenger code 0)
+      (click-card state :challenger (refresh iw))
+      (is (some? (-> (get-contestant) :prompt first)) "Contestant should be prompted to prevent")
+      (is (= 0 (-> (get-contestant) :discard count)) "No discarded cards")
+      (card-ability state :contestant zai 1)
+      (is (= 1 (-> (get-contestant) :discard count)) "Zaibatsu Loyalty should be in discard after using ability"))))
 
 (deftest zealous-judge
   ;; Zealous Judge
   (do-game
-    (new-game (default-corp ["Zealous Judge"])
-              (default-runner))
-    (play-from-hand state :corp "Zealous Judge" "New remote")
-    (let [judge (get-content state :remote1 0)]
-      (core/rez state :corp judge)
-      (is (not (:rezzed (refresh judge))) "Zealous Judge can't be rezzed until Runner is tagged")
-      (core/gain state :runner :tag 1)
-      (core/rez state :corp judge)
-      (is (:rezzed (refresh judge)) "Zealous Judge can be rezzed while the Runner is tagged")
-      (card-ability state :corp judge 0)
-      (is (= 2 (:tag (get-runner))) "Runner should gain a tag from Zealous Judge's ability"))))
+    (new-game (default-contestant ["Zealous Judge"])
+              (default-challenger))
+    (play-from-hand state :contestant "Zealous Judge" "New party")
+    (let [judge (get-content state :party1 0)]
+      (core/reveal state :contestant judge)
+      (is (not (:revealed (refresh judge))) "Zealous Judge can't be revealed until Challenger is tagged")
+      (core/gain state :challenger :tag 1)
+      (core/reveal state :contestant judge)
+      (is (:revealed (refresh judge)) "Zealous Judge can be revealed while the Challenger is tagged")
+      (card-ability state :contestant judge 0)
+      (is (= 2 (:tag (get-challenger))) "Challenger should gain a tag from Zealous Judge's ability"))))

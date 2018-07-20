@@ -78,7 +78,7 @@
             returning an integer for the base strength. The map is otherwise a normal ability map that can
             contain :req, :effect, or any other key in an ability; the :effect is only triggered if the trace
             succeeds. Can also have a key :kicker that is an ability map with key :min, whose effect triggers
-            if the trace strength matches or exceeds the :min value. (Constellation ice.)
+            if the trace strength matches or exceeds the :min value. (Constellation character.)
 
   SIMULTANEOUS EFFECT RESOLUTION KEYS
   :interactive -- when simultaneous effect resolution has been enabled for a specific event, the user receives
@@ -88,7 +88,7 @@
                   arbitrary order. In general, handlers should be marked ':interactive (req true)' if they have
                   important order-of-effect interactions with other cards. The :interactive function can be coded to
                   have smarter logic if necessary -- see Replicator, which is only interactive if there is another
-                  copy of the installed card remaining in the Stack.
+                  copy of the placed card remaining in the Stack.
   :silent -- any handler that does not require user interaction under any circumstances can be marked :silent. If a
              handler's :silent function returns true, then no menu entry will be shown for the handler. In that case,
              the ability will only be resolved once all non-silent abilities are resolved. Example: AstroScript has no
@@ -438,20 +438,20 @@
     (swap! state update-in [side :prompt] (fn [pr] (filter #(not= % wait) pr)))))
 
 ;;; Psi games
-(defn show-prompt-with-dice
+(defn show-prompt-with-dcharacter
   "Calls show-prompt normally, but appends a 'roll d6' button to choices.
   If user chooses to roll d6, reveal the result to user and re-display
   the prompt without the 'roll d6 button'."
   ([state side card message other-choices f]
    (show-prompt state side card message other-choices f nil))
   ([state side card message other-choices f args]
-   (let [dice-msg "Roll a d6",
-         choices (conj other-choices dice-msg)]
+   (let [dcharacter-msg "Roll a d6",
+         choices (conj other-choices dcharacter-msg)]
      (show-prompt state side card message choices
-                  #(if (not= % dice-msg)
+                  #(if (not= % dcharacter-msg)
                      (f %)
                      (show-prompt state side card
-                                  (str message " (Dice result: " (inc (rand-int 6)) ")")
+                                  (str message " (Dcharacter result: " (inc (rand-int 6)) ")")
                                   other-choices f args))
                   args))))
 
@@ -462,14 +462,14 @@
   ([state side eid card psi]
    (swap! state assoc :psi {})
    (register-once state psi card)
-   (system-msg state (:player psi :corp) (str "uses " (:title card) " to start a psi game"))
-   (doseq [s [:corp :runner]]
+   (system-msg state (:player psi :contestant) (str "uses " (:title card) " to start a psi game"))
+   (doseq [s [:contestant :challenger]]
      (let [all-amounts (range (min 3 (inc (get-in @state [s :credit]))))
-           valid-amounts (remove #(or (any-flag-fn? state :corp :psi-prevent-spend %)
-                                      (any-flag-fn? state :runner :psi-prevent-spend %))
+           valid-amounts (remove #(or (any-flag-fn? state :contestant :psi-prevent-spend %)
+                                      (any-flag-fn? state :challenger :psi-prevent-spend %))
                                  all-amounts)]
 
-       (show-prompt-with-dice state s card (str "Choose an amount to spend for " (:title card))
+       (show-prompt-with-dcharacter state s card (str "Choose an amount to spend for " (:title card))
                               (map #(str % " [Credits]") valid-amounts)
                               #(resolve-psi state s eid card psi (str->int (first (split % #" "))))
                     {:priority 2
@@ -480,7 +480,7 @@
   resolution ability."
   [state side eid card psi bet]
   (swap! state assoc-in [:psi side] bet)
-  (let [opponent (if (= side :corp) :runner :corp)]
+  (let [opponent (if (= side :contestant) :challenger :contestant)]
     (if-let [opponent-bet (get-in @state [:psi opponent])]
       (do (clear-wait-prompt state opponent)
           (deduct state opponent [:credit opponent-bet])
@@ -510,67 +510,67 @@
     (cond
       (some? constant-effect) constant-effect
       (some? player) player
-      :else :corp)))
+      :else :contestant)))
 
-(defn corp-start?
+(defn contestant-start?
   [trace]
-  (= :corp (:player trace)))
+  (= :contestant (:player trace)))
 
 (defn resolve-trace
   "Compares trace strength and link strength and triggers the appropriate effects."
   [state side card {:keys [eid player other base bonus link priority ability strength] :as trace} boost]
-  (clear-wait-prompt state :corp)
-  (let [corp-strength (if (corp-start? trace)
+  (clear-wait-prompt state :contestant)
+  (let [contestant-strength (if (contestant-start? trace)
                          strength
                          ((fnil + 0 0 0) base bonus boost))
-        runner-strength (if (corp-start? trace)
+        challenger-strength (if (contestant-start? trace)
                          ((fnil + 0 0) link boost)
                          strength)
         trigger-trace (select-keys trace [:player :other :base :bonus :link :priority :ability :strength])]
     (system-msg state other (str " spends " boost
-                                 "[Credits] to increase " (if (corp-start? trace) "link" "trace")
-                                 " strength to " (if (corp-start? trace)
-                                                   runner-strength
-                                                   corp-strength)))
+                                 "[Credits] to increase " (if (contestant-start? trace) "link" "trace")
+                                 " strength to " (if (contestant-start? trace)
+                                                   challenger-strength
+                                                   contestant-strength)))
     (clear-wait-prompt state player)
-    (let [successful (> corp-strength runner-strength)
+    (let [successful (> contestant-strength challenger-strength)
           which-ability (assoc (if successful
                                  (:successful trace)
                                  (:unsuccessful trace))
                                :eid (make-eid state))]
       (system-say state side (str "The trace was " (when-not successful "un") "successful."))
-      (wait-for (trigger-event-sync state :corp (if successful :successful-trace :unsuccessful-trace)
+      (wait-for (trigger-event-sync state :contestant (if successful :successful-trace :unsuccessful-trace)
                                     (assoc trigger-trace
-                                           :corp-strength corp-strength
-                                           :runner-strength runner-strength
+                                           :contestant-strength contestant-strength
+                                           :challenger-strength challenger-strength
                                            :successful successful
-                                           :corp-spent (if (corp-start? trace)
+                                           :contestant-spent (if (contestant-start? trace)
                                                          (- strength (+ base bonus))
                                                          boost)
-                                           :runner-spent (if (corp-start? trace)
+                                           :challenger-spent (if (contestant-start? trace)
                                                            boost
                                                            (- strength link))))
-                (wait-for (resolve-ability state :corp (:eid which-ability) which-ability
-                                           card [corp-strength runner-strength])
+                (wait-for (resolve-ability state :contestant (:eid which-ability) which-ability
+                                           card [contestant-strength challenger-strength])
                           (do (when-let [kicker (:kicker trace)]
-                                (when (>= corp-strength (:min kicker))
-                                  (resolve-ability state :corp kicker card [corp-strength runner-strength])))
+                                (when (>= contestant-strength (:min kicker))
+                                  (resolve-ability state :contestant kicker card [contestant-strength challenger-strength])))
                               (effect-completed state side eid)))))))
 
 (defn trace-reply
   "Shows a trace prompt to the second player, after the first has already spent credits to boost."
   [state side card {:keys [eid player other base bonus link priority] :as trace} boost]
-  (let [other-type (if (corp-start? trace) "link" "trace")
-        strength (if (corp-start? trace)
+  (let [other-type (if (contestant-start? trace) "link" "trace")
+        strength (if (contestant-start? trace)
                    ((fnil + 0 0 0) base bonus boost)
                    ((fnil + 0 0) link boost))
         trace (assoc trace :strength strength)]
     (system-msg state player (str " spends " boost
-                                  "[Credits] to increase " (if (corp-start? trace) "trace" "link")
+                                  "[Credits] to increase " (if (contestant-start? trace) "trace" "link")
                                   " strength to " strength))
     (clear-wait-prompt state other)
     (show-wait-prompt state player
-                      (str (if (corp-start? trace) "Runner" "Corp")
+                      (str (if (contestant-start? trace) "Challenger" "Contestant")
                            " to boost " other-type " strength")
                       {:priority priority})
     (show-trace-prompt state other card (str "Boost " other-type " strength?")
@@ -578,22 +578,22 @@
                        trace)))
 
 (defn trace-start
-  "Starts the trace process by showing the boost prompt to the first player (normally corp)."
+  "Starts the trace process by showing the boost prompt to the first player (normally contestant)."
   [state side card {:keys [player other base bonus priority label] :as trace}]
-  (system-msg state :corp (str "uses " (:title card)
+  (system-msg state :contestant (str "uses " (:title card)
                                " to initiate a trace with strength " ((fnil + 0 0) base bonus)
                                (when (pos? bonus)
                                  (str " (" base " + " bonus ")"))
                                (when label
                                  (str " (" label ")"))))
   (show-wait-prompt state other
-                    (str (if (corp-start? trace) "Corp" "Runner")
+                    (str (if (contestant-start? trace) "Contestant" "Challenger")
                          " to boost "
-                         (if (corp-start? trace) "trace" "link")
+                         (if (contestant-start? trace) "trace" "link")
                          " strength")
                     {:priority priority})
   (show-trace-prompt state player card
-                     (str "Boost " (if (corp-start? trace) "trace" "link") " strength?")
+                     (str "Boost " (if (contestant-start? trace) "trace" "link") " strength?")
                      #(trace-reply state side card trace %)
                      trace))
 
@@ -606,17 +606,17 @@
 (defn init-trace
   [state side card {:keys [base priority eid] :as trace}]
   (reset-trace-modifications state)
-  (wait-for (trigger-event-sync state :corp :pre-init-trace card eid)
+  (wait-for (trigger-event-sync state :contestant :pre-init-trace card eid)
             (let [force-base (get-in @state [:trace :force-base])
                   force-link (get-in @state [:trace :force-link])
                   base (cond force-base force-base
-                             (fn? base) (base state :corp (make-eid state) card nil)
+                             (fn? base) (base state :contestant (make-eid state) card nil)
                              :else base)
                   link (if force-link
                          force-link
-                         (get-in @state [:runner :link] 0))
+                         (get-in @state [:challenger :link] 0))
                   trace (merge trace {:player (determine-initiator state trace)
-                                      :other (if (= :corp (determine-initiator state trace)) :runner :corp)
+                                      :other (if (= :contestant (determine-initiator state trace)) :challenger :contestant)
                                       :base base
                                       :bonus (get-in @state [:bonus :trace] 0)
                                       :link link
@@ -631,7 +631,7 @@
    (continue-ability state side
                     {:show-discard  true
                      :choices {:max n
-                               :req #(and (= (:side %) "Corp")
+                               :req #(and (= (:side %) "Contestant")
                                           (= (:zone %) [:discard]))
                                :all all?}
                      :msg (msg "shuffle "

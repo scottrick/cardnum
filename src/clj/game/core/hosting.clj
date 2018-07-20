@@ -48,11 +48,11 @@
 (defn host
   "Host the target onto the card."
   ([state side card target] (host state side card target nil))
-  ([state side card {:keys [zone cid host installed] :as target} {:keys [facedown] :as options}]
+  ([state side card {:keys [zone cid host placed] :as target} {:keys [facedown] :as options}]
    (when (not= cid (:cid card))
-     (when installed
+     (when placed
        (unregister-events state side target))
-     (doseq [s [:runner :corp]]
+     (doseq [s [:challenger :contestant]]
        (if host
          (when-let [host-card (get-card state host)]
            (update! state side (update-in host-card [:hosted]
@@ -72,11 +72,11 @@
            tdef (card-def c)]
        (update! state side (update-in card [:hosted] #(conj % c)))
 
-       ;; events should be registered for: runner cards that are installed; corp cards that are Operations, or are installed and rezzed
+       ;; events should be registered for: challenger cards that are placed; contestant cards that are Operations, or are placed and revealed
        (when (or (is-type? target "Operation")
                  (and (is-type? target "Event") (not facedown))
-                 (and installed (card-is? target :side :runner))
-                 (and installed (card-is? target :side :corp) (:rezzed target)))
+                 (and placed (card-is? target :side :challenger))
+                 (and placed (card-is? target :side :contestant) (:revealed target)))
          (when-let [events (:events tdef)]
            (register-events state side events c))
          (when (or (:recurring tdef) (:prevent tdef))
@@ -84,7 +84,7 @@
                                     :init-data true})))
 
        (when-let [events (:events tdef)]
-         (when (and installed (:recurring tdef))
+         (when (and placed (:recurring tdef))
            (unregister-events state side target)
            (register-events state side events c)))
        (when-let [hosted-gained (:hosted-gained cdef)]

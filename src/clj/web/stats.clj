@@ -135,16 +135,16 @@
                                              :deckstats deckstats}])))))
 
 (defn game-started [{:keys [gameid date title room players]}]
-  (let [corp (some #(when (= "Corp" (:side %)) %) players)
-        runner (some #(when (= "Runner" (:side %)) %) players)]
+  (let [contestant (some #(when (= "Contestant" (:side %)) %) players)
+        challenger (some #(when (= "Challenger" (:side %)) %) players)]
     (mc/insert db "gamestats" {:gameid         (str gameid)
                                :startDate      date
                                :title          title
                                :room           room
-                               :corp           (get-in corp [:user :username] "")
-                               :runner         (get-in runner [:user :username] "")
-                               :corpIdentity   (get-in corp [:deck :identity :title])
-                               :runnerIdentity (get-in runner [:deck :identity :title])})))
+                               :contestant           (get-in contestant [:user :username] "")
+                               :challenger         (get-in challenger [:user :username] "")
+                               :contestantIdentity   (get-in contestant [:deck :identity :title])
+                               :challengerIdentity (get-in challenger [:deck :identity :title])})))
 
 (defn game-finished [{:keys [state gameid]}]
   (when state
@@ -154,5 +154,5 @@
                         :reason       (:reason @state)
                         :endDate      (java.util.Date.)
                         :turn         (:turn @state)
-                        :corpAgenda   (get-in @state [:corp :agenda-point])
-                        :runnerAgenda (get-in @state [:runner :agenda-point])}})))
+                        :contestantAgenda   (get-in @state [:contestant :agenda-point])
+                        :challengerAgenda (get-in @state [:challenger :agenda-point])}})))

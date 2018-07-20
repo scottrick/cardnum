@@ -3,7 +3,7 @@
             [cheshire.generate :refer [add-encoder encode-str]]
             [game.core :refer [card-is-public? game-states show-error-toast toast] :as core]
             [game.utils :refer [private-card]]
-            [jinteki.cards :refer [all-cards]]
+            [cardnum.cards :refer [all-cards]]
             [differ.core :as differ]))
 
 (add-encoder java.lang.Object encode-str)
@@ -21,10 +21,10 @@
    "close-deck" core/close-deck
    "concede" core/concede
    "continue" core/continue
-   "corp-ability" core/play-corp-ability
-   "corp-phase-43" core/corp-phase-43
+   "contestant-ability" core/play-contestant-ability
+   "contestant-phase-43" core/contestant-phase-43
    "credit" core/click-credit
-   "derez" #(core/derez %1 %2 (:card %3))
+   "hide" #(core/hide %1 %2 (:card %3))
    "draw" core/click-draw
    "dynamic-ability" core/play-dynamic-ability
    "end-phase-12" core/end-phase-12
@@ -37,9 +37,9 @@
    "play" core/play
    "purge" core/do-purge
    "remove-tag" core/remove-tag
-   "rez" #(core/rez %1 %2 (:card %3) nil)
+   "reveal" #(core/reveal %1 %2 (:card %3) nil)
    "run" core/click-run
-   "runner-ability" core/play-runner-ability
+   "challenger-ability" core/play-challenger-ability
    "score" #(core/score %1 %2 (game.core/get-card %1 (:card %3)))
    "select" core/select
    "shuffle" core/shuffle-deck
@@ -47,21 +47,21 @@
    "subroutine" core/play-subroutine
    "system-msg" #(core/system-msg %1 %2 (:msg %3))
    "toast" core/toast
-   "trash-resource" core/trash-resource
+   "discard-radicle" core/discard-radicle
    "view-deck" core/view-deck})
 
 (defn strip [state]
   (-> state
     (dissoc :events :turn-events :per-turn :prevent :damage :effect-completed :click-state :turn-state)
-    (update-in [:corp :register] dissoc :most-recent-drawn)
-    (update-in [:runner :register] dissoc :most-recent-drawn)))
+    (update-in [:contestant :register] dissoc :most-recent-drawn)
+    (update-in [:challenger :register] dissoc :most-recent-drawn)))
 
 (defn not-spectator?
   "Returns true if the specified user in the specified state is not a spectator"
   [state user]
-  (let [corp-id (get-in @state [:corp :user :_id])
-        runner-id (get-in @state [:runner :user :_id])]
-    (and state ((set [corp-id runner-id]) (:_id user)))))
+  (let [contestant-id (get-in @state [:contestant :user :_id])
+        challenger-id (get-in @state [:challenger :user :_id])]
+    (and state ((set [contestant-id challenger-id]) (:_id user)))))
 
 (defn- private-card-vector [state side cards]
   (vec (map (fn [card]
@@ -71,23 +71,23 @@
                 :else card))
             cards)))
 
-(defn- make-private-runner [state]
-  (-> (:runner @state)
-      (update-in [:hand] #(private-card-vector state :runner %))
-      (update-in [:discard] #(private-card-vector state :runner %))
-      (update-in [:deck] #(private-card-vector state :runner %))
-      (update-in [:rig :facedown] #(private-card-vector state :runner %))
-      (update-in [:rig :resource] #(private-card-vector state :runner %))))
+(defn- make-private-challenger [state]
+  (-> (:challenger @state)
+      (update-in [:hand] #(private-card-vector state :challenger %))
+      (update-in [:discard] #(private-card-vector state :challenger %))
+      (update-in [:deck] #(private-card-vector state :challenger %))
+      (update-in [:rig :facedown] #(private-card-vector state :challenger %))
+      (update-in [:rig :radicle] #(private-card-vector state :challenger %))))
 
-(defn- make-private-corp [state]
+(defn- make-private-contestant [state]
   (let [zones (concat [[:hand]] [[:discard]] [[:deck]]
-                      (for [server (keys (:servers (:corp @state)))] [:servers server :ices])
-                      (for [server (keys (:servers (:corp @state)))] [:servers server :content]))]
-    (loop [s (:corp @state)
+                      (for [locale (keys (:locales (:contestant @state)))] [:locales locale :characters])
+                      (for [locale (keys (:locales (:contestant @state)))] [:locales locale :content]))]
+    (loop [s (:contestant @state)
            z zones]
       (if (empty? z)
         s
-        (recur (update-in s (first z) #(private-card-vector state :corp %)) (next z))))))
+        (recur (update-in s (first z) #(private-card-vector state :contestant %)) (next z))))))
 
 (defn- make-private-deck [state side deck]
   (if (:view-deck (side @state))
@@ -95,21 +95,21 @@
     (private-card-vector state side deck)))
 
 (defn- private-states
-  "Generates privatized states for the Corp, Runner and any spectators from the base state.
+  "Generates privatized states for the Contestant, Challenger and any spectators from the base state.
   If `:spectatorhands` is on, all information is passed on to spectators as well."
   [state]
-  ;; corp, runner, spectator
-  (let [corp-private (make-private-corp state)
-        runner-private (make-private-runner state)
-        corp-deck (update-in (:corp @state) [:deck] #(make-private-deck state :corp %))
-        runner-deck (update-in (:runner @state) [:deck] #(make-private-deck state :runner %))]
-    [(assoc @state :runner runner-private
-                   :corp corp-deck)
-     (assoc @state :corp corp-private
-                   :runner runner-deck)
+  ;; contestant, challenger, spectator
+  (let [contestant-private (make-private-contestant state)
+        challenger-private (make-private-challenger state)
+        contestant-deck (update-in (:contestant @state) [:deck] #(make-private-deck state :contestant %))
+        challenger-deck (update-in (:challenger @state) [:deck] #(make-private-deck state :challenger %))]
+    [(assoc @state :challenger challenger-private
+                   :contestant contestant-deck)
+     (assoc @state :contestant contestant-private
+                   :challenger challenger-deck)
      (if (get-in @state [:options :spectatorhands])
-       (assoc @state :corp corp-deck :runner runner-deck)
-       (assoc @state :corp corp-private :runner runner-private))]))
+       (assoc @state :contestant contestant-deck :challenger challenger-deck)
+       (assoc @state :contestant contestant-private :challenger challenger-private))]))
 
 (defn- reset-all-cards
   [cards]
@@ -119,24 +119,24 @@
     (reset! all-cards regular)))
 
 (defn public-states [state]
-  (let [[new-corp new-runner new-spect] (private-states state)]
-    {:runner-state (strip new-runner)
-     :corp-state   (strip new-corp)
+  (let [[new-contestant new-challenger new-spect] (private-states state)]
+    {:challenger-state (strip new-challenger)
+     :contestant-state   (strip new-contestant)
      :spect-state  (strip new-spect)}))
 
 (defn public-diffs [old-state new-state]
-  (let [[old-corp old-runner old-spect] (when old-state (private-states (atom old-state)))
-        [new-corp new-runner new-spect] (private-states new-state)
+  (let [[old-contestant old-challenger old-spect] (when old-state (private-states (atom old-state)))
+        [new-contestant new-challenger new-spect] (private-states new-state)
 
-        runner-diff (differ/diff (strip old-runner) (strip new-runner))
-        corp-diff (differ/diff (strip old-corp) (strip new-corp))
+        challenger-diff (differ/diff (strip old-challenger) (strip new-challenger))
+        contestant-diff (differ/diff (strip old-contestant) (strip new-contestant))
         spect-diff (differ/diff (strip old-spect) (strip new-spect))]
-    {:runner-diff runner-diff
-     :corp-diff   corp-diff
+    {:challenger-diff challenger-diff
+     :contestant-diff   contestant-diff
      :spect-diff  spect-diff}))
 
 (defn set-action-id
-  "Creates a unique action id for each server response - used in client lock"
+  "Creates a unique action id for each locale response - used in client lock"
   [state side]
   (swap! state update-in [side :aid] (fnil inc 0)))
 
@@ -169,7 +169,7 @@
 (defn handle-announcement
   [state text]
   (when state
-    (doseq [side [:runner :corp]]
+    (doseq [side [:challenger :contestant]]
       (toast state side text "warning" {:time-out 0 :close-button true}))))
 
 (defn handle-typing
@@ -182,8 +182,8 @@
 (defn handle-rejoin
   [state {:keys [_id username] :as user}]
   (when-let [side (cond
-                    (= _id (get-in @state [:corp :user :_id])) :corp
-                    (= _id (get-in @state [:runner :user :_id])) :runner
+                    (= _id (get-in @state [:contestant :user :_id])) :contestant
+                    (= _id (get-in @state [:challenger :user :_id])) :challenger
                     :else nil)]
     (swap! state assoc-in [side :user] user)
     (handle-notification state (str username " rejoined the game."))))

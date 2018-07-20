@@ -5,11 +5,11 @@
             [clojure.string :refer [lower-case split]]
             [monger.core :as mg]
             [monger.collection :as mc]
-            [jinteki.cards :refer [all-cards]]))
+            [cardnum.cards :refer [all-cards]]))
 
 (defn load-card [title]
   (let [conn (mg/connect {:host "127.0.0.1" :port 27017})
-        db (mg/get-db conn "netrunner")
+        db (mg/get-db conn "meccg")
         card (mc/find-maps db "cards" {:title title})
         ret (first card)]
     (mg/disconnect conn)
@@ -17,7 +17,7 @@
 
 (defn load-cards []
   (let [conn (mg/connect {:host "127.0.0.1" :port 27017})
-        db (mg/get-db conn "netrunner")
+        db (mg/get-db conn "meccg")
         cards (doall (mc/find-maps db "cards"))]
     (mg/disconnect conn)
     cards))
@@ -32,12 +32,12 @@
   {:identity identity
    :deck (map #(if (string? %) (qty % 1) %) deck)})
 
-(defn default-corp
-  ([] (default-corp [(qty "Hedge Fund" 3)]))
+(defn default-contestant
+  ([] (default-contestant [(qty "Hedge Fund" 3)]))
   ([deck] (make-deck "Custom Biotics: Engineered for Success" deck)))
 
-(defn default-runner
-  ([] (default-runner [(qty "Sure Gamble" 3)]))
+(defn default-challenger
+  ([] (default-challenger [(qty "Sure Gamble" 3)]))
   ([deck] (make-deck "The Professor: Keeper of Knowledge" deck)))
 
 
@@ -74,11 +74,11 @@
                (string? card)))
       (if (map? card)
         (core/select state side {:card card})
-        (let [all-cards (concat (core/get-all-installed state)
+        (let [all-cards (concat (core/get-all-placed state)
                                 (mapcat (fn [side]
                                           (mapcat #(-> @state side %)
                                                   [:hand :discard :deck :rfg :scored :play-area]))
-                                        [:corp :runner]))
+                                        [:contestant :challenger]))
               matching-cards (filter #(= card (:title %)) all-cards)]
           (if (= (count matching-cards) 1)
             (core/select state side {:card (first matching-cards)})

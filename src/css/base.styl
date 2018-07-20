@@ -550,11 +550,11 @@ nav ul
 .influence.neutral
   color: white
 
-// Corps
+// Contestants
 .influence.haas-bioroid
   color: blueviolet
 
-.influence.jinteki
+.influence.cardnum
   color: crimson
 
 .influence.nbn
@@ -563,7 +563,7 @@ nav ul
 .influence.weyland-consortium
   color: darkgreen
 
-// Runners
+// Challengers
 .influence.adam
   color: olive
 
@@ -1454,7 +1454,7 @@ nav ul
     &.green
       background-color: green
 
-  .server-target, .subtype-target
+  .locale-target, .subtype-target
     position: absolute
     z-index: 10
     padding: 0
@@ -1467,7 +1467,7 @@ nav ul
     padding-right: 3px
     white-space: nowrap
 
-  .server-target
+  .locale-target
     background-color: sienna
 
   .subtype-target
@@ -1482,12 +1482,12 @@ nav ul
     &.sentry
       background-color: criminal-blue
 
-  .abilities, .servers-menu, .menu, .runner-abilities, .corp-abilities, .popup
+  .abilities, .locales-menu, .menu, .challenger-abilities, .contestant-abilities, .popup
     left: 0
     bottom: 100%
     margin: 6px -1px
 
-  .abilities, .servers-menu, .menu, .runner-abilities, .corp-abilities
+  .abilities, .locales-menu, .menu, .challenger-abilities, .contestant-abilities
     display: none
     position: absolute
     z-index: 30
@@ -1545,7 +1545,7 @@ nav ul
     width: 60px
     border-radius: 4px
 
-  .server-card
+  .locale-card
     position: relative
     min-height: 84px
     min-width: 60px
@@ -1777,7 +1777,7 @@ nav ul
           .run-button
             position: relative
 
-            .servers-menu
+            .locales-menu
               left: 100%
               bottom: 0
               width: 120px
@@ -1820,7 +1820,7 @@ nav ul
     .card-wrapper
       margin: 3px 6px
 
-    .runner-board
+    .challenger-board
       flex(1)
       display-flex()
       flex-direction(column)
@@ -1831,7 +1831,7 @@ nav ul
         &:first-child
           margin-top: auto
 
-      .runner-centrals
+      .challenger-centrals
         padding: 5px 0
         display-flex()
 
@@ -1839,7 +1839,7 @@ nav ul
           margin-left: 16px
           margin-right: 16px
 
-    .runner-board.opponent
+    .challenger-board.opponent
       opacity: 0.99
       > div:first-child
         margin-top: 0
@@ -1847,13 +1847,13 @@ nav ul
       > div:last-child
         margin-bottom: auto
 
-    .corp-board
+    .contestant-board
       flex(1)
       display-flex()
       flex-direction(row-reverse)
       justify-content(flex-end)
 
-      .server
+      .locale
         position: relative
         min-width: 84px
         margin: 0 4px
@@ -1863,7 +1863,7 @@ nav ul
         justify-content(flex-end)
         align-items(center)
 
-        .ices
+        .characters
           position: relative
           display-flex()
           flex-direction(column-reverse)
@@ -1903,7 +1903,7 @@ nav ul
                 transform(translateX(-50%))
                 border-bottom: 22px solid transparent-orange
 
-          .ice
+          .character
             margin: -7px 0
             transform(rotate(90deg))
             cursor: pointer
@@ -1931,7 +1931,7 @@ nav ul
               .counters
                 transform(rotate(-90deg))
 
-              .abilities, .runner-abilities, .corp-abilities
+              .abilities, .challenger-abilities, .contestant-abilities
                 top: auto
                 bottom: 100%
                 left: 0
@@ -1951,7 +1951,7 @@ nav ul
           .counter
             transform(rotate(90deg))
 
-          .abilities, .runner-abilities, .corp-abilities
+          .abilities, .challenger-abilities, .contestant-abilities
             left: 100%
             margin: -1px 6px
 
@@ -1961,7 +1961,7 @@ nav ul
             transform(rotate(90deg) translateY(-100%))
             transform-origin(0 0)
 
-          .runner-abilities, .corp-abilities
+          .challenger-abilities, .contestant-abilities
             bottom: 0
             transform(rotate(-90deg) translateY(100%))
             transform-origin(0 100%)
@@ -1973,7 +1973,7 @@ nav ul
           transform(rotate(180deg))
           display-flex()
 
-    .corp-board.opponent .server
+    .contestant-board.opponent .locale
       transform(initial)
 
       .content
@@ -1985,7 +1985,7 @@ nav ul
       .icon
         transform(rotate(-90deg))
 
-      .ices
+      .characters
         opacity: 0.99
         .subtype-target
           transform(rotate(-90deg), translateY(-100%))
@@ -1997,7 +1997,7 @@ nav ul
           .counters
             transform(rotate(90deg))
 
-          .abilities, .runner-abilities, .corp-abilities
+          .abilities, .challenger-abilities, .contestant-abilities
             top: 100%
             bottom: auto
 

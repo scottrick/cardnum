@@ -1,7 +1,7 @@
 (ns web.core
   (:require [web.api :refer [app]]
             [monger.collection :as mc]
-            [jinteki.cards :as cards]
+            [cardnum.cards :as cards]
             [web.config :refer [frontend-version server-config server-mode]]
             [web.ws :as ws]
             [web.db :refer [db]]
@@ -9,7 +9,7 @@
             [web.lobby :as lobby]
             [web.game :as game]
             [web.stats :as stats]
-            [jinteki.nav :as nav]
+            [cardnum.nav :as nav]
             [clj-time.format :as f]
             [game.core :as core])
   (:gen-class :main true))
@@ -53,7 +53,7 @@
     (web.utils/tick lobby/send-lobby 1000)
 
     (reset! server (org.httpkit.server/run-server app {:port port}))
-    (println "Jinteki server running in" @server-mode "mode on port" port)
+    (println "Cardnum server running in" @server-mode "mode on port" port)
     (println "Frontend version " @frontend-version))
 
   (ws/start-ws-router!))

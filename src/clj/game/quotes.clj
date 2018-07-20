@@ -2,16 +2,16 @@
   (:require [aero.core :refer [read-config]]
             [clojure.java.io :as io]))
 
-(let [quotes-corp-filename "data/quotes-corp.edn"
-      quotes-runner-filename "data/quotes-runner.edn"
-      quotes-corp (if (.exists (io/file quotes-corp-filename))
-                    (read-config quotes-corp-filename)
+(let [quotes-contestant-filename "data/quotes-contestant.edn"
+      quotes-challenger-filename "data/quotes-challenger.edn"
+      quotes-contestant (if (.exists (io/file quotes-contestant-filename))
+                    (read-config quotes-contestant-filename)
                     {})
-      quotes-runner (if (.exists (io/file quotes-runner-filename))
-                      (read-config quotes-runner-filename)
+      quotes-challenger (if (.exists (io/file quotes-challenger-filename))
+                      (read-config quotes-challenger-filename)
                       {})
       generic-key "Default"]
-  (defonce identity-quotes (merge quotes-corp quotes-runner))
+  (defonce identity-quotes (merge quotes-contestant quotes-challenger))
 
   (defn- choose-and-repeat [options qty]
     (when (not-empty options)

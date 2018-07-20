@@ -3,13 +3,13 @@
   (:require [web.db :refer [db] :as webdb]
             [monger.collection :as mc]
             [monger.operators :refer :all]
-            [tasks.nrdb :refer [replace-collection tables update-config tables]]
+            [tasks.meccgdb :refer [replace-collection tables update-config tables]]
             [clojure.string :as string]
             [clojure.java.io :as io]
             [cheshire.core :as json]))
 
 (def ^:const alt-art-sets "data/promo.json")
-(def ^:const img-directory ["resources" "public" "img" "cards"])
+(def ^:const img-directory ["radicles" "public" "img" "cards"])
 
 (def ^:const alt-collection "altarts")
 (def ^:const card-collection (:collection (:card tables)))

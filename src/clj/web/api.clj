@@ -1,5 +1,5 @@
 (ns web.api
-  (:require [jinteki.nav :as nav]
+  (:require [cardnum.nav :as nav]
             [web.utils :refer [response]]
             [web.data :as data]
             [web.pages :as pages]

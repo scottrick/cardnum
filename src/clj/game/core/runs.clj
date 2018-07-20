@@ -1,80 +1,80 @@
 (in-ns 'game.core)
 
 (declare any-flag-fn? clear-run-register! run-cleanup
-         gain-run-credits update-ice-in-server update-all-ice
+         gain-run-credits update-character-in-locale update-all-character
          get-agenda-points gain-agenda-point optional-ability
-         get-remote-names card-name can-access-loud can-steal?
+         get-party-names card-name can-access-loud can-steal?
          prevent-jack-out card-flag? can-run?)
 
 ;;; Steps in the run sequence
 (defn run
-  "Starts a run on the given server, with the given card as the cause."
-  ([state side server] (run state side (make-eid state) server nil nil))
-  ([state side eid server] (run state side eid server nil nil))
-  ([state side server run-effect card] (run state side (make-eid state) server run-effect card))
-  ([state side eid server run-effect card]
-   (when (can-run? state :runner)
-     (let [s [(if (keyword? server) server (last (server->zone state server)))]
-           ices (get-in @state (concat [:corp :servers] s [:ices]))
-           n (count ices)]
-       ;; s is a keyword for the server, like :hq or :remote1
+  "Starts a run on the given locale, with the given card as the cause."
+  ([state side locale] (run state side (make-eid state) locale nil nil))
+  ([state side eid locale] (run state side eid locale nil nil))
+  ([state side locale run-effect card] (run state side (make-eid state) locale run-effect card))
+  ([state side eid locale run-effect card]
+   (when (can-run? state :challenger)
+     (let [s [(if (keyword? locale) locale (last (locale->zone state locale)))]
+           characters (get-in @state (concat [:contestant :locales] s [:characters]))
+           n (count characters)]
+       ;; s is a keyword for the locale, like :hq or :party1
        (swap! state assoc :per-run nil
-              :run {:server s
+              :run {:locale s
                     :position n
                     :access-bonus 0
                     :run-effect (assoc run-effect :card card)
                     :eid eid})
-       (gain-run-credits state side (+ (get-in @state [:corp :bad-publicity]) (get-in @state [:corp :has-bad-pub])))
-       (swap! state update-in [:runner :register :made-run] #(conj % (first s)))
-       (update-all-ice state :corp)
+       (gain-run-credits state side (+ (get-in @state [:contestant :bad-publicity]) (get-in @state [:contestant :has-bad-pub])))
+       (swap! state update-in [:challenger :register :made-run] #(conj % (first s)))
+       (update-all-character state :contestant)
        (swap! state update-in [:stats side :runs :started] (fnil inc 0))
-       (wait-for (trigger-event-sync state :runner :run s)
-                 (when (>= n 2) (trigger-event state :runner :run-big s n))
+       (wait-for (trigger-event-sync state :challenger :run s)
+                 (when (>= n 2) (trigger-event state :challenger :run-big s n))
                  (when (zero? n)
-                   (trigger-event-sync state :runner (make-eid state) :approach-server nil)))))))
+                   (trigger-event-sync state :challenger (make-eid state) :approach-locale nil)))))))
 
 (defn gain-run-credits
   "Add temporary credits that will disappear when the run is over."
   [state side n]
-  (swap! state update-in [:runner :run-credit] + n)
-  (gain-credits state :runner n))
+  (swap! state update-in [:challenger :run-credit] + n)
+  (gain-credits state :challenger n))
 
 (defn access-end
-  "Trigger events involving the end of the access phase, including :no-trash and :post-access-card"
+  "Trigger events involving the end of the access phase, including :no-discard and :post-access-card"
   [state side eid c]
-  (when-not (find-cid (:cid c) (get-in @state [:corp :discard]))
-    ;; Do not trigger :no-trash if card has already been trashed
-    (trigger-event state side :no-trash c))
+  (when-not (find-cid (:cid c) (get-in @state [:contestant :discard]))
+    ;; Do not trigger :no-discard if card has already been discarded
+    (trigger-event state side :no-discard c))
   (when (and (is-type? c "Agenda")
-             (not (find-cid (:cid c) (get-in @state [:runner :scored]))))
+             (not (find-cid (:cid c) (get-in @state [:challenger :scored]))))
     (trigger-event state side :no-steal c))
   (when (and (get-card state c)
-             ;; Don't increment :no-trash-or-steal if accessing a card in Archives
+             ;; Don't increment :no-discard-or-steal if accessing a card in Archives
              (not= (:zone c) [:discard]))
-    (swap! state update-in [:runner :register :no-trash-or-steal] (fnil inc 0)))
+    (swap! state update-in [:challenger :register :no-discard-or-steal] (fnil inc 0)))
   (trigger-event-sync state side eid :post-access-card c))
 
 ;;; Stealing agendas
 (defn steal
-  "Moves a card to the runner's :scored area, triggering events from the completion of the steal."
+  "Moves a card to the challenger's :scored area, triggering events from the completion of the steal."
   ([state side card] (steal state side (make-eid state) card))
   ([state side eid card]
-   (let [c (move state :runner (dissoc card :advance-counter :new) :scored {:force true})
-         points (get-agenda-points state :runner c)]
+   (let [c (move state :challenger (dissoc card :advance-counter :new) :scored {:force true})
+         points (get-agenda-points state :challenger c)]
      (wait-for
        (trigger-event-simult
-         state :runner :agenda-stolen
-         {:first-ability {:effect (req (system-msg state :runner (str "steals " (:title c) " and gains "
+         state :challenger :agenda-stolen
+         {:first-ability {:effect (req (system-msg state :challenger (str "steals " (:title c) " and gains "
                                                                       (quantify points "agenda point")))
-                                       (swap! state update-in [:runner :register :stole-agenda]
+                                       (swap! state update-in [:challenger :register :stole-agenda]
                                               #(+ (or % 0) (:agendapoints c 0)))
-                                       (gain-agenda-point state :runner points)
+                                       (gain-agenda-point state :challenger points)
                                        (play-sfx state side "agenda-steal")
                                        (when (:run @state)
                                          (swap! state assoc-in [:run :did-steal] true))
                                        (when (card-flag? c :has-events-when-stolen true)
                                          (register-events state side (:events (card-def c)) c))
-                                       (remove-old-current state side :corp))}
+                                       (remove-old-current state side :contestant))}
           :card-ability (ability-as-handler c (:stolen (card-def c)))}
          c)
        (access-end state side eid card)))))
@@ -84,8 +84,8 @@
   ([state side card] (steal-agenda state side (make-eid state) card))
   ([state side eid card]
    (let [cdef (card-def card)]
-     (if (or (not (:steal-req cdef)) ((:steal-req cdef) state :runner (make-eid state) card nil))
-       (steal state :runner eid card)
+     (if (or (not (:steal-req cdef)) ((:steal-req cdef) state :challenger (make-eid state) card nil))
+       (steal state :challenger eid card)
        (access-end state side eid card)))))
 
 (defn steal-cost-bonus
@@ -118,45 +118,45 @@
       merge-costs flatten vec))
 
 (defn access-non-agenda
-  "Access a non-agenda. Show a prompt to trash for trashable cards."
+  "Access a non-agenda. Show a prompt to discard for discardable cards."
   [state side eid c & {:keys [skip-trigger-event]}]
   (when-not skip-trigger-event
-    (trigger-event state side :pre-trash c))
-  (swap! state update-in [:stats :runner :access :cards] (fnil inc 0))
+    (trigger-event state side :pre-discard c))
+  (swap! state update-in [:stats :challenger :access :cards] (fnil inc 0))
   (if (not= (:zone c) [:discard]) ; if not accessing in Archives
-    ;; The card has a trash cost (Asset, Upgrade)
+    ;; The card has a discard cost (Site, Region)
     (let [card (assoc c :seen true)
           card-name (:title card)
-          trash-cost (trash-cost state side c)
-          can-pay (when trash-cost (or (can-pay? state :runner nil :credit trash-cost)
-                                       (can-pay-with-recurring? state :runner trash-cost)))]
-      ;; Show the option to pay to trash the card.
+          discard-cost (discard-cost state side c)
+          can-pay (when discard-cost (or (can-pay? state :challenger nil :credit discard-cost)
+                                       (can-pay-with-recurring? state :challenger discard-cost)))]
+      ;; Show the option to pay to discard the card.
       (when-not (and (is-type? card "Operation")
-                     ;; Don't show the option if Edward Kim's auto-trash flag is true.
-                     (card-flag? card :can-trash-operation true))
-        ;; If card has already been trashed this access don't show option to pay to trash (eg. Ed Kim)
-        (when-not (find-cid (:cid card) (get-in @state [:corp :discard]))
-          (let [trash-ab-cards (->> (concat (all-active state :runner)
-                                            (get-in @state [:runner :play-area]))
-                                    (filter #(can-trigger? state :runner (:trash-ability (:interactions (card-def %))) % [card])))
-                ability-strs (map #(->> (card-def %) :interactions :trash-ability :label) trash-ab-cards)
-                trash-cost-str (when can-pay
-                                 [(str "Pay " trash-cost " [Credits] to trash")])
-                ;; If the runner is forced to trash this card (Neutralize All Threats)
-                forced-to-trash? (and (or can-pay
-                                          (seq trash-ab-cards))
-                                      (or (get-in @state [:runner :register :force-trash])
-                                          (card-flag-fn? state side card :must-trash true)))
-                trash-msg (when can-pay
-                            (str trash-cost " [Credits] to trash " card-name " from " (name-zone :corp (:zone card))))
+                     ;; Don't show the option if Edward Kim's auto-discard flag is true.
+                     (card-flag? card :can-discard-operation true))
+        ;; If card has already been discarded this access don't show option to pay to discard (eg. Ed Kim)
+        (when-not (find-cid (:cid card) (get-in @state [:contestant :discard]))
+          (let [discard-ab-cards (->> (concat (all-active state :challenger)
+                                            (get-in @state [:challenger :play-area]))
+                                    (filter #(can-trigger? state :challenger (:discard-ability (:interactions (card-def %))) % [card])))
+                ability-strs (map #(->> (card-def %) :interactions :discard-ability :label) discard-ab-cards)
+                discard-cost-str (when can-pay
+                                 [(str "Pay " discard-cost " [Credits] to discard")])
+                ;; If the challenger is forced to discard this card (Neutralize All Threats)
+                forced-to-discard? (and (or can-pay
+                                          (seq discard-ab-cards))
+                                      (or (get-in @state [:challenger :register :force-discard])
+                                          (card-flag-fn? state side card :must-discard true)))
+                discard-msg (when can-pay
+                            (str discard-cost " [Credits] to discard " card-name " from " (name-zone :contestant (:zone card))))
                 pay-str (when can-pay
-                          (str (if forced-to-trash? "is forced to pay " "pays ") trash-msg))
+                          (str (if forced-to-discard? "is forced to pay " "pays ") discard-msg))
                 prompt-str (str "You accessed " card-name ".")
-                no-action-str (when-not forced-to-trash?
+                no-action-str (when-not forced-to-discard?
                                 ["No action"])
-                choices (into [] (concat ability-strs trash-cost-str no-action-str))]
+                choices (into [] (concat ability-strs discard-cost-str no-action-str))]
             (continue-ability
-              state :runner
+              state :challenger
               {:async true
                :prompt prompt-str
                :choices choices
@@ -165,29 +165,29 @@
                               (access-end state side eid c)
 
                               (.contains target "Pay")
-                              (if (> trash-cost (get-in @state [:runner :credit] 0))
+                              (if (> discard-cost (get-in @state [:challenger :credit] 0))
                                 (do (toast state side (str "You don't have the credits to pay for " card-name
-                                                           ". Did you mean to first gain credits from installed cards?"))
+                                                           ". Did you mean to first gain credits from placed cards?"))
                                     (access-non-agenda state side eid c :skip-trigger-event true))
-                                (do (lose state side :credit trash-cost)
+                                (do (lose state side :credit discard-cost)
                                     (when (:run @state)
-                                      (swap! state assoc-in [:run :did-trash] true)
-                                      (when forced-to-trash?
+                                      (swap! state assoc-in [:run :did-discard] true)
+                                      (when forced-to-discard?
                                         (swap! state assoc-in [:run :did-access] true)))
-                                    (swap! state assoc-in [:runner :register :trashed-card] true)
+                                    (swap! state assoc-in [:challenger :register :discarded-card] true)
                                     (system-msg state side pay-str)
-                                    (wait-for (trash state side card nil)
+                                    (wait-for (discard state side card nil)
                                               (access-end state side eid c))))
 
                               (some #(= % target) ability-strs)
                               (let [idx (.indexOf ability-strs target)
-                                    trash-ab-card (nth trash-ab-cards idx)
-                                    cdef (-> (card-def trash-ab-card)
+                                    discard-ab-card (nth discard-ab-cards idx)
+                                    cdef (-> (card-def discard-ab-card)
                                              :interactions
-                                             :trash-ability)]
+                                             :discard-ability)]
                                 (when (:run @state)
-                                  (swap! state assoc-in [:run :did-trash] true))
-                                (wait-for (resolve-ability state side cdef trash-ab-card [card])
+                                  (swap! state assoc-in [:run :did-discard] true))
+                                (wait-for (resolve-ability state side cdef discard-ab-card [card])
                                           (access-end state side eid c)))))}
               card nil)))))
     (access-end state side eid c)))
@@ -200,9 +200,9 @@
    :choices (conj (vec (keys cost-map)) "No action")
    :effect (req
              (if (= target "No action")
-               (continue-ability state :runner
+               (continue-ability state :challenger
                                  {:async true
-                                  :effect (req (when-not (find-cid cid (:deck corp))
+                                  :effect (req (when-not (find-cid cid (:deck contestant))
                                                  (system-msg state side (str "decides not to pay to steal " title)))
                                                (access-end state side eid card))}
                  card nil)
@@ -216,16 +216,16 @@
                          (if (> (count cost-map) 1)
                            (continue-ability
                              state side
-                             (steal-pay-choice state :runner (dissoc cost-map target) card)
+                             (steal-pay-choice state :challenger (dissoc cost-map target) card)
                              card nil)
                            (steal-agenda state side eid card))))
                    (access-end state side eid card)))))})
 
 (defn- access-agenda
-  "Rules interactions for a runner that has accessed an agenda and may be able to steal it."
+  "Rules interactions for a challenger that has accessed an agenda and may be able to steal it."
   [state side eid c]
   (trigger-event state side :pre-steal-cost c)
-  (swap! state update-in [:stats :runner :access :cards] (fnil inc 0))
+  (swap! state update-in [:stats :challenger :access :cards] (fnil inc 0))
   (let [cost (steal-cost state side c)
         part-cost (partition 2 cost)
         cost-strs (map costs->symbol part-cost)
@@ -234,13 +234,13 @@
         card-name (:title c)
         can-pay-costs? (can-pay? state side card-name cost)
         cost-as-symbol (when (= 1 (count cost-strs)) (costs->symbol cost))
-        ;; any trash abilities
+        ;; any discard abilities
         can-steal-this? (can-steal? state side c)
-        trash-ab-cards (when (not= (:zone c) [:discard])
-                         (->> (concat (all-active state :runner)
-                                      (get-in @state [:runner :play-area]))
-                              (filter #(can-trigger? state :runner (get-in (card-def %) [:interactions :trash-ability]) % [c]))))
-        ability-strs (map #(->> (card-def %) :interactions :trash-ability :label) trash-ab-cards)
+        discard-ab-cards (when (not= (:zone c) [:discard])
+                         (->> (concat (all-active state :challenger)
+                                      (get-in @state [:challenger :play-area]))
+                              (filter #(can-trigger? state :challenger (get-in (card-def %) [:interactions :discard-ability]) % [c]))))
+        ability-strs (map #(->> (card-def %) :interactions :discard-ability :label) discard-ab-cards)
         ;; strs
         steal-str (when (and can-steal-this? can-pay-costs?)
                     (if (seq cost-strs)
@@ -253,8 +253,8 @@
                         ["No action"])
         prompt-str (str "You accessed " card-name ".")
         choices (into [] (concat ability-strs steal-str no-action-str))]
-    ;; Steal costs are additional costs and can be denied by the runner.
-    (continue-ability state :runner
+    ;; Steal costs are additional costs and can be denied by the challenger.
+    (continue-ability state :challenger
                       {:async true
                        :prompt prompt-str
                        :choices choices
@@ -265,14 +265,14 @@
 
                                       ;; Steal normally
                                       (= target "Steal")
-                                      (steal-agenda state :runner eid c)
+                                      (steal-agenda state :challenger eid c)
 
                                       ;; Pay single additiional cost to steal
                                       (.contains target "Pay")
                                       (if (> n 1)
                                         ;; Use the better function for multiple costs
-                                        (continue-ability state :runner
-                                                          (steal-pay-choice state :runner cost-map c)
+                                        (continue-ability state :challenger
+                                                          (steal-pay-choice state :challenger cost-map c)
                                                           c nil)
                                         ;; Otherwise, just handle everything right friggin here
                                         (wait-for (pay-sync state side nil cost {:action :steal-cost})
@@ -280,16 +280,16 @@
                                                                   (str "pays " cost-as-symbol " to steal " card-name))
                                                       (steal-agenda state side eid c))))
 
-                                      ;; Use trash ability
+                                      ;; Use discard ability
                                       (some #(= % target) ability-strs)
                                       (let [idx (.indexOf ability-strs target)
-                                            trash-ab-card (nth trash-ab-cards idx)
-                                            cdef (-> (card-def trash-ab-card)
+                                            discard-ab-card (nth discard-ab-cards idx)
+                                            cdef (-> (card-def discard-ab-card)
                                                      :interactions
-                                                     :trash-ability)]
+                                                     :discard-ability)]
                                         (when (:run @state)
-                                          (swap! state assoc-in [:run :did-trash] true))
-                                        (wait-for (resolve-ability state side cdef trash-ab-card [c])
+                                          (swap! state assoc-in [:run :did-discard] true))
+                                        (wait-for (resolve-ability state side cdef discard-ab-card [c])
                                                   (do (trigger-event state side :no-steal c)
                                                       (access-end state side eid c))))))}
                       c nil)))
@@ -321,7 +321,7 @@
       (system-msg state side (str "must reveal they accessed " (:title card))))))
 
 (defn- access-trigger-events
-  "Trigger access effects, then move into trash/steal choice."
+  "Trigger access effects, then move into discard/steal choice."
   [state side eid c title]
   (let [cdef (card-def c)
         c (assoc c :seen true)
@@ -341,7 +341,7 @@
                 (access-end state side eid c)))))
 
 (defn- access-pay
-  "Force the runner to pay any costs to access this card, if any, before proceeding with access."
+  "Force the challenger to pay any costs to access this card, if any, before proceeding with access."
   [state side eid c title]
   (let [acost (access-cost state side c)
         ;; hack to prevent toasts when playing against Gagarin and accessing on 0 credits
@@ -351,11 +351,11 @@
                   :async true
                   :effect (effect (access-end eid c))}]
     (cond
-      ;; Check if a pre-access-card effect trashed the card (By Any Means)
+      ;; Check if a pre-access-card effect discarded the card (By Any Means)
       (not (get-card state c))
       (access-end state side eid c)
 
-      ;; Either there were no access costs, or the runner could pay them.
+      ;; Either there were no access costs, or the challenger could pay them.
       (empty? acost)
       (access-trigger-events state side eid c title)
 
@@ -364,10 +364,10 @@
       (wait-for (pay-sync state side anon-card acost)
                 (if async-result
                   (access-trigger-events state side eid c title)
-                  (resolve-ability state :runner eid cant-pay c nil)))
+                  (resolve-ability state :challenger eid cant-pay c nil)))
       :else
-      ;; The runner cannot afford the cost to access the card
-      (resolve-ability state :runner eid cant-pay c nil))))
+      ;; The challenger cannot afford the cost to access the card
+      (resolve-ability state :challenger eid cant-pay c nil))))
 
 (defn access-card
   "Apply game rules for accessing the given card."
@@ -376,20 +376,20 @@
   ([state side eid card title]
     ;; Indicate that we are in the access step.
    (swap! state assoc :access true)
-    ;; Reset counters for increasing costs of trash, steal, and access.
-   (swap! state update-in [:bonus] dissoc :trash)
+    ;; Reset counters for increasing costs of discard, steal, and access.
+   (swap! state update-in [:bonus] dissoc :discard)
    (swap! state update-in [:bonus] dissoc :steal-cost)
    (swap! state update-in [:bonus] dissoc :access-cost)
    (when (:run @state)
      (let [zone (#{:discard :deck :hand} (-> card :zone first))
            zone (if zone zone (-> card :zone second))]
        (swap! state update-in [:run :cards-accessed zone] (fnil inc 0))))
-   ;; First trigger pre-access-card, then move to determining if we can trash or steal.
+   ;; First trigger pre-access-card, then move to determining if we can discard or steal.
    (wait-for (trigger-event-sync state side :pre-access-card card)
              (access-pay state side eid card title))))
 
 (defn prevent-access
-  "Prevents the runner from accessing cards this run. This will cancel any run effects and not trigger access routines."
+  "Prevents the challenger from accessing cards this run. This will cancel any run effects and not trigger access routines."
   [state _]
   (swap! state assoc-in [:run :prevent-access] true))
 
@@ -406,39 +406,39 @@
 
 (defn access-count [state side kw]
   (let [run (:run @state)
-        accesses (+ (get-in @state [:runner kw]) (:access-bonus run 0))]
+        accesses (+ (get-in @state [:challenger kw]) (:access-bonus run 0))]
     (if-let [max-access (:max-access run)]
       (min max-access accesses) accesses)))
 
 
-;;; Methods for allowing user-controlled multi-access in servers.
+;;; Methods for allowing user-controlled multi-access in locales.
 
-;; choose-access implements game prompts allowing the runner to choose the order of access.
-(defmulti choose-access (fn [cards server args] (get-server-type (first server))))
+;; choose-access implements game prompts allowing the challenger to choose the order of access.
+(defmulti choose-access (fn [cards locale args] (get-locale-type (first locale))))
 
-(defn access-helper-remote [cards]
-  {:prompt "Click a card to access it. You must access all cards in this server."
+(defn access-helper-party [cards]
+  {:prompt "Click a card to access it. You must access all cards in this locale."
    :choices {:req #(some (fn [c] (= (:cid %) (:cid c))) cards)}
    :async true
    :effect (req (wait-for (access-card state side target)
                           (if (< 1 (count cards))
-                            (continue-ability state side (access-helper-remote (filter #(not= (:cid %) (:cid target)) cards))
+                            (continue-ability state side (access-helper-party (filter #(not= (:cid %) (:cid target)) cards))
                                               card nil)
                             (effect-completed state side eid))))})
 
-(defmethod choose-access :remote [cards server args]
+(defmethod choose-access :party [cards locale args]
   {:async true
    :effect (req (if (and (>= 1 (count cards))
-                         (not (any-flag-fn? state :runner :slow-remote-access true
-                                            (concat (all-active state :runner) (all-active state :corp)))))
+                         (not (any-flag-fn? state :challenger :slow-party-access true
+                                            (concat (all-active state :challenger) (all-active state :contestant)))))
                   (access-card state side eid (first cards))
-                  (continue-ability state side (access-helper-remote cards) card nil)))})
+                  (continue-ability state side (access-helper-party cards) card nil)))})
 
 (defn access-helper-hq-or-rd
   "Shows a prompt to access card(s) from the given zone.
-  zone: :rd or :hq, for finding Upgrades to access.
+  zone: :rd or :hq, for finding Regions to access.
   label: a string label to describe what is being accessed, e.g., 'Card from deck' -- 'deck' being the label.
-  amount: how many accesses the runner has remaining.
+  amount: how many accesses the challenger has remaining.
   select-fn: a function taking the already-accessed set as argument, and returning the next card to access
       from the given zone.
   title-fn: a function taking a card map being accessed and returning a string to print as the card's title, e.g.,
@@ -446,36 +446,36 @@
   already-accessed: a set of cards already accessed from this zone or its root."
   [state chosen-zone label amount select-fn title-fn already-accessed]
   (let [get-root-content (fn [state]
-                           (filter #(not (contains? already-accessed %)) (get-in @state [:corp :servers chosen-zone :content])))
-        server-name (central->name chosen-zone)
-        unrezzed-upgrade (str "Unrezzed upgrade in " server-name)
+                           (filter #(not (contains? already-accessed %)) (get-in @state [:contestant :locales chosen-zone :content])))
+        locale-name (central->name chosen-zone)
+        unrevealed-region (str "Unrevealed region in " locale-name)
         card-from (str "Card from " label)]
     {:async true
      :prompt "Select a card to access."
      :choices (concat (when (pos? amount) [card-from])
-                      (map #(if (rezzed? %) (:title %) unrezzed-upgrade)
+                      (map #(if (revealed? %) (:title %) unrevealed-region)
                            (get-root-content state)))
      :effect (req (cond
-                    (= target unrezzed-upgrade)
-                    ;; accessing an unrezzed upgrade
+                    (= target unrevealed-region)
+                    ;; accessing an unrevealed region
                     (let [from-root (get-root-content state)
-                          unrezzed (filter #(and (= (last (:zone %)) :content) (not (:rezzed %)))
+                          unrevealed (filter #(and (= (last (:zone %)) :content) (not (:revealed %)))
                                            from-root)]
-                      (if (= 1 (count unrezzed))
-                        ;; only one unrezzed upgrade; access it and continue
-                        (wait-for (access-card state side (first unrezzed))
+                      (if (= 1 (count unrevealed))
+                        ;; only one unrevealed region; access it and continue
+                        (wait-for (access-card state side (first unrevealed))
                                   (if (or (pos? amount) (< 1 (count from-root)))
                                     (continue-ability
                                       state side
                                       (access-helper-hq-or-rd state chosen-zone label amount select-fn title-fn
-                                                              (conj already-accessed (first unrezzed)))
+                                                              (conj already-accessed (first unrevealed)))
                                       card nil)
                                     (effect-completed state side eid)))
-                        ;; more than one unrezzed upgrade. allow user to select with mouse.
+                        ;; more than one unrevealed region. allow user to select with mouse.
                         (continue-ability
                           state side
                           {:async true
-                           :prompt (str "Choose an upgrade in " server-name " to access.")
+                           :prompt (str "Choose an region in " locale-name " to access.")
                            :choices {:req #(and (= (second (:zone %)) chosen-zone)
                                                 (complement already-accessed))}
                            :effect (req (wait-for (access-card state side target)
@@ -498,14 +498,14 @@
                                       (access-helper-hq-or-rd state chosen-zone label (dec amount) select-fn title-fn
                                                               (if (-> @state :run :shuffled-during-access chosen-zone)
                                                                 ;; if the zone was shuffled because of the access,
-                                                                ;; the runner "starts over" excepting any upgrades that were accessed
+                                                                ;; the challenger "starts over" excepting any regions that were accessed
                                                                 (do (swap! state update-in [:run :shuffled-during-access] dissoc chosen-zone)
-                                                                    (set (filter #(= :servers (first (:zone %)))
+                                                                    (set (filter #(= :locales (first (:zone %)))
                                                                                  already-accessed)))
                                                                 (conj already-accessed accessed)))
                                       card nil)
                                     (effect-completed state side eid)))))
-                    ;; accessing a rezzed upgrade
+                    ;; accessing a revealed region
                     :else
                     (let [accessed (some #(when (= (:title %) target) %) (get-root-content state))]
                       (wait-for (access-card state side accessed)
@@ -518,7 +518,7 @@
                                     card nil)
                                   (effect-completed state side eid))))))}))
 
-(defmethod choose-access :rd [cards server {:keys [no-root] :as args}]
+(defmethod choose-access :rd [cards locale {:keys [no-root] :as args}]
   {:async true
    :effect (req (if (pos? (count cards))
                   (if (= 1 (count cards))
@@ -528,31 +528,31 @@
                                                      state :rd "deck" from-rd
                                                      ;; access the first card in deck that has not been accessed.
                                                      (fn [already-accessed] (first (drop-while already-accessed
-                                                                                               (-> @state :corp :deck))))
+                                                                                               (-> @state :contestant :deck))))
                                                      (fn [_] "an unseen card")
                                                      (if no-root
-                                                       (set (get-in @state [:corp :servers :rd :content]))
+                                                       (set (get-in @state [:contestant :locales :rd :content]))
                                                        #{}))
                                         card nil)))
                   (effect-completed state side eid)))})
 
-(defmethod choose-access :hq [cards server {:keys [no-root] :as args}]
+(defmethod choose-access :hq [cards locale {:keys [no-root] :as args}]
   {:async true
    :effect (req (if (pos? (count cards))
                   (if (and (= 1 (count cards))
-                           (not (any-flag-fn? state :runner :slow-hq-access true)))
+                           (not (any-flag-fn? state :challenger :slow-hq-access true)))
                     (access-card state side eid (first cards))
                     (let [from-hq (min (access-count state side :hq-access)
-                                       (-> @state :corp :hand count))
+                                       (-> @state :contestant :hand count))
                           ; Handle root only access - no cards to access in hand
                           from-hq (if (some #(= '[:hand] (:zone %)) cards) from-hq 0)]
                       (continue-ability state side (access-helper-hq-or-rd
                                                      state :hq "hand" from-hq
                                                      (fn [already-accessed] (some #(when-not (already-accessed %) %)
-                                                                                  (shuffle (-> @state :corp :hand))))
+                                                                                  (shuffle (-> @state :contestant :hand))))
                                                      (fn [card] (:title card))
                                                      (if no-root
-                                                       (set (get-in @state [:corp :servers :hq :content]))
+                                                       (set (get-in @state [:contestant :locales :hq :content]))
                                                        #{}))
                                         card nil)))
                   (effect-completed state side eid)))})
@@ -563,7 +563,7 @@
   [state from-hq already-accessed]
   (access-helper-hq-or-rd state :hq "hand" from-hq
                           (fn [already-accessed] (some #(when-not (already-accessed %) %)
-                                                       (shuffle (-> @state :corp :hand))))
+                                                       (shuffle (-> @state :contestant :hand))))
                           :title
                           already-accessed))
 
@@ -575,23 +575,23 @@
              ;; must also be :seen
              (and (:seen %)
                   (or (is-type? % "Agenda")
-                      (should-trigger? state :corp % nil (:access cdef)))))
-          (get-in @state [:corp :discard])))
+                      (should-trigger? state :contestant % nil (:access cdef)))))
+          (get-in @state [:contestant :discard])))
 
 (defn- get-archives-inactive [state]
   ;; get faceup cards with no access interaction
   (filter #(let [cdef (card-def %)]
              (and (:seen %)
                   (not (or (is-type? % "Agenda")
-                           (should-trigger? state :corp % nil (:access cdef))))))
-          (get-in @state [:corp :discard])))
+                           (should-trigger? state :contestant % nil (:access cdef))))))
+          (get-in @state [:contestant :discard])))
 
 (defn access-helper-archives [state amount already-accessed]
-  (let [root-content (fn [already-accessed] (remove already-accessed (-> @state :corp :servers :archives :content)))
+  (let [root-content (fn [already-accessed] (remove already-accessed (-> @state :contestant :locales :archives :content)))
         faceup-accessible (fn [already-accessed] (remove already-accessed (get-archives-accessible state)))
         facedown-cards (fn [already-accessed] (filter #(and (not (:seen %))
                                                             (not (already-accessed %)))
-                                                      (-> @state :corp :discard)))
+                                                      (-> @state :contestant :discard)))
 
         next-access (fn [state side eid already-accessed card]
                       (continue-ability state side (access-helper-archives state (dec amount) already-accessed)
@@ -607,13 +607,13 @@
      :choices (concat (when (<= amount (count (filter (complement already-accessed) (get-archives-inactive state))))
                         [(str "Access " amount " inactive cards")])
                       (map :title (faceup-accessible already-accessed))
-                      (map #(if (rezzed? %) (:title %) "Unrezzed upgrade in Archives") (root-content already-accessed))
+                      (map #(if (revealed? %) (:title %) "Unrevealed region in Archives") (root-content already-accessed))
                       (map (fn [_] (str "Facedown card in Archives")) (facedown-cards already-accessed)))
      :effect (req (cond
                     (.endsWith target "inactive cards")
-                    ;; Interaction with Bacterial Programming. If we have X accesses remaining and <= X inactive cards
+                    ;; Interaction with Bacterial Resourceming. If we have X accesses remaining and <= X inactive cards
                     ;; in Archives, we don't have to access the remaining active cards.  This only happens if you choose
-                    ;; to access at least one of the facedown cards added to Archives by Bacterial Programming.
+                    ;; to access at least one of the facedown cards added to Archives by Bacterial Resourceming.
                     (do (system-msg state side "accesses the remaining inactive cards in Archives")
                         (effect-completed state side eid))
 
@@ -626,22 +626,22 @@
                                   (next-access state side eid already-accessed card)
                                   (effect-completed state side eid))))
 
-                    (= target "Unrezzed upgrade in Archives")
-                    ;; accessing an unrezzed upgrade
-                    (let [unrezzed (filter #(and (= (last (:zone %)) :content) (not (:rezzed %)))
+                    (= target "Unrevealed region in Archives")
+                    ;; accessing an unrevealed region
+                    (let [unrevealed (filter #(and (= (last (:zone %)) :content) (not (:revealed %)))
                                            (root-content already-accessed))]
-                      (if (= 1 (count unrezzed))
-                        ;; only one unrezzed upgrade; access it and continue
-                        (let [already-accessed (conj already-accessed (first unrezzed))]
-                          (wait-for (access-card state side (first unrezzed))
+                      (if (= 1 (count unrevealed))
+                        ;; only one unrevealed region; access it and continue
+                        (let [already-accessed (conj already-accessed (first unrevealed))]
+                          (wait-for (access-card state side (first unrevealed))
                                     (if (must-continue? already-accessed)
                                       (next-access state side eid already-accessed card)
                                       (effect-completed state side eid))))
-                        ;; more than one unrezzed upgrade. allow user to select with mouse.
+                        ;; more than one unrevealed region. allow user to select with mouse.
                         (continue-ability
                           state side
                           {:async true
-                           :prompt "Choose an upgrade in Archives to access."
+                           :prompt "Choose an region in Archives to access."
                            :choices {:req #(and (= (second (:zone %)) :archives)
                                                 (not (already-accessed %)))}
                            :effect (req (let [already-accessed (conj already-accessed target)]
@@ -652,7 +652,7 @@
                           card nil)))
 
                     :else
-                    ;; accessing a rezzed upgrade, or a card in archives
+                    ;; accessing a revealed region, or a card in archives
                     (let [accessed (some #(when (= (:title %) target) %)
                                          (concat (faceup-accessible already-accessed) (root-content already-accessed)))
                           already-accessed (conj already-accessed accessed)]
@@ -661,10 +661,10 @@
                                   (next-access state side eid already-accessed card)
                                   (effect-completed state side eid))))))}))
 
-(defmethod choose-access :archives [cards server {:keys [no-root] :as args}]
+(defmethod choose-access :archives [cards locale {:keys [no-root] :as args}]
   {:async true
-   :effect (req (let [cards (concat (get-archives-accessible state) (-> @state :corp :servers :archives :content))
-                      archives-count (+ (count (-> @state :corp :discard)) (count (-> @state :corp :servers :archives :content)))]
+   :effect (req (let [cards (concat (get-archives-accessible state) (-> @state :contestant :locales :archives :content))
+                      archives-count (+ (count (-> @state :contestant :discard)) (count (-> @state :contestant :locales :archives :content)))]
                   ;; Because we don't "access" cards in Archives like normal,
                   ;; we have to manually count all the cards we'd normally skip
                   (swap! state update-in [:run :cards-accessed :discard] (fnil + 0 0) (- archives-count (count cards)))
@@ -674,7 +674,7 @@
                       (continue-ability state side
                                         (access-helper-archives state archives-count
                                                                 (if no-root
-                                                                  (set (get-in @state [:corp :servers :archives :content]))
+                                                                  (set (get-in @state [:contestant :locales :archives :content]))
                                                                   #{}))
                                         card nil))
                     (effect-completed state side eid))))})
@@ -687,35 +687,35 @@
 
 
 (defmulti cards-to-access
-  "Gets the list of cards to access for the server"
-  (fn [state side server] (get-server-type (first server))))
+  "Gets the list of cards to access for the locale"
+  (fn [state side locale] (get-locale-type (first locale))))
 
-(defmethod cards-to-access :hq [state side server]
-  (concat (take (access-count state side :hq-access) (shuffle (get-in @state [:corp :hand])))
-          (get-in @state [:corp :servers :hq :content])))
+(defmethod cards-to-access :hq [state side locale]
+  (concat (take (access-count state side :hq-access) (shuffle (get-in @state [:contestant :hand])))
+          (get-in @state [:contestant :locales :hq :content])))
 
-(defmethod cards-to-access :rd [state side server]
-  (concat (take (access-count state side :rd-access) (get-in @state [:corp :deck]))
-          (get-in @state [:corp :servers :rd :content])))
+(defmethod cards-to-access :rd [state side locale]
+  (concat (take (access-count state side :rd-access) (get-in @state [:contestant :deck]))
+          (get-in @state [:contestant :locales :rd :content])))
 
-(defmethod cards-to-access :archives [state side server]
-  (swap! state update-in [:corp :discard] #(map (fn [c] (assoc c :seen true)) %))
-  (concat (get-in @state [:corp :discard]) (get-in @state [:corp :servers :archives :content])))
+(defmethod cards-to-access :archives [state side locale]
+  (swap! state update-in [:contestant :discard] #(map (fn [c] (assoc c :seen true)) %))
+  (concat (get-in @state [:contestant :discard]) (get-in @state [:contestant :locales :archives :content])))
 
-(defmethod cards-to-access :remote [state side server]
-  (let [contents (get-in @state [:corp :servers (first server) :content])]
+(defmethod cards-to-access :party [state side locale]
+  (let [contents (get-in @state [:contestant :locales (first locale) :content])]
     (filter (partial can-access-loud state side) (concat contents (get-all-hosted contents)))))
 
 (defn do-access
-  "Starts the access routines for the run's server."
-  ([state side server] (do-access state side (make-eid state) server))
-  ([state side eid server] (do-access state side eid server nil))
-  ([state side eid server {:keys [hq-root-only no-root] :as args}]
-   (wait-for (trigger-event-sync state side :pre-access (first server))
-             (let [cards (cards-to-access state side server)
+  "Starts the access routines for the run's locale."
+  ([state side locale] (do-access state side (make-eid state) locale))
+  ([state side eid locale] (do-access state side eid locale nil))
+  ([state side eid locale {:keys [hq-root-only no-root] :as args}]
+   (wait-for (trigger-event-sync state side :pre-access (first locale))
+             (let [cards (cards-to-access state side locale)
                    cards (if hq-root-only (remove #(= '[:hand] (:zone %)) cards) cards)
-                   cards (if no-root (remove #(or (= '[:servers :rd :content] (:zone %))
-                                                  (= '[:servers :hq :content] (:zone %))) cards) cards)
+                   cards (if no-root (remove #(or (= '[:locales :rd :content] (:zone %))
+                                                  (= '[:locales :hq :content] (:zone %))) cards) cards)
                    n (count cards)]
                ;; Make `:did-access` true when reaching the access step (no replacement)
                (when (:run @state)
@@ -724,9 +724,9 @@
                        (safe-zero? (get-in @state [:run :max-access])))
                  (do (system-msg state side "accessed no cards during the run")
                      (effect-completed state side eid))
-                 (do (swap! state assoc-in [:runner :register :accessed-cards] true)
-                     (wait-for (resolve-ability state side (choose-access cards server args) nil nil)
-                               (wait-for (trigger-event-sync state side :end-access-phase {:from-server (first server)})
+                 (do (swap! state assoc-in [:challenger :register :accessed-cards] true)
+                     (wait-for (resolve-ability state side (choose-access cards locale args) nil nil)
+                               (wait-for (trigger-event-sync state side :end-access-phase {:from-locale (first locale)})
                                          (effect-completed state side eid)))))))))
 
 (defn replace-access
@@ -740,13 +740,13 @@
 
 ;;; Ending runs.
 (defn register-successful-run
-  ([state side server] (register-successful-run state side (make-eid state) server))
-  ([state side eid server]
-   (swap! state update-in [:runner :register :successful-run] #(conj % (first server)))
+  ([state side locale] (register-successful-run state side (make-eid state) locale))
+  ([state side eid locale]
+   (swap! state update-in [:challenger :register :successful-run] #(conj % (first locale)))
    (swap! state assoc-in [:run :successful] true)
-   (wait-for (trigger-event-simult state side :pre-successful-run nil (first server))
-             (wait-for (trigger-event-simult state side :successful-run nil (first (get-in @state [:run :server])))
-                       (wait-for (trigger-event-simult state side :post-successful-run nil (first (get-in @state [:run :server])))
+   (wait-for (trigger-event-simult state side :pre-successful-run nil (first locale))
+             (wait-for (trigger-event-simult state side :successful-run nil (first (get-in @state [:run :locale])))
+                       (wait-for (trigger-event-simult state side :post-successful-run nil (first (get-in @state [:run :locale])))
                                  (effect-completed state side eid))))))
 
 (defn- successful-run-trigger
@@ -757,9 +757,9 @@
     (when (and successful-run-effect
                (not (apply trigger-suppress state side :successful-run card)))
       (resolve-ability state side successful-run-effect (:card successful-run-effect) nil)))
-  (wait-for (register-successful-run state side (get-in @state [:run :server]))
+  (wait-for (register-successful-run state side (get-in @state [:run :locale]))
             (let [the-run (:run @state)
-                  server (:server the-run) ; bind here as the server might have changed
+                  locale (:locale the-run) ; bind here as the locale might have changed
                   run-effect (:run-effect the-run)
                   run-req (:req run-effect)
                   card (:card run-effect)
@@ -767,15 +767,15 @@
               (if (:ended (:run @state))
                 (run-cleanup state side)
                 (if (:prevent-access the-run)
-                  (do (system-msg state :runner "is prevented from accessing any cards this run")
-                      (resolve-ability state :runner
+                  (do (system-msg state :challenger "is prevented from accessing any cards this run")
+                      (resolve-ability state :challenger
                                        {:prompt "You are prevented from accessing any cards this run."
                                         :choices ["OK"]
                                         :effect (effect (handle-end-run))}
                                        nil nil))
                   (if (and replace-effect
                            (or (not run-req)
-                               (run-req state side (make-eid state) card [(first server)])))
+                               (run-req state side (make-eid state) card [(first locale)])))
                     (if (:mandatory replace-effect)
                       (replace-access state side replace-effect card)
                       (swap! state update-in [side :prompt]
@@ -784,33 +784,33 @@
                                               :choices ["Replacement effect" "Access cards"]
                                               :effect #(if (= % "Replacement effect")
                                                          (replace-access state side replace-effect card)
-                                                         (wait-for (do-access state side server)
+                                                         (wait-for (do-access state side locale)
                                                                    (handle-end-run state side)))}))))
-                    (wait-for (do-access state side server)
+                    (wait-for (do-access state side locale)
                               (handle-end-run state side))))))))
 
 (defn successful-run
-  "Run when a run has passed all ice and the runner decides to access. The corp may still get to act in 4.3."
+  "Run when a run has passed all character and the challenger decides to access. The contestant may still get to act in 4.3."
   [state side args]
-  (if (get-in @state [:run :corp-phase-43])
-    ;; if corp requests phase 4.3, then we do NOT fire :successful-run yet, which does not happen until 4.4
+  (if (get-in @state [:run :contestant-phase-43])
+    ;; if contestant requests phase 4.3, then we do NOT fire :successful-run yet, which does not happen until 4.4
     (do (swap! state dissoc :no-action)
-        (system-msg state :corp "wants to act before the run is successful")
-        (show-wait-prompt state :runner "Corp's actions")
-        (show-prompt state :corp nil "Rez and take actions before Successful Run" ["Done"]
-                     (fn [args-corp]
-                       (clear-wait-prompt state :runner)
+        (system-msg state :contestant "wants to act before the run is successful")
+        (show-wait-prompt state :challenger "Contestant's actions")
+        (show-prompt state :contestant nil "Reveal and take actions before Successful Run" ["Done"]
+                     (fn [args-contestant]
+                       (clear-wait-prompt state :challenger)
                        (if-not (:ended (:run @state))
-                        (show-prompt state :runner nil "The run is now successful" ["Continue"]
-                                     (fn [args-runner] (successful-run-trigger state :runner)))
+                        (show-prompt state :challenger nil "The run is now successful" ["Continue"]
+                                     (fn [args-challenger] (successful-run-trigger state :challenger)))
                         (handle-end-run state side)))
                      {:priority -1}))
     (successful-run-trigger state side)))
 
-(defn corp-phase-43
-  "The corp indicates they want to take action after runner hits Successful Run, before access."
+(defn contestant-phase-43
+  "The contestant indicates they want to take action after challenger hits Successful Run, before access."
   [state side args]
-  (swap! state assoc-in [:run :corp-phase-43] true)
+  (swap! state assoc-in [:run :contestant-phase-43] true)
   (swap! state assoc-in [:run :no-action] true)
   (system-msg state side "has no further action")
   (trigger-event state side :no-action))
@@ -820,8 +820,8 @@
   ([state side] (end-run state side (make-eid state)))
   ([state side eid]
    (let [run (:run @state)
-         server (first (get-in @state [:run :server]))]
-     (swap! state update-in [:runner :register :unsuccessful-run] #(conj % server))
+         locale (first (get-in @state [:run :locale]))]
+     (swap! state update-in [:challenger :register :unsuccessful-run] #(conj % locale))
      (swap! state assoc-in [:run :unsuccessful] true)
      (handle-end-run state side)
      (trigger-event-sync state side eid :unsuccessful-run run))))
@@ -838,22 +838,22 @@
   (trigger-event-sync state side (make-result eid true) :jack-out))
 
 (defn jack-out
-  "The runner decides to jack out."
+  "The challenger decides to jack out."
   ([state side] (jack-out state side (make-eid state)))
   ([state side eid]
    (swap! state update-in [:jack-out] dissoc :jack-out-prevent)
    (wait-for (trigger-event-sync state side :pre-jack-out)
-             (let [prevent (get-prevent-list state :corp :jack-out)]
-               (if (cards-can-prevent? state :corp prevent :jack-out)
-                 (do (system-msg state :corp "has the option to prevent the Runner from jacking out")
-                     (show-wait-prompt state :runner "Corp to prevent the jack out" {:priority 10})
-                     (show-prompt state :corp nil
-                                  (str "Prevent the Runner from jacking out?") ["Done"]
+             (let [prevent (get-prevent-list state :contestant :jack-out)]
+               (if (cards-can-prevent? state :contestant prevent :jack-out)
+                 (do (system-msg state :contestant "has the option to prevent the Challenger from jacking out")
+                     (show-wait-prompt state :challenger "Contestant to prevent the jack out" {:priority 10})
+                     (show-prompt state :contestant nil
+                                  (str "Prevent the Challenger from jacking out?") ["Done"]
                                   (fn [_]
-                                    (clear-wait-prompt state :runner)
+                                    (clear-wait-prompt state :challenger)
                                     (if-let [_ (get-in @state [:jack-out :jack-out-prevent])]
                                       (effect-completed state side (make-result eid false))
-                                      (do (system-msg state :corp "will not prevent the Runner from jacking out")
+                                      (do (system-msg state :contestant "will not prevent the Challenger from jacking out")
                                           (resolve-jack-out state side eid))))
                                   {:priority 10}))
                  (do (resolve-jack-out state side eid)
@@ -879,11 +879,11 @@
 (defn run-cleanup-2
   [state side]
   (let [run (:run @state)]
-    (swap! state assoc-in [:runner :register :last-run] run)
-    (swap! state update-in [:runner :credit] - (get-in @state [:runner :run-credit]))
-    (swap! state assoc-in [:runner :run-credit] 0)
+    (swap! state assoc-in [:challenger :register :last-run] run)
+    (swap! state update-in [:challenger :credit] - (get-in @state [:challenger :run-credit]))
+    (swap! state assoc-in [:challenger :run-credit] 0)
     (swap! state assoc :run nil)
-    (update-all-ice state side)
+    (update-all-character state side)
     (swap! state dissoc :access)
     (clear-run-register! state)
     (trigger-run-end-events state side (:eid run) run)))
@@ -891,24 +891,24 @@
 (defn run-cleanup
   "Trigger appropriate events for the ending of a run."
   [state side]
-  (let [server (-> @state :run :server first)]
+  (let [locale (-> @state :run :locale first)]
     (swap! state assoc-in [:run :ending] true)
-    (trigger-event state side :run-ends server)
-    (doseq [p (filter #(has-subtype? % "Icebreaker") (all-active-installed state :runner))]
+    (trigger-event state side :run-ends locale)
+    (doseq [p (filter #(has-subtype? % "Icebreaker") (all-active-placed state :challenger))]
       (update! state side (update-in (get-card state p) [:pump] dissoc :all-run))
       (update! state side (update-in (get-card state p) [:pump] dissoc :encounter))
       (update-breaker-strength state side p))
     (let [run-effect (get-in @state [:run :run-effect])]
       (if-let [end-run-effect (:end-run run-effect)]
-        (wait-for (resolve-ability state side end-run-effect (:card run-effect) [server])
+        (wait-for (resolve-ability state side end-run-effect (:card run-effect) [locale])
                   (run-cleanup-2 state side))
         (run-cleanup-2 state side)))))
 
 (defn handle-end-run
   "Initiate run resolution."
   [state side]
-  (if-not (and (empty? (get-in @state [:runner :prompt]))
-               (empty? (get-in @state [:corp :prompt])))
+  (if-not (and (empty? (get-in @state [:challenger :prompt]))
+               (empty? (get-in @state [:contestant :prompt])))
     (swap! state assoc-in [:run :ended] true)
     (run-cleanup state side)))
 
@@ -921,15 +921,15 @@
     (effect-completed state side eid)
     (when-let [run (:run @state)]
       (when (and (:ended run)
-                 (empty? (get-in @state [:runner :prompt])))
-        (handle-end-run state :runner)))))
+                 (empty? (get-in @state [:challenger :prompt])))
+        (handle-end-run state :challenger)))))
 
-(defn get-run-ices
+(defn get-run-characters
   [state]
-  (get-in @state (concat [:corp :servers] (:server (:run @state)) [:ices])))
+  (get-in @state (concat [:contestant :locales] (:locale (:run @state)) [:characters])))
 
 (defn total-cards-accessed
   ([run]
    (apply + (vals (:cards-accessed run {}))))
-  ([run server]
-   (get-in run [:cards-accessed server] 0)))
+  ([run locale]
+   (get-in run [:cards-accessed locale] 0)))

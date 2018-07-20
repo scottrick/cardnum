@@ -1,7 +1,7 @@
-(defproject netrunner "1.0"
+(defproject meccg "1.0"
   ;; the version string gets replaced by the git rev version plugin anyway
-  :description "Browser implementation of Android: Netrunner card game."
-  :url "https://github.com/mtgred/netrunner"
+  :description "Browser implementation of MECCG:CCG."
+  :url "https://github.com/rezwits/cardnum"
   :license {:name "The MIT License (MIT)"
             :url "https://opensource.org/licenses/MIT"}
 
@@ -53,13 +53,13 @@
             "card-coverage" ["run" "-m" "tasks.cards/test-coverage"]}
 
   ;; Compilation.
-  :source-paths ["src/clj" "src/cljs/nr" "src/cljc"]
+  :source-paths ["src/clj" "src/cljs/meccg" "src/cljc"]
     ;; aot only the namespaces needed for the main game in uberjar, notably ignoring the test and task namespaces.
   :aot [#"game\.*"
         #"web\.*"
-        #"jinteki\.*"]
-  :jar-name "netrunner.jar"
-  :uberjar-name "netrunner-standalone.jar"
+        #"cardnum\.*"]
+  :jar-name "meccg.jar"
+  :uberjar-name "meccg-standalone.jar"
   :omit-source true
   :main web.core
 
@@ -72,18 +72,18 @@
   :cljsbuild {
     :builds [
       {:id "dev"
-       :source-paths ["src/cljs/nr" "src/cljs/dev" "src/cljc"]
+       :source-paths ["src/cljs/meccg" "src/cljs/dev" "src/cljc"]
        :figwheel true
        :compiler {:output-to "resources/public/cljs/app10.js"
                   :output-dir "resources/public/cljs"
-                  :main "dev.nr"
+                  :main "dev.meccg"
                   :asset-path   "cljs"
                   :optimizations :none
                   :source-map-timestamp true
                   :npm-deps false
                   :external-config {:devtools/config {:features-to-install :all}}}}
       {:id "prod"
-       :source-paths ["src/cljs/nr" "src/cljs/prod" "src/cljc"]
+       :source-paths ["src/cljs/meccg" "src/cljs/prod" "src/cljc"]
        :compiler {:output-to "resources/public/js/app10.js"
                   :output-dir "out"
                   :optimizations :advanced

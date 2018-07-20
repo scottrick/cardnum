@@ -1,11 +1,11 @@
 (in-ns 'game.core)
 
 (declare can-run? card-init card-str cards-can-prevent? close-access-prompt enforce-msg gain-agenda-point
-         get-prevent-list get-agenda-points in-corp-scored? installed? is-type? play-sfx prevent-draw make-result
-         remove-old-current show-prompt system-say system-msg steal-trigger-events trash-cards
-         untrashable-while-rezzed? update-all-ice untrashable-while-resources? win win-decked)
+         get-prevent-list get-agenda-points in-contestant-scored? placed? is-type? play-sfx prevent-draw make-result
+         remove-old-current show-prompt system-say system-msg steal-trigger-events discard-cards
+         undiscardable-while-revealed? update-all-character undiscardable-while-radicles? win win-decked)
 
-;;;; Functions for applying core Netrunner game rules.
+;;;; Functions for applying core MECCG game rules.
 
 ;;; Playing cards.
 (defn- complete-play-instant
@@ -20,7 +20,7 @@
                                 (when ignore-cost " at no cost")))
     (play-sfx state side "play-instant")
     (if (has-subtype? c "Current")
-      (do (doseq [s [:corp :runner]]
+      (do (doseq [s [:contestant :challenger]]
             (remove-old-current state side s))
           (let [c (some #(when (= (:cid %) (:cid card)) %) (get-in @state [side :play-area]))
                 moved-card (move state side c :current)]
@@ -31,8 +31,8 @@
             (move state side c :discard))
           (when (has-subtype? card "Terminal")
             (lose state side :click (-> @state side :click))
-            (swap! state assoc-in [:corp :register :terminal] true))))
-    (trigger-event state side (if (= side :corp) :play-operation :play-event) c)))
+            (swap! state assoc-in [:contestant :register :terminal] true))))
+    (trigger-event state side (if (= side :contestant) :play-operation :play-event) c)))
 
 (defn play-instant
   "Plays an Event or Operation."
@@ -66,14 +66,14 @@
                           (not (and (has-subtype? card "Current")
                                     (get-in @state [side :register :cannot-play-current])))
                           (not (and (has-subtype? card "Run")
-                                    (not (can-run? state :runner))))
+                                    (not (can-run? state :challenger))))
                           (not (and (has-subtype? card "Priority")
                                     (get-in @state [side :register :spent-click])))) ; if priority, have not spent a click
                    ;; Wait on pay-sync to finish before triggering instant-effect
                    (wait-for (pay-sync state side card (if ignore-cost 0 total-cost) {:action :play-instant})
                              (if-let [cost-str async-result]
                                (complete-play-instant state side eid card cost-str ignore-cost)
-                               ;; could not pay the card's price; mark the effect as being over.
+                               ;; could not pay the card's prcharacter; mark the effect as being over.
                                (effect-completed state side eid)))
                    ;; card's req was not satisfied; mark the effect as being over.
                    (effect-completed state side eid)))))))
@@ -102,7 +102,7 @@
   ([state side n args] (draw state side (make-eid state) n args))
   ([state side eid n {:keys [suppress-event] :as args}]
    (swap! state update-in [side :register] dissoc :most-recent-drawn) ;clear the most recent draw in case draw prevented
-   (trigger-event state side (if (= side :corp) :pre-corp-draw :pre-runner-draw) n)
+   (trigger-event state side (if (= side :contestant) :pre-contestant-draw :pre-challenger-draw) n)
    (let [active-player (get-in @state [:active-player])
          n (+ n (get-in @state [:bonus :draw] 0))
          draws-wanted n
@@ -110,7 +110,7 @@
                                   (min n (remaining-draws state side))
                                   n)
          deck-count (count (get-in @state [side :deck]))]
-     (when (and (= side :corp) (> draws-after-prevent deck-count))
+     (when (and (= side :contestant) (> draws-after-prevent deck-count))
        (win-decked state))
      (when-not (and (= side active-player) (get-in @state [side :register :cannot-draw]))
        (let [drawn (zone :hand (take draws-after-prevent (get-in @state [side :deck])))]
@@ -122,8 +122,8 @@
          (swap! state update-in [:bonus] dissoc :draw)
          (if (and (not suppress-event) (pos? deck-count))
            (wait-for
-             (trigger-event-sync state side (if (= side :corp) :corp-draw :runner-draw) draws-after-prevent)
-             (trigger-event-sync state side eid (if (= side :corp) :post-corp-draw :post-runner-draw) draws-after-prevent))
+             (trigger-event-sync state side (if (= side :contestant) :contestant-draw :challenger-draw) draws-after-prevent)
+             (trigger-event-sync state side eid (if (= side :contestant) :post-contestant-draw :post-challenger-draw) draws-after-prevent))
            (effect-completed state side eid))
          (when (safe-zero? (remaining-draws state side))
            (prevent-draw state side))))
@@ -136,8 +136,8 @@
 ;;; Damage
 (defn flatline [state]
   (when-not (:winner state)
-    (system-msg state :runner "is flatlined")
-    (win state :corp "Flatline")))
+    (system-msg state :challenger "is flatlined")
+    (win state :contestant "Flatline")))
 
 (defn damage-count
   "Calculates the amount of damage to do, taking into account prevention and boosting effects."
@@ -168,31 +168,31 @@
   (let [{:keys [n part-resolved]} (get-in @state [:damage :defer-damage dtype])]
     (when (or part-resolved (not unpreventable)) n)))
 
-(defn enable-runner-damage-choice
+(defn enable-challenger-damage-choice
   [state side]
-  (swap! state assoc-in [:damage :damage-choose-runner] true))
+  (swap! state assoc-in [:damage :damage-choose-challenger] true))
 
-(defn enable-corp-damage-choice
+(defn enable-contestant-damage-choice
   [state side]
-  (swap! state assoc-in [:damage :damage-choose-corp] true))
+  (swap! state assoc-in [:damage :damage-choose-contestant] true))
 
-(defn runner-can-choose-damage?
+(defn challenger-can-choose-damage?
   [state]
-  (get-in @state [:damage :damage-choose-runner]))
+  (get-in @state [:damage :damage-choose-challenger]))
 
-(defn corp-can-choose-damage?
+(defn contestant-can-choose-damage?
   [state]
-  (get-in @state [:damage :damage-choose-corp]))
+  (get-in @state [:damage :damage-choose-contestant]))
 
 (defn damage-choice-priority
   "Determines which side gets to act if either or both have the ability to choose cards for damage.
   Currently just for Chronos Protocol vs Titanium Ribs"
   [state]
   (let [active-player (get-in @state [:active-player])]
-    (when (and (corp-can-choose-damage? state) (runner-can-choose-damage? state))
-      (if (= active-player :corp)
-        (swap! state update-in [:damage] dissoc :damage-choose-runner)
-        (swap! state update-in [:damage] dissoc :damage-choose-corp)))))
+    (when (and (contestant-can-choose-damage? state) (challenger-can-choose-damage? state))
+      (if (= active-player :contestant)
+        (swap! state update-in [:damage] dissoc :damage-choose-challenger)
+        (swap! state update-in [:damage] dissoc :damage-choose-contestant)))))
 
 (defn resolve-damage
   "Resolves the attempt to do n damage, now that both sides have acted to boost or
@@ -202,33 +202,33 @@
   (damage-choice-priority state)
   (wait-for (trigger-event-sync state side :pre-resolve-damage type card n)
             (do (when-not (or (get-in @state [:damage :damage-replace])
-                              (runner-can-choose-damage? state))
+                              (challenger-can-choose-damage? state))
                   (let [n (if-let [defer (get-defer-damage state side type args)] defer n)]
                     (when (pos? n)
-                      (let [hand (get-in @state [:runner :hand])
-                            cards-trashed (take n (shuffle hand))]
+                      (let [hand (get-in @state [:challenger :hand])
+                            cards-discarded (take n (shuffle hand))]
                         (when (= type :brain)
-                          (swap! state update-in [:runner :brain-damage] #(+ % n))
-                          (swap! state update-in [:runner :hand-size :mod] #(- % n)))
-                        (when-let [trashed-msg (join ", " (map :title cards-trashed))]
-                          (system-msg state :runner (str "trashes " trashed-msg " due to " (name type) " damage")))
+                          (swap! state update-in [:challenger :brain-damage] #(+ % n))
+                          (swap! state update-in [:challenger :hand-size :mod] #(- % n)))
+                        (when-let [discarded-msg (join ", " (map :title cards-discarded))]
+                          (system-msg state :challenger (str "discards " discarded-msg " due to " (name type) " damage")))
                         (if (< (count hand) n)
                           (do (flatline state)
-                              (trash-cards state side (make-eid state) cards-trashed
+                              (discard-cards state side (make-eid state) cards-discarded
                                            {:unpreventable true})
-                              (swap! state update-in [:stats :corp :damage :all] (fnil + 0) n)
-                              (swap! state update-in [:stats :corp :damage type] (fnil + 0) n))
-                          (do (trash-cards state side (make-eid state) cards-trashed
+                              (swap! state update-in [:stats :contestant :damage :all] (fnil + 0) n)
+                              (swap! state update-in [:stats :contestant :damage type] (fnil + 0) n))
+                          (do (discard-cards state side (make-eid state) cards-discarded
                                            {:unpreventable true :cause type})
-                              (swap! state update-in [:stats :corp :damage :all] (fnil + 0) n)
-                              (swap! state update-in [:stats :corp :damage type] (fnil + 0) n)
+                              (swap! state update-in [:stats :contestant :damage :all] (fnil + 0) n)
+                              (swap! state update-in [:stats :contestant :damage type] (fnil + 0) n)
                               (trigger-event state side :damage type card n)))))))
                 (swap! state update-in [:damage :defer-damage] dissoc type)
                 (swap! state update-in [:damage] dissoc :damage-replace)
                 (effect-completed state side eid))))
 
 (defn damage
-  "Attempts to deal n damage of the given type to the runner. Starts the
+  "Attempts to deal n damage of the given type to the challenger. Starts the
   prevention/boosting process and eventually resolves the damage."
   ([state side type n] (damage state side (make-eid state) type n nil))
   ([state side type n args] (damage state side (make-eid state) type n args))
@@ -238,20 +238,20 @@
    ;; alert listeners that damage is about to be calculated.
    (trigger-event state side :pre-damage type card n)
    (let [n (damage-count state side type n args)
-         prevent (get-prevent-list state :runner type)]
-     (if (and (not unpreventable) (cards-can-prevent? state :runner prevent type))
-       ;; runner can prevent the damage.
-       (do (system-msg state :runner "has the option to avoid damage")
-           (show-wait-prompt state :corp "Runner to prevent damage" {:priority 10})
+         prevent (get-prevent-list state :challenger type)]
+     (if (and (not unpreventable) (cards-can-prevent? state :challenger prevent type))
+       ;; challenger can prevent the damage.
+       (do (system-msg state :challenger "has the option to avoid damage")
+           (show-wait-prompt state :contestant "Challenger to prevent damage" {:priority 10})
            (swap! state assoc-in [:prevent :current] type)
            (show-prompt
-             state :runner nil (str "Prevent any of the " n " " (name type) " damage?") ["Done"]
+             state :challenger nil (str "Prevent any of the " n " " (name type) " damage?") ["Done"]
              (fn [_] (let [prevent (get-in @state [:damage :damage-prevent type])]
                        (when prevent (trigger-event state side :prevented-damage type prevent))
-                       (system-msg state :runner
+                       (system-msg state :challenger
                                    (if prevent (str "prevents " (if (= prevent Integer/MAX_VALUE) "all" prevent)
                                                     " " (name type) " damage") "will not prevent damage"))
-                       (clear-wait-prompt state :corp)
+                       (clear-wait-prompt state :contestant)
                        (resolve-damage state side eid type (max 0 (- n (or prevent 0))) args)))
              {:priority 10}))
        (resolve-damage state side eid type n args)))))
@@ -270,38 +270,38 @@
   ([state side n] (tag-prevent state side (make-eid state) n))
   ([state side eid n]
    (swap! state update-in [:tag :tag-prevent] (fnil #(+ % n) 0))
-   (trigger-event-sync state side eid (if (= side :corp) :corp-prevent :runner-prevent) `(:tag ~n))))
+   (trigger-event-sync state side eid (if (= side :contestant) :contestant-prevent :challenger-prevent) `(:tag ~n))))
 
 (defn tag-remove-bonus
   "Applies a cost increase of n to removing tags with the click action. (SYNC.)"
   [state side n]
-  (swap! state update-in [:runner :tag-remove-bonus] (fnil #(+ % n) 0)))
+  (swap! state update-in [:challenger :tag-remove-bonus] (fnil #(+ % n) 0)))
 
 (defn resolve-tag [state side eid n args]
   (trigger-event state side :pre-resolve-tag n)
   (if (pos? n)
-    (do (gain state :runner :tag n)
-        (toast state :runner (str "Took " (quantify n "tag") "!") "info")
-        (trigger-event-sync state side eid :runner-gain-tag n))
+    (do (gain state :challenger :tag n)
+        (toast state :challenger (str "Took " (quantify n "tag") "!") "info")
+        (trigger-event-sync state side eid :challenger-gain-tag n))
     (effect-completed state side eid)))
 
 (defn gain-tags
-  "Attempts to give the runner n tags, allowing for boosting/prevention effects."
+  "Attempts to give the challenger n tags, allowing for boosting/prevention effects."
   ([state side n] (gain-tags state side (make-eid state) n nil))
   ([state side eid n] (gain-tags state side eid n nil))
   ([state side eid n {:keys [unpreventable unboostable card] :as args}]
    (swap! state update-in [:tag] dissoc :tag-bonus :tag-prevent)
    (trigger-event state side :pre-tag card)
    (let [n (tag-count state side n args)
-         prevent (get-prevent-list state :runner :tag)]
+         prevent (get-prevent-list state :challenger :tag)]
      (if (and (pos? n)
               (not unpreventable)
-              (cards-can-prevent? state :runner prevent :tag))
-       (do (system-msg state :runner "has the option to avoid tags")
-           (show-wait-prompt state :corp "Runner to prevent tags" {:priority 10})
+              (cards-can-prevent? state :challenger prevent :tag))
+       (do (system-msg state :challenger "has the option to avoid tags")
+           (show-wait-prompt state :contestant "Challenger to prevent tags" {:priority 10})
            (swap! state assoc-in [:prevent :current] :tag)
            (show-prompt
-             state :runner nil
+             state :challenger nil
              (str "Avoid " (when (< 1 n) "any of the ") (quantify n "tag") "?") ["Done"]
              (fn [_]
                (let [prevent (get-in @state [:tag :tag-prevent])
@@ -310,8 +310,8 @@
                                         (if (= prevent Integer/MAX_VALUE) "all" prevent)
                                         (if (< 1 prevent) " tags" " tag"))
                                    "will not avoid tags")]
-                 (system-msg state :runner prevent-msg)
-                 (clear-wait-prompt state :corp)
+                 (system-msg state :challenger prevent-msg)
+                 (clear-wait-prompt state :contestant)
                  (resolve-tag state side eid (max 0 (- n (or prevent 0))) args)))
              {:priority 10}))
        (resolve-tag state side eid n args)))))
@@ -320,11 +320,11 @@
   ([state side n] (lose-tags state side (make-eid state) n))
   ([state side eid n]
    (if (= n :all)
-     (do (swap! state update-in [:stats :runner :lose :tag] (fnil + 0 0) (get-in @state [:runner :tag]))
-         (swap! state assoc-in [:runner :tag] 0))
-     (do (swap! state update-in [:stats :runner :lose :tag] (fnil + 0) n)
-         (deduct state :runner [:tag n])))
-   (trigger-event-sync state side eid :runner-lose-tag n side)))
+     (do (swap! state update-in [:stats :challenger :lose :tag] (fnil + 0 0) (get-in @state [:challenger :tag]))
+         (swap! state assoc-in [:challenger :tag] 0))
+     (do (swap! state update-in [:stats :challenger :lose :tag] (fnil + 0) n)
+         (deduct state :challenger [:tag n])))
+   (trigger-event-sync state side eid :challenger-lose-tag n side)))
 
 
 ;;;; Bad Publicity
@@ -338,171 +338,171 @@
 
 (defn bad-publicity-prevent [state side n]
   (swap! state update-in [:bad-publicity :bad-publicity-prevent] (fnil #(+ % n) 0))
-  (trigger-event state side (if (= side :corp) :corp-prevent :runner-prevent) `(:bad-publicity ~n)))
+  (trigger-event state side (if (= side :contestant) :contestant-prevent :challenger-prevent) `(:bad-publicity ~n)))
 
 (defn resolve-bad-publicity [state side eid n args]
   (trigger-event state side :pre-resolve-bad-publicity n)
   (if (pos? n)
-    (do (gain state :corp :bad-publicity n)
-        (toast state :corp (str "Took " n " bad publicity!") "info")
-        (trigger-event-sync state side eid :corp-gain-bad-publicity n))
+    (do (gain state :contestant :bad-publicity n)
+        (toast state :contestant (str "Took " n " bad publicity!") "info")
+        (trigger-event-sync state side eid :contestant-gain-bad-publicity n))
     (effect-completed state side eid)))
 
 (defn gain-bad-publicity
-  "Attempts to give the runner n bad publicity, allowing for boosting/prevention effects."
+  "Attempts to give the challenger n bad publicity, allowing for boosting/prevention effects."
   ([state side n] (gain-bad-publicity state side (make-eid state) n nil))
   ([state side eid n] (gain-bad-publicity state side eid n nil))
   ([state side eid n {:keys [unpreventable card] :as args}]
    (swap! state update-in [:bad-publicity] dissoc :bad-publicity-bonus :bad-publicity-prevent)
    (wait-for (trigger-event-sync state side :pre-bad-publicity card)
              (let [n (bad-publicity-count state side n args)
-                   prevent (get-prevent-list state :corp :bad-publicity)]
+                   prevent (get-prevent-list state :contestant :bad-publicity)]
                (if (and (pos? n)
                         (not unpreventable)
-                        (cards-can-prevent? state :corp prevent :bad-publicity))
-                 (do (system-msg state :corp "has the option to avoid bad publicity")
-                     (show-wait-prompt state :runner "Corp to prevent bad publicity" {:priority 10})
+                        (cards-can-prevent? state :contestant prevent :bad-publicity))
+                 (do (system-msg state :contestant "has the option to avoid bad publicity")
+                     (show-wait-prompt state :challenger "Contestant to prevent bad publicity" {:priority 10})
                      (swap! state assoc-in [:prevent :current] :bad-publicity)
                      (show-prompt
-                       state :corp nil
+                       state :contestant nil
                        (str "Avoid " (when (< 1 n) "any of the ") n " bad publicity?") ["Done"]
                        (fn [_]
                          (let [prevent (get-in @state [:bad-publicity :bad-publicity-prevent])]
-                           (system-msg state :corp
+                           (system-msg state :contestant
                                        (if prevent
                                          (str "avoids "
                                               (if (= prevent Integer/MAX_VALUE) "all" prevent)
                                               " bad publicity")
                                          "will not avoid bad publicity"))
-                           (clear-wait-prompt state :runner)
+                           (clear-wait-prompt state :challenger)
                            (resolve-bad-publicity state side eid (max 0 (- n (or prevent 0))) args)))
                        {:priority 10}))
                  (resolve-bad-publicity state side eid n args))))))
 
 
-;;; Trashing
-(defn trash-resource-bonus
-  "Applies a cost increase of n to trashing a resource with the click action. (SYNC.)"
+;;; Discarding
+(defn discard-radicle-bonus
+  "Applies a cost increase of n to discarding a radicle with the click action. (SYNC.)"
   [state side n]
-  (swap! state update-in [:corp :trash-cost-bonus] (fnil #(+ % n) 0)))
+  (swap! state update-in [:contestant :discard-cost-bonus] (fnil #(+ % n) 0)))
 
-(defn trash-prevent [state side type n]
-  (swap! state update-in [:trash :trash-prevent type] (fnil #(+ % n) 0)))
+(defn discard-prevent [state side type n]
+  (swap! state update-in [:discard :discard-prevent type] (fnil #(+ % n) 0)))
 
-(defn- resolve-trash-end
-  ([state side eid card args] (resolve-trash-end state side eid card eid args))
+(defn- resolve-discard-end
+  ([state side eid card args] (resolve-discard-end state side eid card eid args))
   ([state side eid {:keys [disabled] :as card} oid
-   {:keys [cause keep-server-alive host-trashed] :as args}]
+   {:keys [cause keep-locale-alive host-discarded] :as args}]
   (let [cdef (card-def card)
-        moved-card (move state (to-keyword (:side card)) card :discard {:keep-server-alive keep-server-alive})]
+        moved-card (move state (to-keyword (:side card)) card :discard {:keep-locale-alive keep-locale-alive})]
     (swap! state update-in [:per-turn] dissoc (:cid moved-card))
-    (swap! state update-in [:trash :trash-list] dissoc oid)
-    (if-let [trash-effect (:trash-effect cdef)]
+    (swap! state update-in [:discard :discard-list] dissoc oid)
+    (if-let [discard-effect (:discard-effect cdef)]
       (if (and (not disabled)
-               (or (and (= (:side card) "Runner")
-                        (:installed card)
+               (or (and (= (:side card) "Challenger")
+                        (:placed card)
                         (not (:facedown card)))
-                   (and (:rezzed card)
-                        (not host-trashed))
-                   (and (:when-inactive trash-effect)
-                        (not host-trashed))))
-        (wait-for (resolve-ability state side trash-effect moved-card (list cause))
+                   (and (:revealed card)
+                        (not host-discarded))
+                   (and (:when-inactive discard-effect)
+                        (not host-discarded))))
+        (wait-for (resolve-ability state side discard-effect moved-card (list cause))
                   (effect-completed state side eid))
         (effect-completed state side eid))
       (effect-completed state side eid)))))
 
-(defn- resolve-trash
-  ([state side eid card args] (resolve-trash state side eid card eid args))
+(defn- resolve-discard
+  ([state side eid card args] (resolve-discard state side eid card eid args))
   ([state side eid {:keys [zone] :as card} oid
    {:keys [cause suppress-event] :as args}]
   (if (and (not suppress-event)
-           (not= (last zone) :current)) ; Trashing a current does not trigger a trash event.
-    (wait-for (trigger-event-sync state side (keyword (str (name side) "-trash")) card cause)
-              (resolve-trash-end state side eid card oid args))
-    (resolve-trash-end state side eid card args))))
+           (not= (last zone) :current)) ; Discarding a current does not trigger a discard event.
+    (wait-for (trigger-event-sync state side (keyword (str (name side) "-discard")) card cause)
+              (resolve-discard-end state side eid card oid args))
+    (resolve-discard-end state side eid card args))))
 
-(defn- prevent-trash
-  ([state side card oid] (prevent-trash state side (make-eid state) card oid nil))
-  ([state side card oid args] (prevent-trash state side (make-eid state) card oid args))
+(defn- prevent-discard
+  ([state side card oid] (prevent-discard state side (make-eid state) card oid nil))
+  ([state side card oid args] (prevent-discard state side (make-eid state) card oid args))
   ([state side eid {:keys [zone type] :as card} oid
-    {:keys [unpreventable cause keep-server-alive suppress-event] :as args}]
+    {:keys [unpreventable cause keep-locale-alive suppress-event] :as args}]
    (if (and card (not (some #{:discard} zone)))
      (cond
 
-       (untrashable-while-rezzed? card)
-       (do (enforce-msg state card "cannot be trashed while installed")
+       (undiscardable-while-revealed? card)
+       (do (enforce-msg state card "cannot be discarded while placed")
            (effect-completed state side eid))
 
-       (and (= side :corp)
-            (untrashable-while-resources? card)
-            (> (count (filter #(is-type? % "Resource") (all-active-installed state :runner))) 1))
-       (do (enforce-msg state card "cannot be trashed while there are other resources installed")
+       (and (= side :contestant)
+            (undiscardable-while-radicles? card)
+            (> (count (filter #(is-type? % "Radicle") (all-active-placed state :challenger))) 1))
+       (do (enforce-msg state card "cannot be discarded while there are other radicles placed")
            (effect-completed state side eid))
 
-       ;; Card is not enforced untrashable
+       ;; Card is not enforced undiscardable
        :else
        (let [ktype (keyword (clojure.string/lower-case type))]
          (when (and (not unpreventable)
                     (not= cause :ability-cost))
-           (swap! state update-in [:trash :trash-prevent] dissoc ktype))
-         (let [type (->> ktype name (str "trash-") keyword)
-               prevent (get-prevent-list state :runner type)]
+           (swap! state update-in [:discard :discard-prevent] dissoc ktype))
+         (let [type (->> ktype name (str "discard-") keyword)
+               prevent (get-prevent-list state :challenger type)]
            ;; Check for prevention effects
            (if (and (not unpreventable)
                     (not= cause :ability-cost)
-                    (cards-can-prevent? state :runner prevent type card args))
-             (do (system-msg state :runner "has the option to prevent trash effects")
-                 (show-wait-prompt state :corp "Runner to prevent trash effects" {:priority 10})
-                 (show-prompt state :runner nil
-                              (str "Prevent the trashing of " (:title card) "?") ["Done"]
+                    (cards-can-prevent? state :challenger prevent type card args))
+             (do (system-msg state :challenger "has the option to prevent discard effects")
+                 (show-wait-prompt state :contestant "Challenger to prevent discard effects" {:priority 10})
+                 (show-prompt state :challenger nil
+                              (str "Prevent the discarding of " (:title card) "?") ["Done"]
                               (fn [_]
-                                (clear-wait-prompt state :corp)
-                                (if-let [_ (get-in @state [:trash :trash-prevent ktype])]
-                                  (do (system-msg state :runner (str "prevents the trashing of " (:title card)))
-                                      (swap! state update-in [:trash :trash-prevent] dissoc ktype)
+                                (clear-wait-prompt state :contestant)
+                                (if-let [_ (get-in @state [:discard :discard-prevent ktype])]
+                                  (do (system-msg state :challenger (str "prevents the discarding of " (:title card)))
+                                      (swap! state update-in [:discard :discard-prevent] dissoc ktype)
                                       (effect-completed state side eid))
-                                  (do (system-msg state :runner (str "will not prevent the trashing of " (:title card)))
-                                      (swap! state update-in [:trash :trash-list oid] concat [card])
+                                  (do (system-msg state :challenger (str "will not prevent the discarding of " (:title card)))
+                                      (swap! state update-in [:discard :discard-list oid] concat [card])
                                       (effect-completed state side eid))))
                               {:priority 10}))
-             ;; No prevention effects: add the card to the trash-list
-             (do (swap! state update-in [:trash :trash-list oid] concat [card])
+             ;; No prevention effects: add the card to the discard-list
+             (do (swap! state update-in [:discard :discard-list oid] concat [card])
                  (effect-completed state side eid))))))
      (effect-completed state side eid))))
 
-(defn trash
-  "Attempts to trash the given card, allowing for boosting/prevention effects."
-  ([state side card] (trash state side (make-eid state) card nil))
-  ([state side card args] (trash state side (make-eid state) card args))
+(defn discard
+  "Attempts to discard the given card, allowing for boosting/prevention effects."
+  ([state side card] (discard state side (make-eid state) card nil))
+  ([state side card args] (discard state side (make-eid state) card args))
   ([state side eid card {:keys [unpreventable cause suppress-event] :as args}]
-   (wait-for (prevent-trash state side card eid args)
-             (if-let [c (first (get-in @state [:trash :trash-list eid]))]
-               (resolve-trash state side eid c args)
+   (wait-for (prevent-discard state side card eid args)
+             (if-let [c (first (get-in @state [:discard :discard-list eid]))]
+               (resolve-discard state side eid c args)
                (effect-completed state side eid)))))
 
-(defn trash-cards
-  ([state side cards] (trash-cards state side (make-eid state) cards nil))
-  ([state side eid cards] (trash-cards state side eid cards nil))
+(defn discard-cards
+  ([state side cards] (discard-cards state side (make-eid state) cards nil))
+  ([state side eid cards] (discard-cards state side eid cards nil))
   ([state side eid cards {:keys [suppress-event] :as args}]
-   (letfn [(trashrec [cs]
+   (letfn [(discardrec [cs]
              (if (not-empty cs)
-               (wait-for (resolve-trash-end state side (get-card state (first cs)) eid args)
-                         (trashrec (rest cs)))
+               (wait-for (resolve-discard-end state side (get-card state (first cs)) eid args)
+                         (discardrec (rest cs)))
                (effect-completed state side eid)))
            (preventrec [cs]
              (if (not-empty cs)
-               (wait-for (prevent-trash state side (get-card state (first cs)) eid args)
+               (wait-for (prevent-discard state side (get-card state (first cs)) eid args)
                          (preventrec (rest cs)))
-               (let [trashlist (get-in @state [:trash :trash-list eid])]
-                 (wait-for (apply trigger-event-sync state side (keyword (str (name side) "-trash")) trashlist)
-                           (trashrec trashlist)))))]
+               (let [discardlist (get-in @state [:discard :discard-list eid])]
+                 (wait-for (apply trigger-event-sync state side (keyword (str (name side) "-discard")) discardlist)
+                           (discardrec discardlist)))))]
      (preventrec cards))))
 
-(defn trash-no-cost
+(defn discard-no-cost
   [state side eid card & {:keys [seen unpreventable]
                           :or {seen true}}]
-  (swap! state assoc-in [side :register :trashed-card] true)
-  (trash state side eid (assoc card :seen seen) {:unpreventable unpreventable}))
+  (swap! state assoc-in [side :register :discarded-card] true)
+  (discard state side eid (assoc card :seen seen) {:unpreventable unpreventable}))
 
 ;;; Agendas
 (defn get-agenda-points
@@ -510,15 +510,15 @@
   to the given player."
   [state side card]
   (let [base-points (:agendapoints card)
-        runner-fn (:agendapoints-runner (card-def card))
-        corp-fn (:agendapoints-corp (card-def card))]
+        challenger-fn (:agendapoints-challenger (card-def card))
+        contestant-fn (:agendapoints-contestant (card-def card))]
     (cond
-      (and (= side :runner)
-           (some? runner-fn))
-      (runner-fn state side (make-eid state) card nil)
-      (and (= side :corp)
-           (some? corp-fn))
-      (corp-fn state side (make-eid state) card nil)
+      (and (= side :challenger)
+           (some? challenger-fn))
+      (challenger-fn state side (make-eid state) card nil)
+      (and (= side :contestant)
+           (some? contestant-fn))
+      (contestant-fn state side (make-eid state) card nil)
       :else
       base-points)))
 
@@ -544,7 +544,7 @@
   (update! state side (assoc agenda :current-cost (advancement-cost state side agenda))))
 
 (defn update-all-advancement-costs [state side]
-  (doseq [ag (->> (mapcat :content (flatten (seq (get-in @state [:corp :servers]))))
+  (doseq [ag (->> (mapcat :content (flatten (seq (get-in @state [:contestant :locales]))))
                   (filter #(is-type? % "Agenda")))]
     (update-advancement-cost state side ag)))
 
@@ -563,7 +563,7 @@
   ([state side eid card]
    ;; Remove all hosted cards first
    (doseq [h (:hosted card)]
-     (trash state side
+     (discard state side
             (update-in h [:zone] #(map to-keyword %))
             {:unpreventable true :suppress-event true}))
    (let [card (get-card state card)]
@@ -587,23 +587,23 @@
   "Purges viruses."
   [state side]
   (trigger-event state side :pre-purge)
-  (let [rig-cards (all-installed state :runner)
-        hosted-on-ice (->> (get-in @state [:corp :servers]) seq flatten (mapcat :ices) (mapcat :hosted))]
-    (doseq [card (concat rig-cards hosted-on-ice)]
+  (let [rig-cards (all-placed state :challenger)
+        hosted-on-character (->> (get-in @state [:contestant :locales]) seq flatten (mapcat :characters) (mapcat :hosted))]
+    (doseq [card (concat rig-cards hosted-on-character)]
       (when (or (has-subtype? card "Virus")
                 (contains? (:counter card) :virus))
-        (add-counter state :runner card :virus (- (get-counters card :virus)))))
-    (update-all-ice state side))
+        (add-counter state :challenger card :virus (- (get-counters card :virus)))))
+    (update-all-character state side))
   (trigger-event state side :purge))
 
 (defn mill
-  "Force the discard of n cards by trashing them."
+  "Force the discard of n cards by discarding them."
   ([state side] (mill state side side 1))
   ([state side n] (mill state side side n))
   ([state from-side to-side n]
    (let [milltargets (take n (get-in @state [to-side :deck]))]
      (doseq [card milltargets]
-       (trash-no-cost state from-side (make-eid state) card :seen false :unpreventable true)))))
+       (discard-no-cost state from-side (make-eid state) card :seen false :unpreventable true)))))
 
 ;; Exposing
 (defn expose-prevent
@@ -624,21 +624,21 @@
   ([state side eid target] (expose state side eid target nil))
   ([state side eid target {:keys [unpreventable] :as args}]
     (swap! state update-in [:expose] dissoc :expose-prevent)
-    (if (rezzed? target)
+    (if (revealed? target)
       (effect-completed state side eid) ; cannot expose faceup cards
       (wait-for (trigger-event-sync state side :pre-expose target)
-                (let [prevent (get-prevent-list state :corp :expose)]
+                (let [prevent (get-prevent-list state :contestant :expose)]
                   (if (and (not unpreventable)
-                           (cards-can-prevent? state :corp prevent :expose))
-                    (do (system-msg state :corp "has the option to prevent a card from being exposed")
-                        (show-wait-prompt state :runner "Corp to prevent the expose" {:priority 10})
-                        (show-prompt state :corp nil
+                           (cards-can-prevent? state :contestant prevent :expose))
+                    (do (system-msg state :contestant "has the option to prevent a card from being exposed")
+                        (show-wait-prompt state :challenger "Contestant to prevent the expose" {:priority 10})
+                        (show-prompt state :contestant nil
                                      (str "Prevent " (:title target) " from being exposed?") ["Done"]
                                      (fn [_]
-                                       (clear-wait-prompt state :runner)
+                                       (clear-wait-prompt state :challenger)
                                        (if-let [_ (get-in @state [:expose :expose-prevent])]
                                          (effect-completed state side (make-result eid false)) ;; ??
-                                         (do (system-msg state :corp "will not prevent a card from being exposed")
+                                         (do (system-msg state :contestant "will not prevent a card from being exposed")
                                              (resolve-expose state side eid target args))))
                                      {:priority 10}))
                     (if-not (get-in @state [:expose :expose-prevent])
@@ -659,10 +659,10 @@
   "Clears the current win condition.  Requires both sides to have issued the command"
   [state side]
   (swap! state assoc-in [side :clear-win] true)
-  (when (and (-> @state :runner :clear-win) (-> @state :corp :clear-win))
+  (when (and (-> @state :challenger :clear-win) (-> @state :contestant :clear-win))
     (system-msg state side "cleared the win condition")
-    (swap! state dissoc-in [:runner :clear-win])
-    (swap! state dissoc-in [:corp :clear-win])
+    (swap! state dissoc-in [:challenger :clear-win])
+    (swap! state dissoc-in [:contestant :clear-win])
     (swap! state dissoc :winner :loser :winning-user :losing-user :reason :winning-deck-id :losing-deck-id :end-time)))
 
 (defn win
@@ -685,7 +685,7 @@
              :losing-deck-id (get-in @state [(other-side side) :deck-id])))))
 
 (defn win-decked
-  "Records a win via decking the corp."
+  "Records a win via decking the contestant."
   [state]
-  (system-msg state :corp "is decked")
-  (win state :runner "Decked"))
+  (system-msg state :contestant "is decked")
+  (win state :challenger "Decked"))
