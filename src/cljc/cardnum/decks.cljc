@@ -332,13 +332,3 @@
      :onesies       onesies
      :cache-refresh cache-refresh
      :modded        modded}))
-
-(defn trusted-deck-status [{:keys [status name cards date] :as deck}]
-  (let [parse-date #?(:clj  #(f/parse (f/formatters :date-time) %)
-                      :cljs #(js/Date.parse %))
-        deck-date (parse-date date)
-        mwl-date (:date_start @cards/mwl)]
-    (if (and status
-             (> deck-date mwl-date))
-      status
-      (calculate-deck-status deck))))

@@ -28,6 +28,3 @@
                              (if (empty? username)
                                (:name %)
                                username))))))
-
-(defn cards-version-handler [req]
-  (response 200 {:version (int (:cards-version (mc/find-one-as-map db "config" nil)))}))

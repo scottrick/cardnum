@@ -7,11 +7,10 @@
             [cardnum.cards :refer [all-cards] :as cards]
             [cardnum.decks :as decks]
             [cardnum.utils :refer [str->int INFINITY] :as utils]
-            [meccg.account :refer [load-alt-arts]]
             [meccg.ajax :refer [DELETE GET POST PUT]]
             [meccg.appstate :refer [app-state]]
             [meccg.auth :refer [authenticated] :as auth]
-            [meccg.cardbrowser :refer [card-view cards-channel expand-alts filter-title image-url show-alt-art? ] :as cb]
+            [meccg.cardbrowser :refer [card-view cards-channel filter-title image-url] :as cb]
             [meccg.utils :refer [alliance-dots banned-span dots-html influence-dot influence-dots make-dots restricted-span rotated-span]]
             [reagent.core :as r]))
 
@@ -379,9 +378,7 @@
 
 (defn- deck-status-details
   [deck use-trusted-info]
-  (if use-trusted-info
-    (decks/trusted-deck-status deck)
-    (decks/calculate-deck-status deck)))
+  (decks/calculate-deck-status deck))
 
 (defn format-deck-status-span
   [deck-status tooltip? violation-details?]
@@ -753,6 +750,5 @@
 (go (let [cards (<! cards-channel)
           decks (process-decks (:json (<! (GET (str "/data/decks")))))]
       (load-decks decks)
-      (load-alt-arts)
       (>! cards-channel cards)))
 

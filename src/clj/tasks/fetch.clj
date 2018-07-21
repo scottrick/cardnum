@@ -18,14 +18,12 @@
           download-fn (if use-local
                         (partial read-local-data localpath)
                         download-meccgdb-data)
-          cycles (fetch-data download-fn (:cycle tables))
           mwls (fetch-data download-fn (:mwl tables))
-          sets (fetch-data download-fn (:set tables) (partial add-set-fields cycles))
+          sets (fetch-data download-fn (:set tables))
           card-download-fn (if use-local
                              (partial read-card-dir localpath)
                              download-meccgdb-data)
           cards (fetch-cards card-download-fn (:card tables) sets (not (some #{"--no-card-images"} args)))]
-      (println (count cycles) "cycles imported")
       (println (count sets) "sets imported")
       (println (count mwls) "MWL versions imported")
       (println (count cards) "cards imported")

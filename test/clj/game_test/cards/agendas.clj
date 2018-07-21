@@ -292,10 +292,10 @@
       (take-credits state :contestant)
       (play-from-hand state :challenger "Wyrm")
       (click-prompt state :contestant "Yes")
-      (is (= 2 (:tag (get-challenger))) "Challenger gains 1 tag for placing an Icebreaker")
+      (is (= 2 (:tag (get-challenger))) "Challenger gains 1 tag for placing an Characterbreaker")
       (play-from-hand state :challenger "The Maker's Eye")
       (is (empty? (-> (get-contestant) :prompt)) "Contestant shouldn't get a prompt to use Better Citizen Resource")
-      (is (= 2 (:tag (get-challenger))) "Challenger doesn't gain a tag from playing a Run event after placing an Icebreaker")
+      (is (= 2 (:tag (get-challenger))) "Challenger doesn't gain a tag from playing a Run event after placing an Characterbreaker")
       (run-successful state)))
   (testing "Should only trigger on Run events. #3619"
     (do-game

@@ -11,29 +11,10 @@
             [meccg.auth :refer [avatar] :as auth]
             [reagent.core :as r]))
 
-(def alt-arts-channel (chan))
-
-(defn load-alt-arts []
-  (go (let [alt_info (->> (<! (GET "/data/cards/altarts"))
-                          (:json)
-                          (map #(select-keys % [:version :name :description :position])))
-            cards (->> @all-cards
-                       (filter #(not (:replaced_by %)))
-                       (map #(select-keys % [:title :setname :code :alt_art :replaces :replaced_by]))
-                       (filter :alt_art)
-                       (into {} (map (juxt :code identity))))]
-        (swap! app-state assoc :alt-arts cards)
-        (swap! app-state assoc :alt-info alt_info)
-        (put! alt-arts-channel cards))))
-
 (defn image-url [card-code version]
   (let [card (get (:alt-arts @app-state) card-code)
         version-path (get (:alt_art card) (keyword version) card-code)]
     (str "/img/cards/" version-path ".png")))
-
-(defn- all-alt-art-types
-  []
-  (map :version (:alt-info @app-state)))
 
 (defn alt-art-name
   [version]
@@ -60,7 +41,6 @@
   (swap! app-state assoc-in [:options :lobby-sounds] (:lobby-sounds @s))
   (swap! app-state assoc-in [:options :sounds-volume] (:volume @s))
   (swap! app-state assoc-in [:options :background] (:background @s))
-  (swap! app-state assoc-in [:options :show-alt-art] (:show-alt-art @s))
   (swap! app-state assoc-in [:options :blocked-users] (:blocked-users @s))
   (swap! app-state assoc-in [:options :alt-arts] (:alt-arts @s))
   (swap! app-state assoc-in [:options :gamestats] (:gamestats @s))
@@ -147,15 +127,6 @@
                    :gamestats (get-in @app-state [:options :gamestats])
                    :deckstats (get-in @app-state [:options :deckstats])
                    :blocked-users (sort (get-in @app-state [:options :blocked-users]))})]
-    (go (while true 
-          (let [cards (<! alt-arts-channel) 
-                first-alt (first (sort-by :title (vals cards)))]
-            (swap! s assoc-in [:alt-arts] (get-in @app-state [:options :alt-arts]))
-            (swap! s assoc-in [:alt-card] (:code first-alt)) 
-            (swap! s assoc-in [:alt-card-version] 
-                   (get-in @app-state [:options :alt-arts (keyword (:code first-alt))]
-                         "default")))))
-
     (fn [user]
       [:div.account
        [:div#profile-form.panel.blue-shade.content-page {:ref "profile-form"} 
@@ -264,17 +235,11 @@
                           [:div
                            [:img {:class "alt-art-select"
                                   :src url
-                                  :alt (str (:title alt) " (" (alt-art-name version) ")")
                                   :on-click #(set-card-art (name version) s)
                                   :onError #(-> % .-target js/$ .hide)
                                   :onLoad #(-> % .-target js/$ .show)}]]])))]
              [:div {:id "set-all"}
               "Set all cards to: "
-              [:select {:ref "all-art-select"
-                        :value (:all-art-select @s)
-                        :on-change #(swap! s assoc-in [:all-art-select] (-> % .-target .-value))}
-               (doall (for [t (all-alt-art-types)]
-                        [:option {:value t :key t} (alt-art-name t)]))]
               [:button
                {:type "button"
                 :on-click #(do (reset-card-art s)
