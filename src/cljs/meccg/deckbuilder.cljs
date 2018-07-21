@@ -106,7 +106,7 @@
   "Add art and id parameters to a card hash"
   [card id]
   (-> card
-    (assoc :id id)))
+      (assoc :id id)))
 
 (defn- clean-param
   "Parse card parameter key value pairs from a string"
@@ -220,7 +220,7 @@
           regions (into wizard-sites (parse-deck-string all-regions))]
       (assoc deck :resources resources :hazards hazards :sideboard sideboard
                   :characters characters :pool pool :fwsb fwsb :cards cards
-                  :sites regions
+                  :location regions
                   :identity identity))))
 
 (defn distinct-by [f coll]
@@ -268,28 +268,28 @@
     (om/set-state! owner :resource-edit str)))
 
 (defn hazards->str [owner]
-  (let [cards (om/get-state owner [:deck :hazards])
-        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" cards)]
+  (let [hazards (om/get-state owner [:deck :hazards])
+        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" hazards)]
     (om/set-state! owner :hazard-edit str)))
 
 (defn sideboard->str [owner]
-  (let [cards (om/get-state owner [:deck :sideboard])
-        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" cards)]
+  (let [sideboard (om/get-state owner [:deck :sideboard])
+        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" sideboard)]
     (om/set-state! owner :sideboard-edit str)))
 
 (defn characters->str [owner]
-  (let [cards (om/get-state owner [:deck :characters])
-        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" cards)]
+  (let [characters (om/get-state owner [:deck :characters])
+        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" characters)]
     (om/set-state! owner :character-edit str)))
 
 (defn pool->str [owner]
-  (let [cards (om/get-state owner [:deck :pool])
-        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" cards)]
+  (let [pool (om/get-state owner [:deck :pool])
+        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" pool)]
     (om/set-state! owner :pool-edit str)))
 
 (defn fwsb->str [owner]
-  (let [cards (om/get-state owner [:deck :fwsb])
-        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" cards)]
+  (let [fwsb (om/get-state owner [:deck :fwsb])
+        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" fwsb)]
     (om/set-state! owner :fwsb-edit str)))
 
 (defn cards->str [owner]
@@ -416,7 +416,7 @@
     (om/set-state! owner :deck {:name "New deck" :resources [] :hazards [] :sideboard []
                                 :characters [] :pool [] :fwsb [] :cards [] :regions []
                                 :wizard-sites [] :minion-sites [] :balrog-sites []
-                                :fallen-sites [] :elf-sites [] :dwarf-sites [] :sites []
+                                :fallen-sites [] :elf-sites [] :dwarf-sites [] :location []
                                 :identity id})
     (try (js/ga "send" "event" "deckbuilder" "new" alignment) (catch js/Error e))
     (edit-deck owner)
@@ -919,9 +919,10 @@
              [:button {:on-click #(new-deck "Fallen-wizard" owner)} "New Fallen deck"]
              [:button {:on-click #(new-deck "Elf-lord" owner)} "New Elf deck"]
              [:button {:on-click #(new-deck "Dwarf-lord" owner)} "New Dwarf deck"]
-             [:button {:on-click #(new-deck "Dragon-lord" owner)} "New Dragon deck"]
              [:button {:on-click #(new-deck "Atani-lord" owner)} "New Atani deck"]
-             [:button {:on-click #(new-deck "Future Use" owner)} "New Future Use"]]
+             [:button {:on-click #(new-deck "War-lord" owner)} "New Warlord deck"]
+             [:button {:on-click #(new-deck "Dragon-lord" owner)} "New Dragon deck"]
+             ]
             [:div.deck-collection
              (when-not (:edit state)
                (om/build deck-collection {:sets sets :decks decks :decks-loaded decks-loaded :active-deck (om/get-state owner :deck)}))
