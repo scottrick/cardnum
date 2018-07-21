@@ -114,7 +114,7 @@
 (defn- reset-all-cards
   [cards]
   (let [;; split the cards into regular cards and alt-art cards
-        [regular alt] ((juxt filter remove) #(not= "Alternates" (:setname %)) cards)
+        [regular alt] ((juxt filter remove) #(not= "Alternates" (:set_code %)) cards)
         regular (into {} (map (juxt :title identity) regular))]
     (reset! all-cards regular)))
 

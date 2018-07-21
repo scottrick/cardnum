@@ -90,17 +90,17 @@
                     :else card))))))
 
 (defn- build-identity-name
-  [title setname art]
-  (let [set-title (if setname (str title " (" setname ")") title)]
+  [title set_code art]
+  (let [set-title (if set_code (str title " (" set_code ")") title)]
     (if art
       (str set-title " [" art "]")
       set-title)))
 
 (defn parse-identity
   "Parse an id to the corresponding card map"
-  [{:keys [alignment title art setname]}]
+  [{:keys [alignment title art set_code]}]
   (let [card (identity-lookup alignment {:title title})]
-    (assoc card :art art :display-name (build-identity-name title setname art))))
+    (assoc card :art art :display-name (build-identity-name title set_code art))))
 
 (defn add-params-to-card
   "Add art and id parameters to a card hash"
@@ -238,7 +238,7 @@
         indexes (keep-indexed #(if (= %2 card-title) %1 nil) all-titles)
         dups (> (count indexes) 1)]
     (if dups
-      (assoc card :display-name (str (:title card) " (" (:setname card) ")"))
+      (assoc card :display-name (str (:title card) " (" (:set_code card) ")"))
       (assoc card :display-name (:title card)))))
 
 (defn alignment-identities [alignment]

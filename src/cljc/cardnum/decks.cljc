@@ -61,7 +61,7 @@
 (defn is-draft-id?
   "Check if the specified id is a draft identity"
   [identity]
-  (= "Draft" (:setname identity)))
+  (= "Draft" (:set_code identity)))
 
 (defn id-inf-limit
   "Returns influence limit of an identity or INFINITY in case of draft IDs."
@@ -92,7 +92,7 @@
 (defn released?
   "Returns false if the card comes from a spoiled set or is out of competitive rotation."
   [sets card]
-  (let [card-set (:setname card)
+  (let [card-set (:set_code card)
         rotated (:rotated card)
         date (some #(when (= (:name %) card-set) (:available %)) sets)]
     (and (not rotated)
@@ -192,10 +192,10 @@
 (defn group-cards-from-restricted-sets
   "Return map (big boxes and datapacks) of used sets that are restricted by given format"
   [sets allowed-sets deck]
-  (let [restricted-cards (remove (fn [card] (some #(= (:setname (:card card)) %) allowed-sets)) (:cards deck))
-        restricted-sets (group-by (fn [card] (:setname (:card card))) restricted-cards)
+  (let [restricted-cards (remove (fn [card] (some #(= (:set_code (:card card)) %) allowed-sets)) (:cards deck))
+        restricted-sets (group-by (fn [card] (:set_code (:card card))) restricted-cards)
         sorted-restricted-sets (reverse (sort-by #(count (second %)) restricted-sets))
-        [restricted-bigboxes restricted-datapacks] (split-with (fn [[setname cards]] (some #(when (= (:name %) setname) (:bigbox %)) sets)) sorted-restricted-sets)]
+        [restricted-bigboxes restricted-datapacks] (split-with (fn [[set_code cards]] (some #(when (= (:name %) set_code) (:bigbox %)) sets)) sorted-restricted-sets)]
     { :bigboxes restricted-bigboxes :datapacks restricted-datapacks }))
 
 (defn cards-over-one-core

@@ -45,7 +45,7 @@
 
 (def card-fields
   {
-   :Set (rename :setname)
+   :Set (rename :set_code)
    :Primary (rename :type)
    :Alignment (rename :alignment)
    :Artist identity
@@ -199,7 +199,7 @@
 (defn- add-card-fields
   "Add additional fields to the card documents"
   [set-map c]
-  (let [s (set-map (:setname c))]
+  (let [s (set-map (:set_code c))]
     (-> c
         (assoc :full_set (:name s)
                :rotated false
@@ -225,7 +225,7 @@
 (defn- card-image-file
   "Returns the path to a card's image as a File"
   [card]
-  (io/file "resources" "public" "img" "cards" (str (:setname card)) (str (:ImageName card))))
+  (io/file "resources" "public" "img" "cards" (str (:set_code card)) (str (:ImageName card))))
 
 (defn- download-card-image
   "Download a single card image from NRDB"
