@@ -33,7 +33,6 @@
       (reset! cards/all-cards (into {} (map (juxt :title identity)
                                             (sort-by (complement :rotated) cards))))
       (reset! cards/sets sets)
-      (reset! cards/cycles cycles)
       (reset! cards/mwl mwl))
 
     (when (#{"dev" "prod"} (first args))

@@ -18,9 +18,6 @@
 (defn mwl-handler [req]
   (response 200 (map #(dissoc % :_id) (mc/find-maps db "mwl"))))
 
-(defn cycles-handler [req]
-  (response 200 (map #(dissoc % :_id) (mc/find-maps db "cycles"))))
-
 (defn donors-handler [req]
   (response 200 (->> (mc/find-maps db "donators")
                      (sort-by :amount #(> %1 %2))

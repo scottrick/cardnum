@@ -7,7 +7,6 @@
 (defn card-count [cards]
   (reduce #(+ %1 (:qty %2)) 0 cards))
 
-
 ;;; Helpers for Alliance cards
 (defn- is-alliance?
   "Checks if the card is an alliance card"
@@ -189,7 +188,6 @@
        (distinct)
        (count)))
 
-
 ;; alternative formats validation
 (defn group-cards-from-restricted-sets
   "Return map (big boxes and datapacks) of used sets that are restricted by given format"
@@ -206,30 +204,11 @@
   (let [one-box-num-copies? (fn [{:keys [qty card]}] (<= qty (or (:packquantity card) 3)))]
     (remove one-box-num-copies? (:cards deck))))
 
-(defn get-newest-cycles
-  "Returns n cycles of data packs from newest backwards"
-  [sets n]
-  (let [cycles (group-by :cycle (remove :bigbox sets))
-        parse-date #?(:clj  #(f/parse (f/formatters :date) %)
-                      :cljs identity)
-        cycle-release-date (reduce-kv (fn [result cycle sets-in-cycle]
-                                        (assoc result
-                                          cycle
-                                          (first (sort (mapv #(parse-date (:available %)) sets-in-cycle)))))
-                                      {} cycles)
-        valid-cycles (map first (take-last n (sort-by last (filter (fn [[cycle date]] (before-today? date)) cycle-release-date))))]
-    valid-cycles))
-
-(defn sets-in-newest-cycles
-  "Returns sets in the n cycles of released datapacks"
-  [sets n]
-  (map :name (filter (fn [set] (some #(= (:cycle set) %) (get-newest-cycles sets n))) sets)))
-
 (defn modded-legal
   "Returns true if deck is valid under Modded rules. https://forum.stimhack.com/t/modded-format-online-league-starts-april-14/9791"
   [sets deck]
   (let [revised-core "Revised Core Set"
-        valid-sets (concat [revised-core] (sets-in-newest-cycles sets 1))
+        valid-sets sets
         deck-with-id (assoc deck :cards (cons {:card (:identity deck) } (:cards deck))) ;identity should also be from valid sets
         restricted-sets (group-cards-from-restricted-sets sets valid-sets deck-with-id)
         restricted-bigboxes (remove #(= revised-core %) (:bigboxes restricted-sets))
@@ -245,7 +224,7 @@
   "Returns true if deck is valid under Cache Refresh rules. http://www.cache-refresh.info/"
   [sets deck]
   (let [over-one-core (cards-over-one-core deck)
-        valid-sets (concat ["Revised Core Set" "Terminal Directive"] (sets-in-newest-cycles sets 2))
+        valid-sets sets
         deck-with-id (assoc deck :cards (cons {:card (:identity deck) } (:cards deck))) ;identity should also be from valid sets
         restricted-sets (group-cards-from-restricted-sets sets valid-sets deck-with-id)
         restricted-bigboxes (rest (:bigboxes restricted-sets)) ;one big box is fine
@@ -278,23 +257,21 @@
 ;; Card and deck validity
 (defn allowed?
   "Checks if a card is allowed in deck of a given identity - not accounting for influence"
-  [card {:keys [side faction code] :as identity}]
-  (and (not= (:type card) "Identity")
-       (= (:side card) side)
-       (or (not= (:type card) "Agenda")
-           (= (:faction card) "Neutral")
-           (= (:faction card) faction)
-           (is-draft-id? identity))
-       (or (not= code "03002") ; Custom Biotics: Engineered for Success
-           (not= (:faction card) "Cardnum"))))
+  [card {:keys [alignment faction code] :as identity}]
+  (or (not= (:type card) "Site")
+      (= (:alignment card) alignment)
+      (or (not= (:Secondary card) "Agenda")
+          (= (:faction card) "Neutral")
+          (= (:faction card) faction)
+          (is-draft-id? identity))
+      (or (not= code "03002") ; Custom Biotics: Engineered for Success
+          (not= (:faction card) "Jinteki"))))
 
 (defn valid-deck? [{:keys [identity cards] :as deck}]
   (and (not (nil? identity))
-       (>= (card-count cards) (min-deck-size identity))
-       (<= (influence-count deck) (id-inf-limit identity))
        (every? #(and (allowed? (:card %) identity)
                      (legal-num-copies? identity %)) cards)
-       (or (= (:side identity) "Challenger")
+       (or (not= (:alignment identity) "Crazy")
            (let [min (min-agenda-points deck)]
              (<= min (agenda-points deck) (inc min))))))
 

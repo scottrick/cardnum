@@ -7,13 +7,13 @@
             [cardnum.cards :refer [all-cards] :as cards]
             [cardnum.decks :as decks]
             [cardnum.utils :refer [str->int INFINITY] :as utils]
+            [meccg.sites :refer [all-regions all-wizard-sites all-minion-sites all-fallen-sites all-balrog-sites all-elf-sites all-dwarf-sites all-lord-sites all-dual-sites]]
             [meccg.ajax :refer [DELETE GET POST PUT]]
             [meccg.appstate :refer [app-state]]
             [meccg.auth :refer [authenticated] :as auth]
             [meccg.cardbrowser :refer [card-view cards-channel filter-title image-url] :as cb]
             [meccg.utils :refer [alliance-dots banned-span dots-html influence-dot influence-dots make-dots restricted-span rotated-span]]
             [reagent.core :as r]))
-
 
 (def select-channel (chan))
 (def zoom-channel (chan))
@@ -50,15 +50,36 @@
             cards)))
 
 (defn lookup
-  "Lookup the card title (query) looking at all cards on specified side"
-  [side card]
+  "Lookup the card title (query) looking at all cards on specified alignment"
+  [card]
   (let [q (.toLowerCase (:title card))
         id (:id card)
-        cards (filter #(= (:side %) side) @all-cards)
+        cards @all-cards
         exact-matches (filter-exact-title q cards)]
     (cond (and id
-               (first (filter #(= id (:code %)) cards)))
-          (first (filter #(= id (:code %)) cards))
+               (first (filter #(= id (:trimCode %)) cards)))
+          (let [id-matches (filter #(= id (:trimCode %)) cards)]
+            (first (filter-exact-title q id-matches)))
+          (not-empty exact-matches) (take-best-card exact-matches)
+          :else
+          (loop [i 2 matches cards]
+            (let [subquery (subs q 0 i)]
+              (cond (zero? (count matches)) card
+                    (or (= (count matches) 1) (identical-cards? matches)) (take-best-card matches)
+                    (<= i (count (:title card))) (recur (inc i) (filter-title subquery matches))
+                    :else card))))))
+
+(defn identity-lookup
+  "Lookup the identity (query) looking at all cards on specified alignment"
+  [alignment card]
+  (let [q (.toLowerCase (:title card))
+        id (:id card)
+        cards (filter #(= (:alignment %) alignment) @all-cards)
+        exact-matches (filter-exact-title q cards)]
+    (cond (and id
+               (first (filter #(= id (:trimCode %)) cards)))
+          (let [id-matches (filter #(= id (:trimCode %)) cards)]
+            (first (filter-exact-title q id-matches)))
           (not-empty exact-matches) (take-best-card exact-matches)
           :else
           (loop [i 2 matches cards]
@@ -69,24 +90,22 @@
                     :else card))))))
 
 (defn- build-identity-name
-  [title setname]
-  (if setname
-    (str title " (" setname ")")
-    title))
+  [title setname art]
+  (let [set-title (if setname (str title " (" setname ")") title)]
+    (if art
+      (str set-title " [" art "]")
+      set-title)))
 
 (defn parse-identity
   "Parse an id to the corresponding card map"
-  [{:keys [side title setname]}]
-  (if (nil? title)
-    {:display-name "Missing Identity"}
-    (let [card (lookup side {:title title})]
-      (assoc card :display-name (build-identity-name title setname)))))
+  [{:keys [alignment title art setname]}]
+  (let [card (identity-lookup alignment {:title title})]
+    (assoc card :art art :display-name (build-identity-name title setname art))))
 
 (defn add-params-to-card
   "Add art and id parameters to a card hash"
-  [card id art]
+  [card id]
   (-> card
-      (assoc :art art)
       (assoc :id id)))
 
 (defn- clean-param
@@ -121,13 +140,18 @@
   "Parse a single line of a deck string"
   [line]
   (let [clean (s/trim line)
-        [_ qty-str card-name _ card-params] (re-matches #"(\d+)[^\s]*\s+([^\[]+)(\[(.*)\])?" clean)]
+        [_ qty-str card-name _ card-params]
+        (re-matches #"(\d+)[^\s]*\s+([^\(^\[]+)([\(\[](.{0,7}))?" clean)]
     (if (and qty-str
-             (not (js/isNaN (str->int qty-str)))
-             card-name)
-      (let [result (assoc {} :qty (str->int qty-str) :card (s/trim card-name))]
-        (add-params result card-params))
-      nil)))
+             (not (js/isNaN (js/parseInt qty-str)))
+             card-name
+             card-params)
+      (assoc {} :qty (js/parseInt qty-str) :card (s/trim card-name) :id (s/trim card-params))
+      (if (and qty-str
+               (not (js/isNaN (js/parseInt qty-str)))
+               card-name)
+        (assoc {} :qty (js/parseInt qty-str) :card (s/trim card-name))
+        nil))))
 
 (defn- line-reducer
   "Reducer function to parse lines in a deck string"
@@ -154,16 +178,16 @@
 
 (defn lookup-deck
   "Takes a list of {:qty n :card title} and looks up each title and replaces it with the corresponding cardmap"
-  [side card-list]
+  [card-list]
   (let [card-list (collate-deck card-list)]
     ;; lookup each card and replace title with cardmap
-    (map #(assoc % :card (lookup side (assoc % :title (:card %)))) card-list)))
+    (map #(assoc % :card (lookup (assoc % :title (:card %)))) card-list)))
 
 (defn parse-deck-string
   "Parses a string containing the decklist and returns a list of lines {:qty :card}"
-  [side deck-string]
+  [deck-string]
   (let [raw-deck-list (deck-string->list deck-string)]
-    (lookup-deck side raw-deck-list)))
+    (lookup-deck raw-deck-list)))
 
 (defn load-decks [decks]
   (swap! app-state assoc :decks decks)
@@ -176,8 +200,28 @@
   [decks]
   (for [deck decks]
     (let [identity (parse-identity (:identity deck))
-          cards (lookup-deck (:side identity) (:cards deck))]
-      (assoc deck :identity identity :cards cards))))
+          resources (lookup-deck (:resources deck))
+          hazards (lookup-deck (:hazards deck))
+          sideboard (lookup-deck (:sideboard deck))
+          characters (lookup-deck (:characters deck))
+          pool (lookup-deck (:pool deck))
+          fwsb (lookup-deck (:fwsb deck))
+          joined (into (:resources deck) (:hazards deck))
+          combed (into (:characters deck) joined)
+          cards (lookup-deck combed)
+          dual-sites (parse-deck-string all-dual-sites)
+          lord-sites (into dual-sites (parse-deck-string all-lord-sites))
+          dwarf-sites (into lord-sites (parse-deck-string all-dwarf-sites))
+          elf-sites (into dwarf-sites (parse-deck-string all-elf-sites))
+          fallen-sites (into elf-sites (parse-deck-string all-fallen-sites))
+          balrog-sites (into fallen-sites (parse-deck-string all-balrog-sites))
+          minion-sites (into balrog-sites (parse-deck-string all-minion-sites))
+          wizard-sites (into minion-sites (parse-deck-string all-wizard-sites))
+          regions (into wizard-sites (parse-deck-string all-regions))]
+      (assoc deck :resources resources :hazards hazards :sideboard sideboard
+                  :characters characters :pool pool :fwsb fwsb :cards cards
+                  :sites regions
+                  :identity identity))))
 
 (defn distinct-by [f coll]
   (letfn [(step [xs seen]
@@ -197,12 +241,11 @@
       (assoc card :display-name (str (:title card) " (" (:setname card) ")"))
       (assoc card :display-name (:title card)))))
 
-(defn side-identities [side]
+(defn alignment-identities [alignment]
   (let [cards
         (->> @all-cards
-             (filter #(and (= (:side %) side)
-                           (= (:type %) "Identity")))
-             (filter #(not (contains? %1 :replaced_by))))
+             (filter #(and (= (:alignment %) alignment)
+                           (= (:Secondary %) "Avatar"))))
         all-titles (map :title cards)
         add-deck (partial add-deck-name all-titles)]
     (map add-deck cards)))
@@ -213,12 +256,46 @@
   (let [id (:id card)
         art (:art card)]
     (if (or id art)
-      (str " ["
-           (when id (str "id: " id))
+      (str " "
+           (when id (str id))
            (when (and id art) ", ")
-           (when art (str "art: " art))
-           "]")
+           (when art (str art)))
       "")))
+
+(defn resources->str [s]
+  (let [resources (get-in @s [:deck :resources])
+        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" resources)]
+    (swap! s assoc :resource-edit str)))
+
+(defn hazards->str [s]
+  (let [hazards (get-in @s [:deck :hazards])
+        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" hazards)]
+    (swap! s assoc :hazard-edit str)))
+
+(defn sideboard->str [s]
+  (let [sideboard (get-in @s [:deck :sideboard])
+        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" sideboard)]
+    (swap! s assoc :sideboard-edit str)))
+
+(defn characters->str [s]
+  (let [characters (get-in @s [:deck :characters])
+        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" characters)]
+    (swap! s assoc :character-edit str)))
+
+(defn pool->str [s]
+  (let [pool (get-in @s [:deck :pool])
+        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" pool)]
+    (swap! s assoc :pool-edit str)))
+
+(defn fwsb->str [s]
+  (let [fwsb (get-in @s [:deck :fwsb])
+        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" fwsb)]
+    (swap! s assoc :fwsb-edit str)))
+
+(defn cards->str [s]
+  (let [cards (get-in @s [:deck :cards])
+        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" cards)]
+    (swap! s assoc :cards-edit str)))
 
 (defn deck->str [s]
   (let [cards (get-in @s [:deck :cards])
@@ -229,7 +306,12 @@
   (let [deck (:deck @s)]
     (swap! s assoc :old-deck deck)
     (swap! s assoc :edit true)
-    (deck->str s)
+    (resources->str s)
+    (hazards->str s)
+    (sideboard->str s)
+    (characters->str s)
+    (pool->str s)
+    (fwsb->str s)
     (-> (:viewport @db-dom) js/$ (.addClass "edit"))
     (try (js/ga "send" "event" "deckbuilder" "edit") (catch js/Error e))
     (go (<! (timeout 500))
@@ -240,12 +322,68 @@
   (swap! s assoc :query "")
   (-> (:viewport @db-dom) js/$ (.removeClass "edit")))
 
+(defn handle-resource-edit [s]
+  (let [text (.-value (:resourceedit @db-dom))
+        cards (parse-deck-string text)]
+    (swap! s assoc :resource-edit text)
+    (swap! s assoc-in [:deck :resources] cards)))
+
+(defn handle-hazard-edit [s]
+  (let [text (.-value (:hazardedit @db-dom))
+        cards (parse-deck-string text)]
+    (swap! s assoc :hazard-edit text)
+    (swap! s assoc-in [:deck :hazards] cards)))
+
+(defn handle-character-edit [s]
+  (let [text (.-value (:characteredit @db-dom))
+        cards (parse-deck-string text)]
+    (swap! s assoc :character-edit text)
+    (swap! s assoc-in [:deck :characters] cards)))
+
+(defn handle-pool-edit [s]
+  (let [text (.-value (:pooledit @db-dom))
+        cards (parse-deck-string text)]
+    (swap! s assoc :pool-edit text)
+    (swap! s assoc-in [:deck :pool] cards)))
+
+(defn handle-sideboard-edit [s]
+  (let [text (.-value (:sideboardedit @db-dom))
+        cards (parse-deck-string text)]
+    (swap! s assoc :sideboard-edit text)
+    (swap! s assoc-in [:deck :sideboard] cards)))
+
+(defn handle-fwsb-edit [s]
+  (let [text (.-value (:fwsbedit @db-dom))
+        cards (parse-deck-string text)]
+    (swap! s assoc :fwsb-edit text)
+    (swap! s assoc-in [:deck :fwsb] cards)))
+
 (defn handle-edit [s]
   (let [text (.-value (:deckedit @db-dom))
-        side (get-in @s [:deck :identity :side])
-        cards (parse-deck-string side text)]
+        cards (parse-deck-string text)]
     (swap! s assoc :deck-edit text)
     (swap! s assoc-in [:deck :cards] cards)))
+
+(defn wizard-edit [s]
+  (if (get-in @s :vs-wizard)
+    (swap! s assoc :vs-wizard false)
+    (swap! s assoc :vs-wizard true))
+  (if (and (get-in @s :vs-wizard) (get-in @s :vs-minion))
+    (swap! s assoc :vs-fallen true)))
+
+(defn minion-edit [s]
+  (if (get-in @s :vs-minion)
+    (swap! s assoc :vs-minion false)
+    (swap! s assoc :vs-minion true))
+  (if (and (get-in @s :vs-wizard) (get-in @s :vs-minion))
+    (swap! s assoc :vs-fallen true)))
+
+(defn fallen-edit [s]
+  (if (and (get-in @s :vs-wizard) (get-in @s :vs-minion))
+    (swap! s assoc :vs-fallen true)
+    (if (get-in @s :vs-fallen)
+      (swap! s assoc :vs-fallen false)
+      (swap! s assoc :vs-fallen true))))
 
 (defn cancel-edit [s]
   (end-edit s)
@@ -256,7 +394,12 @@
 
 (defn delete-deck [s]
   (swap! s assoc :delete true)
-  (deck->str s)
+  (resources->str s)
+  (hazards->str s)
+  (sideboard->str s)
+  (characters->str s)
+  (pool->str s)
+  (fwsb->str s)
   (-> (:viewport @db-dom) js/$ (.addClass "delete"))
   (try (js/ga "send" "event" "deckbuilder" "delete") (catch js/Error e)))
 
@@ -275,14 +418,18 @@
           (swap! s assoc :deck (first (sort-by :date > (:decks @app-state))))
           (end-delete s))))))
 
-(defn new-deck [side s]
+(defn new-deck [alignment s]
   (let [old-deck (:deck @s)
-        id (->> side
-                side-identities
+        id (->> alignment
+                alignment-identities
                 (sort-by :title)
                 first)]
-    (swap! s assoc :deck {:name "New deck" :cards [] :identity id})
-    (try (js/ga "send" "event" "deckbuilder" "new" side) (catch js/Error e))
+    (swap! s assoc :deck {:name "New deck" :resources [] :hazards [] :sideboard []
+                          :characters [] :pool [] :fwsb [] :cards [] :regions []
+                          :wizard-sites [] :minion-sites [] :balrog-sites []
+                          :fallen-sites [] :elf-sites [] :dwarf-sites [] :sites []
+                          :identity id})
+    (try (js/ga "send" "event" "deckbuilder" "new" alignment) (catch js/Error e))
     (edit-deck s)
     (swap! s assoc :old-deck old-deck)))
 
@@ -293,15 +440,47 @@
       (let [deck (assoc (:deck @s) :date (.toJSON (js/Date.)))
             deck (dissoc deck :stats)
             decks (remove #(= (:_id deck) (:_id %)) (:decks @app-state))
-            cards (for [card (:cards deck) :when (get-in card [:card :title])]
-                    (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
-                          card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
-                      (if (contains? card :art)
-                        (conj card-id {:art (:art card)})
-                        card-id)))
+            resources (for [card (:resources deck) :when (get-in card [:card :title])]
+                        (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
+                              card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
+                          (if (contains? card :art)
+                            (conj card-id {:art (:art card)})
+                            card-id)))
+            hazards (for [card (:hazards deck) :when (get-in card [:card :title])]
+                      (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
+                            card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
+                        (if (contains? card :art)
+                          (conj card-id {:art (:art card)})
+                          card-id)))
+            sideboard (for [card (:sideboard deck) :when (get-in card [:card :title])]
+                        (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
+                              card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
+                          (if (contains? card :art)
+                            (conj card-id {:art (:art card)})
+                            card-id)))
+            characters (for [card (:characters deck) :when (get-in card [:card :title])]
+                         (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
+                               card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
+                           (if (contains? card :art)
+                             (conj card-id {:art (:art card)})
+                             card-id)))
+            pool (for [card (:pool deck) :when (get-in card [:card :title])]
+                   (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
+                         card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
+                     (if (contains? card :art)
+                       (conj card-id {:art (:art card)})
+                       card-id)))
+            fwsb (for [card (:fwsb deck) :when (get-in card [:card :title])]
+                   (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
+                         card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
+                     (if (contains? card :art)
+                       (conj card-id {:art (:art card)})
+                       card-id)))
             ;; only include keys that are relevant
-            identity (select-keys (:identity deck) [:title :side :code])
-            data (assoc deck :cards cards :identity identity)]
+            identity (select-keys (:identity deck) [:title :alignment :trimCode])
+            data (assoc deck :resources resources :hazards hazards :sideboard sideboard
+                             :characters characters :pool pool :fwsb fwsb
+                             :identity identity)]
         (try (js/ga "send" "event" "deckbuilder" "save") (catch js/Error e))
         (go (let [new-id (get-in (<! (if (:_id deck)
                                        (PUT "/data/decks" data :json)
@@ -428,14 +607,23 @@
   (.preventDefault event)
   (let [qty (str->int (:quantity @s))
         card (nth (:matches @s) (:selected @s))
-        best-card (lookup (:side card) card)]
+        best-card (lookup card)]
     (if (js/isNaN qty)
       (swap! s assoc :quantity 3)
       (let [max-qty (or (:limited best-card) 3)
             limit-qty (if (> qty max-qty) max-qty qty)]
-        (put! (:edit-channel @s)
-              {:qty limit-qty
-               :card best-card})
+        (if (= (:type best-card) "Resource")
+          (put! (:resource-edit-channel @s)
+                {:qty limit-qty
+                 :card best-card}))
+        (if (= (:type best-card) "Hazard")
+          (put! (:hazard-edit-channel @s)
+                {:qty limit-qty
+                 :card best-card}))
+        (if (= (:type best-card) "Character")
+          (put! (:character-edit-channel @s)
+                {:qty limit-qty
+                 :card best-card}))
         (swap! s assoc :quantity 3)
         (swap! s assoc :query "")
         (-> ".deckedit .lookup" js/$ .select)))))
@@ -445,7 +633,9 @@
                    :matches []
                    :quantity 3
                    :selected 0
-                   :edit-channel (:edit-channel @deck)})]
+                   :resource-edit-channel (:resource-edit-channel @deck)
+                   :hazard-edit-channel (:hazard-edit-channel @deck)
+                   :character-edit-channel (:character-edit-channel @deck)})]
     (fn [deck]
       [:div
        [:h3 "Add cards"]
@@ -540,7 +730,7 @@
 (defn line-qty-span
   "Make the view of a single line in the deck - returns a span"
   [sets {:keys [identity cards] :as deck} {:keys [qty card] :as line}]
-  [:span {:key (:code card)} qty "  "])
+  [:span {:key (:fullCode card)} qty "  "])
 
 (defn line-name-span
   "Make the view of a single line in the deck - returns a span"
@@ -565,20 +755,29 @@
 
 (defn- create-identity
   [s target-value]
-  (let [side (get-in @s [:deck :identity :side])
+  (let [side (get-in @s [:deck :identity :alignment])
         json-map (.parse js/JSON (.. target-value -target -value))
         id-map (js->clj json-map :keywordize-keys true)]
-    (lookup side id-map)))
+    (lookup id-map)))
 
 (defn- identity-option-string
   [card]
-  (.stringify js/JSON (clj->js {:title (:title card) :id (:code card)})))
+  (.stringify js/JSON (clj->js {:title (:title card) :id (:trimCode card)})))
 
 (defn deck-builder
   "Make the deckbuilder view"
   []
   (let [s (r/atom {:edit false
+                   :vs-wizard false
+                   :vs-minion false
+                   :vs-fallen false
                    :old-deck nil
+                   :resource-edit-channel (chan)
+                   :hazard-edit-channel (chan)
+                   :sideboard-edit-channel (chan)
+                   :character-edit-channel (chan)
+                   :pool-edit-channel (chan)
+                   :fwsb-edit-channel (chan)
                    :edit-channel (chan)
                    :deck nil})
         decks (r/cursor app-state [:decks])
@@ -590,66 +789,170 @@
       {:display-name "deck-builder"
 
        :component-will-mount
-       (fn []
-         (let [edit-channel (:edit-channel @s)]
-           (go (while true
-                 (let [card (<! zoom-channel)]
-                   (swap! s assoc :zoom card))))
-           (go (while true
-                 (let [edit (<! edit-channel)
-                       card (:card edit)
-                       max-qty (or (:limited card) 3)
-                       cards (get-in @s [:deck :cards])
-                       match? #(when (= (get-in % [:card :title]) (:title card)) %)
-                       existing-line (some match? cards)
-                       new-qty (+ (or (:qty existing-line) 0) (:qty edit))
-                       rest (remove match? cards)
-                       draft-id (decks/is-draft-id? (get-in @s [:deck :identity]))
-                       new-cards (cond (and (not draft-id) (> new-qty max-qty))
-                                       (conj rest (assoc existing-line :qty max-qty))
-                                       (<= new-qty 0) rest
-                                       (empty? existing-line) (conj rest {:qty new-qty :card card})
-                                       :else (conj rest (assoc existing-line :qty new-qty)))]
-                   (swap! s assoc-in [:deck :cards] new-cards)
-                   (deck->str s)))))
-         (go (while true
-               (let [deck (<! select-channel)]
-                 (end-delete s)
-                 (swap! s assoc :deck deck)))))
+                     (fn []
+                       (go (while true
+                             (let [card (<! zoom-channel)]
+                               (swap! s assoc :zoom card))))
+                       (let [edit-channel (:resource-edit-channel @s)]
+                         (go (while true
+                               (let [edit (<! edit-channel)
+                                     card (:card edit)
+                                     max-qty (or (:limited card) 3)
+                                     cards (get-in @s [:deck :resources])
+                                     match? #(when (= (get-in % [:card :title]) (:title card)) %)
+                                     existing-line (some match? cards)
+                                     new-qty (+ (or (:qty existing-line) 0) (:qty edit))
+                                     rest (remove match? cards)
+                                     draft-id (decks/is-draft-id? (get-in @s [:deck :identity]))
+                                     new-cards (cond (and (not draft-id) (> new-qty max-qty))
+                                                     (conj rest (assoc existing-line :qty max-qty))
+                                                     (<= new-qty 0) rest
+                                                     (empty? existing-line) (conj rest {:qty new-qty :card card})
+                                                     :else (conj rest (assoc existing-line :qty new-qty)))]
+                                 (swap! s assoc-in [:deck :resources] new-cards)
+                                 (resources->str s)))))
+                       (let [edit-channel (:hazard-edit-channel @s)]
+                         (go (while true
+                               (let [edit (<! edit-channel)
+                                     card (:card edit)
+                                     max-qty (or (:limited card) 3)
+                                     cards (get-in @s [:deck :hazards])
+                                     match? #(when (= (get-in % [:card :title]) (:title card)) %)
+                                     existing-line (some match? cards)
+                                     new-qty (+ (or (:qty existing-line) 0) (:qty edit))
+                                     rest (remove match? cards)
+                                     draft-id (decks/is-draft-id? (get-in @s [:deck :identity]))
+                                     new-cards (cond (and (not draft-id) (> new-qty max-qty))
+                                                     (conj rest (assoc existing-line :qty max-qty))
+                                                     (<= new-qty 0) rest
+                                                     (empty? existing-line) (conj rest {:qty new-qty :card card})
+                                                     :else (conj rest (assoc existing-line :qty new-qty)))]
+                                 (swap! s assoc-in [:deck :hazards] new-cards)
+                                 (hazards->str s)))))
+                       (let [edit-channel (:sideboard-edit-channel @s)]
+                         (go (while true
+                               (let [edit (<! edit-channel)
+                                     card (:card edit)
+                                     max-qty (or (:limited card) 3)
+                                     cards (get-in @s [:deck :sideboard])
+                                     match? #(when (= (get-in % [:card :title]) (:title card)) %)
+                                     existing-line (some match? cards)
+                                     new-qty (+ (or (:qty existing-line) 0) (:qty edit))
+                                     rest (remove match? cards)
+                                     draft-id (decks/is-draft-id? (get-in @s [:deck :identity]))
+                                     new-cards (cond (and (not draft-id) (> new-qty max-qty))
+                                                     (conj rest (assoc existing-line :qty max-qty))
+                                                     (<= new-qty 0) rest
+                                                     (empty? existing-line) (conj rest {:qty new-qty :card card})
+                                                     :else (conj rest (assoc existing-line :qty new-qty)))]
+                                 (swap! s assoc-in [:deck :sideboard] new-cards)
+                                 (sideboard->str s)))))
+                       (let [edit-channel (:character-edit-channel @s)]
+                         (go (while true
+                               (let [edit (<! edit-channel)
+                                     card (:card edit)
+                                     max-qty (or (:limited card) 3)
+                                     cards (get-in @s [:deck :characters])
+                                     match? #(when (= (get-in % [:card :title]) (:title card)) %)
+                                     existing-line (some match? cards)
+                                     new-qty (+ (or (:qty existing-line) 0) (:qty edit))
+                                     rest (remove match? cards)
+                                     draft-id (decks/is-draft-id? (get-in @s [:deck :identity]))
+                                     new-cards (cond (and (not draft-id) (> new-qty max-qty))
+                                                     (conj rest (assoc existing-line :qty max-qty))
+                                                     (<= new-qty 0) rest
+                                                     (empty? existing-line) (conj rest {:qty new-qty :card card})
+                                                     :else (conj rest (assoc existing-line :qty new-qty)))]
+                                 (swap! s assoc-in [:deck :characters] new-cards)
+                                 (characters->str s)))))
+                       (let [edit-channel (:pool-edit-channel @s)]
+                         (go (while true
+                               (let [edit (<! edit-channel)
+                                     card (:card edit)
+                                     max-qty (or (:limited card) 3)
+                                     cards (get-in @s [:deck :pool])
+                                     match? #(when (= (get-in % [:card :title]) (:title card)) %)
+                                     existing-line (some match? cards)
+                                     new-qty (+ (or (:qty existing-line) 0) (:qty edit))
+                                     rest (remove match? cards)
+                                     draft-id (decks/is-draft-id? (get-in @s [:deck :identity]))
+                                     new-cards (cond (and (not draft-id) (> new-qty max-qty))
+                                                     (conj rest (assoc existing-line :qty max-qty))
+                                                     (<= new-qty 0) rest
+                                                     (empty? existing-line) (conj rest {:qty new-qty :card card})
+                                                     :else (conj rest (assoc existing-line :qty new-qty)))]
+                                 (swap! s assoc-in [:deck :pool] new-cards)
+                                 (pool->str s)))))
+                       (let [edit-channel (:fwsb-edit-channel @s)]
+                         (go (while true
+                               (let [edit (<! edit-channel)
+                                     card (:card edit)
+                                     max-qty (or (:limited card) 3)
+                                     cards (get-in @s [:deck :fwsb])
+                                     match? #(when (= (get-in % [:card :title]) (:title card)) %)
+                                     existing-line (some match? cards)
+                                     new-qty (+ (or (:qty existing-line) 0) (:qty edit))
+                                     rest (remove match? cards)
+                                     draft-id (decks/is-draft-id? (get-in @s [:deck :identity]))
+                                     new-cards (cond (and (not draft-id) (> new-qty max-qty))
+                                                     (conj rest (assoc existing-line :qty max-qty))
+                                                     (<= new-qty 0) rest
+                                                     (empty? existing-line) (conj rest {:qty new-qty :card card})
+                                                     :else (conj rest (assoc existing-line :qty new-qty)))]
+                                 (swap! s assoc-in [:deck :fwsb] new-cards)
+                                 (fwsb->str s)))))
+                       (go (while true
+                             (let [deck (<! select-channel)]
+                               (end-delete s)
+                               (swap! s assoc :deck deck)))))
 
        :reagent-render
-       (fn []
-         [:div
-          [:div.deckbuilder.blue-shade.panel
-           [:div.viewport {:ref #(swap! db-dom assoc :viewport %)}
-            [:div.decks
-             [:div.button-bar
-              (if @user
-                (list
-                  [:button {:key "contestant"
-                            :on-click #(new-deck "Contestant" s)} "New Contestant deck"]
-                  [:button {:key "challenger"
-                            :on-click #(new-deck "Challenger" s)} "New Challenger deck"])
-                (list
-                  [:button {:key "contestant"
-                            :class "disabled"} "New Contestant deck"]
-                  [:button {:key "challenger"
-                            :class "disabled"} "New Challenger deck"]))]
-             [:div.deck-collection
-              (when-not (:edit @s)
-                [deck-collection {:sets card-sets :decks decks :decks-loaded decks-loaded :active-deck (:deck @s)}])
-              ]
-             [:div {:class (when (:edit @s) "edit")}
-              (when-let [line (:zoom @s)]
-                (let [art (:art line)
-                      id (:id line)
-                      updated-card (add-params-to-card (:card line) id art)]
-                  [card-view updated-card s]))]]
+                     (fn []
+                       [:div
+                        [:div.deckbuilder.blue-shade.panel
+                         [:div.viewport {:ref #(swap! db-dom assoc :viewport %)}
+                          [:div.decks
+                           [:div.button-bar
+                            (if @user
+                              (list
+                                [:button {:key "hero" :on-click #(new-deck "Hero" s)} "New Wizard deck"]
+                                [:button {:key "minion" :on-click #(new-deck "Minion" s)} "New Minion deck"]
+                                [:button {:key "balrog" :on-click #(new-deck "Balrog" s)} "New Balrog deck"]
+                                [:button {:key "fallen-wizard" :on-click #(new-deck "Fallen-wizard" s)} "New Fallen deck"]
+                                [:button {:key "elf-lord" :on-click #(new-deck "Elf-lord" s)} "New Elf deck"]
+                                [:button {:key "dwarf-lord" :on-click #(new-deck "Dwarf-lord" s)} "New Dwarf deck"]
+                                [:button {:key "atani-lord" :on-click #(new-deck "Atani-lord" s)} "New Atani deck"]
+                                [:button {:key "war-lord" :on-click #(new-deck "War-lord" s)} "New Warlord deck"]
+                                [:button {:key "dragon-lord" :on-click #(new-deck "Dragon-lord" s)} "New Dragon deck"])
+                              (list
+                                [:button {:key "hero" :class "disabled"} "New Wizard deck"]
+                                [:button {:key "minion" :class "disabled"} "New Minion deck"]
+                                [:button {:key "balrog" :class "disabled"} "New Balrog deck"]
+                                [:button {:key "fallen-wizard" :class "disabled"} "New Fallen deck"]
+                                [:button {:key "elf-lord" :class "disabled"} "New Elf deck"]
+                                [:button {:key "dwarf-lord" :class "disabled"} "New Dwarf deck"]
+                                [:button {:key "atani-lord" :class "disabled"} "New Atani deck"]
+                                [:button {:key "war-lord" :class "disabled"} "New Warlord deck"]
+                                [:button {:key "dragon-lord" :class "disabled"} "New Dragon deck"]))]
+                           [:div.deck-collection
+                            (when-not (:edit @s)
+                              [deck-collection {:sets card-sets :decks decks :decks-loaded decks-loaded :active-deck (:deck @s)}])
+                            ]
+                           [:div {:class (when (:edit @s) "edit")}
+                            (when-let [line (:zoom @s)]
+                              (let [id (:id line)
+                                    updated-card (add-params-to-card (:card line) id)]
+                                [card-view updated-card s]))]]
 
             [:div.decklist
              (when-let [deck (:deck @s)]
                (let [identity (:identity deck)
-                     cards (:cards deck)
+                     resources (:resources deck)
+                     hazards (:hazards deck)
+                     sideboard (:sideboard deck)
+                     characters (:characters deck)
+                     pool (:pool deck)
+                     fwsb (:fwsb deck)
                      edit? (:edit @s)
                      delete? (:delete @s)]
                  [:div
@@ -676,7 +979,7 @@
                     (if (decks/banned? identity)
                       banned-span
                       (when (:rotated identity) rotated-span))]
-                   (let [count (decks/card-count cards)
+                   (let [count (decks/card-count resources)
                          min-count (decks/min-deck-size identity)]
                      [:div count " cards"
                       (when (< count min-count)
@@ -701,7 +1004,7 @@
                    [:div [deck-status-span @card-sets deck true true false]]]
                   [:div.cards
                    (doall
-                     (for [group (sort-by first (group-by #(get-in % [:card :type]) cards))]
+                     (for [group (sort-by first (group-by #(get-in % [:card :Secondary]) resources))]
                        ^{:key (or (first group) "Unknown")}
                        [:div.group
                         [:h4 (str (or (first group) "Unknown") " (" (decks/card-count (last group)) ")") ]
@@ -710,7 +1013,7 @@
                             ^{:key (or (get-in line [:card :code]) line)}
                             [:div.line
                              (if (:edit @s)
-                               (let [ch (:edit-channel @s)]
+                               (let [ch (:resource-edit-channel @s)]
                                  [:span
                                   [:button.small {:on-click #(put! ch {:qty -1 :card (:card line)})
                                                   :type "button"} "-"]
@@ -722,28 +1025,54 @@
 
             [:div.deckedit
              [:div
-              [:div
-               [:h3 "Deck name"]
+              [:p
+               [:h3.lftlabel "Deck name"]
+               [:h3.rgtlabel "Avatar"]
                [:input.deckname {:type "text" :placeholder "Deck name"
                                  :ref #(swap! db-dom assoc :deckname %)
                                  :value (get-in @s [:deck :name])
                                  :on-change #(swap! s assoc-in [:deck :name] (.. % -target -value))}]]
-              [:div
-               [:h3 "Identity"]
+              [:p
                [:select.identity {:value (identity-option-string (get-in @s [:deck :identity]))
                                   :on-change #(swap! s assoc-in [:deck :identity] (create-identity s %))}
-                (let [idents (side-identities (get-in @s [:deck :identity :side]))]
+                (let [idents (alignment-identities (get-in @s [:deck :identity :alignment]))]
                   (for [card (sort-by :display-name idents)]
                     ^{:key (:display-name card)}
                     [:option
                      {:value (identity-option-string card)}
                      (:display-name card)]))]]
               [card-lookup s]
-              [:h3 "Decklist"
-               [:span.small "(Type or paste a decklist, it will be parsed)" ]]]
-             [:textarea {:ref #(swap! db-dom assoc :deckedit %)
-                         :value (:deck-edit @s)
-                         :on-change #(handle-edit s)}]]]]])
+              [:div
+               [:h3.column1 "Resources"]
+               [:h3.column2 "Hazards"]
+               [:h3.column3 "Sideboard"]
+               ]
+
+              [:textarea.txttop {:ref #(swap! db-dom assoc :resourceedit %)
+                                 :value (:resource-edit @s)
+                                 :on-change #(handle-resource-edit s)}]
+              [:textarea.txttop {:ref #(swap! db-dom assoc :hazardedit %)
+                                 :value (:hazard-edit @s)
+                                 :on-change #(handle-hazard-edit s)}]
+              [:textarea.txttop {:ref #(swap! db-dom assoc :sideboardedit %)
+                                 :value (:sideboard-edit @s)
+                                 :on-change #(handle-sideboard-edit s)}]
+              [:div
+               [:h3.column1 "Characters"]
+               [:h3.column2 "Pool"]
+               [:h3.column3 "FW-DC-SB"]
+               ]
+
+              [:textarea.txttop {:ref #(swap! db-dom assoc :characteredit %)
+                                 :value (:character-edit @s)
+                                 :on-change #(handle-character-edit s)}]
+              [:textarea.txttop {:ref #(swap! db-dom assoc :pooledit %)
+                                 :value (:pool-edit @s)
+                                 :on-change #(handle-pool-edit s)}]
+              [:textarea.txttop {:ref #(swap! db-dom assoc :fwsbedit %)
+                                 :value (:fwsb-edit @s)
+                                 :on-change #(handle-fwsb-edit s)}]]
+             ]]]])
 
        })))
 
