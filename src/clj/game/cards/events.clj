@@ -1525,7 +1525,7 @@
 
                ;; Move the selected ID to [:challenger :identity] and set the zone
                (swap! state update-in [side :identity]
-                  (fn [x] (assoc (server-card (:title target) (get-in @state [:challenger :user]))
+                  (fn [x] (assoc (locale-card (:title target) (get-in @state [:challenger :user]))
                             :zone [:identity])))
 
                ;; enable-identity does not do everything that init-identity does

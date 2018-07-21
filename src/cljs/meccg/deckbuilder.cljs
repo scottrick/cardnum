@@ -465,10 +465,16 @@
                      (if (contains? card :art)
                        (conj card-id {:art (:art card)})
                        card-id)))
+            cards (for [card (:cards deck) :when (get-in card [:card :title])]
+                    (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
+                          card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
+                      (if (contains? card :art)
+                        (conj card-id {:art (:art card)})
+                        card-id)))
             ;; only include keys that are relevant
             identity (select-keys (:identity deck) [:title :alignment :trimCode])
             data (assoc deck :resources resources :hazards hazards :sideboard sideboard
-                             :characters characters :pool pool :fwsb fwsb
+                             :characters characters :pool pool :fwsb fwsb :cards cards
                              :identity identity)]
         (try (js/ga "send" "event" "deckbuilder" "save") (catch js/Error e))
         (go (let [new-id (get-in (<! (if (:_id deck)
@@ -545,9 +551,9 @@
 
 (defn- deck-status-details
   [deck use-trusted-info]
-  (if use-trusted-info
-    (decks/trusted-deck-status deck)
-    (decks/calculate-deck-status deck)))
+;  (if use-trusted-info
+;    (decks/trusted-deck-status deck)
+    (decks/calculate-deck-status deck))
 
 (defn format-deck-status-span
   [deck-status tooltip? violation-details?]

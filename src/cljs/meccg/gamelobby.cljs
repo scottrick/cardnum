@@ -113,6 +113,7 @@
    (fn [user]
      (om/set-state! owner :title (str (:username user) "'s game"))
      (om/set-state! owner :side "Contestant")
+     (om/set-state! owner :alignment "Minion")
      (om/set-state! owner :editing true)
      (om/set-state! owner :flash-message "")
      (om/set-state! owner :protected false)
@@ -137,6 +138,7 @@
                            :allowspectator (om/get-state owner :allowspectator)
                            :spectatorhands (om/get-state owner :spectatorhands)
                            :side           (om/get-state owner :side)
+                           :alignment      (om/get-state owner :alignment)
                            :room           (om/get-state owner :current-room)
                            :options        (:options @app-state)}])))))))
 
@@ -193,9 +195,10 @@
       [:h3 "Select your deck"]
       [:div.deck-collection
        (let [players (:players (some #(when (= (:gameid %) gameid) %) games))
+             alignment (:alignment (some #(when (= (-> % :user :_id) (:_id user)) %) players))
              side (:side (some #(when (= (-> % :user :_id) (:_id user)) %) players))]
          [:div {:data-dismiss "modal"}
-          (for [deck (sort-by :date > (filter #(= (get-in % [:identity :side]) side) decks))]
+          (for [deck (sort-by :date > (filter #(= (get-in % [:identity :alignment]) alignment) decks))]
             [:div.deckline {:on-click #(ws/ws-send! [:lobby/deck (:_id deck)])}
              [:img {:src (image-url (:identity deck))
                     :alt (get-in deck [:identity :title] "")}]
@@ -239,12 +242,13 @@
      (om/build avatar (:user player) {:opts {:size 22}})
      (user-status-span player)
      (let [side (:side player)
+           alignment (:alignment player)
            faction (:faction (:identity (:deck player)))
            identity (:title (:identity (:deck player)))
            specs (:allowspectator game)]
        (cond
          (and (some? faction) (not= "Neutral" faction) specs) (faction-icon faction identity)
-         side [:span.side (str "(" side ")")]))])))
+         alignment [:span.alignment (str "(" alignment ")")]))])))
 
 (defn chat-view [messages owner]
   (reify
@@ -287,6 +291,15 @@
                     (do (swap! app-state assoc :password-gameid gameid) (om/set-state! owner :prompt action))))))]
        (sab/html
         [:div.gameline {:class (when (= current-game gameid) "active")}
+         [:section
+          [:h3 "Alignment"]
+          (for [option ["Hero" "Minion" "Balrog" "Fallen-wizard" "Elf-lord" "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord"]]
+            [:align-radio
+             [:label [:input {:type "radio"
+                              :name "alignment"
+                              :value option
+                              :on-change #(om/set-state! owner :alignment (.. % -target -value))
+                              :checked (= (om/get-state owner :alignment) option)}] option]])]
          (when (and (:allowspectator game) (not (or password-game current-game editing)))
            [:button {:on-click #(do (join "watch") (resume-sound))} "Watch" editing])
          (when-not (or current-game editing (= (count players) 2) started password-game)
@@ -413,14 +426,14 @@
                                    :value (:title state) :placeholder "Title" :maxLength "100"}]]
 
               [:section
-               [:h3 "Side"]
-               (for [option ["Contestant" "Challenger"]]
-                 [:p
+               [:h3 "Alignment"]
+               (for [option ["Hero" "Minion" "Balrog" "Fallen-wizard" "Elf-lord" "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord"]]
+                 [:align-radio
                   [:label [:input {:type "radio"
-                                   :name "side"
+                                   :name "alignment"
                                    :value option
-                                   :on-change #(om/set-state! owner :side (.. % -target -value))
-                                   :checked (= (om/get-state owner :side) option)}] option]])]
+                                   :on-change #(om/set-state! owner :alignment (.. % -target -value))
+                                   :checked (= (om/get-state owner :alignment) option)}] option]])]
 
               [:section
                [:h3 "Options"]

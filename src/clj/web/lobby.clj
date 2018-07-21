@@ -170,6 +170,7 @@
             new-player {:user    user
                         :ws-id   client-id
                         :side    new-side
+                        :alignment  "Hero"
                         :options options}]
         (swap! all-games update-in [gameid :players] #(conj % new-player))
         (swap! client-gameids assoc client-id gameid)
@@ -208,7 +209,7 @@
 (defn handle-lobby-create
   [{{{:keys [username emailhash] :as user} :user} :ring-req
     client-id                                     :client-id
-    {:keys [title allowspectator spectatorhands password room side options]} :?data :as event}]
+    {:keys [title allowspectator spectatorhands password room side alignment options]} :?data :as event}]
   (let [gameid (java.util.UUID/randomUUID)
         game {:date           (java.util.Date.)
               :gameid         gameid
@@ -221,6 +222,7 @@
               :players        [{:user    user
                                 :ws-id      client-id
                                 :side    side
+                                :alignment alignment
                                 :options options}]
               :spectators     []
               :last-update    (t/now)}]
@@ -337,6 +339,8 @@
         deck (as-> (mc/find-one-as-map db "decks" {:_id (object-id deck-id) :username username}) d
                    (update-in d [:cards] #(mapv map-card %))
                    (update-in d [:cards] #(vec (remove unknown-card %)))
+                   (update-in d [:pool] #(mapv map-card %))
+                   (update-in d [:pool] #(vec (remove unknown-card %)))
                    (update-in d [:identity] #(@all-cards (:title %)))
                    (assoc d :status (decks/calculate-deck-status d)))]
     (when (and (:identity deck) (player? client-id gameid))
