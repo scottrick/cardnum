@@ -50,21 +50,21 @@
                                            (if (< n i)
                                              (continue-ability state side (abt (inc n) i) card nil)
                                              (do (doseq [c (get-in @state [:contestant :play-area])]
-                                                   (system-msg state side "trashes a card")
-                                                   (trash state side c {:unpreventable true}))
+                                                   (system-msg state side "discards a card")
+                                                   (discard state side c {:unpreventable true}))
                                                  (effect-completed state side eid)))
                                            (do (doseq [c (get-in @state [:contestant :play-area])]
                                                  (move state side c :deck))
                                                (shuffle! state side :deck)
                                                (effect-completed state side eid))))))
                 :cancel-effect (req (doseq [c (get-in @state [:contestant :play-area])]
-                                      (system-msg state side "trashes a card")
-                                      (trash state side c {:unpreventable true})))}
+                                      (system-msg state side "discards a card")
+                                      (discard state side c {:unpreventable true})))}
                {:prompt "None of the cards are character. Say goodbye!"
                 :choices ["I have no regrets"]
                 :effect (req (doseq [c (get-in @state [:contestant :play-area])]
-                               (system-msg state side "trashes a card")
-                               (trash state side c {:unpreventable true})))}))]
+                               (system-msg state side "discards a card")
+                               (discard state side c {:unpreventable true})))}))]
      {:interactive (req true)
       :optional {:prompt "Look at the top 3 cards of R&D?"
                  :yes-ability {:async true
@@ -106,10 +106,10 @@
                         :effect (effect (damage :net 1))}}}
 
    "AR-Enhanced Security"
-   {:events {:challenger-trash {:once :per-turn
+   {:events {:challenger-discard {:once :per-turn
                             :async true
                             :req (req (some #(card-is? % :side :contestant) targets))
-                            :msg "give the Challenger a tag for trashing a Contestant card"
+                            :msg "give the Challenger a tag for discarding a Contestant card"
                             :effect (effect (tag-challenger :challenger eid 1))}}}
 
    "Armed Intimidation"
@@ -130,12 +130,12 @@
                       card nil))}
 
    "Armored Servers"
-   {:implementation "Challenger must trash cards manually when required"
+   {:implementation "Challenger must discard cards manually when required"
     :effect (effect (add-counter card :agenda 1))
     :silent (req true)
     :abilities [{:counter-cost [:agenda 1]
                  :req (req (:run @state))
-                 :msg "make the Challenger trash a card from their grip to jack out or break subroutines for the remainder of the run"}]}
+                 :msg "make the Challenger discard a card from their grip to jack out or break subroutines for the remainder of the run"}]}
 
    "AstroScript Pilot Resource"
    {:effect (effect (add-counter card :agenda 1))
@@ -166,14 +166,14 @@
                               card nil))}}
 
    "Bacterial Resourceming"
-   (letfn [(hq-step [remaining to-trash to-hq]
+   (letfn [(hq-step [remaining to-discard to-hq]
              {:async true
               :prompt "Select a card to move to HQ"
               :choices (conj (vec remaining) "Done")
               :effect (req (if (= "Done" target)
                              (do
-                               (doseq [t to-trash]
-                                 (trash state :contestant t {:unpreventable true}))
+                               (doseq [t to-discard]
+                                 (discard state :contestant t {:unpreventable true}))
                                (doseq [h to-hq]
                                  (move state :contestant h :hand))
                                (if (not-empty remaining)
@@ -181,21 +181,21 @@
                                  (do (clear-wait-prompt state :challenger)
                                      (effect-completed state :contestant eid)))
                                (system-msg state :contestant (str "uses Bacterial Resourceming to add " (count to-hq)
-                                                            " cards to HQ, discard " (count to-trash)
+                                                            " cards to HQ, discard " (count to-discard)
                                                             ", and arrange the top cards of R&D")))
                              (continue-ability state :contestant (hq-step
                                                              (clojure.set/difference (set remaining) (set [target]))
-                                                             to-trash
+                                                             to-discard
                                                              (conj to-hq target)) card nil)))})
-           (trash-step [remaining to-trash]
+           (discard-step [remaining to-discard]
              {:async true
               :prompt "Select a card to discard"
               :choices (conj (vec remaining) "Done")
               :effect (req (if (= "Done" target)
-                             (continue-ability state :contestant (hq-step remaining to-trash `()) card nil)
-                             (continue-ability state :contestant (trash-step
+                             (continue-ability state :contestant (hq-step remaining to-discard `()) card nil)
+                             (continue-ability state :contestant (discard-step
                                                              (clojure.set/difference (set remaining) (set [target]))
-                                                             (conj to-trash target)) card nil)))})]
+                                                             (conj to-discard target)) card nil)))})]
      (let [arrange-rd (effect (continue-ability
                                 {:optional
                                  {:async true
@@ -205,7 +205,7 @@
                                                                (when (:run @state)
                                                                 (swap! state assoc-in [:run :shuffled-during-access :rd] true))
                                                                (show-wait-prompt state :challenger "Contestant to use Bacterial Resourceming")
-                                                               (continue-ability state :contestant (trash-step c `()) card nil)))}}}
+                                                               (continue-ability state :contestant (discard-step c `()) card nil)))}}}
                                 card nil))]
        {:effect arrange-rd
         :async true
@@ -298,13 +298,13 @@
                    (system-msg state side (str "gains " bucks " [Credits] from CFC Excavation Contract"))))}
 
    "Character Assassination"
-   {:prompt "Select a muthereff to trash"
+   {:prompt "Select a radicle to discard"
     :choices {:req #(and (installed? %)
-                         (is-type? % "Muthereff"))}
-    :msg (msg "trash " (:title target))
+                         (is-type? % "Radicle"))}
+    :msg (msg "discard " (:title target))
     :interactive (req true)
     :async true
-    :effect (effect (trash eid target {:unpreventable true}))}
+    :effect (effect (discard eid target {:unpreventable true}))}
 
    "Chronos Project"
    {:msg "remove all cards in the Challenger's Heap from the game"
@@ -827,16 +827,16 @@
 
    "Paper Trail"
    {:trace {:base 6
-            :successful {:msg "trash all connection and job muthereffs"
-                         :effect (req (doseq [muthereff (filter #(or (has-subtype? % "Job")
+            :successful {:msg "discard all connection and job radicles"
+                         :effect (req (doseq [radicle (filter #(or (has-subtype? % "Job")
                                                                     (has-subtype? % "Connection"))
                                                                (all-active-installed state :challenger))]
-                                        (trash state side muthereff)))}}}
+                                        (discard state side radicle)))}}}
 
    "Personality Profiles"
    (let [pp {:req (req (pos? (count (:hand challenger))))
-             :effect (effect (trash (first (shuffle (:hand challenger)))))
-             :msg (msg "force the Challenger to trash " (:title (last (:discard challenger))) " from their Grip at random")}]
+             :effect (effect (discard (first (shuffle (:hand challenger)))))
+             :msg (msg "force the Challenger to discard " (:title (last (:discard challenger))) " from their Grip at random")}]
      {:events {:searched-stack pp
                :challenger-install (assoc pp :req (req (and (some #{:discard} (:previous-zone target))
                                                         (pos? (count (:hand challenger))))))}})
@@ -878,23 +878,23 @@
                      (gain-credits state :contestant (* 5 (str->int target))))))}
 
    "Project Ares"
-   (letfn [(trash-count-str [card]
+   (letfn [(discard-count-str [card]
              (quantify (- (get-counters card :advancement) 4) "installed card"))]
      {:silent (req true)
       :req (req (and (> (get-counters card :advancement) 4)
                      (pos? (count (all-installed state :challenger)))))
-      :msg (msg "force the Challenger to trash " (trash-count-str card) " and take 1 bad publicity")
+      :msg (msg "force the Challenger to discard " (discard-count-str card) " and take 1 bad publicity")
       :async true
-      :effect (effect (show-wait-prompt :contestant "Challenger to trash installed cards")
+      :effect (effect (show-wait-prompt :contestant "Challenger to discard installed cards")
                       (continue-ability
                        :challenger
-                       {:prompt (msg "Select " (trash-count-str card) " installed cards to trash")
+                       {:prompt (msg "Select " (discard-count-str card) " installed cards to discard")
                         :choices {:max (min (- (get-counters card :advancement) 4)
                                             (count (all-installed state :challenger)))
                                   :req #(and (= (:side %) "Challenger")
                                              (:installed %))}
-                        :effect (effect (trash-cards targets)
-                                        (system-msg (str "trashes " (join ", " (map :title targets))))
+                        :effect (effect (discard-cards targets)
+                                        (system-msg (str "discards " (join ", " (map :title targets))))
                                         (gain-bad-publicity :contestant 1))}
                        card nil)
                       (clear-wait-prompt :contestant))})
@@ -1141,28 +1141,28 @@
    "Standoff"
    (letfn [(stand [side]
              {:async true
-              :prompt "Choose one of your installed cards to trash due to Standoff"
+              :prompt "Choose one of your installed cards to discard due to Standoff"
               :choices {:req #(and (installed? %)
                                    (same-side? side (:side %)))}
               :cancel-effect (req (if (= side :challenger)
                                     (do (draw state :contestant)
                                         (gain-credits state :contestant 5)
                                         (clear-wait-prompt state :contestant)
-                                        (system-msg state :challenger "declines to trash a card due to Standoff")
+                                        (system-msg state :challenger "declines to discard a card due to Standoff")
                                         (system-msg state :contestant "draws a card and gains 5 [Credits] from Standoff")
                                         (effect-completed state :contestant eid))
-                                    (do (system-msg state :contestant "declines to trash a card from Standoff")
+                                    (do (system-msg state :contestant "declines to discard a card from Standoff")
                                         (clear-wait-prompt state :challenger)
                                         (effect-completed state :contestant eid))))
-              :effect (req (wait-for (trash state side target {:unpreventable true})
+              :effect (req (wait-for (discard state side target {:unpreventable true})
                                      (do
-                                       (system-msg state side (str "trashes " (card-str state target) " due to Standoff"))
+                                       (system-msg state side (str "discards " (card-str state target) " due to Standoff"))
                                        (clear-wait-prompt state (other-side side))
-                                       (show-wait-prompt state side (str (side-str (other-side side)) " to trash a card for Standoff"))
+                                       (show-wait-prompt state side (str (side-str (other-side side)) " to discard a card for Standoff"))
                                        (continue-ability state (other-side side) (stand (other-side side)) card nil))))})]
      {:interactive (req true)
       :async true
-      :effect (effect (show-wait-prompt (str (side-str (other-side side)) " to trash a card for Standoff"))
+      :effect (effect (show-wait-prompt (str (side-str (other-side side)) " to discard a card for Standoff"))
                       (continue-ability :challenger (stand :challenger) card nil))})
 
    "Successful Field Test"
@@ -1221,10 +1221,10 @@
      {:install-state :face-up
       :events {:advance {:req (req (= (:cid card) (:cid target)))
                          :msg (msg (if (pos? (count (:deck challenger)))
-                                     (str "trash "
+                                     (str "discard "
                                           (join ", " (map :title (take (adv4? state card) (:deck challenger))))
                                           " from the Challenger's stack")
-                                     "trash from the Challenger's stack but it is empty"))
+                                     "discard from the Challenger's stack but it is empty"))
                          :effect (effect (mill :contestant :challenger (adv4? state card)))}}})
 
    "Unorthodox Predictions"
@@ -1286,7 +1286,7 @@
              :effect (effect (gain-bad-publicity :contestant 1))}}
 
    "Water Monopoly"
-   {:events {:pre-install {:req (req (and (is-type? target "Muthereff")
+   {:events {:pre-install {:req (req (and (is-type? target "Radicle")
                                           (not (has-subtype? target "Virtual"))
                                           (not (second targets)))) ; not facedown
                            :effect (effect (install-cost-bonus [:credit 1]))}}}})

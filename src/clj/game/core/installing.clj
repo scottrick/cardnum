@@ -162,18 +162,18 @@
   (some? (#{"Site" "Agenda" "Character" "Region"} (:type card))))
 
 (defn- contestant-install-site-agenda
-  "Forces the contestant to trash an existing site or agenda if a second was just installed."
+  "Forces the contestant to discard an existing site or agenda if a second was just installed."
   [state side eid card dest-zone server]
   (let [prev-card (some #(when (#{"Site" "Agenda"} (:type %)) %) dest-zone)]
     (if (and (#{"Site" "Agenda"} (:type card))
              prev-card
              (not (:host card)))
-      (continue-ability state side {:prompt (str "The " (:title prev-card) " in " server " will now be trashed.")
+      (continue-ability state side {:prompt (str "The " (:title prev-card) " in " server " will now be discarded.")
                                     :choices ["OK"]
                                     :async true
-                                    :effect (req (system-msg state :contestant (str "trashes " (card-str state prev-card)))
-                                                 (if (get-card state prev-card) ; make sure they didn't trash the card themselves
-                                                   (trash state :contestant eid prev-card {:keep-server-alive true})
+                                    :effect (req (system-msg state :contestant (str "discards " (card-str state prev-card)))
+                                                 (if (get-card state prev-card) ; make sure they didn't discard the card themselves
+                                                   (discard state :contestant eid prev-card {:keep-server-alive true})
                                                    (effect-completed state :contestant eid)))}
                        nil nil)
       (effect-completed state side eid))))
@@ -356,7 +356,7 @@
       true true
       ;; failed unique check
       :unique
-      (reason-toast (str "Cannot install a second copy of " title " since it is unique. Please trash currently"
+      (reason-toast (str "Cannot install a second copy of " title " since it is unique. Please discard currently"
                          " installed copy first"))
       ;; failed install lock check
       :lock-install
@@ -431,8 +431,8 @@
                      (use-mu state (:memoryunits card))
                      (toast-check-mu state))
                    (handle-virus-counter-flag state side installed-card)
-                   (when (and (not facedown) (is-type? card "Muthereff"))
-                     (swap! state assoc-in [:challenger :register :installed-muthereff] true))
+                   (when (and (not facedown) (is-type? card "Radicle"))
+                     (swap! state assoc-in [:challenger :register :installed-radicle] true))
                    (when (and (not facedown) (has-subtype? c "Icebreaker"))
                      (update-breaker-strength state side c))
                    (trigger-event-simult state side eid :challenger-install

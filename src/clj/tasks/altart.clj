@@ -3,7 +3,7 @@
   (:require [web.db :refer [db] :as webdb]
             [monger.collection :as mc]
             [monger.operators :refer :all]
-            [tasks.nrdb :refer [replace-collection tables update-config tables]]
+            [tasks.meccgdb :refer [replace-collection tables update-config tables]]
             [clojure.string :as string]
             [clojure.java.io :as io]
             [cheshire.core :as json]))

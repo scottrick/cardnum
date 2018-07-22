@@ -81,7 +81,7 @@
                     ;:location (zone :location contestant-location)
                     :discard [] :scored [] :rfg [] :play-area []
                     :servers {:hq {} :rd {} :archives {} :sites {}}
-                    :rig {:resource [] :muthereff [] :hazard []}
+                    :rig {:resource [] :radicle [] :hazard []}
                     :click 0 :credit 20 :bad-publicity 0 :has-bad-pub 0
                     :free_gi 0 :total_mp 0 :stage_pt 0
                     :char_mp 0 :ally_mp 0 :item_mp 0
@@ -100,7 +100,7 @@
                     ;:location (zone :location challenger-location)
                     :discard [] :scored [] :rfg [] :play-area []
                     :servers {:hq {} :rd {} :archives {} :sites {}}
-                    :rig {:resource [] :muthereff [] :hazard []}
+                    :rig {:resource [] :radicle [] :hazard []}
                     :toast []
                     :click 0 :credit 20 :run-credit 0 :memory 4 :link 0 :tag 0
                     :free_gi 0 :total_mp 0 :stage_pt 0

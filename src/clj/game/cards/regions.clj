@@ -1,4 +1,4 @@
-(ns game.cards.upgrades
+(ns game.cards.regions
   (:require [game.core :refer :all]
             [game.utils :refer :all]
             [game.macros :refer [effect req msg wait-for continue-ability]]
@@ -55,7 +55,7 @@
                                  (register-events {:run-ends
                                                     {:effect (req (doseq [c (:hosted card)]
                                                                     (when (:rezzed c)
-                                                                      (trash state side c)))
+                                                                      (discard state side c)))
                                                                   (unregister-events state side card))}} card))}]
     :events {:run-ends nil}}
 
@@ -94,7 +94,7 @@
    (let [bm {:req (req (or (in-same-server? card target)
                            (from-same-server? card target)))
              :effect (effect (steal-cost-bonus [:net-damage 2]))}]
-     {:trash-effect
+     {:discard-effect
               {:req (req (and (= :servers (first (:previous-zone card))) (:run @state)))
                :effect (effect (register-events {:pre-steal-cost (assoc bm :req (req (or (= (:zone target) (:previous-zone card))
                                                                                          (= (central->zone (:zone target))
@@ -111,20 +111,20 @@
                                                    :async true
                                                    :effect (effect (tag-challenger :challenger eid 1))}
                                       :unsuccessful
-                                      {:effect (effect (system-msg "trashes Berncharacter Mai from the unsuccessful trace")
-                                                       (trash card))}}}}}
+                                      {:effect (effect (system-msg "discards Berncharacter Mai from the unsuccessful trace")
+                                                       (discard card))}}}}}
 
   "Bio Vault"
   {:install-req (req (remove #{"HQ" "R&D" "Archives"} targets))
    :advanceable :always
-   :abilities [{:label "[Trash]: End the run"
+   :abilities [{:label "[Discard]: End the run"
                 :advance-counter-cost 2
                 :req (req (:run @state))
-                :msg "end the run. Bio Vault is trashed"
+                :msg "end the run. Bio Vault is discarded"
                 :async true
                 :effect (effect
                           (end-run)
-                          (trash eid card {:cause :ability-cost}))}]}
+                          (discard eid card {:cause :ability-cost}))}]}
 
    "Black Level Clearance"
    {:events {:successful-run
@@ -143,8 +143,8 @@
                                                     (handle-end-run state side)
                                                     (gain-credits state :contestant 5)
                                                     (draw state :contestant)
-                                                    (system-msg state :contestant (str "gains 5 [Credits] and draws 1 card. Black Level Clearance is trashed"))
-                                                    (trash state side card)
+                                                    (system-msg state :contestant (str "gains 5 [Credits] and draws 1 card. Black Level Clearance is discarded"))
+                                                    (discard state side card)
                                                     (effect-completed state side eid))))}
                                card nil))}}}
 
@@ -162,12 +162,12 @@
                  :msg (msg "play " (:title target) " from Archives, ignoring all costs, and removes it from the game")
                  :choices (req (cancellable (filter #(and (is-type? % "Operation")
                                                           (has-subtype? % "Transaction")) (:discard contestant)) :sorted))
-                 :effect (effect (play-instant nil (assoc-in target [:special :rfg-when-trashed] true) {:ignore-cost true})
+                 :effect (effect (play-instant nil (assoc-in target [:special :rfg-when-discarded] true) {:ignore-cost true})
                                  (move target :rfg))}]}
 
    "Calibration Testing"
    {:install-req (req (remove #{"HQ" "R&D" "Archives"} targets))
-    :abilities [{:label "[Trash]: Place 1 advancement token on a card in this server"
+    :abilities [{:label "[Discard]: Place 1 advancement token on a card in this server"
                  :async true
                  :effect (effect (continue-ability
                                    {:prompt "Select a card in this server"
@@ -175,7 +175,7 @@
                                     :async true
                                     :msg (msg "place an advancement token on " (card-str state target))
                                     :effect (effect (add-prop target :advance-counter 1 {:placed true})
-                                                    (trash eid card {:cause :ability-cost}))}
+                                                    (discard eid card {:cause :ability-cost}))}
                                    card nil))}]}
 
 
@@ -198,18 +198,18 @@
                                 :msg "give the Challenger 1 tag"}}}
 
    "Code Replicator"
-   {:abilities [{:label "[Trash]: Force the challenger to approach the passed piece of character again"
+   {:abilities [{:label "[Discard]: Force the challenger to approach the passed piece of character again"
                  :req (req (and this-server
                                 (> (count (get-run-characters state)) (:position run))
                                 (:rezzed (get-in (:characters (card->server state card)) [(:position run)]))))
                  :effect (req (let [charactername (:title (get-in (:characters (card->server state card)) [(:position run)]))]
-                                (trash state :contestant (get-card state card))
+                                (discard state :contestant (get-card state card))
                                 (swap! state update-in [:run] #(assoc % :position (inc (:position run))))
-                                 (system-msg state :contestant (str "trashes Code Replicator to make the challenger approach "
+                                 (system-msg state :contestant (str "discards Code Replicator to make the challenger approach "
                                                               charactername " again"))))}]}
 
    "Contestantorate Troubleshooter"
-   {:abilities [{:label "[Trash]: Add strength to a rezzed Character protecting this server" :choices :credit
+   {:abilities [{:label "[Discard]: Add strength to a rezzed Character protecting this server" :choices :credit
                  :prompt "How many credits?"
                  :effect (req (let [boost target]
                                 (resolve-ability
@@ -219,10 +219,10 @@
                                    :msg (msg "add " boost " strength to " (:title target))
                                    :effect (req (update! state side (assoc card :troubleshooter-target target
                                                                                 :troubleshooter-amount boost))
-                                                (trash state side (get-card state card))
+                                                (discard state side (get-card state card))
                                                 (update-character-strength state side target))} card nil)))}]
     :events {:pre-character-strength nil :challenger-turn-ends nil :contestant-turn-ends nil}
-    :trash-effect
+    :discard-effect
                {:effect (req (register-events
                                state side
                                (let [ct {:effect (req (unregister-events state side card)
@@ -254,15 +254,15 @@
                                                                          (purge))}
                                            :no-ability {:effect (effect (clear-wait-prompt :challenger))}}}
                                card nil))}
-    :abilities [{:label "[Trash]: Purge virus counters"
-                 :msg "purge virus counters" :effect (effect (trash card) (purge))}]}
+    :abilities [{:label "[Discard]: Purge virus counters"
+                 :msg "purge virus counters" :effect (effect (discard card) (purge))}]}
 
    "Dedicated Technician Team"
    {:recurring 2}
 
    "Defense Construct"
    {:advanceable :always
-    :abilities [{:label "[Trash]: Add 1 facedown card from Archives to HQ for each advancement token"
+    :abilities [{:label "[Discard]: Add 1 facedown card from Archives to HQ for each advancement token"
                  :req (req (and run (= (:server run) [:archives])
                                 (pos? (get-counters card :advancement))))
                  :effect (effect (resolve-ability
@@ -275,7 +275,7 @@
                                     :effect (req (doseq [c targets]
                                                    (move state side c :hand)))}
                                   card nil)
-                                 (trash card))}]}
+                                 (discard card))}]}
 
    "Disposable HQ"
    (letfn [(dhq [n i]
@@ -319,7 +319,7 @@
     :events {:pre-character-strength {:req (req (protecting-same-server? card target))
                                 :effect (effect (character-strength-bonus 1 target))}}
     :derez-effect {:effect (req (update-character-in-server state side (card->server state card)))}
-    :trash-effect {:effect (req (update-all-character state side))}}
+    :discard-effect {:effect (req (update-all-character state side))}}
 
    "Expo Grid"
    (let [ability {:req (req (some #(and (is-type? % "Site")
@@ -344,11 +344,11 @@
 
    "Fractal Threat Matrix"
    {:implementation "Manual trigger each time all subs are broken"
-    :abilities [{:label "Trash the top 2 cards from the Stack"
+    :abilities [{:label "Discard the top 2 cards from the Stack"
                  :msg (msg (let [deck (:deck challenger)]
                              (if (pos? (count deck))
-                               (str "trash " (join ", " (map :title (take 2 deck))) " from the Stack")
-                               "trash the top 2 cards from their Stack - but the Stack is empty")))
+                               (str "discard " (join ", " (map :title (take 2 deck))) " from the Stack")
+                               "discard the top 2 cards from their Stack - but the Stack is empty")))
                  :effect (effect (mill :contestant :challenger 2))}]}
 
    "Georgia Emelyov"
@@ -377,16 +377,16 @@
                                  (lose :challenger :run-credit :all))}]}
 
    "Helheim Servers"
-   {:abilities [{:label "Trash 1 card from HQ: All character protecting this server has +2 strength until the end of the run"
+   {:abilities [{:label "Discard 1 card from HQ: All character protecting this server has +2 strength until the end of the run"
                  :req (req (and this-server (pos? (count run-characters)) (pos? (count (:hand contestant)))))
                  :async true
                  :effect (req (show-wait-prompt state :challenger "Contestant to use Helheim Servers")
                               (wait-for
                                 (resolve-ability
                                   state side
-                                  {:prompt "Choose a card in HQ to trash"
+                                  {:prompt "Choose a card in HQ to discard"
                                    :choices {:req #(and (in-hand? %) (= (:side %) "Contestant"))}
-                                   :effect (effect (trash target) (clear-wait-prompt :challenger))} card nil)
+                                   :effect (effect (discard target) (clear-wait-prompt :challenger))} card nil)
                                 (do (register-events
                                       state side
                                       {:pre-character-strength {:req (req (= (card->server state card)
@@ -416,17 +416,17 @@
     :access {:req (req (not= (first (:zone card)) :discard))
              :interactive (req true)
              :trace {:base 4
-                     :label "add an installed resource or virtual muthereff to the Grip"
+                     :label "add an installed resource or virtual radicle to the Grip"
                      :successful
                      {:async true
                       :effect (req (show-wait-prompt state :challenger "Contestant to resolve Intake")
                                    (continue-ability
                                      state :contestant
-                                     {:prompt "Select a resource or virtual muthereff"
+                                     {:prompt "Select a resource or virtual radicle"
                                       :player :contestant
                                       :choices {:req #(and (installed? %)
                                                            (or (resource? %)
-                                                               (and (muthereff? %)
+                                                               (and (radicle? %)
                                                                     (has-subtype? % "Virtual"))))}
                                       :async true
                                       :msg (msg "move " (:title target) " to the Grip")
@@ -486,14 +486,14 @@
                :post-contestant-draw {:effect (req (swap! state dissoc-in [:per-turn :jinja-city-grid-draw]))}}})
 
    "Keegan Lane"
-   {:abilities [{:label "[Trash], remove a tag: Trash a resource"
+   {:abilities [{:label "[Discard], remove a tag: Discard a resource"
                  :req (req (and this-server
                                 (pos? (get-in @state [:challenger :tag]))
                                 (not (empty? (filter #(is-type? % "Resource")
                                                      (all-active-installed state :challenger))))))
                  :msg (msg "remove 1 tag")
-                 :effect (req (resolve-ability state side trash-resource card nil)
-                              (trash state side card {:cause :ability-cost})
+                 :effect (req (resolve-ability state side discard-resource card nil)
+                              (discard state side card {:cause :ability-cost})
                               (lose state :challenger :tag 1))}]}
 
    "Khondi Plaza"
@@ -526,13 +526,13 @@
 
    "Marcus Batty"
    {:abilities [{:req (req this-server)
-                 :label "[Trash]: Start a Psi game"
+                 :label "[Discard]: Start a Psi game"
                  :msg "start a Psi game"
                  :psi {:not-equal {:prompt "Select a rezzed piece of Character to resolve one of its subroutines"
                                    :choices {:req #(and (character? %)
                                                         (rezzed? %))}
                                    :msg (msg "resolve a subroutine on " (:title target))}}
-                 :effect (effect (trash card))}]}
+                 :effect (effect (discard card))}]}
 
    "Mason Bellamy"
    {:implementation "Manually triggered by Contestant"
@@ -591,22 +591,22 @@
                                                   card nil)))}]}
 
    "Mumbad Virtual Tour"
-   {:implementation "Only forces trash if challenger has no Imps and enough credits in the credit pool"
-    :flags {:must-trash (req (when installed
+   {:implementation "Only forces discard if challenger has no Imps and enough credits in the credit pool"
+    :flags {:must-discard (req (when installed
                                true))}
     :access {:req (req installed)
-             :effect (req (let [trash-cost (trash-cost state side card)
+             :effect (req (let [discard-cost (discard-cost state side card)
                                 no-salsette (remove #(= (:title %) "Salsette Slums") (all-active state :challenger))
-                                slow-trash (any-flag-fn? state :challenger :slow-trash true no-salsette)]
-                            (if (and (can-pay? state :challenger nil :credit trash-cost)
-                                     (not slow-trash))
-                              (do (toast state :challenger "You have been forced to trash Mumbad Virtual Tour" "info")
-                                  (swap! state assoc-in [:challenger :register :force-trash] true))
+                                slow-discard (any-flag-fn? state :challenger :slow-discard true no-salsette)]
+                            (if (and (can-pay? state :challenger nil :credit discard-cost)
+                                     (not slow-discard))
+                              (do (toast state :challenger "You have been forced to discard Mumbad Virtual Tour" "info")
+                                  (swap! state assoc-in [:challenger :register :force-discard] true))
                               (toast state :challenger
-                                     (str "You must trash Mumbad Virtual Tour, if able, using any available means "
+                                     (str "You must discard Mumbad Virtual Tour, if able, using any available means "
                                           "(Whizzard, Imp, Ghost Challenger, Net Celebrity...)")))))}
-    :trash-effect {:when-inactive true
-                   :effect (req (swap! state assoc-in [:challenger :register :force-trash] false))}}
+    :discard-effect {:when-inactive true
+                   :effect (req (swap! state assoc-in [:challenger :register :force-discard] false))}}
 
    "Mwanza City Grid"
    (let [gain-creds {:req (req (and installed
@@ -625,7 +625,7 @@
                             :msg "force the Challenger to access 3 additional cards"
                             :effect (effect (access-bonus 3))}
                :run-ends gain-creds}
-      :trash-effect
+      :discard-effect
       {:req (req (and (= :servers (first (:previous-zone card))) (:run @state)))
        :effect (effect (register-events {:run-ends
                                          (assoc gain-creds :req (req (= (first (:server run))
@@ -685,8 +685,8 @@
                            (effect-completed state side eid)))))}}}
 
    "Oaktown Grid"
-   {:events {:pre-trash {:req (req (in-same-server? card target))
-                         :effect (effect (trash-cost-bonus 3))}}}
+   {:events {:pre-discard {:req (req (in-same-server? card target))
+                         :effect (effect (discard-cost-bonus 3))}}}
 
    "Oberth Protocol"
    {:additional-cost [:forfeit]
@@ -701,10 +701,10 @@
     :effect (req (prevent-run-on-server state card (second (:zone card))))
     :events {:challenger-turn-begins {:effect (req (prevent-run-on-server state card (second (:zone card))))}
              :successful-run {:req (req (= target :hq))
-                              :effect (req (trash state :contestant card)
+                              :effect (req (discard state :contestant card)
                                            (enable-run-on-server state card
                                                                  (second (:zone card)))
-                                           (system-msg state :contestant (str "trashes Off the Grid")))}}
+                                           (system-msg state :contestant (str "discards Off the Grid")))}}
     :leave-play (req (enable-run-on-server state card (second (:zone card))))}
 
    "Old Hollywood Grid"
@@ -718,7 +718,7 @@
                                  ((constantly false)
                                     (toast state :challenger "Cannot steal due to Old Hollywood Grid." "warning"))
                                  true))))}]
-     {:trash-effect
+     {:discard-effect
       {:req (req (and (= :servers (first (:previous-zone card))) (:run @state)))
        :effect (req (register-events
                       state side
@@ -748,17 +748,17 @@
                                                :async true
                                                :effect (req (tag-challenger state :challenger eid 1))}}}
                                card nil))}]
-     {:trash-effect
+     {:discard-effect
       {:req (req (and (= :servers (first (:previous-zone card)))
                       (:run @state)))
-       :effect (effect (register-events {:challenger-trash (assoc om :req (req (or (= (:zone (get-nested-host target))
+       :effect (effect (register-events {:challenger-discard (assoc om :req (req (or (= (:zone (get-nested-host target))
                                                                                   (:previous-zone card))
                                                                                (= (central->zone (:zone target))
                                                                                   (butlast (:previous-zone card))))))
                                          :run-ends {:effect (effect (unregister-events card))}}
                                         (assoc card :zone '(:discard))))}
       :events {:run-ends nil
-               :challenger-trash om}})
+               :challenger-discard om}})
 
    "Panic Button"
    {:init {:root "HQ"}
@@ -766,13 +766,13 @@
                  :req (req (and run (= (first (:server run)) :hq)))}]}
 
    "Port Anson Grid"
-   {:msg "prevent the Challenger from jacking out unless they trash an installed resource"
+   {:msg "prevent the Challenger from jacking out unless they discard an installed resource"
     :effect (req (when this-server
                    (prevent-jack-out state side)))
     :events {:run {:req (req this-server)
-                   :msg "prevent the Challenger from jacking out unless they trash an installed resource"
+                   :msg "prevent the Challenger from jacking out unless they discard an installed resource"
                    :effect (effect (prevent-jack-out))}
-             :challenger-trash {:req (req (and this-server (is-type? target "Resource")))
+             :challenger-discard {:req (req (and this-server (is-type? target "Resource")))
                             :effect (req (swap! state update-in [:run] dissoc :cannot-jack-out))}}}
 
    "Prisec"
@@ -799,7 +799,7 @@
    (let [ab {:req (req (or (in-same-server? card target)
                            (from-same-server? card target)))
              :effect (effect (steal-cost-bonus [:credit 5]))}]
-     {:trash-effect
+     {:discard-effect
       {:req (req (and (= :servers (first (:previous-zone card))) (:run @state)))
        :effect (effect (register-events {:pre-steal-cost (assoc ab :req (req (or (= (:zone target) (:previous-zone card))
                                                                                  (= (central->zone (:zone target))
@@ -827,10 +827,10 @@
                               :effect (effect (init-trace-bonus 2))}}}
 
    "Ryon Knight"
-   {:abilities [{:label "[Trash]: Do 1 brain damage"
+   {:abilities [{:label "[Discard]: Do 1 brain damage"
                  :msg "do 1 brain damage" :req (req (and this-server (zero? (:click challenger))))
                  :async true
-                 :effect (effect (trash card) (damage eid :brain 1 {:card card}))}]}
+                 :effect (effect (discard card) (damage eid :brain 1 {:card card}))}]}
 
    "SanSan City Grid"
    {:effect (req (when-let [agenda (some #(when (is-type? % "Agenda") %)
@@ -856,12 +856,12 @@
    "Self-destruct"
    {:install-req (req (remove #{"HQ" "R&D" "Archives"} targets))
     :abilities [{:req (req this-server)
-                 :label "[Trash]: Trace X - Do 3 net damage"
+                 :label "[Discard]: Trace X - Do 3 net damage"
                  :effect (req (let [serv (card->server state card)
                                     cards (concat (:characters serv) (:content serv))]
-                                (trash state side card)
+                                (discard state side card)
                                 (doseq [c cards]
-                                  (trash state side c))
+                                  (discard state side c))
                                 (resolve-ability
                                   state side
                                   {:trace {:base (req (dec (count cards)))
@@ -883,11 +883,11 @@
                       (set-prop card :counter {:credit 0}))}]}
 
    "Signal Jamming"
-   {:abilities [{:label "[Trash]: Cards cannot be installed until the end of the run"
+   {:abilities [{:label "[Discard]: Cards cannot be installed until the end of the run"
                  :msg (msg "prevent cards being installed until the end of the run")
                  :req (req this-server)
-                 :effect (effect (trash (get-card state card) {:cause :ability-cost}))}]
-    :trash-effect {:effect (effect (register-run-flag! card :contestant-lock-install (constantly true))
+                 :effect (effect (discard (get-card state card) {:cause :ability-cost}))}]
+    :discard-effect {:effect (effect (register-run-flag! card :contestant-lock-install (constantly true))
                                    (register-run-flag! card :challenger-lock-install (constantly true))
                                    (toast :challenger "Cannot install until the end of the run")
                                    (toast :contestant "Cannot install until the end of the run"))}
@@ -900,7 +900,7 @@
    (let [ab {:req (req (or (in-same-server? card target)
                            (from-same-server? card target)))
              :effect (effect (steal-cost-bonus [:click 1]))}]
-     {:trash-effect
+     {:discard-effect
       {:req (req (and (= :servers (first (:previous-zone card))) (:run @state)))
        :effect (effect (register-events {:pre-steal-cost (assoc ab :req (req (or (= (:zone target) (:previous-zone card))
                                                                                  (= (central->zone (:zone target))
@@ -965,7 +965,7 @@
                                            card nil)))))}}}}
 
    "The Twins"
-   {:abilities [{:label "Reveal and trash a copy of the Character just passed from HQ"
+   {:abilities [{:label "Reveal and discard a copy of the Character just passed from HQ"
                  :req (req (and this-server
                                 (> (count (get-run-characters state)) (:position run))
                                 (:rezzed (get-in (:characters (card->server state card)) [(:position run)]))))
@@ -976,10 +976,10 @@
                                    :choices {:req #(and (in-hand? %)
                                                         (character? %)
                                                         (= (:title %) charactername))}
-                                   :effect (req (trash state side (assoc target :seen true))
+                                   :effect (req (discard state side (assoc target :seen true))
                                                 (swap! state update-in [:run]
                                                        #(assoc % :position (inc (:position run)))))
-                                   :msg (msg "trash a copy of " (:title target) " from HQ and force the Challenger to encounter it again")}
+                                   :msg (msg "discard a copy of " (:title target) " from HQ and force the Challenger to encounter it again")}
                                  card nil)))}]}
 
    "Tori Hanzō"
@@ -1025,10 +1025,10 @@
                                         :effect (effect (gain-credits 1))}}}}}
 
    "Tyrs Hand"
-   {:abilities [{:label "[Trash]: Prevent a subroutine on a piece of Bioroid Character from being broken"
+   {:abilities [{:label "[Discard]: Prevent a subroutine on a piece of Bioroid Character from being broken"
                  :req (req (and (= (butlast (:zone current-character)) (butlast (:zone card)))
                                 (has-subtype? current-character "Bioroid")))
-                 :effect (effect (trash card))
+                 :effect (effect (discard card))
                  :msg (msg "prevent a subroutine on " (:title current-character) " from being broken")}]}
 
    "Underway Grid"
@@ -1044,7 +1044,7 @@
                  :msg "reduce the Challenger's maximum hand size by 1 until the start of the next Contestant turn"
                  :effect (req (update! state side (assoc card :times-used (inc (get card :times-used 0))))
                               (lose state :challenger :hand-size 1))}]
-    :trash-effect {:req (req (and (= :servers (first (:previous-zone card))) (:run @state)))
+    :discard-effect {:req (req (and (= :servers (first (:previous-zone card))) (:run @state)))
                    :effect (req (when-let [n (:times-used card)]
                                   (register-events state side
                                                    {:contestant-turn-begins
@@ -1061,22 +1061,22 @@
 
    "Warroid Tracker"
    (letfn [(wt [card n t]
-             {:prompt "Choose an installed card to trash due to Warroid Tracker"
+             {:prompt "Choose an installed card to discard due to Warroid Tracker"
               :async true
               :player :challenger
               :priority 2
               :choices {:req #(and (installed? %) (= (:side %) "Challenger"))}
-              :effect (req (system-msg state side (str "trashes " (card-str state target) " due to Warroid Tracker"))
-                           (trash state side target {:unpreventable true})
+              :effect (req (system-msg state side (str "discards " (card-str state target) " due to Warroid Tracker"))
+                           (discard state side target {:unpreventable true})
                            (if (> n t)
                              (continue-ability state side (wt card n (inc t)) card nil)
                              (do (clear-wait-prompt state :contestant)
                                  (effect-completed state side eid)))
-                           ;; this ends-the-run if WT is the only card and is trashed, and trashes at least one challenger card
+                           ;; this ends-the-run if WT is the only card and is discarded, and discards at least one challenger card
                            (when (zero? (count (cards-to-access state side (get-in @state [:run :server]))))
                              (handle-end-run state side)))})]
    {:implementation "Does not handle UFAQ interaction with Singularity"
-    :events {:challenger-trash {:async true
+    :events {:challenger-discard {:async true
                             :req (req (= (-> card :zone second) (-> target :zone second)))
                             :trace {:base 4
                                     :successful
@@ -1086,13 +1086,13 @@
                                             (if (pos? n)
                                               (do (system-msg
                                                     state side
-                                                    (str "uses Warroid Tracker to force the challenger to trash "
+                                                    (str "uses Warroid Tracker to force the challenger to discard "
                                                          (quantify n " installed card")))
-                                                  (show-wait-prompt state :contestant "Challenger to choose cards to trash")
+                                                  (show-wait-prompt state :contestant "Challenger to choose cards to discard")
                                                   (resolve-ability state side (wt card n 1) card nil))
                                               (system-msg
                                                 state side
-                                                (str "uses Warroid Tracker but there are no installed cards to trash")))))}}}}})
+                                                (str "uses Warroid Tracker but there are no installed cards to discard")))))}}}}})
 
    "Will-o-the-Wisp"
    {:events
@@ -1104,13 +1104,13 @@
       :effect (req (show-wait-prompt state :challenger "Contestant to use Will-o'-the-Wisp")
                    (continue-ability state side
                      {:optional
-                      {:prompt "Trash Will-o'-the-Wisp?"
+                      {:prompt "Discard Will-o'-the-Wisp?"
                        :choices {:req #(has-subtype? % "Icebreaker")}
                        :yes-ability {:async true
                                      :prompt "Choose an characterbreaker used to break at least 1 subroutine during this run"
                                      :choices {:req #(has-subtype? % "Icebreaker")}
                                      :msg (msg "add " (:title target) " to the bottom of the Challenger's Stack")
-                                     :effect (effect (trash card)
+                                     :effect (effect (discard card)
                                                      (move :challenger target :deck)
                                                      (clear-wait-prompt :challenger)
                                                      (effect-completed eid card))}

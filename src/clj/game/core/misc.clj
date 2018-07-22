@@ -79,7 +79,7 @@
   but not including 'inactive hosting' like Personal Workshop."
   [state side]
   (if (= side :challenger)
-    (let [top-level-cards (flatten (for [t [:resource :hazard :muthereff :facedown]] (get-in @state [:challenger :rig t])))
+    (let [top-level-cards (flatten (for [t [:resource :hazard :radicle :facedown]] (get-in @state [:challenger :rig t])))
           hosted-on-character (->> (:contestant @state) :servers seq flatten (mapcat :characters) (mapcat :hosted))]
       (loop [unchecked (concat top-level-cards (filter #(= (:side %) "Challenger") hosted-on-character)) installed ()]
         (if (empty? unchecked)
@@ -212,12 +212,12 @@
 (defn remove-old-current
   "Removes the old current when a new one is played, or an agenda is stolen / scored"
   [state side current-side]
-  (when-let [current (first (get-in @state [current-side :current]))] ; trash old current
-    (if (get-in current [:special :rfg-when-trashed])
+  (when-let [current (first (get-in @state [current-side :current]))] ; discard old current
+    (if (get-in current [:special :rfg-when-discarded])
       (do (system-say state side (str (:title current) " is removed from the game."))
           (move state (other-side side) current :rfg))
-      (do (system-say state side (str (:title current) " is trashed."))
-          (trash state side current)))))
+      (do (system-say state side (str (:title current) " is discarded."))
+          (discard state side current)))))
 
 ;;; Functions for icons associated with special cards - e.g. Femme Fatale
 (defn add-icon

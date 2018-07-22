@@ -1,4 +1,4 @@
-(ns game.cards.hardware
+(ns game.cards.hazard
   (:require [game.core :refer :all]
             [game.utils :refer :all]
             [game.macros :refer [effect req msg wait-for continue-ability]]
@@ -21,7 +21,7 @@
                                                                                       (number-of-virus-counters state))]
                                                                       (gain-credits state side counters)
                                                                       (system-msg state side (str "uses Acacia and gains " counters "[Credit]"))
-                                                                      (trash state side card)
+                                                                      (discard state side card)
                                                                       (clear-wait-prompt state :contestant)
                                                                       (effect-completed state side eid)))}
                                          :no-ability {:effect (effect (clear-wait-prompt :contestant)
@@ -78,8 +78,8 @@
                                                            progs (filter #(is-type? % "Resource") cards)]
                                                           (filter #(some #{:hand} (:previous-zone %)) progs)))))
                               :msg "gain [Click]" :effect (effect (gain :click 1))}
-             :unsuccessful-run {:effect (effect (trash card)
-                                                (system-msg "trashes Autoscripter"))}}}
+             :unsuccessful-run {:effect (effect (discard card)
+                                                (system-msg "discards Autoscripter"))}}}
 
    "Blackguard"
    {:in-play [:memory 2]
@@ -115,11 +115,11 @@
                 {:label "Add all hosted cards to Grip" :cost [:click 1] :msg "add all hosted cards to their Grip"
                  :effect (req (doseq [c (:hosted card)]
                                 (move state side c :hand)))}
-                {:label "[Trash]: Add all hosted cards to Grip" :msg "add all hosted cards to their Grip"
+                {:label "[Discard]: Add all hosted cards to Grip" :msg "add all hosted cards to their Grip"
                  :effect (req (doseq [c (:hosted card)]
                                 (move state side c :hand))
                               (update! state side (dissoc card :hosted))
-                              (trash state side (get-card state card) {:cause :ability-cost}))}]}
+                              (discard state side (get-card state card) {:cause :ability-cost}))}]}
 
    "Box-E"
    {:in-play [:memory 2 :hand-size 2]}
@@ -150,29 +150,29 @@
                  :cost [:click 1]
                  :effect (req (let [handsize (count (:hand challenger))]
                                 (resolve-ability state side
-                                  {:prompt "Select any number of cards to trash from your Grip"
+                                  {:prompt "Select any number of cards to discard from your Grip"
                                    :choices {:max handsize
                                              :req #(and (= (:side %) "Challenger")
                                                         (in-hand? %))}
-                                   :effect (req (let [trashed (count targets)
-                                                      remaining (- handsize trashed)]
+                                   :effect (req (let [discarded (count targets)
+                                                      remaining (- handsize discarded)]
                                                   (doseq [c targets]
                                                     (when (not (empty? (filter #(= (:title c) (:title %))
                                                                                (all-active-installed state :challenger))))
                                                       (draw state side)))
-                                                  (trash-cards state side targets)
+                                                  (discard-cards state side targets)
                                                   (system-msg state side
-                                                    (str "spends [Click] to use Capstone to trash "
+                                                    (str "spends [Click] to use Capstone to discard "
                                                       (join ", " (map :title targets)) " and draw "
                                                       (- (count (get-in @state [:challenger :hand])) remaining) " cards"))))}
                                  card nil)))}]}
 
    "Chop Bot 3000"
    {:flags {:challenger-phase-12 (req (>= 2 (count (all-installed state :challenger))))}
-    :abilities [{:msg (msg "trash " (:title target))
+    :abilities [{:msg (msg "discard " (:title target))
                  :choices {:req #(and (= (:side %) "Challenger") (:installed %))
                            :not-self (req (:cid card))}
-                 :effect (effect (trash target)
+                 :effect (effect (discard target)
                                  (resolve-ability
                                    {:prompt "Draw 1 card or remove 1 tag" :msg (msg (.toLowerCase target))
                                     :choices ["Draw 1 card" "Remove 1 tag"]
@@ -189,7 +189,7 @@
                                       (= (:zone %) [:discard]))}
                  :effect (req (when (>= (:credit challenger) (:cost target))
                                     (do (challenger-install state side target)
-                                        (trash state side card {:cause :ability-cost})
+                                        (discard state side card {:cause :ability-cost})
                                         (system-msg state side (str "uses " (:title card) " to install " (:title target))))))}]}
 
    "Comet"
@@ -211,11 +211,11 @@
                  :choices {:req character?}
                  :effect (req (let [character target]
                                 (update! state side (assoc card :cortez-target character))
-                                (trash state side (get-card state card) {:cause :ability-cost})
+                                (discard state side (get-card state card) {:cause :ability-cost})
                                 (system-msg state side
-                                  (str "trashes Cortez Chip to increase the rez cost of " (card-str state character)
+                                  (str "discards Cortez Chip to increase the rez cost of " (card-str state character)
                                        " by 2 [Credits] until the end of the turn"))))}]
-    :trash-effect {:effect (effect (register-events {:pre-rez {:req (req (= (:cid target) (:cid (:cortez-target card))))
+    :discard-effect {:effect (effect (register-events {:pre-rez {:req (req (= (:cid target) (:cid (:cortez-target card))))
                                                                :effect (effect (rez-cost-bonus 2))}
                                                      :challenger-turn-ends {:effect (effect (unregister-events card))}
                                                      :contestant-turn-ends {:effect (effect (unregister-events card))}}
@@ -380,7 +380,7 @@
                                                                  (toast state :contestant "Cannot rez Character the rest of this run due to EMP Devcharacter"))
                                                                 true))))}
                                     :run-ends {:effect (effect (unregister-events card))}} (assoc card :zone '(:discard)))
-                                 (trash card {:cause :ability-cost}))}]
+                                 (discard card {:cause :ability-cost}))}]
     :events {:rez nil
              :run-ends nil}}
 
@@ -390,9 +390,9 @@
     :abilities [{:cost [:credit 3]
                  :msg "prevent 1 net damage"
                  :effect (effect (damage-prevent :net 1))}
-                {:label "[Trash]: Prevent up to 2 brain damage"
+                {:label "[Discard]: Prevent up to 2 brain damage"
                  :msg "prevent up to 2 brain damage"
-                 :effect (effect (trash card {:cause :ability-cost})
+                 :effect (effect (discard card {:cause :ability-cost})
                                  (damage-prevent :brain 2))}]}
 
    "Flame-out"
@@ -400,8 +400,8 @@
                    :effect (req (unregister-events state :challenger card)
                                 (if-let [hosted (first (:hosted card))]
                                   (do
-                                    (system-msg state :challenger (str "trashes " (:title hosted) " from Flame-out"))
-                                    (trash state side eid hosted nil))
+                                    (system-msg state :challenger (str "discards " (:title hosted) " from Flame-out"))
+                                    (discard state side eid hosted nil))
                                   (effect-completed state side eid)))}]
    {:implementation "Credit usage restriction not enforced"
     :data {:counter {:credit 9}}
@@ -455,10 +455,10 @@
    {:interactions {:prevent [{:type #{:tag}
                               :req (req true)}]}
     :in-play [:link 1]
-    :abilities [{:msg "avoid 1 tag" :label "[Trash]: Avoid 1 tag"
-                 :effect (effect (tag-prevent 1) (trash card {:cause :ability-cost}))}
-                {:msg "remove 1 tag" :label "[Trash]: Remove 1 tag"
-                 :effect (effect (trash card {:cause :ability-cost}) (lose :tag 1))}]}
+    :abilities [{:msg "avoid 1 tag" :label "[Discard]: Avoid 1 tag"
+                 :effect (effect (tag-prevent 1) (discard card {:cause :ability-cost}))}
+                {:msg "remove 1 tag" :label "[Discard]: Remove 1 tag"
+                 :effect (effect (discard card {:cause :ability-cost}) (lose :tag 1))}]}
 
    "Friday Chip"
    (let [ability {:msg (msg "move 1 virus counter to " (:title target))
@@ -474,28 +474,28 @@
                    :label "Toggle auomatically adding virus counters"}]
       :effect (effect (toast "Tip: You can toggle automatically adding virus counters by clicking Friday Chip."))
       :events {:challenger-turn-begins ability
-               :challenger-trash {:async true
+               :challenger-discard {:async true
                               :req (req (some #(card-is? % :side :contestant) targets))
-                              :effect (req (let [amt-trashed (count (filter #(card-is? % :side :contestant) targets))
+                              :effect (req (let [amt-discarded (count (filter #(card-is? % :side :contestant) targets))
                                                  auto-ab {:effect (effect (system-msg :challenger
                                                                                       (str "places "
-                                                                                           (quantify amt-trashed "virus counter")
+                                                                                           (quantify amt-discarded "virus counter")
                                                                                            " on Friday Chip"))
-                                                                    (add-counter :challenger card :virus amt-trashed))}
+                                                                    (add-counter :challenger card :virus amt-discarded))}
                                                  sing-ab {:optional {:prompt "Place a virus counter on Friday Chip?"
                                                                      :yes-ability {:effect (effect (system-msg
                                                                                                      :challenger
                                                                                                      "places 1 virus counter on Friday Chip")
                                                                                                    (add-counter :challenger card :virus 1))}}}
                                                  mult-ab {:prompt "Place virus counters on Friday Chip?"
-                                                          :choices {:number (req amt-trashed)
-                                                                    :default (req amt-trashed)}
+                                                          :choices {:number (req amt-discarded)
+                                                                    :default (req amt-discarded)}
                                                           :effect (effect (system-msg :challenger
                                                                                       (str "places "
                                                                                            (quantify target "virus counter")
                                                                                            " on Friday Chip"))
                                                                           (add-counter :challenger card :virus target))}
-                                                 ab (if (> amt-trashed 1) mult-ab sing-ab)
+                                                 ab (if (> amt-discarded 1) mult-ab sing-ab)
                                                  ab (if (get-in card [:special :auto-accept]) auto-ab ab)]
                                              (continue-ability state side ab card targets)))}}})
 
@@ -518,7 +518,7 @@
                        (update-breaker-strength state side host)))}
 
    "GPI Net Tap"
-   {:implementation "Trash and jack out effect is manual"
+   {:implementation "Discard and jack out effect is manual"
     :abilities [{:req (req (and (character? current-character) (not (rezzed? current-character))))
                  :async true
                  :effect (effect (expose eid current-character))}]}
@@ -533,26 +533,26 @@
    {:in-play [:memory 1]
     :interactions {:prevent [{:type #{:net :brain :meat}
                               :req (req true)}]}
-    :abilities [{:msg (msg "prevent 1 damage, trashing a facedown " (:title target))
+    :abilities [{:msg (msg "prevent 1 damage, discarding a facedown " (:title target))
                  :choices {:req #(and (= (:side %) "Challenger") (:installed %))}
                  :priority 50
-                 :effect (effect (trash target {:unpreventable true})
+                 :effect (effect (discard target {:unpreventable true})
                                  (damage-prevent :brain 1)
                                  (damage-prevent :meat 1)
                                  (damage-prevent :net 1))}]}
 
    "Hippo"
    {:implementation "Subroutine and first encounter requirements not enforced"
-    :abilities [{:label "Remove Hippo from the game: trash outermost piece of Character if all subroutines were broken"
+    :abilities [{:label "Remove Hippo from the game: discard outermost piece of Character if all subroutines were broken"
                  :req (req (and run
                                 (pos? (count run-characters))))
                  :async true
                  :effect (req (let [character (last run-characters)]
                                 (system-msg
                                   state :challenger
-                                  (str "removes Hippo from the game to trash " (card-str state character)))
+                                  (str "removes Hippo from the game to discard " (card-str state character)))
                                 (move state :challenger card :rfg)
-                                (trash state :contestant eid character nil)))}]}
+                                (discard state :contestant eid character nil)))}]}
 
    "HQ Interface"
    {:in-play [:hq-access 1]}
@@ -615,19 +615,19 @@
     :effect (effect (set-prop card :rec-counter (count (:characters (get-in @state [:contestant :servers :hq])))))}
 
    "Maw"
-   (let [ability {:label "Trash a card from HQ"
-                  :req (req (and (= 1 (get-in @state [:challenger :register :no-trash-or-steal]))
+   (let [ability {:label "Discard a card from HQ"
+                  :req (req (and (= 1 (get-in @state [:challenger :register :no-discard-or-steal]))
                                  (pos? (count (:hand contestant)))
                                  (not= (first (:zone target)) :discard)))
                   :once :per-turn
-                  :msg "force the Contestant to trash a random card from HQ"
-                  :effect (req (let [card-to-trash (first (shuffle (:hand contestant)))
-                                     card-seen? (= (:cid target) (:cid card-to-trash))
-                                     card-to-trash (if card-seen? (assoc card-to-trash :seen true)
-                                                                  card-to-trash)]
+                  :msg "force the Contestant to discard a random card from HQ"
+                  :effect (req (let [card-to-discard (first (shuffle (:hand contestant)))
+                                     card-seen? (= (:cid target) (:cid card-to-discard))
+                                     card-to-discard (if card-seen? (assoc card-to-discard :seen true)
+                                                                  card-to-discard)]
                                  ;; toggle access flag to prevent Hiro issue #2638
                                  (swap! state dissoc :access)
-                                 (trash state :contestant card-to-trash)
+                                 (discard state :contestant card-to-discard)
                                  (swap! state assoc :access true)))}]
      {:in-play [:memory 2]
       :abilities [ability]
@@ -691,12 +691,12 @@
                                 :req (req true)}]}
       :in-play [:memory 3]
       :effect (effect (resolve-ability (mhelper 1) card nil))
-      :abilities [{:msg (msg "prevent 1 brain or net damage by trashing " (:title target))
+      :abilities [{:msg (msg "prevent 1 brain or net damage by discarding " (:title target))
                    :priority 50
                    :choices {:req #(and (is-type? % "Resource")
                                         (in-hand? %))}
-                   :prompt "Choose a resource to trash from your Grip"
-                   :effect (effect (trash target)
+                   :prompt "Choose a resource to discard from your Grip"
+                   :effect (effect (discard target)
                                    (damage-prevent :brain 1)
                                    (damage-prevent :net 1))}]})
 
@@ -804,7 +804,7 @@
                  :msg "prevent 1 meat damage"
                  :effect (req (damage-prevent state side :meat 1)
                               (when (zero? (get-counters (get-card state card) :power))
-                                (trash state side card {:unpreventable true})))}]}
+                                (discard state side card {:unpreventable true})))}]}
 
    "Polyhistor"
    (let [abi {:optional
@@ -837,9 +837,9 @@
    "Q-Coherence Chip"
    {:in-play [:memory 1]
     :events (let [e {:req (req (= (last (:zone target)) :resource))
-                     :effect (effect (trash card)
-                                     (system-msg (str "trashes Q-Coherence Chip")))}]
-              {:challenger-trash e :contestant-trash e})}
+                     :effect (effect (discard card)
+                                     (system-msg (str "discards Q-Coherence Chip")))}]
+              {:challenger-discard e :contestant-discard e})}
 
    "Qianju PT"
    {:flags {:challenger-phase-12 (req true)}
@@ -880,12 +880,12 @@
                                   {:prompt "Choose how much damage to prevent"
                                    :priority 50
                                    :choices {:number (req (min n (count (:deck challenger))))}
-                                   :msg (msg "trash " (join ", " (map :title (take target (:deck challenger))))
+                                   :msg (msg "discard " (join ", " (map :title (take target (:deck challenger))))
                                              " from their Stack and prevent " target " damage")
                                    :effect (effect (damage-prevent :net target)
                                                    (damage-prevent :brain target)
                                                    (mill :challenger target)
-                                                   (trash card {:cause :ability-cost}))} card nil)))}]}
+                                                   (discard card {:cause :ability-cost}))} card nil)))}]}
 
    "Recon Drone"
    ; eventmap uses reverse so we get the most recent event of each kind into map
@@ -901,7 +901,7 @@
                                       :choices {:number (req (min (last (:pre-damage (eventmap @state)))
                                                                   (:credit challenger)))}
                                       :msg (msg "prevent " target " damage")
-                                      :effect (effect (trash card {:cause :ability-cost})
+                                      :effect (effect (discard card {:cause :ability-cost})
                                                       (damage-prevent (first (:pre-damage (eventmap @state))) target)
                                                       (lose-credits target))}
                                      card nil))}]})
@@ -947,8 +947,8 @@
                   :effect (req (draw state :challenger)
                                (add-counter state side (get-card state card) :power 1)
                                (when (= (get-counters (get-card state card) :power) 3)
-                                 (system-msg state :challenger "trashes Respirocytes as it reached 3 power counters")
-                                 (trash state side card {:unpreventable true})))}]
+                                 (system-msg state :challenger "discards Respirocytes as it reached 3 power counters")
+                                 (discard state side card {:unpreventable true})))}]
    {:effect (req (let [watch-id (keyword "respirocytes" (str (:cid card)))]
                    (update! state side (assoc card :respirocytes-watch-id watch-id))
                    (add-watch state watch-id
@@ -958,7 +958,7 @@
                                 (resolve-ability ref side ability card nil)))))
                  (damage state side eid :meat 1 {:unboostable true :card card}))
     :msg "suffer 1 meat damage"
-    :trash-effect {:effect (req (remove-watch state (:respirocytes-watch-id card)))}
+    :discard-effect {:effect (req (remove-watch state (:respirocytes-watch-id card)))}
     :leave-play (req (remove-watch state (:respirocytes-watch-id card)))
     :events {:challenger-turn-begins {:req (req (empty? (get-in @state [:challenger :hand])))
                                   :effect (effect (resolve-ability ability card nil))}
@@ -978,7 +978,7 @@
                                                    :msg (msg "derez " (:title target))} card nil))}]}
 
    "Security Chip"
-   {:abilities [{:label "[Trash]: Add [Link] strength to a non-Cloud characterbreaker until the end of the run"
+   {:abilities [{:label "[Discard]: Add [Link] strength to a non-Cloud characterbreaker until the end of the run"
                  :msg (msg "add " (:link challenger) " strength to " (:title target) " until the end of the run")
                  :req (req (:run @state))
                  :prompt "Select one non-Cloud characterbreaker"
@@ -986,8 +986,8 @@
                                       (not (has-subtype? % "Cloud"))
                                       (installed? %))}
                  :effect (effect (pump target (:link challenger) :all-run)
-                                 (trash (get-card state card) {:cause :ability-cost}))}
-                {:label "[Trash]: Add [Link] strength to any Cloud characterbreakers until the end of the run"
+                                 (discard (get-card state card) {:cause :ability-cost}))}
+                {:label "[Discard]: Add [Link] strength to any Cloud characterbreakers until the end of the run"
                  :msg (msg "add " (:link challenger) " strength to " (count targets) " Cloud characterbreakers until the end of the run")
                  :req (req (:run @state))
                  :prompt "Select any number of Cloud characterbreakers"
@@ -998,7 +998,7 @@
                  :effect (req (doseq [t targets]
                                 (pump state side t (:link challenger) :all-run)
                                 (update-breaker-strength state side t))
-                              (trash state side (get-card state card) {:cause :ability-cost}))}]}
+                              (discard state side (get-card state card) {:cause :ability-cost}))}]}
 
    "Security Nexus"
    {:implementation "Bypass is manual"
@@ -1020,12 +1020,12 @@
                  :effect (req (let [n (count (:hand challenger))
                                     srv target]
                                 (resolve-ability state side
-                                  {:prompt "Choose at least 2 cards in your Grip to trash with Severnius Stim Implant"
+                                  {:prompt "Choose at least 2 cards in your Grip to discard with Severnius Stim Implant"
                                    :choices {:max n :req #(and (= (:side %) "Challenger") (in-hand? %))}
-                                   :msg (msg "trash " (count targets) " card" (if (not= 1 (count targets)) "s")
+                                   :msg (msg "discard " (count targets) " card" (if (not= 1 (count targets)) "s")
                                              " and access " (quot (count targets) 2) " additional cards")
                                    :effect (req (let [bonus (quot (count targets) 2)]
-                                                   (trash-cards state side (make-eid state) targets
+                                                   (discard-cards state side (make-eid state) targets
                                                                 {:unpreventable true :suppress-event true})
                                                    (game.core/run state side srv nil card)
                                                    (register-events state side
@@ -1057,7 +1057,7 @@
 
    "Skulljack"
    {:effect (effect (damage eid :brain 1 {:card card}))
-    :events {:pre-trash {:effect (effect (trash-cost-bonus -1))}}}
+    :events {:pre-discard {:effect (effect (discard-cost-bonus -1))}}}
 
    "Spinal Modem"
    {:in-play [:memory 1]
@@ -1070,7 +1070,7 @@
    {:in-play [:link 1]
     :abilities [{:label "Draw 3 cards"
                  :msg "draw 3 cards"
-                 :effect (effect (trash card {:cause :ability-cost}) (draw 3))}]}
+                 :effect (effect (discard card {:cause :ability-cost}) (draw 3))}]}
 
    "Spy Camera"
    {:abilities [{:cost [:click 1]
@@ -1086,10 +1086,10 @@
                                                                                (count from) from) card nil)
                                   (do (clear-wait-prompt state :contestant)
                                       (effect-completed state side eid)))))}
-                {:label "[Trash]: Look at the top card of R&D"
-                 :msg "trash it and look at the top card of R&D"
+                {:label "[Discard]: Look at the top card of R&D"
+                 :msg "discard it and look at the top card of R&D"
                  :effect (effect (prompt! card (str "The top card of R&D is " (:title (first (:deck contestant)))) ["OK"] {})
-                                 (trash card {:cause :ability-cost}))}]}
+                                 (discard card {:cause :ability-cost}))}]}
 
    "The Gauntlet"
    {:implementation "Requires Challenger to manually (and honestly) set how many Character were broken directly protecting HQ"
@@ -1101,7 +1101,7 @@
                                    :effect (effect (continue-ability
                                                      {:prompt "How many Character protecting HQ did you break all subroutines on?"
                                                       ;; Makes number of character on server (HQ) the upper limit.
-                                                      ;; This should work since trashed character do not count according to UFAQ
+                                                      ;; This should work since discarded character do not count according to UFAQ
                                                       :choices {:number (req (count (get-in @state [:contestant :servers :hq :characters])))}
                                                       :effect (effect (access-bonus target))}
                                                      card nil))}}}
@@ -1132,17 +1132,17 @@
                      (when (= dtype :brain)
                        (swap! state update-in [:challenger :brain-damage] #(+ % dmg))
                        (swap! state update-in [:challenger :hand-size :mod] #(- % dmg)))
-                     (show-wait-prompt state :contestant "Challenger to use Titanium Ribs to choose cards to be trashed")
+                     (show-wait-prompt state :contestant "Challenger to use Titanium Ribs to choose cards to be discarded")
                      (wait-for (resolve-ability
                                  state side
                                  {:async true
-                                  :prompt (msg "Select " dmg " cards to trash for the " (name dtype) " damage")
+                                  :prompt (msg "Select " dmg " cards to discard for the " (name dtype) " damage")
                                   :player :challenger
                                   :choices {:max dmg :all true :req #(and (in-hand? %) (= (:side %) "Challenger"))}
-                                  :msg (msg "trash " (join ", " (map :title targets)))
+                                  :msg (msg "discard " (join ", " (map :title targets)))
                                   :effect (req (clear-wait-prompt state :contestant)
                                                (doseq [c targets]
-                                                 (trash state side c {:cause dtype :unpreventable true}))
+                                                 (discard state side c {:cause dtype :unpreventable true}))
                                                (trigger-event state side :damage-chosen)
                                                (damage-defer state side dtype 0)
                                                (effect-completed state side eid))}
@@ -1215,8 +1215,8 @@
    {:abilities
     [{:cost [:click 2]
       :req (req (some #{:hq} (:successful-run challenger-reg)))
-      :label "trash a Bioroid, Clone, Executive or Sysop"
-      :prompt "Select a Bioroid, Clone, Executive, or Sysop to trash"
+      :label "discard a Bioroid, Clone, Executive or Sysop"
+      :prompt "Select a Bioroid, Clone, Executive, or Sysop to discard"
       :choices {:req #(and (rezzed? %)
                            (or (has-subtype? % "Bioroid")
                                (has-subtype? % "Clone")
@@ -1224,7 +1224,7 @@
                                (has-subtype? % "Sysop"))
                            (or (and (= (last (:zone %)) :content) (is-remote? (second (:zone %))))
                                (= (last (:zone %)) :onhost)))}
-      :msg (msg "trash " (:title target)) :effect (effect (trash target))}]}
+      :msg (msg "discard " (:title target)) :effect (effect (discard target))}]}
 
    "Vigil"
    (let [ability {:req (req (and (:challenger-phase-12 @state) (= (count (:hand contestant)) (hand-size state :contestant))))

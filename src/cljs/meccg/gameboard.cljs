@@ -114,8 +114,8 @@
                 "[l]" "link"
                 "[Memory Unit]" "mu"
                 "[mu]" "mu"
-                "[Trash]" "trash"
-                "[t]" "trash"})
+                "[Discard]" "discard"
+                "[t]" "discard"})
 
 
 (defn send-command
@@ -626,8 +626,8 @@
          [:div.heading (str "Memory: " memory) [:span.anr-icon.mu]]))
      (when-let [cost (:cost card)]
        [:div.heading (str "Cost: " cost)])
-     (when-let [trash-cost (:trash card)]
-       [:div.heading (str "Trash cost: " trash-cost)])
+     (when-let [discard-cost (:discard card)]
+       [:div.heading (str "Discard cost: " discard-cost)])
      (when-let [strength (:strength card)]
        [:div.heading (str "Strength: " strength)])
      (when-let [requirement (:advancementcost card)]
@@ -1118,7 +1118,7 @@
                      (om/build identity-view player)])]
       [:div.challenger-board {:class (if is-me "me" "opponent")}
        (when-not is-me centrals)
-       (for [zone [:resource :hazard :muthereff :facedown]]
+       (for [zone [:resource :hazard :radicle :facedown]]
          [:div
           (for [c (zone (:rig player))]
             [:div.card-wrapper {:class (when (playable? c) "playable")}
@@ -1289,11 +1289,11 @@
               (when (= side :contestant)
                 (cond-button "Purge" (>= (:click me) 3) #(send-command "purge")))
               (when (= side :contestant)
-                (cond-button "Trash Muthereff" (and (pos? (:click me))
-                                                   (>= (:credit me) (- 2 (or (:trash-cost-bonus me) 0)))
+                (cond-button "Discard Radicle" (and (pos? (:click me))
+                                                   (>= (:credit me) (- 2 (or (:discard-cost-bonus me) 0)))
                                                    (or (pos? (:tagged opponent))
                                                        (pos? (:tag opponent))))
-                             #(send-command "trash-muthereff")))
+                             #(send-command "discard-radicle")))
               (cond-button "Draw" (and (pos? (:click me)) (not-empty (:deck me))) #(send-command "draw"))
               (cond-button "Gain Credit" (pos? (:click me)) #(send-command "credit"))]))]))))
 

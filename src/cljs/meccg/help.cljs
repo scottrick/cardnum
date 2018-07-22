@@ -28,7 +28,7 @@
                          "To undo to the start of the click the active player must use the /undo-click command. "]
                         [:p "There are some non-click based interactions such as using clone-chip and rezzing Character or sites which are "
                          "not supported via the undo-click function and players will need to handle manually. "
-                         " Trashed/played cards can be dragged back to hand and reinstalled if needed. If there"
+                         " Discarded/played cards can be dragged back to hand and reinstalled if needed. If there"
                           " are lingering/hard to dismiss prompts, try using " [:code "/close-prompt"] " command as a last resort."])}
             {:id "breakcharacter"
              :title "How do I break Character and fire Character subroutines?"
@@ -108,7 +108,7 @@
                        "happy to play with a beginner should join after a while."]}
             {:id "finddecks"
              :title "Where can I find some good starting decks?"
-             :content (list [:p [:a {:href "https://meccgdb.com/"} "MECCGDB"] " is a good muthereff for finding decks of all kinds. "
+             :content (list [:p [:a {:href "https://meccgdb.com/"} "MECCGDB"] " is a good resource for finding decks of all kinds. "
                        "For finding decks consisting of core set only try setting some filters in "
                        [:a {:href "http://meccgdb.com/en/decklists/search#allowed_packs"} "the decklist search"] "."]
                             [:p "Once you find a deck you like, export it in Cardnum.net's format (or plain text format if the "

@@ -273,8 +273,8 @@
 (defn hazard? [card]
   (is-type? card "Hazard"))
 
-(defn muthereff? [card]
-  (is-type? card "Muthereff"))
+(defn radicle? [card]
+  (is-type? card "Radicle"))
 
 (defn rezzed? [card]
   (:rezzed card))
@@ -297,11 +297,11 @@
            (installed? card)
            (not (facedown? card)))))
 
-(defn untrashable-while-rezzed? [card]
-  (and (card-flag? card :untrashable-while-rezzed true) (rezzed? card)))
+(defn undiscardable-while-rezzed? [card]
+  (and (card-flag? card :undiscardable-while-rezzed true) (rezzed? card)))
 
-(defn untrashable-while-muthereffs? [card]
-  (and (card-flag? card :untrashable-while-muthereffs true) (installed? card)))
+(defn undiscardable-while-radicles? [card]
+  (and (card-flag? card :undiscardable-while-radicles true) (installed? card)))
 
 (defn install-locked?
   "Checks if installing is locked"
@@ -352,7 +352,7 @@
        :turn-flag false
        ;; Uniqueness
        :unique (or ignore-unique
-                   (reason-toast (str "Cannot rez a second copy of " title " since it is unique. Please trash the other"
+                   (reason-toast (str "Cannot rez a second copy of " title " since it is unique. Please discard the other"
                                       " copy first")))
        ;; Rez requirement
        :req (reason-toast (str "Rez requirements for " title " are not fulfilled"))))))

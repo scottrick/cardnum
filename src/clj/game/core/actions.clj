@@ -4,7 +4,7 @@
 
 (declare available-mu card-str can-rez? can-advance? contestant-install effect-as-handler enforce-msg gain-agenda-point get-remote-names
          get-run-characters jack-out move name-zone play-instant purge resolve-select run has-subtype?
-         challenger-install trash update-breaker-strength update-character-in-server update-run-character win can-run?
+         challenger-install discard update-breaker-strength update-character-in-server update-run-character win can-run?
          can-run-server? can-score? say play-sfx base-mod-size free-mu)
 
 ;;; Neutral actions
@@ -14,7 +14,7 @@
   (when-let [card (get-card state card)]
     (case (:type card)
       ("Event" "Operation") (play-instant state side card {:extra-cost [:click 1]})
-      ("Hazard" "Muthereff" "Resource") (challenger-install state side (make-eid state) card {:extra-cost [:click 1]})
+      ("Hazard" "Radicle" "Resource") (challenger-install state side (make-eid state) card {:extra-cost [:click 1]})
       ("Character" "Region" "Site" "Agenda") (contestant-install state side card server {:extra-cost [:click 1] :action :contestant-click-install}))
     (trigger-event state side :play card)))
 
@@ -100,7 +100,7 @@
         src (name-zone (:side c) (:zone c))
         from-str (when-not (nil? src)
                    (if (= :content last-zone)
-                     (str " in " src) ; this string matches the message when a card is trashed via (trash)
+                     (str " in " src) ; this string matches the message when a card is discarded via (discard)
                      (str " from their " src)))
         label (if (and (not= last-zone :play-area)
                        (not (and (= (:side c) "Challenger")
@@ -121,8 +121,8 @@
                    (same-side? side (:side card))))
       (case server
         ("Heap" "Archives")
-        (let [action-str (if (= (first (:zone c)) :hand) "discards " "trashes ")]
-          (trash state s c {:unpreventable true})
+        (let [action-str (if (= (first (:zone c)) :hand) "discards " "discards ")]
+          (discard state s c {:unpreventable true})
           (system-msg state side (str action-str label from-str)))
         ("Grip" "HQ")
         (do (move state s (dissoc c :seen :rezzed) :hand {:force true})
@@ -310,21 +310,21 @@
            (resolve-ability state side eid sub-effect card (assoc (:data sub) :targets targets))))))))
 
 ;;; Contestant actions
-(defn trash-muthereff
-  "Click to trash a muthereff."
+(defn discard-radicle
+  "Click to discard a radicle."
   [state side args]
-  (let [trash-cost (max 0 (- 2 (get-in @state [:contestant :trash-cost-bonus] 0)))]
-    (when-let [cost-str (pay state side nil :click 1 :credit trash-cost {:action :contestant-trash-muthereff})]
+  (let [discard-cost (max 0 (- 2 (get-in @state [:contestant :discard-cost-bonus] 0)))]
+    (when-let [cost-str (pay state side nil :click 1 :credit discard-cost {:action :contestant-discard-radicle})]
       (resolve-ability state side
-                       {:prompt  "Choose a muthereff to trash"
+                       {:prompt  "Choose a radicle to discard"
                         :choices {:req (fn [card]
-                                         (if (and (seq (filter (fn [c] (untrashable-while-muthereffs? c)) (all-active-installed state :challenger)))
-                                                  (> (count (filter #(is-type? % "Muthereff") (all-active-installed state :challenger))) 1))
-                                           (and (is-type? card "Muthereff") (not (untrashable-while-muthereffs? card)))
-                                           (is-type? card "Muthereff")))}
-                        :cancel-effect (effect (gain :credit trash-cost :click 1))
-                        :effect  (effect (trash target)
-                                         (system-msg (str (build-spend-msg cost-str "trash")
+                                         (if (and (seq (filter (fn [c] (undiscardable-while-radicles? c)) (all-active-installed state :challenger)))
+                                                  (> (count (filter #(is-type? % "Radicle") (all-active-installed state :challenger))) 1))
+                                           (and (is-type? card "Radicle") (not (undiscardable-while-radicles? card)))
+                                           (is-type? card "Radicle")))}
+                        :cancel-effect (effect (gain :credit discard-cost :click 1))
+                        :effect  (effect (discard target)
+                                         (system-msg (str (build-spend-msg cost-str "discard")
                                                           (:title target))))} nil nil))))
 
 (defn do-purge
@@ -457,11 +457,11 @@
            state :contestant eid :agenda-scored
            {:first-ability {:effect (req (when-let [current (first (get-in @state [:challenger :current]))]
                                            ;; TODO: Make this use remove-old-current
-                                           (system-say state side (str (:title current) " is trashed."))
+                                           (system-say state side (str (:title current) " is discarded."))
                                            ; This is to handle Employee Strike with damage IDs #2688
                                            (when (:disable-id (card-def current))
                                              (swap! state assoc-in [:contestant :disable-id] true))
-                                           (trash state side current)))}
+                                           (discard state side current)))}
             :card-ability (card-as-handler c)
             :after-active-player {:effect (req (let [c (get-card state c)
                                                      points (or (get-agenda-points state :contestant c) points)]

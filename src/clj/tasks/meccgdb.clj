@@ -1,4 +1,4 @@
-(ns tasks.nrdb
+(ns tasks.meccgdb
   "MECCG import tasks"
   (:require [org.httpkit.client :as http]
             [web.db :refer [db] :as webdb]
@@ -132,7 +132,7 @@
        :data
        (map (partial translate-fields fields))))
 
-(defn download-nrdb-data
+(defn download-meccgdb-data
   "Translate data from NRDB"
   [path fields]
   (println "Downloading" path)

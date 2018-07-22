@@ -1,4 +1,4 @@
-(ns game.cards.ice
+(ns game.cards.character
   (:require [game.core :refer :all]
             [game.utils :refer :all]
             [game.macros :refer [effect req msg wait-for continue-ability]]
@@ -11,7 +11,7 @@
 
 ;;; Challenger abilites for breaking subs
 (defn challenger-pay-or-break
-  "Ability to break a subroutine by spending a muthereff (Bioroids, Negotiator, etc)"
+  "Ability to break a subroutine by spending a radicle (Bioroids, Negotiator, etc)"
   [cost subs label]
   (let [cost-str (build-cost-str [cost])
         subs-str (quantify subs "subroutine")]
@@ -20,12 +20,12 @@
      :effect (req (system-msg state :challenger (str "spends " cost-str " to " label " " subs-str " on " (:title card))))}))
 
 (defn challenger-break
-  "Ability to break a subroutine by spending a muthereff (Bioroids, Negotiator, etc)"
+  "Ability to break a subroutine by spending a radicle (Bioroids, Negotiator, etc)"
   [cost subs]
   (challenger-pay-or-break cost subs "break"))
 
 (defn challenger-pay
-  "Ability to pay to avoid a subroutine by spending a muthereff (Popup Window, Turing, etc)"
+  "Ability to pay to avoid a subroutine by spending a radicle (Popup Window, Turing, etc)"
   [cost subs]
   (challenger-pay-or-break cost subs "pay for"))
 
@@ -232,18 +232,18 @@
                   (do-net-damage 1)]}
 
    "Aimor"
-   {:subroutines [{:label "Trash the top 3 cards of the Stack. Trash Aimor."
+   {:subroutines [{:label "Discard the top 3 cards of the Stack. Discard Aimor."
                    :effect (req (when (not-empty (:deck challenger))
                                   (system-msg state :contestant
-                                              (str "uses Aimor to trash "
+                                              (str "uses Aimor to discard "
                                                    (join ", " (map :title (take 3 (:deck challenger))))
                                                    " from the Challenger's Stack"))
                                   (mill state :contestant :challenger 3))
                                 (when current-character
                                   (no-action state :contestant nil)
                                   (continue state :challenger nil))
-                                (trash state side card)
-                                (system-msg state side (str "trashes Aimor")))}]}
+                                (discard state side card)
+                                (system-msg state side (str "discards Aimor")))}]}
 
    "Anansi"
    (let [contestant-draw {:optional {:prompt "Draw 1 card?"
@@ -325,11 +325,11 @@
    "Archer"
    {:additional-cost [:forfeit]
     :subroutines [(gain-credits-sub 2)
-                  trash-resource
+                  discard-resource
                   end-the-run]}
 
    "Architect"
-   {:flags {:untrashable-while-rezzed true}
+   {:flags {:undiscardable-while-rezzed true}
     :subroutines [{:label "Look at the top 5 cards of R&D"
                    :prompt "Choose a card to install"
                    :priority true
@@ -359,7 +359,7 @@
 
    "Assassin"
    {:subroutines [(trace-ability 5 (do-net-damage 3))
-                  (trace-ability 4 trash-resource)]}
+                  (trace-ability 4 discard-resource)]}
 
    "Asteroid Belt"
    (space-character end-the-run)
@@ -397,19 +397,19 @@
    {:subroutines [end-the-run]}
 
    "Bloodletter"
-   {:subroutines [{:label "Challenger trashes 1 resource or top 2 cards of their Stack"
+   {:subroutines [{:label "Challenger discards 1 resource or top 2 cards of their Stack"
                    :effect (req (if (empty? (filter #(is-type? % "Resource") (all-active-installed state :challenger)))
                                    (do (mill state :challenger 2)
-                                       (system-msg state :challenger (str "trashes the top 2 cards of their Stack")))
+                                       (system-msg state :challenger (str "discards the top 2 cards of their Stack")))
                                    (do (show-wait-prompt state :contestant "Challenger to choose an option for Bloodletter")
                                        (resolve-ability state :challenger
-                                         {:prompt "Trash 1 resource or trash top 2 cards of the Stack?"
-                                          :choices ["Trash 1 resource" "Trash top 2 of Stack"]
-                                          :effect (req (if (and (= target "Trash top 2 of Stack") (pos? (count (:deck challenger))))
+                                         {:prompt "Discard 1 resource or discard top 2 cards of the Stack?"
+                                          :choices ["Discard 1 resource" "Discard top 2 of Stack"]
+                                          :effect (req (if (and (= target "Discard top 2 of Stack") (pos? (count (:deck challenger))))
                                                          (do (mill state :challenger 2)
-                                                             (system-msg state :challenger (str "trashes the top 2 cards of their Stack"))
+                                                             (system-msg state :challenger (str "discards the top 2 cards of their Stack"))
                                                              (clear-wait-prompt state :contestant))
-                                                         (resolve-ability state :challenger trash-resource card nil)))}
+                                                         (resolve-ability state :challenger discard-resource card nil)))}
                                         card nil))))}]}
 
    "Bloom"
@@ -479,19 +479,19 @@
     :abilities [{:msg "gain 2 [Credits] if there is an installed AI"
                  :req (req (some #(has-subtype? % "AI") (all-active-installed state :challenger)))
                  :effect (effect (gain-credits 2))}]
-    :subroutines [(assoc trash-resource :player :challenger
-                                       :msg "force the Challenger to trash 1 resource"
-                                       :label "The Challenger trashes 1 resource")
+    :subroutines [(assoc discard-resource :player :challenger
+                                       :msg "force the Challenger to discard 1 resource"
+                                       :label "The Challenger discards 1 resource")
                   {:msg "gain 2 [Credits] and end the run"
                    :effect (effect (gain-credits 2)
                                    (end-run))}]}
 
 
    "Burke Bugs"
-   {:subroutines [(trace-ability 0 (assoc trash-resource :not-distinct true
+   {:subroutines [(trace-ability 0 (assoc discard-resource :not-distinct true
                                                         :player :challenger
-                                                        :msg "force the Challenger to trash a resource"
-                                                        :label "Force the Challenger to trash a resource"))]}
+                                                        :msg "force the Challenger to discard a resource"
+                                                        :label "Force the Challenger to discard a resource"))]}
 
    "Caduceus"
    {:subroutines [(trace-ability 3 (gain-credits-sub 3))
@@ -543,10 +543,10 @@
       :subroutines [end-the-run]})
 
    "Chiyashi"
-   {:implementation "Trash effect when using an AI to break is activated manually"
-    :abilities [{:label "Trash the top 2 cards of the Challenger's Stack"
+   {:implementation "Discard effect when using an AI to break is activated manually"
+    :abilities [{:label "Discard the top 2 cards of the Challenger's Stack"
                  :req (req (some #(has-subtype? % "AI") (all-active-installed state :challenger)))
-                 :msg (msg (str "trash " (join ", " (map :title (take 2 (:deck challenger)))) " from the Challenger's Stack"))
+                 :msg (msg (str "discard " (join ", " (map :title (take 2 (:deck challenger)))) " from the Challenger's Stack"))
                  :effect (effect (mill :contestant :challenger 2))}]
     :subroutines [(do-net-damage 2)
                   end-the-run]}
@@ -595,7 +595,7 @@
                                            (end-run))})]}
 
    "Cobra"
-   {:subroutines [trash-resource (do-net-damage 2)]}
+   {:subroutines [discard-resource (do-net-damage 2)]}
 
    "Colossus"
    {:advanceable :always
@@ -603,27 +603,27 @@
                    :async true
                    :msg (msg "give the Challenger " (if (wonder-sub card 3) "2 tags" "1 tag"))
                    :effect (effect (tag-challenger :challenger eid (if (wonder-sub card 3) 2 1)))}
-                  {:label "Trash 1 resource (Trash 1 resource and 1 muthereff)"
+                  {:label "Discard 1 resource (Discard 1 resource and 1 radicle)"
                    :async true
-                   :msg (msg "trash 1 resource" (when (wonder-sub card 3) " and 1 muthereff"))
-                   :effect (req (wait-for (resolve-ability state side trash-resource card nil)
+                   :msg (msg "discard 1 resource" (when (wonder-sub card 3) " and 1 radicle"))
+                   :effect (req (wait-for (resolve-ability state side discard-resource card nil)
                                           (if (wonder-sub card 3)
                                             (continue-ability
                                               state side
-                                              {:prompt "Choose a muthereff to trash"
-                                               :msg (msg "trash " (:title target))
+                                              {:prompt "Choose a radicle to discard"
+                                               :msg (msg "discard " (:title target))
                                                :choices {:req #(and (installed? %)
-                                                                    (is-type? % "Muthereff"))}
+                                                                    (is-type? % "Radicle"))}
                                                :cancel-effect (req (effect-completed state side eid))
-                                               :effect (effect (trash target {:cause :subroutine}))}
+                                               :effect (effect (discard target {:cause :subroutine}))}
                                               card nil)
                                             (effect-completed state side eid))))}]
     :strength-bonus advance-counters}
 
    "Conundrum"
-   {:subroutines [(assoc trash-resource :player :challenger
-                                       :msg "force the Challenger to trash 1 resource"
-                                       :label "The Challenger trashes 1 resource")
+   {:subroutines [(assoc discard-resource :player :challenger
+                                       :msg "force the Challenger to discard 1 resource"
+                                       :label "The Challenger discards 1 resource")
                   {:msg "force the Challenger to lose 1 [Click] if able"
                    :effect challenger-loses-click}
                   end-the-run]
@@ -653,15 +653,15 @@
     :events (let [cw {:req (req (and (not= (:cid card) (:cid target))
                                      (= (card->server state card) (card->server state target))))
                       :effect (effect (update-character-strength card))}]
-              {:contestant-install cw :trash cw :card-moved cw})}
+              {:contestant-install cw :discard cw :card-moved cw})}
 
    "Data Hound"
-   (letfn [(dh-trash [cards]
-             {:prompt "Choose a card to trash"
+   (letfn [(dh-discard [cards]
+             {:prompt "Choose a card to discard"
               :choices cards
               :async true
-              :msg (msg "trash " (:title target))
-              :effect (req (do (trash state side target {:unpreventable true})
+              :msg (msg "discard " (:title target))
+              :effect (req (do (discard state side target {:unpreventable true})
                                (continue-ability
                                  state side
                                  (reorder-choice
@@ -678,9 +678,9 @@
                                                      (system-msg state :contestant
                                                                  (str "looks at the top " c " cards of Stack"))
                                                      (if (< 1 c)
-                                                       (continue-ability state side (dh-trash from) card nil)
-                                                       (do (system-msg state :contestant (str "trashes " (:title (first from))))
-                                                           (trash state side (first from) {:unpreventable true})
+                                                       (continue-ability state side (dh-discard from) card nil)
+                                                       (do (system-msg state :contestant (str "discards " (:title (first from))))
+                                                           (discard state side (first from) {:unpreventable true})
                                                            (clear-wait-prompt state :challenger)
                                                            (effect-completed state side eid)))))})]})
 
@@ -706,7 +706,7 @@
                                 (when current-character
                                   (no-action state side nil)
                                   (continue state side nil))
-                                (trash state side card))}]}
+                                (discard state side card))}]}
 
    "Datapike"
    {:subroutines [{:msg "force the Challenger to pay 2 [Credits] if able"
@@ -770,16 +770,16 @@
 
    "Enforcer 1.0"
    {:additional-cost [:forfeit]
-    :subroutines [trash-resource
+    :subroutines [discard-resource
                   (do-brain-damage 1)
-                  {:label "Trash a console"
-                   :prompt "Select a console to trash"
+                  {:label "Discard a console"
+                   :prompt "Select a console to discard"
                    :choices {:req #(has-subtype? % "Console")}
-                   :msg (msg "trash " (:title target))
-                   :effect (effect (trash target))}
-                  {:msg "trash all virtual muthereffs"
+                   :msg (msg "discard " (:title target))
+                   :effect (effect (discard target))}
+                  {:msg "discard all virtual radicles"
                    :effect (req (doseq [c (filter #(has-subtype? % "Virtual") (all-active-installed state :challenger))]
-                                  (trash state side c)))}]
+                                  (discard state side c)))}]
     :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Envelope"
@@ -809,40 +809,40 @@
     :challenger-abilities [(challenger-break [:credit 4] 1)]}
 
    "Fairchild 1.0"
-   {:subroutines [{:label "Force the Challenger to pay 1 [Credits] or trash an installed card"
-                   :msg "force the Challenger to pay 1 [Credits] or trash an installed card"
+   {:subroutines [{:label "Force the Challenger to pay 1 [Credits] or discard an installed card"
+                   :msg "force the Challenger to pay 1 [Credits] or discard an installed card"
                    :player :challenger
                    :prompt "Choose one"
-                   :choices ["Pay 1 [Credits]" "Trash an installed card"]
+                   :choices ["Pay 1 [Credits]" "Discard an installed card"]
                    :effect (req (if (= target "Pay 1 [Credits]")
                                   (do (pay state side card :credit 1)
                                       (system-msg state side "pays 1 [Credits]"))
-                                  (resolve-ability state :challenger trash-installed card nil)))}]
+                                  (resolve-ability state :challenger discard-installed card nil)))}]
     :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Fairchild 2.0"
-   {:subroutines [{:label "Force the Challenger to pay 2 [Credits] or trash an installed card"
-                   :msg "force the Challenger to pay 2 [Credits] or trash an installed card"
+   {:subroutines [{:label "Force the Challenger to pay 2 [Credits] or discard an installed card"
+                   :msg "force the Challenger to pay 2 [Credits] or discard an installed card"
                    :player :challenger
                    :prompt "Choose one"
-                   :choices ["Pay 2 [Credits]" "Trash an installed card"]
+                   :choices ["Pay 2 [Credits]" "Discard an installed card"]
                    :effect (req (if (= target "Pay 2 [Credits]")
                                   (do (pay state side card :credit 2)
                                       (system-msg state side "pays 2 [Credits]"))
-                                  (resolve-ability state :challenger trash-installed card nil)))}
+                                  (resolve-ability state :challenger discard-installed card nil)))}
                   (do-brain-damage 1)]
     :challenger-abilities [(challenger-break [:click 2] 2)]}
 
    "Fairchild 3.0"
-   {:subroutines [{:label "Force the Challenger to pay 3 [Credits] or trash an installed card"
-                   :msg "force the Challenger to pay 3 [Credits] or trash an installed card"
+   {:subroutines [{:label "Force the Challenger to pay 3 [Credits] or discard an installed card"
+                   :msg "force the Challenger to pay 3 [Credits] or discard an installed card"
                    :player :challenger
                    :prompt "Choose one"
-                   :choices ["Pay 3 [Credits]" "Trash an installed card"]
+                   :choices ["Pay 3 [Credits]" "Discard an installed card"]
                    :effect (req (if (= target "Pay 3 [Credits]")
                                   (do (pay state side card :credit 3)
                                       (system-msg state side "pays 3 [Credits]"))
-                                  (resolve-ability state :challenger trash-installed card nil)))}
+                                  (resolve-ability state :challenger discard-installed card nil)))}
                   {:label "Do 1 brain damage or end the run"
                    :prompt "Choose one"
                    :choices ["Do 1 brain damage" "End the run"]
@@ -863,16 +863,16 @@
     :strength-bonus advance-counters}
 
    "Flare"
-   {:subroutines [(trace-ability 6 {:label "Trash 1 hazard, do 2 meat damage, and end the run"
-                                    :msg "trash 1 hazard, do 2 meat damage, and end the run"
+   {:subroutines [(trace-ability 6 {:label "Discard 1 hazard, do 2 meat damage, and end the run"
+                                    :msg "discard 1 hazard, do 2 meat damage, and end the run"
                                     :async true
                                     :effect (effect (continue-ability
-                                                     {:prompt "Select a piece of hazard to trash"
-                                                      :label "Trash a piece of hazard"
+                                                     {:prompt "Select a piece of hazard to discard"
+                                                      :label "Discard a piece of hazard"
                                                       :choices {:req #(is-type? % "Hazard")}
-                                                      :msg (msg "trash " (:title target))
+                                                      :msg (msg "discard " (:title target))
                                                       :effect (req (wait-for
-                                                                     (trash state side target {:cause :subroutine})
+                                                                     (discard state side target {:cause :subroutine})
                                                                      (do (damage state side eid :meat 2 {:unpreventable true
                                                                                                          :card card})
                                                                          (end-run state side))))
@@ -894,7 +894,7 @@
 
    "Grim"
    {:effect take-bad-pub
-    :subroutines [trash-resource]}
+    :subroutines [discard-resource]}
 
    "Guard"
    {:implementation "Prevent bypass is manual"
@@ -905,7 +905,7 @@
     :strength-bonus (req (if (= (second (:zone card)) :rd) 3 0))}
 
    "Gyri Labyrinth"
-   {:implementation "Hand size is not restored if trashed or derezzed after firing"
+   {:implementation "Hand size is not restored if discarded or derezzed after firing"
     :subroutines [{:req (req (:run @state))
                    :label "Reduce Challenger's maximum hand size by 2 until start of next Contestant turn"
                    :msg "reduce the Challenger's maximum hand size by 2 until the start of the next Contestant turn"
@@ -942,9 +942,9 @@
                                        :choices {:max delta
                                                  :req #(in-hand? %)}
                                        :effect (req (doseq [c targets]
-                                                      (trash state :challenger c))
+                                                      (discard state :challenger c))
                                                     (system-msg state :challenger
-                                                                (str "trashes " (join ", " (map :title targets)))))}
+                                                                (str "discards " (join ", " (map :title targets)))))}
                                       card nil))))}]}
 
    "Himitsu-Bako"
@@ -995,12 +995,12 @@
    {:subroutines [(trace-ability 4 {:label "Challenger cannot access any cards this run"
                                     :msg "stop the Challenger from accessing any cards this run"
                                     :effect (effect (prevent-access))})
-                  {:label "Trash an characterbreaker"
-                   :prompt "Choose an characterbreaker to trash"
-                   :msg (msg "trash " (:title target))
+                  {:label "Discard an characterbreaker"
+                   :prompt "Choose an characterbreaker to discard"
+                   :msg (msg "discard " (:title target))
                    :choices {:req #(and (installed? %)
                                         (has? % :subtype "Icebreaker"))}
-                   :effect (effect (trash target {:cause :subroutine})
+                   :effect (effect (discard target {:cause :subroutine})
                                    (clear-wait-prompt :challenger))}]}
 
    "Hortum"
@@ -1063,7 +1063,7 @@
                                                                                       :init-data true})
                                                         (trigger-event state side :contestant-install newcharacter)))} card nil)))}]
       :events {:run-ends {:req (req (:howler-target card))
-                          :effect (effect (trash card {:cause :self-trash})
+                          :effect (effect (discard card {:cause :self-discard})
                                           (derez (get-card state (:howler-target card))))}}})
 
    "Hudson 1.0"
@@ -1080,7 +1080,7 @@
     :strength-bonus advance-counters}
 
    "Ichi 1.0"
-   {:subroutines [trash-resource
+   {:subroutines [discard-resource
                   (trace-ability 1 {:label "Give the Challenger 1 tag and do 1 brain damage"
                                     :msg "give the Challenger 1 tag and do 1 brain damage"
                                     :async true
@@ -1089,7 +1089,7 @@
     :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Ichi 2.0"
-   {:subroutines [trash-resource
+   {:subroutines [discard-resource
                   (trace-ability 3 {:label "Give the Challenger 1 tag and do 1 brain damage"
                                     :msg "give the Challenger 1 tag and do 1 brain damage"
                                     :async true
@@ -1110,7 +1110,7 @@
     :abilities [{:label "Gain subroutines"
                  :msg (msg "gain " (:tag challenger 0) " subroutines")}
                 (tag-trace 1)]
-    :subroutines [trash-installed]}
+    :subroutines [discard-installed]}
 
    "IP Block"
    {:abilities [(assoc (give-tags 1)
@@ -1141,11 +1141,11 @@
    {:expose {:msg "do 2 net damage"
              :async true
              :effect (effect (damage eid :net 2 {:card card}))}
-    :subroutines [(assoc trash-installed :effect (req (trash state side target {:cause :subroutine})
+    :subroutines [(assoc discard-installed :effect (req (discard state side target {:cause :subroutine})
                                                       (when current-character
                                                         (no-action state side nil)
                                                         (continue state side nil))
-                                                      (trash state side card)))]}
+                                                      (discard state side card)))]}
 
    "Janus 1.0"
    {:subroutines [(do-brain-damage 1)]
@@ -1187,35 +1187,35 @@
 
    "Kamali 1.0"
    (letfn [(better-name [kind] (if (= "hazard" kind) "piece of hazard" kind))
-           (challenger-trash [kind]
-             {:prompt (str "Select an installed " (better-name kind) " to trash")
-              :label (str "Trash an installed " (better-name kind))
-              :msg (msg "trash " (:title target))
+           (challenger-discard [kind]
+             {:prompt (str "Select an installed " (better-name kind) " to discard")
+              :label (str "Discard an installed " (better-name kind))
+              :msg (msg "discard " (:title target))
               :async true
               :choices {:req #(and (installed? %)
                                    (is-type? % (capitalize kind)))}
-              :cancel-effect (effect (system-msg (str "fails to trash an installed " (better-name kind)))
+              :cancel-effect (effect (system-msg (str "fails to discard an installed " (better-name kind)))
                                      (effect-completed eid))
-              :effect (effect (trash eid target {:cause :subroutine}))})
+              :effect (effect (discard eid target {:cause :subroutine}))})
            (sub-map [kind]
              {:player :challenger
               :async true
               :prompt "Choose one"
-              :choices ["Take 1 brain damage" (str "Trash an installed " (better-name kind))]
+              :choices ["Take 1 brain damage" (str "Discard an installed " (better-name kind))]
               :effect (req (if (= target "Take 1 brain damage")
                              (do (system-msg state :contestant "uses Kamali 1.0 to give the Challenger 1 brain damage")
                                  (damage state :challenger eid :brain 1 {:card card}))
-                             (continue-ability state :challenger (challenger-trash kind) card nil)))})
-           (brain-trash [kind]
-             {:label (str "Force the Challenger to take 1 brain damage or trash an installed " (better-name kind))
-              :msg (str "force the Challenger to take 1 brain damage or trash an installed " (better-name kind))
+                             (continue-ability state :challenger (challenger-discard kind) card nil)))})
+           (brain-discard [kind]
+             {:label (str "Force the Challenger to take 1 brain damage or discard an installed " (better-name kind))
+              :msg (str "force the Challenger to take 1 brain damage or discard an installed " (better-name kind))
               :async true
               :effect (req (show-wait-prompt state :contestant "Challenger to decide on Kamali 1.0 action")
                            (wait-for (resolve-ability state side (sub-map kind) card nil)
                                      (clear-wait-prompt state :contestant)))})]
-     {:subroutines [(brain-trash "muthereff")
-                    (brain-trash "hazard")
-                    (brain-trash "resource")]
+     {:subroutines [(brain-discard "radicle")
+                    (brain-discard "hazard")
+                    (brain-discard "resource")]
       :challenger-abilities [(challenger-break [:click 1] 1)]})
 
    "Kitsune"
@@ -1223,7 +1223,7 @@
                    :choices {:req in-hand?}
                    :label "Force the Challenger to access a card in HQ"
                    :msg (msg "force the Challenger to access " (:title target))
-                   :effect (req (trash state side card)
+                   :effect (req (discard state side card)
                                 (wait-for (trigger-event-sync state side :pre-access :hq)
                                           (wait-for (access-card state side target)
                                                     (let [from-hq (dec (access-count state side :hq-access))]
@@ -1243,17 +1243,17 @@
     :subroutines [(do-net-damage 1)]}
 
    "Lab Dog"
-   {:subroutines [(assoc trash-hazard :label "Force the Challenger to trash an installed piece of hazard"
+   {:subroutines [(assoc discard-hazard :label "Force the Challenger to discard an installed piece of hazard"
                                         :player :challenger
-                                        :msg (msg "force the Challenger to trash " (:title target))
-                                        :effect (req (trash state side target)
+                                        :msg (msg "force the Challenger to discard " (:title target))
+                                        :effect (req (discard state side target)
                                                      (when current-character
                                                        (no-action state side nil)
                                                        (continue state side nil))
-                                                     (trash state side card)))]}
+                                                     (discard state side card)))]}
 
    "Lancelot"
-   (grail-character trash-resource)
+   (grail-character discard-resource)
 
    "Little Engine"
    {:subroutines [end-the-run
@@ -1291,18 +1291,18 @@
     :flags {:cannot-lower-strength true}}
 
    "Lycan"
-   (morph-character "Sentry" "Code Gate" trash-resource)
+   (morph-character "Sentry" "Code Gate" discard-resource)
 
    "Macrophage"
    {:subroutines [(trace-ability 4 {:label "Purge virus counters"
                                     :msg "purge virus counters"
                                     :effect (effect (purge))})
-                  (trace-ability 3 {:label "Trash a virus"
-                                    :prompt "Choose a virus to trash"
-                                    :msg (msg "trash " (:title target))
+                  (trace-ability 3 {:label "Discard a virus"
+                                    :prompt "Choose a virus to discard"
+                                    :msg (msg "discard " (:title target))
                                     :choices {:req #(and (installed? %)
                                                          (has? % :subtype "Virus"))}
-                                    :effect (effect (trash target {:cause :subroutine})
+                                    :effect (effect (discard target {:cause :subroutine})
                                                     (clear-wait-prompt :challenger))})
                   (trace-ability 2 {:label "Remove a virus in the Heap from the game"
                                     :prompt "Choose a virus in the Heap to remove from the game"
@@ -1348,7 +1348,7 @@
                    :msg (msg "give the next Character encountered \"[Subroutine] End the run\" after all its other subroutines for the remainder of the run")}]}
 
    "Markus 1.0"
-   {:subroutines [trash-installed end-the-run]
+   {:subroutines [discard-installed end-the-run]
     :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Matrix Analyzer"
@@ -1425,12 +1425,12 @@
                            :async true
                            :player :contestant
                            :effect (req (wait-for (damage state :contestant :net 2 {:card card})
-                                                  (trash state :contestant eid card nil)))}
+                                                  (discard state :contestant eid card nil)))}
                           {:label "do 1 net damage"
                            :async true
                            :player :contestant
                            :effect (req (wait-for (damage state :contestant :net 1 {:card card})
-                                                  (trash state :contestant eid card nil)))})]}
+                                                  (discard state :contestant eid card nil)))})]}
 
    "Mind Game"
    {:subroutines [(do-psi {:label "Redirect the run to another server"
@@ -1482,14 +1482,14 @@
                                             card nil)))}]}
 
    "Mlinzi"
-   (letfn [(net-or-trash [net-dmg mill-cnt]
+   (letfn [(net-or-discard [net-dmg mill-cnt]
              {:label (str "Do " net-dmg " net damage")
               :effect (req (show-wait-prompt state :contestant "Challenger to choose an option for Mlinzi")
                            (resolve-ability
                              state :challenger
-                             {:prompt "Take net damage or trash cards from the Stack?"
+                             {:prompt "Take net damage or discard cards from the Stack?"
                               :choices [(str "Take " net-dmg " net damage")
-                                        (str "Trash the top " mill-cnt " cards of the Stack")]
+                                        (str "Discard the top " mill-cnt " cards of the Stack")]
                               :effect (req (if (.startsWith target "Take")
                                              (do (system-msg state :contestant
                                                              (str "uses Mlinzi to do "
@@ -1497,15 +1497,15 @@
                                                  (clear-wait-prompt state :contestant)
                                                  (damage state :challenger eid :net net-dmg {:card card}))
                                              (do (system-msg state :contestant
-                                                             (str "uses Mlinzi to trash "
+                                                             (str "uses Mlinzi to discard "
                                                                   (join ", " (map :title (take mill-cnt (:deck challenger))))
                                                                   " from the Challenger's Stack"))
                                                  (clear-wait-prompt state :contestant)
                                                  (mill state :challenger mill-cnt))))}
                              card nil))})]
-     {:subroutines [(net-or-trash 1 2)
-                    (net-or-trash 2 3)
-                    (net-or-trash 3 4)]})
+     {:subroutines [(net-or-discard 1 2)
+                    (net-or-discard 2 3)
+                    (net-or-discard 3 4)]})
 
    "Mother Goddess"
    (let [ab (effect (update! (let [subtype (->> (mapcat :characters (flatten (seq (:servers contestant))))
@@ -1538,11 +1538,11 @@
     :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Nebula"
-   (space-character trash-resource)
+   (space-character discard-resource)
 
    "Negotiator"
    {:subroutines [(gain-credits-sub 2)
-                  trash-resource]
+                  discard-resource]
     :challenger-abilities [(challenger-break [:credit 2] 1)]}
 
    "Nerine 2.0"
@@ -1578,25 +1578,25 @@
                       :effect (effect (update-character-strength card))}]
               {:rez nb
                :derez nb
-               :trash nb
+               :discard nb
                :card-moved nb})}
 
    "NEXT Diamond"
    {:rez-cost-bonus (req (- (next-character-count contestant)))
     :subroutines [(do-brain-damage 1)
-                  {:prompt "Select a card to trash"
-                   :label "Trash 1 installed Challenger card"
-                   :msg (msg "trash " (:title target))
+                  {:prompt "Select a card to discard"
+                   :label "Discard 1 installed Challenger card"
+                   :msg (msg "discard " (:title target))
                    :choices {:req #(and (installed? %)
                                         (= (:side %) "Challenger"))}
                    :async true
-                   :effect (req (trash state side eid target {:cause :subroutine}))}]}
+                   :effect (req (discard state side eid target {:cause :subroutine}))}]}
 
    "NEXT Gold"
    {:subroutines [{:label "Do 1 net damage for each rezzed NEXT character"
                    :msg (msg "do " (next-character-count contestant) " net damage")
                    :effect (effect (damage eid :net (next-character-count contestant) {:card card}))}
-                  trash-resource]}
+                  discard-resource]}
 
    "NEXT Opal"
    {:subroutines [{:label "Install a card from HQ, paying all costs"
@@ -1673,7 +1673,7 @@
 
    "Orion"
    (implementation-note "\"Resolve a subroutine...\" subroutine is not implemented"
-                        (space-character trash-resource end-the-run))
+                        (space-character discard-resource end-the-run))
 
    "Owl"
    {:subroutines [{:choices {:req #(and (installed? %)
@@ -1687,7 +1687,7 @@
    {:subroutines [end-the-run-if-tagged]}
 
    "Paper Wall"
-   {:implementation "Trash on break is manual"
+   {:implementation "Discard on break is manual"
     :subroutines [end-the-run]}
 
    "Pop-up Window"
@@ -1743,7 +1743,7 @@
     :subroutines [(trace-ability 4 end-the-run)]}
 
    "Rototurret"
-   {:subroutines [trash-resource end-the-run]}
+   {:subroutines [discard-resource end-the-run]}
 
    "Sadaka"
    (let [maybe-draw-effect
@@ -1790,36 +1790,36 @@
                                                 (continue-ability state side maybe-draw-effect card nil))))}
                                       card nil)))}
 
-                    {:label "Trash 1 card in HQ"
+                    {:label "Discard 1 card in HQ"
                      :async true
                      :effect
-                     (req (show-wait-prompt state :challenger "Contestant to select cards to trash with Sadaka")
+                     (req (show-wait-prompt state :challenger "Contestant to select cards to discard with Sadaka")
                           (wait-for
                             (resolve-ability
                               state side
-                              {:prompt "Choose a card in HQ to trash"
+                              {:prompt "Choose a card in HQ to discard"
                                :choices (req (cancellable (:hand contestant) :sorted))
                                :async true
-                               :cancel-effect (effect (system-msg "chooses not to trash a card from HQ")
+                               :cancel-effect (effect (system-msg "chooses not to discard a card from HQ")
                                                       (effect-completed eid))
                                :effect (req (wait-for
-                                              (trash state :contestant (make-eid state) target nil)
+                                              (discard state :contestant (make-eid state) target nil)
                                               (do
-                                                (system-msg state :contestant "trashes a card from HQ")
+                                                (system-msg state :contestant "discards a card from HQ")
                                                 (wait-for
-                                                  (resolve-ability state side trash-muthereff-sub card nil)
+                                                  (resolve-ability state side discard-radicle-sub card nil)
                                                   (effect-completed state side eid)))))}
                               card nil)
                             (do
-                              (system-msg state :contestant "trashes Sadaka")
+                              (system-msg state :contestant "discards Sadaka")
                               (clear-wait-prompt state :challenger)
                               (when current-character
                                 (no-action state side nil)
                                 (continue state side nil))
-                              (trash state :contestant eid card nil))))}]})
+                              (discard state :contestant eid card nil))))}]})
 
    "Sagittarius"
-   (constellation-character trash-resource)
+   (constellation-character discard-resource)
 
    "Salvage"
    {:advanceable :while-rezzed
@@ -1832,12 +1832,12 @@
                    :label "Move Sand Storm and the run to another server"
                    :prompt "Choose another server and redirect the run to its outermost position"
                    :choices (req (cancellable servers))
-                   :msg (msg "move Sand Storm and the run.  The Challenger is now running on " target ". Sand Storm is trashed")
+                   :msg (msg "move Sand Storm and the run.  The Challenger is now running on " target ". Sand Storm is discarded")
                    :effect (req (let [dest (server->zone state target)]
                                   (swap! state update-in [:run]
                                          #(assoc % :position (count (get-in contestant (conj dest :characters)))
                                                  :server (rest dest)))
-                                  (trash state side card {:unpreventable true})))}]}
+                                  (discard state side card {:unpreventable true})))}]}
 
    "Sandman"
    {:subroutines [{:label "Add an installed Challenger card to the grip"
@@ -1853,7 +1853,7 @@
 
    "Sapper"
    {:flags {:rd-reveal (req true)}
-    :subroutines [trash-resource]
+    :subroutines [discard-resource]
     :access {:async true
              :req (req (and (not= (first (:zone card)) :discard)
                             (some #(is-type? % "Resource") (all-active-installed state :challenger))))
@@ -1864,7 +1864,7 @@
                                          :prompt "Allow Sapper subroutine to fire?"
                                          :priority 1
                                          :yes-ability {:effect (req (clear-wait-prompt state :contestant)
-                                                                    (show-wait-prompt state :challenger "Contestant to trash a resource with Sapper")
+                                                                    (show-wait-prompt state :challenger "Contestant to discard a resource with Sapper")
                                                                     (play-subroutine state :contestant eid {:card card :subroutine 0}))}
                                          :no-ability {:effect (effect (clear-wait-prompt :contestant)
                                                                       (effect-completed eid))}}}
@@ -1957,25 +1957,25 @@
                  :msg (msg "reveal the Challenger's Grip ( " (join ", " (map :title (:hand challenger))) " )")}
                 {:req (req (pos? (get-counters card :power)))
                  :counter-cost [:power 1]
-                 :label "Hosted power counter: Reveal all cards in Grip and trash 1 card"
-                 :msg (msg "look at all cards in Grip and trash " (:title target)
+                 :label "Hosted power counter: Reveal all cards in Grip and discard 1 card"
+                 :msg (msg "look at all cards in Grip and discard " (:title target)
                            " using 1 power counter")
                  :choices (req (cancellable (:hand challenger) :sorted))
-                 :prompt "Choose a card to trash"
-                 :effect (effect (trash target))}]
+                 :prompt "Choose a card to discard"
+                 :effect (effect (discard target))}]
     :subroutines [(trace-ability 3 add-power-counter)]}
 
    "Snowflake"
    {:subroutines [(do-psi end-the-run)]}
 
    "Special Offer"
-   {:subroutines [{:label "Gain 5 [Credits] and trash Special Offer"
+   {:subroutines [{:label "Gain 5 [Credits] and discard Special Offer"
                    :effect (req (gain-credits state :contestant 5)
                                 (when current-character
                                   (no-action state side nil)
                                   (continue state side nil))
-                                (trash state side card)
-                                (system-msg state side (str "gains 5 [Credits] and trashes Special Offer")))}]}
+                                (discard state side card)
+                                (system-msg state side (str "gains 5 [Credits] and discards Special Offer")))}]}
 
    "Spiderweb"
    {:subroutines [end-the-run]}
@@ -2008,16 +2008,16 @@
     :advanceable :always
     :abilities [{:label "Gain subroutines"
                  :msg (msg "gain " (get-counters card :advancement) " subroutines")}]
-    :subroutines [trash-resource]
+    :subroutines [discard-resource]
     :challenger-abilities [(challenger-pay [:credit 3] 1)]}
 
    "Swordsman"
    {:implementation "AI restriction not implemented"
     :subroutines [(do-net-damage 1)
-                  {:prompt "Select an AI resource to trash"
-                   :msg (msg "trash " (:title target))
-                   :label "Trash an AI resource"
-                   :effect (effect (trash target))
+                  {:prompt "Select an AI resource to discard"
+                   :msg (msg "discard " (:title target))
+                   :label "Discard an AI resource"
+                   :effect (effect (discard target))
                    :choices {:req #(and (installed? %)
                                         (is-type? % "Resource")
                                         (has-subtype? % "AI"))}}]}
@@ -2042,7 +2042,7 @@
                    :effect (effect (move target :deck {:front true}))}]}
 
    "Taurus"
-   (constellation-character trash-hazard)
+   (constellation-character discard-hazard)
 
    "Thoth"
    {:implementation "Encounter effect is manual"
@@ -2063,14 +2063,14 @@
    {:alternative-cost [:forfeit]
     :implementation "Does not handle UFAQ for Pawn or Blackguard interaction"
     :cannot-host true
-    :subroutines [trash-resource
+    :subroutines [discard-resource
                   end-the-run
-                  {:label "Trash a muthereff"
-                   :msg (msg "trash " (:title target))
+                  {:label "Discard a radicle"
+                   :msg (msg "discard " (:title target))
                    :async true
                    :choices {:req #(and (installed? %)
-                                        (is-type? % "Muthereff"))}
-                   :effect (effect (trash target {:reason :subroutine}))}]}
+                                        (is-type? % "Radicle"))}
+                   :effect (effect (discard target {:reason :subroutine}))}]}
 
    "TL;DR"
    {:subroutines [{:msg "duplicate subroutines on next piece of Character encountered this run"}]}
@@ -2094,8 +2094,8 @@
     :subroutines [end-the-run]}
 
    "Tribunal"
-   {:subroutines [{:msg "force the Challenger to trash 1 installed card"
-                   :effect (effect (resolve-ability :challenger trash-installed card nil))}]}
+   {:subroutines [{:msg "force the Challenger to discard 1 installed card"
+                   :effect (effect (resolve-ability :challenger discard-installed card nil))}]}
 
    "Troll"
    {:implementation "Encounter effect is manual"
@@ -2142,7 +2142,7 @@
                                       (when current-character
                                         (no-action state side nil)
                                         (continue state side nil))
-                                      (trash state side card))
+                                      (discard state side card))
                                   (lose-credits state :challenger 1)))}]}
 
    "Upayoga"
@@ -2198,17 +2198,17 @@
    (constellation-character (give-tags 1))
 
    "Waiver"
-   {:subroutines [(trace-ability 5 {:label "Reveal the Challenger's Grip and trash cards"
+   {:subroutines [(trace-ability 5 {:label "Reveal the Challenger's Grip and discard cards"
                                     :msg (msg "reveal all cards in the Challenger's Grip: " (join ", " (map :title (:hand challenger)))
                                               ". Cards with a play/install cost less than or equal to " (- target (second targets))
-                                              " will be trashed")
+                                              " will be discarded")
                                     :effect (req (let [delta (- target (second targets))]
                                                    (doseq [c (:hand challenger)]
                                                      (when (<= (:cost c) delta)
                                                        (resolve-ability
                                                          state side
-                                                         {:msg (msg "trash " (:title c))
-                                                          :effect (effect (trash c))}
+                                                         {:msg (msg "discard " (:title c))
+                                                          :effect (effect (discard c))}
                                                          card nil)))))})]}
 
    "Wall of Static"
@@ -2231,14 +2231,14 @@
    {:subroutines [{:label "force the Challenger to lose 1 [Click], if able"
                    :msg "force the Challenger to lose 1 [Click]"
                    :effect challenger-loses-click}
-                  {:label "Challenger trashes 1 card from their Grip"
+                  {:label "Challenger discards 1 card from their Grip"
                    :req (req (pos? (count (:hand challenger))))
-                   :prompt "Choose a card to trash from your Grip"
+                   :prompt "Choose a card to discard from your Grip"
                    :player :challenger
                    :choices (req (:hand challenger))
                    :not-distinct true
-                   :effect (effect (trash :challenger target)
-                                   (system-msg :challenger (str "trashes " (:title target) " from their Grip")))}]}
+                   :effect (effect (discard :challenger target)
+                                   (system-msg :challenger (str "discards " (:title target) " from their Grip")))}]}
 
    "Wendigo"
    (implementation-note
@@ -2255,7 +2255,7 @@
                                 (when current-character
                                   (no-action state side nil)
                                   (continue state side nil))
-                                (trash state side card))}]}
+                                (discard state side card))}]}
 
    "Woodcutter"
    {:advanceable :while-rezzed
@@ -2282,7 +2282,7 @@
                       :req (req (and (not= (:cid target) (:cid card))
                                      (has-subtype? target "Fracter")))
                       :effect (effect (update-character-strength card))}]
-              {:challenger-install wr :trash wr :card-moved wr})}
+              {:challenger-install wr :discard wr :card-moved wr})}
 
    "Yagura"
    {:subroutines [(do-net-damage 1)
@@ -2299,6 +2299,6 @@
 
    "Zed 2.0"
    {:implementation "Restriction on having spent [click] is not implemented"
-    :subroutines [trash-hazard
+    :subroutines [discard-hazard
                   (do-brain-damage 2)]
     :challenger-abilities [(challenger-break [:click 2] 2)]}})

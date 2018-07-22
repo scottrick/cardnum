@@ -46,7 +46,7 @@
 
 (defn enforce-msg
   "Prints a message related to a rules enforcement on a given card.
-  Example: 'Architect cannot be trashed while installed.'"
+  Example: 'Architect cannot be discarded while installed.'"
   [state card text]
   (say state nil {:user (get-in card [:title]) :text (str (:title card) " " text ".")}))
 

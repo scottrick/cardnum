@@ -2,7 +2,7 @@
 
 (declare active? all-installed all-active-installed cards card-init deactivate card-flag? gain lose get-card-hosted
          handle-end-run hazard? has-subtype? character? is-type? make-eid resource? register-events remove-from-host
-         remove-icon reset-card muthereff? rezzed? toast toast-check-mu trash trigger-event update-breaker-strength
+         remove-icon reset-card radicle? rezzed? toast toast-check-mu discard trigger-event update-breaker-strength
          update-hosted! update-character-strength unregister-events use-mu)
 
 ;;; Functions for loading card information.
@@ -81,13 +81,13 @@
        (let [dest (if (sequential? to) (vec to) [to])
              to-facedown (= dest [:rig :facedown])
              to-installed (#{:servers :rig} (first dest))
-             trash-hosted (fn [h]
-                             (trash state side
+             discard-hosted (fn [h]
+                             (discard state side
                                     (update-in h [:zone] #(map to-keyword %))
                                     {:unpreventable true
                                      :suppress-event true
-                                     ;; this handles executives getting trashed before World's Plaza #2949
-                                     :host-trashed true})
+                                     ;; this handles executives getting discarded before World's Plaza #2949
+                                     :host-discarded true})
                                ())
              update-hosted (fn [h]
                              (let [newz (flatten (list (if (vector? to) to [to])))
@@ -99,7 +99,7 @@
                                (register-events state side (:events (card-def newh)) newh)
                                newh))
              hosted (seq (flatten (map
-                      (if same-zone? update-hosted trash-hosted)
+                      (if same-zone? update-hosted discard-hosted)
                       (:hosted card))))
              c (if (and (= side :contestant) (= (first dest) :discard) (rezzed? card))
                  (assoc card :seen true) card)

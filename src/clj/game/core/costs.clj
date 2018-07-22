@@ -99,19 +99,19 @@
                       card nil)
     cost-name))
 
-(defn pay-trash
-  "Trash a card as part of paying for a card or ability"
+(defn pay-discard
+  "Discard a card as part of paying for a card or ability"
   ;; If multiples needed in future likely prompt-select needs work to take a function
   ;; instead of an ability
-  ([state side eid card type amount select-fn] (pay-trash state side eid card type amount select-fn nil))
+  ([state side eid card type amount select-fn] (pay-discard state side eid card type amount select-fn nil))
   ([state side eid card type amount select-fn args]
    (let [cost-name (cost-names amount type)]
      (continue-ability state side
-                       {:prompt (str "Choose a " type " to trash")
+                       {:prompt (str "Choose a " type " to discard")
                         :choices {:max amount
                                   :req select-fn}
                         :async true
-                        :effect (req (wait-for (trash state side target (merge args {:unpreventable true}))
+                        :effect (req (wait-for (discard state side target (merge args {:unpreventable true}))
                                                (effect-completed state side (make-result eid cost-name))))}
                        card nil)
      cost-name)))
@@ -166,14 +166,14 @@
               (swap! state assoc-in [side :register :spent-click] true)
               (complete-with-result state side eid (deduct state side cost)))
      :forfeit (pay-forfeit state side eid card (second cost))
-     :hazard (pay-trash state side eid card "piece of hazard" (second cost) (every-pred installed? #(is-type? % :hazard) (complement facedown?)))
-     :resource (pay-trash state side eid card "resource" (second cost) (every-pred installed? #(is-type? % :resource) (complement facedown?)))
+     :hazard (pay-discard state side eid card "piece of hazard" (second cost) (every-pred installed? #(is-type? % :hazard) (complement facedown?)))
+     :resource (pay-discard state side eid card "resource" (second cost) (every-pred installed? #(is-type? % :resource) (complement facedown?)))
 
      ;; Connection
-     :connection (pay-trash state side eid card "connection" (second cost) (every-pred installed? #(has-subtype? % "Connection") (complement facedown?)))
+     :connection (pay-discard state side eid card "connection" (second cost) (every-pred installed? #(has-subtype? % "Connection") (complement facedown?)))
 
      ;; Rezzed Character
-     :character (pay-trash state :contestant eid card "rezzed Character" (second cost) (every-pred rezzed? character?) {:cause :ability-cost :keep-server-alive true})
+     :character (pay-discard state :contestant eid card "rezzed Character" (second cost) (every-pred rezzed? character?) {:cause :ability-cost :keep-server-alive true})
 
      :tag (complete-with-result state side eid (deduct state :challenger cost))
      :net-damage (pay-damage state side eid :net (second cost))
@@ -304,25 +304,25 @@
 (defn click-run-cost-bonus [state side & n]
   (swap! state update-in [:bonus :click-run-cost] #(merge-costs (concat % n))))
 
-(defn trash-cost-bonus [state side n]
-  (swap! state update-in [:bonus :trash] (fnil #(+ % n) 0)))
+(defn discard-cost-bonus [state side n]
+  (swap! state update-in [:bonus :discard] (fnil #(+ % n) 0)))
 
-(defn trash-cost [state side {:keys [trash] :as card}]
-  (when-not (nil? trash)
-    (-> (if-let [trashfun (:trash-cost-bonus (card-def card))]
-          (+ trash (trashfun state side (make-eid state) card nil))
-          trash)
-        (+ (get-in @state [:bonus :trash] 0))
+(defn discard-cost [state side {:keys [discard] :as card}]
+  (when-not (nil? discard)
+    (-> (if-let [discardfun (:discard-cost-bonus (card-def card))]
+          (+ discard (discardfun state side (make-eid state) card nil))
+          discard)
+        (+ (get-in @state [:bonus :discard] 0))
         (max 0))))
 
-(defn modified-trash-cost
-  "Returns the numbe of credits required to trash the given card, after modification effects.
-  Allows cards like Product Recall to pre-calculate trash costs without manually triggering the effects."
+(defn modified-discard-cost
+  "Returns the numbe of credits required to discard the given card, after modification effects.
+  Allows cards like Product Recall to pre-calculate discard costs without manually triggering the effects."
   [state side card]
-  (swap! state update-in [:bonus] dissoc :trash)
-  (trigger-event state side :pre-trash card)
-  (let [tcost (trash-cost state side card)]
-    (swap! state update-in [:bonus] dissoc :trash)
+  (swap! state update-in [:bonus] dissoc :discard)
+  (trigger-event state side :pre-discard card)
+  (let [tcost (discard-cost state side card)]
+    (swap! state update-in [:bonus] dissoc :discard)
     tcost))
 
 (defn install-cost-bonus [state side n]

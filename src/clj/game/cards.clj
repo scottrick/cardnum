@@ -1,34 +1,34 @@
 (in-ns 'game.core)
 
-(def trash-resource {:prompt "Select a resource to trash"
-                    :label "Trash a resource"
-                    :msg (msg "trash " (:title target))
+(def discard-resource {:prompt "Select a resource to discard"
+                    :label "Discard a resource"
+                    :msg (msg "discard " (:title target))
                     :choices {:req #(and (installed? %)
                                          (is-type? % "Resource"))}
-                    :effect (effect (trash target {:cause :subroutine})
+                    :effect (effect (discard target {:cause :subroutine})
                                     (clear-wait-prompt :challenger))})
 
-(def trash-hazard {:prompt "Select a piece of hazard to trash"
-                     :label "Trash a piece of hazard"
-                     :msg (msg "trash " (:title target))
+(def discard-hazard {:prompt "Select a piece of hazard to discard"
+                     :label "Discard a piece of hazard"
+                     :msg (msg "discard " (:title target))
                      :choices {:req #(and (installed? %)
                                           (is-type? % "Hazard"))}
-                     :effect (effect (trash target {:cause :subroutine}))})
+                     :effect (effect (discard target {:cause :subroutine}))})
 
-(def trash-muthereff-sub {:prompt "Select a muthereff to trash"
-                         :label "Trash a muthereff"
-                         :msg (msg "trash " (:title target))
+(def discard-radicle-sub {:prompt "Select a radicle to discard"
+                         :label "Discard a radicle"
+                         :msg (msg "discard " (:title target))
                          :choices {:req #(and (installed? %)
-                                              (is-type? % "Muthereff"))}
-                         :effect (effect (trash target {:cause :subroutine}))})
+                                              (is-type? % "Radicle"))}
+                         :effect (effect (discard target {:cause :subroutine}))})
 
-(def trash-installed {:prompt "Select an installed card to trash"
+(def discard-installed {:prompt "Select an installed card to discard"
                       :player :challenger
-                      :label "Force the Challenger to trash an installed card"
-                      :msg (msg "force the Challenger to trash " (:title target))
+                      :label "Force the Challenger to discard an installed card"
+                      :msg (msg "force the Challenger to discard " (:title target))
                       :choices {:req #(and (installed? %)
                                            (= (:side %) "Challenger"))}
-                      :effect (effect (trash target {:cause :subroutine}))})
+                      :effect (effect (discard target {:cause :subroutine}))})
 
 (def contestant-rez-toast
   "Effect to be placed with `:challenger-turn-ends` to remind players of 'when turn begins'

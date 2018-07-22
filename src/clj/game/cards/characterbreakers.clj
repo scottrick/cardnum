@@ -1,4 +1,4 @@
-(ns game.cards.icebreakers
+(ns game.cards.characterbreakers
   (:require [game.core :refer :all]
             [game.utils :refer :all]
             [game.macros :refer [effect req msg wait-for continue-ability]]
@@ -150,13 +150,13 @@
 (defn- break-and-enter
   "Breakers from the Break and Entry set"
   [character-type]
-  (cloud-characterbreaker {:abilities [{:label (str "[Trash]: Break up to 3 " (lower-case character-type) "subroutines")
+  (cloud-characterbreaker {:abilities [{:label (str "[Discard]: Break up to 3 " (lower-case character-type) "subroutines")
                                   :msg (str "break up to 3 " (lower-case character-type) " subroutines")
-                                  :effect (effect (trash card {:cause :ability-cost}))}]
+                                  :effect (effect (discard card {:cause :ability-cost}))}]
                       :events (let [cloud {:silent (req true)
                                            :req (req (has-subtype? target "Icebreaker"))
                                            :effect (effect (update-breaker-strength card))}]
-                                {:challenger-install cloud :trash cloud :card-moved cloud})
+                                {:challenger-install cloud :discard cloud :card-moved cloud})
                       :strength-bonus (req (count (filter #(has-subtype? % "Icebreaker")
                                                           (all-active-installed state :challenger))))}))
 
@@ -294,8 +294,8 @@
                                  (strength-pump 2 2)
                                  {:label "Bypass Code Gate being encountered"
                                   :req (req (has-subtype? current-character "Code Gate"))
-                                  :msg (msg "trash it and bypass " (:title current-character))
-                                  :effect (effect (trash card {:cause :ability-cost}))}]})
+                                  :msg (msg "discard it and bypass " (:title current-character))
+                                  :effect (effect (discard card {:cause :ability-cost}))}]})
 
    "Adept"
    (ancient-greek-breaker "adept" [{:cost [:credit 2]
@@ -358,7 +358,7 @@
                  :effect (effect (system-msg "manually adds a virus counter to Aumakua")
                                  (add-counter card :virus 1))}]
     :strength-bonus (req (get-virus-counters state side card))
-    :events {:run-ends {:req (req (and (not (or (get-in @state [:run :did-trash])
+    :events {:run-ends {:req (req (and (not (or (get-in @state [:run :did-discard])
                                                 (get-in @state [:run :did-steal])))
                                        (get-in @state [:run :did-access])))
                         :effect (effect (add-counter card :virus 1))}
@@ -491,7 +491,7 @@
                                     :effect (req ((:effect breaker-auto-pump) state side eid card targets)
                                                  (if (pos? (get-counters card :virus))
                                                    (add-counter state side card :virus -1)
-                                                   (trash state side card {:cause :self-trash}))
+                                                   (discard state side card {:cause :self-discard}))
                                                  (update! state side (dissoc (get-card state card) :crypsis-broke)))}]
                                {:pass-character encounter-ends-effect
                                 :run-ends encounter-ends-effect})
@@ -540,16 +540,16 @@
                                  (strength-pump 2 3)
                                  {:label "Bypass Barrier being encountered"
                                   :req (req (has-subtype? current-character "Barrier"))
-                                  :msg (msg "trash it and bypass " (:title current-character))
-                                  :effect (effect (trash card {:cause :ability-cost}))}]})
+                                  :msg (msg "discard it and bypass " (:title current-character))
+                                  :effect (effect (discard card {:cause :ability-cost}))}]})
 
    "Deus X"
    {:interactions {:prevent [{:type #{:net}
                               :req (req true)}]}
     :abilities [{:msg "break any number of AP subroutines"
-                 :effect (effect (trash card {:cause :ability-cost}))}
+                 :effect (effect (discard card {:cause :ability-cost}))}
                 {:msg "prevent any amount of net damage"
-                 :effect (effect (trash card {:cause :ability-cost})
+                 :effect (effect (discard card {:cause :ability-cost})
                                  (damage-prevent :net Integer/MAX_VALUE))}]}
 
    "Eater"
@@ -560,12 +560,12 @@
                                  (strength-pump 1 1)]})
 
    "Endless Hunger"
-   {:abilities [{:label "Trash 1 installed card to break 1 \"End the run.\" subroutine"
-                 :prompt "Select a card to trash for Endless Hunger"
+   {:abilities [{:label "Discard 1 installed card to break 1 \"End the run.\" subroutine"
+                 :prompt "Select a card to discard for Endless Hunger"
                  :choices {:req #(and (= (:side %) "Challenger") (:installed %))}
-                 :msg (msg "trash " (:title target)
+                 :msg (msg "discard " (:title target)
                            " and break 1 \"[Subroutine] End the run.\" subroutine")
-                 :effect (effect (trash target {:unpreventable true}))}]}
+                 :effect (effect (discard target {:unpreventable true}))}]}
    "Engolo"
    (auto-characterbreaker
      ["Code Gate"]
@@ -578,19 +578,19 @@
                     {:abilities [(break-sub 0 1 "Sentry" (effect (update! (assoc-in card [:special :faerie-used] true))))
                                  (strength-pump 1 1)]
                      :events {:pass-character {:req (req (get-in card [:special :faerie-used]))
-                                         :effect (effect (trash card))}}})
+                                         :effect (effect (discard card))}}})
 
    "Faust"
-   {:abilities [{:label "Trash 1 card from Grip to break 1 subroutine"
-                 :prompt "Select a card from your grip to trash for Faust"
+   {:abilities [{:label "Discard 1 card from Grip to break 1 subroutine"
+                 :prompt "Select a card from your grip to discard for Faust"
                  :choices {:req in-hand?}
-                 :msg (msg "trash " (:title target) " and break 1 subroutine")
-                 :effect (effect (trash target {:unpreventable true}))}
-                {:label "Trash 1 card from Grip to add 2 strength"
-                 :prompt "Select a card from your grip to trash for Faust"
+                 :msg (msg "discard " (:title target) " and break 1 subroutine")
+                 :effect (effect (discard target {:unpreventable true}))}
+                {:label "Discard 1 card from Grip to add 2 strength"
+                 :prompt "Select a card from your grip to discard for Faust"
                  :choices {:req in-hand?}
-                 :msg (msg "trash " (:title target) " and add 2 strength")
-                 :effect (effect (trash target {:unpreventable true})
+                 :msg (msg "discard " (:title target) " and add 2 strength")
+                 :effect (effect (discard target {:unpreventable true})
                                  (pump card 2))}]}
 
    "Fawkes"
@@ -750,8 +750,8 @@
                                  (strength-pump 3 5)
                                  {:label "Bypass Sentry being encountered"
                                   :req (req (has-subtype? current-character "Sentry"))
-                                  :msg (msg "trash it and bypass " (:title current-character))
-                                  :effect (effect (trash card {:cause :ability-cost}))}]})
+                                  :msg (msg "discard it and bypass " (:title current-character))
+                                  :effect (effect (discard card {:cause :ability-cost}))}]})
 
    "Mammon"
    (auto-characterbreaker ["All"]
@@ -780,7 +780,7 @@
     :events (let [maven {:silent (req true)
                          :req (req (is-type? target "Resource"))
                          :effect (effect (update-breaker-strength card))}]
-              {:challenger-install maven :trash maven :card-moved maven})
+              {:challenger-install maven :discard maven :card-moved maven})
     :strength-bonus (req (count (filter #(is-type? % "Resource") (all-active-installed state :challenger))))}
 
    "Morning Star"
@@ -896,8 +896,8 @@
                                                                   :async true
                                                                   :choices {:number (req 10)}
                                                                   :msg (msg (if (pos? target)
-                                                                              (str "trash " (:title (first (:deck challenger))) " from their Stack and trash " target " cards from R&D")
-                                                                              (str "trash " (:title (first (:deck challenger))) " from their Stack and nothing from R&D")))
+                                                                              (str "discard " (:title (first (:deck challenger))) " from their Stack and discard " target " cards from R&D")
+                                                                              (str "discard " (:title (first (:deck challenger))) " from their Stack and nothing from R&D")))
                                                                   :effect (effect (mill :challenger)
                                                                                   (mill :challenger :contestant target))}}}}})
 
@@ -959,9 +959,9 @@
 
    "Sharpshooter"
    (auto-characterbreaker ["Destroyer"]
-                    {:abilities [{:label "[Trash]: Break any number of Destroyer subroutines"
+                    {:abilities [{:label "[Discard]: Break any number of Destroyer subroutines"
                                   :msg "break any number of Destroyer subroutines"
-                                  :effect (effect (trash card {:cause :ability-cost}))}
+                                  :effect (effect (discard card {:cause :ability-cost}))}
                                  (strength-pump 1 2)]})
 
    "Shiv"

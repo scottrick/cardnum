@@ -2716,10 +2716,10 @@ var $ = {
                       "getEntriesByName": {
                         "closure_uid_523191572": {}
                       },
-                      "clearMuthereffTimings": {
+                      "clearResourceTimings": {
                         "closure_uid_523191572": {}
                       },
-                      "setMuthereffTimingBufferSize": {
+                      "setResourceTimingBufferSize": {
                         "closure_uid_523191572": {}
                       },
                       "mark": {
@@ -2775,7 +2775,7 @@ var $ = {
                         "TYPE_BACK_FORWARD": {},
                         "TYPE_RESERVED": {}
                       },
-                      "onmutherefftimingbufferfull": {}
+                      "onresourcetimingbufferfull": {}
                     },
                     "caches": {
                       "closure_uid_523191572": {},
@@ -4424,10 +4424,10 @@ var $ = {
                     "getEntriesByName": {
                       "closure_uid_523191572": {}
                     },
-                    "clearMuthereffTimings": {
+                    "clearResourceTimings": {
                       "closure_uid_523191572": {}
                     },
-                    "setMuthereffTimingBufferSize": {
+                    "setResourceTimingBufferSize": {
                       "closure_uid_523191572": {}
                     },
                     "mark": {
@@ -4483,7 +4483,7 @@ var $ = {
                       "TYPE_BACK_FORWARD": {},
                       "TYPE_RESERVED": {}
                     },
-                    "onmutherefftimingbufferfull": {}
+                    "onresourcetimingbufferfull": {}
                   },
                   "caches": {
                     "closure_uid_523191572": {},
@@ -5336,10 +5336,10 @@ var $ = {
                       "getEntriesByName": {
                         "closure_uid_523191572": {}
                       },
-                      "clearMuthereffTimings": {
+                      "clearResourceTimings": {
                         "closure_uid_523191572": {}
                       },
-                      "setMuthereffTimingBufferSize": {
+                      "setResourceTimingBufferSize": {
                         "closure_uid_523191572": {}
                       },
                       "mark": {
@@ -5395,7 +5395,7 @@ var $ = {
                         "TYPE_BACK_FORWARD": {},
                         "TYPE_RESERVED": {}
                       },
-                      "onmutherefftimingbufferfull": {}
+                      "onresourcetimingbufferfull": {}
                     },
                     "caches": {
                       "closure_uid_523191572": {},
@@ -7469,10 +7469,10 @@ var $ = {
                       "getEntriesByName": {
                         "closure_uid_523191572": {}
                       },
-                      "clearMuthereffTimings": {
+                      "clearResourceTimings": {
                         "closure_uid_523191572": {}
                       },
-                      "setMuthereffTimingBufferSize": {
+                      "setResourceTimingBufferSize": {
                         "closure_uid_523191572": {}
                       },
                       "mark": {
@@ -7528,7 +7528,7 @@ var $ = {
                         "TYPE_BACK_FORWARD": {},
                         "TYPE_RESERVED": {}
                       },
-                      "onmutherefftimingbufferfull": {}
+                      "onresourcetimingbufferfull": {}
                     },
                     "caches": {
                       "closure_uid_523191572": {},
@@ -12313,10 +12313,10 @@ var $ = {
                   "getEntriesByName": {
                     "closure_uid_523191572": {}
                   },
-                  "clearMuthereffTimings": {
+                  "clearResourceTimings": {
                     "closure_uid_523191572": {}
                   },
-                  "setMuthereffTimingBufferSize": {
+                  "setResourceTimingBufferSize": {
                     "closure_uid_523191572": {}
                   },
                   "mark": {
@@ -12372,7 +12372,7 @@ var $ = {
                     "TYPE_BACK_FORWARD": {},
                     "TYPE_RESERVED": {}
                   },
-                  "onmutherefftimingbufferfull": {}
+                  "onresourcetimingbufferfull": {}
                 },
                 "caches": {
                   "closure_uid_523191572": {},
@@ -14020,10 +14020,10 @@ var $ = {
                 "getEntriesByName": {
                   "closure_uid_523191572": {}
                 },
-                "clearMuthereffTimings": {
+                "clearResourceTimings": {
                   "closure_uid_523191572": {}
                 },
-                "setMuthereffTimingBufferSize": {
+                "setResourceTimingBufferSize": {
                   "closure_uid_523191572": {}
                 },
                 "mark": {
@@ -14079,7 +14079,7 @@ var $ = {
                   "TYPE_BACK_FORWARD": {},
                   "TYPE_RESERVED": {}
                 },
-                "onmutherefftimingbufferfull": {}
+                "onresourcetimingbufferfull": {}
               },
               "caches": {
                 "closure_uid_523191572": {},
@@ -14932,10 +14932,10 @@ var $ = {
                   "getEntriesByName": {
                     "closure_uid_523191572": {}
                   },
-                  "clearMuthereffTimings": {
+                  "clearResourceTimings": {
                     "closure_uid_523191572": {}
                   },
-                  "setMuthereffTimingBufferSize": {
+                  "setResourceTimingBufferSize": {
                     "closure_uid_523191572": {}
                   },
                   "mark": {
@@ -14991,7 +14991,7 @@ var $ = {
                     "TYPE_BACK_FORWARD": {},
                     "TYPE_RESERVED": {}
                   },
-                  "onmutherefftimingbufferfull": {}
+                  "onresourcetimingbufferfull": {}
                 },
                 "caches": {
                   "closure_uid_523191572": {},
@@ -17065,10 +17065,10 @@ var $ = {
                   "getEntriesByName": {
                     "closure_uid_523191572": {}
                   },
-                  "clearMuthereffTimings": {
+                  "clearResourceTimings": {
                     "closure_uid_523191572": {}
                   },
-                  "setMuthereffTimingBufferSize": {
+                  "setResourceTimingBufferSize": {
                     "closure_uid_523191572": {}
                   },
                   "mark": {
@@ -17124,7 +17124,7 @@ var $ = {
                     "TYPE_BACK_FORWARD": {},
                     "TYPE_RESERVED": {}
                   },
-                  "onmutherefftimingbufferfull": {}
+                  "onresourcetimingbufferfull": {}
                 },
                 "caches": {
                   "closure_uid_523191572": {},

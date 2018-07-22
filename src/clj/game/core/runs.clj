@@ -36,18 +36,18 @@
   (gain-credits state :challenger n))
 
 (defn access-end
-  "Trigger events involving the end of the access phase, including :no-trash and :post-access-card"
+  "Trigger events involving the end of the access phase, including :no-discard and :post-access-card"
   [state side eid c]
   (when-not (find-cid (:cid c) (get-in @state [:contestant :discard]))
-    ;; Do not trigger :no-trash if card has already been trashed
-    (trigger-event state side :no-trash c))
+    ;; Do not trigger :no-discard if card has already been discarded
+    (trigger-event state side :no-discard c))
   (when (and (is-type? c "Agenda")
              (not (find-cid (:cid c) (get-in @state [:challenger :scored]))))
     (trigger-event state side :no-steal c))
   (when (and (get-card state c)
-             ;; Don't increment :no-trash-or-steal if accessing a card in Archives
+             ;; Don't increment :no-discard-or-steal if accessing a card in Archives
              (not= (:zone c) [:discard]))
-    (swap! state update-in [:challenger :register :no-trash-or-steal] (fnil inc 0)))
+    (swap! state update-in [:challenger :register :no-discard-or-steal] (fnil inc 0)))
   (trigger-event-sync state side eid :post-access-card c))
 
 ;;; Stealing agendas
@@ -114,43 +114,43 @@
       merge-costs flatten vec))
 
 (defn access-non-agenda
-  "Access a non-agenda. Show a prompt to trash for trashable cards."
+  "Access a non-agenda. Show a prompt to discard for discardable cards."
   [state side eid c & {:keys [skip-trigger-event]}]
   (when-not skip-trigger-event
-    (trigger-event state side :pre-trash c))
+    (trigger-event state side :pre-discard c))
   (swap! state update-in [:stats :challenger :access :cards] (fnil inc 0))
   (if (not= (:zone c) [:discard]) ; if not accessing in Archives
-    ;; The card has a trash cost (Site, Region)
+    ;; The card has a discard cost (Site, Region)
     (let [card (assoc c :seen true)
           card-name (:title card)
-          trash-cost (trash-cost state side c)
-          can-pay (when trash-cost (or (can-pay? state :challenger nil :credit trash-cost)
-                                       (can-pay-with-recurring? state :challenger trash-cost)))]
-      ;; Show the option to pay to trash the card.
+          discard-cost (discard-cost state side c)
+          can-pay (when discard-cost (or (can-pay? state :challenger nil :credit discard-cost)
+                                       (can-pay-with-recurring? state :challenger discard-cost)))]
+      ;; Show the option to pay to discard the card.
       (when-not (and (is-type? card "Operation")
-                     ;; Don't show the option if Edward Kim's auto-trash flag is true.
-                     (card-flag? card :can-trash-operation true))
-        ;; If card has already been trashed this access don't show option to pay to trash (eg. Ed Kim)
+                     ;; Don't show the option if Edward Kim's auto-discard flag is true.
+                     (card-flag? card :can-discard-operation true))
+        ;; If card has already been discarded this access don't show option to pay to discard (eg. Ed Kim)
         (when-not (find-cid (:cid card) (get-in @state [:contestant :discard]))
-          (let [trash-ab-cards (->> (concat (all-active state :challenger)
+          (let [discard-ab-cards (->> (concat (all-active state :challenger)
                                             (get-in @state [:challenger :play-area]))
-                                    (filter #(can-trigger? state :challenger (:trash-ability (:interactions (card-def %))) % [card])))
-                ability-strs (map #(->> (card-def %) :interactions :trash-ability :label) trash-ab-cards)
-                trash-cost-str (when can-pay
-                                 [(str "Pay " trash-cost "[Credits] to trash")])
-                ;; If the challenger is forced to trash this card (Neutralize All Threats)
-                forced-to-trash? (and (or can-pay
-                                          (seq trash-ab-cards))
-                                      (or (get-in @state [:challenger :register :force-trash])
-                                          (card-flag-fn? state side card :must-trash true)))
-                trash-msg (when can-pay
-                            (str trash-cost "[Credits] to trash " card-name " from " (name-zone :contestant (:zone card))))
+                                    (filter #(can-trigger? state :challenger (:discard-ability (:interactions (card-def %))) % [card])))
+                ability-strs (map #(->> (card-def %) :interactions :discard-ability :label) discard-ab-cards)
+                discard-cost-str (when can-pay
+                                 [(str "Pay " discard-cost "[Credits] to discard")])
+                ;; If the challenger is forced to discard this card (Neutralize All Threats)
+                forced-to-discard? (and (or can-pay
+                                          (seq discard-ab-cards))
+                                      (or (get-in @state [:challenger :register :force-discard])
+                                          (card-flag-fn? state side card :must-discard true)))
+                discard-msg (when can-pay
+                            (str discard-cost "[Credits] to discard " card-name " from " (name-zone :contestant (:zone card))))
                 pay-str (when can-pay
-                          (str (if forced-to-trash? "is forced to pay " "pays ") trash-msg))
+                          (str (if forced-to-discard? "is forced to pay " "pays ") discard-msg))
                 prompt-str (str "You accessed " card-name ".")
-                no-action-str (when-not forced-to-trash?
+                no-action-str (when-not forced-to-discard?
                                 ["No action"])
-                choices (into [] (concat ability-strs trash-cost-str no-action-str))]
+                choices (into [] (concat ability-strs discard-cost-str no-action-str))]
             (continue-ability
               state :challenger
               {:async true
@@ -161,29 +161,29 @@
                               (access-end state side eid c)
 
                               (.contains target "Pay")
-                              (if (> trash-cost (get-in @state [:challenger :credit] 0))
+                              (if (> discard-cost (get-in @state [:challenger :credit] 0))
                                 (do (toast state side (str "You don't have the credits to pay for " card-name
                                                            ". Did you mean to first gain credits from installed cards?"))
                                     (access-non-agenda state side eid c :skip-trigger-event true))
-                                (do (lose state side :credit trash-cost)
+                                (do (lose state side :credit discard-cost)
                                     (when (:run @state)
-                                      (swap! state assoc-in [:run :did-trash] true)
-                                      (when forced-to-trash?
+                                      (swap! state assoc-in [:run :did-discard] true)
+                                      (when forced-to-discard?
                                         (swap! state assoc-in [:run :did-access] true)))
-                                    (swap! state assoc-in [:challenger :register :trashed-card] true)
+                                    (swap! state assoc-in [:challenger :register :discarded-card] true)
                                     (system-msg state side pay-str)
-                                    (wait-for (trash state side card nil)
+                                    (wait-for (discard state side card nil)
                                               (access-end state side eid c))))
 
                               (some #(= % target) ability-strs)
                               (let [idx (.indexOf ability-strs target)
-                                    trash-ab-card (nth trash-ab-cards idx)
-                                    cdef (-> (card-def trash-ab-card)
+                                    discard-ab-card (nth discard-ab-cards idx)
+                                    cdef (-> (card-def discard-ab-card)
                                              :interactions
-                                             :trash-ability)]
+                                             :discard-ability)]
                                 (when (:run @state)
-                                  (swap! state assoc-in [:run :did-trash] true))
-                                (wait-for (resolve-ability state side cdef trash-ab-card [card])
+                                  (swap! state assoc-in [:run :did-discard] true))
+                                (wait-for (resolve-ability state side cdef discard-ab-card [card])
                                           (access-end state side eid c)))))}
               card nil)))))
     (access-end state side eid c)))
@@ -230,13 +230,13 @@
         card-name (:title c)
         can-pay-costs? (can-pay? state side card-name cost)
         cost-as-symbol (when (= 1 (count cost-strs)) (costs->symbol cost))
-        ;; any trash abilities
+        ;; any discard abilities
         can-steal-this? (can-steal? state side c)
-        trash-ab-cards (when (not= (:zone c) [:discard])
+        discard-ab-cards (when (not= (:zone c) [:discard])
                          (->> (concat (all-active state :challenger)
                                       (get-in @state [:challenger :play-area]))
-                              (filter #(can-trigger? state :challenger (get-in (card-def %) [:interactions :trash-ability]) % [c]))))
-        ability-strs (map #(->> (card-def %) :interactions :trash-ability :label) trash-ab-cards)
+                              (filter #(can-trigger? state :challenger (get-in (card-def %) [:interactions :discard-ability]) % [c]))))
+        ability-strs (map #(->> (card-def %) :interactions :discard-ability :label) discard-ab-cards)
         ;; strs
         steal-str (when (and can-steal-this? can-pay-costs?)
                     (if (seq cost-strs)
@@ -276,16 +276,16 @@
                                                                   (str "pays " cost-as-symbol " to steal " card-name))
                                                       (steal-agenda state side eid c))))
 
-                                      ;; Use trash ability
+                                      ;; Use discard ability
                                       (some #(= % target) ability-strs)
                                       (let [idx (.indexOf ability-strs target)
-                                            trash-ab-card (nth trash-ab-cards idx)
-                                            cdef (-> (card-def trash-ab-card)
+                                            discard-ab-card (nth discard-ab-cards idx)
+                                            cdef (-> (card-def discard-ab-card)
                                                      :interactions
-                                                     :trash-ability)]
+                                                     :discard-ability)]
                                         (when (:run @state)
-                                          (swap! state assoc-in [:run :did-trash] true))
-                                        (wait-for (resolve-ability state side cdef trash-ab-card [c])
+                                          (swap! state assoc-in [:run :did-discard] true))
+                                        (wait-for (resolve-ability state side cdef discard-ab-card [c])
                                                   (do (trigger-event state side :no-steal c)
                                                       (access-end state side eid c))))))}
                       c nil)))
@@ -317,7 +317,7 @@
       (system-msg state side (str "must reveal they accessed " (:title card))))))
 
 (defn- access-trigger-events
-  "Trigger access effects, then move into trash/steal choice."
+  "Trigger access effects, then move into discard/steal choice."
   [state side eid c title]
   (let [cdef (card-def c)
         c (assoc c :seen true)
@@ -347,7 +347,7 @@
                   :async true
                   :effect (effect (access-end eid c))}]
     (cond
-      ;; Check if a pre-access-card effect trashed the card (By Any Means)
+      ;; Check if a pre-access-card effect discarded the card (By Any Means)
       (not (get-card state c))
       (access-end state side eid c)
 
@@ -372,11 +372,11 @@
   ([state side eid card title]
     ;; Indicate that we are in the access step.
    (swap! state assoc :access true)
-    ;; Reset counters for increasing costs of trash, steal, and access.
-   (swap! state update-in [:bonus] dissoc :trash)
+    ;; Reset counters for increasing costs of discard, steal, and access.
+   (swap! state update-in [:bonus] dissoc :discard)
    (swap! state update-in [:bonus] dissoc :steal-cost)
    (swap! state update-in [:bonus] dissoc :access-cost)
-    ;; First trigger pre-access-card, then move to determining if we can trash or steal.
+    ;; First trigger pre-access-card, then move to determining if we can discard or steal.
    (wait-for (trigger-event-sync state side :pre-access-card card)
              (access-pay state side eid card title))))
 

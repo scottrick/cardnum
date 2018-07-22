@@ -2,7 +2,7 @@
   "MECCGDB import tasks"
   (:require [web.db :refer [db] :as webdb]
             [clojure.string :as string]
-            [tasks.nrdb :refer :all]
+            [tasks.meccgdb :refer :all]
             [tasks.altart :refer [add-art]]))
 
 (defn fetch
@@ -17,12 +17,12 @@
           localpath (first (remove #(string/starts-with? % "--") args))
           download-fn (if use-local
                         (partial read-local-data localpath)
-                        download-nrdb-data)
+                        download-meccgdb-data)
           mwls (fetch-data download-fn (:mwl tables))
           sets (fetch-data download-fn (:set tables))
           card-download-fn (if use-local
                              (partial read-card-dir localpath)
-                             download-nrdb-data)
+                             download-meccgdb-data)
           cards (fetch-cards card-download-fn (:card tables) sets (not (some #{"--no-card-images"} args)))]
       (println (count sets) "sets imported")
       (println (count mwls) "MWL versions imported")

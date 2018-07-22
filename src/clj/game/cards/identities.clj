@@ -104,9 +104,9 @@
                  :req (req (and (:run @state) (not (rezzed? current-character)) (can-rez? state side current-character {:ignore-unique true})))
                  :prompt "Choose another server and redirect the run to its outermost position"
                  :choices (req (cancellable (remove #{(-> @state :run :server central->name)} servers)))
-                 :msg (msg "trash the approached Character. The Challenger is now running on " target)
+                 :msg (msg "discard the approached Character. The Challenger is now running on " target)
                  :effect (req (let [dest (server->zone state target)]
-                                (trash state side current-character)
+                                (discard state side current-character)
                                 (swap! state update-in [:run]
                                        #(assoc % :position (count (get-in contestant (conj dest :characters)))
                                                  :server (rest dest)))))}]}
@@ -118,13 +118,13 @@
               :req (req (and (= target :archives)
                              (first-successful-run-on-server? state :archives)
                              (not-empty (:hand contestant))))
-              :effect (effect (show-wait-prompt :challenger "Contestant to trash 1 card from HQ")
+              :effect (effect (show-wait-prompt :challenger "Contestant to discard 1 card from HQ")
                               (continue-ability
                                 {:prompt "Choose a card in HQ to discard"
                                  :player :contestant
                                  :choices (req (:hand contestant))
-                                 :msg "force the Contestant to trash 1 card from HQ"
-                                 :effect (effect (trash :contestant target)
+                                 :msg "force the Contestant to discard 1 card from HQ"
+                                 :effect (effect (discard :contestant target)
                                                  (clear-wait-prompt :challenger))}
                                card nil))}}}
 
@@ -160,7 +160,7 @@
                                  (damage state :challenger eid :meat 2 {:unboostable true :card card}))))}}}
 
    "Armand \"Geist\" Walker: Tech Lord"
-   {:events {:challenger-trash {:req (req (and (= side :challenger) (= (second targets) :ability-cost)))
+   {:events {:challenger-discard {:req (req (and (= side :challenger) (= (second targets) :ability-cost)))
                             :msg "draw a card"
                             :effect (effect (draw 1))}}}
 
@@ -218,7 +218,7 @@
 
    "Azmari EdTech: Shaping the Future"
    (let [choose-type {:prompt "Name a Challenger card type"
-                      :choices ["Event" "Muthereff" "Resource" "Hazard"]
+                      :choices ["Event" "Radicle" "Resource" "Hazard"]
                       :effect (effect (update! (assoc card :az-target target))
                                       (system-msg (str "uses Azmari EdTech: Shaping the Future to name " target)))}
          check-type {:req (req (is-type? target (:az-target card)))
@@ -282,19 +282,19 @@
                            state side
                            {:optional
                             {:prompt (str "Use Chronos Protocol: Selective Mind-mapping to reveal the Challenger's "
-                                          "Grip to select the first card trashed?")
+                                          "Grip to select the first card discarded?")
                              :priority 10
                              :player :contestant
-                             :yes-ability {:prompt (msg "Select a card to trash")
+                             :yes-ability {:prompt (msg "Select a card to discard")
                                            :choices (req (:hand challenger)) :not-distinct true
                                            :priority 10
-                                           :msg (msg "trash " (:title target)
+                                           :msg (msg "discard " (:title target)
                                                      (when (pos? (dec (or (get-defer-damage state side :net nil) 0)))
                                                        (str " and deal " (- (get-defer-damage state side :net nil) 1)
                                                             " more net damage")))
                                            :effect (req (clear-wait-prompt state :challenger)
                                                         (swap! state update-in [:damage] dissoc :damage-choose-contestant)
-                                                        (trash state side target {:cause :net :unpreventable true})
+                                                        (discard state side target {:cause :net :unpreventable true})
                                                         (let [more (dec (or (get-defer-damage state side :net nil) 0))]
                                                           (damage-defer state side :net more {:part-resolved true})))}
                              :no-ability {:effect (req (clear-wait-prompt state :challenger)
@@ -313,17 +313,17 @@
    "Edward Kim: Humanitys Hammer"
    {:events {:access {:once :per-turn
                       :req (req (and (is-type? target "Operation")
-                                     (turn-flag? state side card :can-trash-operation)))
-                      :effect (req (trash state side target)
-                                   (swap! state assoc-in [:run :did-trash] true)
-                                   (swap! state assoc-in [:challenger :register :trashed-card] true)
-                                   (register-turn-flag! state side card :can-trash-operation (constantly false)))
-                      :msg (msg "trash " (:title target))}
+                                     (turn-flag? state side card :can-discard-operation)))
+                      :effect (req (discard state side target)
+                                   (swap! state assoc-in [:run :did-discard] true)
+                                   (swap! state assoc-in [:challenger :register :discarded-card] true)
+                                   (register-turn-flag! state side card :can-discard-operation (constantly false)))
+                      :msg (msg "discard " (:title target))}
              :successful-run-ends {:req (req (and (= (:server target) [:archives])
                                                   (nil? (:replace-access (:run-effect target)))
                                                   (not= (:max-access target) 0)
                                                   (seq (filter #(is-type? % "Operation") (:discard contestant)))))
-                                   :effect (effect (register-turn-flag! card :can-trash-operation (constantly false)))}}}
+                                   :effect (effect (register-turn-flag! card :can-discard-operation (constantly false)))}}}
 
    "Ele \"Smoke\" Scovak: Cynosure of the Net"
    {:recurring 1}
@@ -339,12 +339,12 @@
                               :effect (req (draw state side eid 1 nil))}}}
 
    "Freedom Khumalo: Crypto-Anarchist"
-   {:flags {:slow-trash (req true)}
+   {:flags {:slow-discard (req true)}
     :interactions
-    {:trash-ability
+    {:discard-ability
      {:interactive (req true)
       :async true
-      :label "[Freedom]: Trash card"
+      :label "[Freedom]: Discard card"
       :req (req (and (not (get-in @state [:per-turn (:cid card)]))
                      (not (is-type? target "Agenda"))
                      (<= (:cost target)
@@ -357,18 +357,18 @@
                      (if (zero? play-or-rez)
                        (continue-ability state side
                                          {:async true
-                                          :msg (msg "trash " (:title accessed-card) " at no cost")
+                                          :msg (msg "discard " (:title accessed-card) " at no cost")
                                           :effect (effect (clear-wait-prompt :contestant)
-                                                          (trash-no-cost eid accessed-card))}
+                                                          (discard-no-cost eid accessed-card))}
                                          card nil)
                        (wait-for (resolve-ability state side (pick-virus-counters-to-spend play-or-rez) card nil)
                                  (do (clear-wait-prompt state :contestant)
                                      (if-let [msg (:msg async-result)]
                                        (do (system-msg state :challenger
                                                        (str "uses Freedom Khumalo: Crypto-Anarchist to"
-                                                            " trash " (:title accessed-card)
+                                                            " discard " (:title accessed-card)
                                                             " at no cost, spending " msg))
-                                           (trash-no-cost state side eid accessed-card))
+                                           (discard-no-cost state side eid accessed-card))
                                        ;; Player cancelled ability
                                        (do (swap! state dissoc-in [:per-turn (:cid card)])
                                            (access-non-agenda state side eid accessed-card :skip-trigger-event true))))))))}}}
@@ -498,7 +498,7 @@
       :abilities [ability]})
 
    "Industrial Genomics: Growing Solutions"
-   {:events {:pre-trash {:effect (effect (trash-cost-bonus
+   {:events {:pre-discard {:effect (effect (discard-cost-bonus
                                            (count (remove #(:seen %) (:discard contestant)))))}}}
 
    "Information Dynamics: All You Need To Know"
@@ -554,7 +554,7 @@
    {:events {:pre-resolve-damage
              {:req (req (and (-> @state :contestant :disable-id not) (= target :net) (pos? (last targets))))
               :effect (req (let [c (first (get-in @state [:challenger :deck]))]
-                             (system-msg state :contestant (str "uses Cardnum: Potential Unleashed to trash " (:title c)
+                             (system-msg state :contestant (str "uses Cardnum: Potential Unleashed to discard " (:title c)
                                                           " from the top of the Challenger's Stack"))
                              (mill state :contestant :challenger 1)))}}}
 
@@ -695,8 +695,8 @@
    "MaxX: Maximum Punk Rock"
    (let [ability {:msg (msg (let [deck (:deck challenger)]
                               (if (pos? (count deck))
-                                (str "trash " (join ", " (map :title (take 2 deck))) " from their Stack and draw 1 card")
-                                "trash the top 2 cards from their Stack and draw 1 card - but their Stack is empty")))
+                                (str "discard " (join ", " (map :title (take 2 deck))) " from their Stack and draw 1 card")
+                                "discard the top 2 cards from their Stack and draw 1 card - but their Stack is empty")))
                   :once :per-turn
                   :effect (effect (mill :challenger 2) (draw))}]
      {:flags {:challenger-turn-draw true
@@ -738,16 +738,16 @@
                                   (swap! state update-in [:bonus] dissoc :cost))))}]}
 
    "NBN: Controlling the Message"
-   (let [cleanup (effect (update! :contestant (dissoc card :saw-trash)))]
+   (let [cleanup (effect (update! :contestant (dissoc card :saw-discard)))]
    {:events {:contestant-turn-ends {:effect cleanup}
              :challenger-turn-ends {:effect cleanup}
-             :challenger-trash
+             :challenger-discard
              {:async true
-              :req (req (and (not (:saw-trash card))
+              :req (req (and (not (:saw-discard card))
                              (card-is? target :side :contestant)
                              (installed? target)))
               :effect (req (show-wait-prompt state :challenger "Contestant to use NBN: Controlling the Message")
-                           (update! state :contestant (assoc card :saw-trash true))
+                           (update! state :contestant (assoc card :saw-discard true))
                            (continue-ability
                              state :contestant
                              {:optional
@@ -817,20 +817,20 @@
    {:events {:psi-game {:msg "gain 1 [Credits]" :effect (effect (gain-credits :contestant 1))}}}
 
    "Noise: Hacker Extraordinaire"
-   {:events {:challenger-install {:msg "force the Contestant to trash the top card of R&D"
+   {:events {:challenger-install {:msg "force the Contestant to discard the top card of R&D"
                               :effect (effect (mill :contestant))
                               :req (req (has-subtype? target "Virus"))}}}
 
    "Null: Whistleblower"
    {:abilities [{:once :per-turn
                  :req (req (and (:run @state) (rezzed? current-character)))
-                 :prompt "Select a card in your Grip to trash"
+                 :prompt "Select a card in your Grip to discard"
                  :choices {:req in-hand?}
-                 :msg (msg "trash " (:title target) " and reduce the strength of " (:title current-character)
+                 :msg (msg "discard " (:title target) " and reduce the strength of " (:title current-character)
                            " by 2 for the remainder of the run")
                  :effect (effect (update! (assoc card :null-target current-character))
                                  (update-character-strength current-character)
-                                 (trash target {:unpreventable true}))}]
+                                 (discard target {:unpreventable true}))}]
     :events {:pre-character-strength
              {:req (req (= (:cid target) (get-in card [:null-target :cid])))
               :effect (effect (character-strength-bonus -2 target))}
@@ -912,11 +912,11 @@
 
    "Skorpios Defense Systems: Persuasive Power"
    {:implementation "Manually triggered, no restriction on which cards in Heap can be targeted.  Cannot use on in progress run event"
-    :abilities [{:label "Remove a card in the Heap that was just trashed from the game"
+    :abilities [{:label "Remove a card in the Heap that was just discarded from the game"
                  :async true
                  :effect (req (when-not (and (used-this-turn? (:cid card) state) (active-prompt? state side card))
                                 (show-wait-prompt state :challenger "Contestant to use Skorpios' ability" {:card card})
-                                (continue-ability state side {:prompt "Choose a card in the Challenger's Heap that was just trashed"
+                                (continue-ability state side {:prompt "Choose a card in the Challenger's Heap that was just discarded"
                                                               :once :per-turn
                                                               :choices (req (cancellable
                                                               ; do not allow a run event in progress to get nuked #2963
@@ -1038,21 +1038,21 @@
    {:effect (req (when (> (:turn @state) 1)
                    (if (:sync-front card)
                      (tag-remove-bonus state side -1)
-                     (trash-muthereff-bonus state side 2))))
+                     (discard-radicle-bonus state side 2))))
     :events {:pre-first-turn {:req (req (= side :contestant))
                               :effect (effect (update! (assoc card :sync-front true)) (tag-remove-bonus -1))}}
     :abilities [{:cost [:click 1]
                  :effect (req (if (:sync-front card)
                                 (do (tag-remove-bonus state side 1)
-                                    (trash-muthereff-bonus state side 2)
+                                    (discard-radicle-bonus state side 2)
                                     (update! state side (-> card (assoc :sync-front false) (assoc :code "sync"))))
                                 (do (tag-remove-bonus state side -1)
-                                    (trash-muthereff-bonus state side -2)
+                                    (discard-radicle-bonus state side -2)
                                     (update! state side (-> card (assoc :sync-front true) (assoc :code "09001"))))))
                  :msg (msg "flip their ID")}]
     :leave-play (req (if (:sync-front card)
                        (tag-remove-bonus state side 1)
-                       (trash-muthereff-bonus state side -2)))}
+                       (discard-radicle-bonus state side -2)))}
 
    "Synthetic Systems: The World Re-imagined"
    {:events {:pre-start-game {:effect draft-points-target}}
@@ -1144,7 +1144,7 @@
 
    "Wyvern: Chemically Enhanced"
    {:events {:pre-start-game {:effect draft-points-target}
-             :challenger-trash {:req (req (and (has-most-faction? state :challenger "Anarch")
+             :challenger-discard {:req (req (and (has-most-faction? state :challenger "Anarch")
                                            (card-is? target :side :contestant)
                                            (pos? (count (:discard challenger)))))
                             :msg (msg "shuffle " (:title (last (:discard challenger))) " into their Stack")

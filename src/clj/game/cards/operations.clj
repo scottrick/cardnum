@@ -138,30 +138,30 @@
                 (if (some #(= (:cid %) (:cid card)) p)
                   (>= (count h) 2)
                   (>= (count h) 3))))
-    :effect (req (system-msg state side "trashes all cards in HQ due to Audacity")
+    :effect (req (system-msg state side "discards all cards in HQ due to Audacity")
                  (doseq [c (:hand contestant)]
-                   (trash state side c {:unpreventable true}))
+                   (discard state side c {:unpreventable true}))
                  (continue-ability state side (audacity 1) card nil))})
 
    "Back Channels"
    {:async true
-    :prompt "Select an installed card in a server to trash"
+    :prompt "Select an installed card in a server to discard"
     :choices {:req #(and (= (last (:zone %)) :content)
                          (is-remote? (second (:zone %))))}
     :effect (effect (gain-credits (* 3 (get-counters target :advancement)))
-                    (trash eid target nil))
-    :msg (msg "trash " (card-str state target) " and gain "
+                    (discard eid target nil))
+    :msg (msg "discard " (card-str state target) " and gain "
               (* 3 (get-counters target :advancement)) " [Credits]")}
 
    "Bad Times"
-   {:implementation "Any required resource trashing is manual"
+   {:implementation "Any required resource discarding is manual"
     :req (req tagged)
     :msg "force the Challenger to lose 2[mu] until the end of the turn"
     :effect (req (lose state :challenger :memory 2)
                  (when (neg? (available-mu state))
                    ;; Give challenger a toast as well
                    (toast-check-mu state)
-                   (system-msg state :challenger "must trash resources to free up [mu]")))
+                   (system-msg state :challenger "must discard resources to free up [mu]")))
     :end-turn {:effect (req (gain state :challenger :memory 2)
                             (system-msg state :challenger "regains 2[mu]"))}}
 
@@ -174,30 +174,30 @@
     :req (req (not-empty (all-installed state :challenger)))
     :effect (req (let [t (:tag challenger)]
                    (continue-ability state side
-                     {:prompt (msg "Choose a Challenger card with an install cost of " t " or less to trash")
+                     {:prompt (msg "Choose a Challenger card with an install cost of " t " or less to discard")
                       :choices {:req #(and (installed? %)
                                            (<= (:cost %) t))}
-                      :msg (msg "trash " (:title target))
-                      :effect (effect (trash target))}
+                      :msg (msg "discard " (:title target))
+                      :effect (effect (discard target))}
                     card nil)))}
 
    "Biased Reporting"
    {:async true
     :req (req (not-empty (all-active-installed state :challenger)))
     :prompt "Choose a card type"
-    :choices ["Muthereff" "Hazard" "Resource"]
+    :choices ["Radicle" "Hazard" "Resource"]
     :effect (req (let [t target
                        num (count (filter #(is-type? % t) (all-active-installed state :challenger)))]
-                   (show-wait-prompt state :contestant "Challenger to choose cards to trash")
+                   (show-wait-prompt state :contestant "Challenger to choose cards to discard")
                    (wait-for
                      (resolve-ability state :challenger
-                       {:prompt (msg "Choose any number of cards of type " t " to trash")
+                       {:prompt (msg "Choose any number of cards of type " t " to discard")
                         :choices {:max num :req #(and (installed? %) (is-type? % t))}
                         :cancel-effect (effect (clear-wait-prompt :contestant))
                         :effect (req (doseq [c targets]
-                                       (trash state :challenger c {:unpreventable true}))
+                                       (discard state :challenger c {:unpreventable true}))
                                      (gain-credits state :challenger (count targets))
-                                     (system-msg state :challenger (str "trashes " (join ", " (map :title (sort-by :title targets)))
+                                     (system-msg state :challenger (str "discards " (join ", " (map :title (sort-by :title targets)))
                                                                     " and gains " (count targets) " [Credits]"))
                                      (clear-wait-prompt state :contestant))}
                       card nil)
@@ -324,7 +324,7 @@
                            :effect (effect (gain-credits :contestant 1))}]
      {:implementation "Credit gain mandatory to save on wait-prompts, adjust credits manually if credit not wanted."
       :events {:challenger-install gain-cred-effect
-               :challenger-trash (assoc gain-cred-effect :req (req (installed? target)))}})
+               :challenger-discard (assoc gain-cred-effect :req (req (installed? target)))}})
 
    "Dedication Ceremony"
    {:prompt "Select a faceup card"
@@ -356,20 +356,20 @@
    "Distract the Masses"
    (let [shuffle-two {:async true
                       :effect (effect (rfg-and-shuffle-rd-effect (find-cid (:cid card) (:discard contestant)) 2))}
-         trash-from-hq {:async true
-                        :prompt "Select up to 2 cards in HQ to trash"
+         discard-from-hq {:async true
+                        :prompt "Select up to 2 cards in HQ to discard"
                         :choices {:max 2
                                   :req #(and (= (:side %) "Contestant")
                                              (in-hand? %))}
-                        :msg (msg "trash " (quantify (count targets) "card") " from HQ")
+                        :msg (msg "discard " (quantify (count targets) "card") " from HQ")
                         :effect (req (wait-for
-                                       (trash-cards state side targets nil)
+                                       (discard-cards state side targets nil)
                                        (continue-ability state side shuffle-two card nil)))
                         :cancel-effect (req (continue-ability state side shuffle-two card nil))}]
      {:async true
       :msg "give The Challenger 2 [Credits]"
       :effect (effect (gain-credits :challenger 2)
-                      (continue-ability trash-from-hq card nil))})
+                      (continue-ability discard-from-hq card nil))})
 
    "Diversified Portfolio"
    (letfn [(number-of-non-empty-remotes [state]
@@ -404,8 +404,8 @@
                    count
                    pos?))
     :async true
-    :msg (msg "trash all cards in HQ and draw 5 cards")
-    :effect (effect (trash-cards (get-in @state [:contestant :hand]))
+    :msg (msg "discard all cards in HQ and draw 5 cards")
+    :effect (effect (discard-cards (get-in @state [:contestant :hand]))
                     (draw eid 5 nil))}
 
    "Enforced Curfew"
@@ -415,7 +415,7 @@
 
    "Enforcing Loyalty"
    {:trace {:base 3
-            :label "Trash a card not matching the faction of the Challenger's identity"
+            :label "Discard a card not matching the faction of the Challenger's identity"
             :successful
             {:async true
              :effect (req (let [f (:faction (:identity challenger))]
@@ -425,8 +425,8 @@
                                :choices {:req #(and (installed? %)
                                                     (not= f (:faction %))
                                                     (card-is? % :side :challenger))}
-                               :msg (msg "trash " (:title target))
-                               :effect (effect (trash target))}
+                               :msg (msg "discard " (:title target))
+                               :effect (effect (discard target))}
                               card nil)))}}}
 
    "Enhanced Login Protocol"
@@ -487,23 +487,23 @@
 
    "Financial Collapse"
    {:async true
-    :req (req (and (>= (:credit challenger) 6) (seq (filter #(is-type? % "Muthereff") (all-active-installed state :challenger)))))
-    :effect (req (let [rcount (count (filter #(is-type? % "Muthereff") (all-active-installed state :challenger)))]
+    :req (req (and (>= (:credit challenger) 6) (seq (filter #(is-type? % "Radicle") (all-active-installed state :challenger)))))
+    :effect (req (let [rcount (count (filter #(is-type? % "Radicle") (all-active-installed state :challenger)))]
                    (if (pos? rcount)
-                     (do (show-wait-prompt state :contestant "Challenger to trash a muthereff to prevent Financial Collapse")
+                     (do (show-wait-prompt state :contestant "Challenger to discard a radicle to prevent Financial Collapse")
                          (continue-ability
                            state side
-                           {:prompt (msg "Trash a muthereff to prevent Financial Collapse?")
+                           {:prompt (msg "Discard a radicle to prevent Financial Collapse?")
                             :choices ["Yes" "No"] :player :challenger
                             :async true
                             :effect (effect (continue-ability
                                               (if (= target "Yes")
                                                 {:player :challenger
-                                                 :prompt "Select a muthereff to trash"
-                                                 :choices {:req #(and (is-type? % "Muthereff") (installed? %))}
-                                                 :effect (req (trash state side target {:unpreventable true})
+                                                 :prompt "Select a radicle to discard"
+                                                 :choices {:req #(and (is-type? % "Radicle") (installed? %))}
+                                                 :effect (req (discard state side target {:unpreventable true})
                                                               (system-msg state :challenger
-                                                                          (str "trashes " (:title target)
+                                                                          (str "discards " (:title target)
                                                                                " to prevent Financial Collapse"))
                                                               (clear-wait-prompt state :contestant))}
                                                 {:effect (effect (lose-credits :challenger (* rcount 2))
@@ -517,22 +517,22 @@
 
    "Foxfire"
    {:trace {:base 7
-            :successful {:prompt "Select 1 card to trash"
+            :successful {:prompt "Select 1 card to discard"
                          :not-distinct true
                          :choices {:req #(and (installed? %)
                                               (or (has-subtype? % "Virtual")
                                                   (has-subtype? % "Link")))}
-                         :msg "trash 1 virtual muthereff or link"
-                         :effect (effect (trash target)
-                                         (system-msg (str "trashes " (:title target))))}}}
+                         :msg "discard 1 virtual radicle or link"
+                         :effect (effect (discard target)
+                                         (system-msg (str "discards " (:title target))))}}}
 
    "Freelancer"
    {:req (req tagged)
-    :msg (msg "trash " (join ", " (map :title (sort-by :title targets))))
+    :msg (msg "discard " (join ", " (map :title (sort-by :title targets))))
     :choices {:max 2
               :req #(and (installed? %)
-                         (is-type? % "Muthereff"))}
-    :effect (effect (trash-cards :challenger targets))}
+                         (is-type? % "Radicle"))}
+    :effect (effect (discard-cards :challenger targets))}
 
    "Friends in High Places"
    (let [fhelper (fn fhp [n] {:prompt "Select a card in Archives to install with Friends in High Places"
@@ -555,7 +555,7 @@
    "Genotyping"
    {:async true
     :effect (effect (mill :contestant 2)
-                    (system-msg "trashes the top 2 cards of R&D")
+                    (system-msg "discards the top 2 cards of R&D")
                     (rfg-and-shuffle-rd-effect eid (first (:play-area contestant)) 4 false))}
 
    "Green Level Clearance"
@@ -594,7 +594,7 @@
                                (continue-ability state side (hr-final chosen original) card nil))))})]
      {:additional-cost [:mill 1]
       :async true
-      :msg "trash the top card of R&D, draw 3 cards, and add 3 cards in HQ to the top of R&D"
+      :msg "discard the top card of R&D, draw 3 cards, and add 3 cards in HQ to the top of R&D"
       :effect (req (wait-for (draw state side 3 nil)
                              (do (show-wait-prompt state :challenger "Contestant to add 3 cards in HQ to the top of R&D")
                                  (let [from (get-in @state [:contestant :hand])]
@@ -612,20 +612,20 @@
    {:msg "gain 9 [Credits]" :effect (effect (gain-credits 9))}
 
    "Hellion Alpha Test"
-   {:req (req (last-turn? state :challenger :installed-muthereff))
+   {:req (req (last-turn? state :challenger :installed-radicle))
     :trace {:base 2
-            :successful {:msg "add a Muthereff to the top of the Stack"
+            :successful {:msg "add a Radicle to the top of the Stack"
                          :choices {:req #(and (installed? %)
-                                              (is-type? % "Muthereff"))}
+                                              (is-type? % "Radicle"))}
                          :effect (effect (move :challenger target :deck {:front true})
                                          (system-msg (str "adds " (:title target) " to the top of the Stack")))}
             :unsuccessful {:msg "take 1 bad publicity"
                            :effect (effect (gain-bad-publicity :contestant 1))}}}
 
    "Hellion Beta Test"
-   {:req (req (last-turn? state :challenger :trashed-card))
+   {:req (req (last-turn? state :challenger :discarded-card))
     :trace {:base 2
-            :label "Trace 2 - Trash 2 installed non-resource cards or take 1 bad publicity"
+            :label "Trace 2 - Discard 2 installed non-resource cards or take 1 bad publicity"
             :successful {:choices {:max (req (min 2 (count (filter #(or (:facedown %)
                                                                         (not (is-type? % "Resource")))
                                                                    (concat (all-installed state :contestant)
@@ -633,9 +633,9 @@
                                    :all true
                                    :req #(and (installed? %)
                                               (not (is-type? % "Resource")))}
-                         :msg (msg "trash " (join ", " (map :title (sort-by :title targets))))
+                         :msg (msg "discard " (join ", " (map :title (sort-by :title targets))))
                          :effect (req (doseq [c targets]
-                                        (trash state side c)))}
+                                        (discard state side c)))}
             :unsuccessful {:msg "take 1 bad publicity"
                            :effect (effect (gain-bad-publicity :contestant 1))}}}
 
@@ -660,19 +660,19 @@
 
    "Housekeeping"
    {:events {:challenger-install {:player :challenger
-                              :prompt "Select a card from your Grip to trash for Housekeeping" :once :per-turn
+                              :prompt "Select a card from your Grip to discard for Housekeeping" :once :per-turn
                               :choices {:req #(and (= (:side %) "Challenger")
                                                    (in-hand? %))}
-                              :msg (msg "force the Challenger to trash " (:title target) " from their Grip")
-                              :effect (effect (trash target {:unpreventable true}))}}}
+                              :msg (msg "force the Challenger to discard " (:title target) " from their Grip")
+                              :effect (effect (discard target {:unpreventable true}))}}}
 
    "Hunter Seeker"
    {:req (req (last-turn? state :challenger :stole-agenda))
     :async true
-    :prompt "Choose a card to trash"
+    :prompt "Choose a card to discard"
     :choices {:req installed?}
-    :msg (msg "trash " (card-str state target))
-    :effect (effect (trash target))}
+    :msg (msg "discard " (card-str state target))
+    :effect (effect (discard target))}
 
    "Interns"
    {:prompt "Select a card to install from Archives or HQ"
@@ -688,29 +688,29 @@
    (letfn [(iop [x]
              {:async true
               :req (req (->> (:hand challenger)
-                             (filter #(or (is-type? % "Muthereff")
+                             (filter #(or (is-type? % "Radicle")
                                           (is-type? % "Event")))
                              count
                              pos?))
-              :prompt "Choose a muthereff or event to trash"
-              :msg (msg "trash " (:title target))
+              :prompt "Choose a radicle or event to discard"
+              :msg (msg "discard " (:title target))
               :choices (req (cancellable
-                              (filter #(or (is-type? % "Muthereff")
+                              (filter #(or (is-type? % "Radicle")
                                            (is-type? % "Event"))
                                       (:hand challenger))
                               :sorted))
-              :effect (req (trash state side target)
+              :effect (req (discard state side target)
                            (if (pos? x)
                              (continue-ability state side (iop (dec x)) card nil)
                              (effect-completed state side eid)))})]
      {:trace {:base 2
-              :successful {:msg "reveal the Challenger's Grip and trash up to X muthereffs or events"
+              :successful {:msg "reveal the Challenger's Grip and discard up to X radicles or events"
                            :effect (req (let [x (- target (second targets))]
                                           (system-msg
                                             state :contestant
                                             (str "reveals the Challenger's Grip ( "
                                                  (join ", " (map :title (sort-by :title (:hand challenger))))
-                                                 " ) and can trash up to " x " muthereffs or events"))
+                                                 " ) and can discard up to " x " radicles or events"))
                                           (continue-ability state side (iop (dec x)) card nil)))}
               :unsuccessful {:msg "take 1 bad publicity"
                              :effect (effect (gain-bad-publicity :contestant 1))}}})
@@ -751,13 +751,13 @@
    {:async true
     :effect (req (let [n (count (filter #(not (is-type? % "Agenda")) (all-active-installed state :contestant)))]
                    (continue-ability state side
-                     {:prompt "Select any number of rezzed cards to trash"
+                     {:prompt "Select any number of rezzed cards to discard"
                       :choices {:max n
                                 :req #(and (rezzed? %)
                                            (not (is-type? % "Agenda")))}
-                      :msg (msg "trash " (join ", " (map :title (sort-by :title targets))) " and gain " (* (count targets) 3) " [Credits]")
+                      :msg (msg "discard " (join ", " (map :title (sort-by :title targets))) " and gain " (* (count targets) 3) " [Credits]")
                       :effect (req (doseq [c targets]
-                                     (trash state side c))
+                                     (discard state side c))
                                    (gain-credits state side (* (count targets) 3)))}
                     card nil)))}
 
@@ -811,7 +811,7 @@
                                                       (get-all-installed state))))))}
 
    "MCA Informant"
-   {:implementation "Challenger must deduct 1 click and 2 credits, then trash host manually"
+   {:implementation "Challenger must deduct 1 click and 2 credits, then discard host manually"
     :req (req (not-empty (filter #(has-subtype? % "Connection") (all-active-installed state :challenger))))
     :prompt "Choose a connection to host MCA Informant on it"
     :choices {:req #(and (= (:side %) "Challenger") (has-subtype? % "Connection") (installed? %))}
@@ -819,7 +819,7 @@
     :effect (req (host state side (get-card state target) (assoc card :zone [:discard] :seen true))
                  (swap! state update-in [:challenger :tag] inc))
     :leave-play (req (swap! state update-in [:challenger :tag] dec)
-                     (system-msg state :contestant "trashes MCA Informant"))}
+                     (system-msg state :contestant "discards MCA Informant"))}
 
    "Medical Research Fundraiser"
    {:msg "gain 8 [Credits]. The Challenger gains 3 [Credits]"
@@ -861,7 +861,7 @@
    {:req (req (some #(and (character? %)
                           (rezzed? %))
                     (all-installed state :contestant)))
-    :prompt "Select a rezzed piece of character to trash"
+    :prompt "Select a rezzed piece of character to discard"
     :choices {:req #(and (character? %)
                          (rezzed? %))}
     :async true
@@ -870,9 +870,9 @@
                        titles (->> (conj (vec reveal) (first r))
                                    (filter identity)
                                    (map :title))]
-                   (wait-for (trash state :contestant target nil)
+                   (wait-for (discard state :contestant target nil)
                              (do
-                               (system-msg state side (str "uses Mutate to trash " (:title target)))
+                               (system-msg state side (str "uses Mutate to discard " (:title target)))
                                (when (seq titles)
                                  (system-msg state side (str "reveals " (clojure.string/join ", " titles) " from R&D")))
                                (if-let [character (first r)]
@@ -901,12 +901,12 @@
                    (do (gain state :contestant :click 2)
                        (system-msg state side (str "uses O₂ Shortage to gain [Click][Click]"))
                        (effect-completed state side eid))
-                   (do (show-wait-prompt state :contestant "Challenger to decide whether or not to trash a card from their Grip")
+                   (do (show-wait-prompt state :contestant "Challenger to decide whether or not to discard a card from their Grip")
                        (continue-ability state side
                          {:optional
-                          {:prompt "Trash 1 random card from your Grip?"
+                          {:prompt "Discard 1 random card from your Grip?"
                            :player :challenger
-                           :yes-ability {:effect (effect (trash-cards :challenger (take 1 (shuffle (:hand challenger))))
+                           :yes-ability {:effect (effect (discard-cards :challenger (take 1 (shuffle (:hand challenger))))
                                                          (clear-wait-prompt :contestant))}
                            :no-ability {:msg "gain [Click][Click]"
                                         :effect (effect (gain :contestant :click 2)
@@ -919,14 +919,14 @@
                    (< (:credit challenger) 6)))
     :async true
     :effect (effect (continue-ability
-                      {:prompt "Select an installed card to trash"
+                      {:prompt "Select an installed card to discard"
                        :choices {:req installed?}
-                       :msg (msg "remove 1 Challenger tag and trash " (:title target))
-                       :effect (effect (trash target))}
+                       :msg (msg "remove 1 Challenger tag and discard " (:title target))
+                       :effect (effect (discard target))}
                      card nil))}
 
    "Oversight AI"
-   {:implementation "Trashing Character is manual"
+   {:implementation "Discarding Character is manual"
     :choices {:req #(and (character? %) (not (rezzed? %)) (= (last (:zone %)) :characters))}
     :msg (msg "rez " (:title target) " at no cost")
     :effect (effect (rez target {:ignore-cost :all-costs})
@@ -956,35 +956,35 @@
    "Power Grid Overload"
    {:req (req (last-turn? state :challenger :made-run))
     :trace {:base 2
-            :successful {:msg "trash 1 piece of hazard"
+            :successful {:msg "discard 1 piece of hazard"
                          :async true
                          :effect (req (let [max-cost (- target (second targets))]
                                         (continue-ability
                                           state side
                                           {:choices {:req #(and (is-type? % "Hazard")
                                                                 (<= (:cost %) max-cost))}
-                                           :msg (msg "trash " (:title target))
-                                           :effect (effect (trash target))}
+                                           :msg (msg "discard " (:title target))
+                                           :effect (effect (discard target))}
                                           card nil))
                                       (system-msg
                                         state :contestant
-                                        (str "trashes 1 piece of hazard with install cost less than or equal to "
+                                        (str "discards 1 piece of hazard with install cost less than or equal to "
                                              (- target (second targets)))))}}}
 
    "Power Shutdown"
    {:req (req (last-turn? state :challenger :made-run))
-    :prompt "Trash how many cards from the top R&D?"
+    :prompt "Discard how many cards from the top R&D?"
     :choices {:number (req (apply max (map :cost (filter #(or (= "Resource" (:type %)) (= "Hazard" (:type %))) (all-active-installed state :challenger)))))}
-    :msg (msg "trash " target " cards from the top of R&D")
+    :msg (msg "discard " target " cards from the top of R&D")
     :async true
     :effect (req (mill state :contestant target)
                  (let [n target]
                    (continue-ability state :challenger
-                                     {:prompt "Select a Resource or piece of Hazard to trash"
+                                     {:prompt "Select a Resource or piece of Hazard to discard"
                                       :choices {:req #(and (#{"Hazard" "Resource"} (:type %))
                                                            (<= (:cost %) n))}
-                                      :msg (msg "trash " (:title target))
-                                      :effect (effect (trash target))}
+                                      :msg (msg "discard " (:title target))
+                                      :effect (effect (discard target))}
                                     card nil)))}
 
    "Precognition"
@@ -1019,14 +1019,14 @@
 
    "Product Recall"
    {:async true
-    :prompt "Select a rezzed site or region to trash"
+    :prompt "Select a rezzed site or region to discard"
     :choices {:req #(and (rezzed? %)
                          (or (is-type? % "Site")
                              (is-type? % "Region")))}
-    :effect (req (let [tcost (modified-trash-cost state side target)]
-                   (wait-for (trash state side target {:unpreventable true})
+    :effect (req (let [tcost (modified-discard-cost state side target)]
+                   (wait-for (discard state side target {:unpreventable true})
                              (do (gain-credits state :contestant tcost)
-                                 (system-msg state side (str "uses Product Recall to trash " (card-str state target)
+                                 (system-msg state side (str "uses Product Recall to discard " (card-str state target)
                                                              " and gain " tcost "[Credits]"))
                                  (effect-completed state side eid)))))}
 
@@ -1179,14 +1179,14 @@
 
    "Restoring Face"
    {:async true
-    :prompt "Select a Sysop, Executive or Clone to trash"
-    :msg (msg "trash " (card-str state target) " to remove 2 bad publicity")
+    :prompt "Select a Sysop, Executive or Clone to discard"
+    :msg (msg "discard " (card-str state target) " to remove 2 bad publicity")
     :choices {:req #(and (rezzed? %)
                          (or (has-subtype? % "Clone")
                              (has-subtype? % "Executive")
                              (has-subtype? % "Sysop")))}
     :effect (effect (lose :bad-publicity 2)
-                    (trash eid target nil))}
+                    (discard eid target nil))}
 
    "Restructure"
    {:msg "gain 15 [Credits]"
@@ -1196,14 +1196,14 @@
    {:async true
     :effect (req (let [n (count (:hand contestant))]
                    (continue-ability state side
-                     {:prompt (msg "Select up to " n " cards in HQ to trash with Reuse")
+                     {:prompt (msg "Select up to " n " cards in HQ to discard with Reuse")
                       :choices {:max n
                                 :req #(and (= (:side %) "Contestant")
                                            (in-hand? %))}
                       :msg (msg (let [m (count targets)]
-                                  (str "trash " (quantify m "card")
+                                  (str "discard " (quantify m "card")
                                        " and gain " (* 2 m) " [Credits]")))
-                      :effect (effect (trash-cards targets)
+                      :effect (effect (discard-cards targets)
                                       (gain-credits (* 2 (count targets))))} card nil)))}
 
    "Reverse Infection"
@@ -1217,12 +1217,12 @@
                      (purge state side)
                      (let [post-purge-virus (number-of-virus-counters state)
                            num-virus-purged (- pre-purge-virus post-purge-virus)
-                           num-to-trash (quot num-virus-purged 3)]
-                       (mill state :contestant :challenger num-to-trash)
+                           num-to-discard (quot num-virus-purged 3)]
+                       (mill state :contestant :challenger num-to-discard)
                        (system-msg state side (str "uses Reverse Infection to purge "
                                                    num-virus-purged (pluralize " virus counter" num-virus-purged)
-                                                   " and trash "
-                                                   num-to-trash (pluralize " card" num-to-trash)
+                                                   " and discard "
+                                                   num-to-discard (pluralize " card" num-to-discard)
                                                    " from the top of the stack"))))))}
 
    "Rework"
@@ -1234,7 +1234,7 @@
                     (shuffle! :deck))}
 
    "Riot Suppression"
-   {:req (req (last-turn? state :challenger :trashed-card))
+   {:req (req (last-turn? state :challenger :discarded-card))
     :async true
     :effect (req (let [c card]
                    (show-wait-prompt state :contestant "Challenger to decide if they will take 1 brain damage")
@@ -1293,13 +1293,13 @@
     :effect (req (system-msg state side
                              (str "uses Salem's Hospitality to reveal the Challenger's Grip ( "
                                   (join ", " (map :title (sort-by :title (:hand challenger))))
-                                  " ) and trash any copies of " target))
+                                  " ) and discard any copies of " target))
                  (doseq [c (filter #(= target (:title %)) (:hand challenger))]
-                   (trash state side c {:unpreventable true})))}
+                   (discard state side c {:unpreventable true})))}
 
-   "Scarcity of Muthereffs"
-   {:msg "increase the install cost of muthereffs by 2"
-    :events {:pre-install {:req (req (and (is-type? target "Muthereff")
+   "Scarcity of Radicles"
+   {:msg "increase the install cost of radicles by 2"
+    :events {:pre-install {:req (req (and (is-type? target "Radicle")
                                           (not (second targets)))) ; not facedown
                            :effect (effect (install-cost-bonus [:credit 2]))}}}
 
@@ -1402,7 +1402,7 @@
    "Snatch and Grab"
    {:trace {:base 3
             :successful
-            {:msg "trash a connection"
+            {:msg "discard a connection"
              :choices {:req #(has-subtype? % "Connection")}
              :async true
              :effect (req (let [c target]
@@ -1410,19 +1410,19 @@
                             (continue-ability
                               state side
                               {:player :challenger
-                               :prompt (msg "Take 1 tag to prevent " (:title c) " from being trashed?")
+                               :prompt (msg "Take 1 tag to prevent " (:title c) " from being discarded?")
                                :choices ["Yes" "No"]
                                :async true
                                :effect (effect (clear-wait-prompt :contestant)
                                                (continue-ability
                                                  (if (= target "Yes")
                                                    {:msg (msg "take 1 tag to prevent " (:title c)
-                                                              " from being trashed")
+                                                              " from being discarded")
                                                     :async true
                                                     :effect (effect (tag-challenger eid 1 {:unpreventable true}))}
                                                    {:async true
-                                                    :effect (effect (trash :contestant eid c nil))
-                                                    :msg (msg "trash " (:title c))})
+                                                    :effect (effect (discard :contestant eid c nil))
+                                                    :msg (msg "discard " (:title c))})
                                                  card nil))}
                               card nil)))}}}
 
@@ -1441,7 +1441,7 @@
    "Standard Procedure"
    {:req (req (last-turn? state :challenger :successful-run))
     :prompt "Choose a card type"
-    :choices ["Event" "Hazard" "Resource" "Muthereff"]
+    :choices ["Event" "Hazard" "Resource" "Radicle"]
     :effect (req (let [n (* 2 (count (filter #(is-type? % target) (:hand challenger))))]
                    (gain-credits state :contestant n)
                    (system-msg state side (str "uses Standard Procedure to name " target ", reveal "
@@ -1564,25 +1564,25 @@
                :play-event gaincr}})
 
    "The All-Seeing I"
-   (let [trash-all-muthereffs {:player :challenger
-                              :effect (req (trash-cards state side (filter #(is-type? % "Muthereff") (all-active-installed state :challenger))))
-                              :msg (msg "trash all muthereffs")}]
+   (let [discard-all-radicles {:player :challenger
+                              :effect (req (discard-cards state side (filter #(is-type? % "Radicle") (all-active-installed state :challenger))))
+                              :msg (msg "discard all radicles")}]
        {:req (req tagged)
         :async true
         :effect (effect
                  (continue-ability
                    (if-not (zero? (:bad-publicity contestant)) ;; If contestant's bad-pub is 0
                      {:optional {:player :challenger
-                                 :prompt "Remove 1 bad publicity from the contestant to prevent all muthereffs from being trashed?"
+                                 :prompt "Remove 1 bad publicity from the contestant to prevent all radicles from being discarded?"
                                  :yes-ability {:effect (effect (lose :contestant :bad-publicity 1))
                                                :player :contestant
-                                               :msg (msg "lose 1 bad publicity, preventing all muthereffs from being trashed")}
-                                 :no-ability trash-all-muthereffs}}
-                    trash-all-muthereffs)
+                                               :msg (msg "lose 1 bad publicity, preventing all radicles from being discarded")}
+                                 :no-ability discard-all-radicles}}
+                    discard-all-radicles)
                   card targets))})
 
    "Threat Assessment"
-   {:req (req (last-turn? state :challenger :trashed-card))
+   {:req (req (last-turn? state :challenger :discarded-card))
     :prompt "Select an installed Challenger card"
     :choices {:req #(and (= (:side %) "Challenger") (installed? %))}
     :async true
@@ -1670,7 +1670,7 @@
    "Trojan Horse"
    {:req (req (:accessed-cards challenger-reg))
     :trace {:base 4
-            :label "Trace 4 - Trash a resource"
+            :label "Trace 4 - Discard a resource"
             :successful {:async true
                          :effect (req (let [exceed (- target (second targets))]
                                         (continue-ability
@@ -1681,8 +1681,8 @@
                                            :choices {:req #(and (is-type? % "Resource")
                                                                 (installed? %)
                                                                 (>= exceed (:cost %)))}
-                                           :msg (msg "trash " (card-str state target))
-                                           :effect (effect (trash eid target nil))}
+                                           :msg (msg "discard " (card-str state target))
+                                           :effect (effect (discard eid target nil))}
                                           card nil)))}}}
 
    "Ultraviolet Clearance"
@@ -1706,31 +1706,31 @@
    "Voter Intimidation"
    {:req (req (seq (:scored challenger)))
     :psi {:not-equal {:player :contestant
-                      :prompt "Select a muthereff to trash"
+                      :prompt "Select a radicle to discard"
                       :choices {:req #(and (installed? %)
-                                           (is-type? % "Muthereff"))}
-                      :msg (msg "trash " (:title target))
-                      :effect (effect (trash target))}}}
+                                           (is-type? % "Radicle"))}
+                      :msg (msg "discard " (:title target))
+                      :effect (effect (discard target))}}}
 
    "Wake Up Call"
-   {:req (req (last-turn? state :challenger :trashed-card))
-    :prompt "Select a piece of hazard or non-virtual muthereff"
+   {:req (req (last-turn? state :challenger :discarded-card))
+    :prompt "Select a piece of hazard or non-virtual radicle"
     :choices {:req #(or (hazard? %)
-                        (and (muthereff? %) (not (has-subtype? % "Virtual"))))}
+                        (and (radicle? %) (not (has-subtype? % "Virtual"))))}
     :async true
     :effect (req (let [chosen target
                        wake card]
                    (show-wait-prompt state side "Challenger to resolve Wake Up Call")
                    (continue-ability state :challenger
-                                     {:prompt (str "Trash " (:title chosen) " or suffer 4 meat damage?")
-                                      :choices [(str "Trash " (:title chosen))
+                                     {:prompt (str "Discard " (:title chosen) " or suffer 4 meat damage?")
+                                      :choices [(str "Discard " (:title chosen))
                                                 "4 meat damage"]
                                       :async true
                                       :effect (req (clear-wait-prompt state :contestant)
                                                    (move state :contestant (last (:discard contestant)) :rfg)
-                                                   (if (.startsWith target "Trash")
-                                                     (do (system-msg state side (str "chooses to trash " (:title chosen)))
-                                                         (trash state side eid chosen nil))
+                                                   (if (.startsWith target "Discard")
+                                                     (do (system-msg state side (str "chooses to discard " (:title chosen)))
+                                                         (discard state side eid chosen nil))
                                                      (do (system-msg state side "chooses to suffer meat damage")
                                                          (damage state side eid :meat 4 {:card wake
                                                                                          :unboostable true}))))}
