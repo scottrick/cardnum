@@ -138,7 +138,7 @@
   ([card cid]
   (-> card
       (assoc :cid cid :implementation (card-implemented card))
-      (dissoc :set_code :text :_id))))
+      (dissoc :text :_id))))
 
 (defn reset-card
   "Resets a card back to its original state - retaining any data in the :persistent key"
