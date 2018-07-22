@@ -7,7 +7,7 @@
 
 
 (deftest minigame-prevent-netdmg-muthereffdiscard
-  "Mini-game testing prevention of net damage and muthereff discarding, with hosted Fall Guy"
+  "Mini-game testing prevention of net damage and radicle discarding, with hosted Fall Guy"
   (do-game
     (new-game
       (default-contestant [(qty "Neural EMP" 1) (qty "Hedge Fund" 3) (qty "SEA Source" 1)])
@@ -23,7 +23,7 @@
     (play-from-hand state :challenger "Off-Campus Apartment")
     (play-from-hand state :challenger "Wireless Net Pavilion")
     (play-from-hand state :challenger "Net Shield")
-    (let [apt (get-muthereff state 0)]
+    (let [apt (get-radicle state 0)]
       (card-ability state :challenger apt 0)
       (prompt-select :challenger (find-card "Fall Guy" (:hand (get-challenger))))
       (take-credits state :challenger)
@@ -39,11 +39,11 @@
         (prompt-choice :challenger 0)
         (is (= 1 (:tag (get-challenger))) "Challenger took tag from SEA Source")
         (is (= 7 (:credit (get-contestant))))
-        (core/discard-muthereff state :contestant nil)
+        (core/discard-radicle state :contestant nil)
         (prompt-select :contestant (find-card "Off-Campus Apartment" (:rig (get-challenger))))
-        (is (= 3 (:credit (get-contestant))) "WNP increased cost to discard a muthereff by 2")
+        (is (= 3 (:credit (get-contestant))) "WNP increased cost to discard a radicle by 2")
         (card-ability state :challenger fg 0)                   ; Discard Fall Guy to save the Apartment!
-        (is (= (:title (get-muthereff state 0)) "Off-Campus Apartment")
+        (is (= (:title (get-radicle state 0)) "Off-Campus Apartment")
             "Apartment still standing")
         (is (= (:title (last (:discard (get-challenger)))) "Fall Guy") "Fall Guy discarded")))))
 

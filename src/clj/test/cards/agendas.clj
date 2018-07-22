@@ -125,7 +125,7 @@
     (is (= 0 (get-in @state [:challenger :tag]))) "Two tags removed at the end of the turn"))
 
 (deftest character-assassination
-  ;; Character Assassination - Unpreventable discard of 1 muthereff when scored
+  ;; Character Assassination - Unpreventable discard of 1 radicle when scored
   (do-game
     (new-game (default-contestant [(qty "Character Assassination" 1)])
               (default-challenger [(qty "Fall Guy" 1) (qty "Kati Jones" 1)]))
@@ -135,7 +135,7 @@
     (take-credits state :challenger)
     (play-from-hand state :contestant "Character Assassination" "New party")
     (score-agenda state :contestant (get-content state :party1 0))
-    (let [kati (get-in @state [:challenger :rig :muthereff 0])]
+    (let [kati (get-in @state [:challenger :rig :radicle 0])]
       (prompt-select :contestant kati)
       (is (empty? (:prompt (get-challenger))) "Fall Guy prevention didn't occur")
       (is (= 1 (count (:discard (get-challenger)))) "Kati Jones discarded"))))
@@ -317,7 +317,7 @@
     (prompt-choice :challenger "Access")
     (prompt-choice :contestant "Yes")
     (prompt-choice :challenger "Steal")
-    (let [ttw (get-muthereff state 0)]
+    (let [ttw (get-radicle state 0)]
       (is (= 0 (get-counters (refresh ttw) :power)) "TTW did not gain counters")
       (is (= 1 (count (:scored (get-challenger)))) "Challenger stole Explodapalooza")
       (is (= 12 (:credit (get-contestant))) "Gained 5 credits")

@@ -418,7 +418,7 @@
     (play-from-hand state :challenger "Earthrise Hotel")
     (take-credits state :challenger)
     (let [liz (get-content state :party1 0)
-          hotel (get-in @state [:challenger :rig :muthereff 0])]
+          hotel (get-in @state [:challenger :rig :radicle 0])]
       (core/reveal state :contestant liz)
       (is (= 0 (:bad-publicity (get-contestant))) "1 bad publicity removed")
       (card-ability state :contestant liz 0)
@@ -749,7 +749,7 @@
     (core/reveal state :contestant (get-content state :party1 0))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Mr. Li")
-    (let [mrli (get-in @state [:challenger :rig :muthereff 0])]
+    (let [mrli (get-in @state [:challenger :rig :radicle 0])]
       (is (= 0 (count (:hand (get-challenger)))))
       ;use Mr. Li with 2 draws allowed
       (card-ability state :challenger mrli 0)
@@ -966,14 +966,14 @@
     (take-credits state :challenger)
     ;; discard 3 muthereffs
     (core/gain state :challenger :tag 1)
-    (core/discard-muthereff state :contestant nil)
-    (prompt-select :contestant (get-muthereff state 0))
+    (core/discard-radicle state :contestant nil)
+    (prompt-select :contestant (get-radicle state 0))
     (is (= 1 (count (:discard (get-challenger)))))
-    (core/discard-muthereff state :contestant nil)
-    (prompt-select :contestant (get-muthereff state 0))
+    (core/discard-radicle state :contestant nil)
+    (prompt-select :contestant (get-radicle state 0))
     (is (= 2 (count (:discard (get-challenger)))))
-    (core/discard-muthereff state :contestant nil)
-    (prompt-select :contestant (get-muthereff state 0))
+    (core/discard-radicle state :contestant nil)
+    (prompt-select :contestant (get-radicle state 0))
     (is (= 3 (count (:discard (get-challenger)))))
     (is (= 1 (:click (get-contestant))))))
 
@@ -1118,7 +1118,7 @@
     (take-credits state :challenger)
     (let [gb (get-content state :party1 0)
           net (get-content state :party2 0)
-          nach (get-in @state [:challenger :rig :muthereff 0])]
+          nach (get-in @state [:challenger :rig :radicle 0])]
       (core/reveal state :contestant (refresh net))
       (core/advance state :contestant {:card (refresh gb)})
       (is (= 1 (get-in (refresh gb) [:advance-counter])))
@@ -1875,7 +1875,7 @@
     (is (= 3 (count (:scored (get-challenger)))) "News Team added to Challenger score area")
     (is (= -3 (:agenda-point (get-challenger))) "Challenger has -3 agenda points")
 
-    (card-ability state :challenger (get-muthereff state 0) 0)
+    (card-ability state :challenger (get-radicle state 0) 0)
     (prompt-choice :challenger (->> @state :challenger :prompt first :choices first))
     (prompt-select :challenger (first (:scored (get-challenger))))
     (is (= 2 (count (:scored (get-challenger)))) "Fan Site removed from Challenger score area")

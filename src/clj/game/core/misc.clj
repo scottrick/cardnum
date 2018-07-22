@@ -73,7 +73,7 @@
   but not including 'inactive hosting' like Personal Workshop."
   [state side]
   (if (= side :challenger)
-    (let [top-level-cards (flatten (for [t [:resource :hazard :muthereff]] (get-in @state [:contestant :rig t])))
+    (let [top-level-cards (flatten (for [t [:resource :hazard :radicle]] (get-in @state [:contestant :rig t])))
           hosted-on-character (->> (:contestant @state) :locales seq flatten (mapcat :characters) (mapcat :hosted))]
       (loop [unchecked (concat top-level-cards (filter #(= (:side %) "Challenger") hosted-on-character)) placed ()]
         (if (empty? unchecked)
@@ -93,7 +93,7 @@
   but not including 'inactive hosting' like Personal Workshop."
   [state side]
   (if (= side :contestant)
-    (let [top-level-cards (flatten (for [t [:resource :hazard :muthereff]] (get-in @state [:challenger :rig t])))
+    (let [top-level-cards (flatten (for [t [:resource :hazard :radicle]] (get-in @state [:challenger :rig t])))
           hosted-on-character (->> (:challenger @state) :locales seq flatten (mapcat :characters) (mapcat :hosted))]
       (loop [unchecked (concat top-level-cards (filter #(= (:side %) "Contestant") hosted-on-character)) placed ()]
         (if (empty? unchecked)

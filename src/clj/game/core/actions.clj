@@ -14,7 +14,7 @@
   (let [card (get-card state card)]
     (case (:type card)
       ("Event" "Operation") (play-instant state side card {:extra-cost [:click 0]})
-      ("Hazard" "Muthereff" "Resource") (challenger-place state side (make-eid state) card {:extra-cost [:click 0]})
+      ("Hazard" "Radicle" "Resource") (challenger-place state side (make-eid state) card {:extra-cost [:click 0]})
       ("Character" "Region" "Site") (contestant-place state side card locale {:extra-cost [:click 0] :action :contestant-click-place}))
     (trigger-event state side :play card)))
 
@@ -273,18 +273,18 @@
        (resolve-ability state side eid sub card targets)))))
 
 ;;; Contestant actions
-(defn discard-muthereff
-  "Click to discard a muthereff."
+(defn discard-radicle
+  "Click to discard a radicle."
   [state side args]
   (let [discard-cost (max 0 (- 2 (or (get-in @state [:contestant :discard-cost-bonus]) 0)))]
-    (when-let [cost-str (pay state side nil :click 1 :credit discard-cost {:action :contestant-discard-muthereff})]
+    (when-let [cost-str (pay state side nil :click 1 :credit discard-cost {:action :contestant-discard-radicle})]
       (resolve-ability state side
-                       {:prompt  "Choose a muthereff to discard"
+                       {:prompt  "Choose a radicle to discard"
                         :choices {:req (fn [card]
                                          (if (and (seq (filter (fn [c] (undiscardable-while-muthereffs? c)) (all-placed state :challenger)))
-                                                  (> (count (filter #(is-type? % "Muthereff") (all-placed state :challenger))) 1))
-                                           (and (is-type? card "Muthereff") (not (undiscardable-while-muthereffs? card)))
-                                           (is-type? card "Muthereff")))}
+                                                  (> (count (filter #(is-type? % "Radicle") (all-placed state :challenger))) 1))
+                                           (and (is-type? card "Radicle") (not (undiscardable-while-muthereffs? card)))
+                                           (is-type? card "Radicle")))}
                         :cancel-effect (effect (gain :credit discard-cost :click 1))
                         :effect  (effect (discard target)
                                          (system-msg (str (build-spend-msg cost-str "discard")
