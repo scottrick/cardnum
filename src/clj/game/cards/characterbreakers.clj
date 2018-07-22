@@ -9,7 +9,7 @@
 
 (def breaker-auto-pump
   "Updates an characterbreaker's abilities with a pseudo-ability to trigger the
-  auto-pump routine in core, IF we are encountering a rezzed character with a subtype
+  auto-pump routine in core, IF we are encountering a revealed character with a subtype
   we can break."
   {:effect
    (req (let [abs (filter #(not= (:dynamic %) :auto-pump) (:abilities card))
@@ -33,7 +33,7 @@
                    (assoc card :abilities
                           (if (and pumpcst
                                    pumpnum
-                                   (rezzed? current-character)
+                                   (revealed? current-character)
                                    (or (some #(has-subtype? current-character %) (:breaks card))
                                        (= (first (:breaks card)) "All"))
                                    (pos? pumpnum))
@@ -67,7 +67,7 @@
    :label (str "Make currently encountered character gain " character-type)
    :msg (msg "make " (:title current-character) " gain " character-type)
    :req (req (and current-character
-                  (rezzed? current-character)
+                  (revealed? current-character)
                   (not (has-subtype? current-character character-type))))
    :effect (req (let [character current-character
                       stargets (:subtype-target character)
@@ -156,9 +156,9 @@
                       :events (let [cloud {:silent (req true)
                                            :req (req (has-subtype? target "Icebreaker"))
                                            :effect (effect (update-breaker-strength card))}]
-                                {:challenger-install cloud :discard cloud :card-moved cloud})
+                                {:challenger-place cloud :discard cloud :card-moved cloud})
                       :strength-bonus (req (count (filter #(has-subtype? % "Icebreaker")
-                                                          (all-active-installed state :challenger))))}))
+                                                          (all-active-placed state :challenger))))}))
 
 (defn- global-sec-breaker
   "GlobalSec breakers for Sunny"
@@ -184,7 +184,7 @@
                                                                                 :init-data true}))
                                                 (let [devavec (get-in @state [:challenger :rig :resource])
                                                       devaindex (first (keep-indexed #(when (= (:cid %2) (:cid card)) %1) devavec))
-                                                      newdeva (assoc target :zone (:zone card) :installed true)
+                                                      newdeva (assoc target :zone (:zone card) :placed true)
                                                       newvec (apply conj (subvec devavec 0 devaindex) newdeva (subvec devavec devaindex))]
                                                   (lose state :challenger :memory (:memoryunits card))
                                                   (swap! state assoc-in [:challenger :rig :resource] newvec)
@@ -194,41 +194,41 @@
                                               (move state side card :hand))}]}))
 
 (defn- conspiracy
-  "Install-from-heap breakers"
+  "Place-from-heap breakers"
   [title character-type abilities]
-  (let [install-prompt {:req (req (and (= (:zone card) [:discard])
-                                       (rezzed? current-character)
+  (let [place-prompt {:req (req (and (= (:zone card) [:discard])
+                                       (revealed? current-character)
                                        (has-subtype? current-character character-type)
-                                       (not (install-locked? state :challenger))))
+                                       (not (place-locked? state :challenger))))
                         :async true
                         :effect (effect (continue-ability
-                                          {:optional {:req (req (and (not-any? #(= title (:title %)) (all-active-installed state :challenger))
+                                          {:optional {:req (req (and (not-any? #(= title (:title %)) (all-active-placed state :challenger))
                                                                      (not (get-in @state [:run :register :conspiracy (:cid current-character)]))))
                                                       :player :challenger
-                                                      :prompt (str "Install " title "?")
+                                                      :prompt (str "Place " title "?")
                                                       :yes-ability {:effect (effect (unregister-events card)
-                                                                                    (challenger-install :challenger card))}
-                                                      ;; Add a register to note that the player was already asked about installing,
+                                                                                    (challenger-place :challenger card))}
+                                                      ;; Add a register to note that the player was already asked about placing,
                                                       ;; to prevent multiple copies from prompting multiple times.
                                                       :no-ability {:effect (req (swap! state assoc-in [:run :register :conspiracy (:cid current-character)] true))}}}
                                           card targets))}
         heap-event (req (when (= (:zone card) [:discard])
                           (unregister-events state side card)
                           (register-events state side
-                                           {:rez install-prompt
-                                            :approach-character install-prompt
-                                            :run install-prompt}
+                                           {:reveal place-prompt
+                                            :approach-character place-prompt
+                                            :run place-prompt}
                                            (assoc card :zone [:discard]))))]
     {:move-zone heap-event
-     :events {:rez nil
+     :events {:reveal nil
               :approach-character nil
               :run nil}
      :abilities abilities}))
 
 (defn- central-breaker
-  "'Cannot be used on a remote server' breakers"
+  "'Cannot be used on a party locale' breakers"
   [character-type break pump]
-  (let [central-req (req (or (not (:central-breaker card)) (#{:hq :rd :archives} (first (:server run)))))]
+  (let [central-req (req (or (not (:central-breaker card)) (#{:hq :rd :archives} (first (:locale run)))))]
     (auto-characterbreaker [character-type]
                      {:abilities [(assoc break :req central-req)
                                   (assoc pump :req central-req)]
@@ -310,7 +310,7 @@
    (auto-characterbreaker ["All"]
                     {:abilities [{:cost [:credit 1]
                                   :req (req (= (:position run) (count run-characters)))
-                                  :msg "break 1 subroutine on the outermost Character protecting this server"}
+                                  :msg "break 1 subroutine on the outermost Character protecting this locale"}
                                  (strength-pump 1 1)]})
 
    "Alias"
@@ -324,7 +324,7 @@
                                  (strength-pump 2 3)
                                  {:label "Contestant loses 1 [Credits]"
                                   :req (req (and (has-subtype? current-character "Code Gate")
-                                                 (rezzed? current-character)))
+                                                 (revealed? current-character)))
                                   :msg (msg "make the Contestant lose 1 [Credits]")
                                   :effect (effect (lose-credits :contestant 1))}]})
 
@@ -334,7 +334,7 @@
                                  (strength-pump 1 1)
                                  {:label "Add Barrier to HQ"
                                   :req (req (and (has-subtype? current-character "Barrier")
-                                                 (rezzed? current-character)))
+                                                 (revealed? current-character)))
                                   :msg (msg "add " (:title current-character) " to HQ after breaking all its subroutines")
                                   :effect (req (let [c current-character]
                                                  (move state :contestant c :hand nil)
@@ -373,17 +373,17 @@
 
    "Baba Yaga"
    (let [host-click {:cost [:click 1]
-                     :label "Install a non-AI characterbreaker on Baba Yaga"
-                     :prompt "Choose a non-AI characterbreaker in your Grip to install on Baba Yaga"
+                     :label "Place a non-AI characterbreaker on Baba Yaga"
+                     :prompt "Choose a non-AI characterbreaker in your Grip to place on Baba Yaga"
                      :choices {:req #(and (has-subtype? % "Icebreaker")
                                           (not (has-subtype? % "AI"))
                                           (in-hand? %))}
-                     :effect (effect (challenger-install target {:host-card card}))}
-         host-free {:label "Host an installed non-AI characterbreaker on Baba Yaga"
-                    :prompt "Choose an installed non-AI characterbreaker to host on Baba Yaga"
+                     :effect (effect (challenger-place target {:host-card card}))}
+         host-free {:label "Host an placed non-AI characterbreaker on Baba Yaga"
+                    :prompt "Choose an placed non-AI characterbreaker to host on Baba Yaga"
                     :choices {:req #(and (has-subtype? % "Icebreaker")
                                          (not (has-subtype? % "AI"))
-                                         (installed? %))}
+                                         (placed? %))}
                     :effect (req (when (host state side card target)
                                    (gain :memory (:memoryunits target))))}
          gain-abis (req (let [new-abis (mapcat (fn [c] (map-indexed #(assoc %2 :dynamic :copy, :source (:title c)
@@ -406,7 +406,7 @@
     :implementation "Number of subroutines on encountered Character has to be entered by challenger when Contestant chooses 'No More Action'"
     :events {:encounter-character {:req (req (and (= (:cid target) (:cid current-character))
                                             (has-subtype? target "Barrier")
-                                            (rezzed? target)))
+                                            (revealed? target)))
                              :async true
                              :effect (effect (continue-ability :challenger
                                                {:prompt "How many subroutines are on the encountered Barrier?"
@@ -500,11 +500,11 @@
 
    "Cyber-Cypher"
    (auto-characterbreaker ["Code Gate"]
-                    {:prompt "Choose a server where this copy of Cyber-Cypher can be used:"
+                    {:prompt "Choose a locale where this copy of Cyber-Cypher can be used:"
                      :msg (msg "target " target)
-                     :choices (req servers)
-                     :effect (effect (update! (assoc card :server-target target)))
-                     :leave-play (effect (update! (dissoc card :server-target)))
+                     :choices (req locales)
+                     :effect (effect (update! (assoc card :locale-target target)))
+                     :leave-play (effect (update! (dissoc card :locale-target)))
                      :abilities [(break-sub 1 1 "Code Gate")
                                  (strength-pump 1 1)]})
 
@@ -560,9 +560,9 @@
                                  (strength-pump 1 1)]})
 
    "Endless Hunger"
-   {:abilities [{:label "Discard 1 installed card to break 1 \"End the run.\" subroutine"
+   {:abilities [{:label "Discard 1 placed card to break 1 \"End the run.\" subroutine"
                  :prompt "Select a card to discard for Endless Hunger"
-                 :choices {:req #(and (= (:side %) "Challenger") (:installed %))}
+                 :choices {:req #(and (= (:side %) "Challenger") (:placed %))}
                  :msg (msg "discard " (:title target)
                            " and break 1 \"[Subroutine] End the run.\" subroutine")
                  :effect (effect (discard target {:unpreventable true}))}]}
@@ -619,11 +619,11 @@
    "Flashbang"
    (auto-characterbreaker ["Sentry"]
                     {:abilities [(strength-pump 1 1)
-                                 {:label "Derez a Sentry being encountered"
+                                 {:label "Dereveal a Sentry being encountered"
                                   :cost [:credit 6]
-                                  :req (req (and (rezzed? current-character) (has-subtype? current-character "Sentry")))
-                                  :msg (msg "derez " (:title current-character))
-                                  :effect (effect (derez current-character))}]})
+                                  :req (req (and (revealed? current-character) (has-subtype? current-character "Sentry")))
+                                  :msg (msg "hide " (:title current-character))
+                                  :effect (effect (hide current-character))}]})
 
    "Force of Nature"
    (auto-characterbreaker ["Code Gate"]
@@ -655,11 +655,11 @@
    (auto-characterbreaker ["Sentry"]
                     {:abilities [(break-sub 2 2 "Sentry")
                                  (strength-pump 2 4)
-                                 {:label "Derez a Sentry and return Golden to your Grip"
+                                 {:label "Dereveal a Sentry and return Golden to your Grip"
                                   :cost [:credit 2]
-                                  :req (req (and (rezzed? current-character) (has-subtype? current-character "Sentry")))
-                                  :msg (msg "derez " (:title current-character) " and return Golden to their Grip")
-                                  :effect (effect (derez current-character)
+                                  :req (req (and (revealed? current-character) (has-subtype? current-character "Sentry")))
+                                  :msg (msg "hide " (:title current-character) " and return Golden to their Grip")
+                                  :effect (effect (hide current-character)
                                                   (move card :hand))}]})
 
    "Gordian Blade"
@@ -699,7 +699,7 @@
                                   :once :per-turn
                                   :req (req (:run @state))
                                   :prompt "Select the Code Gate you just passed and another piece of Character to swap positions"
-                                  :choices {:req #(and (installed? %) (character? %)) :max 2}
+                                  :choices {:req #(and (placed? %) (character? %)) :max 2}
                                   :msg (msg "swap the positions of " (card-str state (first targets)) " and " (card-str state (second targets)))
                                   :effect (req (when (= (count targets) 2)
                                                  (swap-character state side (first targets) (second targets))))}
@@ -720,10 +720,10 @@
                                                              (not= (:zone %) (:zone (:host k))))
                                                          (character? %)
                                                          (can-host? %)
-                                                         (installed? %)
+                                                         (placed? %)
                                                          (not (some (fn [c] (has? c :subtype "Caïssa")) (:hosted %))))
                                                     (and (character? %)
-                                                         (installed? %)
+                                                         (placed? %)
                                                          (can-host? %)
                                                          (not (some (fn [c] (has? c :subtype "Caïssa")) (:hosted %)))))}
                                   :msg (msg "host it on " (card-str state target))
@@ -780,8 +780,8 @@
     :events (let [maven {:silent (req true)
                          :req (req (is-type? target "Resource"))
                          :effect (effect (update-breaker-strength card))}]
-              {:challenger-install maven :discard maven :card-moved maven})
-    :strength-bonus (req (count (filter #(is-type? % "Resource") (all-active-installed state :challenger))))}
+              {:challenger-place maven :discard maven :card-moved maven})
+    :strength-bonus (req (count (filter #(is-type? % "Resource") (all-active-placed state :challenger))))}
 
    "Morning Star"
    {:abilities [(break-sub 1 0 "Barrier")]}
@@ -808,14 +808,14 @@
    (auto-characterbreaker ["Sentry"]
                     {:effect (req (add-watch state (keyword (str "nanotk" (:cid card)))
                                               (fn [k ref old new]
-                                                (let [server (first (get-in @state [:run :server]))]
+                                                (let [locale (first (get-in @state [:run :locale]))]
                                                   (when (or
                                                           ; run initiated or ended
                                                           (not= (get-in old [:run])
                                                                 (get-in new [:run]))
-                                                          ; server configuration changed (redirected or newly installed Character)
-                                                          (not= (get-in old [:contestant :servers server :characters])
-                                                                (get-in new [:contestant :servers server :characters])))
+                                                          ; locale configuration changed (redirected or newly placed Character)
+                                                          (not= (get-in old [:contestant :locales locale :characters])
+                                                                (get-in new [:contestant :locales locale :characters])))
                                                     (update-breaker-strength ref side card))))))
                      :strength-bonus (req (if-let [numcharacter (count run-characters)] numcharacter 0))
                      :leave-play (req (remove-watch state (keyword (str "nanotk" (:cid card)))))
@@ -840,7 +840,7 @@
    "Omega"
    (auto-characterbreaker ["All"]
                     {:abilities [{:cost [:credit 1] :req (req (= 1 (:position run)))
-                                  :msg "break 1 subroutine on the innermost Character protecting this server"}
+                                  :msg "break 1 subroutine on the innermost Character protecting this locale"}
                                  (strength-pump 1 1)]})
 
    "Overmind"
@@ -878,11 +878,11 @@
    (auto-characterbreaker ["Code Gate"]
                     {:abilities [(break-sub 1 1 "Code Gate")
                                  (strength-pump 3 3)
-                                 {:label "Derez a Code Gate and return Peregrine to your Grip"
+                                 {:label "Dereveal a Code Gate and return Peregrine to your Grip"
                                   :cost [:credit 2]
-                                  :req (req (and (rezzed? current-character) (has-subtype? current-character "Code Gate")))
-                                  :msg (msg "derez " (:title current-character) " and return Peregrine to their Grip")
-                                  :effect (effect (derez current-character)
+                                  :req (req (and (revealed? current-character) (has-subtype? current-character "Code Gate")))
+                                  :msg (msg "hide " (:title current-character) " and return Peregrine to their Grip")
+                                  :effect (effect (hide current-character)
                                                   (move card :hand))}]})
 
    "Persephone"
@@ -890,7 +890,7 @@
                     {:implementation "Requires challenger to input the number of subroutines allowed to resolve"
                      :abilities [(break-sub 2 1 "Sentry")
                                  (strength-pump 1 1)]
-                     :events {:pass-character {:req (req (and (has-subtype? target "Sentry") (rezzed? target)) (pos? (count (:deck challenger))))
+                     :events {:pass-character {:req (req (and (has-subtype? target "Sentry") (revealed? target)) (pos? (count (:deck challenger))))
                                          :optional {:prompt (msg "Use Persephone's ability??")
                                                     :yes-ability {:prompt "How many subroutines resolved on the passed Character?"
                                                                   :async true
@@ -938,11 +938,11 @@
    (auto-characterbreaker ["Barrier"]
                     {:abilities [(break-sub 1 1 "Barrier")
                                  (strength-pump 2 2)
-                                 {:label "Derez a Barrier and return Saker to your Grip"
+                                 {:label "Dereveal a Barrier and return Saker to your Grip"
                                   :cost [:credit 2]
-                                  :req (req (and (rezzed? current-character) (has-subtype? current-character "Barrier")))
-                                  :msg (msg "derez " (:title current-character) " and return Saker to their Grip")
-                                  :effect (effect (derez current-character)
+                                  :req (req (and (revealed? current-character) (has-subtype? current-character "Barrier")))
+                                  :msg (msg "hide " (:title current-character) " and return Saker to their Grip")
+                                  :effect (effect (hide current-character)
                                                   (move card :hand))}]})
 
    "Savant"
@@ -1007,7 +1007,7 @@
                                   :msg "break 1 subroutine on Character with 0 or less strength"}
                                  {:cost [:credit 1]
                                   :label "Give -1 strength to current Character"
-                                  :req (req (rezzed? current-character))
+                                  :req (req (revealed? current-character))
                                   :msg (msg "give -1 strength to " (:title current-character))
                                   :effect (req (update! state side (update-in card [:wyrm-count] (fnil #(+ % 1) 0)))
                                                (update-character-strength state side current-character))}

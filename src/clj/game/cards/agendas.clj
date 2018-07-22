@@ -9,11 +9,11 @@
 
 (defn character-boost-agenda [subtype]
   (letfn [(count-character [contestant]
-            (reduce (fn [c server]
+            (reduce (fn [c locale]
                       (+ c (count (filter #(and (has-subtype? % subtype)
-                                                (rezzed? %))
-                                          (:characters server)))))
-                    0 (flatten (seq (:servers contestant)))))]
+                                                (revealed? %))
+                                          (:characters locale)))))
+                    0 (flatten (seq (:locales contestant)))))]
     {:msg (msg "gain " (count-character contestant) " [Credits]")
      :interactive (req true)
      :effect (effect (gain-credits (count-character contestant))
@@ -30,7 +30,7 @@
                                     agenda-owner (if (some #(= (:cid %) (:cid card)) contestant-agendas) :contestant :challenger)]
                                 (gain-agenda-point state agenda-owner (- (:agendapoints card))))
                               ; refresh agendapoints to 1 before shuffle in case it was modified by e.g. The Board
-                              (move state :contestant (dissoc (assoc card :agendapoints 1) :seen :rezzed) :deck {:front true})
+                              (move state :contestant (dissoc (assoc card :agendapoints 1) :seen :revealed) :deck {:front true})
                               (shuffle! state :contestant :deck))}]
     :flags {:has-abilities-when-stolen true}}
 
@@ -38,12 +38,12 @@
    (letfn [(abt [n i]
              (if (pos? i)
                {:async true
-                :prompt "Select a piece of Character from the Temporary Zone to install"
+                :prompt "Select a piece of Character from the Temporary Zone to place"
                 :choices {:req #(and (= (:side %) "Contestant")
                                      (character? %)
                                      (= (:zone %) [:play-area]))}
-                :effect (req (wait-for (contestant-install state side target nil
-                                                     {:no-install-cost true :install-state :rezzed-no-cost})
+                :effect (req (wait-for (contestant-place state side target nil
+                                                     {:no-place-cost true :place-state :revealed-no-cost})
                                        (let [card (get-card state card)]
                                          (unregister-events state side card)
                                          (if (not (:shuffle-occurred card))
@@ -129,7 +129,7 @@
                                           (system-msg state :challenger "chooses to take 2 tags from Armed Intimidation"))))}
                       card nil))}
 
-   "Armored Servers"
+   "Armored Locales"
    {:implementation "Challenger must discard cards manually when required"
     :effect (effect (add-counter card :agenda 1))
     :silent (req true)
@@ -148,7 +148,7 @@
    "Award Bait"
    {:flags {:rd-reveal (req true)}
     :access {:async true
-             :req (req (not-empty (filter #(can-be-advanced? %) (all-installed state :contestant))))
+             :req (req (not-empty (filter #(can-be-advanced? %) (all-placed state :contestant))))
              :effect (effect (show-wait-prompt :challenger "Contestant to place advancement tokens with Award Bait")
                              (continue-ability
                                {:async true
@@ -231,12 +231,12 @@
                                           (not (used-this-turn? (:cid card) state))))
                            :async true
                            :effect (ability "playing a run event")}
-              :challenger-install {:silent (req true)
+              :challenger-place {:silent (req true)
                                :req (req (and (has-subtype? target "Icebreaker")
-                                              (first-event? state :challenger :challenger-install #(has-subtype? (first %) "Icebreaker"))
+                                              (first-event? state :challenger :challenger-place #(has-subtype? (first %) "Icebreaker"))
                                               (not (used-this-turn? (:cid card) state))))
                                :async true
-                               :effect (ability "installing an characterbreaker")}}})
+                               :effect (ability "placing an characterbreaker")}}})
 
    "Bifrost Array"
    {:req (req (not (empty? (filter #(not= (:title %)
@@ -280,8 +280,8 @@
    "Braintrust"
    {:effect (effect (add-counter card :agenda (quot (- (get-counters card :advancement) 3) 2)))
     :silent (req true)
-    :events {:pre-rez-cost {:req (req (character? target))
-                            :effect (req (rez-cost-bonus state side (- (get-counters card :agenda))))}}}
+    :events {:pre-reveal-cost {:req (req (character? target))
+                            :effect (req (reveal-cost-bonus state side (- (get-counters card :agenda))))}}}
 
    "Breaking News"
    {:async true
@@ -292,14 +292,14 @@
                :msg "make the Challenger lose 2 tags"}}
 
    "CFC Excavation Contract"
-   {:effect (req (let [bios (count (filter #(has-subtype? % "Bioroid") (all-active-installed state :contestant)))
+   {:effect (req (let [bios (count (filter #(has-subtype? % "Bioroid") (all-active-placed state :contestant)))
                        bucks (* bios 2)]
                    (gain-credits state side bucks)
                    (system-msg state side (str "gains " bucks " [Credits] from CFC Excavation Contract"))))}
 
    "Character Assassination"
    {:prompt "Select a radicle to discard"
-    :choices {:req #(and (installed? %)
+    :choices {:req #(and (placed? %)
                          (is-type? % "Radicle"))}
     :msg (msg "discard " (:title target))
     :interactive (req true)
@@ -313,8 +313,8 @@
 
    "City Works Project"
    (letfn [(meat-damage [s c] (+ 2 (get-counters (get-card s c) :advancement)))]
-     {:install-state :face-up
-      :access {:req (req installed)
+     {:place-state :face-up
+      :access {:req (req placed)
                :msg (msg "do " (meat-damage state card) " meat damage")
                :async true
                :effect (effect (damage eid :meat (meat-damage state card) {:card card}))}})
@@ -382,26 +382,26 @@
                                                                  (effect-completed state side eid))}}}}})
 
    "Degree Mill"
-   {:steal-cost-bonus (req [:shuffle-installed-to-stack 2])}
+   {:steal-cost-bonus (req [:shuffle-placed-to-stack 2])}
 
    "Director Haas Pet Project"
-   (letfn [(install-ability [server-name n]
-             {:prompt "Select a card to install"
+   (letfn [(place-ability [locale-name n]
+             {:prompt "Select a card to place"
               :show-discard true
               :choices {:req #(and (= (:side %) "Contestant")
                                    (not (is-type? % "Operation"))
                                    (#{[:hand] [:discard]} (:zone %)))}
-              :effect (req (contestant-install state side target server-name {:no-install-cost true})
+              :effect (req (contestant-place state side target locale-name {:no-place-cost true})
                            (if (< n 2)
                              (continue-ability state side
-                                               (install-ability (last (get-remote-names state)) (inc n))
+                                               (place-ability (last (get-party-names state)) (inc n))
                                                card nil)
                              (effect-completed state side eid)))
               :msg (msg (if (pos? n)
-                          (contestant-install-msg target)
-                          "create a new remote server, installing cards from HQ or Archives, ignoring all install costs"))})]
-     {:optional {:prompt "Install cards in a new remote server?"
-                 :yes-ability (install-ability "New remote" 0)}})
+                          (contestant-place-msg target)
+                          "create a new party locale, placing cards from HQ or Archives, ignoring all place costs"))})]
+     {:optional {:prompt "Place cards in a new party locale?"
+                 :yes-ability (place-ability "New party" 0)}})
 
    "Domestic Sleepers"
    {:agendapoints-challenger (req 0)
@@ -411,16 +411,16 @@
                                  (set-prop card :counter {:agenda 1} :agendapoints 1))}]}
 
    "Eden Fragment"
-   {:events {:pre-contestant-install
+   {:events {:pre-contestant-place
                {:req (req (and (is-type? target "Character")
-                               (empty? (let [cards (map first (turn-events state side :contestant-install))]
+                               (empty? (let [cards (map first (turn-events state side :contestant-place))]
                                          (filter #(is-type? % "Character") cards)))))
-                :effect (effect (ignore-install-cost true))}
-             :contestant-install
+                :effect (effect (ignore-place-cost true))}
+             :contestant-place
                {:req (req (and (is-type? target "Character")
-                               (empty? (let [cards (map first (turn-events state side :contestant-install))]
+                               (empty? (let [cards (map first (turn-events state side :contestant-place))]
                                          (filter #(is-type? % "Character") cards)))))
-                :msg (msg "ignore the install cost of the first Character this turn")}}}
+                :msg (msg "ignore the place cost of the first Character this turn")}}}
 
    "Efficiency Committee"
    {:silent (req true)
@@ -606,7 +606,7 @@
     :interactive (req true)}
 
    "Hollywood Renovation"
-   {:install-state :face-up
+   {:place-state :face-up
     :events {:advance
              {:async true
               :req (req (= (:cid card)
@@ -664,14 +664,14 @@
              :pre-init-trace {:req (req (has-subtype? target "Tracer"))
                               :effect (effect (init-trace-bonus 1))}}}
 
-   "Labyrinthine Servers"
+   "Labyrinthine Locales"
    {:interactions {:prevent [{:type #{:jack-out}
                               :req (req (pos? (get-counters card :power)))}]}
     :silent (req true)
     :effect (effect (add-counter card :power 2))
     :abilities [{:req (req (:run @state))
                  :counter-cost [:power 1]
-                 :effect (req (let [ls (filter #(= "Labyrinthine Servers" (:title %)) (:scored contestant))]
+                 :effect (req (let [ls (filter #(= "Labyrinthine Locales" (:title %)) (:scored contestant))]
                                 (jack-out-prevent state side)
                                 (when (zero? (reduce + (for [c ls] (get-counters c :power))))
                                   (swap! state update-in [:prevent] dissoc :jack-out))))
@@ -679,17 +679,17 @@
 
    "Lcharacternse Acquisition"
    {:interactive (req true)
-    :prompt "Select an site or region to install from Archives or HQ"
+    :prompt "Select an site or region to place from Archives or HQ"
     :show-discard true
     :choices {:req #(and (#{"Site" "Region"} (:type %))
                          (#{[:hand] [:discard]} (:zone %))
                          (= (:side %) "Contestant"))}
-    :msg (msg "install and rez " (:title target) ", ignoring all costs")
-    :effect (effect (contestant-install eid target nil {:install-state :rezzed-no-cost}))}
+    :msg (msg "place and reveal " (:title target) ", ignoring all costs")
+    :effect (effect (contestant-place eid target nil {:place-state :revealed-no-cost}))}
 
    "Mandatory Seed Replacement"
    (letfn [(msr [] {:prompt "Select two pieces of Character to swap positions"
-                    :choices {:req #(and (installed? %)
+                    :choices {:req #(and (placed? %)
                                          (character? %))
                               :max 2}
                     :async true
@@ -762,24 +762,24 @@
                                     (:has-bad-pub contestant)))}
 
    "New Construction"
-   {:install-state :face-up
+   {:place-state :face-up
     :events {:advance
              {:optional
               {:req (req (= (:cid card) (:cid target)))
-               :prompt "Install a card from HQ in a new remote?"
-               :yes-ability {:prompt "Select a card to install"
+               :prompt "Place a card from HQ in a new party?"
+               :yes-ability {:prompt "Select a card to place"
                              :choices {:req #(and (not (is-type? % "Operation"))
                                                   (not (is-type? % "Character"))
                                                   (= (:side %) "Contestant")
                                                   (in-hand? %))}
-                             :msg (msg "install a card from HQ"
+                             :msg (msg "place a card from HQ"
                                        (when (>= (get-counters (get-card state card) :advancement) 5)
-                                         " and rez it, ignoring all costs"))
+                                         " and reveal it, ignoring all costs"))
                              :effect (req (if (>= (get-counters (get-card state card) :advancement) 5)
-                                            (do (contestant-install state side target "New remote"
-                                                              {:install-state :rezzed-no-cost})
-                                                (trigger-event state side :rez target))
-                                            (contestant-install state side target "New remote")))}}}}}
+                                            (do (contestant-place state side target "New party"
+                                                              {:place-state :revealed-no-cost})
+                                                (trigger-event state side :reveal target))
+                                            (contestant-place state side target "New party")))}}}}}
 
    "Net Quarantine"
    (let [nq {:effect (req (let [extra (int (/ (:challenger-spent target) 2))]
@@ -799,10 +799,10 @@
 
    "NEXT Wave 2"
    {:not-when-scored true
-    :req (req (some #(and (rezzed? %)
+    :req (req (some #(and (revealed? %)
                           (character? %)
                           (has-subtype? % "NEXT"))
-                    (all-installed state :contestant)))
+                    (all-placed state :contestant)))
     :optional {:prompt "Do 1 brain damage with NEXT Wave 2?"
                :yes-ability {:msg "do 1 brain damage"
                              :effect (effect (damage eid :brain 1 {:card card}))}}}
@@ -816,7 +816,7 @@
                  :effect (effect (end-run))}]}
 
    "Oaktown Renovation"
-   {:install-state :face-up
+   {:place-state :face-up
     :events {:advance {:req (req (= (:cid card) (:cid target)))
                        :msg (msg "gain " (if (>= (get-counters (get-card state card) :advancement) 5) "3" "2") " [Credits]")
                        :effect (req (gain-credits state side
@@ -830,7 +830,7 @@
             :successful {:msg "discard all connection and job radicles"
                          :effect (req (doseq [radicle (filter #(or (has-subtype? % "Job")
                                                                     (has-subtype? % "Connection"))
-                                                               (all-active-installed state :challenger))]
+                                                               (all-active-placed state :challenger))]
                                         (discard state side radicle)))}}}
 
    "Personality Profiles"
@@ -838,7 +838,7 @@
              :effect (effect (discard (first (shuffle (:hand challenger)))))
              :msg (msg "force the Challenger to discard " (:title (last (:discard challenger))) " from their Grip at random")}]
      {:events {:searched-stack pp
-               :challenger-install (assoc pp :req (req (and (some #{:discard} (:previous-zone target))
+               :challenger-place (assoc pp :req (req (and (some #{:discard} (:previous-zone target))
                                                         (pos? (count (:hand challenger))))))}})
 
    "Philotic Entanglement"
@@ -858,9 +858,9 @@
    "Priority Requisition"
    {:interactive (req true)
     :choices {:req #(and (character? %)
-                         (not (rezzed? %))
-                         (installed? %))}
-    :effect (effect (rez target {:ignore-cost :all-costs}))}
+                         (not (revealed? %))
+                         (placed? %))}
+    :effect (effect (reveal target {:ignore-cost :all-costs}))}
 
    "Private Security Force"
    {:abilities [{:req (req tagged)
@@ -879,20 +879,20 @@
 
    "Project Ares"
    (letfn [(discard-count-str [card]
-             (quantify (- (get-counters card :advancement) 4) "installed card"))]
+             (quantify (- (get-counters card :advancement) 4) "placed card"))]
      {:silent (req true)
       :req (req (and (> (get-counters card :advancement) 4)
-                     (pos? (count (all-installed state :challenger)))))
+                     (pos? (count (all-placed state :challenger)))))
       :msg (msg "force the Challenger to discard " (discard-count-str card) " and take 1 bad publicity")
       :async true
-      :effect (effect (show-wait-prompt :contestant "Challenger to discard installed cards")
+      :effect (effect (show-wait-prompt :contestant "Challenger to discard placed cards")
                       (continue-ability
                        :challenger
-                       {:prompt (msg "Select " (discard-count-str card) " installed cards to discard")
+                       {:prompt (msg "Select " (discard-count-str card) " placed cards to discard")
                         :choices {:max (min (- (get-counters card :advancement) 4)
-                                            (count (all-installed state :challenger)))
+                                            (count (all-placed state :challenger)))
                                   :req #(and (= (:side %) "Challenger")
-                                             (:installed %))}
+                                             (:placed %))}
                         :effect (effect (discard-cards targets)
                                         (system-msg (str "discards " (join ", " (map :title targets))))
                                         (gain-bad-publicity :contestant 1))}
@@ -946,7 +946,7 @@
    {:silent (req true)
     :effect (effect (add-counter card :agenda 3))
     :abilities [{:req (req (and (character? current-character)
-                                (rezzed? current-character)
+                                (revealed? current-character)
                                 (has-subtype? current-character "Bioroid")))
                  :counter-cost [:agenda 1]
                  :msg (str "make the approached piece of Bioroid Character gain \"[Subroutine] End the run\""
@@ -983,7 +983,7 @@
 
    "Rebranding Team"
    (letfn [(get-sites [state contestant]
-             (filter #(is-type? % "Site") (concat (all-installed state :contestant)
+             (filter #(is-type? % "Site") (concat (all-placed state :contestant)
                                                    (:deck contestant)
                                                    (:hand contestant)
                                                    (:discard contestant))))
@@ -1042,7 +1042,7 @@
                      (do (system-msg state side "does not add any cards from HQ to bottom of R&D")
                          (effect-completed state side eid)))))})
 
-   "Remote Data Farm"
+   "Party Data Farm"
    {:silent (req true)
     :msg "increase their maximum hand size by 2"
     :effect (effect (gain :hand-size 2))
@@ -1050,34 +1050,34 @@
               :effect (effect (gain :hand-size 2))}
     :leave-play (effect (lose :hand-size 2))}
 
-   "Remote Enforcement"
+   "Party Enforcement"
    {:interactive (req true)
-    :optional {:prompt "Search R&D for a piece of character to install protecting a remote server?"
+    :optional {:prompt "Search R&D for a piece of character to place protecting a party locale?"
                :yes-ability {:async true
                              :prompt "Choose a piece of character"
                              :choices (req (filter character? (:deck contestant)))
                              :effect (req (let [chosen-character target]
                                             (continue-ability state side
                                               {:async true
-                                               :prompt (str "Select a server to install " (:title chosen-character) " on")
+                                               :prompt (str "Select a locale to place " (:title chosen-character) " on")
                                                :choices (filter #(not (#{"HQ" "Archives" "R&D"} %))
-                                                                (contestant-install-list state chosen-character))
+                                                                (contestant-place-list state chosen-character))
                                                :effect (effect (shuffle! :deck)
-                                                               (contestant-install eid chosen-character target {:install-state :rezzed-no-rez-cost}))}
+                                                               (contestant-place eid chosen-character target {:place-state :revealed-no-reveal-cost}))}
                                               card nil)))}}}
 
    "Research Grant"
    {:interactive (req true)
-    :silent (req (empty? (filter #(= (:title %) "Research Grant") (all-installed state :contestant))))
-    :req (req (not (empty? (filter #(= (:title %) "Research Grant") (all-installed state :contestant)))))
+    :silent (req (empty? (filter #(= (:title %) "Research Grant") (all-placed state :contestant))))
+    :req (req (not (empty? (filter #(= (:title %) "Research Grant") (all-placed state :contestant)))))
     :async true
     :effect (effect (continue-ability
-                      {:prompt "Select another installed copy of Research Grant to score"
+                      {:prompt "Select another placed copy of Research Grant to score"
                        :choices {:req #(= (:title %) "Research Grant")}
                        :async true
                        :effect (effect (set-prop target :advance-counter (:advancementcost target))
                                        (score eid (get-card state target)))
-                       :msg "score another installed copy of Research Grant"}
+                       :msg "score another placed copy of Research Grant"}
                      card nil))}
 
    "Restructured Datapool"
@@ -1099,16 +1099,16 @@
    {:effect (effect (add-counter card :agenda 1))
     :silent (req true)
     :abilities [{:counter-cost [:agenda 1]
-                 :req (req (some #(and (has-subtype? % "Bioroid") (not (rezzed? %))) (all-installed state :contestant)))
-                 :prompt "Choose a bioroid to rez, ignoring all costs"
-                 :choices {:req #(and (has-subtype? % "Bioroid") (not (rezzed? %)))}
-                 :msg (msg "rez " (card-str state target) ", ignoring all costs")
+                 :req (req (some #(and (has-subtype? % "Bioroid") (not (revealed? %))) (all-placed state :contestant)))
+                 :prompt "Choose a bioroid to reveal, ignoring all costs"
+                 :choices {:req #(and (has-subtype? % "Bioroid") (not (revealed? %)))}
+                 :msg (msg "reveal " (card-str state target) ", ignoring all costs")
                  :effect (req (let [c target]
-                                (rez state side c {:ignore-cost :all-costs})
+                                (reveal state side c {:ignore-cost :all-costs})
                                 (register-events state side
-                                  {:contestant-turn-ends {:effect (effect (derez c)
+                                  {:contestant-turn-ends {:effect (effect (hide c)
                                                                     (unregister-events card))}
-                                   :challenger-turn-ends {:effect (effect (derez c)
+                                   :challenger-turn-ends {:effect (effect (hide c)
                                                                       (unregister-events card))}} card)))}]
       :events {:contestant-turn-ends nil :challenger-turn-ends nil}}
 
@@ -1141,8 +1141,8 @@
    "Standoff"
    (letfn [(stand [side]
              {:async true
-              :prompt "Choose one of your installed cards to discard due to Standoff"
-              :choices {:req #(and (installed? %)
+              :prompt "Choose one of your placed cards to discard due to Standoff"
+              :choices {:req #(and (placed? %)
                                    (same-side? side (:side %)))}
               :cancel-effect (req (if (= side :challenger)
                                     (do (draw state :contestant)
@@ -1166,19 +1166,19 @@
                       (continue-ability :challenger (stand :challenger) card nil))})
 
    "Successful Field Test"
-   (letfn [(sft [n max] {:prompt "Select a card in HQ to install with Successful Field Test"
+   (letfn [(sft [n max] {:prompt "Select a card in HQ to place with Successful Field Test"
                          :priority -1
                          :async true
                          :choices {:req #(and (= (:side %) "Contestant")
                                               (not (is-type? % "Operation"))
                                               (in-hand? %))}
                          :effect (req (wait-for
-                                        (contestant-install state side target nil {:no-install-cost true})
+                                        (contestant-place state side target nil {:no-place-cost true})
                                         (if (< n max)
                                           (continue-ability state side (sft (inc n) max) card nil)
                                           (effect-completed state side eid))))})]
      {:async true
-      :msg "install cards from HQ, ignoring all costs"
+      :msg "place cards from HQ, ignoring all costs"
       :effect (req (let [max (count (filter #(not (is-type? % "Operation")) (:hand contestant)))]
                      (continue-ability state side (sft 1 max) card nil)))})
 
@@ -1209,7 +1209,7 @@
    "The Future Perfect"
    {:flags {:rd-reveal (req true)}
     :access
-    {:psi {:req (req (not installed))
+    {:psi {:req (req (not placed))
            :not-equal {:msg (msg "prevent it from being stolen")
                        :effect (effect (register-run-flag! card :can-steal
                                                            (fn [_ _ c] (not= (:cid c) (:cid card))))
@@ -1218,7 +1218,7 @@
 
    "Underway Renovation"
    (letfn [(adv4? [s c] (if (>= (get-counters (get-card s c) :advancement) 4) 2 1))]
-     {:install-state :face-up
+     {:place-state :face-up
       :events {:advance {:req (req (= (:cid card) (:cid target)))
                          :msg (msg (if (pos? (count (:deck challenger)))
                                      (str "discard "
@@ -1286,7 +1286,7 @@
              :effect (effect (gain-bad-publicity :contestant 1))}}
 
    "Water Monopoly"
-   {:events {:pre-install {:req (req (and (is-type? target "Radicle")
+   {:events {:pre-place {:req (req (and (is-type? target "Radicle")
                                           (not (has-subtype? target "Virtual"))
                                           (not (second targets)))) ; not facedown
-                           :effect (effect (install-cost-bonus [:credit 1]))}}}})
+                           :effect (effect (place-cost-bonus [:credit 1]))}}}})

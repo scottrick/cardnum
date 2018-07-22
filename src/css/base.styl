@@ -1502,7 +1502,7 @@ nav ul
     &.green
       background-color: green
 
-  .server-target, .subtype-target
+  .locale-target, .subtype-target
     position: absolute
     z-index: 10
     padding: 0
@@ -1515,7 +1515,7 @@ nav ul
     padding-right: 3px
     white-space: nowrap
 
-  .server-target
+  .locale-target
     background-color: sienna
 
   .subtype-target
@@ -1530,12 +1530,12 @@ nav ul
     &.sentry
       background-color: criminal-blue
 
-  .abilities, .servers-menu, .menu, .challenger-abilities, .contestant-abilities, .popup
+  .abilities, .locales-menu, .menu, .challenger-abilities, .contestant-abilities, .popup
     left: 0
     bottom: 100%
     margin: 6px -1px
 
-  .abilities, .servers-menu, .menu, .challenger-abilities, .contestant-abilities
+  .abilities, .locales-menu, .menu, .challenger-abilities, .contestant-abilities
     display: none
     position: absolute
     z-index: 30
@@ -1593,7 +1593,7 @@ nav ul
     width: 60px
     border-radius: 4px
 
-  .server-card
+  .locale-card
     position: relative
     min-height: 84px
     min-width: 60px
@@ -1706,7 +1706,7 @@ nav ul
           .run-button
             position: relative
 
-            .servers-menu
+            .locales-menu
               left: 100%
               bottom: 0
               width: 120px
@@ -1782,7 +1782,7 @@ nav ul
       flex-direction(row-reverse)
       justify-content(flex-end)
 
-      .server
+      .locale
         position: relative
         min-width: 84px
         margin: 0 4px
@@ -1902,7 +1902,7 @@ nav ul
           transform(rotate(180deg))
           display-flex()
 
-    .contestant-board.opponent .server
+    .contestant-board.opponent .locale
       transform(initial)
 
       .content

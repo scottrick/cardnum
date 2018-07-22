@@ -1,139 +1,139 @@
 (in-ns 'game.core)
 
-(declare set-prop get-nested-host get-nested-zone all-active-installed)
+(declare set-prop get-nested-host get-nested-zone all-active-placed)
 
 (defn get-zones [state]
-  (keys (get-in @state [:contestant :servers])))
+  (keys (get-in @state [:contestant :locales])))
 
-(defn get-remote-zones [state]
-  (filter is-remote? (get-zones state)))
+(defn get-party-zones [state]
+  (filter is-party? (get-zones state)))
 
 (defn get-runnable-zones [state]
-  (let [restricted-zones (keys (get-in @state [:challenger :register :cannot-run-on-server]))]
+  (let [restricted-zones (keys (get-in @state [:challenger :register :cannot-run-on-locale]))]
     (remove (set restricted-zones) (get-zones state))))
 
-(defn get-remotes [state]
-  (select-keys (get-in @state [:contestant :servers]) (get-remote-zones state)))
+(defn get-parties [state]
+  (select-keys (get-in @state [:contestant :locales]) (get-party-zones state)))
 
-(defn get-remote-names [state]
-  (zones->sorted-names (get-remote-zones state)))
+(defn get-party-names [state]
+  (zones->sorted-names (get-party-zones state)))
 
-(defn server-list
-  "Get a list of all servers (including centrals)"
+(defn locale-list
+  "Get a list of all locales (including centrals)"
   [state]
   (zones->sorted-names (get-zones state)))
 
-(defn installable-servers
-  "Get list of servers the specified card can be installed in"
+(defn placeable-locales
+  "Get list of locales the specified card can be placed in"
   [state card]
-  (let [base-list (concat (server-list state) ["New remote"])]
-    (if-let [install-req (-> card card-def :install-req)]
-      ;; Install req function overrides normal list of install locations
-      (install-req state :contestant card (make-eid state) base-list)
+  (let [base-list (concat (locale-list state) ["New party"])]
+    (if-let [place-req (-> card card-def :place-req)]
+      ;; Place req function overrides normal list of place locations
+      (place-req state :contestant card (make-eid state) base-list)
       ;; Standard list
       base-list)))
 
 
-(defn server->zone [state server]
-  (if (sequential? server)
-    (vec (cons :servers server))
-    (case server
-      "HQ" [:servers :hq]
-      "R&D" [:servers :rd]
-      "Archives" [:servers :archives]
-      "New remote" [:servers (keyword (str "remote" (make-rid state)))]
-      [:servers (->> (split server #" ") last (str "remote") keyword)])))
+(defn locale->zone [state locale]
+  (if (sequential? locale)
+    (vec (cons :locales locale))
+    (case locale
+      "HQ" [:locales :hq]
+      "R&D" [:locales :rd]
+      "Archives" [:locales :archives]
+      "New party" [:locales (keyword (str "party" (make-rid state)))]
+      [:locales (->> (split locale #" ") last (str "party") keyword)])))
 
-(defn same-server?
-  "True if the two cards are IN or PROTECTING the same server."
+(defn same-locale?
+  "True if the two cards are IN or PROTECTING the same locale."
   [card1 card2]
   (let [zone1 (get-nested-zone card1)
         zone2 (get-nested-zone card2)]
     (= (second zone1) (second zone2))))
 
-(defn protecting-same-server?
-  "True if an character is protecting the server that the card is in or protecting."
+(defn protecting-same-locale?
+  "True if an character is protecting the locale that the card is in or protecting."
   [card character]
   (let [zone1 (get-nested-zone card)
         zone2 (get-nested-zone character)]
     (and (= (second zone1) (second zone2))
          (= :characters (last zone2)))))
 
-(defn in-same-server?
-  "True if the two cards are installed IN the same server, or hosted on cards IN the same server."
+(defn in-same-locale?
+  "True if the two cards are placed IN the same locale, or hosted on cards IN the same locale."
   [card1 card2]
   (let [zone1 (get-nested-zone card1)
         zone2 (get-nested-zone card2)]
     (and (= zone1 zone2)
-         (is-remote? (second zone1)) ; cards in centrals are in the server's root, not in the server.
+         (is-party? (second zone1)) ; cards in centrals are in the locale's root, not in the locale.
          (= :content (last zone1)))))
 
-(defn from-same-server?
-  "True if the region is in the root of the server that the target is in."
+(defn from-same-locale?
+  "True if the region is in the root of the locale that the target is in."
   [region target]
   (= (central->zone (:zone target))
      (butlast (get-nested-zone region))))
 
-(defn all-installed
-  "Returns a vector of all installed cards for the given side, including those hosted on other cards,
+(defn all-placed
+  "Returns a vector of all placed cards for the given side, including those hosted on other cards,
   but not including 'inactive hosting' like Personal Workshop."
   [state side]
   (if (= side :challenger)
     (let [top-level-cards (flatten (for [t [:resource :hazard :radicle :facedown]] (get-in @state [:challenger :rig t])))
-          hosted-on-character (->> (:contestant @state) :servers seq flatten (mapcat :characters) (mapcat :hosted))]
-      (loop [unchecked (concat top-level-cards (filter #(= (:side %) "Challenger") hosted-on-character)) installed ()]
+          hosted-on-character (->> (:contestant @state) :locales seq flatten (mapcat :characters) (mapcat :hosted))]
+      (loop [unchecked (concat top-level-cards (filter #(= (:side %) "Challenger") hosted-on-character)) placed ()]
         (if (empty? unchecked)
-          (filter :installed installed)
+          (filter :placed placed)
           (let [[card & remaining] unchecked]
-            (recur (filter identity (into remaining (:hosted card))) (into installed [card]))))))
-    (let [servers (->> (:contestant @state) :servers seq flatten)
-          content (mapcat :content servers)
-          character (mapcat :characters servers)
+            (recur (filter identity (into remaining (:hosted card))) (into placed [card]))))))
+    (let [locales (->> (:contestant @state) :locales seq flatten)
+          content (mapcat :content locales)
+          character (mapcat :characters locales)
           top-level-cards (concat character content)]
-      (loop [unchecked top-level-cards installed ()]
+      (loop [unchecked top-level-cards placed ()]
         (if (empty? unchecked)
-          (filter #(= (:side %) "Contestant") installed)
+          (filter #(= (:side %) "Contestant") placed)
           (let [[card & remaining] unchecked]
-            (recur (filter identity (into remaining (:hosted card))) (into installed [card]))))))))
+            (recur (filter identity (into remaining (:hosted card))) (into placed [card]))))))))
 
-(defn get-all-installed
-  "Returns a list of all installed cards"
+(defn get-all-placed
+  "Returns a list of all placed cards"
   [state]
-  (concat (all-installed state :contestant) (all-installed state :challenger)))
+  (concat (all-placed state :contestant) (all-placed state :challenger)))
 
 (defn number-of-virus-counters
   "Returns number of actual virus counters (excluding virtual counters from Hivemind)"
   [state]
-  (reduce + (map #(get-counters % :virus) (all-installed state :challenger))))
+  (reduce + (map #(get-counters % :virus) (all-placed state :challenger))))
 
 (defn all-active
-  "Returns a vector of all active cards for the given side. Active cards are either installed, the identity,
+  "Returns a vector of all active cards for the given side. Active cards are either placed, the identity,
   currents, or the contestant's scored area."
   [state side]
   (if (= side :challenger)
-    (cons (get-in @state [:challenger :identity]) (concat (get-in @state [:challenger :current]) (all-active-installed state side)))
+    (cons (get-in @state [:challenger :identity]) (concat (get-in @state [:challenger :current]) (all-active-placed state side)))
     (cons (get-in @state [:contestant :identity]) (remove :disabled
-                                                    (concat (all-active-installed state side)
+                                                    (concat (all-active-placed state side)
                                                             (get-in @state [:contestant :current])
                                                             (get-in @state [:contestant :scored]))))))
 
-(defn all-active-installed
-  "Returns a vector of active AND installed cards for the given side. This is all face-up installed cards."
+(defn all-active-placed
+  "Returns a vector of active AND placed cards for the given side. This is all face-up placed cards."
   [state side]
-  (let [installed (all-installed state side)]
+  (let [placed (all-placed state side)]
    (if (= side :challenger)
-     (remove :facedown installed)
-     (filter :rezzed installed))))
+     (remove :facedown placed)
+     (filter :revealed placed))))
 
-(defn installed-byname
-  "Returns a truthy card map if a card matching title is installed"
+(defn placed-byname
+  "Returns a truthy card map if a card matching title is placed"
   [state side title]
-  (some #(when (= (:title %) title) %) (all-active-installed state side)))
+  (some #(when (= (:title %) title) %) (all-active-placed state side)))
 
 (defn in-play?
-  "Returns a truthy card map if the given card is in play (installed)."
+  "Returns a truthy card map if the given card is in play (placed)."
   [state card]
-  (installed-byname state (to-keyword (:side card)) (:title card)))
+  (placed-byname state (to-keyword (:side card)) (:title card)))
 
 ;;; Stuff for handling {:base x :mod y} data structures
 

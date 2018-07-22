@@ -3,7 +3,7 @@
 (def discard-resource {:prompt "Select a resource to discard"
                     :label "Discard a resource"
                     :msg (msg "discard " (:title target))
-                    :choices {:req #(and (installed? %)
+                    :choices {:req #(and (placed? %)
                                          (is-type? % "Resource"))}
                     :effect (effect (discard target {:cause :subroutine})
                                     (clear-wait-prompt :challenger))})
@@ -11,29 +11,29 @@
 (def discard-hazard {:prompt "Select a piece of hazard to discard"
                      :label "Discard a piece of hazard"
                      :msg (msg "discard " (:title target))
-                     :choices {:req #(and (installed? %)
+                     :choices {:req #(and (placed? %)
                                           (is-type? % "Hazard"))}
                      :effect (effect (discard target {:cause :subroutine}))})
 
 (def discard-radicle-sub {:prompt "Select a radicle to discard"
                          :label "Discard a radicle"
                          :msg (msg "discard " (:title target))
-                         :choices {:req #(and (installed? %)
+                         :choices {:req #(and (placed? %)
                                               (is-type? % "Radicle"))}
                          :effect (effect (discard target {:cause :subroutine}))})
 
-(def discard-installed {:prompt "Select an installed card to discard"
+(def discard-placed {:prompt "Select an placed card to discard"
                       :player :challenger
-                      :label "Force the Challenger to discard an installed card"
+                      :label "Force the Challenger to discard an placed card"
                       :msg (msg "force the Challenger to discard " (:title target))
-                      :choices {:req #(and (installed? %)
+                      :choices {:req #(and (placed? %)
                                            (= (:side %) "Challenger"))}
                       :effect (effect (discard target {:cause :subroutine}))})
 
-(def contestant-rez-toast
+(def contestant-reveal-toast
   "Effect to be placed with `:challenger-turn-ends` to remind players of 'when turn begins'
   triggers"
-  {:effect (req (toast state :contestant "Reminder: You have unrezzed cards with \"when turn begins\" abilities." "info"))})
+  {:effect (req (toast state :contestant "Reminder: You have unrevealed cards with \"when turn begins\" abilities." "info"))})
 
 (declare reorder-final) ; forward reference since reorder-choice and reorder-final are mutually recursive
 
@@ -106,7 +106,7 @@
     (swap! state update-in (cons :contestant (:zone b)) #(assoc % b-index a-new))
     (doseq [newcard [a-new b-new]]
       (unregister-events state side newcard)
-      (when (rezzed? newcard)
+      (when (revealed? newcard)
         (register-events state side (:events (card-def newcard)) newcard))
       (doseq [h (:hosted newcard)]
         (let [newh (-> h
@@ -114,18 +114,18 @@
                        (assoc-in [:host :zone] (:zone newcard)))]
           (update! state side newh)
           (unregister-events state side h)
-          (when (rezzed? h)
+          (when (revealed? h)
             (register-events state side (:events (card-def newh)) newh)))))
     (update-character-strength state side a-new)
     (update-character-strength state side b-new)))
 
 (defn card-index
-  "Get the zero-based index of the given card in its server's list of content. Same as character-index"
+  "Get the zero-based index of the given card in its locale's list of content. Same as character-index"
   [state card]
   (first (keep-indexed #(when (= (:cid %2) (:cid card)) %1) (get-in @state (cons :contestant (:zone card))))))
 
-(defn swap-installed
-  "Swaps two installed contestant cards - like swap Character except no strength update"
+(defn swap-placed
+  "Swaps two placed contestant cards - like swap Character except no strength update"
   [state side a b]
   (let [a-index (card-index state a)
         b-index (card-index state b)
@@ -180,7 +180,7 @@
                  counter-count (when (and target-count (pos? target-count))
                                  (str " of " target-count))
                  " virus counters)")
-    :choices {:req #(and (installed? %)
+    :choices {:req #(and (placed? %)
                          (pos? (get-counters % :virus)))}
     :effect (req (add-counter state :challenger target :virus -1)
                  (let [selected-cards (update selected-cards (:cid target)

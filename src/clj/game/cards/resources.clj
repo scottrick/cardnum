@@ -18,7 +18,7 @@
                                  :replace-access
                                  {:prompt "Choose a card to shuffle into R&D"
                                   :choices {:req #(and (not (character? %))
-                                                       (not (rezzed? %))
+                                                       (not (revealed? %))
                                                        (zero? (get-counters % :advancement)))}
                                   :effect (req (move state :contestant target :deck)
                                                (shuffle! state :contestant :deck)
@@ -35,14 +35,14 @@
    {:abilities [{:cost [:click 1]
                  :effect (req (let [b (get-card state card)
                                     hosted? (character? (:host b))
-                                    remote? (is-remote? (second (:zone (:host b))))]
+                                    party? (is-party? (second (:zone (:host b))))]
                                 (resolve-ability state side
                                  {:prompt (msg "Host Bishop on a piece of Character protecting "
-                                            (if hosted? (if remote? "a central" "a remote") "any") " server")
+                                            (if hosted? (if party? "a central" "a party") "any") " locale")
                                   :choices {:req #(if hosted?
-                                                    (and (if remote?
+                                                    (and (if party?
                                                            (is-central? (second (:zone %)))
-                                                           (is-remote? (second (:zone %))))
+                                                           (is-party? (second (:zone %))))
                                                          (character? %)
                                                          (can-host? %)
                                                          (= (last (:zone %)) :characters)
@@ -56,7 +56,7 @@
                                   :msg (msg "host it on " (card-str state target))
                                   :effect (effect (host target card))} card nil)))}]
     :events {:pre-character-strength
-             {:req (req (and (= (:cid target) (:cid (:host card))) (:rezzed target)))
+             {:req (req (and (= (:cid target) (:cid (:host card))) (:revealed target)))
               :effect (effect (character-strength-bonus -2 target))}}}
 
    "Bug"
@@ -91,41 +91,41 @@
 
    "Clot"
    {:effect (req (let [agendas (map first (filter #(is-type? (first %) "Agenda")
-                                                  (turn-events state :contestant :contestant-install)))]
+                                                  (turn-events state :contestant :contestant-place)))]
                    (swap! state assoc-in [:contestant :register :cannot-score] agendas)))
     :events {:purge {:effect (req (swap! state update-in [:contestant :register] dissoc :cannot-score)
                                   (discard state side card {:cause :purge}))}
-             :contestant-install {:req (req (is-type? target "Agenda"))
+             :contestant-place {:req (req (is-type? target "Agenda"))
                             :effect (req (swap! state update-in [:contestant :register :cannot-score] #(cons target %)))}}
     :leave-play (req (swap! state update-in [:contestant :register] dissoc :cannot-score))}
 
    "Collective Consciousness"
-   {:events {:rez {:req (req (character? target)) :msg "draw 1 card"
+   {:events {:reveal {:req (req (character? target)) :msg "draw 1 card"
                    :effect (effect (draw :challenger))}}}
 
    "Copycat"
    {:abilities [{:req (req (and (:run @state)
-                                (:rezzed current-character)))
+                                (:revealed current-character)))
                  :effect (req (let [charactername (:title current-character)]
                                 (resolve-ability
                                   state side
-                                  {:prompt (msg "Choose a rezzed copy of " charactername)
-                                   :choices {:req #(and (rezzed? %)
+                                  {:prompt (msg "Choose a revealed copy of " charactername)
+                                   :choices {:req #(and (revealed? %)
                                                         (character? %)
                                                         (= (:title %) charactername))}
                                    :msg "redirect the run"
                                    :effect (req (let [dest (second (:zone target))
                                                       tgtndx (character-index state target)]
                                                   (swap! state update-in [:run]
-                                                         #(assoc % :position tgtndx :server [dest]))
+                                                         #(assoc % :position tgtndx :locale [dest]))
                                                   (discard state side card {:cause :ability-cost})))}
                                  card nil)))}]}
 
    "Crescentus"
    {:implementation "Does not check that all subroutines were broken"
-    :abilities [{:req (req (rezzed? current-character))
-                 :msg (msg "derez " (:title current-character))
-                 :effect (effect (discard card {:cause :ability-cost}) (derez current-character))}]}
+    :abilities [{:req (req (revealed? current-character))
+                 :msg (msg "hide " (:title current-character))
+                 :effect (effect (discard card {:cause :ability-cost}) (hide current-character))}]}
 
    "Customized Secretary"
    (letfn [(custsec-host [cards]
@@ -142,18 +142,18 @@
                                  (continue-ability state side (custsec-host (remove-once #(= % target) cards))
                                                    card nil))))})]
      {:async true
-      :interactive (req (some #(card-flag? % :challenger-install-draw true) (all-active state :challenger)))
+      :interactive (req (some #(card-flag? % :challenger-place-draw true) (all-active state :challenger)))
       :msg (msg "reveal the top 5 cards of their Stack: " (join ", " (map :title (take 5 (:deck challenger)))))
       :effect (req (show-wait-prompt state :contestant "Challenger to host resources on Customized Secretary")
                    (let [from (take 5 (:deck challenger))]
                      (continue-ability state side (custsec-host from) card nil)))
       :abilities [{:cost [:click 1]
-                   :prompt "Choose a resource hosted on Customized Secretary to install"
+                   :prompt "Choose a resource hosted on Customized Secretary to place"
                    :choices (req (cancellable (filter #(can-pay? state side nil :credit (:cost %))
                                                       (:hosted card))))
-                   :msg (msg "install " (:title target))
+                   :msg (msg "place " (:title target))
                    :effect (req (when (can-pay? state side nil :credit (:cost target))
-                                  (challenger-install state side target)))}]})
+                                  (challenger-place state side target)))}]})
    "Consume"
    {:events {:challenger-discard {:async true
                             :req (req (some #(card-is? % :side :contestant) targets))
@@ -177,7 +177,7 @@
                  :label "Gain 2 [Credits] for each hosted virus counter, then remove all virus counters."
                  :effect (req (gain-credits state side (* 2 (get-virus-counters state side card)))
                               (update! state side (assoc-in card [:counter :virus] 0))
-                              (when-let [hiveminds (filter #(= "Hivemind" (:title %)) (all-active-installed state :challenger))]
+                              (when-let [hiveminds (filter #(= "Hivemind" (:title %)) (all-active-placed state :challenger))]
                                         (doseq [h hiveminds]
                                                (update! state side (assoc-in h [:counter :virus] 0)))))
                  :msg (msg (let [local-virus (get-counters card :virus)
@@ -204,14 +204,14 @@
     :abilities [{:effect
                  (req (let [c card]
                         (resolve-ability state side
-                                         {:prompt "Choose a card to install from your Grip"
+                                         {:prompt "Choose a card to place from your Grip"
                                           :choices {:req #(and (<= (:cost %) (get-counters c :power))
                                                                (#{"Hazard" "Resource" "Radicle"} (:type %))
                                                                (in-hand? %))}
-                                          :req (req (not (install-locked? state side)))
-                                          :msg (msg "install " (:title target) " at no cost")
+                                          :req (req (not (place-locked? state side)))
+                                          :msg (msg "place " (:title target) " at no cost")
                                           :effect (effect (discard card {:cause :ability-cost})
-                                                          (challenger-install target {:no-cost true}))}
+                                                          (challenger-place target {:no-cost true}))}
                                          card nil)))}]}
 
    "Datasucker"
@@ -226,7 +226,7 @@
                :pass-character ds :run-ends ds})
     :abilities [{:counter-cost [:virus 1]
                  :msg (msg "give -1 strength to " (:title current-character))
-                 :req (req (and current-character (:rezzed current-character)))
+                 :req (req (and current-character (:revealed current-character)))
                  :effect (req (update! state side (update-in card [:datasucker-count] (fnil #(+ % 1) 0)))
                               (update-character-strength state side current-character))}]}
 
@@ -240,25 +240,25 @@
                                                                  (:title (first (:deck contestant)))) ["OK"] {}))}}}
 
    "Dhegdheer"
-   {:abilities [{:label "Install a resource on Dhegdheer"
+   {:abilities [{:label "Place a resource on Dhegdheer"
                  :req (req (nil? (get-in card [:special :dheg-prog])))
                  :effect (effect (resolve-ability
                                    {:cost [:click 1]
-                                    :prompt "Choose a resource in your Grip to install on Dhegdheer"
+                                    :prompt "Choose a resource in your Grip to place on Dhegdheer"
                                     :choices {:req #(and (is-type? % "Resource")
-                                                         (challenger-can-install? state side % false)
+                                                         (challenger-can-place? state side % false)
                                                          (in-hand? %))}
                                     :msg (msg "host " (:title target) (when (-> target :cost pos?) ", lowering its cost by 1 [Credit]"))
                                     :effect (effect (when (-> target :cost pos?)
-                                                      (install-cost-bonus state side [:credit -1]))
-                                                    (challenger-install target {:host-card card :no-mu true})
+                                                      (place-cost-bonus state side [:credit -1]))
+                                                    (challenger-place target {:host-card card :no-mu true})
                                                     (update! (assoc-in (get-card state card) [:special :dheg-prog] (:cid target))))}
                                   card nil))}
-                {:label "Host an installed resource on Dhegdheer with [Credit] discount"
+                {:label "Host an placed resource on Dhegdheer with [Credit] discount"
                  :req (req (nil? (get-in card [:special :dheg-prog])))
-                 :prompt "Choose an installed resource to host on Dhegdheer with [Credit] discount"
+                 :prompt "Choose an placed resource to host on Dhegdheer with [Credit] discount"
                  :choices {:req #(and (is-type? % "Resource")
-                                      (installed? %))}
+                                      (placed? %))}
                  :msg (msg "host " (:title target) (when (-> target :cost pos?) ", lowering its cost by 1 [Credit]"))
                  :effect (req (free-mu state (:memoryunits target))
                               (when (-> target :cost pos?)
@@ -266,11 +266,11 @@
                               (update-breaker-strength state side target)
                               (host state side card (get-card state target))
                               (update! state side (assoc-in (get-card state card) [:special :dheg-prog] (:cid target))))}
-                {:label "Host an installed resource on Dhegdheer"
+                {:label "Host an placed resource on Dhegdheer"
                  :req (req (nil? (get-in card [:special :dheg-prog])))
-                 :prompt "Choose an installed resource to host on Dhegdheer"
+                 :prompt "Choose an placed resource to host on Dhegdheer"
                  :choices {:req #(and (is-type? % "Resource")
-                                      (installed? %))}
+                                      (placed? %))}
                  :msg (msg "host " (:title target) (when (-> target :cost pos?)))
                  :effect (effect (free-mu (:memoryunits target))
                                  (update-breaker-strength target)
@@ -295,16 +295,16 @@
                         card nil))}}}
 
    "Diwan"
-   {:prompt "Choose the server that this copy of Diwan is targeting:"
-    :choices (req servers)
-    :effect (effect (update! (assoc card :server-target target)))
+   {:prompt "Choose the locale that this copy of Diwan is targeting:"
+    :choices (req locales)
+    :effect (effect (update! (assoc card :locale-target target)))
     :events {:purge {:effect (effect (discard card {:cause :purge}))}
-             :pre-contestant-install {:req (req (let [c target
-                                                serv (:server (second targets))]
-                                            (and (= serv (:server-target card))
+             :pre-contestant-place {:req (req (let [c target
+                                                serv (:locale (second targets))]
+                                            (and (= serv (:locale-target card))
                                                  (not (and (is-central? serv)
                                                            (is-type? c "Region"))))))
-                                :effect (effect (install-cost-bonus [:credit 1]))}}}
+                                :effect (effect (place-cost-bonus [:credit 1]))}}}
 
    "Djinn"
    {:abilities [{:label "Search your Stack for a virus resource and add it to your Grip"
@@ -317,25 +317,25 @@
                  :effect (effect (trigger-event :searched-stack nil)
                                  (shuffle! :deck)
                                  (move target :hand) )}
-                {:label "Install a non-Icebreaker resource on Djinn"
+                {:label "Place a non-Icebreaker resource on Djinn"
                  :effect (effect (resolve-ability
                                    {:cost [:click 1]
-                                    :prompt "Choose a non-Icebreaker resource in your Grip to install on Djinn"
+                                    :prompt "Choose a non-Icebreaker resource in your Grip to place on Djinn"
                                     :choices {:req #(and (is-type? % "Resource")
-                                                         (challenger-can-install? state side % false)
+                                                         (challenger-can-place? state side % false)
                                                          (not (has-subtype? % "Icebreaker"))
                                                          (in-hand? %))}
-                                    :msg (msg "install and host " (:title target))
-                                    :effect (effect (challenger-install target {:host-card card :no-mu true})
+                                    :msg (msg "place and host " (:title target))
+                                    :effect (effect (challenger-place target {:host-card card :no-mu true})
                                                     (update! (assoc (get-card state card)
                                                                     :hosted-resources
                                                                     (cons (:cid target) (:hosted-resources card)))))}
                                   card nil))}
-                {:label "Host an installed non-Icebreaker resource on Djinn"
-                 :prompt "Choose an installed non-Icebreaker resource to host on Djinn"
+                {:label "Host an placed non-Icebreaker resource on Djinn"
+                 :prompt "Choose an placed non-Icebreaker resource to host on Djinn"
                  :choices {:req #(and (is-type? % "Resource")
                                       (not (has-subtype? % "Icebreaker"))
-                                      (installed? %))}
+                                      (placed? %))}
                  :msg (msg "host " (:title target))
                  :effect (effect (host card target)
                                  (free-mu (:memoryunits target))
@@ -348,19 +348,19 @@
 
    "Egret"
    {:implementation "Added subtypes don't get removed when Egret is moved/discarded"
-    :hosting {:req #(and (character? %) (can-host? %) (rezzed? %))}
+    :hosting {:req #(and (character? %) (can-host? %) (revealed? %))}
     :msg (msg "make " (card-str state (:host card)) " gain Barrier, Code Gate and Sentry subtypes")
     :effect (req (when-let [h (:host card)]
-                   (update! state side (assoc-in card [:special :installing] true))
+                   (update! state side (assoc-in card [:special :placing] true))
                    (update-character-strength state side h)
                    (when-let [card (get-card state card)]
-                     (update! state side (update-in card [:special] dissoc :installing)))))
+                     (update! state side (update-in card [:special] dissoc :placing)))))
     :events {:character-strength-changed
              {:effect (req (unregister-events state side card)
-                           (when (get-in card [:special :installing])
+                           (when (get-in card [:special :placing])
                              (update! state side (assoc (:host (get-card state card)) :subtype (combine-subtypes false(-> card :host :subtype) "Barrier" "Code Gate" "Sentry")))
-                             (update! state side (update-in card [:special] dissoc :installing))
-                             (trigger-event state side :challenger-install card))
+                             (update! state side (update-in card [:special] dissoc :placing))
+                             (trigger-event state side :challenger-place card))
                            (continue state side nil))}}}
 
    "Equivocation"
@@ -399,20 +399,20 @@
    "False Echo"
    {:abilities [{:req (req (and run
                                 (< (:position run) (count run-characters))
-                                (not (rezzed? current-character))))
-                 :msg "make the Contestant rez the passed Character or add it to HQ"
-                 :effect (req (let [s (:server run)
-                                    character (nth (get-in @state (vec (concat [:contestant :servers] s [:characters]))) (:position run))
+                                (not (revealed? current-character))))
+                 :msg "make the Contestant reveal the passed Character or add it to HQ"
+                 :effect (req (let [s (:locale run)
+                                    character (nth (get-in @state (vec (concat [:contestant :locales] s [:characters]))) (:position run))
                                     charactername (:title character)
-                                    charactercost (rez-cost state side character)]
+                                    charactercost (reveal-cost state side character)]
                                 (continue-ability
                                   state side
-                                  {:prompt (msg "Rez " charactername " or add it to HQ?") :player :contestant
+                                  {:prompt (msg "Reveal " charactername " or add it to HQ?") :player :contestant
                                    :choices (req (if (< (:credit contestant) charactercost)
                                                      ["Add to HQ"]
-                                                     ["Rez" "Add to HQ"]))
-                                   :effect (req (if (= target "Rez")
-                                                  (rez state side character)
+                                                     ["Reveal" "Add to HQ"]))
+                                   :effect (req (if (= target "Reveal")
+                                                  (reveal state side character)
                                                   (do (move state :contestant character :hand nil)
                                                       (system-msg state :contestant (str "chooses to add the passed Character to HQ"))))
                                                 (discard state side card))}
@@ -429,7 +429,7 @@
    {:abilities [{:msg "break all but 1 subroutine" :effect (effect (discard card {:cause :ability-cost}))}]}
 
    "Gravedigger"
-   {:events (let [e {:req (req (and (installed? target) (= (:side target) "Contestant")))
+   {:events (let [e {:req (req (and (placed? target) (= (:side target) "Contestant")))
                      :effect (effect (add-counter :challenger card :virus 1))}]
               {:challenger-discard e :contestant-discard e})
     :abilities [{:counter-cost [:virus 1]
@@ -442,7 +442,7 @@
      {:req (req (not (some #{:facedown :hand} (:previous-zone card))))
       :effect (req (let [lock (get-in @state [:challenger :locked :discard])]
                      (swap! state assoc-in [:challenger :locked] nil)
-                     (challenger-install state :challenger card {:facedown true})
+                     (challenger-place state :challenger card {:facedown true})
                      (swap! state assoc-in [:challenger :locked] lock)))}}
 
    "Hemorrhage"
@@ -462,7 +462,7 @@
                                card nil))}]}
 
    "Hivemind"
-   (let [update-resources (req (let [virus-resources (->> (all-installed state :challenger)
+   (let [update-resources (req (let [virus-resources (->> (all-placed state :challenger)
                                                   (filter #(and (resource? %)
                                                                 (has-subtype? % "Virus")
                                                                 (not (facedown? %)))))]
@@ -520,7 +520,7 @@
    {:events {:challenger-turn-begins {:effect (effect (add-counter card :virus 1))}}
     :abilities [{:cost [:click 1]
                  :msg (msg "move " (get-counters card :virus) " virus counter to " (:title target))
-                 :choices {:req #(and (installed? %)
+                 :choices {:req #(and (placed? %)
                                       (has-subtype? % "Virus"))}
                  :effect (effect (discard card {:cause :ability-cost})
                                  (add-counter target :virus (get-counters card :virus)))}]}
@@ -551,26 +551,26 @@
              :purge {:effect (effect (discard card {:cause :purge}))}}}
 
    "Leprechaun"
-   {:abilities [{:label "Install a resource on Leprechaun"
+   {:abilities [{:label "Place a resource on Leprechaun"
                  :req (req (< (count (get-in card [:special :hosted-resources])) 2))
                  :effect (effect (resolve-ability
                                    {:cost [:click 1]
-                                    :prompt "Choose a resource in your Grip to install on Leprechaun"
+                                    :prompt "Choose a resource in your Grip to place on Leprechaun"
                                     :choices {:req #(and (is-type? % "Resource")
-                                                         (challenger-can-install? state side % false)
+                                                         (challenger-can-place? state side % false)
                                                          (in-hand? %))}
                                     :msg (msg "host " (:title target))
-                                    :effect (effect (challenger-install target {:host-card card :no-mu true})
+                                    :effect (effect (challenger-place target {:host-card card :no-mu true})
                                                     (update! (assoc-in (get-card state card)
                                                                     [:special :hosted-resources]
                                                                     (cons (:cid target)
                                                                           (get-in card [:special :hosted-resources])))))}
                                   card nil))}
-                {:label "Host an installed resource on Leprechaun"
+                {:label "Host an placed resource on Leprechaun"
                  :req (req (< (count (get-in card [:special :hosted-resources])) 2))
-                 :prompt "Choose an installed resource to host on Leprechaun"
+                 :prompt "Choose an placed resource to host on Leprechaun"
                  :choices {:req #(and (is-type? % "Resource")
-                                      (installed? %))}
+                                      (placed? %))}
                  :msg (msg "host " (:title target))
                  :effect (effect (free-mu (:memoryunits target))
                                  (update-breaker-strength target)
@@ -667,14 +667,14 @@
    "Origami"
    {:effect (effect (gain :hand-size
                           {:mod (dec (* 2 (count (filter #(= (:title %) "Origami")
-                                                         (all-active-installed state :challenger)))))}))
+                                                         (all-active-placed state :challenger)))))}))
     :leave-play (effect (lose :hand-size
                               {:mod (dec (* 2 (count (filter #(= (:title %) "Origami")
-                                                             (all-active-installed state :challenger)))))}))}
+                                                             (all-active-placed state :challenger)))))}))}
 
    "Paintbrush"
    {:abilities [{:cost [:click 1]
-                 :choices {:req #(and (installed? %) (character? %) (rezzed? %))}
+                 :choices {:req #(and (placed? %) (character? %) (revealed? %))}
                  :effect (req (let [character target
                                     stypes (:subtype character)]
                            (resolve-ability
@@ -697,12 +697,12 @@
                  :once :per-turn}]}
 
    "Parasite"
-   {:hosting {:req #(and (character? %) (can-host? %) (rezzed? %))}
+   {:hosting {:req #(and (character? %) (can-host? %) (revealed? %))}
     :effect (req (when-let [h (:host card)]
-                   (update! state side (assoc-in card [:special :installing] true))
+                   (update! state side (assoc-in card [:special :placing] true))
                    (update-character-strength state side h)
                    (when-let [card (get-card state card)]
-                     (update! state side (update-in card [:special] dissoc :installing)))))
+                     (update! state side (update-in card [:special] dissoc :placing)))))
     :events {:challenger-turn-begins
              {:effect (req (add-counter state side card :virus 1))}
              :counter-added
@@ -713,12 +713,12 @@
               :effect (effect (character-strength-bonus (- (get-virus-counters state side card)) target))}
              :character-strength-changed
              {:req (req (and (= (:cid target) (:cid (:host card)))
-                             (not (card-flag? (:host card) :undiscardable-while-rezzed true))
+                             (not (card-flag? (:host card) :undiscardable-while-revealed true))
                              (<= (:current-strength target) 0)))
               :effect (req (unregister-events state side card)
-                           (when (get-in card [:special :installing])
-                             (update! state side (update-in card [:special] dissoc :installing))
-                             (trigger-event state side :challenger-install card))
+                           (when (get-in card [:special :placing])
+                             (update! state side (update-in card [:special] dissoc :placing))
+                             (trigger-event state side :challenger-place card))
                            (discard state side target)
                            (continue state side nil))
               :msg (msg "discard " (:title target))}}}
@@ -728,8 +728,8 @@
 
    "Pawn"
    {:implementation "All abilities are manual"
-    :abilities [{:label "Host Pawn on the outermost Character of a central server"
-                 :prompt "Host Pawn on the outermost Character of a central server" :cost [:click 1]
+    :abilities [{:label "Host Pawn on the outermost Character of a central locale"
+                 :prompt "Host Pawn on the outermost Character of a central locale" :cost [:click 1]
                  :choices {:req #(and (character? %)
                                       (can-host? %)
                                       (= (last (:zone %)) :characters)
@@ -744,27 +744,27 @@
                                       (is-central? (second (:zone %))))}
                  :msg (msg "host it on " (card-str state target))
                  :effect (effect (host target card))}
-                {:label "Discard Pawn and install a Caïssa from your Grip or Heap, ignoring all costs"
+                {:label "Discard Pawn and place a Caïssa from your Grip or Heap, ignoring all costs"
                  :effect (req (let [this-pawn (:cid card)]
                                 (resolve-ability
                                   state side
-                                  {:prompt "Choose a Caïssa resource to install from your Grip or Heap"
+                                  {:prompt "Choose a Caïssa resource to place from your Grip or Heap"
                                    :show-discard true
                                    :choices {:req #(and (has-subtype? % "Caïssa")
                                                         (not= (:cid %) this-pawn)
                                                         (#{[:hand] [:discard]} (:zone %)))}
-                                   :msg (msg "install " (:title target))
-                                   :effect (effect (challenger-install target {:no-cost true}))} card nil)
+                                   :msg (msg "place " (:title target))
+                                   :effect (effect (challenger-place target {:no-cost true}))} card nil)
                                 (discard state side card)))}]}
 
    "Plague"
-   {:prompt "Choose a server for Plague" :choices (req servers)
+   {:prompt "Choose a locale for Plague" :choices (req locales)
     :msg (msg "target " target)
-    :req (req (not (get-in card [:special :server-target])))
-    :effect (effect (update! (assoc-in card [:special :server-target] target)))
+    :req (req (not (get-in card [:special :locale-target])))
+    :effect (effect (update! (assoc-in card [:special :locale-target] target)))
     :events {:successful-run
-             {:req (req (= (zone->name (get-in @state [:run :server]))
-                           (get-in (get-card state card) [:special :server-target])))
+             {:req (req (= (zone->name (get-in @state [:run :locale]))
+                           (get-in (get-card state card) [:special :locale-target])))
               :msg "gain 2 virus counters"
               :effect (effect (add-counter :challenger card :virus 2))}}}
 
@@ -776,26 +776,26 @@
                               :effect (effect (add-counter card :virus 1))}}}
 
    "Progenitor"
-   {:abilities [{:label "Install a virus resource on Progenitor"
+   {:abilities [{:label "Place a virus resource on Progenitor"
                  :req (req (empty? (:hosted card)))
                  :effect (effect (resolve-ability
                                    {:cost [:click 1]
-                                    :prompt "Choose a Virus resource to install on Progenitor"
+                                    :prompt "Choose a Virus resource to place on Progenitor"
                                     :choices {:req #(and (is-type? % "Resource")
                                                          (has-subtype? % "Virus")
                                                          (in-hand? %))}
                                     :msg (msg "host " (:title target))
-                                    :effect (effect (challenger-install target {:host-card card :no-mu true})
+                                    :effect (effect (challenger-place target {:host-card card :no-mu true})
                                                     (update! (assoc (get-card state card)
                                                                     :hosted-resources
                                                                     (cons (:cid target) (:hosted-resources card)))))}
                                   card nil))}
-                {:label "Host an installed virus on Progenitor"
+                {:label "Host an placed virus on Progenitor"
                  :req (req (empty? (:hosted card)))
-                 :prompt "Choose an installed virus resource to host on Progenitor"
+                 :prompt "Choose an placed virus resource to host on Progenitor"
                  :choices {:req #(and (is-type? % "Resource")
                                       (has-subtype? % "Virus")
-                                      (installed? %))}
+                                      (placed? %))}
                  :msg (msg "host " (:title target))
                  :effect (effect (host card target)
                                  (free-mu (:memoryunits target))
@@ -811,8 +811,8 @@
                                           (use-mu (:memoryunits target)))}}}
 
    "Reaver"
-   {:events {:challenger-discard {:req (req (and (first-installed-discard? state side)
-                                           (installed? target)))
+   {:events {:challenger-discard {:req (req (and (first-placed-discard? state side)
+                                           (placed? target)))
                             :effect (effect (draw :challenger 1))
                             :msg "draw 1 card"}}}
 
@@ -821,9 +821,9 @@
                                :async true
                                :msg (msg "to reveal " (:title target))
                                :effect (req (if-let [guess (get-in card [:special :rng-guess])]
-                                              (if (installed? target)
-                                                ;; Do not trigger on installed cards (can't "reveal" an installed card per UFAQ)
-                                                (do (toast state :challenger "Installed cards cannot be revealed, so RNG Key does not pay out." "info")
+                                              (if (placed? target)
+                                                ;; Do not trigger on placed cards (can't "reveal" an placed card per UFAQ)
+                                                (do (toast state :challenger "Placed cards cannot be revealed, so RNG Key does not pay out." "info")
                                                     (effect-completed state side eid))
                                                 (if (or (= guess (:cost target))
                                                         (= guess (:advancementcost target)))
@@ -854,9 +854,9 @@
                                     characterpos (character-index state (get-card state (:host r)))]
                                 (resolve-ability state side
                                  {:prompt (if hosted?
-                                            (msg "Host Rook on a piece of Character protecting this server or at position "
-                                              characterpos " of a different server")
-                                            (msg "Host Rook on a piece of Character protecting any server"))
+                                            (msg "Host Rook on a piece of Character protecting this locale or at position "
+                                              characterpos " of a different locale")
+                                            (msg "Host Rook on a piece of Character protecting any locale"))
                                   :choices {:req #(if hosted?
                                                     (and (or (= (:zone %) (:zone (:host r)))
                                                              (= (character-index state %) characterpos))
@@ -870,8 +870,8 @@
                                                          (not (some (fn [c] (has? c :subtype "Caïssa")) (:hosted %)))))}
                                   :msg (msg "host it on " (card-str state target))
                                   :effect (effect (host target card))} card nil)))}]
-    :events {:pre-rez-cost {:req (req (= (:zone (:host card)) (:zone target)))
-                            :effect (effect (rez-cost-bonus 2))}}}
+    :events {:pre-reveal-cost {:req (req (= (:zone (:host card)) (:zone target)))
+                            :effect (effect (reveal-cost-bonus 2))}}}
 
    "Sahasrara"
    {:recurring 2}
@@ -879,50 +879,50 @@
    "Savoir-faire"
    {:abilities [{:cost [:credit 2]
                  :once :per-turn
-                 :req (req (not (install-locked? state side)))
-                 :msg (msg "install " (:title target))
-                 :prompt "Choose a resource to install from your grip"
+                 :req (req (not (place-locked? state side)))
+                 :msg (msg "place " (:title target))
+                 :prompt "Choose a resource to place from your grip"
                  :choices {:req #(and (is-type? % "Resource")
                                       (in-hand? %))}
-                 :effect (effect (challenger-install target))}]}
+                 :effect (effect (challenger-place target))}]}
 
    "Scheherazade"
-   {:abilities [{:label "Install and host a resource from Grip"
+   {:abilities [{:label "Place and host a resource from Grip"
                  :effect (effect (resolve-ability
                                    {:cost [:click 1]
-                                    :prompt "Choose a resource to install on Scheherazade from your grip"
+                                    :prompt "Choose a resource to place on Scheherazade from your grip"
                                     :choices {:req #(and (is-type? % "Resource")
-                                                         (challenger-can-install? state side % false)
+                                                         (challenger-can-place? state side % false)
                                                          (in-hand? %))}
                                     :msg (msg "host " (:title target) " and gain 1 [Credits]")
-                                    :effect (effect (challenger-install target {:host-card card}) (gain-credits 1))}
+                                    :effect (effect (challenger-place target {:host-card card}) (gain-credits 1))}
                                   card nil))}
-                {:label "Host an installed resource"
+                {:label "Host an placed resource"
                  :prompt "Choose a resource to host on Scheherazade" :priority 2
                  :choices {:req #(and (is-type? % "Resource")
-                                      (installed? %))}
+                                      (placed? %))}
                  :msg (msg "host " (:title target) " and gain 1 [Credits]")
                  :effect (req (when (host state side card target)
                                 (gain-credits state side 1)))}]}
 
    "Self-modifying Code"
-   {:abilities [{:req (req (not (install-locked? state side)))
+   {:abilities [{:req (req (not (place-locked? state side)))
                  :effect (req (wait-for (discard state side card {:cause :ability-cost})
                                         (continue-ability state side
-                                                          {:prompt "Choose a resource to install"
-                                                           :msg (req (if (not= target "No install")
-                                                                       (str "install " (:title target))
+                                                          {:prompt "Choose a resource to place"
+                                                           :msg (req (if (not= target "No place")
+                                                                       (str "place " (:title target))
                                                                        (str "shuffle their Stack")))
                                                            :priority true
                                                            :choices (req (cancellable
                                                                            (conj (vec (sort-by :title (filter #(is-type? % "Resource")
                                                                                                               (:deck challenger))))
-                                                                                 "No install")))
+                                                                                 "No place")))
                                                            :cost [:credit 2]
                                                            :effect (req (trigger-event state side :searched-stack nil)
                                                                         (shuffle! state side :deck)
-                                                                        (when (not= target "No install")
-                                                                          (challenger-install state side target)))} card nil)))}]}
+                                                                        (when (not= target "No place")
+                                                                          (challenger-place state side target)))} card nil)))}]}
 
    "Sneakdoor Beta"
    {:abilities [{:cost [:click 1]
@@ -932,7 +932,7 @@
                                    {:req (req (= target :archives))
                                     :successful-run
                                     {:silent (req true)
-                                     :effect (req (swap! state assoc-in [:run :server] [:hq])
+                                     :effect (req (swap! state assoc-in [:run :locale] [:hq])
                                                   ; remove the :req from the run-effect, so that other cards that replace
                                                   ; access don't use Sneakdoor's req. (Security Testing, Ash 2X).
                                                   (swap! state dissoc-in [:run :run-effect :req])
@@ -942,7 +942,7 @@
                                    card))}]}
 
    "Snitch"
-   {:abilities [{:once :per-run :req (req (and (character? current-character) (not (rezzed? current-character))))
+   {:abilities [{:once :per-run :req (req (and (character? current-character) (not (revealed? current-character))))
                  :async true
                  :effect (req (wait-for (expose state side current-character)
                                         (continue-ability
@@ -972,7 +972,7 @@
                              (trigger-event state side :approach-character current-character)))})]
      {:abilities [{:cost [:credit 2]
                    :req (req (and (:run @state)
-                                  (rezzed? current-character)
+                                  (revealed? current-character)
                                   (has-subtype? current-character "Barrier")))
                    :label "Swap the Barrier Character currently being encountered with a piece of Character directly before or after it"
                    :effect (effect (resolve-ability (surf state current-character) card nil))}]})
@@ -983,14 +983,14 @@
                  :effect (effect (add-counter card :power 1)
                                  (system-msg "adds a power counter to Takobi"))}
                 {:req (req (and (:run @state)
-                                (rezzed? current-character)
+                                (revealed? current-character)
                                 (>= (get-counters card :power) 2)))
                  :counter-cost [:power 2]
                  :label "Increase non-AI characterbreaker strength by +3 until end of encounter"
-                 :prompt "Choose an installed non-AI characterbreaker"
+                 :prompt "Choose an placed non-AI characterbreaker"
                  :choices {:req #(and (has-subtype? % "Icebreaker")
                                       (not (has-subtype? % "AI"))
-                                      (installed? %))}
+                                      (placed? %))}
                  :msg (msg "add +3 strength to " (:title target) " for remainder of encounter")
                  :effect (effect (pump target 3 :encounter))}]}
 
@@ -1007,16 +1007,16 @@
                :purge {:effect (effect (discard card {:cause :purge}))}}})
 
    "Tracker"
-   (let [ability {:prompt "Choose a server for Tracker" :choices (req servers)
+   (let [ability {:prompt "Choose a locale for Tracker" :choices (req locales)
                   :msg (msg "target " target)
-                  :req (req (not (:server-target card)))
-                  :effect (effect (update! (assoc card :server-target target)))}]
-     {:abilities [{:label "Make a run on targeted server" :cost [:click 1 :credit 2]
-                   :req (req (some #(= (:server-target card) %) runnable-servers))
-                   :msg (msg "make a run on " (:server-target card) ". Prevent the first subroutine that would resolve from resolving")
-                   :effect (effect (run (:server-target card) nil card))}]
+                  :req (req (not (:locale-target card)))
+                  :effect (effect (update! (assoc card :locale-target target)))}]
+     {:abilities [{:label "Make a run on targeted locale" :cost [:click 1 :credit 2]
+                   :req (req (some #(= (:locale-target card) %) runnable-locales))
+                   :msg (msg "make a run on " (:locale-target card) ". Prevent the first subroutine that would resolve from resolving")
+                   :effect (effect (run (:locale-target card) nil card))}]
       :events {:challenger-turn-begins ability
-               :challenger-turn-ends {:effect (effect (update! (dissoc card :server-target)))}}})
+               :challenger-turn-ends {:effect (effect (update! (dissoc card :locale-target)))}}})
 
    "Trope"
    {:events {:challenger-turn-begins {:effect (effect (add-counter card :power 1))}}
@@ -1039,8 +1039,8 @@
    "Trypano"
    (let [discard-if-5 (req (when-let [h (get-card state (:host card))]
                            (if (and (>= (get-virus-counters state side card) 5)
-                                      (not (and (card-flag? h :undiscardable-while-rezzed true)
-                                                (rezzed? h))))
+                                      (not (and (card-flag? h :undiscardable-while-revealed true)
+                                                (revealed? h))))
                              (do (system-msg state :challenger (str "uses Trypano to discard " (card-str state h)))
                                  (unregister-events state side card)
                                  (discard state :challenger eid h nil))
@@ -1055,7 +1055,7 @@
                                  :effect discard-if-5}
                  :card-moved {:effect discard-if-5
                               :async true}
-                 :challenger-install {:effect discard-if-5
+                 :challenger-place {:effect discard-if-5
                                   :async true}}})
 
    "Upya"
@@ -1079,7 +1079,7 @@
                                                        (expose-and-maybe-bounce target)
                                                        card nil)))})
            (expose-and-maybe-bounce [chosen-subtype]
-             {:choices {:req #(and (character? %) (not (rezzed? %)))}
+             {:choices {:req #(and (character? %) (not (revealed? %)))}
               :async true
               :msg (str "name " chosen-subtype)
               :effect (req (wait-for (expose state side target)
@@ -1093,9 +1093,9 @@
               {:interactive (req true)
                :async true
                :req (req (and (= target :hq)
-                              (first-successful-run-on-server? state :hq)
-                              (some #(and (character? %) (not (rezzed? %)))
-                                    (all-installed state :contestant))))
+                              (first-successful-run-on-locale? state :hq)
+                              (some #(and (character? %) (not (revealed? %)))
+                                    (all-placed state :contestant))))
                :effect (effect (continue-ability
                                 {:prompt "Use Wari?"
                                  :choices ["Yes" "No"]

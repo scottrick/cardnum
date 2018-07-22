@@ -88,7 +88,7 @@
                   arbitrary order. In general, handlers should be marked ':interactive (req true)' if they have
                   important order-of-effect interactions with other cards. The :interactive function can be coded to
                   have smarter logic if necessary -- see Replicator, which is only interactive if there is another
-                  copy of the installed card remaining in the Stack.
+                  copy of the placed card remaining in the Stack.
   :silent -- any handler that does not require user interaction under any circumstances can be marked :silent. If a
              handler's :silent function returns true, then no menu entry will be shown for the handler. In that case,
              the ability will only be resolved once all non-silent abilities are resolved. Example: AstroScript has no

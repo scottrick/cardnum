@@ -80,7 +80,7 @@
                     ;:fw-dc-sb (zone :fw-dc-sb contestant-fw-dc)
                     ;:location (zone :location contestant-location)
                     :discard [] :scored [] :rfg [] :play-area []
-                    :servers {:hq {} :rd {} :archives {} :sites {}}
+                    :locales {:hq {} :rd {} :archives {} :sites {}}
                     :rig {:resource [] :radicle [] :hazard []}
                     :click 0 :credit 20 :bad-publicity 0 :has-bad-pub 0
                     :free_gi 0 :total_mp 0 :stage_pt 0
@@ -99,7 +99,7 @@
                     ;:fw-dc-sb (zone :fw-dc-sb challenger-fw-dc)
                     ;:location (zone :location challenger-location)
                     :discard [] :scored [] :rfg [] :play-area []
-                    :servers {:hq {} :rd {} :archives {} :sites {}}
+                    :locales {:hq {} :rd {} :archives {} :sites {}}
                     :rig {:resource [] :radicle [] :hazard []}
                     :toast []
                     :click 0 :credit 20 :run-credit 0 :memory 4 :link 0 :tag 0
@@ -303,7 +303,7 @@
   (when (= side :contestant)
     (swap! state update-in [:turn] inc))
 
-  (doseq [c (filter :new (all-installed state side))]
+  (doseq [c (filter :new (all-placed state side))]
     (update! state side (dissoc c :new)))
 
   (swap! state assoc :active-player side :per-turn nil :end-turn false)
@@ -339,7 +339,7 @@
              (doseq [a (get-in @state [side :register :end-turn])]
                (resolve-ability state side (:ability a) (:card a) (:targets a)))
              (swap! state assoc-in [side :register-last-turn] (-> @state side :register))
-             (doseq [card (all-active-installed state :challenger)]
+             (doseq [card (all-active-placed state :challenger)]
                ;; Clear the added-virus-counter flag for each virus in play.
                ;; We do this even on the contestant's turn to prevent shenanigans with something like Gorman Drip and Surge
                (when (has-subtype? card "Virus")
@@ -352,8 +352,8 @@
              (swap! state assoc :end-turn true)
              (swap! state update-in [side :register] dissoc :cannot-draw)
              (swap! state update-in [side :register] dissoc :drawn-this-turn)
-             (doseq [c (filter #(= :this-turn (:rezzed %)) (all-installed state :contestant))]
-               (update! state side (assoc c :rezzed true)))
+             (doseq [c (filter #(= :this-turn (:revealed %)) (all-placed state :contestant))]
+               (update! state side (assoc c :revealed true)))
              (clear-turn-register! state)
              (swap! state dissoc :turn-events)
              (when-let [extra-turns (get-in @state [side :extra-turns])]

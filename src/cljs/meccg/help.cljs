@@ -26,9 +26,9 @@
                         [:p "There are two undo functions - undo to turn start, and undo the last click. "
                          "To undo the start of the current turn both players must use the /undo-turn command. "
                          "To undo to the start of the click the active player must use the /undo-click command. "]
-                        [:p "There are some non-click based interactions such as using clone-chip and rezzing Character or sites which are "
+                        [:p "There are some non-click based interactions such as using clone-chip and revealing Character or sites which are "
                          "not supported via the undo-click function and players will need to handle manually. "
-                         " Discarded/played cards can be dragged back to hand and reinstalled if needed. If there"
+                         " Discarded/played cards can be dragged back to hand and replaced if needed. If there"
                           " are lingering/hard to dismiss prompts, try using " [:code "/close-prompt"] " command as a last resort."])}
             {:id "breakcharacter"
              :title "How do I break Character and fire Character subroutines?"
@@ -70,10 +70,10 @@
                         [:li [:code "/move-deck"] " - Pick a card from your play-area to put on top of your deck"]
                         [:li [:code "/move-hand"] " - Pick a card from your play-area to put into your hand"]
                         [:li [:code "/psi"] " - Start a Psi game (Contestant only)"]
-                        [:li [:code "/rez"] " - Select a card to rez, ignoring all costs (Contestant only)"]
-                        [:li [:code "/rez-all"] " - Rez all cards, ignoring all costs and flip cards in archives faceup (Contestant only). For revealing your servers at the end of a game."]
+                        [:li [:code "/reveal"] " - Select a card to reveal, ignoring all costs (Contestant only)"]
+                        [:li [:code "/reveal-all"] " - Reveal all cards, ignoring all costs and flip cards in archives faceup (Contestant only). For revealing your locales at the end of a game."]
                         [:li [:code "/rfg"] " - Select a card to remove from the game"]
-                        [:li [:code "/facedown"] " - Select a card to install facedown in your rig (Challenger only)"]
+                        [:li [:code "/facedown"] " - Select a card to place facedown in your rig (Challenger only)"]
                         [:li [:code "/roll n"] " - Roll an n-sided die"]
                         [:li [:code "/tag n"] " - Set your tags to n"]
                         [:li [:code "/take-brain n"] " - Take n brain damage (Challenger only)"]
@@ -85,7 +85,7 @@
             {:id "documentation"
              :title "Is there more documentation on how to use Cardnum.net?"
              :content [:p "Read the "
-                       [:a {:href "https://github.com/rezwits/meccg/wiki/Cardnum.net-Guide" :target "_blank"}
+                       [:a {:href "https://github.com/revealwits/meccg/wiki/Cardnum.net-Guide" :target "_blank"}
                         "Cardnum.net Guide"] " on the GitHub wiki."]}
             )}
     {:id "beginners"
@@ -183,17 +183,17 @@
      :title "Cards and Specific Interactions"
      :sub (list
             {:id "shards"
-             :title "How do I install Eden/Hades/Utopia Shard during a run?"
-             :content [:p "At the last run step on the relevant server, instead of pressing \"Successful Run\" button, "
-                       "click the shard card you want to install in hand. You should end the run with the shard installed "
+             :title "How do I place Eden/Hades/Utopia Shard during a run?"
+             :content [:p "At the last run step on the relevant locale, instead of pressing \"Successful Run\" button, "
+                       "click the shard card you want to place in hand. You should end the run with the shard placed "
                        "at no cost."]}
             {:id "nasir"
              :title "How do I use Nasir's ability?"
              :content [:p "Nasir's ability is currently triggered manually - when encountering a piece of Character, click Nasir's "
                        "identity card to trigger the ability."]}
             {:id "adam"
-             :title "How do I install Adam's directives?"
-             :content [:p "Adam's directives are installed automatically at the game start. The directives are pulled "
+             :title "How do I place Adam's directives?"
+             :content [:p "Adam's directives are placed automatically at the game start. The directives are pulled "
                        "directly from the game-server so do not need to be a part of your deck. The previous workaround "
                        "of explicitly adding the 3 directives to the deck is no longer necessary."]}
             {:id "napdmwl"
@@ -231,10 +231,10 @@
              :title "The website doesn't work well on my touchscreen devcharacter."
              :content [:p "Touchscreen devIces are currently not supported. See answer to " [:a {:href "#bestbrowser"} "this question"]
                        " for best browsers to use with Cardnum.net."]}
-            {:id "toomanyservers"
-             :title "There are too many servers to fit on my screen."
+            {:id "toomanylocales"
+             :title "There are too many locales to fit on my screen."
              :content [:p "Decrease the zoom level of your browser and you should be able to see everything. If you are using "
-                       "Chrome, you can do it by pressing CTRL and - (minus). If you are using Firefox, you may need to install "
+                       "Chrome, you can do it by pressing CTRL and - (minus). If you are using Firefox, you may need to place "
                        [:a {:href "https://addons.mozilla.org/pl/firefox/addon/zoom-page/"} "Zoom Page addon"] " before the zoom works correctly."]}
             {:id "zerogames"
              :title "Whenever I connect to the site, I see there are 0 games in the lobby."
@@ -266,25 +266,25 @@
      :sub (list
             {:id "reportingbugs"
              :title "How can I report a bug?"
-             :content [:p "The best place to report bugs is the " [:a {:href "https://github.com/rezwits/meccg/issues" :target "_blank"} "GitHub issue tracker"]
+             :content [:p "The best place to report bugs is the " [:a {:href "https://github.com/revealwits/meccg/issues" :target "_blank"} "GitHub issue tracker"]
                        ". Before reporting, it is best to make a quick search to see if it's already been reported. "
                        "If the bug concerns a card, look it up in "
                        [:a {:href "https://docs.google.com/spreadsheets/d/1ICv19cNjSaW9C-DoEEGH3iFt09PBTob4CAutGex0gnE/pubhtml" :target "_blank"} "Card implementation status"]
                        " - the card in question may be unimplemented yet."]}
             {:id "features"
              :title "How can I suggest a feature?"
-             :content [:p "Same as bugs - feature requests should go on the " [:a {:href "https://github.com/rezwits/meccg/issues" :target "_blank"} "GitHub issue tracker"]
+             :content [:p "Same as bugs - feature requests should go on the " [:a {:href "https://github.com/revealwits/meccg/issues" :target "_blank"} "GitHub issue tracker"]
                        ". Again, it's best to make a quick search first to avoid duplicating existing issues."]}
             {:id "donations"
              :title "How can I make a donation?"
              :content [:p "Donation info can be found on the " [:a {:href "/about"} "About"] " page."]}
             {:id "devs"
              :title "How can I help with the coding/webdesign?"
-             :content (list [:p "Visit the project page on " [:a {:href "https://github.com/rezwits/meccg/" :target "_blank"} "GitHub"] " and fork "
+             :content (list [:p "Visit the project page on " [:a {:href "https://github.com/revealwits/meccg/" :target "_blank"} "GitHub"] " and fork "
                              "the repository. Implement the changes you were planning on doing and create a PR (Pull Request). If you are in "
-                             "need of some ideas, check out " [:a {:href "https://github.com/rezwits/meccg/labels/easy" :target "_blank"} "issues marked 'easy' on GitHub"] "."]
+                             "need of some ideas, check out " [:a {:href "https://github.com/revealwits/meccg/labels/easy" :target "_blank"} "issues marked 'easy' on GitHub"] "."]
                             [:p "After two of your PRs have been merged into the master branch, send an e-mail to "
-                             [:a {:href "mailto:rezwits@me.com"} "rezwits@me.com"] " stating who you are on GitHub and ask for access "
+                             [:a {:href "mailto:revealwits@me.com"} "revealwits@me.com"] " stating who you are on GitHub and ask for access "
                              "to Cardnum.net Slack, so you can get in better contact with the dev team."])}
             {:id "awesome"
              :title "Why is this site so awesome?"

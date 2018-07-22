@@ -48,22 +48,22 @@
   [state side character]
   (let [character (get-card state character)
         oldstren (or (:current-strength character) (:strength character))]
-    (when (:rezzed character)
+    (when (:revealed character)
       (swap! state update-in [:bonus] dissoc :character-strength)
       (trigger-event state side :pre-character-strength character)
       (update! state side (assoc character :current-strength (character-strength state side character)))
       (trigger-event state side :character-strength-changed (get-card state character) oldstren))))
 
-(defn update-character-in-server
-  "Updates all character in the given server's :characters field."
-  [state side server]
-  (doseq [character (:characters server)] (update-character-strength state side character) ))
+(defn update-character-in-locale
+  "Updates all character in the given locale's :characters field."
+  [state side locale]
+  (doseq [character (:characters locale)] (update-character-strength state side character) ))
 
 (defn update-all-character
-  "Updates all installed character."
+  "Updates all placed character."
   [state side]
-  (doseq [server (get-in @state [:contestant :servers])]
-    (update-character-in-server state side (second server))))
+  (doseq [locale (get-in @state [:contestant :locales])]
+    (update-character-in-locale state side (second locale))))
 
 
 ;;; Icebreaker functions.
@@ -108,7 +108,7 @@
 
 ;;; Others
 (defn character-index
-  "Get the zero-based index of the given character in its server's list of character, where index 0
+  "Get the zero-based index of the given character in its locale's list of character, where index 0
   is the innermost character."
   [state character]
   (first (keep-indexed #(when (= (:cid %2) (:cid character)) %1) (get-in @state (cons :contestant (:zone character))))))

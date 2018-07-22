@@ -15,14 +15,14 @@
      (new-game (default-contestant ["Masvingo"])
                (default-challenger ["Laamb"]))
      (play-from-hand state :contestant "Masvingo" "HQ")
-     (core/rez state :contestant (get-character state :hq 0))
+     (core/reveal state :contestant (get-character state :hq 0))
      (take-credits state :contestant)
      (core/gain state :challenger :credit 5)
      (play-from-hand state :challenger "Laamb")
      (run-on state "HQ")
      (let [laamb (get-resource state 0)]
        (is (= 2 (:current-strength (refresh laamb))) "Laamb starts at 2 strength")
-       (is (= 6 (:credit (get-challenger))) "Spent 4 to install")
+       (is (= 6 (:credit (get-challenger))) "Spent 4 to place")
        (core/play-dynamic-ability state :challenger {:dynamic "auto-pump" :card (refresh laamb)})
        (is (= 8 (:current-strength (refresh laamb))) "Laamb is at 8 strength")
        (is (= 3 (:credit (get-challenger))) "Spent 3 to pump"))))
@@ -31,14 +31,14 @@
      (new-game (default-contestant ["Masvingo"])
                (default-challenger ["Ankusa"]))
      (play-from-hand state :contestant "Masvingo" "HQ")
-     (core/rez state :contestant (get-character state :hq 0))
+     (core/reveal state :contestant (get-character state :hq 0))
      (take-credits state :contestant)
      (core/gain state :challenger :credit 5)
      (play-from-hand state :challenger "Ankusa")
      (run-on state "HQ")
      (let [ank (get-resource state 0)]
        (is (zero? (:current-strength (refresh ank))) "Ankusa starts at 1 strength")
-       (is (= 4 (:credit (get-challenger))) "Spent 6 to install")
+       (is (= 4 (:credit (get-challenger))) "Spent 6 to place")
        (core/play-dynamic-ability state :challenger {:dynamic "auto-pump" :card (refresh ank)})
        (is (= 3 (:current-strength (refresh ank))) "Ankusa is at 3 strength")
        (is (= 1 (:credit (get-challenger))) "Spent 3 to pump")))))
@@ -59,7 +59,7 @@
 
 (deftest atman
   ;; Atman
-  (testing "Installing with 0 power counters"
+  (testing "Placing with 0 power counters"
     (do-game
       (new-game (default-contestant) (default-challenger ["Atman"]))
       (take-credits state :contestant)
@@ -69,7 +69,7 @@
       (let [atman (get-resource state 0)]
         (is (zero? (get-counters atman :power)) "0 power counters")
         (is (zero? (:current-strength atman)) "0 current strength"))))
-  (testing "Installing with 2 power counters"
+  (testing "Placing with 2 power counters"
     (do-game
       (new-game (default-contestant)
                 (default-challenger ["Atman"]))
@@ -87,14 +87,14 @@
     (do-game
       (new-game (default-contestant [(qty "PAD Campaign" 3)])
                 (default-challenger ["Aumakua"]))
-      (play-from-hand state :contestant "PAD Campaign" "New remote")
+      (play-from-hand state :contestant "PAD Campaign" "New party")
       (take-credits state :contestant)
       (play-from-hand state :challenger "Aumakua")
-      (run-empty-server state "Server 1")
+      (run-empty-locale state "Locale 1")
       (prompt-choice :challenger "No action")
       (is (= 1 (get-counters (get-resource state 0) :virus)) "Aumakua gains virus counter from no-discard")
       (core/gain state :challenger :credit 5)
-      (run-empty-server state "Server 1")
+      (run-empty-locale state "Locale 1")
       (prompt-choice-partial :challenger "Pay")
       (is (= 1 (get-counters (get-resource state 0) :virus)) "Aumakua does not gain virus counter from discard")))
   (testing "Gain counters on empty archives"
@@ -103,18 +103,18 @@
                 (default-challenger ["Aumakua"])
                 {:start-as :challenger})
       (play-from-hand state :challenger "Aumakua")
-      (run-empty-server state :archives)
+      (run-empty-locale state :archives)
       (is (= 1 (get-counters (get-resource state 0) :virus)) "Aumakua gains virus counter from accessing empty Archives")))
   (testing "Neutralize All Threats interaction"
     (do-game
       (new-game (default-contestant [(qty "PAD Campaign" 3)])
                 (default-challenger ["Aumakua" "Neutralize All Threats"]))
-      (play-from-hand state :contestant "PAD Campaign" "New remote")
+      (play-from-hand state :contestant "PAD Campaign" "New party")
       (take-credits state :contestant)
       (play-from-hand state :challenger "Aumakua")
       (play-from-hand state :challenger "Neutralize All Threats")
       (core/gain state :challenger :credit 5)
-      (run-empty-server state "Server 1")
+      (run-empty-locale state "Locale 1")
       (is (zero? (get-counters (get-resource state 0) :virus)) "Aumakua does not gain virus counter from ABT-forced discard"))))
 
 (deftest baba-yaga
@@ -151,7 +151,7 @@
              (default-challenger ["Cerberus \"Rex\" H2"]))
    (take-credits state :contestant)
    (play-from-hand state :challenger "Cerberus \"Rex\" H2")
-   (is (= 2 (:credit (get-challenger))) "2 credits left after install")
+   (is (= 2 (:credit (get-challenger))) "2 credits left after place")
    (let [rex (get-resource state 0)]
      (is (= 4 (get-counters rex :power)) "Start with 4 counters")
      ;; boost strength
@@ -164,7 +164,7 @@
      (is (= 3 (get-counters (refresh rex) :power)) "One counter used to break"))))
 
 (deftest chameleon
-  ;; Chameleon - Install on contestant turn, only returns to hand at end of challenger's turn
+  ;; Chameleon - Place on contestant turn, only returns to hand at end of challenger's turn
   (testing "with Clone Chip"
     (do-game
       (new-game (default-contestant) (default-challenger ["Chameleon" "Clone Chip"]))
@@ -173,7 +173,7 @@
       (core/move state :challenger (find-card "Chameleon" (:hand (get-challenger))) :discard)
       (take-credits state :challenger)
       (is (zero? (count (:hand (get-challenger)))))
-      ;; Install Chameleon on contestant turn
+      ;; Place Chameleon on contestant turn
       (take-credits state :contestant 1)
       (let [chip (get-hazard state 0)]
         (card-ability state :challenger chip 0)
@@ -193,15 +193,15 @@
       ;; Host the Chameleon on Scheherazade that was just played (as in Personal Workshop/Hayley ability scenarios)
       (play-from-hand state :challenger "Scheherazade")
       (let [scheherazade (get-resource state 1)]
-        (card-ability state :challenger scheherazade 1) ; Host an installed resource
+        (card-ability state :challenger scheherazade 1) ; Host an placed resource
         (prompt-select :challenger (find-card "Chameleon" (:resource (:rig (get-challenger)))))
         (is (= 4 (:credit (get-challenger))) "+1 from hosting onto Scheherazade")
-        ;; Install another Chameleon directly onto Scheherazade
-        (card-ability state :challenger scheherazade 0) ; Install and host a resource from Grip
+        ;; Place another Chameleon directly onto Scheherazade
+        (card-ability state :challenger scheherazade 0) ; Place and host a resource from Grip
         (prompt-select :challenger (find-card "Chameleon" (:hand (get-challenger))))
         (prompt-choice :challenger "Code Gate")
         (is (= 2 (count (:hosted (refresh scheherazade)))) "2 Chameleons hosted on Scheherazade")
-        (is (= 3 (:credit (get-challenger))) "-2 from playing Chameleon, +1 from installing onto Scheherazade"))
+        (is (= 3 (:credit (get-challenger))) "-2 from playing Chameleon, +1 from placing onto Scheherazade"))
       (is (zero? (count (:hand (get-challenger)))) "Both Chameleons in play - hand size 0")
       (take-credits state :challenger)
       (is (= 2 (count (:hand (get-challenger)))) "Both Chameleons returned to hand - hand size 2"))))
@@ -220,7 +220,7 @@
       (is (= 1 (get-counters (refresh crypsis) :virus))
           "Crypsis has 1 virus counter")
       (run-on state "Archives")
-      (core/rez state :contestant (get-character state :archives 0))
+      (core/reveal state :contestant (get-character state :archives 0))
       (card-ability state :challenger (refresh crypsis) 0) ; Match strength
       (card-ability state :challenger (refresh crypsis) 1) ; Break
       (is (= 1 (get-counters (refresh crypsis) :virus))
@@ -274,17 +274,17 @@
       (new-game
         (default-contestant [(qty "Hostile Infrastructure" 3)])
         (default-challenger [(qty "Deus X" 3) (qty "Sure Gamble" 2)]))
-      (play-from-hand state :contestant "Hostile Infrastructure" "New remote")
-      (play-from-hand state :contestant "Hostile Infrastructure" "New remote")
-      (play-from-hand state :contestant "Hostile Infrastructure" "New remote")
+      (play-from-hand state :contestant "Hostile Infrastructure" "New party")
+      (play-from-hand state :contestant "Hostile Infrastructure" "New party")
+      (play-from-hand state :contestant "Hostile Infrastructure" "New party")
       (core/gain state :contestant :credit 10)
-      (core/rez state :contestant (get-content state :remote1 0))
-      (core/rez state :contestant (get-content state :remote2 0))
-      (core/rez state :contestant (get-content state :remote3 0))
+      (core/reveal state :contestant (get-content state :party1 0))
+      (core/reveal state :contestant (get-content state :party2 0))
+      (core/reveal state :contestant (get-content state :party3 0))
       (take-credits state :contestant)
       (core/gain state :challenger :credit 10)
       (play-from-hand state :challenger "Deus X")
-      (run-empty-server state "Server 1")
+      (run-empty-locale state "Locale 1")
       (prompt-choice-partial :challenger "Pay")
       (let [dx (get-resource state 0)]
         (card-ability state :challenger dx 1)
@@ -295,11 +295,11 @@
       (new-game
         (make-deck "Cardnum: Personal Evolution" [(qty "Fetal AI" 6)])
         (default-challenger [(qty "Deus X" 3) (qty "Sure Gamble" 2)]))
-      (play-from-hand state :contestant "Fetal AI" "New remote")
+      (play-from-hand state :contestant "Fetal AI" "New party")
       (take-credits state :contestant)
       (core/gain state :challenger :credit 10)
       (play-from-hand state :challenger "Deus X")
-      (run-empty-server state "Server 1")
+      (run-empty-locale state "Locale 1")
       (let [dx (get-resource state 0)]
         (card-ability state :challenger dx 1)
         (prompt-choice :challenger "Done")
@@ -318,7 +318,7 @@
     (play-from-hand state :challenger "Faerie")
     (let [fae (get-resource state 0)]
       (run-on state :archives)
-      (core/rez state :contestant (get-character state :archives 0))
+      (core/reveal state :contestant (get-character state :archives 0))
       (card-ability state :challenger fae 0)
       (is (refresh fae) "Faerie not discarded until encounter over")
       (run-continue state)
@@ -350,7 +350,7 @@
       (play-from-hand state :challenger "Faust")
       (play-from-hand state :challenger "Fall Guy")
       (play-from-hand state :challenger "Sacrificial Construct")
-      (is (= 2 (count (get-radicle state))) "Radicles installed")
+      (is (= 2 (count (get-radicle state))) "Radicles placed")
       (let [faust (get-resource state 0)]
         (card-ability state :challenger faust 1)
         (prompt-select :challenger (find-card "Astrolabe" (:hand (get-challenger))))
@@ -397,7 +397,7 @@
      (is (= 2 (get-counters (refresh gow) :virus)) "God of War has 2 virus counters"))))
 
 (deftest inversificator
-  ;; Inversificator shouldn't hook up events for unrezzed character
+  ;; Inversificator shouldn't hook up events for unrevealed character
   (do-game
     (new-game (default-contestant ["Turing" "Kakugo"])
               (default-challenger ["Inversificator" "Sure Gamble"]))
@@ -410,7 +410,7 @@
           tur (get-character state :hq 1)]
       (is (= 1 (count (:hand (get-challenger)))) "Challenger starts with 1 card in hand")
       (run-on state :hq)
-      (core/rez state :contestant (refresh tur))
+      (core/reveal state :contestant (refresh tur))
       (run-continue state)
       (card-ability state :challenger (refresh inv) 0)
       (prompt-select :challenger (get-character state :hq 1))
@@ -419,7 +419,7 @@
       (is (= 1 (count (:hand (get-challenger)))) "Challenger still has 1 card in hand")
       (run-on state :hq)
       (run-continue state)
-      (is (= 1 (count (:hand (get-challenger)))) "Kakugo doesn't fire when unrezzed"))))
+      (is (= 1 (count (:hand (get-challenger)))) "Kakugo doesn't fire when unrevealed"))))
 
 (deftest mammon
   ;; Mammon - Pay to add X power counters at start of turn, all removed at end of turn
@@ -439,7 +439,7 @@
      (is (zero? (get-counters (refresh mam) :power)) "All power counters removed"))))
 
 (deftest musaazi
-  ;; Musaazi gains virus counters on successful runs and can spend virus counters from any installed card
+  ;; Musaazi gains virus counters on successful runs and can spend virus counters from any placed card
   (do-game
     (new-game (default-contestant ["Lancelot"])
               (default-challenger ["Musaazi" "Imp"]))
@@ -450,12 +450,12 @@
     (let [lancelot (get-character state :hq 0)
           musaazi (get-resource state 0)
           imp (get-resource state 1)]
-      (run-empty-server state "Archives")
+      (run-empty-locale state "Archives")
       (is (= 1 (get-counters (refresh musaazi) :virus)) "Musaazi has 1 virus counter")
       (is (= 1 (:current-strength (refresh musaazi))) "Initial Musaazi strength")
       (is (= 2 (get-counters (refresh imp) :virus)) "Initial Imp virus counters")
       (run-on state "HQ")
-      (core/rez state :contestant lancelot)
+      (core/reveal state :contestant lancelot)
       (card-ability state :challenger musaazi 1) ; match strength
       (prompt-select :challenger imp)
       (is (= 1 (get-counters (refresh imp) :virus)) "Imp lost 1 virus counter to pump")
@@ -469,7 +469,7 @@
       (is (= 0 (get-counters (refresh imp) :virus)) "Musaazi lost its virus counter"))))
 
 (deftest na'not'k
-  ;; Na'Not'K - Strength adjusts accordingly when character installed during run
+  ;; Na'Not'K - Strength adjusts accordingly when character placed during run
   (testing "Basic test"
     (do-game
       (new-game (default-contestant ["Architect" "Eli 1.0"])
@@ -481,7 +481,7 @@
             architect (get-character state :hq 0)]
         (is (= 1 (:current-strength (refresh nanotk))) "Default strength")
         (run-on state "HQ")
-        (core/rez state :contestant architect)
+        (core/reveal state :contestant architect)
         (is (= 2 (:current-strength (refresh nanotk))) "1 character on HQ")
         (card-subroutine state :contestant (refresh architect) 1)
         (prompt-select :contestant (find-card "Eli 1.0" (:hand (get-contestant))))
@@ -489,7 +489,7 @@
         (is (= 3 (:current-strength (refresh nanotk))) "2 character on HQ")
         (run-jack-out state)
         (is (= 1 (:current-strength (refresh nanotk))) "Back to default strength"))))
-  (testing "Strength adjusts accordingly when run redirected to another server"
+  (testing "Strength adjusts accordingly when run redirected to another locale"
     (do-game
       (new-game (default-contestant ["Susanoo-no-Mikoto" "Crick" "Cortex Lock"])
                 (default-challenger ["Na'Not'K"]))
@@ -502,7 +502,7 @@
             susanoo (get-character state :hq 1)]
         (is (= 1 (:current-strength (refresh nanotk))) "Default strength")
         (run-on state "HQ")
-        (core/rez state :contestant susanoo)
+        (core/reveal state :contestant susanoo)
         (is (= 3 (:current-strength (refresh nanotk))) "2 character on HQ")
         (card-subroutine state :contestant (refresh susanoo) 0)
         (is (= 2 (:current-strength (refresh nanotk))) "1 character on Archives")
@@ -525,7 +525,7 @@
       (is (= 5 (get-counters (refresh ov) :power)) "Overmind has 5 counters"))))
 
 (deftest paperclip
-  ;; Paperclip - prompt to install on encounter, but not if another is installed
+  ;; Paperclip - prompt to place on encounter, but not if another is placed
   (testing "Basic test"
     (do-game
       (new-game (default-contestant ["Vanilla"])
@@ -534,14 +534,14 @@
       (take-credits state :contestant)
       (discard-from-hand state :challenger "Paperclip")
       (run-on state "Archives")
-      (core/rez state :contestant (get-character state :archives 0))
-      (prompt-choice :challenger "Yes") ; install paperclip
+      (core/reveal state :contestant (get-character state :archives 0))
+      (prompt-choice :challenger "Yes") ; place paperclip
       (run-continue state)
       (run-successful state)
       (is (not (:run @state)) "Run ended")
       (discard-from-hand state :challenger "Paperclip")
       (run-on state "Archives")
-      (is (empty? (:prompt (get-challenger))) "No prompt to install second Paperclip")))
+      (is (empty? (:prompt (get-challenger))) "No prompt to place second Paperclip")))
   (testing "firing on facedown character shouldn't crash"
     (do-game
       (new-game (default-contestant ["Vanilla"])
@@ -552,7 +552,7 @@
       (run-on state "Archives")
       (card-ability state :challenger (get-resource state 0) 0)
       (prompt-choice :challenger 0)))
-  (testing "do not show a second install prompt if user said No to first, when multiple are in heap"
+  (testing "do not show a second place prompt if user said No to first, when multiple are in heap"
     (do-game
       (new-game (default-contestant [(qty "Vanilla" 2)])
                 (default-challenger [(qty "Paperclip" 3)]))
@@ -563,22 +563,22 @@
       (discard-from-hand state :challenger "Paperclip")
       (discard-from-hand state :challenger "Paperclip")
       (run-on state "Archives")
-      (core/rez state :contestant (get-character state :archives 1))
+      (core/reveal state :contestant (get-character state :archives 1))
       (prompt-choice :challenger "No")
-      (is (empty? (:prompt (get-challenger))) "No additional prompts to rez other copies of Paperclip")
+      (is (empty? (:prompt (get-challenger))) "No additional prompts to reveal other copies of Paperclip")
       (run-continue state)
       ;; we should get the prompt on a second character even after denying the first.
-      (core/rez state :contestant (get-character state :archives 0))
+      (core/reveal state :contestant (get-character state :archives 0))
       (prompt-choice :challenger "No")
-      (is (empty? (:prompt (get-challenger))) "No additional prompts to rez other copies of Paperclip")
+      (is (empty? (:prompt (get-challenger))) "No additional prompts to reveal other copies of Paperclip")
       (core/jack-out state :challenger)
-      ;; Run again, make sure we get the prompt to install again.
+      ;; Run again, make sure we get the prompt to place again.
       (run-on state "Archives")
       (prompt-choice :challenger "No")
-      (is (empty? (:prompt (get-challenger))) "No additional prompts to rez other copies of Paperclip"))))
+      (is (empty? (:prompt (get-challenger))) "No additional prompts to reveal other copies of Paperclip"))))
 
 (deftest peregrine
-  ;; Peregrine - 2c to return to grip and derez an encountered code gate
+  ;; Peregrine - 2c to return to grip and hide an encountered code gate
   (do-game
     (new-game (default-contestant ["Paper Wall" (qty "Bandwidth" 2)])
               (default-challenger ["Peregrine"]))
@@ -592,18 +592,18 @@
           pw (get-character state :archives 2)
           per (get-resource state 0)]
       (run-on state "Archives")
-      (core/rez state :contestant pw)
-      (core/rez state :contestant bw1)
+      (core/reveal state :contestant pw)
+      (core/reveal state :contestant bw1)
       (card-ability state :challenger per 2)
       (is (and (= 2 (:credit (get-challenger))) (empty? (:hand (get-challenger)))) "Can't use Peregrine on a barrier")
       (run-continue state)
       (card-ability state :challenger per 2)
-      (is (and (= 2 (:credit (get-challenger))) (empty? (:hand (get-challenger)))) "Can't use Peregrine on unrezzed code gate")
+      (is (and (= 2 (:credit (get-challenger))) (empty? (:hand (get-challenger)))) "Can't use Peregrine on unrevealed code gate")
       (run-continue state)
       (card-ability state :challenger per 2)
       (is (zero? (:credit (get-challenger))) "Spent 2 credits")
       (is (= 1 (count (:hand (get-challenger)))) "Peregrine returned to grip")
-      (is (not (:rezzed (refresh bw1))) "Bandwidth derezzed"))))
+      (is (not (:revealed (refresh bw1))) "Bandwidth hidden"))))
 
 (deftest persephone
   ;; Persephone's ability discards cards from R&D, triggering AR-Enhanced Security
@@ -614,10 +614,10 @@
       (default-challenger [(qty "Persephone" 10)]))
     (core/move state :contestant (find-card "Zed 2.0" (:hand (get-contestant))) :deck)
     (core/move state :contestant (find-card "Zed 2.0" (:hand (get-contestant))) :deck)
-    (play-from-hand state :contestant "AR-Enhanced Security" "New remote")
-    (score-agenda state :contestant (get-content state :remote1 0))
+    (play-from-hand state :contestant "AR-Enhanced Security" "New party")
+    (score-agenda state :contestant (get-content state :party1 0))
     (play-from-hand state :contestant "Zed 1.0" "Archives")
-    (core/rez state :contestant (get-character state :archives 0))
+    (core/reveal state :contestant (get-character state :archives 0))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Persephone")
     (run-on state "Archives")
@@ -637,7 +637,7 @@
     (is (= 2 (:tag (get-challenger))) "Challenger took 1 tag from using Persephone's ability while AR-Enhanced Security is scored")))
 
 (deftest shiv
-  ;; Shiv - Gain 1 strength for each installed breaker; no MU cost when 2+ link
+  ;; Shiv - Gain 1 strength for each placed breaker; no MU cost when 2+ link
   (do-game
     (new-game
       (default-contestant)
@@ -647,11 +647,11 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Shiv")
     (let [shiv (get-resource state 0)]
-      (is (= 1 (:current-strength (refresh shiv))) "1 installed breaker; 1 strength")
+      (is (= 1 (:current-strength (refresh shiv))) "1 placed breaker; 1 strength")
       (play-from-hand state :challenger "Inti")
-      (is (= 2 (:current-strength (refresh shiv))) "2 installed breakers; 2 strength")
+      (is (= 2 (:current-strength (refresh shiv))) "2 placed breakers; 2 strength")
       (play-from-hand state :challenger "Inti")
-      (is (= 3 (:current-strength (refresh shiv))) "3 installed breakers; 3 strength")
+      (is (= 3 (:current-strength (refresh shiv))) "3 placed breakers; 3 strength")
       (is (= 1 (core/available-mu state)) "3 MU consumed")
       (play-from-hand state :challenger "Access to Globalsec")
       (is (= 2 (:link (get-challenger))) "2 link")
@@ -672,8 +672,8 @@
          fw (get-character state :hq 0)
          snow (get-resource state 0)]
      (run-on state "HQ")
-     (core/rez state :contestant sp)
-     (core/rez state :contestant fw)
+     (core/reveal state :contestant sp)
+     (core/reveal state :contestant fw)
      (card-ability state :challenger snow 1) ; match strength
      (is (= 2 (:current-strength (refresh snow))))
      (card-ability state :challenger snow 0) ; strength matched, break a sub
@@ -720,14 +720,14 @@
    (run-on state "HQ")
    (let [character-wall (get-character state :hq 0)
          wyrm (get-resource state 0)]
-     (core/rez state :contestant character-wall)
+     (core/reveal state :contestant character-wall)
      (card-ability state :challenger wyrm 1)
      (is (zero? (:current-strength (refresh character-wall))) "Strength of Ice Wall reduced to 0")
      (card-ability state :challenger wyrm 1)
      (is (= -1 (:current-strength (refresh character-wall))) "Strength of Ice Wall reduced to -1"))))
 
 (deftest yusuf
-  ;; Yusuf gains virus counters on successful runs and can spend virus counters from any installed card
+  ;; Yusuf gains virus counters on successful runs and can spend virus counters from any placed card
   (do-game
     (new-game (default-contestant ["Fire Wall"])
               (default-challenger ["Yusuf" "Cache"]))
@@ -738,12 +738,12 @@
     (let [fire-wall (get-character state :hq 0)
           yusuf (get-resource state 0)
           cache (get-resource state 1)]
-      (run-empty-server state "Archives")
+      (run-empty-locale state "Archives")
       (is (= 1 (get-counters (refresh yusuf) :virus)) "Yusuf has 1 virus counter")
       (is (= 3 (:current-strength (refresh yusuf))) "Initial Yusuf strength")
       (is (= 3 (get-counters (refresh cache) :virus)) "Initial Cache virus counters")
       (run-on state "HQ")
-      (core/rez state :contestant fire-wall)
+      (core/reveal state :contestant fire-wall)
       (card-ability state :challenger yusuf 1) ; match strength
       (prompt-select :challenger cache)
       (prompt-select :challenger yusuf)

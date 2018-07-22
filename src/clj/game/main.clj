@@ -24,7 +24,7 @@
    "contestant-ability" core/play-contestant-ability
    "contestant-phase-43" core/contestant-phase-43
    "credit" core/click-credit
-   "derez" #(core/derez %1 %2 (:card %3))
+   "hide" #(core/hide %1 %2 (:card %3))
    "draw" core/click-draw
    "dynamic-ability" core/play-dynamic-ability
    "end-phase-12" core/end-phase-12
@@ -37,7 +37,7 @@
    "play" core/play
    "purge" core/do-purge
    "remove-tag" core/remove-tag
-   "rez" #(core/rez %1 %2 (:card %3) nil)
+   "reveal" #(core/reveal %1 %2 (:card %3) nil)
    "run" core/click-run
    "challenger-ability" core/play-challenger-ability
    "score" #(core/score %1 %2 (game.core/get-card %1 (:card %3)))
@@ -81,8 +81,8 @@
 
 (defn- make-private-contestant [state]
   (let [zones (concat [[:hand]] [[:discard]] [[:deck]]
-                      (for [server (keys (:servers (:contestant @state)))] [:servers server :characters])
-                      (for [server (keys (:servers (:contestant @state)))] [:servers server :content]))]
+                      (for [locale (keys (:locales (:contestant @state)))] [:locales locale :characters])
+                      (for [locale (keys (:locales (:contestant @state)))] [:locales locale :content]))]
     (loop [s (:contestant @state)
            z zones]
       (if (empty? z)
@@ -136,7 +136,7 @@
      :spect-diff  spect-diff}))
 
 (defn set-action-id
-  "Creates a unique action id for each server response - used in client lock"
+  "Creates a unique action id for each locale response - used in client lock"
   [state side]
   (swap! state update-in [side :aid] (fnil inc 0)))
 

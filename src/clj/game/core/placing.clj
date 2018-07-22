@@ -1,27 +1,27 @@
 (in-ns 'game.core)
 
-(declare available-mu free-mu host in-play? install-locked? make-rid rez run-flag? installable-servers server->zone set-prop system-msg
+(declare available-mu free-mu host in-play? place-locked? make-rid reveal run-flag? placeable-locales locale->zone set-prop system-msg
          turn-flag? update-breaker-strength update-character-strength update-run-character use-mu)
 
-;;;; Functions for the installation and deactivation of cards.
+;;;; Functions for the placeation and deactivation of cards.
 
 ;;; Deactivate a card
 (defn- dissoc-card
   "Dissoc relevant keys in card"
   [card keep-counter]
-  (let [c (dissoc card :current-strength :abilities :subroutines :challenger-abilities :contestant-abilities :rezzed :special :new
-                  :added-virus-counter :subtype-target :sifr-used :sifr-target :pump :server-target)
+  (let [c (dissoc card :current-strength :abilities :subroutines :challenger-abilities :contestant-abilities :revealed :special :new
+                  :added-virus-counter :subtype-target :sifr-used :sifr-target :pump :locale-target)
         c (if keep-counter c (dissoc c :counter :rec-counter :advance-counter :extra-advance-counter))]
     c))
 
 (defn- trigger-leave-effect
   "Triggers leave effects for specified card if relevant"
-  [state side {:keys [disabled installed rezzed facedown zone host] :as card}]
+  [state side {:keys [disabled placed revealed facedown zone host] :as card}]
   (when-let [leave-effect (:leave-play (card-def card))]
     (when (and (not disabled)
-               (not (and (= (:side card) "Challenger") host (not installed) (not facedown)))
-               (or (and (= (:side card) "Challenger") installed (not facedown))
-                   rezzed
+               (not (and (= (:side card) "Challenger") host (not placed) (not facedown)))
+               (or (and (= (:side card) "Challenger") placed (not facedown))
+                   revealed
                    (and host (not facedown))
                    (= (first zone) :current)
                    (= (first zone) :scored)))
@@ -35,13 +35,13 @@
    (unregister-events state side card)
    (trigger-leave-effect state side card)
    (when-let [mu (:memoryunits card)]
-     (when (and (:installed card)
+     (when (and (:placed card)
                 (not (:facedown card)))
        (free-mu state mu)))
-   (when (and (find-cid (:cid card) (all-active-installed state side))
+   (when (and (find-cid (:cid card) (all-active-placed state side))
               (not (:disabled card))
-              (or (:rezzed card)
-                  (:installed card)))
+              (or (:revealed card)
+                  (:placed card)))
      (when-let [in-play (:in-play (card-def card))]
        (apply lose state side in-play)))
    (dissoc-card card keep-counter)))
@@ -116,8 +116,8 @@
 
 
 ;;; Intalling a contestant card
-(defn- contestant-can-install-reason
-  "Checks if the specified card can be installed.
+(defn- contestant-can-place-reason
+  "Checks if the specified card can be placed.
    Returns true if there are no problems
    Returns :regOLDion if RegOLDion check fails
    Returns :character if Character check fails
@@ -128,19 +128,19 @@
     (and (has-subtype? card "RegOLDion")
          (some #(has-subtype? % "RegOLDion") dest-zone))
     :regOLDion
-    ;; Character install prevented by Unscheduled Maintenance
+    ;; Character place prevented by Unscheduled Maintenance
     (and (character? card)
-         (not (turn-flag? state side card :can-install-character)))
+         (not (turn-flag? state side card :can-place-character)))
     :character
-    ;; Installing not locked
-    (install-locked? state :contestant) :lock-install
+    ;; Placing not locked
+    (place-locked? state :contestant) :lock-place
     ;; no restrictions
     :default true))
 
-(defn- contestant-can-install?
-  "Checks `contestant-can-install-reason` if not true, toasts reason and returns false"
+(defn- contestant-can-place?
+  "Checks `contestant-can-place-reason` if not true, toasts reason and returns false"
   [state side card dest-zone]
-  (let [reason (contestant-can-install-reason state side card dest-zone)
+  (let [reason (contestant-can-place-reason state side card dest-zone)
         reason-toast #(do (toast state side % "warning") false)
         title (:title card)]
     (case reason
@@ -148,179 +148,179 @@
       true true
       ;; failed regOLDion check
       :regOLDion
-      (reason-toast (str "Cannot install " (:title card) ", limit of one RegOLDion per server"))
-      ;; failed install lock check
-      :lock-install
-      (reason-toast (str "Unable to install " title ", installing is currently locked"))
+      (reason-toast (str "Cannot place " (:title card) ", limit of one RegOLDion per locale"))
+      ;; failed place lock check
+      :lock-place
+      (reason-toast (str "Unable to place " title ", placing is currently locked"))
       ;; failed Character check
       :character
-      (reason-toast (str "Unable to install " title ": can only install 1 piece of Character per turn")))))
+      (reason-toast (str "Unable to place " title ": can only place 1 piece of Character per turn")))))
 
-(defn contestant-installable-type?
-  "Is the card of an acceptable type to be installed in a server"
+(defn contestant-placeable-type?
+  "Is the card of an acceptable type to be placed in a locale"
   [card]
   (some? (#{"Site" "Agenda" "Character" "Region"} (:type card))))
 
-(defn- contestant-install-site-agenda
-  "Forces the contestant to discard an existing site or agenda if a second was just installed."
-  [state side eid card dest-zone server]
+(defn- contestant-place-site-agenda
+  "Forces the contestant to discard an existing site or agenda if a second was just placed."
+  [state side eid card dest-zone locale]
   (let [prev-card (some #(when (#{"Site" "Agenda"} (:type %)) %) dest-zone)]
     (if (and (#{"Site" "Agenda"} (:type card))
              prev-card
              (not (:host card)))
-      (continue-ability state side {:prompt (str "The " (:title prev-card) " in " server " will now be discarded.")
+      (continue-ability state side {:prompt (str "The " (:title prev-card) " in " locale " will now be discarded.")
                                     :choices ["OK"]
                                     :async true
                                     :effect (req (system-msg state :contestant (str "discards " (card-str state prev-card)))
                                                  (if (get-card state prev-card) ; make sure they didn't discard the card themselves
-                                                   (discard state :contestant eid prev-card {:keep-server-alive true})
+                                                   (discard state :contestant eid prev-card {:keep-locale-alive true})
                                                    (effect-completed state :contestant eid)))}
                        nil nil)
       (effect-completed state side eid))))
 
-(defn- contestant-install-message
-  "Prints the correct install message."
-  [state side card server install-state cost-str]
-  (let [card-name (if (or (= :rezzed-no-cost install-state)
-                          (= :face-up install-state)
-                          (:rezzed card))
+(defn- contestant-place-message
+  "Prints the correct place message."
+  [state side card locale place-state cost-str]
+  (let [card-name (if (or (= :revealed-no-cost place-state)
+                          (= :face-up place-state)
+                          (:revealed card))
                     (:title card)
                     (if (character? card) "Character" "a card"))
-        server-name (if (= server "New remote")
-                      (str (remote-num->name (get-in @state [:rid])) " (new remote)")
-                      server)]
-    (system-msg state side (str (build-spend-msg cost-str "install") card-name
-                                (if (character? card) " protecting " " in ") server-name))))
+        locale-name (if (= locale "New party")
+                      (str (party-num->name (get-in @state [:rid])) " (new party)")
+                      locale)]
+    (system-msg state side (str (build-spend-msg cost-str "place") card-name
+                                (if (character? card) " protecting " " in ") locale-name))))
 
-(defn contestant-install-list
-  "Returns a list of targets for where a given card can be installed."
+(defn contestant-place-list
+  "Returns a list of targets for where a given card can be placed."
   [state card]
   (let [hosts (filter #(when-let [can-host (:can-host (card-def %))]
-                        (and (rezzed? %)
+                        (and (revealed? %)
                              (can-host state :contestant (make-eid state) % [card])))
-                      (all-installed state :contestant))]
-    (concat hosts (installable-servers state card))))
+                      (all-placed state :contestant))]
+    (concat hosts (placeable-locales state card))))
 
-(defn- contestant-install-continue
-  "Used by contestant-install to actually install the card, rez it if it's supposed to be installed
-  rezzed, and calls :contestant-install in an awaitable fashion."
-  [state side eid card server {:keys [install-state host-card front] :as args} slot cost-str]
+(defn- contestant-place-continue
+  "Used by contestant-place to actually place the card, reveal it if it's supposed to be placed
+  revealed, and calls :contestant-place in an awaitable fashion."
+  [state side eid card locale {:keys [place-state host-card front] :as args} slot cost-str]
   (let [cdef (card-def card)
         dest-zone (get-in @state (cons :contestant slot))
-        install-state (or install-state (:install-state cdef))
+        place-state (or place-state (:place-state cdef))
         c (-> card
               (assoc :advanceable (:advanceable cdef) :new true)
               (dissoc :seen :disabled))]
-    (clear-install-cost-bonus state side)
+    (clear-place-cost-bonus state side)
     (when-not host-card
-      (contestant-install-message state side c server install-state cost-str))
-    (play-sfx state side "install-contestant")
+      (contestant-place-message state side c locale place-state cost-str))
+    (play-sfx state side "place-contestant")
 
     (let [moved-card (if host-card
-                       (host state side host-card (assoc c :installed true))
+                       (host state side host-card (assoc c :placed true))
                        (move state side c slot {:front front}))]
       (when (is-type? c "Agenda")
         (update-advancement-cost state side moved-card))
 
-      ;; Check to see if a second agenda/site was installed.
-      (wait-for (contestant-install-site-agenda state side moved-card dest-zone server)
+      ;; Check to see if a second agenda/site was placed.
+      (wait-for (contestant-place-site-agenda state side moved-card dest-zone locale)
                 (letfn [(event [state side eid _]
-                          (trigger-event-sync state side eid :contestant-install (get-card state moved-card)))]
-                  (case install-state
-                    ;; Ignore all costs. Pass eid to rez.
-                    :rezzed-no-cost
+                          (trigger-event-sync state side eid :contestant-place (get-card state moved-card)))]
+                  (case place-state
+                    ;; Ignore all costs. Pass eid to reveal.
+                    :revealed-no-cost
                     (wait-for (event state side nil)
-                              (rez state side eid moved-card {:ignore-cost :all-costs}))
+                              (reveal state side eid moved-card {:ignore-cost :all-costs}))
 
-                    ;; Ignore rez cost only. Pass eid to rez.
-                    :rezzed-no-rez-cost
+                    ;; Ignore reveal cost only. Pass eid to reveal.
+                    :revealed-no-reveal-cost
                     (wait-for (event state side nil)
-                              (rez state side eid moved-card {:ignore-cost :rez-costs}))
+                              (reveal state side eid moved-card {:ignore-cost :reveal-costs}))
 
-                    ;; Pay costs. Pass eid to rez.
-                    :rezzed
+                    ;; Pay costs. Pass eid to reveal.
+                    :revealed
                     (wait-for (event state side nil)
-                              (rez state side eid moved-card nil))
+                              (reveal state side eid moved-card nil))
 
                     ;; "Face-up" cards. Trigger effect-completed manually.
                     :face-up
-                    (if (:install-state cdef)
+                    (if (:place-state cdef)
                       (wait-for (card-init state side
-                                           (assoc (get-card state moved-card) :rezzed true :seen true)
+                                           (assoc (get-card state moved-card) :revealed true :seen true)
                                            {:resolve-effect false
                                             :init-data true})
                                 (event state side eid nil))
-                      (do (update! state side (assoc (get-card state moved-card) :rezzed true :seen true))
+                      (do (update! state side (assoc (get-card state moved-card) :revealed true :seen true))
                           (event state side eid nil)))
 
                     ;; All other cards. Trigger events, which will trigger effect-completed
                     (event state side eid nil))
-                  (when-let [dre (:derezzed-events cdef)]
-                    (when-not (:rezzed (get-card state moved-card))
+                  (when-let [dre (:hidden-events cdef)]
+                    (when-not (:revealed (get-card state moved-card))
                       (register-events state side dre moved-card))))))))
 
-(defn- contestant-install-pay
-  "Used by contestant-install to pay install costs, code continues in contestant-install-continue"
-  [state side eid card server {:keys [extra-cost no-install-cost host-card action] :as args} slot]
+(defn- contestant-place-pay
+  "Used by contestant-place to pay place costs, code continues in contestant-place-continue"
+  [state side eid card locale {:keys [extra-cost no-place-cost host-card action] :as args} slot]
   (let [dest-zone (get-in @state (cons :contestant slot))
         character-cost (if (and (character? card)
-                          (not no-install-cost)
-                          (not (ignore-install-cost? state side)))
+                          (not no-place-cost)
+                          (not (ignore-place-cost? state side)))
                    (count dest-zone) 0)
         all-cost (concat extra-cost [:credit character-cost])
-        end-cost (if no-install-cost 0 (install-cost state side card all-cost))
-        end-fn #((clear-install-cost-bonus state side)
+        end-cost (if no-place-cost 0 (place-cost state side card all-cost))
+        end-fn #((clear-place-cost-bonus state side)
                  (effect-completed state side eid))]
-    (if (and (contestant-can-install? state side card dest-zone)
-             (not (install-locked? state :contestant)))
+    (if (and (contestant-can-place? state side card dest-zone)
+             (not (place-locked? state :contestant)))
       (wait-for (pay-sync state side card end-cost {:action action})
                 (if-let [cost-str async-result]
-                  (if (= server "New remote")
-                    (wait-for (trigger-event-sync state side :server-created card)
-                              (contestant-install-continue state side eid card server args slot cost-str))
-                    (contestant-install-continue state side eid card server args slot cost-str))
+                  (if (= locale "New party")
+                    (wait-for (trigger-event-sync state side :locale-created card)
+                              (contestant-place-continue state side eid card locale args slot cost-str))
+                    (contestant-place-continue state side eid card locale args slot cost-str))
                   (end-fn)))
       (end-fn))))
 
-(defn contestant-install
-  "Installs a card in the chosen server. If server is nil, asks for server to install in.
+(defn contestant-place
+  "Places a card in the chosen locale. If locale is nil, asks for locale to place in.
   The args input takes the following values:
   :host-card - Card to host on
-  :extra-cost - Extra install costs
-  :no-install-cost - true if install costs should be ignored
-  :action - What type of action installed the card
-  :install-state - Can be :rezzed-no-cost, :rezzed-no-rez-cost, :rezzed, or :faceup"
-  ([state side card server] (contestant-install state side (make-eid state) card server nil))
-  ([state side card server args] (contestant-install state side (make-eid state) card server args))
-  ([state side eid card server {:keys [host-card] :as args}]
+  :extra-cost - Extra place costs
+  :no-place-cost - true if place costs should be ignored
+  :action - What type of action placed the card
+  :place-state - Can be :revealed-no-cost, :revealed-no-reveal-cost, :revealed, or :faceup"
+  ([state side card locale] (contestant-place state side (make-eid state) card locale nil))
+  ([state side card locale args] (contestant-place state side (make-eid state) card locale args))
+  ([state side eid card locale {:keys [host-card] :as args}]
    (cond
-     ;; No server selected; show prompt to select an install site (Interns, Lateral Growth, etc.)
-     (not server)
+     ;; No locale selected; show prompt to select an place site (Interns, Lateral Growth, etc.)
+     (not locale)
      (continue-ability state side
-                       {:prompt (str "Choose a location to install " (:title card))
-                        :choices (contestant-install-list state card)
+                       {:prompt (str "Choose a location to place " (:title card))
+                        :choices (contestant-place-list state card)
                         :async true
-                        :effect (effect (contestant-install eid card target args))}
+                        :effect (effect (contestant-place eid card target args))}
                        card nil)
-     ;; A card was selected as the server; recurse, with the :host-card parameter set.
-     (and (map? server) (not host-card))
-     (contestant-install state side eid card server (assoc args :host-card server))
-     ;; A server was selected
+     ;; A card was selected as the locale; recurse, with the :host-card parameter set.
+     (and (map? locale) (not host-card))
+     (contestant-place state side eid card locale (assoc args :host-card locale))
+     ;; A locale was selected
      :else
      (let [slot (if host-card
                   (:zone host-card)
-                  (conj (server->zone state server) (if (character? card) :characters :content)))
+                  (conj (locale->zone state locale) (if (character? card) :characters :content)))
            dest-zone (get-in @state (cons :contestant slot))]
-       ;; trigger :pre-contestant-install before computing install costs so that
+       ;; trigger :pre-contestant-place before computing place costs so that
        ;; event handlers may adjust the cost.
-       (wait-for (trigger-event-sync state side :pre-contestant-install card {:server server :dest-zone dest-zone})
-                 (contestant-install-pay state side eid card server args slot))))))
+       (wait-for (trigger-event-sync state side :pre-contestant-place card {:locale locale :dest-zone dest-zone})
+                 (contestant-place-pay state side eid card locale args slot))))))
 
 
-;;; Installing a challenger card
-(defn- challenger-can-install-reason
-  "Checks if the specified card can be installed.
-   Checks uniqueness of card and installed console.
+;;; Placing a challenger card
+(defn- challenger-can-place-reason
+  "Checks if the specified card can be placed.
+   Checks uniqueness of card and placed console.
    Returns true if there are no problems
    Returns :console if Console check fails
    Returns :unique if uniqueness check fails
@@ -330,25 +330,25 @@
   (let [card-req (:req (card-def card))
         uniqueness (:uniqueness card)]
     (cond
-      ;; Can always install a card facedown
+      ;; Can always place a card facedown
       facedown true
       ;; Console check
       (and (has-subtype? card "Console")
-           (some #(has-subtype? % "Console") (all-active-installed state :challenger)))
+           (some #(has-subtype? % "Console") (all-active-placed state :challenger)))
       :console
-      ;; Installing not locked
-      (install-locked? state :challenger) :lock-install
+      ;; Placing not locked
+      (place-locked? state :challenger) :lock-place
       ;; Uniqueness check
       (and uniqueness (in-play? state card)) :unique
       ;; Req check
       (and card-req (not (card-req state side (make-eid state) card nil))) :req
-      ;; Nothing preventing install
+      ;; Nothing preventing place
       :default true)))
 
-(defn challenger-can-install?
-  "Checks `challenger-can-install-reason` if not true, toasts reason and returns false"
+(defn challenger-can-place?
+  "Checks `challenger-can-place-reason` if not true, toasts reason and returns false"
   [state side card facedown]
-  (let [reason (challenger-can-install-reason state side card facedown)
+  (let [reason (challenger-can-place-reason state side card facedown)
         reason-toast #(do (toast state side % "warning") false)
         title (:title card)]
     (case reason
@@ -356,89 +356,89 @@
       true true
       ;; failed unique check
       :unique
-      (reason-toast (str "Cannot install a second copy of " title " since it is unique. Please discard currently"
-                         " installed copy first"))
-      ;; failed install lock check
-      :lock-install
-      (reason-toast (str "Unable to install " title " since installing is currently locked"))
+      (reason-toast (str "Cannot place a second copy of " title " since it is unique. Please discard currently"
+                         " placed copy first"))
+      ;; failed place lock check
+      :lock-place
+      (reason-toast (str "Unable to place " title " since placing is currently locked"))
       ;; failed console check
       :console
-      (reason-toast (str "Unable to install " title ": an installed console prevents the installation of a replacement"))
+      (reason-toast (str "Unable to place " title ": an placed console prevents the placeation of a replacement"))
       :req
-      (reason-toast (str "Installation requirements are not fulfilled for " title)))))
+      (reason-toast (str "Placeation requirements are not fulfilled for " title)))))
 
 (defn- challenger-get-cost
-  "Get the total install cost for specified card"
+  "Get the total place cost for specified card"
   [state side {:keys [cost] :as card}
    {:keys [extra-cost no-cost facedown] :as params}]
-  (install-cost state side card
+  (place-cost state side card
                 (concat extra-cost (when (and (not no-cost) (not facedown)) [:credit cost]))))
 
-(defn- challenger-install-message
-  "Prints the correct msg for the card install"
+(defn- challenger-place-message
+  "Prints the correct msg for the card place"
   [state side card-title cost-str
    {:keys [no-cost host-card facedown custom-message] :as params}]
   (if facedown
-    (system-msg state side "installs a card facedown")
+    (system-msg state side "places a card facedown")
     (if custom-message
       (system-msg state side custom-message)
       (system-msg state side
-                  (str (build-spend-msg cost-str "install") card-title
+                  (str (build-spend-msg cost-str "place") card-title
                        (when host-card (str " on " (card-str state host-card)))
                        (when no-cost " at no cost"))))))
 
 (defn- handle-virus-counter-flag
   "Deal with setting the added-virus-counter flag"
-  [state side installed-card]
-  (if (and (has-subtype? installed-card "Virus")
-           (pos? (get-counters installed-card :virus)))
-    (update! state side (assoc installed-card :added-virus-counter true))))
+  [state side placed-card]
+  (if (and (has-subtype? placed-card "Virus")
+           (pos? (get-counters placed-card :virus)))
+    (update! state side (assoc placed-card :added-virus-counter true))))
 
-(defn challenger-install
-  "Installs specified challenger card if able
+(defn challenger-place
+  "Places specified challenger card if able
   Params include extra-cost, no-cost, host-card, facedown and custom-message."
-  ([state side card] (challenger-install state side (make-eid state) card nil))
-  ([state side card params] (challenger-install state side (make-eid state) card params))
+  ([state side card] (challenger-place state side (make-eid state) card nil))
+  ([state side card params] (challenger-place state side (make-eid state) card params))
   ([state side eid card {:keys [host-card facedown no-mu] :as params}]
    (if (and (empty? (get-in @state [side :locked (-> card :zone first)]))
-            (not (install-locked? state :challenger)))
+            (not (place-locked? state :challenger)))
      (if-let [hosting (and (not host-card) (not facedown) (:hosting (card-def card)))]
        (continue-ability state side
                          {:choices hosting
                           :prompt (str "Choose a card to host " (:title card) " on")
                           :async true
-                          :effect (effect (challenger-install eid card (assoc params :host-card target)))}
+                          :effect (effect (challenger-place eid card (assoc params :host-card target)))}
                          card nil)
-       (do (trigger-event state side :pre-install card facedown)
+       (do (trigger-event state side :pre-place card facedown)
            (let [cost (challenger-get-cost state side card params)]
-             (if (challenger-can-install? state side card facedown)
+             (if (challenger-can-place? state side card facedown)
                (if-let [cost-str (pay state side card cost)]
                  (let [c (if host-card
                            (host state side host-card card)
                            (move state side card
                                  [:rig (if facedown :facedown (to-keyword (:type card)))]))
-                       c (assoc c :installed true :new true)
-                       installed-card (if facedown
+                       c (assoc c :placed true :new true)
+                       placed-card (if facedown
                                         (update! state side c)
                                         (card-init state side c {:resolve-effect false
                                                                  :init-data true}))]
-                   (challenger-install-message state side (:title card) cost-str params)
-                   (play-sfx state side "install-challenger")
+                   (challenger-place-message state side (:title card) cost-str params)
+                   (play-sfx state side "place-challenger")
                    (when (and (is-type? card "Resource")
                               (not facedown)
                               (not no-mu))
-                     ;; Use up mu from resource not installed facedown
+                     ;; Use up mu from resource not placed facedown
                      (use-mu state (:memoryunits card))
                      (toast-check-mu state))
-                   (handle-virus-counter-flag state side installed-card)
+                   (handle-virus-counter-flag state side placed-card)
                    (when (and (not facedown) (is-type? card "Radicle"))
-                     (swap! state assoc-in [:challenger :register :installed-radicle] true))
+                     (swap! state assoc-in [:challenger :register :placed-radicle] true))
                    (when (and (not facedown) (has-subtype? c "Icebreaker"))
                      (update-breaker-strength state side c))
-                   (trigger-event-simult state side eid :challenger-install
-                                         {:card-ability (card-as-handler installed-card)}
-                                         installed-card))
+                   (trigger-event-simult state side eid :challenger-place
+                                         {:card-ability (card-as-handler placed-card)}
+                                         placed-card))
                  (effect-completed state side eid))
                (effect-completed state side eid)))
-           (clear-install-cost-bonus state side)))
+           (clear-place-cost-bonus state side)))
      (effect-completed state side eid))))

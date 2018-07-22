@@ -1,8 +1,8 @@
 (in-ns 'game.core)
 
-(declare active? all-installed all-active-installed cards card-init deactivate card-flag? gain lose get-card-hosted
+(declare active? all-placed all-active-placed cards card-init deactivate card-flag? gain lose get-card-hosted
          handle-end-run hazard? has-subtype? character? is-type? make-eid resource? register-events remove-from-host
-         remove-icon reset-card radicle? rezzed? toast toast-check-mu discard trigger-event update-breaker-strength
+         remove-icon reset-card radicle? revealed? toast toast-check-mu discard trigger-event update-breaker-strength
          update-hosted! update-character-strength unregister-events use-mu)
 
 ;;; Functions for loading card information.
@@ -21,7 +21,7 @@
   "Returns the newest version of a card where-ever it may be"
   [state card]
   (let [side (-> card :side to-keyword)]
-    (find-cid (:cid card) (concat (all-installed state side)
+    (find-cid (:cid card) (concat (all-placed state side)
                                   (-> (map #(-> @state side %) [:hand :discard :deck :rfg]) concat flatten)))))
 
 (defn get-scoring-owner
@@ -66,7 +66,7 @@
 (defn move
   "Moves the given card to the given new zone."
   ([state side card to] (move state side card to nil))
-  ([state side {:keys [zone cid host installed] :as card} to {:keys [front keep-server-alive force] :as options}]
+  ([state side {:keys [zone cid host placed] :as card} to {:keys [front keep-locale-alive force] :as options}]
    (let [to (if (is-type? card "Fake-Identity") :rfg to)          ; Fake-Identities always get moved to RFG
          zone (if host (map to-keyword (:zone host)) zone)
          src-zone (first zone)
@@ -80,7 +80,7 @@
        (trigger-event state side :pre-card-moved card src-zone target-zone)
        (let [dest (if (sequential? to) (vec to) [to])
              to-facedown (= dest [:rig :facedown])
-             to-installed (#{:servers :rig} (first dest))
+             to-placed (#{:locales :rig} (first dest))
              discard-hosted (fn [h]
                              (discard state side
                                     (update-in h [:zone] #(map to-keyword %))
@@ -101,13 +101,13 @@
              hosted (seq (flatten (map
                       (if same-zone? update-hosted discard-hosted)
                       (:hosted card))))
-             c (if (and (= side :contestant) (= (first dest) :discard) (rezzed? card))
+             c (if (and (= side :contestant) (= (first dest) :discard) (revealed? card))
                  (assoc card :seen true) card)
-             c (if (and (or installed host (#{:servers :scored :current} (first zone)))
+             c (if (and (or placed host (#{:locales :scored :current} (first zone)))
                         (or (#{:hand :deck :discard :rfg} (first dest)) to-facedown)
                         (not (:facedown c)))
                  (deactivate state side c to-facedown) c)
-             c (if to-installed (assoc c :installed true) (dissoc c :installed))
+             c (if to-placed (assoc c :placed true) (dissoc c :placed))
              c (if to-facedown (assoc c :facedown true) (dissoc c :facedown))
              moved-card (assoc c :zone dest :host nil :hosted hosted :previous-zone (:zone c))
              moved-card (if (and (= side :contestant) (#{:hand :deck} (first dest)))
@@ -122,12 +122,12 @@
              (remove-from-host state side card)
              (swap! state update-in (cons s (vec zone)) (fn [coll] (remove-once #(= (:cid %) cid) coll)))))
          (let [z (vec (cons :contestant (butlast zone)))]
-           (when (and (not keep-server-alive)
-                      (is-remote? z)
+           (when (and (not keep-locale-alive)
+                      (is-party? z)
                       (empty? (get-in @state (conj z :content)))
                       (empty? (get-in @state (conj z :characters))))
              (when-let [run (:run @state)]
-               (when (= (last (:server run)) (last z))
+               (when (= (last (:locale run)) (last z))
                  (handle-end-run state side)))
              (swap! state dissoc-in z)))
          (when-let [card-moved (:move-zone (card-def c))]
@@ -143,9 +143,9 @@
 
 (defn move-zone
   "Moves all cards from one zone to another, as in Chronos Project."
-  [state side server to]
-  (when-not (seq (get-in @state [side :locked server]))
-    (let [from-zone (cons side (if (sequential? server) server [server]))
+  [state side locale to]
+  (when-not (seq (get-in @state [side :locked locale]))
+    (let [from-zone (cons side (if (sequential? locale) locale [locale]))
           to-zone (cons side (if (sequential? to) to [to]))]
       (swap! state assoc-in to-zone (concat (get-in @state to-zone)
                                             (zone to (get-in @state from-zone))))
@@ -161,7 +161,7 @@
                         card)]
      (update! state side (update-in updated-card [key] #(+ (or % 0) n)))
      (if (= key :advance-counter)
-       (do (when (and (character? updated-card) (rezzed? updated-card)) (update-character-strength state side updated-card))
+       (do (when (and (character? updated-card) (revealed? updated-card)) (update-character-strength state side updated-card))
            (if-not placed
              (trigger-event state side :advance (get-card state updated-card))
              (trigger-event state side :advancement-placed (get-card state updated-card))))
@@ -212,19 +212,19 @@
   "Calculate the number of virus counters on the given card, taking Hivemind into account."
   [state side card]
   (let [hiveminds (when (is-virus-resource? card)
-                    (filter #(= (:title %) "Hivemind") (all-active-installed state :challenger)))]
+                    (filter #(= (:title %) "Hivemind") (all-active-placed state :challenger)))]
     (reduce + (map #(get-counters % :virus) (cons card hiveminds)))))
 
 (defn count-virus-resources
   "Calculate the number of virus resources in play"
   [state]
-  (count (filter is-virus-resource? (all-active-installed state :challenger))))
+  (count (filter is-virus-resource? (all-active-placed state :challenger))))
 
-(defn card->server
-  "Returns the server map that this card is installed in or protecting."
+(defn card->locale
+  "Returns the locale map that this card is placed in or protecting."
   [state card]
   (let [z (:zone card)]
-    (get-in @state [:contestant :servers (second z)])))
+    (get-in @state [:contestant :locales (second z)])))
 
 (defn disable-identity
   "Disables the side's identity"

@@ -1,7 +1,7 @@
 (in-ns 'game.core)
 
-(declare can-trigger? card-def clear-wait-prompt effect-completed event-title get-card get-nested-host get-remote-names
-         get-runnable-zones get-zones installed? make-eid register-effect-completed register-suppress resolve-ability
+(declare can-trigger? card-def clear-wait-prompt effect-completed event-title get-card get-nested-host get-party-names
+         get-runnable-zones get-zones placed? make-eid register-effect-completed register-suppress resolve-ability
          show-wait-prompt trigger-suppress unregister-suppress)
 
 ; Functions for registering and dispatching events.
@@ -19,9 +19,9 @@
   ([state side card] (unregister-events state side card nil))
   ([state side card part-def]
    (let [cdef (or part-def (card-def card))]
-    ;; Combine normal events and derezzed events. Any merge conflicts should not matter
+    ;; Combine normal events and hidden events. Any merge conflicts should not matter
     ;; as they should cause all relevant events to be removed anyway.
-    (doseq [e (merge (:events cdef) (:derezzed-events cdef))]
+    (doseq [e (merge (:events cdef) (:hidden-events cdef))]
       (swap! state update-in [:events (first e)]
              #(remove (fn [effect] (= (get-in effect [:card :cid]) (:cid card))) %))))
   (unregister-suppress state side card)))
@@ -264,30 +264,30 @@
   [state side ev]
   (count (turn-events state side ev)))
 
-(defn first-successful-run-on-server?
-  "Returns true if the active run is the first succesful run on the given server"
-  [state server]
-  (first-event? state :challenger :successful-run #(= [server] %)))
+(defn first-successful-run-on-locale?
+  "Returns true if the active run is the first succesful run on the given locale"
+  [state locale]
+  (first-event? state :challenger :successful-run #(= [locale] %)))
 
 (defn get-turn-damage
   "Returns the value of damage take this turn"
   [state side]
   (apply + (map #(nth % 2) (turn-events state :challenger :damage))))
 
-(defn get-installed-discarded
-  "Returns list of cards discarded this turn owned by side that were installed"
+(defn get-placed-discarded
+  "Returns list of cards discarded this turn owned by side that were placed"
   [state side]
-  (filter #(-> % first installed?) (turn-events state side (keyword (str (name side) "-discard")))))
+  (filter #(-> % first placed?) (turn-events state side (keyword (str (name side) "-discard")))))
 
-(defn first-installed-discard?
-  "Returns true if this is the first discard of an installed card this turn by this side"
+(defn first-placed-discard?
+  "Returns true if this is the first discard of an placed card this turn by this side"
   [state side]
-  (= 1 (count (get-installed-discarded state side))))
+  (= 1 (count (get-placed-discarded state side))))
 
-(defn first-installed-discard-own?
-  "Returns true if this is the first discard of an owned installed card this turn by this side"
+(defn first-placed-discard-own?
+  "Returns true if this is the first discard of an owned placed card this turn by this side"
   [state side]
-  (= 1 (count (filter #(= (:side (first %)) (side-str side)) (get-installed-discarded state side)))))
+  (= 1 (count (filter #(= (:side (first %)) (side-str side)) (get-placed-discarded state side)))))
 
 ;;; Effect completion triggers
 (defn register-effect-completed

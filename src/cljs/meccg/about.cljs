@@ -16,16 +16,16 @@
      [:p "This website is created and run by an avid MECCG player from Belgium. The goal is to provide a great way to create and test MECCG decks online."]
 
      [:h3 "Contact"]
-     [:p "Twitter: " [:a {:href "http://twitter.com/rezwits" :target "_blank"} "@rezwits"]]
-     [:p "Email: " [:a {:href "mailto:rezwits@me.com"} "rezwits@me.com"]]
+     [:p "Twitter: " [:a {:href "http://twitter.com/revealwits" :target "_blank"} "@revealwits"]]
+     [:p "Email: " [:a {:href "mailto:revealwits@me.com"} "revealwits@me.com"]]
 
      [:h3 "Development"]
 
      [:p "The code is open source and available on "
-      [:a {:href "https://github.com/rezwits/meccg" :target "_blank"} "Github"] "."]
+      [:a {:href "https://github.com/revealwits/meccg" :target "_blank"} "Github"] "."]
 
      [:p "Bug reports and feature suggestions can be submitted "
-      [:a {:href "https://github.com/rezwits/meccg/issues" :target "_blank"} "here"] "."]
+      [:a {:href "https://github.com/revealwits/meccg/issues" :target "_blank"} "here"] "."]
 
      [:p "Card Texts, Stats, and Fixes "
       [:a {:href "https://docs.google.com/spreadsheets/d/1Ly2RVe4QZRhN6TUfV1YO9DuuYvywzMnnaCunQapzzfs/edit?usp=sharing"
@@ -37,7 +37,7 @@
      [:h3 "Donations"]
      [:p "Donations are appreciated and help finance fast servers. You can support the project financially with PayPal or Bitcoin. Alternate art cards will be enabled on your account as a token of gratitude. Please specify your username with your donation."]
      [:ul.list.compact
-      [:li "PayPal: rezwits@me.com or " [:a {:href "https://www.paypal.me/rezwits" :title "PayPal" :target "_blank"} "paypal.me/rezwits"]]
+      [:li "PayPal: revealwits@me.com or " [:a {:href "https://www.paypal.me/revealwits" :title "PayPal" :target "_blank"} "paypal.me/revealwits"]]
       [:li "Bitcoin: " [:span.bitcoin "1ByjuLNZRvG17YaRKgKUjNi3c4qQ3daX3g" [:img.qr {:src "/img/bitcoin.png" :alt "Bitcoin QR Code"}]]]
       ]
 

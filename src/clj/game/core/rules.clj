@@ -1,9 +1,9 @@
 (in-ns 'game.core)
 
 (declare can-run? card-init card-str cards-can-prevent? close-access-prompt enforce-msg gain-agenda-point
-         get-prevent-list get-agenda-points in-contestant-scored? installed? is-type? play-sfx prevent-draw make-result
+         get-prevent-list get-agenda-points in-contestant-scored? placed? is-type? play-sfx prevent-draw make-result
          remove-old-current show-prompt system-say system-msg steal-trigger-events discard-cards
-         undiscardable-while-rezzed? update-all-character undiscardable-while-radicles? win win-decked)
+         undiscardable-while-revealed? update-all-character undiscardable-while-radicles? win win-decked)
 
 ;;;; Functions for applying core MECCG game rules.
 
@@ -380,17 +380,17 @@
 (defn- resolve-discard-end
   ([state side eid card args] (resolve-discard-end state side eid card eid args))
   ([state side eid {:keys [zone type disabled] :as card} oid
-   {:keys [unpreventable cause keep-server-alive suppress-event host-discarded] :as args}]
+   {:keys [unpreventable cause keep-locale-alive suppress-event host-discarded] :as args}]
   (let [cdef (card-def card)
-        moved-card (move state (to-keyword (:side card)) card :discard {:keep-server-alive keep-server-alive})]
+        moved-card (move state (to-keyword (:side card)) card :discard {:keep-locale-alive keep-locale-alive})]
     (swap! state update-in [:per-turn] dissoc (:cid moved-card))
     (swap! state update-in [:discard :discard-list] dissoc oid)
     (if-let [discard-effect (:discard-effect cdef)]
       (if (and (not disabled)
                (or (and (= (:side card) "Challenger")
-                        (:installed card)
+                        (:placed card)
                         (not (:facedown card)))
-                   (and (:rezzed card)
+                   (and (:revealed card)
                         (not host-discarded))
                    (and (:when-inactive discard-effect)
                         (not host-discarded))))
@@ -402,7 +402,7 @@
 (defn- resolve-discard
   ([state side eid card args] (resolve-discard state side eid card eid args))
   ([state side eid {:keys [zone type] :as card} oid
-   {:keys [unpreventable cause keep-server-alive suppress-event] :as args}]
+   {:keys [unpreventable cause keep-locale-alive suppress-event] :as args}]
   (if (and (not suppress-event)
            (not= (last zone) :current)) ; Discarding a current does not trigger a discard event.
     (wait-for (trigger-event-sync state side (keyword (str (name side) "-discard")) card cause)
@@ -413,18 +413,18 @@
   ([state side card oid] (prevent-discard state side (make-eid state) card oid nil))
   ([state side card oid args] (prevent-discard state side (make-eid state) card oid args))
   ([state side eid {:keys [zone type] :as card} oid
-    {:keys [unpreventable cause keep-server-alive suppress-event] :as args}]
+    {:keys [unpreventable cause keep-locale-alive suppress-event] :as args}]
    (if (and card (not (some #{:discard} zone)))
      (cond
 
-       (undiscardable-while-rezzed? card)
-       (do (enforce-msg state card "cannot be discarded while installed")
+       (undiscardable-while-revealed? card)
+       (do (enforce-msg state card "cannot be discarded while placed")
            (effect-completed state side eid))
 
        (and (= side :contestant)
             (undiscardable-while-radicles? card)
-            (> (count (filter #(is-type? % "Radicle") (all-active-installed state :challenger))) 1))
-       (do (enforce-msg state card "cannot be discarded while there are other radicles installed")
+            (> (count (filter #(is-type? % "Radicle") (all-active-placed state :challenger))) 1))
+       (do (enforce-msg state card "cannot be discarded while there are other radicles placed")
            (effect-completed state side eid))
 
        ;; Card is not enforced undiscardable
@@ -532,7 +532,7 @@
   (update! state side (assoc agenda :current-cost (advancement-cost state side agenda))))
 
 (defn update-all-advancement-costs [state side]
-  (doseq [ag (->> (mapcat :content (flatten (seq (get-in @state [:contestant :servers]))))
+  (doseq [ag (->> (mapcat :content (flatten (seq (get-in @state [:contestant :locales]))))
                   (filter #(is-type? % "Agenda")))]
     (update-advancement-cost state side ag)))
 
@@ -575,8 +575,8 @@
   "Purges viruses."
   [state side]
   (trigger-event state side :pre-purge)
-  (let [rig-cards (all-installed state :challenger)
-        hosted-on-character (->> (get-in @state [:contestant :servers]) seq flatten (mapcat :characters) (mapcat :hosted))]
+  (let [rig-cards (all-placed state :challenger)
+        hosted-on-character (->> (get-in @state [:contestant :locales]) seq flatten (mapcat :characters) (mapcat :hosted))]
     (doseq [card (concat rig-cards hosted-on-character)]
       (when (or (has-subtype? card "Virus")
                 (contains? (:counter card) :virus))
@@ -612,7 +612,7 @@
   ([state side eid target] (expose state side eid target nil))
   ([state side eid target {:keys [unpreventable] :as args}]
     (swap! state update-in [:expose] dissoc :expose-prevent)
-    (if (rezzed? target)
+    (if (revealed? target)
       (effect-completed state side eid) ; cannot expose faceup cards
       (wait-for (trigger-event-sync state side :pre-expose target)
                 (let [prevent (get-prevent-list state :contestant :expose)]

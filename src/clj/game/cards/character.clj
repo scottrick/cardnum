@@ -102,7 +102,7 @@
           :equal     eq-ability}}))
 
 (def take-bad-pub
-  "Bad pub on rez effect."
+  "Bad pub on reveal effect."
   (effect (gain-bad-publicity :contestant 1)
           (system-msg (str "takes 1 bad publicity from " (:title card)))))
 
@@ -124,8 +124,8 @@
   "Number of advancement counters - for advanceable Character."
   (req (get-advance-counters card)))
 
-(def space-character-rez-bonus
-  "Amount of rez reduction for the Space Character."
+(def space-character-reveal-bonus
+  "Amount of reveal reduction for the Space Character."
   (req (* -3 (get-advance-counters card))))
 
 (defn space-character
@@ -133,7 +133,7 @@
   [& abilities]
   {:advanceable :always
    :subroutines (vec abilities)
-   :rez-cost-bonus space-character-rez-bonus})
+   :reveal-cost-bonus space-character-reveal-bonus})
 
 
 ;;; For Grail Character
@@ -169,11 +169,11 @@
 
 ;;; For NEXT Character
 (defn next-character-count
-  "Counts number of rezzed NEXT Character - for use with NEXT Bronze and NEXT Gold"
+  "Counts number of revealed NEXT Character - for use with NEXT Bronze and NEXT Gold"
   [contestant]
-  (let [servers (flatten (seq (:servers contestant)))
-        rezzed-next? #(and (rezzed? %) (has-subtype? % "NEXT"))]
-    (reduce (fn [c server] (+ c (count (filter rezzed-next? (:characters server))))) 0 servers)))
+  (let [locales (flatten (seq (:locales contestant)))
+        revealed-next? #(and (revealed? %) (has-subtype? % "NEXT"))]
+    (reduce (fn [c locale] (+ c (count (filter revealed-next? (:characters locale))))) 0 locales)))
 
 
 ;;; For Morph Character
@@ -310,10 +310,10 @@
                        card nil))}
    :subroutines [(trace-ability 6 {:async true
                                    :effect (effect (show-wait-prompt :challenger "Contestant to select Archangel target")
-                                                   (continue-ability {:choices {:req #(and (installed? %)
+                                                   (continue-ability {:choices {:req #(and (placed? %)
                                                                                            (card-is? % :side :challenger))}
-                                                                      :label "Add 1 installed card to the Challenger's Grip"
-                                                                      :msg "add 1 installed card to the Challenger's Grip"
+                                                                      :label "Add 1 placed card to the Challenger's Grip"
+                                                                      :msg "add 1 placed card to the Challenger's Grip"
                                                                       :effect (effect (clear-wait-prompt :challenger)
                                                                                       (move :challenger target :hand true)
                                                                                       (system-msg (str "adds " (:title target)
@@ -329,28 +329,28 @@
                   end-the-run]}
 
    "Architect"
-   {:flags {:undiscardable-while-rezzed true}
+   {:flags {:undiscardable-while-revealed true}
     :subroutines [{:label "Look at the top 5 cards of R&D"
-                   :prompt "Choose a card to install"
+                   :prompt "Choose a card to place"
                    :priority true
                    :activatemsg "uses Architect to look at the top 5 cards of R&D"
                    :req (req (and (not (string? target))
                                   (not (is-type? target "Operation"))))
                    :not-distinct true
-                   :choices (req (conj (take 5 (:deck contestant)) "No install"))
+                   :choices (req (conj (take 5 (:deck contestant)) "No place"))
                    :effect (effect (system-msg (str "chooses the card in position "
                                                     (+ 1 (.indexOf (take 5 (:deck contestant)) target))
                                                     " from R&D (top is 1)"))
-                                   (contestant-install (move state side target :play-area) nil {:no-install-cost true}))}
-                  {:label "Install a card from HQ or Archives"
-                   :prompt "Select a card to install from Archives or HQ"
+                                   (contestant-place (move state side target :play-area) nil {:no-place-cost true}))}
+                  {:label "Place a card from HQ or Archives"
+                   :prompt "Select a card to place from Archives or HQ"
                    :show-discard true
                    :priority true
                    :choices {:req #(and (not (is-type? % "Operation"))
                                         (#{[:hand] [:discard]} (:zone %))
                                         (= (:side %) "Contestant"))}
-                   :effect (effect (contestant-install target nil))
-                   :msg (msg (contestant-install-msg target))}]}
+                   :effect (effect (contestant-place target nil))
+                   :msg (msg (contestant-place-msg target))}]}
 
    "Ashigaru"
    {:abilities [{:label "Gain subroutines"
@@ -398,7 +398,7 @@
 
    "Bloodletter"
    {:subroutines [{:label "Challenger discards 1 resource or top 2 cards of their Stack"
-                   :effect (req (if (empty? (filter #(is-type? % "Resource") (all-active-installed state :challenger)))
+                   :effect (req (if (empty? (filter #(is-type? % "Resource") (all-active-placed state :challenger)))
                                    (do (mill state :challenger 2)
                                        (system-msg state :challenger (str "discards the top 2 cards of their Stack")))
                                    (do (show-wait-prompt state :contestant "Challenger to choose an option for Bloodletter")
@@ -416,21 +416,21 @@
    (let [character-index (fn [state i] (first (keep-indexed #(when (= (:cid %2) (:cid i)) %1)
                                                       (get-in @state (cons :contestant (:zone i))))))]
      {:subroutines
-              [{:label "Install a piece of character from HQ protecting another server, ignoring all costs"
-                :prompt "Choose Character to install from HQ in another server"
+              [{:label "Place a piece of character from HQ protecting another locale, ignoring all costs"
+                :prompt "Choose Character to place from HQ in another locale"
                 :async true
                 :choices {:req #(and (character? %)
                                      (in-hand? %))}
                 :effect (req (let [this (zone->name (second (:zone card)))
                                    ncharacter target]
                                (continue-ability state side
-                                                 {:prompt (str "Choose a location to install " (:title target))
-                                                  :choices (req (remove #(= this %) (contestant-install-list state ncharacter)))
+                                                 {:prompt (str "Choose a location to place " (:title target))
+                                                  :choices (req (remove #(= this %) (contestant-place-list state ncharacter)))
                                                   :async true
-                                                  :effect (effect (contestant-install ncharacter target {:no-install-cost true}))}
+                                                  :effect (effect (contestant-place ncharacter target {:no-place-cost true}))}
                                                  card nil)))}
-               {:label "Install a piece of character from HQ in the next innermost position, protecting this server, ignoring all costs"
-                :prompt "Choose Character to install from HQ in this server"
+               {:label "Place a piece of character from HQ in the next innermost position, protecting this locale, ignoring all costs"
+                :prompt "Choose Character to place from HQ in this locale"
                 :async true
                 :choices {:req #(and (character? %)
                                      (in-hand? %))}
@@ -443,7 +443,7 @@
                                       (fn [coll] (remove-once #(= (:cid %) (:cid target)) coll)))
                                (card-init state side newcharacter {:resolve-effect false
                                                              :init-data true})
-                               (trigger-event state side :contestant-install newcharacter)))}]})
+                               (trigger-event state side :contestant-place newcharacter)))}]})
 
    "Brainstorm"
    {:abilities [{:label "Gain subroutines"
@@ -451,33 +451,33 @@
     :subroutines [(do-brain-damage 1)]}
 
    "Builder"
-   {:abilities [{:label "Move Builder to the outermost position of any server"
-                 :cost [:click 1] :prompt "Choose a server" :choices (req servers)
+   {:abilities [{:label "Move Builder to the outermost position of any locale"
+                 :cost [:click 1] :prompt "Choose a locale" :choices (req locales)
                  :msg (msg "move it to the outermost position of " target)
-                 :effect (effect (move card (conj (server->zone state target) :characters)))}]
-    :subroutines [{:label "Place 1 advancement token on an Character that can be advanced protecting this server"
+                 :effect (effect (move card (conj (locale->zone state target) :characters)))}]
+    :subroutines [{:label "Place 1 advancement token on an Character that can be advanced protecting this locale"
                    :msg (msg "place 1 advancement token on " (card-str state target))
                    :choices {:req #(and (character? %)
                                         (can-be-advanced? %))}
                    :effect (effect (add-prop target :advance-counter 1 {:placed true}))}]}
 
    "Bullfrog"
-   {:subroutines [(do-psi {:label "Move Bullfrog to another server"
+   {:subroutines [(do-psi {:label "Move Bullfrog to another locale"
                            :player :contestant
-                           :prompt "Choose a server"
-                           :choices (req servers)
+                           :prompt "Choose a locale"
+                           :choices (req locales)
                            :msg (msg "move it to the outermost position of " target)
-                           :effect (req (let [dest (server->zone state target)]
+                           :effect (req (let [dest (locale->zone state target)]
                                           (swap! state update-in [:run]
                                                  #(assoc % :position (count (get-in contestant (conj dest :characters)))
-                                                           :server (rest dest))))
+                                                           :locale (rest dest))))
                                         (move state side card
-                                              (conj (server->zone state target) :characters)))})]}
+                                              (conj (locale->zone state target) :characters)))})]}
 
    "Bulwark"
    {:effect take-bad-pub
-    :abilities [{:msg "gain 2 [Credits] if there is an installed AI"
-                 :req (req (some #(has-subtype? % "AI") (all-active-installed state :challenger)))
+    :abilities [{:msg "gain 2 [Credits] if there is an placed AI"
+                 :req (req (some #(has-subtype? % "AI") (all-active-placed state :challenger)))
                  :effect (effect (gain-credits 2))}]
     :subroutines [(assoc discard-resource :player :challenger
                                        :msg "force the Challenger to discard 1 resource"
@@ -499,10 +499,10 @@
 
    "Cell Portal"
    {:subroutines [{:msg "make the Challenger approach the outermost Character"
-                   :effect (req (let [srv (first (:server run))
-                                      n (count (get-in @state [:contestant :servers srv :characters]))]
+                   :effect (req (let [srv (first (:locale run))
+                                      n (count (get-in @state [:contestant :locales srv :characters]))]
                                   (swap! state assoc-in [:run :position] n)
-                                  (derez state side card)))}]}
+                                  (hide state side card)))}]}
 
    "Changeling"
    (morph-character "Barrier" "Sentry" end-the-run)
@@ -529,7 +529,7 @@
                            :msg (msg (str "do " (count (get-in @state [:challenger :hand])) " net damage"))})]}
 
    "Chimera"
-   (let [turn-end-ability {:effect (effect (derez :contestant card)
+   (let [turn-end-ability {:effect (effect (hide :contestant card)
                                            (update! (assoc (get-card state card) :subtype "Mythic")))}]
      {:prompt "Choose one subtype"
       :choices ["Barrier" "Code Gate" "Sentry"]
@@ -545,7 +545,7 @@
    "Chiyashi"
    {:implementation "Discard effect when using an AI to break is activated manually"
     :abilities [{:label "Discard the top 2 cards of the Challenger's Stack"
-                 :req (req (some #(has-subtype? % "AI") (all-active-installed state :challenger)))
+                 :req (req (some #(has-subtype? % "AI") (all-active-placed state :challenger)))
                  :msg (msg (str "discard " (join ", " (map :title (take 2 (:deck challenger)))) " from the Challenger's Stack"))
                  :effect (effect (mill :contestant :challenger 2))}]
     :subroutines [(do-net-damage 2)
@@ -570,9 +570,9 @@
 
    "Chum"
    {:subroutines [{:label "Give +2 strength to next Character Challenger encounters"
-                   :req (req this-server)
+                   :req (req this-locale)
                    :prompt "Select the Character the Challenger is encountering"
-                   :choices {:req #(and (rezzed? %) (character? %))}
+                   :choices {:req #(and (revealed? %) (character? %))}
                    :msg (msg "give " (:title target) " +2 strength")
                    :effect (req (let [character (:cid target)]
                                   (register-events state side
@@ -590,7 +590,7 @@
                            :prompt "Select a target for Clairvoyant Monitor"
                            :msg (msg "place 1 advancement token on "
                                      (card-str state target) " and end the run")
-                           :choices {:req installed?}
+                           :choices {:req placed?}
                            :effect (effect (add-prop target :advance-counter 1 {:placed true})
                                            (end-run))})]}
 
@@ -612,7 +612,7 @@
                                               state side
                                               {:prompt "Choose a radicle to discard"
                                                :msg (msg "discard " (:title target))
-                                               :choices {:req #(and (installed? %)
+                                               :choices {:req #(and (placed? %)
                                                                     (is-type? % "Radicle"))}
                                                :cancel-effect (req (effect-completed state side eid))
                                                :effect (effect (discard target {:cause :subroutine}))}
@@ -627,7 +627,7 @@
                   {:msg "force the Challenger to lose 1 [Click] if able"
                    :effect challenger-loses-click}
                   end-the-run]
-    :strength-bonus (req (if (some #(has-subtype? % "AI") (all-active-installed state :challenger)) 3 0))}
+    :strength-bonus (req (if (some #(has-subtype? % "AI") (all-active-placed state :challenger)) 3 0))}
 
    "Cortex Lock"
    {:subroutines [{:label "Do 1 net damage for each unused memory unit the Challenger has"
@@ -635,25 +635,25 @@
                    :effect (effect (damage eid :net (available-mu state) {:card card}))}]}
 
    "Crick"
-   {:subroutines [{:label "install a card from Archives"
-                   :prompt "Select a card to install from Archives"
+   {:subroutines [{:label "place a card from Archives"
+                   :prompt "Select a card to place from Archives"
                    :show-discard true
                    :priority true
                    :choices {:req #(and (not (is-type? % "Operation"))
                                         (= (:zone %) [:discard])
                                         (= (:side %) "Contestant"))}
-                   :msg (msg (contestant-install-msg target))
-                   :effect (effect (contestant-install target nil))}]
+                   :msg (msg (contestant-place-msg target))
+                   :effect (effect (contestant-place target nil))}]
     :strength-bonus (req (if (= (second (:zone card)) :archives) 3 0))}
 
    "Curtain Wall"
    {:subroutines [end-the-run]
-    :strength-bonus (req (let [characters (:characters (card->server state card))]
+    :strength-bonus (req (let [characters (:characters (card->locale state card))]
                            (if (= (:cid card) (:cid (last characters))) 4 0)))
     :events (let [cw {:req (req (and (not= (:cid card) (:cid target))
-                                     (= (card->server state card) (card->server state target))))
+                                     (= (card->locale state card) (card->locale state target))))
                       :effect (effect (update-character-strength card))}]
-              {:contestant-install cw :discard cw :card-moved cw})}
+              {:contestant-place cw :discard cw :card-moved cw})}
 
    "Data Hound"
    (letfn [(dh-discard [cards]
@@ -778,7 +778,7 @@
                    :msg (msg "discard " (:title target))
                    :effect (effect (discard target))}
                   {:msg "discard all virtual radicles"
-                   :effect (req (doseq [c (filter #(has-subtype? % "Virtual") (all-active-installed state :challenger))]
+                   :effect (req (doseq [c (filter #(has-subtype? % "Virtual") (all-active-placed state :challenger))]
                                   (discard state side c)))}]
     :challenger-abilities [(challenger-break [:click 1] 1)]}
 
@@ -809,40 +809,40 @@
     :challenger-abilities [(challenger-break [:credit 4] 1)]}
 
    "Fairchild 1.0"
-   {:subroutines [{:label "Force the Challenger to pay 1 [Credits] or discard an installed card"
-                   :msg "force the Challenger to pay 1 [Credits] or discard an installed card"
+   {:subroutines [{:label "Force the Challenger to pay 1 [Credits] or discard an placed card"
+                   :msg "force the Challenger to pay 1 [Credits] or discard an placed card"
                    :player :challenger
                    :prompt "Choose one"
-                   :choices ["Pay 1 [Credits]" "Discard an installed card"]
+                   :choices ["Pay 1 [Credits]" "Discard an placed card"]
                    :effect (req (if (= target "Pay 1 [Credits]")
                                   (do (pay state side card :credit 1)
                                       (system-msg state side "pays 1 [Credits]"))
-                                  (resolve-ability state :challenger discard-installed card nil)))}]
+                                  (resolve-ability state :challenger discard-placed card nil)))}]
     :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Fairchild 2.0"
-   {:subroutines [{:label "Force the Challenger to pay 2 [Credits] or discard an installed card"
-                   :msg "force the Challenger to pay 2 [Credits] or discard an installed card"
+   {:subroutines [{:label "Force the Challenger to pay 2 [Credits] or discard an placed card"
+                   :msg "force the Challenger to pay 2 [Credits] or discard an placed card"
                    :player :challenger
                    :prompt "Choose one"
-                   :choices ["Pay 2 [Credits]" "Discard an installed card"]
+                   :choices ["Pay 2 [Credits]" "Discard an placed card"]
                    :effect (req (if (= target "Pay 2 [Credits]")
                                   (do (pay state side card :credit 2)
                                       (system-msg state side "pays 2 [Credits]"))
-                                  (resolve-ability state :challenger discard-installed card nil)))}
+                                  (resolve-ability state :challenger discard-placed card nil)))}
                   (do-brain-damage 1)]
     :challenger-abilities [(challenger-break [:click 2] 2)]}
 
    "Fairchild 3.0"
-   {:subroutines [{:label "Force the Challenger to pay 3 [Credits] or discard an installed card"
-                   :msg "force the Challenger to pay 3 [Credits] or discard an installed card"
+   {:subroutines [{:label "Force the Challenger to pay 3 [Credits] or discard an placed card"
+                   :msg "force the Challenger to pay 3 [Credits] or discard an placed card"
                    :player :challenger
                    :prompt "Choose one"
-                   :choices ["Pay 3 [Credits]" "Discard an installed card"]
+                   :choices ["Pay 3 [Credits]" "Discard an placed card"]
                    :effect (req (if (= target "Pay 3 [Credits]")
                                   (do (pay state side card :credit 3)
                                       (system-msg state side "pays 3 [Credits]"))
-                                  (resolve-ability state :challenger discard-installed card nil)))}
+                                  (resolve-ability state :challenger discard-placed card nil)))}
                   {:label "Do 1 brain damage or end the run"
                    :prompt "Choose one"
                    :choices ["Do 1 brain damage" "End the run"]
@@ -905,7 +905,7 @@
     :strength-bonus (req (if (= (second (:zone card)) :rd) 3 0))}
 
    "Gyri Labyrinth"
-   {:implementation "Hand size is not restored if discarded or derezzed after firing"
+   {:implementation "Hand size is not restored if discarded or hidden after firing"
     :subroutines [{:req (req (:run @state))
                    :label "Reduce Challenger's maximum hand size by 2 until start of next Contestant turn"
                    :msg "reduce the Challenger's maximum hand size by 2 until the start of the next Contestant turn"
@@ -998,7 +998,7 @@
                   {:label "Discard an characterbreaker"
                    :prompt "Choose an characterbreaker to discard"
                    :msg (msg "discard " (:title target))
-                   :choices {:req #(and (installed? %)
+                   :choices {:req #(and (placed? %)
                                         (has? % :subtype "Icebreaker"))}
                    :effect (effect (discard target {:cause :subroutine})
                                    (clear-wait-prompt :challenger))}]}
@@ -1042,16 +1042,16 @@
    (let [character-index (fn [state i] (first (keep-indexed #(when (= (:cid %2) (:cid i)) %1)
                                                       (get-in @state (cons :contestant (:zone i))))))]
      {:subroutines
-      [{:label "Install a piece of Bioroid Character from HQ or Archives"
-        :prompt "Install Character from HQ or Archives?"
+      [{:label "Place a piece of Bioroid Character from HQ or Archives"
+        :prompt "Place Character from HQ or Archives?"
         :choices ["HQ" "Archives"]
         :effect (req (let [fr target]
                        (resolve-ability state side
-                                        {:prompt "Choose a Bioroid Character to install"
+                                        {:prompt "Choose a Bioroid Character to place"
                                          :choices (req (filter #(and (character? %)
                                                                      (has-subtype? % "Bioroid"))
                                                                ((if (= fr "HQ") :hand :discard) contestant)))
-                                         :effect (req (let [newcharacter (assoc target :zone (:zone card) :rezzed true)
+                                         :effect (req (let [newcharacter (assoc target :zone (:zone card) :revealed true)
                                                             hndx (character-index state card)
                                                             characters (get-in @state (cons :contestant (:zone card)))
                                                             newcharacters (apply conj (subvec characters 0 hndx) newcharacter (subvec characters hndx))]
@@ -1061,10 +1061,10 @@
                                                         (update! state side (assoc card :howler-target newcharacter))
                                                         (card-init state side newcharacter {:resolve-effect false
                                                                                       :init-data true})
-                                                        (trigger-event state side :contestant-install newcharacter)))} card nil)))}]
+                                                        (trigger-event state side :contestant-place newcharacter)))} card nil)))}]
       :events {:run-ends {:req (req (:howler-target card))
                           :effect (effect (discard card {:cause :self-discard})
-                                          (derez (get-card state (:howler-target card))))}}})
+                                          (hide (get-card state (:howler-target card))))}}})
 
    "Hudson 1.0"
    {:subroutines [{:msg "prevent the Challenger from accessing more than 1 card during this run"
@@ -1110,12 +1110,12 @@
     :abilities [{:label "Gain subroutines"
                  :msg (msg "gain " (:tag challenger 0) " subroutines")}
                 (tag-trace 1)]
-    :subroutines [discard-installed]}
+    :subroutines [discard-placed]}
 
    "IP Block"
    {:abilities [(assoc (give-tags 1)
-                  :req (req (seq (filter #(has-subtype? % "AI") (all-active-installed state :challenger))))
-                  :label "Give the Challenger 1 tag if there is an installed AI")]
+                  :req (req (seq (filter #(has-subtype? % "AI") (all-active-placed state :challenger))))
+                  :label "Give the Challenger 1 tag if there is an placed AI")]
     :subroutines [(tag-trace 3)
                   end-the-run-if-tagged]}
 
@@ -1128,7 +1128,7 @@
                                   (update-character-strength ref side (get-card ref card)))))))
     :subroutines [end-the-run]
     :strength-bonus (req (count (:hand contestant)))
-    :rez-cost-bonus (req (count (:hand contestant)))
+    :reveal-cost-bonus (req (count (:hand contestant)))
     :leave-play (req (remove-watch state (keyword (str "iq" (:cid card)))))}
 
    "Ireress"
@@ -1141,7 +1141,7 @@
    {:expose {:msg "do 2 net damage"
              :async true
              :effect (effect (damage eid :net 2 {:card card}))}
-    :subroutines [(assoc discard-installed :effect (req (discard state side target {:cause :subroutine})
+    :subroutines [(assoc discard-placed :effect (req (discard state side target {:cause :subroutine})
                                                       (when current-character
                                                         (no-action state side nil)
                                                         (continue state side nil))
@@ -1153,14 +1153,14 @@
 
    "Jua"
    {:implementation "Encounter effect is manual"
-    :abilities [{:msg "prevent the Challenger from installing cards for the rest of the turn"
-                 :effect (effect (register-turn-flag! card :challenger-lock-install (constantly true)))}]
-    :subroutines [{:label "Choose 2 installed Challenger cards, if able. The Challenger must add 1 of those to the top of the Stack."
-                   :req (req (>= (count (all-installed state :challenger)) 2))
+    :abilities [{:msg "prevent the Challenger from placing cards for the rest of the turn"
+                 :effect (effect (register-turn-flag! card :challenger-lock-place (constantly true)))}]
+    :subroutines [{:label "Choose 2 placed Challenger cards, if able. The Challenger must add 1 of those to the top of the Stack."
+                   :req (req (>= (count (all-placed state :challenger)) 2))
                    :async true
-                   :prompt "Select 2 installed Challenger cards"
+                   :prompt "Select 2 placed Challenger cards"
                    :choices {:req #(and (= (:side %) "Challenger")
-                                        (installed? %))
+                                        (placed? %))
                              :max 2
                              :all true}
                    :msg (msg "add either " (card-str state (first targets)) " or " (card-str state (second targets)) " to the Stack")
@@ -1188,27 +1188,27 @@
    "Kamali 1.0"
    (letfn [(better-name [kind] (if (= "hazard" kind) "piece of hazard" kind))
            (challenger-discard [kind]
-             {:prompt (str "Select an installed " (better-name kind) " to discard")
-              :label (str "Discard an installed " (better-name kind))
+             {:prompt (str "Select an placed " (better-name kind) " to discard")
+              :label (str "Discard an placed " (better-name kind))
               :msg (msg "discard " (:title target))
               :async true
-              :choices {:req #(and (installed? %)
+              :choices {:req #(and (placed? %)
                                    (is-type? % (capitalize kind)))}
-              :cancel-effect (effect (system-msg (str "fails to discard an installed " (better-name kind)))
+              :cancel-effect (effect (system-msg (str "fails to discard an placed " (better-name kind)))
                                      (effect-completed eid))
               :effect (effect (discard eid target {:cause :subroutine}))})
            (sub-map [kind]
              {:player :challenger
               :async true
               :prompt "Choose one"
-              :choices ["Take 1 brain damage" (str "Discard an installed " (better-name kind))]
+              :choices ["Take 1 brain damage" (str "Discard an placed " (better-name kind))]
               :effect (req (if (= target "Take 1 brain damage")
                              (do (system-msg state :contestant "uses Kamali 1.0 to give the Challenger 1 brain damage")
                                  (damage state :challenger eid :brain 1 {:card card}))
                              (continue-ability state :challenger (challenger-discard kind) card nil)))})
            (brain-discard [kind]
-             {:label (str "Force the Challenger to take 1 brain damage or discard an installed " (better-name kind))
-              :msg (str "force the Challenger to take 1 brain damage or discard an installed " (better-name kind))
+             {:label (str "Force the Challenger to take 1 brain damage or discard an placed " (better-name kind))
+              :msg (str "force the Challenger to take 1 brain damage or discard an placed " (better-name kind))
               :async true
               :effect (req (show-wait-prompt state :contestant "Challenger to decide on Kamali 1.0 action")
                            (wait-for (resolve-ability state side (sub-map kind) card nil)
@@ -1234,7 +1234,7 @@
                                                           ;; access-helper-hq uses a set to keep track of which cards have already
                                                           ;; been accessed. by adding HQ root's contents to this set, we make the challenger
                                                           ;; unable to access those cards, as Kitsune intends.
-                                                          (conj (set (get-in @state [:contestant :servers :hq :content])) target))
+                                                          (conj (set (get-in @state [:contestant :locales :hq :content])) target))
                                                         card nil)))))}]}
 
    "Komainu"
@@ -1243,7 +1243,7 @@
     :subroutines [(do-net-damage 1)]}
 
    "Lab Dog"
-   {:subroutines [(assoc discard-hazard :label "Force the Challenger to discard an installed piece of hazard"
+   {:subroutines [(assoc discard-hazard :label "Force the Challenger to discard an placed piece of hazard"
                                         :player :challenger
                                         :msg (msg "force the Challenger to discard " (:title target))
                                         :effect (req (discard state side target)
@@ -1300,7 +1300,7 @@
                   (trace-ability 3 {:label "Discard a virus"
                                     :prompt "Choose a virus to discard"
                                     :msg (msg "discard " (:title target))
-                                    :choices {:req #(and (installed? %)
+                                    :choices {:req #(and (placed? %)
                                                          (has? % :subtype "Virus"))}
                                     :effect (effect (discard target {:cause :subroutine})
                                                     (clear-wait-prompt :challenger))})
@@ -1322,7 +1322,7 @@
                                  state side
                                  {:req (req (some #(some (fn [h] (card-is? h :type "Resource")) (:hosted %))
                                                   (remove-once #(= (:cid %) (:cid magnet))
-                                                               (filter character? (all-installed state contestant)))))
+                                                               (filter character? (all-placed state contestant)))))
                                   :prompt "Select a Resource to host on Magnet"
                                   :choices {:req #(and (card-is? % :type "Resource")
                                                        (character? (:host %))
@@ -1330,10 +1330,10 @@
                                   :effect (effect (host card target))}
                                  card nil)
                                (disable-hosted state side card))))
-      :derez-effect {:req (req (not-empty (:hosted card)))
+      :hide-effect {:req (req (not-empty (:hosted card)))
                      :effect (req (doseq [c (get-in card [:hosted])]
                                     (card-init state side c {:resolve-effect false})))}
-      :events {:challenger-install {:req (req (= (:cid card) (:cid (:host target))))
+      :events {:challenger-place {:req (req (= (:cid card) (:cid (:host target))))
                                 :effect (req (disable-hosted state side card)
                                           (update-character-strength state side card))}}
       :subroutines [end-the-run]})
@@ -1348,7 +1348,7 @@
                    :msg (msg "give the next Character encountered \"[Subroutine] End the run\" after all its other subroutines for the remainder of the run")}]}
 
    "Markus 1.0"
-   {:subroutines [discard-installed end-the-run]
+   {:subroutines [discard-placed end-the-run]
     :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Matrix Analyzer"
@@ -1393,8 +1393,8 @@
     :strength-bonus (req (if (= (second (:zone card)) :hq) 3 0))}
 
    "Metamorph"
-   {:subroutines [{:label "Swap two Character or swap two installed non-Character"
-                   :msg "swap two Character or swap two installed non-Character"
+   {:subroutines [{:label "Swap two Character or swap two placed non-Character"
+                   :msg "swap two Character or swap two placed non-Character"
                    :async true
                    :prompt "Choose one"
                    :choices ["Swap two Character" "Swap two non-Character"]
@@ -1403,7 +1403,7 @@
                                     state side
                                     {:prompt "Select the two Character to swap"
                                      :async true
-                                     :choices {:req #(and (installed? %) (character? %)) :max 2 :all true}
+                                     :choices {:req #(and (placed? %) (character? %)) :max 2 :all true}
                                      :msg (msg "swap the positions of " (card-str state (first targets)) " and " (card-str state (second targets)))
                                      :effect (req (when (= (count targets) 2)
                                                     (swap-character state side (first targets) (second targets))
@@ -1413,10 +1413,10 @@
                                     state side
                                     {:prompt "Select the two cards to swap"
                                      :async true
-                                     :choices {:req #(and (installed? %) (not (character? %))) :max 2 :all true}
+                                     :choices {:req #(and (placed? %) (not (character? %))) :max 2 :all true}
                                      :msg (msg "swap the positions of " (card-str state (first targets)) " and " (card-str state (second targets)))
                                      :effect (req (when (= (count targets) 2)
-                                                    (swap-installed state side (first targets) (second targets))
+                                                    (swap-placed state side (first targets) (second targets))
                                                     (effect-completed state side eid)))}
                                     card nil)))}]}
 
@@ -1433,36 +1433,36 @@
                                                   (discard state :contestant eid card nil)))})]}
 
    "Mind Game"
-   {:subroutines [(do-psi {:label "Redirect the run to another server"
+   {:subroutines [(do-psi {:label "Redirect the run to another locale"
                            :player :contestant
-                           :prompt "Choose a server"
-                           :choices (req (remove #{(-> @state :run :server central->name)} servers))
+                           :prompt "Choose a locale"
+                           :choices (req (remove #{(-> @state :run :locale central->name)} locales))
                            :msg (msg "redirect the run to " target)
-                           :effect (req (let [dest (server->zone state target)]
+                           :effect (req (let [dest (locale->zone state target)]
                                           (swap! state update-in [:run]
                                                  #(assoc % :position (count (get-in contestant (conj dest :characters)))
-                                                           :server (rest dest)))))})]
-    :challenger-abilities [{:label "Add an installed card to the bottom of your Stack"
-                        :prompt "Choose one of your installed cards"
-                        :choices {:req #(and (installed? %)
+                                                           :locale (rest dest)))))})]
+    :challenger-abilities [{:label "Add an placed card to the bottom of your Stack"
+                        :prompt "Choose one of your placed cards"
+                        :choices {:req #(and (placed? %)
                                              (= (:side %) "Challenger"))}
                         :effect (effect (move target :deck)
                                         (system-msg :challenger (str "adds " (:title target) " to the bottom of their Stack")))}]}
 
    "Minelayer"
-   {:subroutines [{:msg "install an Character from HQ"
+   {:subroutines [{:msg "place an Character from HQ"
                    :choices {:req #(and (character? %)
                                         (in-hand? %))}
-                   :prompt "Choose an Character to install from HQ"
-                   :effect (req (contestant-install state side target (zone->name (first (:server run))) {:no-install-cost true}))}]}
+                   :prompt "Choose an Character to place from HQ"
+                   :effect (req (contestant-place state side target (zone->name (first (:locale run))) {:no-place-cost true}))}]}
 
    "Mirāju"
    {:abilities [{:label "Challenger broke subroutine: Redirect run to Archives"
-                 :msg "make the Challenger continue the run on Archives. Mirāju is derezzed"
+                 :msg "make the Challenger continue the run on Archives. Mirāju is hidden"
                  :effect (req (swap! state update-in [:run]
-                                     #(assoc % :position (count (get-in contestant [:servers :archives :characters]))
-                                               :server [:archives]))
-                              (derez state side card))}]
+                                     #(assoc % :position (count (get-in contestant [:locales :archives :characters]))
+                                               :locale [:archives]))
+                              (hide state side card))}]
     :subroutines [{:label "Draw 1 card, then shuffle 1 card from HQ into R&D"
                    :effect (req (wait-for (resolve-ability
                                             state side
@@ -1508,8 +1508,8 @@
                     (net-or-discard 3 4)]})
 
    "Mother Goddess"
-   (let [ab (effect (update! (let [subtype (->> (mapcat :characters (flatten (seq (:servers contestant))))
-                                                (filter #(and (rezzed? %)
+   (let [ab (effect (update! (let [subtype (->> (mapcat :characters (flatten (seq (:locales contestant))))
+                                                (filter #(and (revealed? %)
                                                               (not= (:cid card) (:cid %))))
                                                 (mapcat #(split (:subtype %) #" - "))
                                                 (cons "Mythic")
@@ -1521,9 +1521,9 @@
              :effect ab}]
      {:effect ab
       :subroutines [end-the-run]
-      :events {:rez mg
+      :events {:reveal mg
                :card-moved mg
-               :derez mg
+               :hide mg
                :character-subtype-changed mg}})
 
    "Muckraker"
@@ -1576,37 +1576,37 @@
     :events (let [nb {:req (req (and (not= (:cid target) (:cid card))
                                      (has-subtype? target "NEXT")))
                       :effect (effect (update-character-strength card))}]
-              {:rez nb
-               :derez nb
+              {:reveal nb
+               :hide nb
                :discard nb
                :card-moved nb})}
 
    "NEXT Diamond"
-   {:rez-cost-bonus (req (- (next-character-count contestant)))
+   {:reveal-cost-bonus (req (- (next-character-count contestant)))
     :subroutines [(do-brain-damage 1)
                   {:prompt "Select a card to discard"
-                   :label "Discard 1 installed Challenger card"
+                   :label "Discard 1 placed Challenger card"
                    :msg (msg "discard " (:title target))
-                   :choices {:req #(and (installed? %)
+                   :choices {:req #(and (placed? %)
                                         (= (:side %) "Challenger"))}
                    :async true
                    :effect (req (discard state side eid target {:cause :subroutine}))}]}
 
    "NEXT Gold"
-   {:subroutines [{:label "Do 1 net damage for each rezzed NEXT character"
+   {:subroutines [{:label "Do 1 net damage for each revealed NEXT character"
                    :msg (msg "do " (next-character-count contestant) " net damage")
                    :effect (effect (damage eid :net (next-character-count contestant) {:card card}))}
                   discard-resource]}
 
    "NEXT Opal"
-   {:subroutines [{:label "Install a card from HQ, paying all costs"
-                   :prompt "Choose a card in HQ to install"
+   {:subroutines [{:label "Place a card from HQ, paying all costs"
+                   :prompt "Choose a card in HQ to place"
                    :priority true
                    :choices {:req #(and (not (is-type? % "Operation"))
                                         (in-hand? %)
                                         (= (:side %) "Contestant"))}
-                   :effect (effect (contestant-install target nil))
-                   :msg (msg (contestant-install-msg target))}]}
+                   :effect (effect (contestant-place target nil))
+                   :msg (msg (contestant-place-msg target))}]}
 
    "NEXT Sapphire"
    {:subroutines [{:label "Draw up to X cards"
@@ -1647,7 +1647,7 @@
                  :msg (msg "gain "
                            (count (filter #(and (is-type? % "Character")
                                                 (has-subtype? % "NEXT"))
-                                          (all-active-installed state :contestant)))
+                                          (all-active-placed state :contestant)))
                            " subroutines")}]
     :subroutines [end-the-run]}
 
@@ -1676,10 +1676,10 @@
                         (space-character discard-resource end-the-run))
 
    "Owl"
-   {:subroutines [{:choices {:req #(and (installed? %)
+   {:subroutines [{:choices {:req #(and (placed? %)
                                         (is-type? % "Resource"))}
-                   :label "Add installed resource to the top of the Challenger's Stack"
-                   :msg "add an installed resource to the top of the Challenger's Stack"
+                   :label "Add placed resource to the top of the Challenger's Stack"
+                   :msg "add an placed resource to the top of the Challenger's Stack"
                    :effect (effect (move :challenger target :deck {:front true})
                                    (system-msg (str "adds " (:title target) " to the top of the Challenger's Stack")))}]}
 
@@ -1705,7 +1705,7 @@
 
    "Quicksand"
    {:implementation "Encounter effect is manual"
-    :abilities [{:req (req (and this-server (= (dec (:position run)) (character-index state card))))
+    :abilities [{:req (req (and this-locale (= (dec (:position run)) (character-index state card))))
                  :label "Add 1 power counter"
                  :effect (effect (add-counter card :power 1)
                                  (update-all-character))}]
@@ -1716,8 +1716,8 @@
    {:subroutines [end-the-run]}
 
    "Ravana 1.0"
-   {:subroutines [{:label "Resolve a subroutine on another piece of rezzed bioroid Character"
-                   :choices {:req #(and (rezzed? %) (character? %) (has-subtype? % "Bioroid"))}
+   {:subroutines [{:label "Resolve a subroutine on another piece of revealed bioroid Character"
+                   :choices {:req #(and (revealed? %) (character? %) (has-subtype? % "Bioroid"))}
                    :msg (msg "resolve a subroutine on " (:title target))}]
     :challenger-abilities [(challenger-break [:click 1] 1)]}
 
@@ -1822,28 +1822,28 @@
    (constellation-character discard-resource)
 
    "Salvage"
-   {:advanceable :while-rezzed
+   {:advanceable :while-revealed
     :abilities [{:label "Gain subroutines"
                  :msg (msg "gain " (get-counters card :advancement) " subroutines")}]
     :subroutines [(tag-trace 2)]}
 
    "Sand Storm"
    {:subroutines [{:req (req (:run @state))
-                   :label "Move Sand Storm and the run to another server"
-                   :prompt "Choose another server and redirect the run to its outermost position"
-                   :choices (req (cancellable servers))
+                   :label "Move Sand Storm and the run to another locale"
+                   :prompt "Choose another locale and redirect the run to its outermost position"
+                   :choices (req (cancellable locales))
                    :msg (msg "move Sand Storm and the run.  The Challenger is now running on " target ". Sand Storm is discarded")
-                   :effect (req (let [dest (server->zone state target)]
+                   :effect (req (let [dest (locale->zone state target)]
                                   (swap! state update-in [:run]
                                          #(assoc % :position (count (get-in contestant (conj dest :characters)))
-                                                 :server (rest dest)))
+                                                 :locale (rest dest)))
                                   (discard state side card {:unpreventable true})))}]}
 
    "Sandman"
-   {:subroutines [{:label "Add an installed Challenger card to the grip"
-                   :req (req (not-empty (all-installed state :challenger)))
+   {:subroutines [{:label "Add an placed Challenger card to the grip"
+                   :req (req (not-empty (all-placed state :challenger)))
                    :effect (effect (show-wait-prompt :challenger "Contestant to select Sandman target")
-                                   (resolve-ability {:choices {:req #(and (installed? %)
+                                   (resolve-ability {:choices {:req #(and (placed? %)
                                                                            (= (:side %) "Challenger"))}
                                                       :msg (msg "to add " (:title target) " to the grip")
                                                       :effect (effect (clear-wait-prompt :challenger)
@@ -1856,7 +1856,7 @@
     :subroutines [discard-resource]
     :access {:async true
              :req (req (and (not= (first (:zone card)) :discard)
-                            (some #(is-type? % "Resource") (all-active-installed state :challenger))))
+                            (some #(is-type? % "Resource") (all-active-placed state :challenger))))
              :effect (effect (show-wait-prompt :contestant "Challenger to decide to break Sapper subroutine")
                              (continue-ability
                                :challenger {:optional
@@ -1879,10 +1879,10 @@
          recalc-event {:req (req (= (:zone target) (:zone card)))
                        :effect recalculate-strength}]
      {:effect recalculate-strength
-      :strength-bonus (req (count (:characters (card->server state card))))
+      :strength-bonus (req (count (:characters (card->locale state card))))
       :subroutines [end-the-run]
       :events {:card-moved recalc-event
-               :contestant-install recalc-event}})
+               :contestant-place recalc-event}})
 
    "Self-Adapting Code Wall"
    {:subroutines [end-the-run]
@@ -1899,18 +1899,18 @@
     :strength-bonus advance-counters}
 
    "Sherlock 1.0"
-   {:subroutines [{:label "Trace 4 - Add an installed resource to the top of the Challenger's Stack"
+   {:subroutines [{:label "Trace 4 - Add an placed resource to the top of the Challenger's Stack"
                    :trace {:base 4
-                           :successful {:choices {:req #(and (installed? %)
+                           :successful {:choices {:req #(and (placed? %)
                                                              (is-type? % "Resource"))}
                                         :msg (msg "add " (:title target) " to the top of the Challenger's Stack")
                                         :effect (effect (move :challenger target :deck {:front true}))}}}]
     :challenger-abilities [(challenger-break [:click 1] 1)]}
 
    "Sherlock 2.0"
-   {:subroutines [{:label "Trace 4 - Add an installed resource to the bottom of the Challenger's Stack"
+   {:subroutines [{:label "Trace 4 - Add an placed resource to the bottom of the Challenger's Stack"
                    :trace {:base 4
-                           :successful {:choices {:req #(and (installed? %)
+                           :successful {:choices {:req #(and (placed? %)
                                                              (is-type? % "Resource"))}
                                         :msg (msg "add " (:title target) " to the bottom of the Challenger's Stack")
                                         :effect (effect (move :challenger target :deck))}}}
@@ -1981,7 +1981,7 @@
    {:subroutines [end-the-run]}
 
    "Surveyor"
-   (let [x (req (* 2 (count (:characters (card->server state card)))))
+   (let [x (req (* 2 (count (:characters (card->locale state card)))))
          recalculate-strength (req (update-character-strength state side (get-card state card)))
          recalc-event {:req (req (= (:zone target) (:zone card)))
                        :effect recalculate-strength}]
@@ -1994,14 +1994,14 @@
                      :trace {:base x
                              :successful end-the-run}}]
       :events {:card-moved recalc-event
-               :contestant-install recalc-event}})
+               :contestant-place recalc-event}})
 
    "Susanoo-no-Mikoto"
-   {:subroutines [{:req (req (not= (:server run) [:discard]))
+   {:subroutines [{:req (req (not= (:locale run) [:discard]))
                    :msg "make the Challenger continue the run on Archives"
                    :effect (req (swap! state update-in [:run]
-                                       #(assoc % :position (count (get-in contestant [:servers :archives :characters]))
-                                                 :server [:archives])))}]}
+                                       #(assoc % :position (count (get-in contestant [:locales :archives :characters]))
+                                                 :locale [:archives])))}]}
 
    "Swarm"
    {:effect take-bad-pub
@@ -2018,7 +2018,7 @@
                    :msg (msg "discard " (:title target))
                    :label "Discard an AI resource"
                    :effect (effect (discard target))
-                   :choices {:req #(and (installed? %)
+                   :choices {:req #(and (placed? %)
                                         (is-type? % "Resource")
                                         (has-subtype? % "AI"))}}]}
 
@@ -2068,7 +2068,7 @@
                   {:label "Discard a radicle"
                    :msg (msg "discard " (:title target))
                    :async true
-                   :choices {:req #(and (installed? %)
+                   :choices {:req #(and (placed? %)
                                         (is-type? % "Radicle"))}
                    :effect (effect (discard target {:reason :subroutine}))}]}
 
@@ -2077,8 +2077,8 @@
 
    "TMI"
    {:trace {:base 2
-            :msg "keep TMI rezzed"
-            :unsuccessful {:effect (effect (derez card))}}
+            :msg "keep TMI revealed"
+            :unsuccessful {:effect (effect (hide card))}}
     :subroutines [end-the-run]}
 
    "Tollbooth"
@@ -2090,12 +2090,12 @@
    "Tour Guide"
    {:abilities [{:label "Gain subroutines"
                  :msg (msg "gain " (count (filter #(is-type? % "Site")
-                                                  (all-active-installed state :contestant))) " subroutines")}]
+                                                  (all-active-placed state :contestant))) " subroutines")}]
     :subroutines [end-the-run]}
 
    "Tribunal"
-   {:subroutines [{:msg "force the Challenger to discard 1 installed card"
-                   :effect (effect (resolve-ability :challenger discard-installed card nil))}]}
+   {:subroutines [{:msg "force the Challenger to discard 1 placed card"
+                   :effect (effect (resolve-ability :challenger discard-placed card nil))}]}
 
    "Troll"
    {:implementation "Encounter effect is manual"
@@ -2118,7 +2118,7 @@
    "Turing"
    {:implementation "AI restriction not implemented"
     :subroutines [end-the-run]
-    :strength-bonus (req (if (is-remote? (second (:zone card))) 3 0))
+    :strength-bonus (req (if (is-party? (second (:zone card))) 3 0))
     :challenger-abilities [(challenger-pay [:click 3] 1)]}
 
    "Turnpike"
@@ -2128,7 +2128,7 @@
     :subroutines [(tag-trace 5)]}
 
    "Tyrant"
-   {:advanceable :while-rezzed
+   {:advanceable :while-revealed
     :abilities [{:label "Gain subroutines"
                  :msg (msg "gain " (get-counters card :advancement) " subroutines")}]
     :subroutines [end-the-run]}
@@ -2150,7 +2150,7 @@
     :subroutines [(do-psi {:label "Make the Challenger lose 2 [Credits]"
                            :msg "make the Challenger lose 2 [Credits]"
                            :effect (effect (lose-credits :challenger 2))})
-                  {:msg "resolve a subroutine on a piece of rezzed psi Character"}]}
+                  {:msg "resolve a subroutine on a piece of revealed psi Character"}]}
 
    "Uroboros"
    {:subroutines [(trace-ability 4 {:label "Prevent the Challenger from making another run"
@@ -2200,7 +2200,7 @@
    "Waiver"
    {:subroutines [(trace-ability 5 {:label "Reveal the Challenger's Grip and discard cards"
                                     :msg (msg "reveal all cards in the Challenger's Grip: " (join ", " (map :title (:hand challenger)))
-                                              ". Cards with a play/install cost less than or equal to " (- target (second targets))
+                                              ". Cards with a play/place cost less than or equal to " (- target (second targets))
                                               " will be discarded")
                                     :effect (req (let [delta (- target (second targets))]
                                                    (doseq [c (:hand challenger)]
@@ -2248,9 +2248,9 @@
 
    "Whirlpool"
    {:subroutines [{:msg "prevent the Challenger from jacking out"
-                   :effect (req (when (and (is-remote? (second (:zone card)))
-                                           (> (count (concat (:characters (card->server state card))
-                                                             (:content (card->server state card)))) 1))
+                   :effect (req (when (and (is-party? (second (:zone card)))
+                                           (> (count (concat (:characters (card->locale state card))
+                                                             (:content (card->locale state card)))) 1))
                                   (prevent-jack-out state side))
                                 (when current-character
                                   (no-action state side nil)
@@ -2258,7 +2258,7 @@
                                 (discard state side card))}]}
 
    "Woodcutter"
-   {:advanceable :while-rezzed
+   {:advanceable :while-revealed
     :abilities [{:label "Gain subroutines"
                  :msg (msg "gain " (get-counters card :advancement) " subroutines")}]
     :subroutines [(do-net-damage 1)]}
@@ -2276,13 +2276,13 @@
 
    "Wraparound"
    {:subroutines [end-the-run]
-    :strength-bonus (req (if (some #(has-subtype? % "Fracter") (all-active-installed state :challenger))
+    :strength-bonus (req (if (some #(has-subtype? % "Fracter") (all-active-placed state :challenger))
                            0 7))
     :events (let [wr {:silent (req true)
                       :req (req (and (not= (:cid target) (:cid card))
                                      (has-subtype? target "Fracter")))
                       :effect (effect (update-character-strength card))}]
-              {:challenger-install wr :discard wr :card-moved wr})}
+              {:challenger-place wr :discard wr :card-moved wr})}
 
    "Yagura"
    {:subroutines [(do-net-damage 1)
