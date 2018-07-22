@@ -297,8 +297,8 @@
 
 
 ;;; Discarding
-(defn discard-muthereff-bonus
-  "Applies a cost increase of n to discarding a muthereff with the click action. (SYNC.)"
+(defn discard-radicle-bonus
+  "Applies a cost increase of n to discarding a radicle with the click action. (SYNC.)"
   [state side n]
   (swap! state update-in [:contestant :discard-cost-bonus] (fnil #(+ % n) 0)))
 
@@ -343,7 +343,7 @@
 
        (and (= side :contestant)
             (undiscardable-while-muthereffs? card)
-            (> (count (filter #(is-type? % "Muthereff") (all-placed state :challenger))) 1))
+            (> (count (filter #(is-type? % "Radicle") (all-placed state :challenger))) 1))
        (do (enforce-msg state card "cannot be discarded while there are other muthereffs placed")
            (effect-completed state side eid))
 

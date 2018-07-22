@@ -560,7 +560,7 @@
 
     (core/gain state :challenger :credit 2)
     (play-from-hand state :challenger "Hades Shard")
-    (card-ability state :challenger (get-in @state [:challenger :rig :muthereff 0]) 0)
+    (card-ability state :challenger (get-in @state [:challenger :rig :radicle 0]) 0)
     (prompt-choice :challenger "Steal")
     (prompt-choice :contestant "Yes")
     (prompt-select :contestant (find-card "Enhanced Login Protocol"
@@ -589,7 +589,7 @@
 
     (core/gain state :challenger :credit 2)
     (play-from-hand state :challenger "Hades Shard")
-    (card-ability state :challenger (get-in @state [:challenger :rig :muthereff 0]) 0)
+    (card-ability state :challenger (get-in @state [:challenger :rig :radicle 0]) 0)
     (prompt-choice :challenger "Steal")
     (prompt-choice :contestant "Yes")
     (prompt-select :contestant (find-card "Enhanced Login Protocol"
@@ -1370,7 +1370,7 @@
 
     (core/gain state :challenger :credit 3)
     (play-from-hand state :challenger "Hades Shard")
-    (card-ability state :challenger (get-in @state [:challenger :rig :muthereff 0]) 0)
+    (card-ability state :challenger (get-in @state [:challenger :rig :radicle 0]) 0)
     (prompt-choice :challenger "Steal")
     (prompt-choice :contestant "Yes")
     (prompt-select :contestant (find-card "Servcharacter Outage" (:hand (get-contestant))))
@@ -1397,7 +1397,7 @@
 
     (core/gain state :challenger :credit 3)
     (play-from-hand state :challenger "Hades Shard")
-    (card-ability state :challenger (get-in @state [:challenger :rig :muthereff 0]) 0)
+    (card-ability state :challenger (get-in @state [:challenger :rig :radicle 0]) 0)
     (prompt-choice :challenger "Steal")
     (prompt-choice :contestant "Yes")
     (prompt-select :contestant (find-card "Servcharacter Outage" (:hand (get-contestant))))
@@ -1503,7 +1503,7 @@
     (take-credits state :contestant)
     (play-from-hand state :challenger "Cache")
     (play-from-hand state :challenger "Utopia Shard")
-    (let [utopia (get-in @state [:challenger :rig :muthereff 0])]
+    (let [utopia (get-in @state [:challenger :rig :radicle 0])]
       (card-ability state :challenger utopia 0))
     (take-credits state :challenger)
     (prompt-choice :contestant "Yes")

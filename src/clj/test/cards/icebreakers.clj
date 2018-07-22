@@ -256,7 +256,7 @@
     (play-from-hand state :challenger "Faust")
     (play-from-hand state :challenger "Fall Guy")
     (play-from-hand state :challenger "Sacrificial Construct")
-    (is (= 2 (count (get-in @state [:challenger :rig :muthereff]))) "Muthereffs placed")
+    (is (= 2 (count (get-in @state [:challenger :rig :radicle]))) "Muthereffs placed")
     (let [faust (get-in @state [:challenger :rig :resource 0])]
       (card-ability state :challenger faust 1)
       (prompt-card :challenger (find-card "Astrolabe" (:hand (get-challenger))))
@@ -266,7 +266,7 @@
       (is (empty? (:prompt (get-challenger))) "No discard-prevention prompt for resource")
       (card-ability state :challenger faust 1)
       (prompt-card :challenger (find-card "Armitage Codebusting" (:hand (get-challenger))))
-      (is (empty? (:prompt (get-challenger))) "No discard-prevention prompt for muthereff"))))
+      (is (empty? (:prompt (get-challenger))) "No discard-prevention prompt for radicle"))))
 
 (deftest femme-counter
   ;; Femme Fatale counter test

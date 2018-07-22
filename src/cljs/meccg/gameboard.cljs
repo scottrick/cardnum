@@ -1314,7 +1314,7 @@
     (sab/html
       (let [is-me (= (:side @game-state) :contestant)]
         [:div.contestant-rig {:class (if is-me "me" "opponent")}
-         (for [zone [:resource :hazard :muthereff :facedown]]
+         (for [zone [:resource :hazard :radicle :facedown]]
            [:div
             (for [c (zone (:rig player))]
               [:div.card-wrapper {:class (if (and (:tapped c) (not (:inverted c)))
@@ -1332,7 +1332,7 @@
     (sab/html
       (let [is-me (= (:side @game-state) :challenger)]
         [:div.challenger-rig {:class (if is-me "me" "opponent")}
-         (for [zone [:resource :hazard :muthereff :facedown]]
+         (for [zone [:resource :hazard :radicle :facedown]]
            [:div
             (for [c (zone (:rig player))]
               [:div.card-wrapper {:class (when (playable? c) "playable")}

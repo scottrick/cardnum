@@ -15,11 +15,11 @@
                                           (is-type? % "Hazard"))}
                      :effect (effect (discard target {:cause :subroutine}))})
 
-(def discard-muthereff-sub {:prompt "Select a muthereff to discard"
-                         :label "Discard a muthereff"
+(def discard-radicle-sub {:prompt "Select a radicle to discard"
+                         :label "Discard a radicle"
                          :msg (msg "discard " (:title target))
                          :choices {:req #(and (placed? %)
-                                              (is-type? % "Muthereff"))}
+                                              (is-type? % "Radicle"))}
                          :effect (effect (discard target {:cause :subroutine}))})
 
 (def discard-placed {:prompt "Select an placed card to discard"

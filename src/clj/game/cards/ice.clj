@@ -1,12 +1,12 @@
 (in-ns 'game.core)
 
-(declare discard-resource discard-hazard discard-muthereff-sub discard-placed)
+(declare discard-resource discard-hazard discard-radicle-sub discard-placed)
 
 ;;;; Helper functions specific for Character
 
 ;;; Challenger abilites for breaking subs
 (defn challenger-break
-  "Ability to break a subroutine by spending a muthereff (Bioroids, Negotiator, Turing etc)"
+  "Ability to break a subroutine by spending a radicle (Bioroids, Negotiator, Turing etc)"
   [cost subs]
   (let [cost-str (build-cost-str [cost])
         subs-str (quantify subs "subroutine")]

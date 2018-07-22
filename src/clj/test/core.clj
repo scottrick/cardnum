@@ -96,10 +96,10 @@
   ([state pos]
    (get-in @state [:challenger :rig :hazard pos])))
 
-(defn get-muthereff
-  "Get non-hosted muthereff by position."
+(defn get-radicle
+  "Get non-hosted radicle by position."
   [state pos]
-  (get-in @state [:challenger :rig :muthereff pos]))
+  (get-in @state [:challenger :rig :radicle pos]))
 
 (defn get-scored
   "Get a card from the score area. Can find by name or index.
@@ -212,10 +212,10 @@
   [state side title]
   (core/discard state side (find-card title (get-in @state [side :hand]))))
 
-(defn discard-muthereff
+(defn discard-radicle
   "Discard specified card from rig of the challenger"
   [state title]
-  (core/discard state :challenger (find-card title (get-in @state [:challenger :rig :muthereff]))))
+  (core/discard state :challenger (find-card title (get-in @state [:challenger :rig :radicle]))))
 
 (defn starting-hand
   "Moves all cards in the player's hand to their draw pile, then moves the specified card names

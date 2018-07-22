@@ -803,12 +803,12 @@
     (play-from-hand state :challenger "Faerie")
     (let [pag (get-content state :party1 0)
           fae (get-in @state [:challenger :rig :resource 0])
-          tw (get-in @state [:challenger :rig :muthereff 0])]
+          tw (get-in @state [:challenger :rig :radicle 0])]
       (run-on state "Locale 1")
       (core/reveal state :contestant pag)
       (is (:cannot-jack-out (get-in @state [:run])) "Jack out disabled for Challenger") ; UI button greyed out
       (core/discard state :challenger tw)
-      (is (:cannot-jack-out (get-in @state [:run])) "Muthereff discard didn't disable jack out prevention")
+      (is (:cannot-jack-out (get-in @state [:run])) "Radicle discard didn't disable jack out prevention")
       (core/discard state :challenger fae)
       (is (nil? (:cannot-jack-out (get-in @state [:run]))) "Jack out enabled by resource discard")
       (run-on state "Locale 1")

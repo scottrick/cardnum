@@ -91,7 +91,7 @@
    "ability" core/play-ability
    "challenger-ability" core/play-challenger-ability
    "subroutine" core/play-subroutine
-   "discard-muthereff" core/discard-muthereff
+   "discard-radicle" core/discard-radicle
    "dynamic-ability" core/play-dynamic-ability
    "toast" core/toast
    "view-deck" core/view-deck
@@ -145,7 +145,7 @@
       (update-in [:fw-dc-sb] #(private-card-vector state :challenger %))
       (update-in [:location] #(private-card-vector state :challenger %))
       (update-in [:rig :facedown] #(private-card-vector state :challenger %))
-      (update-in [:rig :muthereff] #(private-card-vector state :challenger %))))
+      (update-in [:rig :radicle] #(private-card-vector state :challenger %))))
 
 (defn- make-private-contestant [state]
   (let [zones (concat [[:hand]] [[:discard]] [[:deck]] [[:sideboard]] [[:fw-dc-sb]] [[:location]]

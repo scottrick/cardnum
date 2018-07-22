@@ -271,8 +271,8 @@
 (defn hazard? [card]
   (is-type? card "Hazard"))
 
-(defn muthereff? [card]
-  (is-type? card "Muthereff"))
+(defn radicle? [card]
+  (is-type? card "Radicle"))
 
 (defn revealed? [card]
   (:revealed card))
