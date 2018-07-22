@@ -256,7 +256,7 @@
         (send-command "ability" {:card card :ability 0})
         (send-command (first actions) {:card card})))))
 
-(defn handle-card-click [{:keys [type zone root] :as card} owner]
+(defn handle-card-click [{:keys [type Secondary zone root] :as card} owner]
   (let [side (:side @game-state)]
     (when (not-spectator?)
       (cond
@@ -270,29 +270,38 @@
         ;; Challenger side
         (= side :challenger)
         (case (first zone)
-          "hand" (if (:host card)
-                   (when (:placed card)
-                     (handle-abilities card owner))
+          "hand" (case type
+                   ("Character") (if root
+                                   (send-command "play" {:card card :locale root})
+                                   (-> (om/get-node owner "locales") js/$ .toggle))
+                   ("Region" "Site") (if (< (count (get-in @game-state [:challenger :locales])) 4)
+                                       (send-command "play" {:card card :locale "New party"})
+                                       (-> (om/get-node owner "locales") js/$ .toggle))
+                   ("Resource") (if (some (partial = Secondary) ["Permanent-event" "Long-event"
+                                                                 "Permanent-event/Short-event"
+                                                                 "Short-event" "Faction"])
+                                  (send-command "play" {:card card})
+                                  (send-command "equip" {:card card}))
                    (send-command "play" {:card card}))
-          ("rig" "current" "onhost" "play-area") (handle-abilities card owner)
-          ("locales") (when (and (= type "Character") (:revealed card))
-                        ;; Character that should show list of abilities that send messages to fire sub
-                        (-> (om/get-node owner "challenger-abilities") js/$ .toggle))
+          ("rig" "current" "onhost" "play-area" "locales") (handle-abilities card owner)
           nil)
         ;; Contestant side
         (= side :contestant)
         (case (first zone)
           "hand" (case type
-                   ("Region" "Character") (if root
-                                            (send-command "play" {:card card :locale root})
-                                            (-> (om/get-node owner "locales") js/$ .toggle))
-                   ("Agenda" "Site") (if (< (count (get-in @game-state [:contestant :locales])) 4)
+                   ("Character") (if root
+                                   (send-command "play" {:card card :locale root})
+                                   (-> (om/get-node owner "locales") js/$ .toggle))
+                   ("Region" "Site") (if (< (count (get-in @game-state [:contestant :locales])) 4)
                                        (send-command "play" {:card card :locale "New party"})
                                        (-> (om/get-node owner "locales") js/$ .toggle))
+                   ("Resource") (if (some (partial = Secondary) ["Permanent-event" "Long-event"
+                                                                 "Permanent-event/Short-event"
+                                                                 "Short-event" "Faction"])
+                                  (send-command "play" {:card card})
+                                  (send-command "equip" {:card card}))
                    (send-command "play" {:card card}))
-          ("locales" "scored" "current" "onhost") (handle-abilities card owner)
-          "rig" (when (:contestant-abilities card)
-                  (-> (om/get-node owner "contestant-abilities") js/$ .toggle))
+          ("rig" "locales" "scored" "play-area" "current" "onhost") (handle-abilities card owner)
           nil)))))
 
 (defn in-play? [card]

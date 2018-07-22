@@ -1178,7 +1178,7 @@
                        {:prompt "Select a card to reveal, ignoring the reveal cost"
                         :choices {:req #(not (:revealed %))}
                         :effect (req (reveal state side target {:ignore-cost :reveal-cost})
-                                     (system-msg state side (str "revealzes " (:title target) " at no cost")))}
+                                     (system-msg state side (str "reveals " (:title target) " at no cost")))}
                       card nil))
     :abilities [{:msg "draw 1 card"
                  :effect (effect (discard card {:cause :ability-cost}) (draw))}]}

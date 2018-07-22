@@ -1,9 +1,8 @@
 (in-ns 'game.core)
 
 ;; These functions are called by main.clj in response to commands sent by users.
-
-(declare available-mu card-str can-reveal? can-advance? contestant-place effect-as-handler enforce-msg gain-agenda-point get-party-names
-         get-run-characters jack-out move name-zone play-instant purge resolve-select run has-subtype?
+(declare available-mu card-str can-reveal? can-advance? contestant-place effect-as-handler enforce-msg gain-agenda-point get-party-names get-party-zones-challenger
+         get-run-characters host can-host? jack-out move name-zone play-instant purge resolve-select run has-subtype? get-party-zones locale->zone
          challenger-place discard update-breaker-strength update-character-in-locale update-run-character win can-run?
          can-run-locale? can-score? say play-sfx base-mod-size free-mu)
 
@@ -11,15 +10,15 @@
 (defn play
   "Called when the player clicks a card from hand."
   [state side {:keys [card locale]}]
-  (when-let [card (get-card state card)]
+  (let [card (get-card state card)]
     (case (:type card)
-      ("Event" "Operation") (play-instant state side card {:extra-cost [:click 1]})
-      ("Hazard" "Radicle" "Resource") (challenger-place state side (make-eid state) card {:extra-cost [:click 1]})
-      ("Character" "Region" "Site" "Agenda") (contestant-place state side card locale {:extra-cost [:click 1] :action :contestant-click-place}))
+      ("Event" "Operation") (play-instant state side card {:extra-cost [:click 0]})
+      ("Hazard" "Radicle" "Resource") (challenger-place state side (make-eid state) card {:extra-cost [:click 0]})
+      ("Character" "Region" "Site") (contestant-place state side card locale {:extra-cost [:click 0] :action :contestant-click-place}))
     (trigger-event state side :play card)))
 
 (defn shuffle-deck
-  "Shuffle R&D/Stack."
+  "Shuffle Play Deck."
   [state side {:keys [close] :as args}]
   (swap! state update-in [side :deck] shuffle)
   (if close
@@ -33,7 +32,7 @@
   [state side args]
   (when (and (not (get-in @state [side :register :cannot-draw]))
              (pay state side nil :click 1 {:action :contestant-click-draw}))
-    (system-msg state side "spends [Click] to draw a card")
+    (system-msg state side "draws a card")
     (trigger-event state side (if (= side :contestant) :contestant-click-draw :challenger-click-draw) (->> @state side :deck (take 1)))
     (draw state side)
     (swap! state update-in [:stats side :click :draw] (fnil inc 0))
@@ -74,20 +73,29 @@
 (defn change
   "Increase/decrease a player's property (clicks, credits, MU, etc.) by delta."
   [state side {:keys [key delta]}]
-  (cond
-    ;; Memory needs special treatment and message
-    (= :memory key)
-    (change-mu state side delta)
+  (let [kw (to-keyword key)
+        kt (to-keyword :total_mp)
+        ks (to-keyword :stage_pt)
+        kg (to-keyword :free_gi)
+        kh (to-keyword :hand-size-modification)]
+    (if (or (= kw kt)
+            (= kw ks)
+            (= kw kg)
+            (= kw kh))
+      (if (neg? delta)
+        (deduct state side [kw (- delta)])
+        (swap! state update-in [side kw] (partial + delta)))
+      (if (neg? delta)
+        (do       (deduct state side [kw (- delta)])
+                  (deduct state side [kt (- delta)]))
+        (do         (swap! state update-in [side kw] (partial + delta))
+                    (swap! state update-in [side kt] (partial + delta)))
+        )
+      )))
+;;    (system-msg state side
+  ;;              (str "sets " (.replace key "-" " ") " to " (get-in @state [side kw])
+    ;;                 " (" (if (pos? delta) (str "+" delta) delta) ")"))))
 
-    ;; Hand size needs special treatment as it expects a map
-    (= :hand-size key)
-    (change-map state side key delta)
-
-    :else
-    (do (if (neg? delta)
-          (deduct state side [key (- delta)])
-          (swap! state update-in [side key] (partial + delta)))
-        (change-msg state side key (get-in @state [side key]) delta))))
 
 (defn move-card
   "Called when the user drags a card from one zone to another."
@@ -111,9 +119,9 @@
                            (revealed? c)
                            (:seen c)
                            (= last-zone :deck)))
-                (:title c)
+                "a card";;(:title c)
                 "a card")
-        s (if (#{"HQ" "R&D" "Archives"} locale) :contestant :challenger)]
+        s (if (#{"HQ" "R&D" "Archives" "Sites"} locale) :contestant :challenger)]
     ;; allow moving from play-area always, otherwise only when same side, and to valid zone
     (when (and (not= src locale)
                (same-side? s (:side card))
@@ -121,15 +129,18 @@
                    (same-side? side (:side card))))
       (case locale
         ("Heap" "Archives")
-        (let [action-str (if (= (first (:zone c)) :hand) "discards " "discards ")]
-          (discard state s c {:unpreventable true})
-          (system-msg state side (str action-str label from-str)))
+        (do (let [action-str (if (= (first (:zone c)) :hand) "discards " "discards ")]
+              (discard state s c {:unpreventable true})
+              (system-msg state side (str action-str label from-str))))
         ("Grip" "HQ")
         (do (move state s (dissoc c :seen :revealed) :hand {:force true})
-            (system-msg state side (str "moves " label from-str " to " locale)))
+            (system-msg state side (str "moves " label from-str " to their Hand")))
         ("Stack" "R&D")
         (do (move state s (dissoc c :seen :revealed) :deck {:front true :force true})
-            (system-msg state side (str "moves " label from-str " to the top of " locale)))
+            (system-msg state side (str "moves " label from-str " to the top of their Play Deck")))
+        ("Sites2" "Sites")
+        (do (move state s (dissoc c :seen :revealed) :location {:front true :force true})
+            (system-msg state side (str "moves " label from-str " to the their Location Deck")))
         nil))))
 
 (defn concede [state side args]
@@ -192,15 +203,14 @@
   if the max number of cards has been selected."
   [state side {:keys [card] :as args}]
   (let [card (get-card state card)
-        r (get-in @state [side :selected 0 :req])
-        cid (get-in @state [side :selected 0 :not-self])]
-    (when (and (not= (:cid card) cid) (or (not r) (r card)))
+        r (get-in @state [side :selected 0 :req])]
+    (when (or (not r) (r card))
       (let [c (update-in card [:selected] not)]
         (update! state side c)
         (if (:selected c)
           (swap! state update-in [side :selected 0 :cards] #(conj % c))
           (swap! state update-in [side :selected 0 :cards]
-                 (fn [coll] (remove-once #(= (:cid %) (:cid card)) coll))))
+                 (fn [coll] (remove-once #(not= (:cid %) (:cid card)) coll))))
         (let [selected (get-in @state [side :selected 0])]
           (when (= (count (:cards selected)) (or (:max selected) 1))
             (resolve-select state side)))))))
@@ -352,23 +362,9 @@
      (if (or force (can-reveal? state side card))
        (do
          (trigger-event state side :pre-reveal card)
-         (if (or (#{"Site" "Character" "Region"} (:type card))
+         (if (or (#{"Site" "Character" "Region" "Resource" "Hazard"} (:type card))
                    (:place-revealed (card-def card)))
            (do (trigger-event state side :pre-reveal-cost card)
-               (if (and altcost (can-pay? state side nil altcost)(not ignore-cost))
-                 (let [curr-bonus (get-reveal-cost-bonus state side)]
-                   (prompt! state side card (str "Pay the alternative Reveal cost?") ["Yes" "No"]
-                            {:async true
-                             :effect (req (if (and (= target "Yes")
-                                                   (can-pay? state side (:title card) altcost))
-                                            (do (pay state side card altcost)
-                                              (reveal state side eid (-> card (dissoc :alternative-cost))
-                                                   (merge args {:ignore-cost true
-                                                                :no-get-card true
-                                                                :paid-alt true})))
-                                            (do (reveal state side eid (-> card (dissoc :alternative-cost))
-                                                     (merge args {:no-get-card true
-                                                                  :cached-bonus curr-bonus})))))}))
                  (let [cdef (card-def card)
                        cost (reveal-cost state side card)
                        costs (concat (when-not ignore-cost [:credit cost])
@@ -379,31 +375,19 @@
                      ;; Deregister the hidden-events before revealing card
                      (when (:hidden-events cdef)
                        (unregister-events state side card))
-                     (if-not disabled
-                       (card-init state side (assoc card :revealed :this-turn))
-                       (update! state side (assoc card :revealed :this-turn)))
+                     (if (not disabled)
+                       (card-init state side (assoc card :revealed true :facedown false))
+                       (update! state side (assoc card :revealed true :facedown false)))
                      (doseq [h (:hosted card)]
                        (update! state side (-> h
                                                (update-in [:zone] #(map to-keyword %))
                                                (update-in [:host :zone] #(map to-keyword %)))))
-                     (system-msg state side (str (build-spend-msg cost-str "reveal" "revealzes")
-                                                 (:title card)
-                                                 (cond
-                                                   paid-alt
-                                                   " by paying its alternative cost"
-
-                                                   ignore-cost
-                                                   " at no cost")))
-                     (when (and (not no-warning) (:contestant-phase-12 @state))
-                       (toast state :contestant "You are not allowed to reveal cards between Start of Turn and Mandatory Draw.
-                        Please reveal prior to clicking Start Turn in the future." "warning"
-                              {:time-out 0 :close-button true}))
+                     (system-msg state side (str (build-spend-msg cost-str "reveal" "reveals")
+                                                 (:title card)))
                      (if (character? card)
-                       (do (update-character-strength state side card)
-                           (play-sfx state side "reveal-character"))
+                       (play-sfx state side "reveal-character")
                        (play-sfx state side "reveal-other"))
-                     (swap! state update-in [:stats :contestant :cards :revealed] (fnil inc 0))
-                     (trigger-event-sync state side eid :reveal card)))))
+                     (trigger-event-sync state side eid :reveal card))))
            (effect-completed state side eid))
          (swap! state update-in [:bonus] dissoc :cost))
        (effect-completed state side eid)))))
@@ -420,6 +404,123 @@
       (when-let [dre (:hidden-events cdef)]
         (register-events state side dre card)))
     (trigger-event state side :hide card side)))
+
+(defn equip
+  [state side card]
+  (resolve-ability state side
+                   {:prompt  (str "Choose a character to carry " (:title card))
+                    :choices {:req #(or (character? %) (revealed? %))}
+                    :effect (effect (host target card))
+                    } card nil))
+
+(defn transfer
+  [state side card]
+  (resolve-ability state side
+                   {:prompt (msg "Transfer " (:title card) " to a different character")
+                    :choices {:req #(and (= (last (:zone %)) :characters)
+                                         (character? %)
+                                         (can-host? %))}
+                    :msg (msg "place it on " (card-str state target))
+                    :effect (effect (host target card))} card nil))
+
+(defn move-to-sb
+  [state side card]
+  (resolve-ability state side
+                   {:prompt "Select a site to move to your sideboard"
+                    :effect (req (let [c (deactivate state side target)]
+                                   (move state side c :sideboard)))
+                    :choices {:req (fn [t] (card-is? t :side side))}}
+                   nil nil)
+  )
+
+(defn organize
+  ([state side card locale] (organize state side (make-eid state) card locale nil))
+  ([state side card locale args] (organize state side (make-eid state) card locale args))
+  ([state side eid card locale {:keys [extra-cost no-place-cost place-state host-card action] :as args}]
+   (cond
+     ;; No locale selected; show prompt to select an place site (Interns, Lateral Growth, etc.)
+     (not locale)
+     (continue-ability state side
+                       {:prompt (str "Choose a character for " (:title card) " to follow or not." )
+                        :choices (concat ["New party"] (zones->sorted-names
+                                   (if (= (:side card) "Contestant") (get-party-zones @state) (get-party-zones-challenger @state))))
+                        :delayed-completion true
+                        :effect (effect (organize eid card target args))}
+                       card nil)
+     ;; A card was selected as the locale; recurse, with the :host-card parameter set.
+     (and (map? locale) (not host-card))
+     (organize state side eid card locale (assoc args :host-card locale))
+     ;; A locale was selected
+     :else
+     (let [cdef (card-def card)
+           slot (if host-card
+                  (:zone host-card)
+                  (conj (locale->zone state locale) (if (character? card) :characters :content)))
+           dest-zone (get-in @state (cons :contestant slot))]
+       ;; trigger :pre-contestant-place before computing place costs so that
+       ;; event handlers may adjust the cost.
+       (trigger-event state side :pre-contestant-place card {:locale locale :dest-zone dest-zone})
+       (let [character-cost (if (and (character? card)
+                                     (not no-place-cost)
+                                     (not (ignore-place-cost? state side)))
+                              (count dest-zone) 0)
+             all-cost (concat extra-cost [:credit character-cost])
+             end-cost (if no-place-cost 0 (place-cost state side card all-cost))
+             place-state (or place-state (:place-state cdef))]
+           (if-let [cost-str (pay state side card end-cost action)]
+             (do (let [c (-> card
+                             (assoc :advanceable (:advanceable cdef) :new true)
+                             (dissoc :seen :disabled))]
+                   (when (= locale "New party")
+                     (trigger-event state side :locale-created card))
+                   (let [moved-card (move state side c slot)]
+                     (trigger-event state side :contestant-place moved-card)))))
+         (clear-place-cost-bonus state side))))))
+
+(defn rotate
+  "Rotate a card."
+  [state side card]
+  (let [card (get-card state card)]
+    (system-msg state side (str "rotates " (:title card)))
+    (update! state side (assoc card :rotated true))))
+
+(defn tap
+  "Tap a card."
+  [state side card]
+  (let [card (get-card state card)]
+    (system-msg state side (str "taps " (:title card)))
+    (update! state side (assoc card :tapped true :wounded false))))
+
+(defn untap
+  "Untap a card."
+  [state side card]
+  (let [card (get-card state card)]
+    (system-msg state side (str "untaps " (:title card)))
+    (update! state side (dissoc card :tapped :wounded :inverted :rotated))))
+
+(defn wound
+  "Wounds character."
+  [state side card]
+  (let [card (get-card state card)]
+    (system-msg state side (str "wounds " (:title card)))
+    (update! state side (assoc card :wounded true))))
+
+(defn invert
+  "Inverts a resource."
+  [state side card]
+  (let [card (get-card state card)]
+    (system-msg state side (str "inverts " (:title card)))
+    (update! state side (assoc card :inverted true))))
+
+(defn fix-tap
+  [state side card]
+  (if (:tapped card)
+    (untap state side card)
+    (tap state side card)))
+
+(defn regionize
+  [state side card]
+  (system-msg state side (str (:RPath card) " " (:title card))))
 
 (defn advance
   "Advance a contestant card that can be advanced.
@@ -440,39 +541,36 @@
 
 (defn score
   "Score an agenda. It trusts the card data passed to it."
-  ([state side args] (score state side (make-eid state) args))
-  ([state side eid args]
-   (let [card (or (:card args) args)]
-     (when (and (can-score? state side card)
-                (empty? (filter #(= (:cid card) (:cid %)) (get-in @state [:contestant :register :cannot-score])))
-                (>= (get-counters card :advancement) (or (:current-cost card)
-                                                         (:advancementcost card))))
+  [state side args]
+  (let [card (or (:card args) args)]
+    (when (and (can-score? state side card)
+               (empty? (filter #(= (:cid card) (:cid %)) (get-in @state [:contestant :register :cannot-score])))
+               (>= (:advance-counter card 0) (or (:current-cost card) (:advancementcost card))))
 
-       ;; do not card-init necessarily. if card-def has :effect, wrap a fake event
-       (let [moved-card (move state :contestant card :scored)
-             c (card-init state :contestant moved-card {:resolve-effect false
-                                                  :init-data true})
-             points (get-agenda-points state :contestant c)]
-         (trigger-event-simult
-           state :contestant eid :agenda-scored
-           {:first-ability {:effect (req (when-let [current (first (get-in @state [:challenger :current]))]
-                                           ;; TODO: Make this use remove-old-current
-                                           (system-say state side (str (:title current) " is discarded."))
-                                           ; This is to handle Employee Strike with damage IDs #2688
-                                           (when (:disable-id (card-def current))
-                                             (swap! state assoc-in [:contestant :disable-id] true))
-                                           (discard state side current)))}
-            :card-ability (card-as-handler c)
-            :after-active-player {:effect (req (let [c (get-card state c)
-                                                     points (or (get-agenda-points state :contestant c) points)]
-                                                 (set-prop state :contestant (get-card state moved-card) :advance-counter 0)
-                                                 (system-msg state :contestant (str "scores " (:title c) " and gains "
-                                                                              (quantify points "agenda point")))
-                                                 (swap! state update-in [:contestant :register :scored-agenda] #(+ (or % 0) points))
-                                                 (swap! state dissoc-in [:contestant :disable-id])
-                                                 (gain-agenda-point state :contestant points)
-                                                 (play-sfx state side "agenda-score")))}}
-           c))))))
+      ;; do not card-init necessarily. if card-def has :effect, wrap a fake event
+      (let [moved-card (move state :contestant card :scored)
+            c (card-init state :contestant moved-card {:resolve-effect false
+                                                 :init-data true})
+            points (get-agenda-points state :contestant c)]
+        (trigger-event-simult
+          state :contestant (make-eid state) :agenda-scored
+          {:first-ability {:effect (req (when-let [current (first (get-in @state [:challenger :current]))]
+                                          (say state side {:user "__system__" :text (str (:title current) " is discarded.")})
+                                          ; This is to handle Employee Strike with damage IDs #2688
+                                          (when (:disable-id (card-def current))
+                                            (swap! state assoc-in [:contestant :disable-id] true))
+                                          (discard state side current)))}
+           :card-ability (card-as-handler c)
+           :after-active-player {:effect (req (let [c (get-card state c)
+                                                    points (or (get-agenda-points state :contestant c) points)]
+                                                (set-prop state :contestant (get-card state moved-card) :advance-counter 0)
+                                                (system-msg state :contestant (str "scores " (:title c) " and gains "
+                                                                             (quantify points "agenda point")))
+                                                (swap! state update-in [:contestant :register :scored-agenda] #(+ (or % 0) points))
+                                                (swap! state dissoc-in [:contestant :disable-id])
+                                                (gain-agenda-point state :contestant points)
+                                                (play-sfx state side "agenda-score")))}}
+          c)))))
 
 (defn no-action
   "The contestant indicates they have no more actions for the encounter."
@@ -492,17 +590,8 @@
 (defn click-run
   "Click to start a run."
   [state side {:keys [locale] :as args}]
-  (let [cost-bonus (get-in @state [:bonus :run-cost])
-        click-cost-bonus (get-in @state [:bonus :click-run-cost])]
-    (when (and (can-run? state side)
-               (can-run-locale? state locale)
-               (can-pay? state :challenger "a run" :click 1 cost-bonus click-cost-bonus))
-      (swap! state assoc-in [:challenger :register :made-click-run] true)
-      (run state side locale)
-      (when-let [cost-str (pay state :challenger nil :click 1 cost-bonus click-cost-bonus)]
-        (system-msg state :challenger
-                    (str (build-spend-msg cost-str "make a run on") locale))
-        (play-sfx state side "click-run")))))
+  (swap! state assoc-in [side :register :made-click-run] true)
+  (run state side locale))
 
 (defn remove-tag
   "Click to remove a tag."
@@ -516,26 +605,25 @@
 (defn continue
   "The challenger decides to approach the next character, or the locale itself."
   [state side args]
-  (when (get-in @state [:run :no-action])
-    (let [run-character (get-run-characters state)
-          pos (get-in @state [:run :position])
-          cur-character (when (and pos (pos? pos) (<= pos (count run-character)))
-                    (get-card state (nth run-character (dec pos))))
-          next-character (when (and pos (< 1 pos) (<= (dec pos) (count run-character)))
-                     (get-card state (nth run-character (- pos 2))))]
-      (wait-for (trigger-event-sync state side :pass-character cur-character)
-                (do (update-character-in-locale
-                      state side (get-in @state (concat [:contestant :locales] (get-in @state [:run :locale]))))
-                    (swap! state update-in [:run :position] (fnil dec 1))
-                    (swap! state assoc-in [:run :no-action] false)
-                    (system-msg state side "continues the run")
-                    (when cur-character
-                      (update-character-strength state side cur-character))
-                    (when next-character
-                      (trigger-event-sync state side (make-eid state) :approach-character next-character))
-                    (doseq [p (filter #(has-subtype? % "Icebreaker") (all-active-placed state :challenger))]
-                      (update! state side (update-in (get-card state p) [:pump] dissoc :encounter))
-                      (update-breaker-strength state side p)))))))
+  (let [run-character (get-run-characters state side )
+        pos (get-in @state [:run :position])
+        cur-character (when (and pos (pos? pos) (<= pos (count run-character)))
+                        (get-card state (nth run-character (dec pos))))
+        next-character (when (and pos (< 1 pos) (<= (dec pos) (count run-character)))
+                         (get-card state (nth run-character (- pos 2))))]
+                    (do ;;(update-character-in-locale
+                      ;;state side (get-in @state (concat [:contestant :locales] (get-in @state [:run :locale]))))
+                      (if (= pos 1)
+                        (swap! state assoc-in [:run :position] (get-in @state [:run :rerun]))
+                        (swap! state update-in [:run :position] dec)
+                        )
+                      ;;(swap! state assoc-in [:run :no-action] false)
+                      ;;(system-msg state side (str "a4 character" (count (get-run-characters state))))
+                      ;;(when cur-character
+                      ;; (update-character-strength state side cur-character))
+                      ;;(when next-character
+                      ;;(trigger-event-sync state side (make-eid state) :approach-character next-character))
+                      )))
 
 (defn view-deck
   "Allows the player to view their deck by making the cards in the deck public."
@@ -548,3 +636,41 @@
   [state side args]
   (system-msg state side "stops looking at their deck")
   (swap! state update-in [side] dissoc :view-deck))
+
+(defn view-sideboard
+  "Allows the player to view their deck by making the cards in the deck public."
+  [state side args]
+  (system-msg state side "looks at their sideboard")
+  (swap! state assoc-in [side :view-sideboard] true))
+
+(defn close-sideboard
+  "Closes the deck view and makes cards in deck private again."
+  [state side args]
+  (system-msg state side "stops looking at their sideboard")
+  (swap! state update-in [side] dissoc :view-sideboard))
+
+(defn view-fw-dc-sb
+  "Allows the player to view their deck by making the cards in the deck public."
+  [state side args]
+  (system-msg state side "looks at their fallen-wizard sideboard")
+  (swap! state assoc-in [side :view-fw-dc-sb] true))
+
+(defn close-fw-dc-sb
+  "Closes the deck view and makes cards in deck private again."
+  [state side args]
+  (system-msg state side "stops looking at their fallen-wizard sideboard")
+  (swap! state update-in [side] dissoc :view-fw-dc-sb))
+
+(defn view-location
+  "Allows the player to view their deck by making the cards in the deck public."
+  [state side region]
+  (system-msg state side "looks at their location deck")
+  (swap! state assoc-in [side :cut-region] region)
+  (swap! state assoc-in [side :view-location] true))
+
+(defn close-location
+  "Closes the deck view and makes cards in deck private again."
+  [state side args]
+  (system-msg state side "stops looking at their location deck")
+  (swap! state update-in [side] dissoc :cut-region)
+  (swap! state update-in [side] dissoc :view-location))
