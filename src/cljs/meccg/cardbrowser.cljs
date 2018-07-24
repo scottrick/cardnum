@@ -257,7 +257,7 @@
 (defn sort-field [fieldname]
   (case fieldname
     "Set" #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:setname %))
-    "Name" (juxt :title #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:setname %)))
+    "Name" (juxt :normalizedtitle #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:setname %)))
     "Type" (juxt #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:setname %))
                     #((into {} (map-indexed (fn [i e] [e i]) primary-order)) (:type %)))
     "Align" (juxt #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:setname %))
