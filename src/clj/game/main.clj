@@ -25,6 +25,19 @@
    "contestant-phase-43" core/contestant-phase-43
    "credit" core/click-credit
    "hide" #(core/hide %1 %2 (:card %3))
+
+   "equip" #(core/equip %1 %2 (:card %3))
+   "transfer" #(core/transfer %1 %2 (:card %3))
+   "move-to-sb" #(core/move-to-sb %1 %2 (:card %3))
+   "organize" #(core/organize %1 %2 (:card %3) nil)
+   "tap" #(core/tap %1 %2 (:card %3))
+   "untap" #(core/untap %1 %2 (:card %3))
+   "wound" #(core/wound %1 %2 (:card %3))
+   "invert" #(core/invert %1 %2 (:card %3))
+   "rotate" #(core/rotate %1 %2 (:card %3))
+   "fix-tap" #(core/fix-tap %1 %2 (:card %3))
+   "regionize" #(core/regionize %1 %2 (:card %3))
+
    "draw" core/click-draw
    "dynamic-ability" core/play-dynamic-ability
    "end-phase-12" core/end-phase-12
@@ -44,11 +57,45 @@
    "select" core/select
    "shuffle" core/shuffle-deck
    "start-turn" core/start-turn
+   
+   "not-first" core/not-first
+   "untap-all" core/untap-all
+   "org-phase" core/org-phase
+   "m-h-phase" core/m-h-phase
+   "back-org" core/back-org
+   "next-m-h" core/next-m-h
+   "site-phase" core/site-phase
+   "back-m-h" core/back-m-h
+   "next-site" core/next-site
+   "eot-phase" core/eot-phase
+   "back-site" core/back-site
+   "eot-discard" core/eot-discard
+
+   "reset-org" core/reset-org
+   "wait-alert" core/wait-alert
+   "on-guard" core/on-guard
+   "no-hazards" core/no-hazards
+   "reset-m-h" core/reset-m-h
+   "reveal-o-g" core/reveal-o-g
+   "pre-bluff" core/pre-bluff
+   "bluff-o-g" core/bluff-o-g
+   "reset-site" core/reset-site
+   "reset-done" core/reset-done
+   "return-o-g" core/return-o-g
+   "haz-play-done" core/haz-play-done
+
    "subroutine" core/play-subroutine
    "system-msg" #(core/system-msg %1 %2 (:msg %3))
    "toast" core/toast
    "discard-radicle" core/discard-radicle
-   "view-deck" core/view-deck})
+
+   "view-deck" core/view-deck
+   "view-sideboard" core/view-sideboard
+   "close-sideboard" core/close-sideboard
+   "view-fw-dc-sb" core/view-fw-dc-sb
+   "close-fw-dc-sb" core/close-fw-dc-sb
+   "view-location" core/view-location
+   "close-location" core/close-location})
 
 (defn strip [state]
   (-> state
@@ -76,11 +123,14 @@
       (update-in [:hand] #(private-card-vector state :challenger %))
       (update-in [:discard] #(private-card-vector state :challenger %))
       (update-in [:deck] #(private-card-vector state :challenger %))
+      (update-in [:sideboard] #(private-card-vector state :challenger %))
+      (update-in [:fw-dc-sb] #(private-card-vector state :challenger %))
+      (update-in [:location] #(private-card-vector state :challenger %))
       (update-in [:rig :facedown] #(private-card-vector state :challenger %))
       (update-in [:rig :radicle] #(private-card-vector state :challenger %))))
 
 (defn- make-private-contestant [state]
-  (let [zones (concat [[:hand]] [[:discard]] [[:deck]]
+  (let [zones (concat [[:hand]] [[:discard]] [[:deck]] [[:sideboard]] [[:fw-dc-sb]] [[:location]]
                       (for [locale (keys (:locales (:contestant @state)))] [:locales locale :characters])
                       (for [locale (keys (:locales (:contestant @state)))] [:locales locale :content]))]
     (loop [s (:contestant @state)
@@ -94,6 +144,24 @@
     deck
     (private-card-vector state side deck)))
 
+(defn- make-private-sideboard [state side sideboard]
+  (if (:view-sideboard (side @state))
+    sideboard
+    (private-card-vector state side sideboard)))
+
+(defn- make-private-fw-dc-sb [state side sideboard]
+  (if (:view-fw-dc-sb (side @state))
+    sideboard
+    (private-card-vector state side sideboard)))
+
+(defn- make-private-location [state side location]
+  (let [sorted (if (:cut-region (side @state))
+                 (filter #(= (:Region %) (:cut-region (side @state))) location)
+                 nil)]
+    (if (:view-location (side @state))
+      sorted
+      (private-card-vector state side sorted))))
+
 (defn- private-states
   "Generates privatized states for the Contestant, Challenger and any spectators from the base state.
   If `:spectatorhands` is on, all information is passed on to spectators as well."
@@ -102,13 +170,22 @@
   (let [contestant-private (make-private-contestant state)
         challenger-private (make-private-challenger state)
         contestant-deck (update-in (:contestant @state) [:deck] #(make-private-deck state :contestant %))
-        challenger-deck (update-in (:challenger @state) [:deck] #(make-private-deck state :challenger %))]
-    [(assoc @state :challenger challenger-private
-                   :contestant contestant-deck)
-     (assoc @state :contestant contestant-private
-                   :challenger challenger-deck)
+        challenger-deck (update-in (:challenger @state) [:deck] #(make-private-deck state :challenger %))
+        contestant-sideboard (update-in (:contestant @state) [:sideboard] #(make-private-sideboard state :contestant %))
+        challenger-sideboard (update-in (:challenger @state) [:sideboard] #(make-private-sideboard state :challenger %))
+        contestant-fw-dc-sb (update-in (:contestant @state) [:fw-dc-sb] #(make-private-fw-dc-sb state :contestant %))
+        challenger-fw-dc-sb (update-in (:challenger @state) [:fw-dc-sb] #(make-private-fw-dc-sb state :challenger %))
+        contestant-location (update-in (:contestant @state) [:location] #(make-private-location state :contestant %))
+        challenger-location (update-in (:challenger @state) [:location] #(make-private-location state :challenger %))]
+    [(assoc @state :challenger challenger-private :contestant contestant-deck
+                   :contestant contestant-sideboard :contestant contestant-fw-dc-sb :contestant contestant-location)
+     (assoc @state :contestant contestant-private :challenger challenger-deck
+                   :challenger challenger-sideboard :challenger challenger-fw-dc-sb :challenger challenger-location)
      (if (get-in @state [:options :spectatorhands])
-       (assoc @state :contestant contestant-deck :challenger challenger-deck)
+       (assoc @state :contestant contestant-deck :contestant contestant-sideboard
+                     :contestant contestant-location :contestant contestant-sideboard
+                     :challenger challenger-deck :challenger challenger-fw-dc-sb
+                     :challenger challenger-location :challenger challenger-fw-dc-sb)
        (assoc @state :contestant contestant-private :challenger challenger-private))]))
 
 (defn- reset-all-cards

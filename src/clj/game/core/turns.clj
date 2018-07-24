@@ -47,15 +47,15 @@
   (let [contestant (some #(when (= (:side %) "Contestant") %) players)
         challenger (some #(when (= (:side %) "Challenger") %) players)
         contestant-pool (create-pool "Contestant" (:deck contestant) (:user contestant))
-        ;challenger-pool (create-pool "Challenger" (:deck challenger) (:user challenger))
+        challenger-pool (create-pool "Challenger" (:deck challenger) (:user challenger))
         contestant-deck (create-deck "Contestant" (:deck contestant) (:user contestant))
         challenger-deck (create-deck "Challenger" (:deck challenger) (:user challenger))
-        ;contestant-board (create-board "Contestant" (:deck contestant) (:user contestant))
-        ;challenger-board (create-board "Challenger" (:deck challenger) (:user challenger))
-        ;contestant-fw-dc (create-fw-dc "Contestant" (:deck contestant) (:user contestant))
-        ;challenger-fw-dc (create-fw-dc "Challenger" (:deck challenger) (:user challenger))
-        ;contestant-location (create-location "Contestant" (:deck contestant) (:user contestant))
-        ;challenger-location (create-location "Challenger" (:deck challenger) (:user challenger))
+        contestant-board (create-board "Contestant" (:deck contestant) (:user contestant))
+        challenger-board (create-board "Challenger" (:deck challenger) (:user challenger))
+        contestant-fw-dc (create-fw-dc "Contestant" (:deck contestant) (:user contestant))
+        challenger-fw-dc (create-fw-dc "Challenger" (:deck challenger) (:user challenger))
+        contestant-location (create-location "Contestant" (:deck contestant) (:user contestant))
+        challenger-location (create-location "Challenger" (:deck challenger) (:user challenger))
         contestant-deck-id (get-in contestant [:deck :_id])
         challenger-deck-id (get-in challenger [:deck :_id])
         contestant-options (get-in contestant [:options])
@@ -76,9 +76,9 @@
                     :deck (zone :deck contestant-deck)
                     :deck-id contestant-deck-id
                     :hand (zone :hand contestant-pool)
-                    ;:sideboard (zone :sideboard contestant-board)
-                    ;:fw-dc-sb (zone :fw-dc-sb contestant-fw-dc)
-                    ;:location (zone :location contestant-location)
+                    :sideboard (zone :sideboard contestant-board)
+                    :fw-dc-sb (zone :fw-dc-sb contestant-fw-dc)
+                    :location (zone :location contestant-location)
                     :discard [] :scored [] :rfg [] :play-area []
                     :locales {:hq {} :rd {} :archives {} :sites {}}
                     :rig {:resource [] :radicle [] :hazard []}
@@ -94,10 +94,10 @@
                     :options challenger-options
                     :deck (zone :deck challenger-deck)
                     :deck-id challenger-deck-id
-                    :hand []
-                    ;:sideboard (zone :sideboard challenger-board)
-                    ;:fw-dc-sb (zone :fw-dc-sb challenger-fw-dc)
-                    ;:location (zone :location challenger-location)
+                    :hand (zone :hand challenger-pool)
+                    :sideboard (zone :sideboard challenger-board)
+                    :fw-dc-sb (zone :fw-dc-sb challenger-fw-dc)
+                    :location (zone :location challenger-location)
                     :discard [] :scored [] :rfg [] :play-area []
                     :locales {:hq {} :rd {} :archives {} :sites {}}
                     :rig {:resource [] :radicle [] :hazard []}
@@ -322,6 +322,181 @@
                         " before taking your first click."))
                  "info")
       (end-phase-12 state side args))))
+
+;; --- For what goes on between Start/End ;)
+;; Organization Phase
+(defn not-first
+  [state side args]
+  (start-turn state side args)
+  (swap! state update-in [:turn] dec)
+  (system-msg state side "passes first turn")
+  (let [offset (- 70 (get-in @state [side :click]))]
+    (gain state side :click offset))
+  )
+
+(defn untap-all
+  [state side args]
+  (resolve-ability state side
+                   {:effect (req
+                              (if (= side :contestant)
+                                (doseq [c (all-placed state side)]
+                                  (when (and (not (:wounded c))
+                                             (not (boolean (re-find #"Permanent" (:Secondary c)))) (untap state side c))))
+                                (doseq [c (all-placed-challenger state side)]
+                                  (when (and (not (:wounded c))
+                                             (not (boolean (re-find #"Permanent" (:Secondary c)))) (untap state side c)))))
+                              )}
+                   nil nil)
+
+  (system-msg state side "untaps")
+  (gain state side :click -5)
+  )
+(defn org-phase
+  [state side args]
+  (system-msg state side "is done organizing, Long-event Phase")
+  (gain state side :click -5)
+  )
+(defn m-h-phase
+  [state side args]
+  (system-msg state side "enters the Movement/Hazard Phase")
+  (gain state side :click -5)
+  )
+;; Movement/Hazard Phase
+(defn back-org
+  [state side args]
+  (system-msg state side "goes back to the Organization Phase")
+  (let [offset (- 100 (get-in @state [side :click]))]
+    (gain state side :click offset))
+  )
+(defn next-m-h
+  [state side args]
+  (system-msg state side "goes to the next companies' M/H Phase")
+  )
+(defn site-phase
+  [state side args]
+  (system-msg state side "goes to the Site Phase")
+  (gain state side :click -5)
+  )
+;; Site Phase
+(defn back-m-h
+  [state side args]
+  (system-msg state side "goes back the M/H Phase")
+  (let [offset (- 85 (get-in @state [side :click]))]
+    (gain state side :click offset))
+  )
+(defn next-site
+  [state side args]
+  (system-msg state side "goes to the next companies' Site Phase")
+  )
+(defn eot-phase
+  [state side args]
+  (system-msg state side "goes to the beginning of the End-of-turn")
+  (gain state side :click -5)
+  )
+;; End of Turn Phase
+(defn back-site
+  [state side args]
+  (system-msg state side "goes back the Site Phase")
+  (let [offset (- 80 (get-in @state [side :click]))]
+    (gain state side :click offset))
+  )
+(defn eot-discard
+  [state side args]
+  (system-msg state side "acknowledges EOT discard")
+  (gain state side :click -5)
+  )
+
+;;--- Hazard Phase Replies
+;; Organization Phase
+(defn reset-org
+  [state side args]
+  (let [offset (* -1 (get-in @state [side :click]))]
+    (gain state side :click offset))
+  )
+(defn wait-alert
+  [state side args]
+  (system-msg state side "WAIT! WAIT! WAIT!")
+  )
+;; Movement/Hazard Phase
+(defn on-guard
+  [state side args]
+  (resolve-ability state side
+                   {:prompt "Select a site for on-guard card"
+                    :choices {:req #(is-type? % "Site")}
+                    :msg (msg "host " (:title target))
+                    :effect (effect (resolve-ability (let [site target] {:req (req (zero? (count (:hosted target))))
+                                                                         :prompt "Select a card for on-guard"
+                                                                         :choices {:req #(in-hand? %)}
+                                                                         :effect (req (contestant-place state side target site) ;; install target onto card
+                                                                                      )
+                                                                         }) nil nil))} nil nil)
+  (system-msg state side "plays an on-guard card")
+  (gain state side :click -5)
+  )
+(defn no-hazards
+  [state side args]
+  (system-msg state side "says NO MORE HAZARDS for this company")
+  (let [offset (- 35 (get-in @state [side :click]))]
+    (gain state side :click offset))
+  )
+(defn reset-m-h
+  [state side args]
+  (let [offset (- 45 (get-in @state [side :click]))]
+    (gain state side :click offset))
+  )
+
+;; Site Phase
+(defn reveal-o-g
+  [state side args]
+  (resolve-ability state side
+                   {:effect (effect (reveal target {:ignore-cost :all-costs :force true}))
+                    :choices {:req (fn [t] (card-is? t :side side))}}
+                   nil nil)
+  (system-msg state side "reveals an on-guard card")
+  (let [offset (- 20 (get-in @state [side :click]))]
+    (gain state side :click offset))
+  )
+(defn pre-bluff
+  [state side args]
+  (system-msg state side "says on-guard is possible effect")
+  (gain state side :click -3)
+  )
+(defn bluff-o-g
+  [state side args]
+  (resolve-ability state side
+                   {:prompt "Select a card to move to your hand"
+                    :effect (req (let [c (deactivate state side target)]
+                                   (move state side c :hand)))
+                    :choices {:req (fn [t] (card-is? t :side side))}}
+                   nil nil)
+  (system-msg state side "nope, returns a bluff to his hand")
+  (gain state side :click -2)
+  )
+(defn reset-site
+  [state side args]
+  (let [offset (- 25 (get-in @state [side :click]))]
+    (gain state side :click offset))
+  )
+;; End of Turn Phase
+(defn reset-done
+  [state side args]
+  (let [offset (* -1 (get-in @state [side :click]))]
+    (gain state side :click offset))
+  )
+(defn return-o-g
+  [state side args]
+  (resolve-ability state side
+                   {:prompt "Select a card to move to your hand"
+                    :effect (req (let [c (deactivate state side target)]
+                                   (move state side c :hand)))
+                    :choices {:req (fn [t] (card-is? t :side side))}}
+                   nil nil)
+  (system-msg state side "returns an on-guard card to his hand")
+  )
+(defn haz-play-done
+  [state side args]
+  (system-msg state side "has NOTHING ELSE")
+  )
 
 (defn end-turn
   ([state side args] (end-turn state side (make-eid state) args))

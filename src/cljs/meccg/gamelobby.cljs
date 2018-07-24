@@ -142,7 +142,7 @@
                            :room           (om/get-state owner :current-room)
                            :options        (:options @app-state)}])))))))
 
-(defn join-game [gameid owner action password]
+(defn join-game [gameid owner action alignment password]
   (authenticated
    (fn [user]
      (om/set-state! owner :editing false)
@@ -151,7 +151,7 @@
                      "join" :lobby/join
                      "watch" :lobby/watch
                      "rejoin" :meccg/rejoin)
-                   {:gameid gameid :password password :options (:options @app-state)}]
+                   {:gameid gameid :alignment alignment :password password :options (:options @app-state)}]
                   8000
                   #(if (sente/cb-success? %)
                      (case %
@@ -248,7 +248,7 @@
            specs (:allowspectator game)]
        (cond
          (and (some? faction) (not= "Neutral" faction) specs) (faction-icon faction identity)
-         alignment [:span.alignment (str "(" alignment ")")]))])))
+         alignment [:span.alignment (str " (" alignment ")")]))])))
 
 (defn chat-view [messages owner]
   (reify
@@ -283,11 +283,12 @@
     om/IRenderState
     (render-state [this state]
      (letfn [(join [action]
-                (let [password (:password password-game password)]
+                (let [password (:password password-game password)
+                      alignment (om/get-state owner :alignment)]
                  (if (empty? password)
-                  (join-game (if password-game (:gameid password-game) gameid) owner action nil)
+                  (join-game (if password-game (:gameid password-game) gameid) owner action alignment nil)
                   (if-let [input-password (om/get-state owner :password)]
-                    (join-game (if password-game (:gameid password-game) gameid) owner action input-password)
+                    (join-game (if password-game (:gameid password-game) gameid) owner action alignment input-password)
                     (do (swap! app-state assoc :password-gameid gameid) (om/set-state! owner :prompt action))))))]
        (sab/html
         [:div.gameline {:class (when (= current-game gameid) "active")}
