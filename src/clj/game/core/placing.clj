@@ -1,7 +1,7 @@
 (in-ns 'game.core)
 
-(declare available-mu free-mu host in-play? place-locked? make-rid reveal run-flag? placeable-locales locale->zone set-prop system-msg
-         turn-flag? update-breaker-strength update-character-strength update-run-character use-mu)
+(declare available-mu free-mu host in-play? place-locked? make-rid reveal run-flag? locale-list placeable-locales locale->zone
+         set-prop system-msg turn-flag? update-breaker-strength update-character-strength update-run-character use-mu)
 
 ;;;; Functions for the placeation and deactivation of cards.
 
@@ -9,10 +9,11 @@
 (defn- dissoc-card
   "Dissoc relevant keys in card"
   [card keep-counter]
-  (let [c (dissoc card :current-strength :abilities :subroutines :challenger-abilities :contestant-abilities :revealed :special :new
-                  :added-virus-counter :subtype-target :sifr-used :sifr-target :pump :locale-target)
+  (let [c (dissoc card :current-strength :abilities :subroutines :challenger-abilities :revealed :special :new
+                  :added-virus-counter :subtype-target :sifr-used :sifr-target)
         c (if keep-counter c (dissoc c :counter :rec-counter :advance-counter :extra-advance-counter))]
-    c))
+    (if (and (= (:side c) "Challenger") (not= (last (:zone c)) :facedown))
+      (dissoc c :placed :facedown :counter :rec-counter :pump :locale-target) c)))
 
 (defn- trigger-leave-effect
   "Triggers leave effects for specified card if relevant"
@@ -133,7 +134,7 @@
          (not (turn-flag? state side card :can-place-character)))
     :character
     ;; Placing not locked
-    (place-locked? state :contestant) :lock-place
+    (place-locked? state side) :lock-place
     ;; no restrictions
     :default true))
 
@@ -159,13 +160,13 @@
 (defn contestant-placeable-type?
   "Is the card of an acceptable type to be placed in a locale"
   [card]
-  (some? (#{"Site" "Agenda" "Character" "Region"} (:type card))))
+  (some? (#{"Site" "Agenda" "Character" "Region" "Resource"} (:type card))))
 
 (defn- contestant-place-site-agenda
   "Forces the contestant to discard an existing site or agenda if a second was just placed."
   [state side eid card dest-zone locale]
-  (let [prev-card (some #(when (#{"Site" "Agenda"} (:type %)) %) dest-zone)]
-    (if (and (#{"Site" "Agenda"} (:type card))
+  (let [prev-card (some #(when (#{"Hazard"} (:type %)) %) dest-zone)]
+    (if (and (#{"Hazard"} (:type card))
              prev-card
              (not (:host card)))
       (continue-ability state side {:prompt (str "The " (:title prev-card) " in " locale " will now be discarded.")
@@ -399,46 +400,37 @@
   Params include extra-cost, no-cost, host-card, facedown and custom-message."
   ([state side card] (challenger-place state side (make-eid state) card nil))
   ([state side card params] (challenger-place state side (make-eid state) card params))
-  ([state side eid card {:keys [host-card facedown no-mu] :as params}]
+  ([state side eid card {:keys [host-card facedown] :as params}]
    (if (and (empty? (get-in @state [side :locked (-> card :zone first)]))
-            (not (place-locked? state :challenger)))
+            (not (place-locked? state side)))
      (if-let [hosting (and (not host-card) (not facedown) (:hosting (card-def card)))]
        (continue-ability state side
                          {:choices hosting
-                          :prompt (str "Choose a card to host " (:title card) " on")
+                          :prompt (str "Choose a card to place " (:title card) " on")
                           :async true
                           :effect (effect (challenger-place eid card (assoc params :host-card target)))}
                          card nil)
        (do (trigger-event state side :pre-place card facedown)
-           (let [cost (challenger-get-cost state side card params)]
+           (let [cost (int 0)]
              (if (challenger-can-place? state side card facedown)
-               (if-let [cost-str (pay state side card cost)]
                  (let [c (if host-card
                            (host state side host-card card)
                            (move state side card
                                  [:rig (if facedown :facedown (to-keyword (:type card)))]))
                        c (assoc c :placed true :new true)
                        placed-card (if facedown
-                                        (update! state side c)
-                                        (card-init state side c {:resolve-effect false
-                                                                 :init-data true}))]
-                   (challenger-place-message state side (:title card) cost-str params)
+                                     (update! state side c)
+                                     (card-init state side c {:resolve-effect false
+                                                              :init-data true}))]
+                   (challenger-place-message state side (:title card) nil params)
                    (play-sfx state side "place-challenger")
-                   (when (and (is-type? card "Resource")
-                              (not facedown)
-                              (not no-mu))
-                     ;; Use up mu from resource not placed facedown
-                     (use-mu state (:memoryunits card))
-                     (toast-check-mu state))
-                   (handle-virus-counter-flag state side placed-card)
-                   (when (and (not facedown) (is-type? card "Radicle"))
+                   (when (is-type? card "Radicle")
                      (swap! state assoc-in [:challenger :register :placed-radicle] true))
-                   (when (and (not facedown) (has-subtype? c "Icebreaker"))
+                   (when (has-subtype? c "Icebreaker")
                      (update-breaker-strength state side c))
                    (trigger-event-simult state side eid :challenger-place
                                          {:card-ability (card-as-handler placed-card)}
                                          placed-card))
-                 (effect-completed state side eid))
-               (effect-completed state side eid)))
+                 (effect-completed state side eid)))
            (clear-place-cost-bonus state side)))
      (effect-completed state side eid))))

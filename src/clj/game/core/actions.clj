@@ -407,11 +407,11 @@
 
 (defn equip
   [state side card]
-  (resolve-ability state side
-                   {:prompt  (str "Choose a character to carry " (:title card))
+  (resolve-ability state side (let [c (get-card state card)]
+                   {:prompt  (str "Choose a character to carry " (:title c))
                     :choices {:req #(or (character? %) (revealed? %))}
-                    :effect (effect (host target card))
-                    } card nil))
+                    :effect (effect (host target c))
+                    }) card nil))
 
 (defn transfer
   [state side card]
