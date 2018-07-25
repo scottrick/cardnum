@@ -120,16 +120,16 @@
          (doseq [s [:challenger :contestant]]
            (if host
              (remove-from-host state side card)
-             (swap! state update-in (cons s (vec zone)) (fn [coll] (remove-once #(= (:cid %) cid) coll)))))
-         (let [z (vec (cons :contestant (butlast zone)))]
-           (when (and (not keep-locale-alive)
-                      (is-party? z)
-                      (empty? (get-in @state (conj z :content)))
-                      (empty? (get-in @state (conj z :characters))))
-             (when-let [run (:run @state)]
-               (when (= (last (:locale run)) (last z))
-                 (handle-end-run state side)))
-             (swap! state dissoc-in z)))
+             (swap! state update-in (cons s (vec zone)) (fn [coll] (remove-once #(= (:cid %) cid) coll))))
+           (let [z (vec (cons s (butlast zone)))]
+             (when (and (not keep-locale-alive)
+                        (is-party? z)
+                        (empty? (get-in @state (conj z :content)))
+                        (empty? (get-in @state (conj z :characters))))
+               (when-let [run (:run @state)]
+                 (when (= (last (:locale run)) (last z))
+                   (handle-end-run state side)))
+               (swap! state dissoc-in z))))
          (when-let [card-moved (:move-zone (card-def c))]
            (card-moved state side (make-eid state) moved-card card))
          (trigger-event state side :card-moved card (assoc moved-card :move-to-side side))
@@ -203,6 +203,15 @@
       (swap! state assoc-in [side p] []))))
 
 ;;; Misc card functions
+(defn set-hand-aside
+  [state side & args]
+  (let [player (side @state)
+        zones (filter #(not (seq (get-in @state [side :locked %]))) args)
+        temp (reduce concat (:play-area player) (for [p zones] (zone :play-area (p player))))]
+    (swap! state assoc-in [side :play-area] temp)
+    (doseq [p zones]
+      (swap! state assoc-in [side p] []))))
+
 (defn is-virus-resource?
   [card]
   (and (resource? card)

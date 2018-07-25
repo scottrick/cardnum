@@ -5,8 +5,14 @@
 (defn get-zones [state]
   (keys (get-in @state [:contestant :locales])))
 
+(defn get-zones-challenger [state]
+  (keys (get-in @state [:challenger :locales])))
+
 (defn get-party-zones [state]
   (filter is-party? (get-zones state)))
+
+(defn get-party-zones-challenger [state]
+  (filter is-party? (get-zones-challenger state)))
 
 (defn get-runnable-zones [state]
   (let [restricted-zones (keys (get-in @state [:challenger :register :cannot-run-on-locale]))]
@@ -18,15 +24,17 @@
 (defn get-party-names [state]
   (zones->sorted-names (get-party-zones state)))
 
-(defn locale-list
-  "Get a list of all locales (including centrals)"
-  [state]
-  (zones->sorted-names (get-zones state)))
+(defn locale-list [state card]
+  (concat
+    (if (#{"Site"} (:type card))
+      (get-party-names state)
+      (zones->sorted-names (get-zones state)))
+    ["New party"]))
 
 (defn placeable-locales
   "Get list of locales the specified card can be placed in"
   [state card]
-  (let [base-list (concat (locale-list state) ["New party"])]
+  (let [base-list (concat (locale-list state card) ["New party"])]
     (if-let [place-req (-> card card-def :place-req)]
       ;; Place req function overrides normal list of place locations
       (place-req state :contestant card (make-eid state) base-list)
@@ -41,6 +49,7 @@
       "HQ" [:locales :hq]
       "R&D" [:locales :rd]
       "Archives" [:locales :archives]
+      "Sites" [:locales :sites]
       "New party" [:locales (keyword (str "party" (make-rid state)))]
       [:locales (->> (split locale #" ") last (str "party") keyword)])))
 
@@ -96,6 +105,28 @@
           (let [[card & remaining] unchecked]
             (recur (filter identity (into remaining (:hosted card))) (into placed [card]))))))))
 
+(defn all-placed-challenger
+  "Returns a vector of all placed cards for the given side, including those hosted on other cards,
+but not including 'inactive hosting' like Personal Workshop."
+  [state side]
+  (if (= side :contestant)
+    (let [top-level-cards (flatten (for [t [:resource :hazard :radicle :facedown]] (get-in @state [:contestant :rig t])))
+          hosted-on-character (->> (:challenger @state) :locales seq flatten (mapcat :characters) (mapcat :hosted))]
+      (loop [unchecked (concat top-level-cards (filter #(= (:side %) "Contestant") hosted-on-character)) placed ()]
+        (if (empty? unchecked)
+          (filter :placed placed)
+          (let [[card & remaining] unchecked]
+            (recur (filter identity (into remaining (:hosted card))) (into placed [card]))))))
+    (let [locales (->> (:challenger @state) :locales seq flatten)
+          content (mapcat :content locales)
+          character (mapcat :characters locales)
+          top-level-cards (concat character content)]
+      (loop [unchecked top-level-cards placed ()]
+        (if (empty? unchecked)
+          (filter #(= (:side %) "Challenger") placed)
+          (let [[card & remaining] unchecked]
+            (recur (filter identity (into remaining (:hosted card))) (into placed [card]))))))))
+
 (defn get-all-placed
   "Returns a list of all placed cards"
   [state]
@@ -145,9 +176,12 @@
     (+ base mod)))
 
 (defn hand-size
-  "Returns the current maximum hand-size of the specified side."
+  "Returns the current maximum handsize of the specified side."
   [state side]
-  (base-mod-size state side :hand-size))
+  (let [side' (get @state side)
+        base (get side' :hand-size-base 0)
+        mod (get side' :hand-size-modification 0)]
+    (+ base mod)))
 
 (defn available-mu
   "Returns the available MU the challenger has"

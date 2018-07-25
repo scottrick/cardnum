@@ -3,7 +3,7 @@
 ;; These functions are called by main.clj in response to commands sent by users.
 (declare available-mu card-str can-reveal? can-advance? contestant-place effect-as-handler enforce-msg gain-agenda-point get-party-names get-party-zones-challenger
          get-run-characters host can-host? jack-out move name-zone play-instant purge resolve-select run has-subtype? get-party-zones locale->zone
-         challenger-place discard update-breaker-strength update-character-in-locale update-run-character win can-run?
+         challenger-place discard update-breaker-strength demote-character-strength update-character-in-locale update-run-character win can-run?
          can-run-locale? can-score? say play-sfx base-mod-size free-mu)
 
 ;;; Neutral actions
@@ -31,7 +31,7 @@
   "Click to draw."
   [state side args]
   (when (and (not (get-in @state [side :register :cannot-draw]))
-             (pay state side nil :click 1 {:action :contestant-click-draw}))
+             (pay state side nil :click 0 {:action :contestant-click-draw}))
     (system-msg state side "draws a card")
     (trigger-event state side (if (= side :contestant) :contestant-click-draw :challenger-click-draw) (->> @state side :deck (take 1)))
     (draw state side)
@@ -248,7 +248,7 @@
   [state side args]
   (let [run (:run @state)
         card (get-card state (:card args))
-        run-character (get-run-characters state)
+        run-character (get-run-characters state side)
         character-cnt (count run-character)
         character-idx (dec (:position run 0))
         in-range (and (pos? character-cnt) (< -1 character-idx character-cnt))
@@ -430,52 +430,7 @@
                     :effect (req (let [c (deactivate state side target)]
                                    (move state side c :sideboard)))
                     :choices {:req (fn [t] (card-is? t :side side))}}
-                   nil nil)
-  )
-
-(defn organize
-  ([state side card locale] (organize state side (make-eid state) card locale nil))
-  ([state side card locale args] (organize state side (make-eid state) card locale args))
-  ([state side eid card locale {:keys [extra-cost no-place-cost place-state host-card action] :as args}]
-   (cond
-     ;; No locale selected; show prompt to select an place site (Interns, Lateral Growth, etc.)
-     (not locale)
-     (continue-ability state side
-                       {:prompt (str "Choose a character for " (:title card) " to follow or not." )
-                        :choices (concat ["New party"] (zones->sorted-names
-                                   (if (= (:side card) "Contestant") (get-party-zones @state) (get-party-zones-challenger @state))))
-                        :delayed-completion true
-                        :effect (effect (organize eid card target args))}
-                       card nil)
-     ;; A card was selected as the locale; recurse, with the :host-card parameter set.
-     (and (map? locale) (not host-card))
-     (organize state side eid card locale (assoc args :host-card locale))
-     ;; A locale was selected
-     :else
-     (let [cdef (card-def card)
-           slot (if host-card
-                  (:zone host-card)
-                  (conj (locale->zone state locale) (if (character? card) :characters :content)))
-           dest-zone (get-in @state (cons :contestant slot))]
-       ;; trigger :pre-contestant-place before computing place costs so that
-       ;; event handlers may adjust the cost.
-       (trigger-event state side :pre-contestant-place card {:locale locale :dest-zone dest-zone})
-       (let [character-cost (if (and (character? card)
-                                     (not no-place-cost)
-                                     (not (ignore-place-cost? state side)))
-                              (count dest-zone) 0)
-             all-cost (concat extra-cost [:credit character-cost])
-             end-cost (if no-place-cost 0 (place-cost state side card all-cost))
-             place-state (or place-state (:place-state cdef))]
-           (if-let [cost-str (pay state side card end-cost action)]
-             (do (let [c (-> card
-                             (assoc :advanceable (:advanceable cdef) :new true)
-                             (dissoc :seen :disabled))]
-                   (when (= locale "New party")
-                     (trigger-event state side :locale-created card))
-                   (let [moved-card (move state side c slot)]
-                     (trigger-event state side :contestant-place moved-card)))))
-         (clear-place-cost-bonus state side))))))
+                   nil nil))
 
 (defn rotate
   "Rotate a card."
@@ -578,7 +533,7 @@
   (swap! state assoc-in [:run :no-action] true)
   (system-msg state side "has no further action")
   (trigger-event state side :no-action)
-  (let [run-character (get-run-characters state)
+  (let [run-character (get-run-characters state side)
         pos (get-in @state [:run :position])
         character (when (and pos (pos? pos) (<= pos (count run-character)))
               (get-card state (nth run-character (dec pos))))]
@@ -611,16 +566,22 @@
                         (get-card state (nth run-character (dec pos))))
         next-character (when (and pos (< 1 pos) (<= (dec pos) (count run-character)))
                          (get-card state (nth run-character (- pos 2))))]
-                    (do ;;(update-character-in-locale
-                      ;;state side (get-in @state (concat [:contestant :locales] (get-in @state [:run :locale]))))
+                    (do
+                      (demote-character-strength state side cur-character)
+                      (update-character-strength state side next-character)
                       (if (= pos 1)
-                        (swap! state assoc-in [:run :position] (get-in @state [:run :rerun]))
+                        (do
+                          (swap! state assoc-in [:run :position] (get-in @state [:run :rerun]))
+                          (update-character-in-locale state side
+                                                      (get-in @state (concat [side :locales]
+                                                                             (get-in @state [:run :locale]))))
+                          )
                         (swap! state update-in [:run :position] dec)
                         )
                       ;;(swap! state assoc-in [:run :no-action] false)
                       ;;(system-msg state side (str "a4 character" (count (get-run-characters state))))
                       ;;(when cur-character
-                      ;; (update-character-strength state side cur-character))
+                      ;;(update-character-strength state side cur-character))
                       ;;(when next-character
                       ;;(trigger-event-sync state side (make-eid state) :approach-character next-character))
                       )))

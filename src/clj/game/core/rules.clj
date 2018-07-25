@@ -110,8 +110,6 @@
                                   (min n (remaining-draws state side))
                                   n)
          deck-count (count (get-in @state [side :deck]))]
-     (when (and (= side :contestant) (> draws-after-prevent deck-count))
-       (win-decked state))
      (when-not (and (= side active-player) (get-in @state [side :register :cannot-draw]))
        (let [drawn (zone :hand (take draws-after-prevent (get-in @state [side :deck])))]
          (swap! state update-in [side :hand] #(concat % drawn))

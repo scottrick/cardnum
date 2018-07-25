@@ -1465,10 +1465,10 @@ align-radio
     z-index: 10
     padding: 0
     text-align: center
-    background-color: transparent-orange-bright
+    background-color: transparent-black
     line-height: 24px
     font-size: 12px
-    bottom: 3px
+    bottom: 13px
     left: 3px
     height: 24px
     width: 24px
@@ -1926,12 +1926,18 @@ align-radio
               transform(rotate(180deg) translateY(-100%))
               transform-origin(0 0)
 
+            .strength
+              transform(rotate(180deg))
+
           .character.tapped
             transform(rotate(-90deg))
 
             .abilities
               transform-origin(0 0)
               transform(rotate(-90deg) translateX(-25%))
+
+            .strength
+              transform(rotate(-90deg))
 
           .character
             margin: -7px 0
@@ -2010,7 +2016,7 @@ align-radio
                 transform(initial)
 
           .strength
-            transform(rotate(90deg))
+            transform(rotate(0deg))
 
           .subtype-target
             transform(rotate(90deg), translateX(100%))
@@ -2074,7 +2080,7 @@ align-radio
           transform(initial)
 
         .strength
-          transform(rotate(-90deg))
+          transform(rotate(0deg))
 
         .icon
           transform(rotate(-90deg))

@@ -37,7 +37,7 @@
 (defn character-strength
   "Gets the modified strength of the given character."
   [state side card]
-  (let [strength (:strength card 0)]
+  (let [strength (:Prowess card 0)]
     (+ (if-let [strfun (:strength-bonus (card-def card))]
          (+ strength (strfun state side (make-eid state) card nil))
          strength)
@@ -47,7 +47,7 @@
   "Updates the given character's strength by triggering strength events and updating the card."
   [state side character]
   (let [character (get-card state character)
-        oldstren (or (:current-strength character) (:strength character))]
+        oldstren (or (:current-strength character) (:Prowess character))]
     (when (:revealed character)
       (swap! state update-in [:bonus] dissoc :character-strength)
       (trigger-event state side :pre-character-strength character)
@@ -57,17 +57,37 @@
 (defn update-character-in-locale
   "Updates all character in the given locale's :characters field."
   [state side locale]
-  (doseq [character (:characters locale)] (update-character-strength state side character) ))
+  (update-character-strength state side (last (:characters locale))))
 
 (defn update-all-character
   "Updates all placed character."
   [state side]
-  (doseq [locale (get-in @state [:contestant :locales])]
+  (doseq [locale (get-in @state [side :locales])]
     (update-character-in-locale state side (second locale))))
 
+(defn demote-character-strength
+  "Updates the given character's strength by triggering strength events and updating the card."
+  [state side character]
+  (update! state side (dissoc character :current-strength)))
+
+(defn demote-character-in-locale
+  "Updates all character in the given locale's :characters field."
+  [state side locale]
+  (doseq [character (:characters locale)] (demote-character-strength state side character)))
+
+(defn demote-all-characters
+  "Updates all placed character."
+  [state side]
+  (doseq [locale (get-in @state [side :locales])]
+    (demote-character-in-locale state side (second locale))))
 
 ;;; Icebreaker functions.
 (defn breaker-strength-bonus
+  "Increase the strength of the breaker by n. Negative values cause a decrease."
+  [n]
+  (int 0))
+
+(defn breaker-strength-bonus-old
   "Increase the strength of the breaker by n. Negative values cause a decrease."
   [state side n]
   (swap! state update-in [:bonus :breaker-strength] (fnil #(+ % n) 0)))
@@ -89,6 +109,10 @@
        (get-in @state [:bonus :breaker-strength] 0))))
 
 (defn update-breaker-strength
+  [n]
+  (int 0))
+
+(defn update-breaker-strength-old
   "Updates a breaker's current strength by triggering updates and applying their effects."
   [state side breaker]
   (let [breaker (get-card state breaker)

@@ -263,11 +263,8 @@
 (defn- contestant-place-pay
   "Used by contestant-place to pay place costs, code continues in contestant-place-continue"
   [state side eid card locale {:keys [extra-cost no-place-cost host-card action] :as args} slot]
-  (let [dest-zone (get-in @state (cons :contestant slot))
-        character-cost (if (and (character? card)
-                          (not no-place-cost)
-                          (not (ignore-place-cost? state side)))
-                   (count dest-zone) 0)
+  (let [dest-zone (get-in @state (cons side slot))
+        character-cost 0
         all-cost (concat extra-cost [:credit character-cost])
         end-cost (if no-place-cost 0 (place-cost state side card all-cost))
         end-fn #((clear-place-cost-bonus state side)
@@ -282,6 +279,34 @@
                     (contestant-place-continue state side eid card locale args slot cost-str))
                   (end-fn)))
       (end-fn))))
+
+(defn organize
+  ([state side card locale] (organize state side (make-eid state) card locale nil))
+  ([state side card locale args] (organize state side (make-eid state) card locale args))
+  ([state side eid card locale {:keys [host-card] :as args}]
+   (cond
+     ;; No locale selected; show prompt to select an place site (Interns, Lateral Growth, etc.)
+     (not locale)
+     (continue-ability state side (let [c (get-card state card)]
+                       {:prompt (str "Choose a character for " (:title c) " to follow or not." )
+                        :choices (concat ["New party"] (zones->sorted-names
+                                                         (if (= (:side c) "Contestant") (get-party-zones state) (get-party-zones-challenger state))))
+                        :async true
+                        :effect (effect (organize eid c target args))})
+                       card nil)
+     ;; A card was selected as the locale; recurse, with the :host-card parameter set.
+     (and (map? locale) (not host-card))
+     (organize state side eid card locale (assoc args :host-card locale))
+     ;; A locale was selected
+     :else
+     (let [slot (if host-card
+                  (:zone host-card)
+                  (conj (locale->zone state locale) (if (character? card) :characters :content)))
+           dest-zone (get-in @state (cons :contestant slot))]
+       ;; trigger :pre-contestant-place before computing place costs so that
+       ;; event handlers may adjust the cost.
+       (wait-for (trigger-event-sync state side :pre-contestant-place card {:locale locale :dest-zone dest-zone})
+                 (contestant-place-pay state side eid card locale args slot))))))
 
 (defn contestant-place
   "Places a card in the chosen locale. If locale is nil, asks for locale to place in.

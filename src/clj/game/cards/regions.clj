@@ -200,7 +200,7 @@
    "Code Replicator"
    {:abilities [{:label "[Discard]: Force the challenger to approach the passed piece of character again"
                  :req (req (and this-locale
-                                (> (count (get-run-characters state)) (:position run))
+                                (> (count (get-run-characters state side)) (:position run))
                                 (:revealed (get-in (:characters (card->locale state card)) [(:position run)]))))
                  :effect (req (let [charactername (:title (get-in (:characters (card->locale state card)) [(:position run)]))]
                                 (discard state :contestant (get-card state card))
@@ -967,7 +967,7 @@
    "The Twins"
    {:abilities [{:label "Reveal and discard a copy of the Character just passed from HQ"
                  :req (req (and this-locale
-                                (> (count (get-run-characters state)) (:position run))
+                                (> (count (get-run-characters state side)) (:position run))
                                 (:revealed (get-in (:characters (card->locale state card)) [(:position run)]))))
                  :effect (req (let [charactername (:title (get-in (:characters (card->locale state card)) [(:position run)]))]
                                 (resolve-ability

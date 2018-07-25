@@ -293,7 +293,7 @@
        (sab/html
         [:div.gameline {:class (when (= current-game gameid) "active")}
          [:section
-          [:h3 "Alignment"]
+          [:h3 "Pick your alignment..."]
           (for [option ["Hero" "Minion" "Balrog" "Fallen-wizard" "Elf-lord" "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord"]]
             [:align-radio
              [:label [:input {:type "radio"

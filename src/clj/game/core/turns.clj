@@ -87,7 +87,7 @@
                     :char_mp 0 :ally_mp 0 :item_mp 0
                     :fact_mp 0 :kill_mp 0 :misc_mp 0
                     :toast []
-                    :hand-size {:base 8 :mod 0}
+                    :hand-size-base 8 :hand-size-modification 0
                     :agenda-point 0
                     :click-per-turn 100 :agenda-point-req 7 :keep false}
        :challenger {:user (:user challenger) :identity challenger-identity
@@ -106,7 +106,7 @@
                     :free_gi 0 :total_mp 0 :stage_pt 0
                     :char_mp 0 :ally_mp 0 :item_mp 0
                     :fact_mp 0 :kill_mp 0 :misc_mp 0
-                    :hand-size {:base 8 :mod 0}
+                    :hand-size-base 8 :hand-size-modification 0
                     :agenda-point 0
                     :hq-access 1 :rd-access 1 :tagged 0
                     :brain-damage 0 :click-per-turn 100 :agenda-point-req 7 :keep false}})))
@@ -275,9 +275,9 @@
    (let [extra-clicks (get-in @state [side :extra-click-temp] 0)]
      (gain state side :click (get-in @state [side :click-per-turn]))
      (wait-for (trigger-event-sync state side (if (= side :contestant) :contestant-turn-begins :challenger-turn-begins))
-               (do (when (= side :contestant)
-                     (wait-for (draw state side 1 nil)
-                               (trigger-event-simult state side eid :contestant-mandatory-draw nil nil)))
+               (do ;(when (= side :contestant)
+                     ;(wait-for (draw state side 1 nil)
+                              ; (trigger-event-simult state side eid :contestant-mandatory-draw nil nil)))
 
                    (cond
 
@@ -300,8 +300,7 @@
   (doseq [s [:challenger :contestant]] (swap! state dissoc-in [s :undo-turn]))
   (swap! state assoc :turn-state (dissoc @state :log))
 
-  (when (= side :contestant)
-    (swap! state update-in [:turn] inc))
+  (swap! state update-in [:turn] inc)
 
   (doseq [c (filter :new (all-placed state side))]
     (update! state side (dissoc c :new)))
@@ -504,37 +503,24 @@
    (let [max-hand-size (max (hand-size state side) 0)]
      (when (<= (count (get-in @state [side :hand])) max-hand-size)
        (turn-message state side false)
-       (when (and (= side :challenger)
-                  (neg? (hand-size state side)))
-         (flatline state))
        (wait-for
          (trigger-event-sync state side (if (= side :challenger) :challenger-turn-ends :contestant-turn-ends))
-         (do (when (= side :challenger)
-               (trigger-event state side :post-challenger-turn-ends))
-             (doseq [a (get-in @state [side :register :end-turn])]
-               (resolve-ability state side (:ability a) (:card a) (:targets a)))
-             (swap! state assoc-in [side :register-last-turn] (-> @state side :register))
-             (doseq [card (all-active-placed state :challenger)]
-               ;; Clear the added-virus-counter flag for each virus in play.
-               ;; We do this even on the contestant's turn to prevent shenanigans with something like Gorman Drip and Surge
-               (when (has-subtype? card "Virus")
-                 (set-prop state :challenger card :added-virus-counter false))
-               ;; Remove all-turn strength from characterbreakers.
-               ;; We do this even on the contestant's turn in case the breaker is boosted due to Offer You Can't Refuse
-               (when (has-subtype? card "Icebreaker")
-                 (update! state side (update-in (get-card state card) [:pump] dissoc :all-turn))
-                 (update-breaker-strength state :challenger card)))
-             (swap! state assoc :end-turn true)
-             (swap! state update-in [side :register] dissoc :cannot-draw)
-             (swap! state update-in [side :register] dissoc :drawn-this-turn)
-             (doseq [c (filter #(= :this-turn (:revealed %)) (all-placed state :contestant))]
-               (update! state side (assoc c :revealed true)))
-             (clear-turn-register! state)
-             (swap! state dissoc :turn-events)
-             (when-let [extra-turns (get-in @state [side :extra-turns])]
-               (when (pos? extra-turns)
-                 (start-turn state side nil)
-                 (swap! state update-in [side :extra-turns] dec)
-                 (let [turns (if (= 1 extra-turns) "turn" "turns")]
-                   (system-msg state side (clojure.string/join ["will have " extra-turns " extra " turns " remaining."])))))
-             (effect-completed state side eid)))))))
+         (do
+           (gain state side :click -70)
+           (doseq [a (get-in @state [side :register :end-turn])]
+             (resolve-ability state side (:ability a) (:card a) (:targets a)))
+           (swap! state assoc-in [side :register-last-turn] (-> @state side :register))
+           (swap! state assoc :end-turn true)
+           (swap! state update-in [side :register] dissoc :cannot-draw)
+           (swap! state update-in [side :register] dissoc :drawn-this-turn)
+           (doseq [c (filter #(= :this-turn (:revealed %)) (all-placed state :contestant))]
+             (update! state side (assoc c :revealed true)))
+           (clear-turn-register! state)
+           (swap! state dissoc :turn-events)
+           (when-let [extra-turns (get-in @state [side :extra-turns])]
+             (when (pos? extra-turns)
+               (start-turn state side nil)
+               (swap! state update-in [side :extra-turns] dec)
+               (let [turns (if (= 1 extra-turns) "turn" "turns")]
+                 (system-msg state side (clojure.string/join ["will have " extra-turns " extra " turns " remaining."])))))
+           (effect-completed state side eid)))))))

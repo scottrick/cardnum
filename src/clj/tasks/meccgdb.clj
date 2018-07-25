@@ -63,7 +63,7 @@
    :Body identity
    :Corruption identity
    :Home identity
-   :Unique (fn [[k v]] [:uniqueness (if (nil? v) 0 1)])
+   :Unique (fn [[k v]] [:uniqueness (if (= v "unique") true false)])
    :Secondary identity
    :Race identity
    :RWMPs identity
