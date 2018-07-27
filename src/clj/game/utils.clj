@@ -239,6 +239,7 @@
     :hq "HQ"
     :rd "R&D"
     :archives "Archives"
+    :sites "Sites"
     nil))
 
 (defn zone->name
@@ -249,6 +250,7 @@
 
 (defn zone->sort-key [zone]
   (case (if (keyword? zone) zone (last zone))
+    :sites -4
     :archives -3
     :rd -2
     :hq -1
@@ -272,6 +274,7 @@
   "Converts a central locale keyword like :discard into a corresponding zone vector"
   [zone]
   (case (if (keyword? zone) zone (last zone))
+    :location [:locales :sites]
     :discard [:locales :archives]
     :hand [:locales :hq]
     :deck [:locales :rd]
@@ -283,7 +286,7 @@
   (vec [:rig (-> type .toLowerCase keyword)]))
 
 (defn get-locale-type [zone]
-  (or (#{:hq :rd :archives} zone) :party))
+  (or (#{:hq :rd :archives :sites} zone) :party))
 
 (defn get-cid
   "Gets the cid of a given card"

@@ -102,15 +102,18 @@
   "Gets a string representation for the given zone."
   [side zone]
   (match (vec zone)
-         [:hand] (if (= side "Challenger") "Grip" "HQ")
-         [:discard] (if (= side "Challenger") "Heap" "Archives")
-         [:deck] (if (= side "Challenger") "Stack" "R&D")
-         [:rig _] "Rig"
-         [:locales :hq _] "the root of HQ"
-         [:locales :rd _] "the root of R&D"
-         [:locales :archives _] "the root of Archives"
+         [:hand] "Hand"
+         [:discard] "Discard"
+         [:deck] "Play Deck"
+         [:sideboard] "Sideboard"
+         [:fw-dc-sb] "FW-DC-SB"
+         [:location] "Location Deck"
+         [:rig _] "in play"
+         [:locales :hq _] "the root of Hand"
+         [:locales :rd _] "the root of Deck"
+         [:locales :archives _] "the root of Discard"
+         [:locales :sites _] "the root of Location"
          :else (zone->name (second zone))))
-
 
 ;;; In-game chat commands
 (defn set-adv-counter [state side target value]
@@ -190,7 +193,7 @@
 
 (defn command-revealall [state side value]
   (resolve-ability state side
-    {:optional {:prompt "Reveal all cards and turn cards in archives faceup?"
+    {:optional {:prompt "Reveal all cards and turn cards in discard faceup?"
                 :yes-ability {:effect (req
                                         (swap! state update-in [:contestant :discard] #(map (fn [c] (assoc c :seen true)) %))
                                         (doseq [c (all-placed state side)]
@@ -200,6 +203,9 @@
 
 (defn command-roll [state side value]
   (system-msg state side (str "rolls a " value " sided die and rolls a " (inc (rand-int value)))))
+
+(defn basic-roll [state side]
+  (system-msg state side (str "rolls a roll-" (inc (rand-int 6)) "roll-" (inc (rand-int 6)))))
 
 (defn command-undo-click
   "Resets the game state back to start of the click"
@@ -251,17 +257,21 @@
           "/counter"    #(command-counter %1 %2 args)
           "/credit"     #(swap! %1 assoc-in [%2 :credit] (max 0 value))
           "/deck"       #(toast %1 %2 "/deck number takes the format #n")
-          "/discard"    #(toast %1 %2 "/discard number takes the format #n")
+          "/discard"        #(resolve-ability %1 %2
+                                          {:prompt "Select a card to discard"
+                                           :effect (req (let [c (deactivate %1 %2 target)]
+                                                          (move %1 %2 c :discard)))
+                                           :choices {:req (fn [t] (card-is? t :side %2))}}
+                                          {:title "/discard command"} nil)
+          "/discard-n"    #(toast %1 %2 "/discard number takes the format #n")
           "/discard-random" #(move %1 %2 (rand-nth (get-in @%1 [%2 :hand])) :discard)
           "/draw"       #(draw %1 %2 (max 0 value))
           "/end-run"    #(when (= %2 :contestant) (end-run %1 %2))
           "/error"      show-error-toast
-          "/handsize"   #(swap! %1 assoc-in [%2 :hand-size :mod] (- value (get-in @%1 [%2 :hand-size :base])))
+          "/handsize"   #(swap! %1 assoc-in [%2 :hand-size-modification] (- (max 0 value) (:hand-size-base %2)))
           "/jack-out"   #(when (= %2 :challenger) (jack-out %1 %2 nil))
           "/link"       #(swap! %1 assoc-in [%2 :link] (max 0 value))
-          "/memory"     #(swap! %1 assoc-in [%2 :memory :used] (- (+ (get-in @%1 [:challenger :memory :base])
-                                                                     (get-in @%1 [:challenger :memory :mod]))
-                                                                  value))
+          "/memory"     #(swap! %1 assoc-in [%2 :memory] value)
           "/move-bottom"  #(resolve-ability %1 %2
                                             {:prompt "Select a card in hand to put on the bottom of your deck"
                                              :effect (effect (move target :deck))
@@ -279,15 +289,35 @@
                                                           (move %1 %2 c :hand)))
                                            :choices {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/move-hand command"} nil)
+          "/move-site"  #(resolve-ability %1 %2
+                                          {:prompt "Select a site to move to your Location Deck"
+                                           :effect (req (let [c (deactivate %1 %2 target)]
+                                                          (move %1 %2 c :location)))
+                                           :choices {:req (fn [t] (card-is? t :side %2))}}
+                                          {:title "/move-site command"} nil)
+          "/move-sb"  #(resolve-ability %1 %2
+                                          {:prompt "Select a site to move to your sideboard"
+                                           :effect (req (let [c (deactivate %1 %2 target)]
+                                                          (move %1 %2 c :sideboard)))
+                                           :choices {:req (fn [t] (card-is? t :side %2))}}
+                                          {:title "/move-sb command"} nil)
+          "/move-fw-sb"  #(resolve-ability %1 %2
+                                        {:prompt "Select a site to move to your FW-Sideboard"
+                                         :effect (req (let [c (deactivate %1 %2 target)]
+                                                        (move %1 %2 c :fw-dc-sb)))
+                                         :choices {:req (fn [t] (card-is? t :side %2))}}
+                                        {:title "/move-fw-sb command"} nil)
+          "/re-deck"  #(resolve-ability %1 %2
+                                        {:effect (effect (shuffle-into-deck {} :discard))}
+                                        {:title "/re-deck command"} nil)
           "/psi"        #(when (= %2 :contestant) (psi-game %1 %2
                                                       {:title "/psi command" :side %2}
                                                       {:equal  {:msg "resolve equal bets effect"}
                                                        :not-equal {:msg "resolve unequal bets effect"}}))
-          "/reveal"        #(when (= %2 :contestant)
-                           (resolve-ability %1 %2
+          "/reveal"        #(resolve-ability %1 %2
                                             {:effect (effect (reveal target {:ignore-cost :all-costs :force true}))
                                              :choices {:req (fn [t] (card-is? t :side %2))}}
-                                            {:title "/reveal command"} nil))
+                                            {:title "/reveal command"} nil)
           "/reveal-all"    #(when (= %2 :contestant) (command-revealall %1 %2 value))
           "/rfg"        #(resolve-ability %1 %2
                                           {:prompt "Select a card to remove from the game"
@@ -295,9 +325,20 @@
                                                           (move %1 %2 c :rfg)))
                                            :choices {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/rfg command"} nil)
-          "/facedown"   #(when (= %2 :challenger)
-                           (command-facedown %1 %2))
+          "/rfgh"       #(resolve-ability %1 %2
+                                          {:prompt "Select a card to rfg facedown"
+                                           :effect (req (move %1 %2 (assoc target :hide true) :rfg))
+                                           :choices {:req (fn [t] (card-is? t :side %2))}}
+                                          {:title "/rfgh command"} nil)
+          "/score"      #(resolve-ability %1 %2
+                                          {:prompt "Select a card to score"
+                                           :effect (req (let [c  target]
+                                                          (move %1 %2 c :scored)))
+                                           :choices {:req (fn [t] true)}}
+                                          {:title "/score command"} nil)
+          "/facedown"   #(command-facedown %1 %2)
           "/roll"       #(command-roll %1 %2 value)
+          "/r"          #(basic-roll %1 %2)
           "/tag"        #(swap! %1 assoc-in [%2 :tag] (max 0 value))
           "/take-brain" #(when (= %2 :challenger) (damage %1 %2 :brain (max 0 value)))
           "/take-meat"  #(when (= %2 :challenger) (damage %1 %2 :meat  (max 0 value)))
@@ -319,7 +360,7 @@
   "Prints a message for the start or end of a turn, summarizing credits and cards in hand."
   [state side start-of-turn]
   (let [pre (if start-of-turn "started" "is ending")
-        hand (if (= side :challenger) "their Grip" "HQ")
+        hand "Hand"
         cards (count (get-in @state [side :hand]))
         credits (get-in @state [side :credit])
         text (str pre " their turn " (:turn @state) " with " credits " [Credit] and " cards " cards in " hand)]

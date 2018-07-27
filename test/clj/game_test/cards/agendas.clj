@@ -169,7 +169,7 @@
 (deftest astroscript-pilot-resource
   ;; AstroScript token placement
   (do-game
-    (new-game (default-contestant [(qty "AstroScript Pilot Resource" 3) (qty "Ice Wall" 2)])
+    (new-game (default-contestant [(qty "AstroScript Pilot Resource" 3) (qty "Character Wall" 2)])
               (default-challenger))
     (core/gain state :contestant :click 3)
     (letfn [(try-place [from to]
@@ -197,10 +197,10 @@
         (should-place scored-astro placed-astro " that is placed")
         (advance state placed-astro 2)
         (core/score state :contestant {:card (refresh placed-astro)}))
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (let [no-token-astro (get-scored state :contestant 0)
             token-astro (get-scored state :contestant 1)
-            hand-character-wall (find-card "Ice Wall" (:hand get-contestant))
+            hand-character-wall (find-card "Character Wall" (:hand get-contestant))
             placed-character-wall (get-character state :hq 0)]
         (should-not-place token-astro no-token-astro " that is scored")
         (should-not-place token-astro hand-character-wall " in hand")
@@ -209,12 +209,12 @@
 (deftest award-bait
   ;; Award Bait
   (do-game
-    (new-game (default-contestant [(qty "Award Bait" 2) "Ice Wall"])
+    (new-game (default-contestant [(qty "Award Bait" 2) "Character Wall"])
               (default-challenger))
     (core/move state :contestant (find-card "Award Bait" (:hand (get-contestant))) :deck)
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (let [iw (get-character state :hq 0)]
-      (is (zero? (get-counters (refresh iw) :advancement)) "Ice Wall should start with 0 advancement tokens")
+      (is (zero? (get-counters (refresh iw) :advancement)) "Character Wall should start with 0 advancement tokens")
       (play-from-hand state :contestant "Award Bait" "New party")
       (take-credits state :contestant)
       (run-on state :party1)
@@ -222,14 +222,14 @@
       (prompt-choice :contestant "2")
       (prompt-select :contestant (refresh iw))
       (prompt-choice :challenger "Steal")
-      (is (= 2 (get-counters (refresh iw) :advancement)) "Ice Wall should gain 2 advancement tokens")
+      (is (= 2 (get-counters (refresh iw) :advancement)) "Character Wall should gain 2 advancement tokens")
       (run-on state :rd)
       (run-successful state)
       (prompt-choice :challenger "Access")
       (prompt-choice :contestant "2")
       (prompt-select :contestant (refresh iw))
       (prompt-choice :challenger "Steal")
-      (is (= 4 (get-counters (refresh iw) :advancement)) "Ice Wall should gain 2 advancement tokens"))))
+      (is (= 4 (get-counters (refresh iw) :advancement)) "Character Wall should gain 2 advancement tokens"))))
 
 (deftest bacterial-resourceming
   ;; Bacterial Resourceming
@@ -515,7 +515,7 @@
   (testing "Basic behavior"
     (do-game
       (new-game (default-contestant [(qty "Degree Mill" 2)])
-                (default-challenger ["Ice Analyzer" "All-nighter" "Hunting Grounds"]))
+                (default-challenger ["Character Analyzer" "All-nighter" "Hunting Grounds"]))
       (play-from-hand state :contestant "Degree Mill" "New party")
       (take-credits state :contestant)
       (is (= 0 (count (:deck (get-challenger)))) "Challenger starts with empty deck")
@@ -523,7 +523,7 @@
       (run-successful state)
       (prompt-choice :challenger "No action")
       (is (= 0 (:agenda-point (get-challenger))) "Challenger stole Degree Mill with no placed cards")
-      (play-from-hand state :challenger "Ice Analyzer")
+      (play-from-hand state :challenger "Character Analyzer")
       (play-from-hand state :challenger "All-nighter")
       (let [ia (get-radicle state 0)
             an (get-radicle state 1)]
@@ -561,14 +561,14 @@
   (testing "Multiple steal costs"
     (do-game
       (new-game (default-contestant [(qty "Degree Mill" 1) (qty "Strongbox" 1)])
-                (default-challenger [(qty "Ice Analyzer" 3) (qty "All-nighter" 3)]))
+                (default-challenger [(qty "Character Analyzer" 3) (qty "All-nighter" 3)]))
       (play-from-hand state :contestant "Degree Mill" "New party")
       (play-from-hand state :contestant "Strongbox" "Locale 1")
       (let [dm (get-content state :party1 0)
             sb (get-content state :party1 1)]
         (core/reveal state :contestant sb)
         (take-credits state :contestant)
-        (play-from-hand state :challenger "Ice Analyzer")
+        (play-from-hand state :challenger "Character Analyzer")
         (play-from-hand state :challenger "All-nighter")
         (run-empty-locale state :party1)
         (prompt-select :challenger (refresh dm))
@@ -617,16 +617,16 @@
 (deftest eden-fragment
   ;; Test that Eden Fragment ignores the place cost of the first character
   (do-game
-    (new-game (default-contestant [(qty "Eden Fragment" 3) (qty "Ice Wall" 3)])
+    (new-game (default-contestant [(qty "Eden Fragment" 3) (qty "Character Wall" 3)])
               (default-challenger))
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (play-and-score state "Eden Fragment")
     (take-credits state :contestant)
     (take-credits state :challenger)
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (is (some? (get-character state :hq 1)) "Contestant has two character placed on HQ")
     (is (= 6 (:credit (get-contestant))) "Contestant does not pay for placing the first Character of the turn")
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (is (some? (get-character state :hq 2)) "Contestant has three character placed on HQ")
     (is (= 4 (:credit (get-contestant))) "Contestant pays for placing the second Character of the turn")))
 
@@ -634,13 +634,13 @@
   ;; Efficiency Committee
   (do-game
     (new-game (default-contestant [(qty "Efficiency Committee" 3) (qty "Shipment from SanSan" 2)
-                             "Ice Wall"])
+                             "Character Wall"])
               (default-challenger))
     (core/gain state :contestant :click 4)
     (play-from-hand state :contestant "Efficiency Committee" "New party")
     (play-from-hand state :contestant "Efficiency Committee" "New party")
     (play-from-hand state :contestant "Efficiency Committee" "New party")
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (let [ec1 (get-content state :party1 0)
           ec2 (get-content state :party2 0)
           ec3 (get-content state :party3 0)
@@ -653,7 +653,7 @@
         (is (= 3 (:click (get-contestant))))
         (card-ability state :contestant ec1_scored 0)
         (is (= 4 (:click (get-contestant))))
-        ;; try to advance Ice Wall
+        ;; try to advance Character Wall
         (advance state iw)
         (is (= 4 (:click (get-contestant))))
         (is (zero? (get-counters (refresh iw) :advancement)))
@@ -835,19 +835,19 @@
   ;; Firmware Updates
   (do-game
     (new-game (default-contestant ["Firmware Updates"
-                             "Ice Wall"])
+                             "Character Wall"])
               (default-challenger))
     (play-and-score state "Firmware Updates")
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (let [fu (get-scored state :contestant 0)
           iw (get-character state :hq 0)]
       (is (= 3 (get-counters (refresh fu) :agenda)) "Firmware Updates should start with 3 agenda counters")
       (core/reveal state :contestant iw)
-      (is (zero? (get-counters (refresh iw) :advancement)) "Ice Wall should start with 0 advancement tokens")
+      (is (zero? (get-counters (refresh iw) :advancement)) "Character Wall should start with 0 advancement tokens")
       (card-ability state :contestant fu 0)
       (prompt-select :contestant (refresh iw))
       (is (= 2 (get-counters (refresh fu) :agenda)) "Firmware Updates should now have 2 agenda counters")
-      (is (= 1 (get-counters (refresh iw) :advancement)) "Ice Wall should have 1 advancement token"))))
+      (is (= 1 (get-counters (refresh iw) :advancement)) "Character Wall should have 1 advancement token"))))
 
 (deftest geothermal-fracking
   ;; Geothermal Fracking
@@ -927,15 +927,15 @@
 (deftest glenn-station
   ;; Glenn Station
   (do-game
-    (new-game (default-contestant ["Glenn Station" "Ice Wall"])
+    (new-game (default-contestant ["Glenn Station" "Character Wall"])
               (default-challenger))
     (play-and-score state "Glenn Station")
     (let [gs-scored (get-scored state :contestant 0)]
       (card-ability state :contestant gs-scored 0)
-      (prompt-card :contestant (find-card "Ice Wall" (:hand (get-contestant))))
+      (prompt-card :contestant (find-card "Character Wall" (:hand (get-contestant))))
       (is (= 1 (count (:hosted (refresh gs-scored)))))
       (card-ability state :contestant gs-scored 1)
-      (prompt-card :contestant (find-card "Ice Wall" (:hosted (refresh gs-scored))))
+      (prompt-card :contestant (find-card "Character Wall" (:hosted (refresh gs-scored))))
       (is (zero? (count (:hosted (refresh gs-scored))))))))
 
 (deftest global-food-initiative
@@ -981,9 +981,9 @@
 (deftest graft
   ;; Graft
   (letfn [(graft-test [[number-of-picks deck-size]]
-            (let [cards ["Ice Wall" "Fire Wall" "Orion"]]
+            (let [cards ["Character Wall" "Fire Wall" "Orion"]]
               (do-game
-                (new-game (default-contestant ["Graft" "Ice Wall"
+                (new-game (default-contestant ["Graft" "Character Wall"
                                          "Fire Wall" "Orion"])
                           (default-challenger))
                 (starting-hand state :contestant ["Graft"])
@@ -1021,10 +1021,10 @@
   (do-game
     (new-game (default-contestant ["Helium-3 Deposit"
                              "Chief Slee"
-                             "Ice Wall"])
+                             "Character Wall"])
               (default-challenger))
     (play-from-hand state :contestant "Chief Slee" "New party")
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (take-credits state :contestant)
     (let [cs (get-content state :party1 0)
           iw (get-character state :hq 0)]
@@ -1059,24 +1059,24 @@
 (deftest hollywood-renovation
   ;; Hollywood Renovation
   (do-game
-    (new-game (default-contestant ["Hollywood Renovation" "Ice Wall"])
+    (new-game (default-contestant ["Hollywood Renovation" "Character Wall"])
               (default-challenger))
     (core/gain state :contestant :click 10 :credit 10)
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (play-from-hand state :contestant "Hollywood Renovation" "New party")
     (let [hr (get-content state :party1 0)
           iw (get-character state :hq 0)]
       (is (zero? (get-counters (refresh hr) :advancement)) "Hollywood Renovation should start with 0 advancement tokens")
-      (is (zero? (get-counters (refresh iw) :advancement)) "Ice Wall should start with 0 advancement tokens")
+      (is (zero? (get-counters (refresh iw) :advancement)) "Character Wall should start with 0 advancement tokens")
       (dotimes [n 5]
         (advance state (refresh hr))
         (prompt-select :contestant (refresh iw)))
       (is (= 5 (get-counters (refresh hr) :advancement)) "Hollywood Renovation should gain 5 advancement tokens")
-      (is (= 5 (get-counters (refresh iw) :advancement)) "Ice Wall should gain 5 advancement tokens")
+      (is (= 5 (get-counters (refresh iw) :advancement)) "Character Wall should gain 5 advancement tokens")
       (advance state (refresh hr))
       (prompt-select :contestant (refresh iw))
       (is (= 6 (get-counters (refresh hr) :advancement)) "Hollywood Renovation should gain 1 from 5 to 6 advancement tokens")
-      (is (= 7 (get-counters (refresh iw) :advancement)) "Ice Wall should gain 2 from 5 to 7 advancement tokens"))))
+      (is (= 7 (get-counters (refresh iw) :advancement)) "Character Wall should gain 2 from 5 to 7 advancement tokens"))))
 
 (deftest hostile-takeover
   ;; Hostile Takeover
@@ -1297,13 +1297,13 @@
   ;; Mandatory Seed Replacement
   (do-game
     (new-game (default-contestant ["Mandatory Seed Replacement"
-                             "Ice Wall" "Fire Wall"
+                             "Character Wall" "Fire Wall"
                              "Kakugo" "Chum"
                              "RSVP" "Sensei"])
               (default-challenger))
     (core/click-draw state :contestant 2)
     (core/gain state :contestant :click 10 :credit 10)
-    (play-from-hand state :contestant "Ice Wall" "Archives")
+    (play-from-hand state :contestant "Character Wall" "Archives")
     (play-from-hand state :contestant "Fire Wall" "R&D")
     (play-from-hand state :contestant "Kakugo" "HQ")
     (play-from-hand state :contestant "Chum" "Archives")
@@ -1862,9 +1862,9 @@
 (deftest project-kusanagi
   ;; Project Kusanagi
   (do-game
-    (new-game (default-contestant [(qty "Project Kusanagi" 2) "Ice Wall"])
+    (new-game (default-contestant [(qty "Project Kusanagi" 2) "Character Wall"])
               (default-challenger))
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (core/gain state :contestant :click 10 :credit 10)
     (testing "Should gain 0 counters"
       (play-and-score state "Project Kusanagi")
@@ -2093,11 +2093,11 @@
   (testing "vs Leela"
     ;; Issue #3069
     (do-game
-      (new-game (default-contestant [(qty "Research Grant" 2) (qty "Ice Wall" 2)])
+      (new-game (default-contestant [(qty "Research Grant" 2) (qty "Character Wall" 2)])
                 (make-deck "Leela Patel: Trained Pragmatist" ["Sure Gamble"]))
       (core/gain state :contestant :click 1)
-      (play-from-hand state :contestant "Ice Wall" "HQ")
-      (play-from-hand state :contestant "Ice Wall" "R&D")
+      (play-from-hand state :contestant "Character Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "R&D")
       (play-from-hand state :contestant "Research Grant" "New party")
       (play-and-score state "Research Grant")
       (prompt-select :contestant (get-content state :party1 0))
@@ -2307,10 +2307,10 @@
   ;; Standoff
   (testing "Challenger declines first"
     (do-game
-      (new-game (default-contestant ["Standoff" "Ice Wall" "News Team"])
+      (new-game (default-contestant ["Standoff" "Character Wall" "News Team"])
                 (default-challenger ["Cache"]))
-      (starting-hand state :contestant ["Standoff" "Ice Wall"])
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (starting-hand state :contestant ["Standoff" "Character Wall"])
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (take-credits state :contestant)
       (play-from-hand state :challenger "Cache")
       (take-credits state :challenger)
@@ -2329,10 +2329,10 @@
         (is (= 1 (-> (get-contestant) :hand count)) "Contestant should draw a card from Challenger declining to discard an placed card"))))
   (testing "Contestant declines first"
     (do-game
-      (new-game (default-contestant ["Standoff" "Ice Wall" "News Team"])
+      (new-game (default-contestant ["Standoff" "Character Wall" "News Team"])
                 (default-challenger ["Cache" "Cache"]))
-      (starting-hand state :contestant ["Standoff" "Ice Wall"])
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (starting-hand state :contestant ["Standoff" "Character Wall"])
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (take-credits state :contestant)
       (play-from-hand state :challenger "Cache")
       (play-from-hand state :challenger "Cache")
@@ -2356,13 +2356,13 @@
 (deftest successful-field-test
   ;; Successful Field Test
   (do-game
-    (new-game (default-contestant ["Successful Field Test" (qty "Ice Wall" 10)])
+    (new-game (default-contestant ["Successful Field Test" (qty "Character Wall" 10)])
               (default-challenger))
-    (starting-hand state :contestant (vec (cons "Successful Field Test" (repeat 10 "Ice Wall"))))
+    (starting-hand state :contestant (vec (cons "Successful Field Test" (repeat 10 "Character Wall"))))
     (is (= 5 (:credit (get-contestant))) "Should start with 5 credits")
     (play-and-score state "Successful Field Test")
     (dotimes [n 10]
-      (prompt-select :contestant (find-card "Ice Wall" (:hand (get-contestant))))
+      (prompt-select :contestant (find-card "Character Wall" (:hand (get-contestant))))
       (prompt-choice :contestant "HQ"))
     (is (= 5 (:credit (get-contestant))) "Should still have 5 credits")
     (is (some? (get-character state :hq 9)))))
@@ -2370,9 +2370,9 @@
 (deftest superior-cyberwalls
   ;; Superior Cyberwalls
   (do-game
-    (new-game (default-contestant ["Superior Cyberwalls" "Ice Wall"])
+    (new-game (default-contestant ["Superior Cyberwalls" "Character Wall"])
               (default-challenger))
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (let [iw (get-character state :hq 0)]
       (core/reveal state :contestant iw)
       (is (= 1 (:current-strength (refresh iw))) "Should start with base strength of 1")
@@ -2432,13 +2432,13 @@
   ;; The Future is Now
   (testing "With at least one card in deck"
     (do-game
-      (new-game (default-contestant ["The Future is Now" "Ice Wall"])
+      (new-game (default-contestant ["The Future is Now" "Character Wall"])
                 (default-challenger))
       (starting-hand state :contestant ["The Future is Now"])
       (is (= 1 (count (:hand (get-contestant)))))
       (is (= 1 (count (:deck (get-contestant)))))
       (play-and-score state "The Future is Now")
-      (prompt-card :contestant (find-card "Ice Wall" (:deck (get-contestant))))
+      (prompt-card :contestant (find-card "Character Wall" (:deck (get-contestant))))
       (is (= 1 (count (:hand (get-contestant)))))
       (is (zero? (count (:deck (get-contestant)))))))
   (testing "With an empty deck"

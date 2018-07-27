@@ -12,9 +12,9 @@
   end-the-run-test
   ;; Since all ETR character share a common ability, we only need one test
   (do-game
-    (new-game (default-contestant [(qty "Ice Wall" 3) (qty "Hedge Fund" 3) (qty "Restructure" 2)])
+    (new-game (default-contestant [(qty "Character Wall" 3) (qty "Hedge Fund" 3) (qty "Restructure" 2)])
               (default-challenger))
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (take-credits state :contestant 2)
     (run-on state "HQ")
     (is (= [:hq] (get-in @state [:run :locale])))
@@ -182,11 +182,11 @@
 (deftest crick
   ;; Crick - Strength boost when protecting Archives; places a card from Archives
   (do-game
-    (new-game (default-contestant [(qty "Crick" 2) "Ice Wall"])
+    (new-game (default-contestant [(qty "Crick" 2) "Character Wall"])
               (default-challenger))
     (play-from-hand state :contestant "Crick" "HQ")
     (play-from-hand state :contestant "Crick" "Archives")
-    (core/move state :contestant (find-card "Ice Wall" (:hand (get-contestant))) :discard)
+    (core/move state :contestant (find-card "Character Wall" (:hand (get-contestant))) :discard)
     (take-credits state :contestant)
     (let [cr1 (get-character state :hq 0)
           cr2 (get-character state :archives 0)]
@@ -195,7 +195,7 @@
       (is (= 3 (:current-strength (refresh cr1))) "Normal strength over HQ")
       (is (= 6 (:current-strength (refresh cr2))) "+3 strength over Archives")
       (card-subroutine state :contestant cr2 0)
-      (prompt-select :contestant (find-card "Ice Wall" (:discard (get-contestant))))
+      (prompt-select :contestant (find-card "Character Wall" (:discard (get-contestant))))
       (prompt-choice :contestant "HQ")
       (is (= 3 (:credit (get-contestant))) "Paid 1 credit to place as 2nd Character over HQ"))))
 
@@ -582,10 +582,10 @@
   (testing "ability continues to work when character is swapped"
     (do-game
       (new-game (default-contestant ["Kakugo"
-                               "Ice Wall"])
+                               "Character Wall"])
                 (default-challenger))
       (play-from-hand state :contestant "Kakugo" "R&D")
-      (play-from-hand state :contestant "Ice Wall" "Archives")
+      (play-from-hand state :contestant "Character Wall" "Archives")
       (take-credits state :contestant)
       (let [kakugo   (get-character state :rd 0)
             character-wall (get-character state :archives 0)]
@@ -676,12 +676,12 @@
   ;; Lotus Field strength cannot be lowered
   (do-game
     (new-game (default-contestant ["Lotus Field" "Lag Time"])
-              (default-challenger ["Ice Carver" "Parasite"]))
+              (default-challenger ["Character Carver" "Parasite"]))
     (play-from-hand state :contestant "Lotus Field" "Archives")
     (take-credits state :contestant 2)
     (let [lotus (get-character state :archives 0)]
       (core/reveal state :contestant lotus)
-      (play-from-hand state :challenger "Ice Carver")
+      (play-from-hand state :challenger "Character Carver")
       (run-on state "Archives")
       (is (= 4 (:current-strength (refresh lotus))) "Lotus Field strength unchanged")
       (run-jack-out state)
@@ -1156,16 +1156,16 @@
 (deftest seidr-adaptive-barrier
   ;; Seidr Adaptive Barrier - +1 strength for every character protecting its locale
   (do-game
-    (new-game (default-contestant ["Seidr Adaptive Barrier" (qty "Ice Wall" 2)])
+    (new-game (default-contestant ["Seidr Adaptive Barrier" (qty "Character Wall" 2)])
               (default-challenger))
     (core/gain state :contestant :credit 10)
     (play-from-hand state :contestant "Seidr Adaptive Barrier" "HQ")
     (let [sab (get-character state :hq 0)]
       (core/reveal state :contestant sab)
       (is (= 3 (:current-strength (refresh sab))) "Seidr gained 1 strength for itself")
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (is (= 4 (:current-strength (refresh sab))) "+2 strength for 2 pieces of Character")
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (is (= 5 (:current-strength (refresh sab))) "+3 strength for 3 pieces of Character")
       (core/move-card state :contestant {:card (get-character state :hq 1) :locale "Archives"})
       (is (= 4 (:current-strength (refresh sab))) "+2 strength for 2 pieces of Character"))))
@@ -1174,12 +1174,12 @@
   ;; Self-Adapting Code Wall
   (do-game
     (new-game (default-contestant ["Self-Adapting Code Wall" "Lag Time"])
-              (default-challenger ["Ice Carver" "Parasite"]))
+              (default-challenger ["Character Carver" "Parasite"]))
     (play-from-hand state :contestant "Self-Adapting Code Wall" "Archives")
     (take-credits state :contestant 2)
     (let [sacw (get-character state :archives 0)]
       (core/reveal state :contestant sacw)
-      (play-from-hand state :challenger "Ice Carver")
+      (play-from-hand state :challenger "Character Carver")
       (run-on state "Archives")
       (is (= 1 (:current-strength (refresh sacw))) "Self-Adapting Code Wall strength unchanged")
       (run-jack-out state)
@@ -1269,7 +1269,7 @@
   (testing "with Mwanza City Grid, should access additional 3 cards"
     (do-game
       (new-game (default-contestant ["Shiro" "Mwanza City Grid"
-                               (qty "Ice Wall" 10)])
+                               (qty "Character Wall" 10)])
                 (default-challenger ["R&D Interface"]))
       (starting-hand state :contestant ["Shiro" "Mwanza City Grid"])
       (play-from-hand state :contestant "Mwanza City Grid" "R&D")
@@ -1312,9 +1312,9 @@
 (deftest special-offer
   ;; Special Offer discards itself and updates the run position
   (do-game
-    (new-game (default-contestant ["Ice Wall" "Special Offer"])
+    (new-game (default-contestant ["Character Wall" "Special Offer"])
               (default-challenger))
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (play-from-hand state :contestant "Special Offer" "HQ")
     (take-credits state :contestant 1)
     (run-on state "HQ")
@@ -1325,7 +1325,7 @@
       (card-subroutine state :contestant special 0)
       (is (= 9 (:credit (get-contestant))) "Special Offer paid 5 credits")
       (is (= 1 (:position (get-in @state [:run])))
-          "Run position updated; now approaching Ice Wall"))))
+          "Run position updated; now approaching Character Wall"))))
 
 (deftest sand-storm
   ;; Sand Storm should not end the run if protecting an otherwise empty/naked locale
@@ -1345,7 +1345,7 @@
 (deftest surveyor
   ;; Surveyor character strength
   (do-game
-    (new-game (default-contestant [(qty "Surveyor" 1) (qty "Ice Wall" 2)])
+    (new-game (default-contestant [(qty "Surveyor" 1) (qty "Character Wall" 2)])
               (default-challenger))
     (core/gain state :contestant :credit 10)
     (core/gain state :challenger :credit 10)
@@ -1353,9 +1353,9 @@
     (let [surv (get-character state :hq 0)]
       (core/reveal state :contestant surv)
       (is (= 2 (:current-strength (refresh surv))) "Surveyor has 2 strength for itself")
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (is (= 4 (:current-strength (refresh surv))) "Surveyor has 4 strength for 2 pieces of Character")
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (is (= 6 (:current-strength (refresh surv))) "Surveyor has 6 strength for 3 pieces of Character")
       (run-on state "HQ")
       (card-subroutine state :contestant surv 0)

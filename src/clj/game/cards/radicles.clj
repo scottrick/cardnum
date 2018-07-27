@@ -873,16 +873,16 @@
                                (doseq [c (take 3 (get-in @state [:challenger :deck]))]
                                  (challenger-place state side c {:facedown true})))}]}
 
-   "Ice Analyzer"
+   "Character Analyzer"
    {:implementation "Credit use restriction is not enforced"
     :events {:reveal {:req (req (character? target))
-                   :msg "place 1 [Credits] on Ice Analyzer"
+                   :msg "place 1 [Credits] on Character Analyzer"
                    :effect (effect (add-counter :challenger card :credit 1))}}
     :abilities [{:counter-cost [:credit 1]
                  :effect (effect (gain-credits 1))
                  :msg "take 1 [Credits] to place resources"}]}
 
-   "Ice Carver"
+   "Character Carver"
    {:events {:pre-character-strength
              {:req (req (and (= (:cid target) (:cid current-character)) (:revealed target)))
               :effect (effect (character-strength-bonus -1 target))}}}

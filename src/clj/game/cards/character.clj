@@ -1074,7 +1074,7 @@
    "Hunter"
    {:subroutines [(tag-trace 3)]}
 
-   "Ice Wall"
+   "Character Wall"
    {:advanceable :always
     :subroutines [end-the-run]
     :strength-bonus advance-counters}

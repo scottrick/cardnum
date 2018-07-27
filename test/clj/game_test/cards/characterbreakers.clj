@@ -209,9 +209,9 @@
 (deftest crypsis
   ;; Crypsis - Loses a virus counter after encountering character it broke
   (do-game
-    (new-game (default-contestant ["Ice Wall"])
+    (new-game (default-contestant ["Character Wall"])
               (default-challenger [(qty "Crypsis" 2)]))
-    (play-from-hand state :contestant "Ice Wall" "Archives")
+    (play-from-hand state :contestant "Character Wall" "Archives")
     (take-credits state :contestant)
     (core/gain state :challenger :credit 100)
     (play-from-hand state :challenger "Crypsis")
@@ -365,22 +365,22 @@
 (deftest femme-fatale
   ;; Femme Fatale counter test
   (do-game
-   (new-game (default-contestant ["Ice Wall"])
+   (new-game (default-contestant ["Character Wall"])
              (default-challenger [(qty "Femme Fatale" 2)]))
-   (play-from-hand state :contestant "Ice Wall" "HQ")
+   (play-from-hand state :contestant "Character Wall" "HQ")
    (take-credits state :contestant)
    (core/gain state :challenger :credit 18)
    (let [iw (get-character state :hq 0)]
     (play-from-hand state :challenger "Femme Fatale")
     (prompt-select :challenger iw)
-    (is (:icon (refresh iw)) "Ice Wall has an icon")
+    (is (:icon (refresh iw)) "Character Wall has an icon")
     (core/discard state :challenger (get-resource state 0))
-    (is (not (:icon (refresh iw))) "Ice Wall does not have an icon after Femme discarded")
+    (is (not (:icon (refresh iw))) "Character Wall does not have an icon after Femme discarded")
     (play-from-hand state :challenger "Femme Fatale")
     (prompt-select :challenger iw)
-    (is (:icon (refresh iw)) "Ice Wall has an icon")
+    (is (:icon (refresh iw)) "Character Wall has an icon")
     (core/discard state :contestant iw)
-    (is (not (:icon (refresh iw))) "Ice Wall does not have an icon after itself discarded"))))
+    (is (not (:icon (refresh iw))) "Character Wall does not have an icon after itself discarded"))))
 
 (deftest god-of-war
   ;; God of War - Take 1 tag to place 2 virus counters
@@ -712,9 +712,9 @@
 (deftest wyrm
   ;; Wyrm reduces strength of character
   (do-game
-   (new-game (default-contestant ["Ice Wall"])
+   (new-game (default-contestant ["Character Wall"])
              (default-challenger ["Wyrm"]))
-   (play-from-hand state :contestant "Ice Wall" "HQ")
+   (play-from-hand state :contestant "Character Wall" "HQ")
    (take-credits state :contestant)
    (play-from-hand state :challenger "Wyrm")
    (run-on state "HQ")
@@ -722,9 +722,9 @@
          wyrm (get-resource state 0)]
      (core/reveal state :contestant character-wall)
      (card-ability state :challenger wyrm 1)
-     (is (zero? (:current-strength (refresh character-wall))) "Strength of Ice Wall reduced to 0")
+     (is (zero? (:current-strength (refresh character-wall))) "Strength of Character Wall reduced to 0")
      (card-ability state :challenger wyrm 1)
-     (is (= -1 (:current-strength (refresh character-wall))) "Strength of Ice Wall reduced to -1"))))
+     (is (= -1 (:current-strength (refresh character-wall))) "Strength of Character Wall reduced to -1"))))
 
 (deftest yusuf
   ;; Yusuf gains virus counters on successful runs and can spend virus counters from any placed card

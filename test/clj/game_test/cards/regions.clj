@@ -26,9 +26,9 @@
 (deftest ash-2x3zb9cy
   ;; Ash 2X3ZB9CY
   (do-game
-    (new-game (default-contestant ["Ash 2X3ZB9CY" (qty "Ice Wall" 10)])
+    (new-game (default-contestant ["Ash 2X3ZB9CY" (qty "Character Wall" 10)])
               (default-challenger))
-    (starting-hand state :contestant ["Ash 2X3ZB9CY" "Ice Wall"])
+    (starting-hand state :contestant ["Ash 2X3ZB9CY" "Character Wall"])
     (play-from-hand state :contestant "Ash 2X3ZB9CY" "HQ")
     (take-credits state :contestant)
     (let [ash (get-content state :hq 0)]
@@ -381,17 +381,17 @@
 (deftest code-replicator
   ;; Code Replicator - discard to make challenger approach passed (revealed) character again
   (do-game
-    (new-game (default-contestant [(qty "Ice Wall" 3) "Code Replicator"])
+    (new-game (default-contestant [(qty "Character Wall" 3) "Code Replicator"])
               (default-challenger))
     (core/gain state :contestant :click 1)
     (core/gain state :contestant :credit 5)
-    (play-from-hand state :contestant "Ice Wall" "HQ")
-    (play-from-hand state :contestant "Ice Wall" "HQ")
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (play-from-hand state :contestant "Code Replicator" "HQ")
     (take-credits state :contestant)
     (run-on state "HQ")
-    (is (= 3 (:position (get-in @state [:run]))) "Initial position outermost Ice Wall")
+    (is (= 3 (:position (get-in @state [:run]))) "Initial position outermost Character Wall")
     (let [cr (get-content state :hq 0)
           i1 (get-character state :hq 0)
           i2 (get-character state :hq 1)
@@ -400,9 +400,9 @@
       (is (= 5 (:credit (get-contestant))))
       (core/reveal state :contestant i3)
       (run-continue state)
-      (is (= 2 (:position (get-in @state [:run]))) "Passed Ice Wall")
+      (is (= 2 (:position (get-in @state [:run]))) "Passed Character Wall")
       (card-ability state :contestant cr 0)
-      (is (= 3 (:position (get-in @state [:run]))) "Challenger approaching previous Ice Wall")
+      (is (= 3 (:position (get-in @state [:run]))) "Challenger approaching previous Character Wall")
       (is (empty? (get-content state :hq))
           "Code Replicatior discarded from root of HQ"))))
 
@@ -693,7 +693,7 @@
 (deftest jinja-city-grid
   ;; Jinja City Grid - place drawn character, lowering place cost by 4
   (do-game
-    (new-game (default-contestant ["Jinja City Grid" (qty "Vanilla" 3) (qty "Ice Wall" 3)])
+    (new-game (default-contestant ["Jinja City Grid" (qty "Vanilla" 3) (qty "Character Wall" 3)])
               (default-challenger))
     (starting-hand state :contestant ["Jinja City Grid"])
     (core/gain state :contestant :click 6)
@@ -807,11 +807,11 @@
         (is (= 1 (count (get-in @state [:contestant :locales :party1 :characters]))) "Still 1 character on locale"))))
   (testing "fire before pass"
     (do-game
-      (new-game (default-contestant ["Mumbad City Grid" "Quandary" "Ice Wall"])
+      (new-game (default-contestant ["Mumbad City Grid" "Quandary" "Character Wall"])
                 (default-challenger))
       (play-from-hand state :contestant "Mumbad City Grid" "New party")
       (play-from-hand state :contestant "Quandary" "Locale 1")
-      (play-from-hand state :contestant "Ice Wall" "Locale 1")
+      (play-from-hand state :contestant "Character Wall" "Locale 1")
       (let [mcg (get-content state :party1 0)]
         (core/reveal state :contestant mcg)
         (take-credits state :contestant)
@@ -819,7 +819,7 @@
         (is (= 2 (:position (:run @state))) "Challenger at position 2")
         (is (= 2 (count (get-in @state [:contestant :locales :party1 :characters]))) "2 character on locale")
         (is (= "Quandary" (:title (first (get-in @state [:contestant :locales :party1 :characters])))) "Quandary inner character")
-        (is (= "Ice Wall" (:title (second (get-in @state [:contestant :locales :party1 :characters])))) "Ice Wall outer character")
+        (is (= "Character Wall" (:title (second (get-in @state [:contestant :locales :party1 :characters])))) "Character Wall outer character")
         (card-ability state :contestant (refresh mcg) 0)
         (run-continue state)
         (is (= 1 (:position (:run @state))) "Challenger at position 1")
@@ -827,7 +827,7 @@
         (prompt-select :contestant (get-character state :party1 0))
         (is (= 1 (:position (:run @state))) "Challenger at position 1")
         (is (= "Quandary" (:title (second (get-in @state [:contestant :locales :party1 :characters])))) "Quandary outer character")
-        (is (= "Ice Wall" (:title (first (get-in @state [:contestant :locales :party1 :characters])))) "Ice Wall inner character")
+        (is (= "Character Wall" (:title (first (get-in @state [:contestant :locales :party1 :characters])))) "Character Wall inner character")
         (prompt-choice-partial :contestant "No")
         (prompt-choice-partial :challenger "Jack")
         (is (= 2 (count (get-in @state [:contestant :locales :party1 :characters]))) "Still 2 character on locale")))))
@@ -1005,7 +1005,7 @@
   ;; NeoTokyo Grid - Gain 1c the first time per turn a card in this locale gets an advancement
   (do-game
     (new-game (default-contestant ["NeoTokyo Grid" "Nisei MK II"
-                             "Shipment from SanSan" "Ice Wall"])
+                             "Shipment from SanSan" "Character Wall"])
               (default-challenger))
     (core/gain state :contestant :click 2)
     (play-from-hand state :contestant "NeoTokyo Grid" "New party")
@@ -1022,7 +1022,7 @@
       (is (= 3 (:credit (get-contestant))) "No credit gained")
       (take-credits state :contestant)
       (take-credits state :challenger)
-      (play-from-hand state :contestant "Ice Wall" "Locale 1")
+      (play-from-hand state :contestant "Character Wall" "Locale 1")
       (core/advance state :contestant {:card (refresh (get-character state :party1 0))})
       (is (= 2 (:credit (get-contestant))) "No credit gained from advancing Character"))))
 
@@ -1457,11 +1457,11 @@
 (deftest satellite-grid
   ;; Satellite Grid - Add 1 fake advancement on all Character protecting locale
   (do-game
-    (new-game (default-contestant ["Satellite Grid" (qty "Ice Wall" 2)])
+    (new-game (default-contestant ["Satellite Grid" (qty "Character Wall" 2)])
               (default-challenger))
     (play-from-hand state :contestant "Satellite Grid" "HQ")
-    (play-from-hand state :contestant "Ice Wall" "HQ")
-    (play-from-hand state :contestant "Ice Wall" "R&D")
+    (play-from-hand state :contestant "Character Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "R&D")
     (let [iw1 (get-character state :hq 0)
           iw2 (get-character state :rd 0)
           sg (get-content state :hq 0)]
@@ -1475,17 +1475,17 @@
       (core/reveal state :contestant (refresh iw2))
       (is (= 1 (:current-strength (refresh iw2))) "Satellite Grid not impacting Character elsewhere")
       (core/hide state :contestant sg)
-      (is (= 2 (:current-strength (refresh iw1))) "Ice Wall strength boost only from real advancement"))))
+      (is (= 2 (:current-strength (refresh iw1))) "Character Wall strength boost only from real advancement"))))
 
 (deftest self-destruct
   ;; Self-destruct
   (do-game
-    (new-game (default-contestant ["Self-destruct" "Dedicated Response Team" "Ice Wall"])
+    (new-game (default-contestant ["Self-destruct" "Dedicated Response Team" "Character Wall"])
               (default-challenger))
     (core/gain state :contestant :credit 100 :click 4)
     (play-from-hand state :contestant "Self-destruct" "New party")
     (play-from-hand state :contestant "Dedicated Response Team" "Locale 1")
-    (play-from-hand state :contestant "Ice Wall" "Locale 1")
+    (play-from-hand state :contestant "Character Wall" "Locale 1")
     (let [self (get-content state :party1 0)]
       (take-credits state :contestant)
       (run-on state "Locale 1")
@@ -1645,11 +1645,11 @@
 (deftest the-twins
   ;; The Twins
   (do-game
-    (new-game (default-contestant ["The Twins" (qty "Ice Wall" 10)])
+    (new-game (default-contestant ["The Twins" (qty "Character Wall" 10)])
               (default-challenger ["Corroder"]))
-    (starting-hand state :contestant ["The Twins" "Ice Wall" "Ice Wall"])
+    (starting-hand state :contestant ["The Twins" "Character Wall" "Character Wall"])
     (play-from-hand state :contestant "The Twins" "New party")
-    (play-from-hand state :contestant "Ice Wall" "Locale 1")
+    (play-from-hand state :contestant "Character Wall" "Locale 1")
     (let [twins (get-content state :party1 0)
           iw (get-character state :party1 0)]
       (core/reveal state :contestant twins)
@@ -1767,7 +1767,7 @@
   ;; Valley Grid
   (testing "Reduce Challenger max hand size and restore it even if discarded"
     (do-game
-      (new-game (default-contestant [(qty "Valley Grid" 3) (qty "Ice Wall" 3)])
+      (new-game (default-contestant [(qty "Valley Grid" 3) (qty "Character Wall" 3)])
                 (default-challenger))
       (play-from-hand state :contestant "Valley Grid" "New party")
       (take-credits state :contestant 2)

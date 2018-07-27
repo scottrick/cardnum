@@ -1,6 +1,6 @@
 (in-ns 'game.core)
 
-(declare set-prop get-nested-host get-nested-zone all-active-placed)
+(declare set-prop get-nested-host get-nested-zone)
 
 (defn get-zones [state]
   (keys (get-in @state [:contestant :locales])))

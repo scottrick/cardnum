@@ -199,22 +199,22 @@
 (deftest diwan
   ;; Diwan - Full test
   (do-game
-    (new-game (default-contestant [(qty "Ice Wall" 3) (qty "Fire Wall" 3) (qty "Crisium Grid" 2)])
+    (new-game (default-contestant [(qty "Character Wall" 3) (qty "Fire Wall" 3) (qty "Crisium Grid" 2)])
               (default-challenger ["Diwan"]))
     (take-credits state :contestant)
     (play-from-hand state :challenger "Diwan")
     (prompt-choice :challenger "HQ")
     (take-credits state :challenger)
     (is (= 8 (:credit (get-contestant))) "8 credits for contestant at start of second turn")
-    (play-from-hand state :contestant "Ice Wall" "R&D")
+    (play-from-hand state :contestant "Character Wall" "R&D")
     (is (= 8 (:credit (get-contestant))) "Diwan did not charge extra for place on another locale")
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (is (= 7 (:credit (get-contestant))) "Diwan charged 1cr to place character protecting the named locale")
     (play-from-hand state :contestant "Crisium Grid" "HQ")
     (is (= 7 (:credit (get-contestant))) "Diwan didn't charge to place another region in root of HQ")
     (take-credits state :contestant)
     (take-credits state :challenger)
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (is (= 5 (:credit (get-contestant))) "Diwan charged 1cr + 1cr to place a second character protecting the named locale")
     (core/gain state :contestant :click 1)
     (core/purge state :contestant)
@@ -295,10 +295,10 @@
 (deftest false-echo
   ;; False Echo - choice for Contestant
   (do-game
-    (new-game (default-contestant [(qty "Ice Wall" 3)])
+    (new-game (default-contestant [(qty "Character Wall" 3)])
               (default-challenger [(qty "False Echo" 3)]))
-    (play-from-hand state :contestant "Ice Wall" "Archives")
-    (play-from-hand state :contestant "Ice Wall" "Archives")
+    (play-from-hand state :contestant "Character Wall" "Archives")
+    (play-from-hand state :contestant "Character Wall" "Archives")
     (take-credits state :contestant)
     (play-from-hand state :challenger "False Echo")
     (play-from-hand state :challenger "False Echo")
@@ -308,12 +308,12 @@
           echo2 (get-resource state 1)]
       (card-ability state :challenger echo1 0)
       (prompt-choice :contestant "Add to HQ")
-      (is (= 2 (count (:hand (get-contestant)))) "Ice Wall added to HQ")
+      (is (= 2 (count (:hand (get-contestant)))) "Character Wall added to HQ")
       (is (= 1 (count (:discard (get-challenger)))) "False Echo discarded")
       (run-continue state)
       (card-ability state :challenger echo2 0)
       (prompt-choice :contestant "Reveal")
-      (is (:revealed (get-character state :archives 0)) "Ice Wall revealed")
+      (is (:revealed (get-character state :archives 0)) "Character Wall revealed")
       (is (= 2 (count (:discard (get-challenger)))) "False Echo discarded"))))
 
 (deftest gravedigger
@@ -407,7 +407,7 @@
                   ["Hostile Takeover"
                    "Dedicated Response Team"
                    "Beanstalk Royalties"
-                   "Ice Wall"
+                   "Character Wall"
                    "Oberth Protocol"]))))
   (testing "vs an ambush"
     (do-game
@@ -614,9 +614,9 @@
 (deftest paintbrush
   ;; Paintbrush - Give revealed Character a chosen subtype until the end of the next run
   (do-game
-    (new-game (default-contestant ["Ice Wall"])
+    (new-game (default-contestant ["Character Wall"])
               (default-challenger ["Paintbrush"]))
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Paintbrush")
     (is (= 2 (core/available-mu state)))
@@ -624,16 +624,16 @@
           pb (get-resource state 0)]
       (card-ability state :challenger pb 0)
       (prompt-select :challenger iwall)
-      (is (= 3 (:click (get-challenger))) "Ice Wall not revealed, so no click charged")
+      (is (= 3 (:click (get-challenger))) "Character Wall not revealed, so no click charged")
       (prompt-choice :challenger "Done") ; cancel out
       (core/reveal state :contestant iwall)
       (card-ability state :challenger pb 0)
       (prompt-select :challenger iwall)
       (prompt-choice :challenger "Code Gate")
       (is (= 2 (:click (get-challenger))) "Click charged")
-      (is (= true (has? (refresh iwall) :subtype "Code Gate")) "Ice Wall gained Code Gate")
+      (is (= true (has? (refresh iwall) :subtype "Code Gate")) "Character Wall gained Code Gate")
       (run-empty-locale state "Archives")
-      (is (= false (has? (refresh iwall) :subtype "Code Gate")) "Ice Wall lost Code Gate at the end of the run"))))
+      (is (= false (has? (refresh iwall) :subtype "Code Gate")) "Character Wall lost Code Gate at the end of the run"))))
 
 (deftest parasite
   (testing "Basic functionality: Gain 1 counter every Challenger turn"
@@ -686,9 +686,9 @@
           (is (= -1 (:current-strength (refresh arch))) "Architect at -1 strength")))))
   (testing "Should stay on hosted card moved by Builder"
     (do-game
-      (new-game (default-contestant [(qty "Builder" 3) "Ice Wall"])
+      (new-game (default-contestant [(qty "Builder" 3) "Character Wall"])
                 (default-challenger [(qty "Parasite" 3)]))
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (play-from-hand state :contestant "Builder" "Archives")
       (let [builder (get-character state :archives 0)]
         (core/reveal state :contestant builder)
@@ -1084,10 +1084,10 @@
 (deftest surfer
   ;; Surfer - Swap position with character before or after when encountering a Barrier Character
   (do-game
-   (new-game (default-contestant ["Ice Wall" "Quandary"])
+   (new-game (default-contestant ["Character Wall" "Quandary"])
              (default-challenger ["Surfer"]))
    (play-from-hand state :contestant "Quandary" "HQ")
-   (play-from-hand state :contestant "Ice Wall" "HQ")
+   (play-from-hand state :contestant "Character Wall" "HQ")
    (take-credits state :contestant)
    (play-from-hand state :challenger "Surfer")
    (is (= 3 (:credit (get-challenger))) "Paid 2 credits to place Surfer")
@@ -1099,7 +1099,7 @@
      (prompt-select :challenger (get-character state :hq 0))
      (is (= 1 (:credit (get-challenger))) "Paid 2 credits to use Surfer")
      (is (= 1 (get-in @state [:run :position])) "Now at next position (1)")
-     (is (= "Ice Wall" (:title (get-character state :hq 0))) "Ice Wall now at position 1"))))
+     (is (= "Character Wall" (:title (get-character state :hq 0))) "Character Wall now at position 1"))))
 
 (deftest takobi
   ;; Takobi - 2 power counter to add +3 strength to a non-AI characterbreaker for encounter
@@ -1216,9 +1216,9 @@
 
 (deftest wari
   (do-game
-    (new-game (default-contestant ["Ice Wall"])
+    (new-game (default-contestant ["Character Wall"])
               (default-challenger ["Wari"]))
-    (play-from-hand state :contestant "Ice Wall" "R&D")
+    (play-from-hand state :contestant "Character Wall" "R&D")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Wari")
     (run-empty-locale state "HQ")
@@ -1226,4 +1226,4 @@
     (prompt-choice :challenger "Barrier")
     (prompt-select :challenger (get-character state :rd 0))
     (is (= 1 (count (:discard (get-challenger)))) "Wari in heap")
-    (is (not (empty? (get-in @state [:challenger :prompt]))) "Challenger is currently accessing Ice Wall")))
+    (is (not (empty? (get-in @state [:challenger :prompt]))) "Challenger is currently accessing Character Wall")))

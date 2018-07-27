@@ -104,9 +104,9 @@
   ;; Apocalypse
   (testing "Ensure MU is correct and no duplicate cards in heap"
     (do-game
-      (new-game (default-contestant [(qty "Launch Campaign" 2) "Ice Wall"])
+      (new-game (default-contestant [(qty "Launch Campaign" 2) "Character Wall"])
                 (default-challenger ["Scheherazade" "Corroder" "Hivemind" (qty "Apocalypse" 2)]))
-      (play-from-hand state :contestant "Ice Wall" "New party")
+      (play-from-hand state :contestant "Character Wall" "New party")
       (play-from-hand state :contestant "Launch Campaign" "New party")
       (play-from-hand state :contestant "Launch Campaign" "New party")
       (take-credits state :contestant)
@@ -163,12 +163,12 @@
   (testing "with Hostile Infrastructure - should take damage equal to 2x cards on the table"
     (do-game
       (new-game
-        (default-contestant [(qty "Hostile Infrastructure" 2) (qty "Ice Wall" 2)])
+        (default-contestant [(qty "Hostile Infrastructure" 2) (qty "Character Wall" 2)])
         (default-challenger ["Apocalypse" (qty "Sure Gamble" 9)]))
       (core/gain state :contestant :click 1)
       (play-from-hand state :contestant "Hostile Infrastructure" "New party")
-      (play-from-hand state :contestant "Ice Wall" "New party")
-      (play-from-hand state :contestant "Ice Wall" "New party")
+      (play-from-hand state :contestant "Character Wall" "New party")
+      (play-from-hand state :contestant "Character Wall" "New party")
       (play-from-hand state :contestant "Hostile Infrastructure" "New party")
       (core/reveal state :contestant (get-content state :party1 0) {:ignore-cost true})
       (core/reveal state :contestant (get-content state :party4 0) {:ignore-cost true})
@@ -185,9 +185,9 @@
       (is (= 9 (count (:discard (get-challenger)))) "There are 9 cards in heap")))
   (testing "Turn Challenger cards facedown and reduce memory and hand-size gains"
     (do-game
-      (new-game (default-contestant [(qty "Launch Campaign" 2) "Ice Wall"])
+      (new-game (default-contestant [(qty "Launch Campaign" 2) "Character Wall"])
                 (default-challenger ["Logos" "Apocalypse" (qty "Origami" 2)]))
-      (play-from-hand state :contestant "Ice Wall" "New party")
+      (play-from-hand state :contestant "Character Wall" "New party")
       (play-from-hand state :contestant "Launch Campaign" "New party")
       (play-from-hand state :contestant "Launch Campaign" "New party")
       (take-credits state :contestant)
@@ -211,9 +211,9 @@
         (is (= 4 (core/available-mu state)) "Memory reset with Logos and Origami facedown"))))
 (testing "Turn Challenger cards facedown without firing their discard effects"
   (do-game
-    (new-game (default-contestant [(qty "Launch Campaign" 2) "Ice Wall"])
+    (new-game (default-contestant [(qty "Launch Campaign" 2) "Character Wall"])
               (default-challenger [(qty "Tri-maf Contact" 3) (qty "Apocalypse" 3)]))
-    (play-from-hand state :contestant "Ice Wall" "New party")
+    (play-from-hand state :contestant "Character Wall" "New party")
     (play-from-hand state :contestant "Launch Campaign" "New party")
     (play-from-hand state :contestant "Launch Campaign" "New party")
     (take-credits state :contestant)
@@ -315,26 +315,26 @@
   (testing "Basic test"
     (do-game
       (new-game
-        (default-contestant [(qty "Ice Wall" 3)])
+        (default-contestant [(qty "Character Wall" 3)])
         (make-deck "Valencia Estevez: The Angel of Cayambe" [(qty "Blackmail" 3)]))
       (is (= 1 (get-in @state [:contestant :bad-publicity])) "Contestant has 1 bad-publicity")
-      (play-from-hand state :contestant "Ice Wall" "HQ")
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (take-credits state :contestant)
       (play-from-hand state :challenger "Blackmail")
       (prompt-choice :challenger "HQ")
       (let [iwall1 (get-character state :hq 0)
             iwall2 (get-character state :hq 1)]
         (core/reveal state :contestant iwall1)
-        (is (not (:revealed (refresh iwall1))) "First Ice Wall is not revealed")
+        (is (not (:revealed (refresh iwall1))) "First Character Wall is not revealed")
         (run-continue state)
         (core/reveal state :contestant iwall2)
-        (is (not (:revealed (refresh iwall2))) "Second Ice Wall is not revealed")
+        (is (not (:revealed (refresh iwall2))) "Second Character Wall is not revealed")
         (core/jack-out state :challenger nil)
         ;; Do another run, where the character should reveal
         (run-on state "HQ")
         (core/reveal state :contestant iwall1)
-        (is (:revealed (refresh iwall1)) "First Ice Wall is revealed"))))
+        (is (:revealed (refresh iwall1)) "First Character Wall is revealed"))))
   (testing "Regression test for a revealed tmi breaking game state on a blackmail run"
     (do-game
       (new-game (default-contestant [(qty "TMI" 3)])
@@ -357,7 +357,7 @@
   ;; By Any Means
   (testing "Full test"
     (do-game
-     (new-game (default-contestant ["Hedge Fund" "Ice Wall" "Paper Trail" "PAD Campaign"
+     (new-game (default-contestant ["Hedge Fund" "Character Wall" "Paper Trail" "PAD Campaign"
                               "Project Junebug"])
                (default-challenger ["By Any Means" (qty "Sure Gamble" 5)]))
      (take-credits state :contestant)
@@ -564,10 +564,10 @@
         (is (= deck (count (:deck (get-challenger)))) "No card was shuffled back into the stack"))))
   (testing "vs ending the run via contestant action. #3639"
       (do-game
-        (new-game (default-contestant ["Ice Wall"])
+        (new-game (default-contestant ["Character Wall"])
                   (default-challenger ["Compile" "Gordian Blade"]))
         (starting-hand state :challenger ["Compile"])
-        (play-from-hand state :contestant "Ice Wall" "Archives")
+        (play-from-hand state :contestant "Character Wall" "Archives")
         (let [iw (get-character state :archives 0)]
           (core/reveal state :contestant iw)
           (take-credits state :contestant)
@@ -935,7 +935,7 @@
   ;; Embezzle
   (testing "Basic test"
     (do-game
-      (new-game (default-contestant ["Ice Wall" "Archer"])
+      (new-game (default-contestant ["Character Wall" "Archer"])
                 (default-challenger ["Embezzle"]))
       (take-credits state :contestant)
       (is (= 5 (:credit (get-challenger))))
@@ -945,7 +945,7 @@
       (is (= 12 (:credit (get-challenger))))))
   (testing "Check that discarded cards are discarded face-up"
     (do-game
-      (new-game (default-contestant ["Ice Wall"])
+      (new-game (default-contestant ["Character Wall"])
                 (default-challenger ["Embezzle"]))
       (take-credits state :contestant)
       (is (= 5 (:credit (get-challenger))))
@@ -977,9 +977,9 @@
   ;; Employee Strike
   (testing "vs Blue Sun, suppress Step 1.2"
     (do-game
-      (new-game (make-deck "Blue Sun: Powering the Future" ["Ice Wall"])
+      (new-game (make-deck "Blue Sun: Powering the Future" ["Character Wall"])
                 (default-challenger ["Employee Strike" "Scrubbed"]))
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (core/reveal state :contestant (get-character state :hq 0))
       (take-credits state :contestant)
       (play-from-hand state :challenger "Employee Strike")
@@ -1270,11 +1270,11 @@
 
 (deftest glut-cipher
   (do-game
-    (new-game (default-contestant [(qty "Ice Wall" 3) (qty "Wraparound" 2) "Hedge Fund"])
+    (new-game (default-contestant [(qty "Character Wall" 3) (qty "Wraparound" 2) "Hedge Fund"])
               (default-challenger [(qty "Glut Cipher" 3)]))
     (take-credits state :contestant)
-    (discard-from-hand state :contestant "Ice Wall")
-    (discard-from-hand state :contestant "Ice Wall")
+    (discard-from-hand state :contestant "Character Wall")
+    (discard-from-hand state :contestant "Character Wall")
     (discard-from-hand state :contestant "Hedge Fund")
     (is (= 3 (count (:discard (get-contestant)))) "There are 3 cards in Archives")
     (play-from-hand state :challenger "Glut Cipher")
@@ -1285,7 +1285,7 @@
     (is (= 3 (count (filter :seen (:discard (get-contestant))))) "There are 3 faceup cards in Archives")
     (discard-from-hand state :contestant "Wraparound")
     (discard-from-hand state :contestant "Wraparound")
-    (discard-from-hand state :contestant "Ice Wall")
+    (discard-from-hand state :contestant "Character Wall")
     (is (= 3 (count (filter :seen (:discard (get-contestant))))) "There are 3 faceup cards in Archives")
     (is (= 6 (count (:discard (get-contestant)))) "There are 6 cards in Archives")
     (play-run-event state "Glut Cipher" :archives)
@@ -1515,13 +1515,13 @@
       (is (= 3 (count (:deck (get-challenger)))) "No cards drawn from I've Had Worse")))
   (testing "Will save you if you apocalypse away a lot of cards vs Hostile Infrastructure"
     (do-game
-      (new-game (default-contestant ["Hostile Infrastructure" (qty "Ice Wall" 2)])
+      (new-game (default-contestant ["Hostile Infrastructure" (qty "Character Wall" 2)])
                 (default-challenger [(qty "I've Had Worse" 3) (qty "Sure Gamble" 3) (qty "Apocalypse" 2)]))
       (starting-hand state :challenger ["I've Had Worse" "Apocalypse"])
-      (starting-hand state :contestant ["Hostile Infrastructure" "Ice Wall" "Ice Wall"])
+      (starting-hand state :contestant ["Hostile Infrastructure" "Character Wall" "Character Wall"])
       (play-from-hand state :contestant "Hostile Infrastructure" "New party")
-      (play-from-hand state :contestant "Ice Wall" "New party")
-      (play-from-hand state :contestant "Ice Wall" "New party")
+      (play-from-hand state :contestant "Character Wall" "New party")
+      (play-from-hand state :contestant "Character Wall" "New party")
       (core/reveal state :contestant (get-content state :party1 0))
       (take-credits state :contestant)
       (run-empty-locale state "HQ")
@@ -1549,32 +1549,32 @@
   ;; Leave No Trace should hide Character that was revealed during the run
   (testing "Basic test"
     (do-game
-      (new-game (default-contestant [(qty "Ice Wall" 2)])
+      (new-game (default-contestant [(qty "Character Wall" 2)])
                 (default-challenger ["Leave No Trace"]))
-      (play-from-hand state :contestant "Ice Wall" "HQ")
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (core/reveal state :contestant (get-character state :hq 1))
       (take-credits state :contestant)
       (play-from-hand state :challenger "Leave No Trace")
       (prompt-choice :challenger "HQ")
       (core/reveal state :contestant (get-character state :hq 0))
       (run-successful state)
-      (is (not (:revealed (get-character state :hq 0))) "Inner Ice Wall should not be revealed")
-      (is (:revealed (get-character state :hq 1)) "Outer Ice Wall should be revealed still")))
+      (is (not (:revealed (get-character state :hq 0))) "Inner Character Wall should not be revealed")
+      (is (:revealed (get-character state :hq 1)) "Outer Character Wall should be revealed still")))
   (testing "should not hide Character that has changed during a run"
     (do-game
-      (new-game (default-contestant ["Ice Wall"])
+      (new-game (default-contestant ["Character Wall"])
                 (default-challenger ["Leave No Trace"]))
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (core/reveal state :contestant (get-character state :hq 0))
       (take-credits state :contestant)
-      (is (:revealed (get-character state :hq 0)) "Ice Wall should be revealed initially")
+      (is (:revealed (get-character state :hq 0)) "Character Wall should be revealed initially")
       (play-from-hand state :challenger "Leave No Trace")
       (prompt-choice :challenger "Locale 1")
       (core/add-prop state :contestant (get-character state :hq 0) :advance-counter 1)
       (run-successful state)
       (is (= 1 (get-counters (get-character state :hq 0) :advancement)))
-      (is (:revealed (get-character state :hq 0)) "Ice Wall should still be revealed"))))
+      (is (:revealed (get-character state :hq 0)) "Character Wall should still be revealed"))))
 
 (deftest mad-dash
   ;; Mad Dash - Make a run. Move to score pile as 1 point if steal agenda.  Take 1 meat if not
@@ -2002,8 +2002,8 @@
                              (play-from-hand state :challenger "Magnum Opus")))))
     (testing "Whizzard works after rebirth"
       (do-game
-        (new-game (default-contestant ["Ice Wall"]) (make-deck reina ["Rebirth"]))
-        (play-from-hand state :contestant "Ice Wall" "R&D")
+        (new-game (default-contestant ["Character Wall"]) (make-deck reina ["Rebirth"]))
+        (play-from-hand state :contestant "Character Wall" "R&D")
         (take-credits state :contestant)
         (play-from-hand state :challenger "Rebirth")
         (choose-challenger whizzard state prompt-map)
@@ -2085,9 +2085,9 @@
 (deftest rigged-results
   ;; Rigged Results - success and failure
   (do-game
-    (new-game (default-contestant ["Ice Wall"])
+    (new-game (default-contestant ["Character Wall"])
               (default-challenger [(qty "Rigged Results" 3)]))
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Rigged Results")
     (prompt-choice :challenger "0")
@@ -2516,24 +2516,24 @@
   ;; Tinkering - Add subtypes to character
   (do-game
     (new-game
-      (default-contestant ["Ice Wall"])
+      (default-contestant ["Character Wall"])
       (default-challenger ["Tinkering"]))
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Tinkering")
     (let [iwall (get-character state :hq 0)]
       (prompt-select :challenger iwall)
-      (is (core/has-subtype? (refresh iwall) "Barrier") "Ice Wall has Barrier")
-      (is (core/has-subtype? (refresh iwall) "Code Gate") "Ice Wall has Code Gate")
-      (is (core/has-subtype? (refresh iwall) "Sentry") "Ice Wall has Sentry")
+      (is (core/has-subtype? (refresh iwall) "Barrier") "Character Wall has Barrier")
+      (is (core/has-subtype? (refresh iwall) "Code Gate") "Character Wall has Code Gate")
+      (is (core/has-subtype? (refresh iwall) "Sentry") "Character Wall has Sentry")
       (core/reveal state :contestant (refresh iwall))
-      (is (core/has-subtype? (refresh iwall) "Barrier") "Ice Wall has Barrier")
-      (is (core/has-subtype? (refresh iwall) "Code Gate") "Ice Wall has Code Gate")
-      (is (core/has-subtype? (refresh iwall) "Sentry") "Ice Wall has Sentry")
+      (is (core/has-subtype? (refresh iwall) "Barrier") "Character Wall has Barrier")
+      (is (core/has-subtype? (refresh iwall) "Code Gate") "Character Wall has Code Gate")
+      (is (core/has-subtype? (refresh iwall) "Sentry") "Character Wall has Sentry")
       (take-credits state :challenger)
-      (is (core/has-subtype? (refresh iwall) "Barrier") "Ice Wall has Barrier")
-      (is (not (core/has-subtype? (refresh iwall) "Code Gate")) "Ice Wall does not have Code Gate")
-      (is (not (core/has-subtype? (refresh iwall) "Sentry")) "Ice Wall does not have Sentry"))))
+      (is (core/has-subtype? (refresh iwall) "Barrier") "Character Wall has Barrier")
+      (is (not (core/has-subtype? (refresh iwall) "Code Gate")) "Character Wall does not have Code Gate")
+      (is (not (core/has-subtype? (refresh iwall) "Sentry")) "Character Wall does not have Sentry"))))
 
 (deftest traffic-jam
   ;; Traffic Jam - Increase adv requirement based on previously scored copies
@@ -2635,7 +2635,7 @@
 (deftest white-hat
   ;; White Hat
   (do-game
-    (new-game (default-contestant ["Ice Wall" "Fire Wall" "Enigma"])
+    (new-game (default-contestant ["Character Wall" "Fire Wall" "Enigma"])
               (default-challenger ["White Hat"]))
     (take-credits state :contestant)
     (run-empty-locale state :rd)
@@ -2643,6 +2643,6 @@
     (is (= :waiting (-> (get-challenger) :prompt first :prompt-type)) "Challenger is waiting for Contestant to boost")
     (prompt-choice :contestant 0)
     (prompt-choice :challenger 4)
-    (prompt-card :challenger (find-card "Ice Wall" (:hand (get-contestant))))
+    (prompt-card :challenger (find-card "Character Wall" (:hand (get-contestant))))
     (prompt-card :challenger (find-card "Enigma" (:hand (get-contestant))))
-    (is (= #{"Ice Wall" "Enigma"} (->> (get-contestant) :deck (map :title) (into #{}))))))
+    (is (= #{"Character Wall" "Enigma"} (->> (get-contestant) :deck (map :title) (into #{}))))))

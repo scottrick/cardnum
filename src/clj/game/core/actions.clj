@@ -1,8 +1,8 @@
 (in-ns 'game.core)
 
 ;; These functions are called by main.clj in response to commands sent by users.
-(declare available-mu card-str can-reveal? can-advance? contestant-place effect-as-handler enforce-msg gain-agenda-point get-party-names get-party-zones-challenger
-         get-run-characters host can-host? jack-out move name-zone play-instant purge resolve-select run has-subtype? get-party-zones locale->zone
+(declare available-mu card-str can-reveal? can-advance? contestant-place effect-as-handler enforce-msg gain-agenda-point get-party-names get-zones-challenger
+         get-party-zones-challenger get-run-characters host can-host? jack-out move name-zone play-instant purge resolve-select run has-subtype? get-party-zones locale->zone
          challenger-place discard update-breaker-strength demote-character-strength update-character-in-locale update-run-character win can-run?
          can-run-locale? can-score? say play-sfx base-mod-size free-mu)
 
@@ -355,9 +355,7 @@
   ([state side eid {:keys [disabled] :as card} {:keys [ignore-cost no-warning force no-get-card paid-alt cached-bonus] :as args}]
    (let [card (if no-get-card
                 card
-                (get-card state card))
-         altcost (when-not no-get-card
-                   (:alternative-cost (card-def card)))]
+                (get-card state card))]
      (when cached-bonus (reveal-cost-bonus state side cached-bonus))
      (if (or force (can-reveal? state side card))
        (do
@@ -393,7 +391,7 @@
        (effect-completed state side eid)))))
 
 (defn hide
-  "Dereveal a contestant card."
+  "Hide a contestant card."
   [state side card]
   (let [card (get-card state card)]
     (system-msg state side (str "hides " (:title card)))

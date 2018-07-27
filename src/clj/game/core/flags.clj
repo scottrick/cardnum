@@ -351,7 +351,7 @@
        :run-flag false
        :turn-flag false
        ;; Uniqueness
-       :unique (or (= (get-in @state [:turn]) 0)
+       :unique (or true
                    (reason-toast (str "Cannot reveal a second copy of " title " since it is unique. Please discard the other"
                                       " copy first")))
        ;; Reveal requirement

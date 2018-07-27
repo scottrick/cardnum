@@ -69,10 +69,10 @@
 (deftest blackguard
   ;; Blackguard - +2 MU, forced reveal of exposed character
   (do-game
-   (new-game (default-contestant ["Ice Wall"])
+   (new-game (default-contestant ["Character Wall"])
              (default-challenger ["Blackguard"
                               "Snitch"]))
-   (play-from-hand state :contestant "Ice Wall" "Archives")
+   (play-from-hand state :contestant "Character Wall" "Archives")
    (take-credits state :contestant)
    (core/gain state :challenger :credit 100)
    (play-from-hand state :challenger "Blackguard")
@@ -82,7 +82,7 @@
          iwall (get-character state :archives 0)]
      (run-on state :archives)
      (card-ability state :challenger snitch 0)
-     (is (:revealed (refresh iwall)) "Ice Wall was revealed"))))
+     (is (:revealed (refresh iwall)) "Character Wall was revealed"))))
 
 (deftest box-e
   ;; Box-E - +2 MU, +2 max hand size
@@ -194,11 +194,11 @@
 (deftest daredevil
   ;; Daredevil
   (do-game
-    (new-game (default-contestant [(qty "Ice Wall" 2)])
+    (new-game (default-contestant [(qty "Character Wall" 2)])
               (default-challenger ["Daredevil" (qty "Sure Gamble" 3) (qty "Easy Mark" 2)]))
     (starting-hand state :challenger ["Daredevil"])
-    (play-from-hand state :contestant "Ice Wall" "Archives")
-    (play-from-hand state :contestant "Ice Wall" "Archives")
+    (play-from-hand state :contestant "Character Wall" "Archives")
+    (play-from-hand state :contestant "Character Wall" "Archives")
     (take-credits state :contestant)
     (play-from-hand state :challenger "Daredevil")
     (is (= 6 (core/available-mu state)) "Gained 2 MU")
@@ -462,37 +462,37 @@
       (is (not-empty (get-hazard state)) "Hippo still placed")))
   (testing "Single character"
     (do-game
-      (new-game (default-contestant ["Ice Wall"])
+      (new-game (default-contestant ["Character Wall"])
                 (default-challenger ["Hippo"]))
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (core/reveal state :contestant (get-character state :hq 0))
       (take-credits state :contestant)
       (play-from-hand state :challenger "Hippo")
       (run-on state "HQ")
       (is (not-empty (get-hazard state)) "Hippo placed")
-      (is (= 1 (count (get-in @state [:contestant :locales :hq :characters]))) "Ice Wall placed")
+      (is (= 1 (count (get-in @state [:contestant :locales :hq :characters]))) "Character Wall placed")
       (card-ability state :challenger (get-hazard state 0) 0)
-      (is (empty? (get-in @state [:contestant :locales :hq :characters])) "Ice Wall removed")
-      (is (= 1 (count (:discard (get-contestant)))) "Ice Wall discarded")
+      (is (empty? (get-in @state [:contestant :locales :hq :characters])) "Character Wall removed")
+      (is (= 1 (count (:discard (get-contestant)))) "Character Wall discarded")
       (is (= 1 (count (:rfg (get-challenger)))) "Hippo RFGed")
       (is (empty? (get-hazard state)) "Hippo removed")))
   (testing "Multiple character"
     (do-game
-      (new-game (default-contestant ["Ice Wall" "Enigma"])
+      (new-game (default-contestant ["Character Wall" "Enigma"])
                 (default-challenger ["Hippo"]))
       (play-from-hand state :contestant "Enigma" "HQ")
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (take-credits state :contestant)
       (play-from-hand state :challenger "Hippo")
       (run-on state "HQ")
       (is (not-empty (get-hazard state)) "Hippo placed")
       (is (= 2 (count (get-in @state [:contestant :locales :hq :characters]))) "2 character placed")
-      (is (= "Ice Wall" (:title (get-character state :hq 1))) "Ice Wall outermost")
+      (is (= "Character Wall" (:title (get-character state :hq 1))) "Character Wall outermost")
       (is (= "Enigma" (:title (get-character state :hq 0))) "Enigma innermost")
       (card-ability state :challenger (get-hazard state 0) 0)
-      (is (= 1 (count (get-in @state [:contestant :locales :hq :characters]))) "Ice removed")
-      (is (= 1 (count (:discard (get-contestant)))) "Ice discarded")
-      (is (= "Ice Wall" (:title (first (:discard (get-contestant))))) "Ice Wall in discard")
+      (is (= 1 (count (get-in @state [:contestant :locales :hq :characters]))) "Character removed")
+      (is (= 1 (count (:discard (get-contestant)))) "Character discarded")
+      (is (= "Character Wall" (:title (first (:discard (get-contestant))))) "Character Wall in discard")
       (is (= "Enigma" (:title (get-character state :hq 0))) "Enigma still innermost")
       (is (= 1 (count (:rfg (get-challenger)))) "Hippo RFGed")
       (is (empty? (get-hazard state)) "Hippo removed"))))
@@ -595,7 +595,7 @@
   (testing "Maw shouldn't trigger on stolen agenda. #3433"
     (do-game
       (new-game (default-contestant ["Hostile Takeover"
-                               (qty "Ice Wall" 5)])
+                               (qty "Character Wall" 5)])
                 (default-challenger ["Maw"]))
       (play-from-hand state :contestant "Hostile Takeover" "New party")
       (take-credits state :contestant)
@@ -606,7 +606,7 @@
       (is (zero? (count (:discard (get-contestant)))) "No HQ card in discard as agenda was stolen")))
   (testing "Maw shouldn't trigger when accessing a card in archives. #3388"
     (do-game
-      (new-game (default-contestant ["Rashida Jaheem" "Cyberdex Virus Suite" (qty "Ice Wall" 4)])
+      (new-game (default-contestant ["Rashida Jaheem" "Cyberdex Virus Suite" (qty "Character Wall" 4)])
                 (make-deck "Alcharacter Merchant: Clan Agitator" ["Maw" "Imp"]))
       (core/move state :contestant (find-card "Rashida Jaheem" (:hand (get-contestant))) :deck)
       (discard-from-hand state :contestant "Cyberdex Virus Suite")
@@ -615,18 +615,18 @@
       (play-from-hand state :challenger "Maw")
       (play-from-hand state :challenger "Imp")
       (run-empty-locale state :archives)
-      (prompt-card :contestant (find-card "Ice Wall" (:hand (get-contestant)))) ;; Alcharacter's ability
+      (prompt-card :contestant (find-card "Character Wall" (:hand (get-contestant)))) ;; Alcharacter's ability
       (prompt-choice :challenger "Cyberdex Virus Suite")
       (prompt-choice :contestant "Yes")
       (run-empty-locale state :rd)
       (prompt-choice-partial :challenger "Pay")
-      (is (= 3 (count (:discard (get-contestant)))) "Ice Wall, CVS, and Rashida")
+      (is (= 3 (count (:discard (get-contestant)))) "Character Wall, CVS, and Rashida")
       (is (empty? (:prompt (get-challenger))) "No more prompts for challenger")))
  (testing "Maw should trigger when declining to steal. #3388"
     (do-game
-      (new-game (default-contestant [(qty "Obokata Protocol" 2) (qty "Ice Wall" 4)])
+      (new-game (default-contestant [(qty "Obokata Protocol" 2) (qty "Character Wall" 4)])
                 (make-deck "Alcharacter Merchant: Clan Agitator" ["Maw" "Archives Interface"]))
-      (discard-from-hand state :contestant "Ice Wall")
+      (discard-from-hand state :contestant "Character Wall")
       (starting-hand state :contestant ["Obokata Protocol" "Obokata Protocol"])
       (take-credits state :contestant)
       (core/gain state :challenger :credit 100)
@@ -635,11 +635,11 @@
       (run-empty-locale state :archives)
       (prompt-card :contestant (find-card "Obokata Protocol" (:hand (get-contestant))))
       (prompt-choice :challenger "Yes")
-      (prompt-card :challenger (find-card "Ice Wall" (:discard (get-contestant))))
+      (prompt-card :challenger (find-card "Character Wall" (:discard (get-contestant))))
       (prompt-choice :challenger "No action")
       (run-empty-locale state :hq)
       (prompt-choice :challenger "No action")
-      (is (= 2 (count (:discard (get-contestant)))) "Ice Wall and Obokata"))))
+      (is (= 2 (count (:discard (get-contestant)))) "Character Wall and Obokata"))))
 
 (deftest maya
   ;; Maya - Move accessed card to bottom of R&D
@@ -1021,9 +1021,9 @@
 (deftest rubicon-switch
   ;; Rubicon Switch
   (do-game
-   (new-game (default-contestant ["Ice Wall" "Pachinko"])
+   (new-game (default-contestant ["Character Wall" "Pachinko"])
              (default-challenger ["Rubicon Switch"]))
-   (play-from-hand state :contestant "Ice Wall" "HQ")
+   (play-from-hand state :contestant "Character Wall" "HQ")
    (play-from-hand state :contestant "Pachinko" "R&D")
    (let [iw (get-character state :hq 0)
          pach (get-character state :rd 0)]
@@ -1035,7 +1035,7 @@
        (card-ability state :challenger rs 0)
        (prompt-choice :challenger 1)
        (prompt-select :challenger (refresh iw))
-       (is (:revealed (refresh iw)) "Ice Wall revealed last turn can't be targeted")
+       (is (:revealed (refresh iw)) "Character Wall revealed last turn can't be targeted")
        (prompt-select :challenger (refresh pach))
        (is (not (:revealed (refresh pach))) "Pachinko hidden")
        (is (= 2 (:click (get-challenger))) "Spent 1 click")
@@ -1044,9 +1044,9 @@
 (deftest security-nexus
   ;; Security Nexus
   (do-game
-    (new-game (default-contestant ["Ice Wall"])
+    (new-game (default-contestant ["Character Wall"])
               (default-challenger ["Security Nexus"]))
-    (play-from-hand state :contestant "Ice Wall" "R&D")
+    (play-from-hand state :contestant "Character Wall" "R&D")
     (take-credits state :contestant)
     (core/gain state :challenger :credit 100)
     (play-from-hand state :challenger "Security Nexus")
@@ -1340,9 +1340,9 @@
 (deftest zamba
   ;; Zamba - Whenever contestant card is exposed you may gain 1 credit
   (do-game
-   (new-game (default-contestant ["Ice Wall"])
+   (new-game (default-contestant ["Character Wall"])
              (default-challenger ["Zamba" (qty "Infiltration" 2)]))
-   (play-from-hand state :contestant "Ice Wall" "Archives")
+   (play-from-hand state :contestant "Character Wall" "Archives")
    (take-credits state :contestant)
    (play-from-hand state :challenger "Zamba")
    (is (= 6 (core/available-mu state)) "Gain 2 memory")

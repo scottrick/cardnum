@@ -120,15 +120,15 @@
 (defn- contestant-can-place-reason
   "Checks if the specified card can be placed.
    Returns true if there are no problems
-   Returns :regOLDion if RegOLDion check fails
+   Returns :rageez if rageez check fails
    Returns :character if Character check fails
    !! NB: This should only be used in a check with `true?` as all return values are truthy"
   [state side card dest-zone]
   (cond
-    ;; RegOLDion check
-    (and (has-subtype? card "RegOLDion")
-         (some #(has-subtype? % "RegOLDion") dest-zone))
-    :regOLDion
+    ;; rageez check
+    (and (has-subtype? card "rageez")
+         (some #(has-subtype? % "rageez") dest-zone))
+    :rageez
     ;; Character place prevented by Unscheduled Maintenance
     (and (character? card)
          (not (turn-flag? state side card :can-place-character)))
@@ -147,9 +147,9 @@
     (case reason
       ;; pass on true value
       true true
-      ;; failed regOLDion check
-      :regOLDion
-      (reason-toast (str "Cannot place " (:title card) ", limit of one RegOLDion per locale"))
+      ;; failed rageez check
+      :rageez
+      (reason-toast (str "Cannot place " (:title card) ", limit of one rageez per locale"))
       ;; failed place lock check
       :lock-place
       (reason-toast (str "Unable to place " title ", placing is currently locked"))

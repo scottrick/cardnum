@@ -478,9 +478,9 @@
           (str "Accessed Dedicated Response Team should have been discarded after selecting 2 virus counters"))))
   (testing "Can use viruses on hosted cards"
     (do-game
-      (new-game (default-contestant [(qty "Ice Wall" 2)])
+      (new-game (default-contestant [(qty "Character Wall" 2)])
                 (make-deck "Freedom Khumalo: Crypto-Anarchist" ["Trypano"]))
-      (play-from-hand state :contestant "Ice Wall" "R&D")
+      (play-from-hand state :contestant "Character Wall" "R&D")
       (let [iw (get-character state :rd 0)]
         (take-credits state :contestant)
         (play-from-hand state :challenger "Trypano")
@@ -491,7 +491,7 @@
         (run-empty-locale state "HQ")
         (prompt-choice-partial :challenger "Freedom")
         (prompt-select :challenger (-> (refresh iw) :hosted first)))
-      (is (= 1 (count (:discard (get-contestant)))) "Accessed Ice Wall should be discarded after selecting 1 virus counter")))
+      (is (= 1 (count (:discard (get-contestant)))) "Accessed Character Wall should be discarded after selecting 1 virus counter")))
   (testing "Doesn't trigger when accessing an Agenda"
     (do-game
       (new-game (default-contestant ["Hostile Takeover"])
@@ -532,18 +532,18 @@
       (is (= 1 (count (:discard (get-contestant)))) "Card should now be properly discarded")))
   (testing "Shouldn't grant additional accesses after discarding accessed card. #3423"
     (do-game
-      (new-game (default-contestant [(qty "Ice Wall" 10)])
+      (new-game (default-contestant [(qty "Character Wall" 10)])
                 (make-deck "Freedom Khumalo: Crypto-Anarchist" ["Cache"]))
       (take-credits state :contestant)
       (play-from-hand state :challenger "Cache")
       (run-empty-locale state "R&D")
       (prompt-choice-partial :challenger "Freedom")
       (prompt-select :challenger (get-resource state 0))
-      (is (= 1 (count (:discard (get-contestant)))) "Accessed Ice Wall should be discarded now")
+      (is (= 1 (count (:discard (get-contestant)))) "Accessed Character Wall should be discarded now")
       (is (not (:run @state)) "Run ended")))
   (testing "Shouldn't give Aumakua additional counters on discard. #3479"
     (do-game
-      (new-game (default-contestant [(qty "Ice Wall" 10)])
+      (new-game (default-contestant [(qty "Character Wall" 10)])
                 (make-deck "Freedom Khumalo: Crypto-Anarchist" ["Cache" "Aumakua"]))
       (take-credits state :contestant)
       (play-from-hand state :challenger "Cache")
@@ -552,7 +552,7 @@
       (is (zero? (get-counters (get-resource state 1) :virus)) "Aumakuma shouldn't have any virus counters yet.")
       (prompt-choice-partial :challenger "Freedom")
       (prompt-select :challenger (get-resource state 0))
-      (is (= 1 (count (:discard (get-contestant)))) "Ice Wall should be discarded now")
+      (is (= 1 (count (:discard (get-contestant)))) "Character Wall should be discarded now")
       (is (zero? (get-counters (get-resource state 1) :virus)) "Aumakua doesn't gain any virus counters from discard ability.")
       (is (not (:run @state)) "Run ended")))
   (testing "interaction with discard-cost-bonuses, and declining ability once initiated"
@@ -790,10 +790,10 @@
     (do-game
       (new-game
         (make-deck "Jemison Astronautics: Sacrifcharacter. Audacity. Success."
-                   ["Enforcer 1.0" "Hostile Takeover" "Ice Wall" "Global Food Initiative"])
+                   ["Enforcer 1.0" "Hostile Takeover" "Character Wall" "Global Food Initiative"])
         (default-challenger ["Data Dealer"]))
       (play-from-hand state :contestant "Enforcer 1.0" "HQ")
-      (play-from-hand state :contestant "Ice Wall" "R&D")
+      (play-from-hand state :contestant "Character Wall" "R&D")
       (play-from-hand state :contestant "Hostile Takeover" "New party")
       (let [enf (get-character state :hq 0)
             iwall (get-character state :rd 0)]
@@ -818,7 +818,7 @@
       (new-game
         (make-deck "Jemison Astronautics: Sacrifcharacter. Audacity. Success."
                    ["Armed Intimidation" "Hostile Takeover"
-                    "24/7 News Cycle" "Ice Wall"])
+                    "24/7 News Cycle" "Character Wall"])
         (default-challenger))
       (play-and-score state "Hostile Takeover")
       (is (= 1 (:agenda-point (get-contestant))) "Contestant has 1 agenda points from Hostile Takeover")
@@ -827,14 +827,14 @@
       (prompt-choice :challenger "Take 2 tags")
       (is (= 3 (:agenda-point (get-contestant))) "Contestant has 3 agenda points from HT + Armed Intimidation")
       (is (= 2 (:tag (get-challenger))) "Challenger took 2 tags from AI")
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (take-credits state :contestant)
       (take-credits state :challenger)
       (play-from-hand state :contestant "24/7 News Cycle")
       (prompt-select :contestant (get-scored state :contestant 0)) ; select HT to forfeit
       (let [character-wall (get-character state :hq 0)]
         (prompt-select :contestant character-wall) ; The Jemison forfeit triggers
-        (is (= 2 (get-counters (refresh character-wall) :advancement)) "Ice Wall has 2 advancement counters from HT forfeit"))
+        (is (= 2 (get-counters (refresh character-wall) :advancement)) "Character Wall has 2 advancement counters from HT forfeit"))
       (prompt-select :contestant (get-scored state :contestant 0)) ; select AI to trigger
       (prompt-choice :challenger "Take 2 tags") ; First challenger has prompt
       (is (= 4 (:tag (get-challenger))) "Challenger took 2 more tags from AI -- happens at the end of all the async completion"))))
@@ -1203,9 +1203,9 @@
       (is (empty? (:hand (get-contestant))) "Enigma removed from HQ")))
   (testing "Multiple character"
     (do-game
-      (new-game (make-deck "Mti Mwekundu: Life Improved" ["Enigma" "Ice Wall" "Bloom"])
+      (new-game (make-deck "Mti Mwekundu: Life Improved" ["Enigma" "Character Wall" "Bloom"])
                 (default-challenger))
-      (play-from-hand state :contestant "Ice Wall" "R&D")
+      (play-from-hand state :contestant "Character Wall" "R&D")
       (play-from-hand state :contestant "Bloom" "R&D")
       (take-credits state :contestant)
       (run-on state "R&D")
@@ -1238,9 +1238,9 @@
   (testing "Basic test"
     (do-game
       (new-game
-        (default-contestant [(qty "Ice Wall" 3)])
+        (default-contestant [(qty "Character Wall" 3)])
         (make-deck "Nasir Meidan: Cyber Explorer" []))
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (take-credits state :contestant)
       (run-on state "HQ")
       (let [iwall (get-character state :hq 0)
@@ -1252,9 +1252,9 @@
   (testing "with Xanadu"
     (do-game
       (new-game
-        (default-contestant ["Ice Wall"])
+        (default-contestant ["Character Wall"])
         (make-deck "Nasir Meidan: Cyber Explorer" ["Xanadu"]))
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (take-credits state :contestant)
       (swap! state assoc-in [:challenger :credit] 6)
       (play-from-hand state :challenger "Xanadu")
@@ -1548,9 +1548,9 @@
   ;; Quetzal
   (do-game
     (new-game
-      (default-contestant [(qty "Ice Wall" 3)])
+      (default-contestant [(qty "Character Wall" 3)])
       (make-deck "Quetzal: Free Spirit" [(qty "Sure Gamble" 3)]))
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (take-credits state :contestant)
     (run-on state "HQ")
     (let [q (get-in @state [:challenger :identity])
@@ -1592,17 +1592,17 @@
   kit
   ;; Rielle "Kit" Peddler - Give Character Code Gate
   (do-game
-    (new-game (default-contestant [(qty "Ice Wall" 2)])
+    (new-game (default-contestant [(qty "Character Wall" 2)])
               (make-deck "Rielle \"Kit\" Peddler: Transhuman" [(qty "Sure Gamble" 3)]))
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (take-credits state :contestant)
     (run-on state "HQ")
     (let [k (get-in @state [:challenger :identity])
           iwall (get-character state :hq 0)]
       (core/reveal state :contestant iwall)
       (card-ability state :challenger k 0)
-      (is (core/has-subtype? (refresh iwall) "Barrier") "Ice Wall has Barrier")
-      (is (core/has-subtype? (refresh iwall) "Code Gate") "Ice Wall has Code Gate"))))
+      (is (core/has-subtype? (refresh iwall) "Barrier") "Character Wall has Barrier")
+      (is (core/has-subtype? (refresh iwall) "Code Gate") "Character Wall has Code Gate"))))
 
 (deftest skontestantios-defense-systems:-persuasive-power
   ; Remove a card from game when it moves to discard once per round
@@ -1901,7 +1901,7 @@
   (testing "2 meat damage from ID ability when The Cleaners is scored"
     (do-game
       (new-game
-        (make-deck "Weyland Consortium: Builder of Nations" [(qty "The Cleaners" 3) (qty "Ice Wall" 3)])
+        (make-deck "Weyland Consortium: Builder of Nations" [(qty "The Cleaners" 3) (qty "Character Wall" 3)])
         (default-challenger [(qty "Sure Gamble" 2)]))
       (play-from-hand state :contestant "The Cleaners" "New party")
       (let [clean (get-content state :party1 0)]

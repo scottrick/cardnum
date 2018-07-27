@@ -18,7 +18,9 @@
                 'current-character '(when-let [run-pos (:position (:run @state))]
                                 (when (and (pos? run-pos) (<= run-pos (count (:characters run-locale))))
                                   (nth (:characters run-locale) (dec run-pos))))
-                'target '(first targets)]
+                'target '(first targets)
+                'played '(if (= (:side card) "Contestant") (:contestant @state) (:challenger @state))
+                'versus '(if (= (:side card) "Contestant") (:challenger @state) (:contestant @state))]
            ~@actions))))
 
 (defmacro req [& expr]
@@ -52,7 +54,11 @@
             'this-locale '(let [s (-> card :zone rest butlast)
                                 r (:locale run)]
                             (and (= (first r) (first s))
-                                 (= (last r) (last s))))]
+                                 (= (last r) (last s))))
+            'played '(if (= (:side card) "Contestant") (:contestant @state) (:challenger @state))
+            'versus '(if (= (:side card) "Contestant") (:challenger @state) (:contestant @state))
+            'served '(zones->sorted-names
+                       (if (= (:side card) "Contestant") (get-zones state) (get-zones-challenger state)))]
         ~@expr)))
 
 (defmacro msg [& expr]
@@ -71,7 +77,9 @@
                             (when (and (pos? run-pos) (<= run-pos (count (:characters run-locale))))
                               (nth (:characters run-locale) (dec run-pos))))
             'target '(first targets)
-            'tagged '(or (pos? (:tagged challenger)) (pos? (:tag challenger)))]
+            'tagged '(or (pos? (:tagged challenger)) (pos? (:tag challenger)))
+            'played '(if (= (:side card) "Contestant") (:contestant @state) (:challenger @state))
+            'versus '(if (= (:side card) "Contestant") (:challenger @state) (:contestant @state))]
        (str ~@expr))))
 
 (defmacro wait-for

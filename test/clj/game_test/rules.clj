@@ -146,9 +146,9 @@
 (deftest refresh-recurring-credits-hosted
   ;; host - Recurring credits on cards hosted after place refresh properly
   (do-game
-    (new-game (default-contestant [(qty "Ice Wall" 3) (qty "Hedge Fund" 3)])
+    (new-game (default-contestant [(qty "Character Wall" 3) (qty "Hedge Fund" 3)])
               (default-challenger ["Compromised Employee" "Off-Campus Apartment"]))
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (take-credits state :contestant 2)
     (play-from-hand state :challenger "Off-Campus Apartment")
     (play-from-hand state :challenger "Compromised Employee")
@@ -171,17 +171,17 @@
 (deftest card-str-test-simple
   ;; ensure card-str names cards in simple situations properly
   (do-game
-    (new-game (default-contestant [(qty "Ice Wall" 3) (qty "Jackson Howard" 2)])
+    (new-game (default-contestant [(qty "Character Wall" 3) (qty "Jackson Howard" 2)])
               (default-challenger ["Corroder"
                                "Clone Chip"
                                "Paparazzi"
                                "Parasite"]))
     (core/gain state :contestant :click 2)
-    (play-from-hand state :contestant "Ice Wall" "HQ")
-    (play-from-hand state :contestant "Ice Wall" "R&D")
+    (play-from-hand state :contestant "Character Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "R&D")
     (play-from-hand state :contestant "Jackson Howard" "New party")
     (play-from-hand state :contestant "Jackson Howard" "New party")
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (core/end-turn state :contestant nil)
     (core/start-turn state :challenger nil)
     (play-from-hand state :challenger "Corroder")
@@ -199,18 +199,18 @@
       (core/reveal state :contestant hqiwall0)
       (core/reveal state :contestant jh1)
       (prompt-select :challenger (refresh hqiwall0))
-      (is (= (core/card-str state (refresh hqiwall0)) "Ice Wall protecting HQ at position 0"))
+      (is (= (core/card-str state (refresh hqiwall0)) "Character Wall protecting HQ at position 0"))
       (is (= (core/card-str state (refresh hqiwall1)) "Character protecting HQ at position 1"))
       (is (= (core/card-str state (refresh rdiwall)) "Character protecting R&D at position 0"))
       (is (= (core/card-str state (refresh rdiwall) {:visible true})
-             "Ice Wall protecting R&D at position 0"))
+             "Character Wall protecting R&D at position 0"))
       (is (= (core/card-str state (refresh jh1)) "Jackson Howard in Locale 1"))
       (is (= (core/card-str state (refresh jh2)) "a card in Locale 2"))
       (is (= (core/card-str state (refresh corr)) "Corroder"))
       (is (= (core/card-str state (refresh cchip)) "Clone Chip"))
       (is (= (core/card-str state (refresh pap)) "Paparazzi"))
       (is (= (core/card-str state (first (:hosted (refresh hqiwall0))))
-             "Parasite hosted on Ice Wall protecting HQ at position 0")))))
+             "Parasite hosted on Character Wall protecting HQ at position 0")))))
 
 (deftest invalid-score-attempt
   ;; Test scoring with an incorrect number of advancement tokens

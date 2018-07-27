@@ -277,12 +277,15 @@
 (defn play-cost-bonus [state side costs]
   (swap! state update-in [:bonus :play-cost] #(merge-costs (concat % costs))))
 
-(defn play-cost [state side card all-cost]
+(defn play-cost-old [state side card all-cost]
   (vec (map #(if (keyword? %) % (max % 0))
             (-> (concat all-cost (get-in @state [:bonus :play-cost])
                         (when-let [playfun (:play-cost-bonus (card-def card))]
                           (playfun state side (make-eid state) card nil)))
                 merge-costs flatten))))
+
+(defn play-cost [state side card all-cost]
+  (int 0))
 
 (defn reveal-cost-bonus [state side n]
   (swap! state update-in [:bonus :cost] (fnil #(+ % n) 0)))
@@ -290,13 +293,16 @@
 (defn get-reveal-cost-bonus [state side]
   (get-in @state [:bonus :cost] 0))
 
-(defn reveal-cost [state side {:keys [cost] :as card}]
+(defn reveal-cost-old [state side {:keys [cost] :as card}]
   (when-not (nil? cost)
     (-> (if-let [revealfun (:reveal-cost-bonus (card-def card))]
           (+ cost (revealfun state side (make-eid state) card nil))
           cost)
         (+ (get-reveal-cost-bonus state side))
         (max 0))))
+
+(defn reveal-cost [state side {:keys [cost] :as card}]
+  (int 0))
 
 (defn run-cost-bonus [state side n]
   (swap! state update-in [:bonus :run-cost] #(merge-costs (concat % n))))

@@ -275,9 +275,9 @@
   (testing "Single advancement token"
     (do-game
       (new-game (default-contestant ["Commercialization"
-                               "Ice Wall"])
+                               "Character Wall"])
                 (default-challenger))
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (core/add-counter state :contestant (refresh (get-character state :hq 0)) :advancement 1)
       (play-from-hand state :contestant "Commercialization")
       (prompt-select :contestant (refresh (get-character state :hq 0)))
@@ -285,9 +285,9 @@
   (testing "Two advancement tokens"
     (do-game
       (new-game (default-contestant ["Commercialization"
-                               "Ice Wall"])
+                               "Character Wall"])
                 (default-challenger))
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (core/add-counter state :contestant (refresh (get-character state :hq 0)) :advancement 2)
       (play-from-hand state :contestant "Commercialization")
       (prompt-select :contestant (refresh (get-character state :hq 0)))
@@ -743,11 +743,11 @@
   ;; Foxfire
   (do-game
     (new-game (default-contestant [(qty "Foxfire" 2)])
-              (default-challenger ["Dyson Mem Chip" "Ice Carver"]))
+              (default-challenger ["Dyson Mem Chip" "Character Carver"]))
     (take-credits state :contestant)
     (core/gain state :challenger :credit 100)
     (play-from-hand state :challenger "Dyson Mem Chip")
-    (play-from-hand state :challenger "Ice Carver")
+    (play-from-hand state :challenger "Character Carver")
     (take-credits state :challenger)
     (play-from-hand state :contestant "Foxfire")
     (prompt-choice :contestant 0)
@@ -758,7 +758,7 @@
     (prompt-choice :contestant 0)
     (prompt-choice :challenger 0)
     (prompt-select :contestant (get-radicle state 0))
-    (is (= 2 (-> (get-challenger) :discard count)) "Contestant should discard Ice Carver from winning Foxfire trace")))
+    (is (= 2 (-> (get-challenger) :discard count)) "Contestant should discard Character Carver from winning Foxfire trace")))
 
 (deftest hard-hitting-news
   ;; Hard-Hitting News
@@ -1073,11 +1073,11 @@
   ;; Mass Commercialization
   (do-game
     (new-game (default-contestant ["Mass Commercialization"
-                             (qty "Ice Wall" 3)])
+                             (qty "Character Wall" 3)])
               (default-challenger))
-    (play-from-hand state :contestant "Ice Wall" "HQ")
-    (play-from-hand state :contestant "Ice Wall" "R&D")
-    (play-from-hand state :contestant "Ice Wall" "Archives")
+    (play-from-hand state :contestant "Character Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "R&D")
+    (play-from-hand state :contestant "Character Wall" "Archives")
     (take-credits state :challenger)
     (core/advance state :contestant {:card (refresh (get-character state :hq 0))})
     (core/advance state :contestant {:card (refresh (get-character state :archives 0))})
@@ -1148,14 +1148,14 @@
   ;; Mutate - discard a revealed piece of character, place and reveal one from R&D
   (testing "Basic operation"
     (do-game
-      (new-game (default-contestant ["Mutate" "Ice Wall" "Enigma" "Hedge Fund"])
+      (new-game (default-contestant ["Mutate" "Character Wall" "Enigma" "Hedge Fund"])
                 (default-challenger))
       (core/move state :contestant (find-card "Hedge Fund" (:hand (get-contestant))) :deck)
       (core/move state :contestant (find-card "Enigma" (:hand (get-contestant))) :deck)
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (core/reveal state :contestant (get-character state :hq 0))
       (is (= 1 (count (get-character state :hq))) "1 character placed")
-      (is (= "Ice Wall" (:title (get-character state :hq 0))) "Ice Wall is placed")
+      (is (= "Character Wall" (:title (get-character state :hq 0))) "Character Wall is placed")
       (play-from-hand state :contestant "Mutate")
       (prompt-select :contestant (get-character state :hq 0))
       (is (= 1 (count (get-character state :hq))) "1 character placed")
@@ -1165,13 +1165,13 @@
       (is (second-last-log-contains? state "Enigma") "Placed card name was logged")))
   (testing "No character in R&D"
     (do-game
-      (new-game (default-contestant ["Mutate" "Ice Wall" "Enigma" "Hedge Fund"])
+      (new-game (default-contestant ["Mutate" "Character Wall" "Enigma" "Hedge Fund"])
                 (default-challenger))
       (core/move state :contestant (find-card "Hedge Fund" (:hand (get-contestant))) :deck)
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (core/reveal state :contestant (get-character state :hq 0))
       (is (= 1 (count (get-character state :hq))) "1 character placed")
-      (is (= "Ice Wall" (:title (get-character state :hq 0))) "Ice Wall is placed")
+      (is (= "Character Wall" (:title (get-character state :hq 0))) "Character Wall is placed")
       (play-from-hand state :contestant "Mutate")
       (prompt-select :contestant (get-character state :hq 0))
       (is (empty? (get-character state :hq)) "No character placed")
@@ -1424,14 +1424,14 @@
 (deftest red-planet-couriers
   ;; Red Planet Couriers - Move all advancements on cards to 1 advanceable card
   (do-game
-    (new-game (default-contestant ["Red Planet Couriers" (qty "Ice Wall" 2)
+    (new-game (default-contestant ["Red Planet Couriers" (qty "Character Wall" 2)
                              "GRNDL Refinery" "Government Takeover"])
               (default-challenger))
     (core/gain state :contestant :click 4)
     (play-from-hand state :contestant "Government Takeover" "New party")
     (play-from-hand state :contestant "GRNDL Refinery" "New party")
-    (play-from-hand state :contestant "Ice Wall" "HQ")
-    (play-from-hand state :contestant "Ice Wall" "R&D")
+    (play-from-hand state :contestant "Character Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "R&D")
     (let [gt (get-content state :party1 0)
           gr (get-content state :party2 0)
           iw1 (get-character state :hq 0)
@@ -1450,10 +1450,10 @@
   ;; Reuse - Gain 2 credits for each card discarded from HQ
   (do-game
     (new-game (default-contestant [(qty "Reuse" 2) "Hive" "IQ"
-                             "Ice Wall"])
+                             "Character Wall"])
               (default-challenger))
     (play-from-hand state :contestant "Reuse")
-    (prompt-select :contestant (find-card "Ice Wall" (:hand (get-contestant))))
+    (prompt-select :contestant (find-card "Character Wall" (:hand (get-contestant))))
     (prompt-select :contestant (find-card "Hive" (:hand (get-contestant))))
     (prompt-select :contestant (find-card "IQ" (:hand (get-contestant))))
     (prompt-choice :contestant "Done")
@@ -1773,9 +1773,9 @@
 (deftest shipment-from-sansan
   ;; Shipment from SanSan - placing advancements
   (do-game
-    (new-game (default-contestant [(qty "Shipment from SanSan" 3) (qty "Ice Wall" 3)])
+    (new-game (default-contestant [(qty "Shipment from SanSan" 3) (qty "Character Wall" 3)])
               (default-challenger))
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (let [iwall (get-character state :hq 0)]
       (play-from-hand state :contestant "Shipment from SanSan")
       (prompt-choice :contestant "2")

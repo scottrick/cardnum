@@ -396,10 +396,10 @@
 (deftest ddos
   ;; Prevent revealing of outermost character for the rest of the turn
   (do-game
-    (new-game (default-contestant [(qty "Ice Wall" 3)])
+    (new-game (default-contestant [(qty "Character Wall" 3)])
               (default-challenger ["DDoS"]))
-    (play-from-hand state :contestant "Ice Wall" "HQ")
-    (play-from-hand state :contestant "Ice Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
+    (play-from-hand state :contestant "Character Wall" "HQ")
     (take-credits state :contestant)
     (play-from-hand state :challenger "DDoS")
     (let [ddos (get-radicle state 0)
@@ -937,19 +937,19 @@
     (is (= 3 (:click (get-challenger))) "Lost 1 click")))
 
 (deftest character-carver
-  ;; Ice Carver - lower character strength on encounter
+  ;; Character Carver - lower character strength on encounter
   (do-game
-    (new-game (default-contestant ["Ice Wall"])
-              (default-challenger ["Ice Carver"]))
-    (play-from-hand state :contestant "Ice Wall" "Archives")
+    (new-game (default-contestant ["Character Wall"])
+              (default-challenger ["Character Carver"]))
+    (play-from-hand state :contestant "Character Wall" "Archives")
     (take-credits state :contestant 2)
     (let [iwall (get-character state :archives 0)]
       (core/reveal state :contestant iwall)
-      (play-from-hand state :challenger "Ice Carver")
+      (play-from-hand state :challenger "Character Carver")
       (run-on state "Archives")
-      (is (zero? (:current-strength (refresh iwall))) "Ice Wall strength at 0 for encounter")
+      (is (zero? (:current-strength (refresh iwall))) "Character Wall strength at 0 for encounter")
       (run-jack-out state)
-      (is (= 1 (:current-strength (refresh iwall))) "Ice Wall strength at 1 after encounter"))))
+      (is (= 1 (:current-strength (refresh iwall))) "Character Wall strength at 1 after encounter"))))
 
 (deftest investigative-journalism
   ;; Investigative Journalism - 4 clicks and discard to give the Contestant 1 bad pub
@@ -1156,9 +1156,9 @@
   ;; Logic Bomb
   (testing "Basic test"
     (do-game
-      (new-game (default-contestant [(qty "Ice Wall" 2)])
+      (new-game (default-contestant [(qty "Character Wall" 2)])
                 (default-challenger ["Logic Bomb"]))
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (core/reveal state :contestant (get-character state :hq 0))
       (take-credits state :contestant)
       (play-from-hand state :challenger "Logic Bomb")
@@ -1171,9 +1171,9 @@
       (is (last-log-contains? state "\\[Click\\]\\[Click\\]") "Log should mention 2 clicks")))
   (testing "if the challenger has no clicks left"
     (do-game
-      (new-game (default-contestant [(qty "Ice Wall" 2)])
+      (new-game (default-contestant [(qty "Character Wall" 2)])
                 (default-challenger ["Logic Bomb"]))
-      (play-from-hand state :contestant "Ice Wall" "HQ")
+      (play-from-hand state :contestant "Character Wall" "HQ")
       (core/reveal state :contestant (get-character state :hq 0))
       (take-credits state :contestant)
       (play-from-hand state :challenger "Logic Bomb")
@@ -1237,10 +1237,10 @@
   ;; Muertos Gang Member - Place and Discard
   (testing "Basic test"
     (do-game
-      (new-game (default-contestant ["Tollbooth" "Ice Wall"])
+      (new-game (default-contestant ["Tollbooth" "Character Wall"])
                 (default-challenger [(qty "Hedge Fund" 3) "Muertos Gang Member"]))
       (play-from-hand state :contestant "Tollbooth" "HQ")
-      (play-from-hand state :contestant "Ice Wall" "Archives")
+      (play-from-hand state :contestant "Character Wall" "Archives")
       (take-credits state :contestant)
       (let [toll (get-character state :hq 0)
             iw (get-character state :archives 0)]
@@ -1248,7 +1248,7 @@
         (core/move state :challenger (find-card "Hedge Fund" (:hand (get-challenger))) :deck)
         (play-from-hand state :challenger "Muertos Gang Member")
         (prompt-select :contestant (refresh iw))
-        (is (not (:revealed (refresh iw))) "Ice Wall hidden")
+        (is (not (:revealed (refresh iw))) "Character Wall hidden")
         (is (= 2 (count (:hand (get-challenger)))) "2 cards in Challenger's hand")
         (let [muer (get-radicle state 0)]
           (card-ability state :challenger muer 0)
@@ -1257,11 +1257,11 @@
           (is (:revealed (refresh toll)) "Tollbooth was revealed")))))
   (testing "Account for Reina interaction, #1098"
     (do-game
-      (new-game (default-contestant ["Tollbooth" "Ice Wall"])
+      (new-game (default-contestant ["Tollbooth" "Character Wall"])
                 (make-deck "Reina Roja: Freedom Fighter" [(qty "Hedge Fund" 3)
                                                           "Muertos Gang Member"]))
       (play-from-hand state :contestant "Tollbooth" "HQ")
-      (play-from-hand state :contestant "Ice Wall" "Archives")
+      (play-from-hand state :contestant "Character Wall" "Archives")
       (let [toll (get-character state :hq 0)
             iw (get-character state :archives 0)]
         (core/reveal state :contestant iw)
@@ -1270,7 +1270,7 @@
         (core/move state :challenger (find-card "Hedge Fund" (:hand (get-challenger))) :deck)
         (play-from-hand state :challenger "Muertos Gang Member")
         (prompt-select :contestant (refresh iw))
-        (is (not (:revealed (refresh iw))) "Ice Wall hidden")
+        (is (not (:revealed (refresh iw))) "Character Wall hidden")
         (is (= 2 (count (:hand (get-challenger)))) "2 cards in Challenger's hand")
         (let [muer (get-radicle state 0)]
           (card-ability state :challenger muer 0)
@@ -2448,9 +2448,9 @@
   ;; The Turning Wheel
   (testing "Basic test"
     (do-game
-      (new-game (default-contestant ["Hostile Takeover" "Ice Wall" "Ice Wall"])
+      (new-game (default-contestant ["Hostile Takeover" "Character Wall" "Character Wall"])
                 (default-challenger ["The Turning Wheel"]))
-      (core/move state :contestant (find-card "Ice Wall" (:hand (get-contestant))) :deck)
+      (core/move state :contestant (find-card "Character Wall" (:hand (get-contestant))) :deck)
       (core/move state :contestant (find-card "Hostile Takeover" (:hand (get-contestant))) :deck)
       (take-credits state :contestant)
       (play-from-hand state :challenger "The Turning Wheel")
@@ -2491,9 +2491,9 @@
         (is (zero? (-> @ state :run :access-bonus)) "Access bonus should be reset on new run"))))
   (testing "Spending counters shouldn't increase accesses when running a non-R&D/HQ locale"
     (do-game
-      (new-game (default-contestant ["Hostile Takeover" "Ice Wall"])
+      (new-game (default-contestant ["Hostile Takeover" "Character Wall"])
                 (default-challenger ["The Turning Wheel"]))
-      (core/move state :contestant (find-card "Ice Wall" (:hand (get-contestant))) :deck)
+      (core/move state :contestant (find-card "Character Wall" (:hand (get-contestant))) :deck)
       (discard-from-hand state :contestant "Hostile Takeover")
       (take-credits state :contestant)
       (play-from-hand state :challenger "The Turning Wheel")

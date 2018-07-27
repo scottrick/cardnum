@@ -2,7 +2,7 @@
 
 (declare card-flag?)
 
-;;; Ice subroutine functions
+;;; Character subroutine functions
 (defn add-extra-sub
   "Add a run time subroutine to a piece of character (Warden, Sub Boost, etc). -1 as the idx adds to the end."
   [state side cid character idx sub]
@@ -26,7 +26,7 @@
                (assoc :subroutines new-subs)
                (assoc-in [:special :extra-subs] extra-subs)))))
 
-;;; Ice strength functions
+;;; Character strength functions
 (defn character-strength-bonus
   "Increase the strength of the given character by n. Negative values cause a decrease."
   [state side n character]
@@ -81,7 +81,7 @@
   (doseq [locale (get-in @state [side :locales])]
     (demote-character-in-locale state side (second locale))))
 
-;;; Icebreaker functions.
+;;; Characterbreaker functions.
 (defn breaker-strength-bonus
   "Increase the strength of the breaker by n. Negative values cause a decrease."
   [n]

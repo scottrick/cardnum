@@ -1,7 +1,7 @@
 (in-ns 'game.core)
 
 (declare can-trigger? card-def clear-wait-prompt effect-completed event-title get-card get-nested-host get-party-names
-         get-runnable-zones get-zones placed? make-eid register-effect-completed register-suppress resolve-ability
+         get-runnable-zones get-zones-challenger get-zones placed? make-eid register-effect-completed register-suppress resolve-ability
          show-wait-prompt trigger-suppress unregister-suppress)
 
 ; Functions for registering and dispatching events.

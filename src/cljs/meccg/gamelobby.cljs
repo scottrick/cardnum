@@ -474,9 +474,7 @@
                      (if (every? :deck players)
                        [:button {:on-click #(ws/ws-send! [:meccg/start gameid])} "Start"]
                        [:button {:class "disabled"} "Start"]))
-                   [:button {:on-click #(leave-lobby cursor owner)} "Leave"]
-                   (when (first-user? players user)
-                     [:button {:on-click #(ws/ws-send! [:lobby/swap gameid])} "Swap sides"])]
+                   [:button {:on-click #(leave-lobby cursor owner)} "Leave"]]
                   [:div.content
                    [:h2 (:title game)]
                    (when-not (every? :deck players)

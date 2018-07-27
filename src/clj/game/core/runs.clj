@@ -20,9 +20,9 @@
              n (count characters)]
          ;; s is a keyword for the locale, like :hq or :party1
          (swap! state assoc :per-run nil
-                :run {:locale     s :position n :rerun n :access-bonus 0
+                :run {:locale s :position n :rerun n :access-bonus 0
                       :run-effect (assoc run-effect :card card)
-                      :eid        eid})
+                      :eid eid})
          (gain-run-credits state side (+ (get-in @state [:contestant :bad-publicity]) (get-in @state [:contestant :has-bad-pub])))
          (swap! state update-in [:challenger :register :made-run] #(conj % (first s)))
          (demote-all-characters state :contestant)
@@ -37,9 +37,9 @@
              n (count characters)]
          ;; s is a keyword for the locale, like :hq or :party1
          (swap! state assoc :per-run nil
-                :run {:locale     s :position n :rerun n :access-bonus 0
+                :run {:locale s :position n :rerun n :access-bonus 0
                       :run-effect (assoc run-effect :card card)
-                      :eid        eid})
+                      :eid eid})
          ;;(gain-run-credits state side (+ (get-in @state [:challenger :bad-publicity]) (get-in @state [:challenger :has-bad-pub])))
          (swap! state update-in [:contestant :register :made-run] #(conj % (first s)))
          (demote-all-characters state :challenger)

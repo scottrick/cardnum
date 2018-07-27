@@ -13,89 +13,85 @@
    "typingstop" core/typingstop})
 
 (def commands
-  {"ability" core/play-ability
+  {
+   "ability" core/play-ability
    "access" core/successful-run
    "advance" core/advance
+   "back-m-h" core/back-m-h
+   "back-org" core/back-org
+   "back-site" core/back-site
+   "bluff-o-g" core/bluff-o-g
+   "challenger-ability" core/play-challenger-ability
    "change" core/change
    "choice" core/resolve-prompt
    "close-deck" core/close-deck
+   "close-fw-dc-sb" core/close-fw-dc-sb
+   "close-location" core/close-location
+   "close-sideboard" core/close-sideboard
    "concede" core/concede
-   "continue" core/continue
    "contestant-ability" core/play-contestant-ability
    "contestant-phase-43" core/contestant-phase-43
+   "continue" core/continue
    "credit" core/click-credit
-   "hide" #(core/hide %1 %2 (:card %3))
-
-   "equip" #(core/equip %1 %2 (:card %3))
-   "transfer" #(core/transfer %1 %2 (:card %3))
-   "move-to-sb" #(core/move-to-sb %1 %2 (:card %3))
-   "organize" #(core/organize %1 %2 (:card %3) nil)
-   "tap" #(core/tap %1 %2 (:card %3))
-   "untap" #(core/untap %1 %2 (:card %3))
-   "wound" #(core/wound %1 %2 (:card %3))
-   "invert" #(core/invert %1 %2 (:card %3))
-   "rotate" #(core/rotate %1 %2 (:card %3))
-   "fix-tap" #(core/fix-tap %1 %2 (:card %3))
-   "regionize" #(core/regionize %1 %2 (:card %3))
-
+   "discard-radicle" core/discard-radicle
    "draw" core/click-draw
    "dynamic-ability" core/play-dynamic-ability
    "end-phase-12" core/end-phase-12
    "end-turn" core/end-turn
+   "eot-discard" core/eot-discard
+   "eot-phase" core/eot-phase
+   "equip" #(core/equip %1 %2 (:card %3))
+   "fix-tap" #(core/fix-tap %1 %2 (:card %3))
+   "haz-play-done" core/haz-play-done
+   "hide" #(core/hide %1 %2 (:card %3))
+   "invert" #(core/invert %1 %2 (:card %3))
    "jack-out" core/jack-out
    "keep" core/keep-hand
+   "m-h-phase" core/m-h-phase
+   "move-to-sb" #(core/move-to-sb %1 %2 (:card %3))
    "move" core/move-card
    "mulligan" core/mulligan
+   "next-m-h" core/next-m-h
+   "next-site" core/next-site
    "no-action" core/no-action
+   "no-hazards" core/no-hazards
+   "not-first" core/not-first
+   "on-guard" core/on-guard
+   "org-phase" core/org-phase
+   "organize" #(core/organize %1 %2 (:card %3) nil)
    "play" core/play
+   "pre-bluff" core/pre-bluff
    "purge" core/do-purge
+   "regionize" #(core/regionize %1 %2 (:card %3))
    "remove-tag" core/remove-tag
+   "reset-done" core/reset-done
+   "reset-m-h" core/reset-m-h
+   "reset-org" core/reset-org
+   "reset-site" core/reset-site
+   "return-o-g" core/return-o-g
+   "reveal-o-g" core/reveal-o-g
    "reveal" #(core/reveal %1 %2 (:card %3) nil)
+   "rotate" #(core/rotate %1 %2 (:card %3))
    "run" core/click-run
-   "challenger-ability" core/play-challenger-ability
    "score" #(core/score %1 %2 (game.core/get-card %1 (:card %3)))
    "select" core/select
    "shuffle" core/shuffle-deck
-   "start-turn" core/start-turn
-   
-   "not-first" core/not-first
-   "untap-all" core/untap-all
-   "org-phase" core/org-phase
-   "m-h-phase" core/m-h-phase
-   "back-org" core/back-org
-   "next-m-h" core/next-m-h
    "site-phase" core/site-phase
-   "back-m-h" core/back-m-h
-   "next-site" core/next-site
-   "eot-phase" core/eot-phase
-   "back-site" core/back-site
-   "eot-discard" core/eot-discard
-
-   "reset-org" core/reset-org
-   "wait-alert" core/wait-alert
-   "on-guard" core/on-guard
-   "no-hazards" core/no-hazards
-   "reset-m-h" core/reset-m-h
-   "reveal-o-g" core/reveal-o-g
-   "pre-bluff" core/pre-bluff
-   "bluff-o-g" core/bluff-o-g
-   "reset-site" core/reset-site
-   "reset-done" core/reset-done
-   "return-o-g" core/return-o-g
-   "haz-play-done" core/haz-play-done
-
+   "start-turn" core/start-turn
    "subroutine" core/play-subroutine
    "system-msg" #(core/system-msg %1 %2 (:msg %3))
+   "tap" #(core/tap %1 %2 (:card %3))
    "toast" core/toast
-   "discard-radicle" core/discard-radicle
-
+   "transfer" #(core/transfer %1 %2 (:card %3))
+   "untap-all" core/untap-all
+   "untap" #(core/untap %1 %2 (:card %3))
    "view-deck" core/view-deck
-   "view-sideboard" core/view-sideboard
-   "close-sideboard" core/close-sideboard
    "view-fw-dc-sb" core/view-fw-dc-sb
-   "close-fw-dc-sb" core/close-fw-dc-sb
    "view-location" core/view-location
-   "close-location" core/close-location})
+   "view-sideboard" core/view-sideboard
+   "wait-alert" core/wait-alert
+   "wound" #(core/wound %1 %2 (:card %3))
+   })
 
 (defn strip [state]
   (-> state
@@ -209,8 +205,8 @@
         contestant-diff (differ/diff (strip old-contestant) (strip new-contestant))
         spect-diff (differ/diff (strip old-spect) (strip new-spect))]
     {:challenger-diff challenger-diff
-     :contestant-diff   contestant-diff
-     :spect-diff  spect-diff}))
+     :contestant-diff contestant-diff
+     :spect-diff spect-diff}))
 
 (defn set-action-id
   "Creates a unique action id for each locale response - used in client lock"

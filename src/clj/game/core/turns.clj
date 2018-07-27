@@ -15,7 +15,7 @@
     msg - string with implementation notes"
   [card]
   (when-let [cdef (card-def card)]
-    ;; Card is defined - hence implemented
+    ; Card is defined - hence implemented
     (if-let [impl (:implementation cdef)]
       (if (:recurring cdef) (str impl ". Recurring credits usage not restricted") impl)
       (if (:recurring cdef) "Recurring credits usage not restricted" :full))))
@@ -42,7 +42,7 @@
                         (interrupt state side nil)))))))
 
 (defn- init-game-state
-  "Initialises the game state"
+  "Initializes the game state"
   [{:keys [players gameid spectatorhands room] :as game}]
   (let [contestant (some #(when (= (:side %) "Contestant") %) players)
         challenger (some #(when (= (:side %) "Challenger") %) players)
@@ -136,9 +136,9 @@
   "Makes or remakes (with current cid) a proper card from an @all-cards card"
   ([card] (make-card card (make-cid)))
   ([card cid]
-  (-> card
-      (assoc :cid cid :implementation (card-implemented card))
-      (dissoc :text :_id))))
+   (-> card
+       (assoc :cid cid :implementation (card-implemented card))
+       (dissoc :text :_id))))
 
 (defn reset-card
   "Resets a card back to its original state - retaining any data in the :persistent key"
@@ -221,7 +221,7 @@
 (defn interrupt
   "Mulligan starting hand."
   [state side args]
-  ;;  (swap! state assoc-in [side :keep] true) ;; was true
+  ;  (swap! state assoc-in [side :keep] true) ; was true
   (system-msg state side "interrupts for placement")
   (show-prompt state side nil "Keep hand?"
                ["Keep" "Mulligan" "Interrupt"]
@@ -235,12 +235,12 @@
   "Mulligan starting hand."
   [state side args]
   (shuffle-into-deck state side :hand)
-  (draw state side 8 {:suppress-event true}) ;; was true
+  (draw state side 8 {:suppress-event true}) ; was true
   (let [card (get-in @state [side :identity])]
     (when-let [cdef (card-def card)]
       (when-let [mul (:mulligan cdef)]
         (mul state side (make-eid state) card nil))))
-  ;;  (swap! state assoc-in [side :keep] true) ;; was true
+  ;  (swap! state assoc-in [side :keep] true) ; was true
   (system-msg state side "takes a mulligan")
   (show-prompt state side nil "Keep hand?"
                ["Keep" "Mulligan" "Interrupt"]
@@ -249,12 +249,12 @@
                   (if (= % "Mulligan")
                     (mulligan state side nil)
                     (interrupt state side nil)))))
-;;(trigger-event state side :pre-first-turn)
-;;(when (and (= side :contestant) (-> @state :challenger :identity :title))
-;;(clear-wait-prompt state :challenger)
-;;(show-wait-prompt state :contestant "Challenger to keep hand or mulligan"))
-;;(when (and (= side :challenger)  (-> @state :contestant :identity :title))
-;;(clear-wait-prompt state :contestant)))
+;(trigger-event state side :pre-first-turn)
+;(when (and (= side :contestant) (-> @state :challenger :identity :title))
+;(clear-wait-prompt state :challenger)
+;(show-wait-prompt state :contestant "Challenger to keep hand or mulligan"))
+;(when (and (= side :challenger)  (-> @state :contestant :identity :title))
+;(clear-wait-prompt state :contestant)))
 
 (defn keep-hand
   "Choose not to mulligan."
@@ -276,21 +276,21 @@
      (gain state side :click (get-in @state [side :click-per-turn]))
      (wait-for (trigger-event-sync state side (if (= side :contestant) :contestant-turn-begins :challenger-turn-begins))
                (do ;(when (= side :contestant)
-                     ;(wait-for (draw state side 1 nil)
-                              ; (trigger-event-simult state side eid :contestant-mandatory-draw nil nil)))
+                 ;(wait-for (draw state side 1 nil)
+                 ; (trigger-event-simult state side eid :contestant-mandatory-draw nil nil)))
 
-                   (cond
+                 (cond
 
-                     (neg? extra-clicks)
-                     (lose state side :click (abs extra-clicks))
+                   (neg? extra-clicks)
+                   (lose state side :click (abs extra-clicks))
 
-                     (pos? extra-clicks)
-                     (gain state side :click extra-clicks))
+                   (pos? extra-clicks)
+                   (gain state side :click extra-clicks))
 
-                   (swap! state dissoc-in [side :extra-click-temp])
-                   (swap! state dissoc (if (= side :contestant) :contestant-phase-12 :challenger-phase-12))
-                   (when (= side :contestant)
-                     (update-all-advancement-costs state side)))))))
+                 (swap! state dissoc-in [side :extra-click-temp])
+                 (swap! state dissoc (if (= side :contestant) :contestant-phase-12 :challenger-phase-12))
+                 (when (= side :contestant)
+                   (update-all-advancement-costs state side)))))))
 
 (defn start-turn
   "Start turn."
@@ -315,11 +315,11 @@
     (trigger-event state side phase nil)
     (if (not-empty start-cards)
       (toast state side
-                 (str "You may use " (clojure.string/join ", " (map :title start-cards))
-                      (if (= side :contestant)
-                        " between the start of your turn and your mandatory draw."
-                        " before taking your first click."))
-                 "info")
+             (str "You may use " (clojure.string/join ", " (map :title start-cards))
+                  (if (= side :contestant)
+                    " between the start of your turn and your mandatory draw."
+                    " before taking your first click."))
+             "info")
       (end-phase-12 state side args))))
 
 ;; --- For what goes on between Start/End ;)
@@ -360,7 +360,7 @@
   (system-msg state side "enters the Movement/Hazard Phase")
   (gain state side :click -5)
   )
-;; Movement/Hazard Phase
+; Movement/Hazard Phase
 (defn back-org
   [state side args]
   (system-msg state side "goes back to the Organization Phase")
@@ -376,7 +376,7 @@
   (system-msg state side "goes to the Site Phase")
   (gain state side :click -5)
   )
-;; Site Phase
+; Site Phase
 (defn back-m-h
   [state side args]
   (system-msg state side "goes back the M/H Phase")
@@ -426,7 +426,7 @@
                     :effect (effect (resolve-ability (let [site target] {:req (req (zero? (count (:hosted target))))
                                                                          :prompt "Select a card for on-guard"
                                                                          :choices {:req #(in-hand? %)}
-                                                                         :effect (req (contestant-place state side target site) ;; install target onto card
+                                                                         :effect (req (contestant-place state side target site) ; install target onto card
                                                                                       )
                                                                          }) nil nil))} nil nil)
   (system-msg state side "plays an on-guard card")

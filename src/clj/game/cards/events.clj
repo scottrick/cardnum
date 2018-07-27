@@ -759,7 +759,7 @@
                      card nil)))}
 
    "Forked"
-   {:implementation "Ice discard is manual"
+   {:implementation "Character discard is manual"
     :prompt "Choose a locale"
     :choices (req runnable-locales)
     :effect (effect (run target nil card))}
@@ -1079,7 +1079,7 @@
                      (gain state :contestant :hand-size {:mod (:bad-publicity contestant)}))}
 
    "Knifed"
-   {:implementation "Ice discard is manual"
+   {:implementation "Character discard is manual"
     :prompt "Choose a locale"
     :choices (req runnable-locales)
     :effect (effect (run target nil card))}
@@ -1628,7 +1628,7 @@
                             :effect (effect (disable-card :contestant target))}}})
 
    "Run Amok"
-   {:implementation "Ice discard is manual"
+   {:implementation "Character discard is manual"
     :prompt "Choose a locale" :choices (req runnable-locales)
     :effect (effect (run target {:end-run {:msg " discard 1 piece of Character that was revealed during the run"}} card))}
 
@@ -1738,7 +1738,7 @@
     :choices (req (cancellable (filter #(has-subtype? % "Icebreaker") (:deck challenger)) :sorted))}
 
    "Spooned"
-   {:implementation "Ice discard is manual"
+   {:implementation "Character discard is manual"
     :prompt "Choose a locale"
     :choices (req runnable-locales)
     :effect (effect (run target nil card))}

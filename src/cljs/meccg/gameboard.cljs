@@ -373,7 +373,7 @@
      (.substring item (inc (.indexOf item ci-seperator)) (dec (count item)))]))
 
 (defn create-face [text symbol class]
-  (.replace text (apply str symbol) (str "<img src='" class "'style=\"width:20px;height:20px;\"></img>")))
+  (.replace text (apply str symbol) (str "<img src='" class "'style=\"height:20px;\"></img>")))
 
 (defn add-faces [card-text]
   (-> (if (nil? card-text) "" card-text)
@@ -386,13 +386,20 @@
 
 (defn add-regions [card-text]
   (-> (if (nil? card-text) "" card-text)
-      (create-face "Borderland" "img/dc/me_bl.png")
+      (create-face "Border-land" "img/dc/me_bl.png")
       (create-face "Coastal Sea" "img/dc/me_cs.png")
-      (create-face "Darkdomain" "img/dc/me_dd.png")
-      (create-face "Freedomain" "img/dc/me_fd.png")
+      (create-face "Double Coastal Sea" "img/dc/me_dc.png")
+      (create-face "Triple Coastal Sea" "img/dc/me_tc.png")
+      (create-face "Dark-domain" "img/dc/me_dd.png")
+      (create-face "Desert" "img/dc/me_er.png")
+      (create-face "Double Desert" "img/dc/me_ee.png")
+      (create-face "Free-domain" "img/dc/me_fd.png")
       (create-face "Jungle" "img/dc/me_ju.png")
-      (create-face "Shadowland" "img/dc/me_sl.png")
-      (create-face "Wilderness" "img/dc/me_wi.png")))
+      (create-face "Shadow-land" "img/dc/me_sl.png")
+      (create-face "Wilderness" "img/dc/me_wi.png")
+      (create-face "Double Wilderness" "img/dc/me_dw.png")
+      (create-face "Triple Wilderness" "img/dc/me_tw.png")
+      ))
 
 (defn create-span-impl [item]
   (if (= "[hr]" item)
