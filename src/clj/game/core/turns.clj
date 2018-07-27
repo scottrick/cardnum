@@ -1,7 +1,7 @@
 (in-ns 'game.core)
 
 (declare all-active card-flag-fn? clear-turn-register! clear-wait-prompt create-pool create-deck create-board create-fw-dc create-location
-         in-hand? challenger-place contestant-place all-placed-challenger reveal untap hand-size keep-hand interrupt mulligan
+         in-hand? challenger-place contestant-place all-placed-challenger reveal untap hand-size keep-hand mulligan
          show-wait-prompt turn-message)
 
 (def game-states (atom {}))
@@ -33,13 +33,7 @@
   ;(draw state :challenger 8 {:suppress-event true})
   (doseq [side [:contestant :challenger]]
     (when (-> @state side :identity :title)
-      (show-prompt state side nil "Keep hand?"
-                   ["Keep" "Mulligan" "Interrupt"]
-                   #(if (= % "Keep")
-                      (keep-hand state side nil)
-                      (if (= % "Mulligan")
-                        (mulligan state side nil)
-                        (interrupt state side nil)))))))
+      (system-msg state side "Drafting Begins"))))
 
 (defn- init-game-state
   "Initializes the game state"
@@ -124,8 +118,7 @@
       (wait-for (trigger-event-sync state side :pre-start-game)
                 (let [side :challenger]
                   (wait-for (trigger-event-sync state side :pre-start-game)
-                            (init-hands state)))))
-    state))
+                            (init-hands state))))) state))
 
 (defn locale-card
   ([ImageName] (@all-cards ImageName))
@@ -218,37 +211,13 @@
   [eid result]
   (assoc eid :result result))
 
-(defn interrupt
-  "Mulligan starting hand."
-  [state side args]
-  ;  (swap! state assoc-in [side :keep] true) ; was true
-  (system-msg state side "interrupts for placement")
-  (show-prompt state side nil "Keep hand?"
-               ["Keep" "Mulligan" "Interrupt"]
-               #(if (= % "Keep")
-                  (keep-hand state side nil)
-                  (if (= % "Mulligan")
-                    (mulligan state side nil)
-                    (interrupt state side nil)))))
-
 (defn mulligan
   "Mulligan starting hand."
   [state side args]
   (shuffle-into-deck state side :hand)
   (draw state side 8 {:suppress-event true}) ; was true
-  (let [card (get-in @state [side :identity])]
-    (when-let [cdef (card-def card)]
-      (when-let [mul (:mulligan cdef)]
-        (mul state side (make-eid state) card nil))))
-  ;  (swap! state assoc-in [side :keep] true) ; was true
-  (system-msg state side "takes a mulligan")
-  (show-prompt state side nil "Keep hand?"
-               ["Keep" "Mulligan" "Interrupt"]
-               #(if (= % "Keep")
-                  (keep-hand state side nil)
-                  (if (= % "Mulligan")
-                    (mulligan state side nil)
-                    (interrupt state side nil)))))
+  (system-msg state side "takes a mulligan"))
+
 ;(trigger-event state side :pre-first-turn)
 ;(when (and (= side :contestant) (-> @state :challenger :identity :title))
 ;(clear-wait-prompt state :challenger)

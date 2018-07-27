@@ -1548,22 +1548,23 @@
                          (zero? (:click me)) end-turn)
                   (do
                     [:div
+                     (cond-button "Keep Hand" (not (get-in @game-state [:contestant :keep])) #(send-command "keep"))
+                     (cond-button "Mulligan" (not (get-in @game-state [:contestant :keep])) #(send-command "mulligan"))
+                     (cond-button "Start Turn" (and (get-in @game-state [:contestant :keep])
+                                                    (get-in @game-state [:challenger :keep]))
+                                  #(send-command "start-turn")) ;; -5
                      (if (and (= (get-in @game-state [:turn]) 0)
                               (= side :contestant))
-                       [:button {:on-click #(send-command "not-first")} "Pass 1st Turn"])
-                     [:button {:on-click #(send-command "start-turn")} "Start Turn"]
-                     (cond-button "Untap All" nil nil)
-                     (cond-button "Organized" nil nil)
-                     (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
-                     (cond-button "M/H Phase" nil nil)
+                       (cond-button "Pass 1st Turn" (and (get-in @game-state [:contestant :keep])
+                                                         (get-in @game-state [:challenger :keep]))
+                                    #(send-command "not-first"))
+                       )
                      ])
                   (if (and (zero? (:click opponent))
                            (zero? (:click me)))
                     [:div
-                     (cond-button "Wait!!!" nil nil)
-                     (cond-button "Nothing" nil nil)
-                     (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
-                     (cond-button "Waiting" nil nil)
+                     (cond-button "Keep Hand" (not (get-in @game-state [:challenger :keep])) #(send-command "keep"))
+                     (cond-button "Mulligan" (not (get-in @game-state [:challenger :keep])) #(send-command "mulligan"))
                      ]
                     )
                   )

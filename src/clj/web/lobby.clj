@@ -3,7 +3,6 @@
             [web.utils :refer [response tick remove-once]]
             [web.ws :as ws]
             [web.stats :as stats]
-            [web.locations :as loc]
             [game.core :as core]
             [crypto.password.bcrypt :as bcrypt]
             [monger.collection :as mc]
