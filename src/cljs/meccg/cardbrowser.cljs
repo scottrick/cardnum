@@ -5,7 +5,6 @@
             [cljs.core.async :refer [chan put! >! sub pub] :as async]
             [clojure.string :as str]
             [meccg.appstate :refer [app-state]]
-            [meccg.account :refer [alt-art-name]]
             [meccg.ajax :refer [GET]]
             [meccg.utils :refer [toastr-options banned-span restricted-span rotated-span influence-dots]]
             [cardnum.cards :refer [all-cards] :as cards]
@@ -130,13 +129,6 @@
   (set! (.-options js/toastr) (toastr-options options))
   (let [f (aget js/toastr type)]
     (f msg)))
-
-(defn- post-response [cursor response]
-  (if (= 200 (:status response))
-    (let [new-alts (get-in response [:json :altarts] {})]
-      (swap! app-state assoc-in [:user :options :alt-arts] new-alts)
-      (non-game-toast "Updated Art" "success" nil))
-    (non-game-toast "Failed to Update Art" "error" nil)))
 
 (defn- card-text
   "Generate text html representation a card"

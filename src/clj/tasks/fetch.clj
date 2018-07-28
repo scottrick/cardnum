@@ -3,7 +3,7 @@
   (:require [web.db :refer [db] :as webdb]
             [clojure.string :as string]
             [tasks.meccgdb :refer :all]
-            [tasks.altart :refer [add-art]]))
+            ))
 
 (defn fetch
   "Import data from MECCGDB.
@@ -27,7 +27,6 @@
       (println (count sets) "sets imported")
       (println (count mwls) "MWL versions imported")
       (println (count cards) "cards imported")
-      (add-art false)
       (update-config (:config tables)))
     (catch Exception e (do
                          (println "Import data failed:" (.getMessage e))
