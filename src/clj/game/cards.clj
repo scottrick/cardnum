@@ -15,13 +15,6 @@
                                           (is-type? % "Hazard"))}
                      :effect (effect (discard target {:cause :subroutine}))})
 
-(def discard-radicle-sub {:prompt "Select a radicle to discard"
-                         :label "Discard a radicle"
-                         :msg (msg "discard " (:title target))
-                         :choices {:req #(and (placed? %)
-                                              (is-type? % "Radicle"))}
-                         :effect (effect (discard target {:cause :subroutine}))})
-
 (def discard-placed {:prompt "Select an placed card to discard"
                       :player :challenger
                       :label "Force the Challenger to discard an placed card"
@@ -141,30 +134,6 @@
           (update! state side newh)
           (unregister-events state side h)
           (register-events state side (:events (card-def newh)) newh))))))
-
-(defn do-net-damage
-  "Do specified amount of net-damage."
-  [dmg]
-  {:label (str "Do " dmg " net damage")
-   :async true
-   :msg (str "do " dmg " net damage")
-   :effect (effect (damage eid :net dmg {:card card}))})
-
-(defn do-meat-damage
-  "Do specified amount of meat damage."
-  [dmg]
-  {:label (str "Do " dmg " meat damage")
-   :async true
-   :msg (str "do " dmg " meat damage")
-   :effect (effect (damage eid :meat dmg {:card card}))})
-
-(defn do-brain-damage
-  "Do specified amount of brain damage."
-  [dmg]
-  {:label (str "Do " dmg " brain damage")
-   :async true
-   :msg (str "do " dmg " brain damage")
-   :effect (effect (damage eid :brain dmg {:card card}))})
 
 (defn pick-virus-counters-to-spend
   "Pick virus counters to spend. For use with Freedom Khumalo and virus breakers, and any other relevant cards.

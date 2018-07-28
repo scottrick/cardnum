@@ -389,6 +389,7 @@
   (characters->str owner)
   (pool->str owner)
   (fwsb->str owner)
+  (cards->str owner)
   (-> owner (om/get-node "viewport") js/$ (.addClass "delete"))
   (try (js/ga "send" "event" "deckbuilder" "delete") (catch js/Error e)))
 

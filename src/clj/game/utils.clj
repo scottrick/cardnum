@@ -97,7 +97,6 @@
                      (case key
                        :credit (str value " [Credits]")
                        :click (reduce str (for [i (range value)] "[Click]"))
-                       :net-damage (str value " net damage")
                        :mill (str value " card mill")
                        :hazard (str value " placed hazard")
                        :shuffle-placed-to-stack (str "shuffling " value " placed "
@@ -173,8 +172,6 @@
       :credit (str value " [$]")
       :click (->> "[Click]" repeat (take value) (apply str))
       :forfeit (str value " Agenda" (when (> value 1) "s"))
-      :net (str value " net damage")
-      :meat (str value " meat damage")
       nil)))
 
 (defn build-cost-str

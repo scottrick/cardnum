@@ -95,7 +95,7 @@
 
 (defn strip [state]
   (-> state
-    (dissoc :events :turn-events :per-turn :prevent :damage :effect-completed :click-state :turn-state)
+    (dissoc :events :turn-events :per-turn :prevent :effect-completed :click-state :turn-state)
     (update-in [:contestant :register] dissoc :most-recent-drawn)
     (update-in [:challenger :register] dissoc :most-recent-drawn)))
 

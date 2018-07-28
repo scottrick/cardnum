@@ -103,7 +103,7 @@
                     :hand-size-base 8 :hand-size-modification 0
                     :agenda-point 0
                     :hq-access 1 :rd-access 1 :tagged 0
-                    :brain-damage 0 :click-per-turn 100 :agenda-point-req 7 :keep false}})))
+                    :click-per-turn 100 :agenda-point-req 7 :keep false}})))
 
 (defn init-game
   "Initializes a new game with the given players vector."

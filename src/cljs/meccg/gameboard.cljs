@@ -132,7 +132,7 @@
          (build-report-url error)
          "');\">Report on GitHub</button></div>")))
 
-(defn toast-other
+(defn toast-off
   "Display a toast warning with the specified message.
   Sends a command to clear any server side toasts."
   [msg type options]
@@ -1743,9 +1743,6 @@
     (cond
       (= "Decked" (@game-state :reason capitalize))
       (str ") wins due to the Contestant being decked on turn " (:turn @game-state))
-
-      (= "Flatline" (@game-state :reason capitalize))
-      (str ") wins by flatline on turn " (:turn @game-state))
 
       (= "Concede" (@game-state :reason capitalize))
       (str ") wins by concession on turn " (:turn @game-state))

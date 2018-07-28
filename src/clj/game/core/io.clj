@@ -340,9 +340,6 @@
           "/roll"       #(command-roll %1 %2 value)
           "/r"          #(basic-roll %1 %2)
           "/tag"        #(swap! %1 assoc-in [%2 :tag] (max 0 value))
-          "/take-brain" #(when (= %2 :challenger) (damage %1 %2 :brain (max 0 value)))
-          "/take-meat"  #(when (= %2 :challenger) (damage %1 %2 :meat  (max 0 value)))
-          "/take-net"   #(when (= %2 :challenger) (damage %1 %2 :net   (max 0 value)))
           "/trace"      #(when (= %2 :contestant) (init-trace %1 %2
                                                         {:title "/trace command" :side %2}
                                                         {:base (max 0 value)

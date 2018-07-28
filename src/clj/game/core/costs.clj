@@ -1,6 +1,6 @@
 (in-ns 'game.core)
 
-(declare forfeit prompt! toast damage mill placed? is-type? is-scored? system-msg facedown? make-result)
+(declare forfeit prompt! toast mill placed? is-type? is-scored? system-msg facedown? make-result)
 
 (defn deduct
   "Deduct the value from the player's attribute."
@@ -47,7 +47,7 @@
       (flag-stops-pay? state side cost-type)
       computer-says-no
 
-      (not (or (#{:memory :net-damage} cost-type)
+      (not (or (#{:memory} cost-type)
                (and (= cost-type :forfeit) (>= (- (count (get-in @state [side :scored])) amount) 0))
                (and (= cost-type :mill) (>= (- (count (get-in @state [side :deck])) amount) 0))
                (and (= cost-type :tag) (>= (- (get-in @state [:challenger :tag]) amount) 0))
@@ -116,13 +116,6 @@
                        card nil)
      cost-name)))
 
-(defn pay-damage
-  "Suffer a damage as part of paying for a card or ability"
-  [state side eid type amount]
-  (let [cost-name (cost-names amount type)]
-    (damage state side eid type amount {:unpreventable true})
-    cost-name))
-
 (defn pay-shuffle-placed-to-stack
   "Shuffle placed challenger card(s) into the stack as part of paying for a card or ability"
   [state side eid card amount]
@@ -176,7 +169,6 @@
      :character (pay-discard state :contestant eid card "revealed Character" (second cost) (every-pred revealed? character?) {:cause :ability-cost :keep-locale-alive true})
 
      :tag (complete-with-result state side eid (deduct state :challenger cost))
-     :net-damage (pay-damage state side eid :net (second cost))
      :mill (complete-with-result state side eid (mill state side (second cost)))
 
      ;; Shuffle placed challenger cards into the stack (eg Degree Mill)

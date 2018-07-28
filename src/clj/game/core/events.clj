@@ -269,11 +269,6 @@
   [state locale]
   (first-event? state :challenger :successful-run #(= [locale] %)))
 
-(defn get-turn-damage
-  "Returns the value of damage take this turn"
-  [state side]
-  (apply + (map #(nth % 2) (turn-events state :challenger :damage))))
-
 (defn get-placed-discarded
   "Returns list of cards discarded this turn owned by side that were placed"
   [state side]
