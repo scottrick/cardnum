@@ -338,16 +338,21 @@
         map-card (fn [c] (update-in c [:card] @all-cards))
         unknown-card (fn [c] (nil? (:card c)))
         deck (as-> (mc/find-one-as-map db "decks" {:_id (object-id deck-id) :username username}) d
-                   (update-in d [:cards] #(mapv map-card %))
-                   (update-in d [:cards] #(vec (remove unknown-card %)))
                    (update-in d [:pool] #(mapv map-card %))
                    (update-in d [:pool] #(vec (remove unknown-card %)))
+                   (update-in d [:resources] #(mapv map-card %))
+                   (update-in d [:resources] #(vec (remove unknown-card %)))
+                   (update-in d [:hazards] #(mapv map-card %))
+                   (update-in d [:hazards] #(vec (remove unknown-card %)))
+                   (update-in d [:characters] #(mapv map-card %))
+                   (update-in d [:characters] #(vec (remove unknown-card %)))
                    (update-in d [:sideboard] #(mapv map-card %))
                    (update-in d [:sideboard] #(vec (remove unknown-card %)))
                    (update-in d [:fwsb] #(mapv map-card %))
                    (update-in d [:fwsb] #(vec (remove unknown-card %)))
                    (update-in d [:identity] #(@all-cards (:title %)))
-                   (assoc d :status (decks/calculate-deck-status d)))]
+                   (assoc d :status (decks/calculate-deck-status d))
+                   )]
     (when (and (:identity deck) (player? client-id gameid))
       (swap! all-games update-in [gameid :players
                               (if (= client-id (:ws-id fplayer)) 0 1)]

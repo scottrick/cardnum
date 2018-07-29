@@ -143,14 +143,14 @@
         [_ qty-str card-name card-params]
         (re-matches #"(\d+)[^\s]*\s+([^\(^\[]+)([\(\[](.{0,7}))?" clean)]
     (if (and qty-str
-             (not (js/isNaN (js/parseInt qty-str)))
+             (not (js/isNaN (str->int qty-str)))
              card-name
              card-params)
-      (assoc {} :qty (js/parseInt qty-str) :card (s/trim card-name) :id (s/trim card-params))
+      (assoc {} :qty (str->int qty-str) :card (s/trim card-name) :id (s/trim card-params))
       (if (and qty-str
-               (not (js/isNaN (js/parseInt qty-str)))
+               (not (js/isNaN (str->int qty-str)))
                card-name)
-        (assoc {} :qty (js/parseInt qty-str) :card (s/trim card-name))
+        (assoc {} :qty (str->int qty-str) :card (s/trim card-name))
         nil))))
 
 (defn- line-reducer
@@ -219,7 +219,7 @@
           wizard-sites (into minion-sites (parse-deck-string all-wizard-sites))
           regions (into wizard-sites (parse-deck-string all-regions))]
       (assoc deck :resources resources :hazards hazards :sideboard sideboard
-                  :characters characters :pool pool :fwsb fwsb :cards cards
+                  :characters characters :pool pool :fwsb fwsb
                   :location regions
                   :identity identity))))
 
@@ -253,13 +253,10 @@
 (defn- insert-params
   "Add card parameters into the string representation"
   [card]
-  (let [id (:id card)
-        art (:art card)]
-    (if (or id art)
       (str " "
-           (when id (str id))
-           (when (and id art) ", ")
-           (when art (str art)))
+  (let [id (:id card)]
+    (if id
+      (when id (str id)))
       "")))
 
 (defn resources->str [owner]
@@ -291,11 +288,6 @@
   (let [fwsb (om/get-state owner [:deck :fwsb])
         str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" fwsb)]
     (om/set-state! owner :fwsb-edit str)))
-
-(defn cards->str [owner]
-  (let [cards (om/get-state owner [:deck :cards])
-        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" cards)]
-    (om/set-state! owner :cards-edit str)))
 
 (defn edit-deck [owner]
   (let [deck (om/get-state owner :deck)]
@@ -389,7 +381,6 @@
   (characters->str owner)
   (pool->str owner)
   (fwsb->str owner)
-  (cards->str owner)
   (-> owner (om/get-node "viewport") js/$ (.addClass "delete"))
   (try (js/ga "send" "event" "deckbuilder" "delete") (catch js/Error e)))
 
@@ -415,7 +406,7 @@
                 (sort-by :title)
                 first)]
     (om/set-state! owner :deck {:name "New deck" :resources [] :hazards [] :sideboard []
-                                :characters [] :pool [] :fwsb [] :cards [] :regions []
+                                :characters [] :pool [] :fwsb [] :regions []
                                 :wizard-sites [] :minion-sites [] :balrog-sites []
                                 :fallen-sites [] :elf-sites [] :dwarf-sites [] :location []
                                 :identity id})
@@ -466,16 +457,10 @@
                      (if (contains? card :art)
                        (conj card-id {:art (:art card)})
                        card-id)))
-            cards (for [card (:cards deck) :when (get-in card [:card :title])]
-                    (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
-                          card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
-                      (if (contains? card :art)
-                        (conj card-id {:art (:art card)})
-                        card-id)))
             ;; only include keys that are relevant
             identity (select-keys (:identity deck) [:title :alignment :trimCode])
             data (assoc deck :resources resources :hazards hazards :sideboard sideboard
-                             :characters characters :pool pool :fwsb fwsb :cards cards
+                             :characters characters :pool pool :fwsb fwsb
                              :identity identity)]
         (try (js/ga "send" "event" "deckbuilder" "save") (catch js/Error e))
         (go (let [new-id (get-in (<! (if (:_id deck)
@@ -936,9 +921,7 @@
              ]
             [:div {:class (when (:edit state) "edit")}
              (when-let [line (om/get-state owner :zoom)]
-               (let [id (:id line)
-                     updated-card (add-params-to-card (:card line) id)]
-                 (om/build card-view updated-card {:state {:cursor cursor}})))]]
+               (om/build card-view (:card line) {:state {:cursor cursor}}))]]
 
            [:div.decklist
             (when-let [deck (:deck state)]
@@ -988,7 +971,9 @@
                    (if (decks/banned? identity)
                      banned-span
                      (when (:rotated identity) rotated-span))]
-                  (let [count (decks/card-count (:cards deck))
+                  (let [count (+ (+ (decks/card-count (:resources deck))
+                                    (decks/card-count (:hazards deck)))
+                                 (decks/card-count (:characters deck)))
                         min-count (decks/min-deck-size identity)]
                     [:div count " cards"
                      (when (< count min-count)

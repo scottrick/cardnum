@@ -120,7 +120,7 @@
                   (wait-for (trigger-event-sync state side :pre-start-game)
                             (init-hands state))))) state))
 
-(defn locale-card
+(defn server-card
   ([ImageName] (@all-cards ImageName))
   ([ImageName user]
    (@all-cards ImageName)))
@@ -130,8 +130,7 @@
   ([card] (make-card card (make-cid)))
   ([card cid]
    (-> card
-       (assoc :cid cid :implementation (card-implemented card))
-       (dissoc :text :_id))))
+       (assoc :cid cid :implementation (card-implemented card)))))
 
 (defn reset-card
   "Resets a card back to its original state - retaining any data in the :persistent key"
@@ -144,10 +143,10 @@
   ([side deck] (create-pool side deck nil))
   ([side deck user]
    (mapcat #(map (fn [card]
-                   (let [locale-card (or (locale-card (:ImageName card) user) card)
-                         c (assoc (make-card locale-card) :side side)]
+                   (let [server-card (or (server-card (:ImageName card) user) card)
+                         c (assoc (make-card server-card) :side side :id (:trimCode card))]
                      (if-let [init (:init (card-def c))] (merge c init) c)))
-                 (repeat (:qty %) (:card %)))
+                 (repeat (:qty %) (assoc (:card %) :id (:trimCode %))))
            (vec (:pool deck)))))
 
 (defn create-deck
@@ -156,11 +155,11 @@
   ([side deck] (create-deck side deck nil))
   ([side deck user]
    (shuffle (mapcat #(map (fn [card]
-                            (let [locale-card (or (locale-card (:ImageName card) user) card)
-                                  c (assoc (make-card locale-card) :side side)]
+                            (let [server-card (or (server-card (:ImageName card) user) card)
+                                  c (assoc (make-card server-card) :side side :id (:id card))]
                               (if-let [init (:init (card-def c))] (merge c init) c)))
-                          (repeat (:qty %) (assoc (:card %) :art (:art %))))
-                    (shuffle (vec (:cards deck)))))))
+                          (repeat (:qty %) (assoc (:card %) :id (:id %))))
+                    (shuffle (vec (into (into (:resources deck) (:hazards deck)) (:characters deck))))))))
 
 (defn create-board
   "Creates a shuffled draw deck from the given list of cards.
@@ -168,10 +167,10 @@
   ([side deck] (create-board side deck nil))
   ([side deck user]
    (mapcat #(map (fn [card]
-                   (let [locale-card (or (locale-card (:ImageName card) user) card)
-                         c (assoc (make-card locale-card) :side side)]
+                   (let [server-card (or (server-card (:ImageName card) user) card)
+                         c (assoc (make-card server-card) :side side :id (:id card))]
                      (if-let [init (:init (card-def c))] (merge c init) c)))
-                 (repeat (:qty %) (:card %)))
+                 (repeat (:qty %) (assoc (:card %) :id (:id %))))
            (vec (:sideboard deck)))))
 
 (defn create-fw-dc
@@ -180,10 +179,10 @@
   ([side deck] (create-fw-dc side deck nil))
   ([side deck user]
    (mapcat #(map (fn [card]
-                   (let [locale-card (or (locale-card (:ImageName card) user) card)
-                         c (assoc (make-card locale-card) :side side)]
+                   (let [server-card (or (server-card (:ImageName card) user) card)
+                         c (assoc (make-card server-card) :side side :id (:id card))]
                      (if-let [init (:init (card-def c))] (merge c init) c)))
-                 (repeat (:qty %) (:card %)))
+                 (repeat (:qty %) (assoc (:card %) :id (:id %))))
            (vec (:fwsb deck)))))
 
 (defn create-location
@@ -192,11 +191,23 @@
   ([side deck] (create-location side deck nil))
   ([side deck user]
    (mapcat #(map (fn [card]
-                   (let [locale-card (or (locale-card (:ImageName card) user) card)
-                         c (assoc (make-card locale-card) :side side)]
+                   (let [server-card (or (server-card (:ImageName card) user) card)
+                         c (assoc (make-card server-card) :side side :id (:id card))]
                      (if-let [init (:init (card-def c))] (merge c init) c)))
-                 (repeat (:qty %) (:card %)))
+                 (repeat (:qty %) (assoc (:card %) :id (:id %))))
            (vec (:location deck)))))
+
+(defn create-deck-old
+  "Creates a shuffled draw deck (R&D/Stack) from the given list of cards.
+  Loads card data from server-side @all-cards map if available."
+  ([deck] (create-deck deck nil))
+  ([deck user]
+   (shuffle (mapcat #(map (fn [card]
+                            (let [server-card (or (server-card (:title card) user) card)
+                                  c (assoc (make-card server-card) :art (:art card))]
+                              (if-let [init (:init (card-def c))] (merge c init) c)))
+                          (repeat (:qty %) (assoc (:card %) :art (:art %))))
+                    (shuffle (vec (:cards deck)))))))
 
 (defn make-rid
   "Returns a progressively-increasing integer to identify a new party locale."
