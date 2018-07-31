@@ -102,7 +102,6 @@
                     :fact_mp 0 :kill_mp 0 :misc_mp 0
                     :hand-size-base 8 :hand-size-modification 0
                     :agenda-point 0
-                    :hq-access 1 :rd-access 1 :tagged 0
                     :click-per-turn 100 :agenda-point-req 7 :keep false}})))
 
 (defn init-game
@@ -196,18 +195,6 @@
                      (if-let [init (:init (card-def c))] (merge c init) c)))
                  (repeat (:qty %) (assoc (:card %) :id (:id %))))
            (vec (:location deck)))))
-
-(defn create-deck-old
-  "Creates a shuffled draw deck (R&D/Stack) from the given list of cards.
-  Loads card data from server-side @all-cards map if available."
-  ([deck] (create-deck deck nil))
-  ([deck user]
-   (shuffle (mapcat #(map (fn [card]
-                            (let [server-card (or (server-card (:title card) user) card)
-                                  c (assoc (make-card server-card) :art (:art card))]
-                              (if-let [init (:init (card-def c))] (merge c init) c)))
-                          (repeat (:qty %) (assoc (:card %) :art (:art %))))
-                    (shuffle (vec (:cards deck)))))))
 
 (defn make-rid
   "Returns a progressively-increasing integer to identify a new party locale."

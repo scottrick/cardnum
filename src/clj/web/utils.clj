@@ -11,6 +11,10 @@
       (do (Thread/sleep ms)
           (callback)))))
 
+(defn map-values
+  [m keys f]
+  (reduce #(update-in %1 [%2] f) m keys))
+
 (defn response [status-code msg]
   (-> (resp/response msg)
       (resp/status status-code)))

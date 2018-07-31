@@ -4,6 +4,7 @@
             [sablono.core :as sab :include-macros true]
             [cljs.core.async :refer [chan put! <!] :as async]
             [clojure.string :as s]
+            [meccg.account :refer [post-options]]
             [meccg.appstate :refer [app-state]]
             [meccg.auth :refer [avatar authenticated] :as auth]
             [meccg.gameboard :refer [card-preview-mouse-over card-preview-mouse-out get-message-parts create-span card-zoom] :as gameboard]
@@ -105,7 +106,7 @@
                    (= -1 (.indexOf current-blocked-list blocked-user)))
           (let [new-block-list (conj current-blocked-list blocked-user)]
             (swap! app-state assoc-in [:options :blocked-users] new-block-list)
-            (meccg.account/post-options "/profile" (partial post-response owner blocked-user))))))))
+            (post-options "/profile" (partial post-response owner blocked-user))))))))
 
 (defn send-msg [event channel owner]
   (.preventDefault event)

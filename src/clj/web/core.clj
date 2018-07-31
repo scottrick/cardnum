@@ -29,8 +29,8 @@
           sets (mc/find-maps db "sets" nil)
           mwl (mc/find-maps db "mwl" nil)]
       (core/reset-card-defs)
-      (reset! cards/all-cards (into {} (map (juxt :title identity)
-                                            (sort-by (complement :rotated) cards))))
+      (reset! cards/all-cards (into (into {} (map (juxt :title identity) cards))
+              (map (juxt :code identity) cards)))
       (reset! cards/sets sets)
       (reset! cards/mwl mwl))
 

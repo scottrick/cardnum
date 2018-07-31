@@ -6,7 +6,7 @@
             [clojure.java.io :as io]
             [clojure.core.match :refer [match]]
             [clojure.stacktrace :refer [print-stack-trace]]
-            [cardnum.utils :refer [str->int]]
+            [cardnum.utils :refer [str->int parse-deck-string INFINITY] :as utils]
             [cardnum.cards :refer [all-cards]]))
 
 (load "core/events")    ; triggering of events

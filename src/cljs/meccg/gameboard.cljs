@@ -277,7 +277,7 @@
                    ("Region" "Site") (if (< (count (get-in @game-state [:challenger :locales])) 4)
                                        (send-command "play" {:card card :locale "New party"})
                                        (-> (om/get-node owner "locales") js/$ .toggle))
-                   ("Resource") (if (some (partial = Secondary) ["Permanent-event" "Long-event"
+                   ("Resource") (if (some (partial = Secondary) ["Avatar" "Permanent-event" "Long-event"
                                                                  "Permanent-event/Short-event"
                                                                  "Short-event" "Faction"])
                                   (send-command "play" {:card card})
@@ -295,7 +295,7 @@
                    ("Region" "Site") (if (< (count (get-in @game-state [:contestant :locales])) 4)
                                        (send-command "play" {:card card :locale "New party"})
                                        (-> (om/get-node owner "locales") js/$ .toggle))
-                   ("Resource") (if (some (partial = Secondary) ["Permanent-event" "Long-event"
+                   ("Resource") (if (some (partial = Secondary) ["Avatar" "Permanent-event" "Long-event"
                                                                  "Permanent-event/Short-event"
                                                                  "Short-event" "Faction"])
                                   (send-command "play" {:card card})

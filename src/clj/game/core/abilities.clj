@@ -437,20 +437,20 @@
 
 ;;; Psi games
 
-(defn show-prompt-with-dcharacter
+(defn show-prompt-with-dice
   "Calls show-prompt normally, but appends a 'roll d6' button to choices.
   If user chooses to roll d6, reveal the result to user and re-display
   the prompt without the 'roll d6 button'."
   ([state side card message other-choices f]
    (show-prompt state side card message other-choices f nil))
   ([state side card message other-choices f args]
-   (let [dcharacter-msg "Roll a d6",
-         choices (conj other-choices dcharacter-msg)]
+   (let [dice-msg "Roll a d6",
+         choices (conj other-choices dice-msg)]
      (show-prompt state side card message choices
-                  #(if (not= % dcharacter-msg)
+                  #(if (not= % dice-msg)
                      (f %)
                      (show-prompt state side card
-                                  (str message " (Dcharacter result: " (inc (rand-int 6)) ")")
+                                  (str message " (Dice result: " (inc (rand-int 6)) ")")
                                   other-choices f args))
                   args))))
 
@@ -468,7 +468,7 @@
                                       (any-flag-fn? state :challenger :psi-prevent-spend %))
                                  all-amounts)]
 
-       (show-prompt-with-dcharacter state s card (str "Choose an amount to spend for " (:title card))
+       (show-prompt-with-dice state s card (str "Choose an amount to spend for " (:title card))
                               (map #(str % " [Credits]") valid-amounts)
                               #(resolve-psi state s eid card psi (str->int (first (split % #" "))))
                     {:priority 2})))))

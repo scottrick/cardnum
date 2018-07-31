@@ -7,12 +7,11 @@
             [meccg.appstate :refer [app-state]]
             [meccg.auth :refer [authenticated] :as auth]
             [meccg.cardbrowser :refer [cards-channel image-url card-view filter-title] :as cb]
-            [meccg.sites :refer [all-regions all-wizard-sites all-minion-sites all-fallen-sites all-balrog-sites all-elf-sites all-dwarf-sites all-lord-sites all-dual-sites]]
             [meccg.ajax :refer [POST GET DELETE PUT]]
             [meccg.utils :refer [banned-span restricted-span rotated-span influence-dot influence-dots alliance-dots dots-html make-dots]]
             [goog.string :as gstring]
             [goog.string.format]
-            [cardnum.utils :refer [str->int INFINITY] :as utils]
+            [cardnum.utils :refer [str->int lookup-deck parse-deck-string INFINITY] :as utils]
             [cardnum.cards :refer [all-cards]]
             [cardnum.decks :as decks]
             [cardnum.cards :as cards]))
@@ -27,47 +26,9 @@
     "0"
     (gstring/format "%.0f" (* 100 (float (/ num1 num2))))))
 
-(defn identical-cards? [cards]
-  (let [name (:title (first cards))]
-    (every? #(= (:title %) name) cards)))
-
 (defn noinfcost? [identity card]
   (or (= (:faction card) (:faction identity))
       (= 0 (:factioncost card)) (= INFINITY (decks/id-inf-limit identity))))
-
-(defn take-best-card
-  "Returns a non-rotated card from the list of cards or a random rotated card from the list"
-  [cards]
-  (let [non-rotated (filter #(= (:title %)) cards)]
-    (if (not-empty non-rotated)
-      (first non-rotated)
-      (first cards))))
-
-(defn filter-exact-title [query cards]
-  (let [lcquery (.toLowerCase query)]
-    (filter #(or (= (.toLowerCase (:title %)) lcquery)
-                 (= (:normalizedtitle %) lcquery))
-            cards)))
-
-(defn lookup
-  "Lookup the card title (query) looking at all cards on specified alignment"
-  [card]
-  (let [q (.toLowerCase (:title card))
-        id (:id card)
-        cards @all-cards
-        exact-matches (filter-exact-title q cards)]
-    (cond (and id
-               (first (filter #(= id (:trimCode %)) cards)))
-          (let [id-matches (filter #(= id (:trimCode %)) cards)]
-            (first (filter-exact-title q id-matches)))
-          (not-empty exact-matches) (take-best-card exact-matches)
-          :else
-          (loop [i 2 matches cards]
-            (let [subquery (subs q 0 i)]
-              (cond (zero? (count matches)) card
-                    (or (= (count matches) 1) (identical-cards? matches)) (take-best-card matches)
-                    (<= i (count (:title card))) (recur (inc i) (filter-title subquery matches))
-                    :else card))))))
 
 (defn identity-lookup
   "Lookup the identity (query) looking at all cards on specified alignment"
@@ -75,18 +36,18 @@
   (let [q (.toLowerCase (:title card))
         id (:id card)
         cards (filter #(= (:alignment %) alignment) @all-cards)
-        exact-matches (filter-exact-title q cards)]
+        exact-matches (utils/filter-exact-title q cards)]
     (cond (and id
                (first (filter #(= id (:trimCode %)) cards)))
           (let [id-matches (filter #(= id (:trimCode %)) cards)]
-            (first (filter-exact-title q id-matches)))
-          (not-empty exact-matches) (take-best-card exact-matches)
+            (first (utils/filter-exact-title q id-matches)))
+          (not-empty exact-matches) (utils/take-best-card exact-matches)
           :else
           (loop [i 2 matches cards]
             (let [subquery (subs q 0 i)]
               (cond (zero? (count matches)) card
-                    (or (= (count matches) 1) (identical-cards? matches)) (take-best-card matches)
-                    (<= i (count (:title card))) (recur (inc i) (filter-title subquery matches))
+                    (or (= (count matches) 1) (utils/identical-cards? matches)) (utils/take-best-card matches)
+                    (<= i (count (:title card))) (recur (inc i) (utils/filter-title subquery matches))
                     :else card))))))
 
 (defn- build-identity-name
@@ -136,59 +97,6 @@
       (reduce param-reducer result params-clean))
     result))
 
-(defn parse-line
-  "Parse a single line of a deck string"
-  [line]
-  (let [clean (s/trim line)
-        [_ qty-str card-name card-params]
-        (re-matches #"(\d+)[^\s]*\s+([^\(^\[]+)([\(\[](.{0,7}))?" clean)]
-    (if (and qty-str
-             (not (js/isNaN (str->int qty-str)))
-             card-name
-             card-params)
-      (assoc {} :qty (str->int qty-str) :card (s/trim card-name) :id (s/trim card-params))
-      (if (and qty-str
-               (not (js/isNaN (str->int qty-str)))
-               card-name)
-        (assoc {} :qty (str->int qty-str) :card (s/trim card-name))
-        nil))))
-
-(defn- line-reducer
-  "Reducer function to parse lines in a deck string"
-  [acc line]
-  (if-let [card (parse-line line)]
-    (conj acc card)
-    acc))
-
-(defn deck-string->list
-  "Turn a raw deck string into a list of {:qty :title}"
-  [deck-string]
-  (reduce line-reducer [] (split-lines deck-string)))
-
-(defn collate-deck
-  "Takes a list of {:qty n :card title} and returns list of unique titles and summed n for same title"
-  [card-list]
-  ;; create a backing map of title to {:qty n :card title} and update the
-  (letfn [(duphelper [currmap line]
-            (let [title (:card line)
-                  curr-qty (get-in currmap [title :qty] 0)
-                  line (update line :qty #(+ % curr-qty))]
-              (assoc currmap title line)))]
-    (vals (reduce duphelper {} card-list))))
-
-(defn lookup-deck
-  "Takes a list of {:qty n :card title} and looks up each title and replaces it with the corresponding cardmap"
-  [card-list]
-  (let [card-list (collate-deck card-list)]
-    ;; lookup each card and replace title with cardmap
-    (map #(assoc % :card (lookup (assoc % :title (:card %)))) card-list)))
-
-(defn parse-deck-string
-  "Parses a string containing the decklist and returns a list of lines {:qty :card}"
-  [deck-string]
-  (let [raw-deck-list (deck-string->list deck-string)]
-    (lookup-deck raw-deck-list)))
-
 (defn load-decks [decks]
   (swap! app-state assoc :decks decks)
   (when-let [selected-deck (first (sort-by :date > decks))]
@@ -205,22 +113,9 @@
           sideboard (lookup-deck (:sideboard deck))
           characters (lookup-deck (:characters deck))
           pool (lookup-deck (:pool deck))
-          fwsb (lookup-deck (:fwsb deck))
-          joined (into (:resources deck) (:hazards deck))
-          combed (into (:characters deck) joined)
-          cards (lookup-deck combed)
-          dual-sites (parse-deck-string all-dual-sites)
-          lord-sites (into dual-sites (parse-deck-string all-lord-sites))
-          dwarf-sites (into lord-sites (parse-deck-string all-dwarf-sites))
-          elf-sites (into dwarf-sites (parse-deck-string all-elf-sites))
-          fallen-sites (into elf-sites (parse-deck-string all-fallen-sites))
-          balrog-sites (into fallen-sites (parse-deck-string all-balrog-sites))
-          minion-sites (into balrog-sites (parse-deck-string all-minion-sites))
-          wizard-sites (into minion-sites (parse-deck-string all-wizard-sites))
-          regions (into wizard-sites (parse-deck-string all-regions))]
+          fwsb (lookup-deck (:fwsb deck))]
       (assoc deck :resources resources :hazards hazards :sideboard sideboard
                   :characters characters :pool pool :fwsb fwsb
-                  :location regions
                   :identity identity))))
 
 (defn distinct-by [f coll]
@@ -252,41 +147,39 @@
 
 (defn- insert-params
   "Add card parameters into the string representation"
-  [card]
-      (str " "
-  (let [id (:id card)]
-    (if id
-      (when id (str id)))
-      "")))
+  [trimCode]
+    (if (nil? trimCode)
+      ""
+      (str " " trimCode)))
 
 (defn resources->str [owner]
   (let [resources (om/get-state owner [:deck :resources])
-        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" resources)]
+        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params (get-in %2 [:card :trimCode])) "\n") "" resources)]
     (om/set-state! owner :resource-edit str)))
 
 (defn hazards->str [owner]
   (let [hazards (om/get-state owner [:deck :hazards])
-        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" hazards)]
+        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params (get-in %2 [:card :trimCode])) "\n") "" hazards)]
     (om/set-state! owner :hazard-edit str)))
 
 (defn sideboard->str [owner]
   (let [sideboard (om/get-state owner [:deck :sideboard])
-        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" sideboard)]
+        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params (get-in %2 [:card :trimCode])) "\n") "" sideboard)]
     (om/set-state! owner :sideboard-edit str)))
 
 (defn characters->str [owner]
   (let [characters (om/get-state owner [:deck :characters])
-        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" characters)]
+        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params (get-in %2 [:card :trimCode])) "\n") "" characters)]
     (om/set-state! owner :character-edit str)))
 
 (defn pool->str [owner]
   (let [pool (om/get-state owner [:deck :pool])
-        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" pool)]
+        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params (get-in %2 [:card :trimCode])) "\n") "" pool)]
     (om/set-state! owner :pool-edit str)))
 
 (defn fwsb->str [owner]
   (let [fwsb (om/get-state owner [:deck :fwsb])
-        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params %2) "\n") "" fwsb)]
+        str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params (get-in %2 [:card :trimCode])) "\n") "" fwsb)]
     (om/set-state! owner :fwsb-edit str)))
 
 (defn edit-deck [owner]
@@ -406,10 +299,7 @@
                 (sort-by :title)
                 first)]
     (om/set-state! owner :deck {:name "New deck" :resources [] :hazards [] :sideboard []
-                                :characters [] :pool [] :fwsb [] :regions []
-                                :wizard-sites [] :minion-sites [] :balrog-sites []
-                                :fallen-sites [] :elf-sites [] :dwarf-sites [] :location []
-                                :identity id})
+                                :characters [] :pool [] :fwsb [] :identity id})
     (try (js/ga "send" "event" "deckbuilder" "new" alignment) (catch js/Error e))
     (edit-deck owner)
     (om/set-state! owner :old-deck old-deck)))
@@ -422,41 +312,23 @@
             deck (dissoc deck :stats)
             decks (remove #(= (:_id deck) (:_id %)) (:decks @app-state))
             resources (for [card (:resources deck) :when (get-in card [:card :title])]
-                        (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
-                              card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
-                          (if (contains? card :art)
-                            (conj card-id {:art (:art card)})
-                            card-id)))
+                        (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}]
+                          (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)))
             hazards (for [card (:hazards deck) :when (get-in card [:card :title])]
-                      (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
-                            card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
-                        (if (contains? card :art)
-                          (conj card-id {:art (:art card)})
-                          card-id)))
+                      (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}]
+                        (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)))
             sideboard (for [card (:sideboard deck) :when (get-in card [:card :title])]
-                        (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
-                              card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
-                          (if (contains? card :art)
-                            (conj card-id {:art (:art card)})
-                            card-id)))
+                        (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}]
+                          (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)))
             characters (for [card (:characters deck) :when (get-in card [:card :title])]
-                         (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
-                               card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
-                           (if (contains? card :art)
-                             (conj card-id {:art (:art card)})
-                             card-id)))
+                         (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}]
+                           (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)))
             pool (for [card (:pool deck) :when (get-in card [:card :title])]
-                   (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
-                         card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
-                     (if (contains? card :art)
-                       (conj card-id {:art (:art card)})
-                       card-id)))
+                   (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}]
+                     (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)))
             fwsb (for [card (:fwsb deck) :when (get-in card [:card :title])]
-                   (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}
-                         card-id (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)]
-                     (if (contains? card :art)
-                       (conj card-id {:art (:art card)})
-                       card-id)))
+                   (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}]
+                     (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)))
             ;; only include keys that are relevant
             identity (select-keys (:identity deck) [:title :alignment :trimCode])
             data (assoc deck :resources resources :hazards hazards :sideboard sideboard
@@ -568,7 +440,7 @@
   (->> @all-cards
        (filter #(decks/allowed? % identity))
        (distinct-by :title)
-       (filter-title query)
+       (utils/filter-title query)
        (take 10)))
 
 (defn handle-keydown [owner event]
@@ -589,7 +461,7 @@
   (.preventDefault event)
   (let [qty (js/parseInt (om/get-state owner :quantity))
         card (nth (om/get-state owner :matches) (om/get-state owner :selected))
-        best-card (lookup card)]
+        best-card (utils/lookup card)]
     (if (js/isNaN qty)
       (om/set-state! owner :quantity 3)
       (let [max-qty (or (:limited best-card) 3)

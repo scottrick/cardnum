@@ -92,22 +92,6 @@
    :released identity
    })
 
-(def ^:const faction-map
-  {
-   "haas-bioroid"  "Haas-Bioroid"
-   "cardnum"  "Cardnum"
-   "nbn"  "NBN"
-   "weyland-consortium"  "Weyland Consortium"
-   "anarch"  "Anarch"
-   "criminal"  "Criminal"
-   "shaper"  "Shaper"
-   "adam"  "Adam"
-   "sunny-lebeau"  "Sunny Lebeau"
-   "apex"  "Apex"
-   "neutral-challenger"  "Neutral"
-   "neutral-contestant"  "Neutral"
-   })
-
 (def tables
   {:mwl   {:path "mwl"    :fields mwl-fields   :collection "mwl"}
    :set   {:path "sets"   :fields set-fields   :collection "sets"}
@@ -185,7 +169,8 @@
   "Remove specified fields if the value is nil"
   [c fields]
   (reduce (fn [acc k]
-            (if (nil? (c k))
+            (if (or (nil? (c k))
+                    (= (c k) ""))
               (dissoc acc k)
               acc))
           c fields))
@@ -201,6 +186,13 @@
   [set-map c]
   (let [s (set-map (:set_code c))]
     (-> c
+        (prune-null-fields [:Artist :Rarity :Precise :subtype :MPs
+                            :Mind :Direct :General :Prowess :Body
+                            :Corruption :Race :RWMPs :Site :Path
+                            :Region :RPath :Playable :GoldRing
+                            :GreaterItem :MajorItem :MinorItem
+                            :Information :Palantiri :Scroll :Haven
+                            :Stage :Strikes :Specific])
         (assoc :full_set (:name s)
                :rotated false
                :normalizedtitle (string/lower-case (deaccent (:title c)))))))

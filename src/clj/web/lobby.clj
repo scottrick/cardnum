@@ -1,13 +1,17 @@
 (ns web.lobby
   (:require [web.db :refer [db object-id]]
             [web.utils :refer [response tick remove-once]]
+            [clojure.string :refer [split split-lines join escape] :as s]
             [web.ws :as ws]
+            [web.sites :refer [all-standard-sites]]
             [web.stats :as stats]
+            [web.utils :refer [map-values]]
             [game.core :as core]
             [crypto.password.bcrypt :as bcrypt]
             [monger.collection :as mc]
             [cardnum.cards :refer [all-cards]]
             [cardnum.decks :as decks]
+            [cardnum.utils :refer [str->int parse-deck-string INFINITY] :as utils]
             [cheshire.core :as json]
             [clj-time.core :as t])
   (:import org.bson.types.ObjectId))
@@ -335,21 +339,46 @@
         fplayer (first (:players game))
         gameid (:gameid game)
 
-        map-card (fn [c] (update-in c [:card] @all-cards))
-        unknown-card (fn [c] (nil? (:card c)))
+        get-code (fn [c] (if (nil? (:id c))
+                           c
+                           (assoc c :code (str (:card c) " " (:id c)))))
+        get-data (fn [c] (if (nil? (:id c))
+                           (update-in c [:card] @all-cards)
+                           (update-in c [:code] @all-cards)))
+        get-swap (fn [c] (if (nil? (:id c))
+                           c
+                           (do
+                             (dissoc c :card)
+                             (assoc c :card (:code c)))))
+        rid-code (fn [c] (if (nil? (:id c))
+                           c
+                           (dissoc c :code :id)))
+        rid-card (fn [c] (nil? (:card c)))
+
         deck (as-> (mc/find-one-as-map db "decks" {:_id (object-id deck-id) :username username}) d
-                   (update-in d [:pool] #(mapv map-card %))
-                   (update-in d [:pool] #(vec (remove unknown-card %)))
-                   (update-in d [:resources] #(mapv map-card %))
-                   (update-in d [:resources] #(vec (remove unknown-card %)))
-                   (update-in d [:hazards] #(mapv map-card %))
-                   (update-in d [:hazards] #(vec (remove unknown-card %)))
-                   (update-in d [:characters] #(mapv map-card %))
-                   (update-in d [:characters] #(vec (remove unknown-card %)))
-                   (update-in d [:sideboard] #(mapv map-card %))
-                   (update-in d [:sideboard] #(vec (remove unknown-card %)))
-                   (update-in d [:fwsb] #(mapv map-card %))
-                   (update-in d [:fwsb] #(vec (remove unknown-card %)))
+                   ;(process-sites d)
+                   (assoc d :location all-standard-sites)
+
+                   (map-values d [:resources :hazards :sideboard
+                                  :characters :pool :fwsb :location]
+                               #(mapv get-code %))
+
+                   (map-values d [:resources :hazards :sideboard
+                                  :characters :pool :fwsb :location]
+                               #(mapv get-data %))
+
+                   (map-values d [:resources :hazards :sideboard
+                                  :characters :pool :fwsb :location]
+                               #(mapv get-swap %))
+
+                   (map-values d [:resources :hazards :sideboard
+                                  :characters :pool :fwsb :location]
+                               #(mapv rid-code %))
+
+                   (map-values d [:resources :hazards :sideboard
+                                  :characters :pool :fwsb :location]
+                               #(vec (remove rid-card %)))
+
                    (update-in d [:identity] #(@all-cards (:title %)))
                    (assoc d :status (decks/calculate-deck-status d))
                    )]
