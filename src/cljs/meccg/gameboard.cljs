@@ -860,7 +860,7 @@
   (-> (om/get-node owner ref) js/$ .fadeOut)
   (cond
     location? (send-command "close-location")
-    shuffle? (send-command "shuffle" {:close "true"})
+    shuffle? (send-command "shuffle" {:board board? :fwsb fw-dc? :close "true"})
     board? (send-command "close-sideboard")
     fw-dc? (send-command "close-fw-dc-sb")
     deck? (send-command "close-deck")
@@ -1000,7 +1000,7 @@
             [:div
              [:a {:on-click #(close-popup % owner deck-content-ref "stops looking at their deck" false false false false true)}
               "Close"]
-             [:a {:on-click #(close-popup % owner deck-content-ref "stops looking at their deck and shuffles" true false false false true)}
+             [:a {:on-click #(close-popup % owner deck-content-ref "" true false false false true)}
               "Close & Shuffle"]]
             (om/build-all card-view deck {:key :cid})])
          (when (= (:side @game-state) side)
@@ -1008,16 +1008,18 @@
             [:div
              [:a {:on-click #(close-popup % owner side-content-ref "stops looking at their sideboard" false false true false false)}
               "Close"]
-             [:a {:on-click #(close-popup % owner side-content-ref "stops looking at their sidboard and shuffles" true false false false true)}
+             [:a {:on-click #(close-popup % owner side-content-ref "" true false true false false)}
               "Close & Shuffle"]]
             (om/build-all card-view sideboard {:key :cid})]
            )
          (when (= (:side @game-state) side)
            [:div.panel.blue-shade.popup {:ref fwdc-content-ref}
             [:div
-             [:a {:on-click #(close-popup % owner fwdc-content-ref "stops looking at their fallen-wizard sideboard" false false false true false)}
-              "Close"](om/build-all card-view fw-dc-sb {:key :cid})]
-            ]
+             [:a {:on-click #(close-popup % owner fwdc-content-ref "stops looking at their dc/fw-sideboard" false false false true false)}
+              "Close"]
+             [:a {:on-click #(close-popup % owner fwdc-content-ref "" true false false true false)}
+              "Close & Shuffle"]]
+             (om/build-all card-view fw-dc-sb {:key :cid})]
            )
          ]))))
 

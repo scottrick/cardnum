@@ -98,6 +98,12 @@
          (if (or (:facedown card) visible) "a facedown card" (:title card)))
        (if (:host card) (str " hosted on " (card-str state (:host card)))))))
 
+(defn card-sb
+  "Gets a string description of an placed card, reflecting whether it is revealed,
+  in/protecting a locale, facedown, or hosted."
+  [card]
+  (str (:type card)))
+
 (defn name-zone
   "Gets a string representation for the given zone."
   [side zone]
