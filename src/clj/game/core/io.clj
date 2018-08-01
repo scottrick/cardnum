@@ -232,6 +232,21 @@
     (swap! state dissoc-in [side :selected])
     (effect-completed state side (:eid fprompt))))
 
+(defn host-any-card
+  [state side args]
+  (resolve-ability state side
+                   {:prompt "Select hosting card"
+                    :choices {:req (fn [t] true)}
+                    :msg (msg "host " (:title target))
+                    :effect (req (let [c (get-card state target)] (resolve-ability state side
+                                                                                   {:prompt "Select card to host"
+                                                                                    :choices {:req (fn [t] true)}
+                                                                                    :effect (effect (host c (get-card state target)))
+                                                                                    ; host target onto card
+                                                                                    } c nil )))} nil nil)
+  (system-msg state side "host a card")
+  )
+
 (defn parse-command [text]
   (let [[command & args] (split text #" ");"
         value (if-let [n (string->num (first args))] n 1)
@@ -269,6 +284,7 @@
           "/end-run"    #(when (= %2 :contestant) (end-run %1 %2))
           "/error"      show-error-toast
           "/handsize"   #(swap! %1 assoc-in [%2 :hand-size-modification] (- (max 0 value) (:hand-size-base %2)))
+          "/host"       #(host-any-card %1 %2 args)
           "/jack-out"   #(when (= %2 :challenger) (jack-out %1 %2 nil))
           "/link"       #(swap! %1 assoc-in [%2 :link] (max 0 value))
           "/memory"     #(swap! %1 assoc-in [%2 :memory] value)

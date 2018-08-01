@@ -211,7 +211,8 @@
         place-state (or place-state (:place-state cdef))
         c (-> card
               (assoc :advanceable (:advanceable cdef) :new true)
-              (dissoc :seen :disabled))]
+              (dissoc :seen :disabled)
+              )]
     (clear-place-cost-bonus state side)
     (when-not host-card
       (contestant-place-message state side c locale place-state cost-str))

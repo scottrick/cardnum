@@ -102,6 +102,7 @@
                     :fact_mp 0 :kill_mp 0 :misc_mp 0
                     :hand-size-base 8 :hand-size-modification 0
                     :agenda-point 0
+                    :hq-access 1 :rd-access 1 :tagged 0
                     :click-per-turn 100 :agenda-point-req 7 :keep false}})))
 
 (defn init-game
@@ -307,10 +308,18 @@
                               (if (= side :contestant)
                                 (doseq [c (all-placed state side)]
                                   (when (and (not (:wounded c))
-                                             (not (boolean (re-find #"Permanent" (:Secondary c)))) (untap state side c))))
+                                             (not (boolean (re-find #"Site" (:type c))))
+                                             (not (boolean (re-find #"Region" (:type c))))
+                                             (not (boolean (re-find #"Permanent" (:Secondary c))))
+                                             )
+                                             (untap state side c)))
                                 (doseq [c (all-placed-challenger state side)]
                                   (when (and (not (:wounded c))
-                                             (not (boolean (re-find #"Permanent" (:Secondary c)))) (untap state side c)))))
+                                             (not (boolean (re-find #"Site" (:type c))))
+                                             (not (boolean (re-find #"Region" (:type c))))
+                                             (not (boolean (re-find #"Permanent" (:Secondary c))))
+                                             )
+                                             (untap state side c))))
                               )}
                    nil nil)
 

@@ -448,7 +448,9 @@
   "Untap a card."
   [state side card]
   (let [card (get-card state card)]
-    (system-msg state side (str "untaps " (:title card)))
+    (if (:revealed card)
+      (system-msg state side (str "untaps " (:title card)))
+      (system-msg state side "untaps a card"))
     (update! state side (dissoc card :tapped :wounded :inverted :rotated))))
 
 (defn wound

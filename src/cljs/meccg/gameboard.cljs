@@ -181,14 +181,12 @@
                      (and (not (re-find #"tap" Home)) (not tapped)))
                  revealed)
           (cons "regionize" %) %))
-      (#(if (and (and (or (#{"Character" "Site"} type)
-                          (#{"Ally"} Secondary))
+      (#(if (and (and (#{"Character" "Site"} type)
                       (#{"locales" "onhost"} (first zone)))
                  revealed
                  (or (not tapped) wounded))
           (cons "tap" %) %))
-      (#(if (and (and (or (#{"Character" "Site"} type)
-                          (#{"Ally"} Secondary))
+      (#(if (and (and (#{"Character" "Site"} type)
                       (#{"locales" "onhost"} (first zone)))
                  (or tapped wounded))
           (cons "untap" %) %))
@@ -197,24 +195,24 @@
                  (#{"locales" "onhost"} (first zone)))
           (cons "transfer" %) %))
       (#(if (and (= type "Resource")
-                 (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item" "Ally"])
+                 (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
                  (#{"locales" "onhost"} (first zone))
                  (not rotated))
-          (cons "rotate" %) %))
-      (#(if (and (and (= type "Resource")
-                      (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
-                      (#{"locales" "onhost"} (first zone)))
-                 (and (not inverted) (not rotated)))
           (cons "invert" %) %))
       (#(if (and (and (= type "Resource")
-                      (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
+                      (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
+                      (#{"locales" "onhost"} (first zone)))
+                 (and (not inverted) (not rotated)))
+          (cons "rotate" %) %))
+      (#(if (and (and (= type "Resource")
+                      (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
                       (#{"locales" "onhost"} (first zone)))
                  (and (not tapped) (not inverted) (not rotated)))
           (cons "tap" %) %))
       (#(if (and (and (= type "Resource")
                       (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
                       (#{"locales" "onhost"} (first zone)))
-                 (or tapped inverted rotated))
+                 (or tapped wounded inverted rotated))
           (cons "untap" %) %))
       (#(if (and (and (= Secondary "Permanent-event")
                       (re-find #"rotate" Home)
@@ -844,9 +842,11 @@
                                   "tapped"
                                   (if (and (:inverted card) (not (:rotated card)))
                                     "inverted"
-                                    (if (:rotated card)
-                                      "rotated"
-                                      nil)))}
+                                    (if (and (:wounded card) (not (:rotated card)))
+                                      "wounded"
+                                      (if (:rotated card)
+                                        "rotated"
+                                      nil))))}
             (om/build card-view card {:opts {:flipped (face-down? card)}})]))])))
 
 (defn drop-area [side locale hmap]
@@ -1000,15 +1000,17 @@
             [:div
              [:a {:on-click #(close-popup % owner deck-content-ref "stops looking at their deck" false false false false true)}
               "Close"]
-             [:a {:on-click #(close-popup % owner deck-content-ref "stops looking at their deck" true false false false true)}
+             [:a {:on-click #(close-popup % owner deck-content-ref "stops looking at their deck and shuffles" true false false false true)}
               "Close & Shuffle"]]
             (om/build-all card-view deck {:key :cid})])
          (when (= (:side @game-state) side)
            [:div.panel.blue-shade.popup {:ref side-content-ref}
             [:div
              [:a {:on-click #(close-popup % owner side-content-ref "stops looking at their sideboard" false false true false false)}
-              "Close"](om/build-all card-view sideboard {:key :cid})]
-            ]
+              "Close"]
+             [:a {:on-click #(close-popup % owner side-content-ref "stops looking at their sidboard and shuffles" true false false false true)}
+              "Close & Shuffle"]]
+            (om/build-all card-view sideboard {:key :cid})]
            )
          (when (= (:side @game-state) side)
            [:div.panel.blue-shade.popup {:ref fwdc-content-ref}
@@ -1550,21 +1552,23 @@
                     [:div
                      (cond-button "Keep Hand" (not (get-in @game-state [:contestant :keep])) #(send-command "keep"))
                      (cond-button "Mulligan" (not (get-in @game-state [:contestant :keep])) #(send-command "mulligan"))
+
+                     (cond-button "Pass 1st Turn" (and (get-in @game-state [:contestant :keep])
+                                                       (get-in @game-state [:challenger :keep])
+                                                       (= side :contestant)
+                                                       (= (get-in @game-state [:turn]) 0))
+                                  #(send-command "not-first"))
                      (cond-button "Start Turn" (and (get-in @game-state [:contestant :keep])
                                                     (get-in @game-state [:challenger :keep]))
                                   #(send-command "start-turn")) ;; -5
-                     (if (and (= (get-in @game-state [:turn]) 0)
-                              (= side :contestant))
-                       (cond-button "Pass 1st Turn" (and (get-in @game-state [:contestant :keep])
-                                                         (get-in @game-state [:challenger :keep]))
-                                    #(send-command "not-first"))
-                       )
                      ])
                   (if (and (zero? (:click opponent))
                            (zero? (:click me)))
                     [:div
                      (cond-button "Keep Hand" (not (get-in @game-state [:challenger :keep])) #(send-command "keep"))
                      (cond-button "Mulligan" (not (get-in @game-state [:challenger :keep])) #(send-command "mulligan"))
+                     (cond-button "Pass 1st Turn" nil nil)
+                     (cond-button "Start Turn" nil nil)
                      ]
                     )
                   )
