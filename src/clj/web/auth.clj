@@ -108,7 +108,7 @@
   (if username
     (if (acknowledged? (mc/update db "users"
                                   {:username username}
-                                  {"$set" {:options (select-keys body [:background :show-alt-art :blocked-users :alt-arts
+                                  {"$set" {:options (select-keys body [:background :blocked-users
                                                                        :deckstats :gamestats])}}))
       (response 200 {:message "Refresh your browser"})
       (response 404 {:message "Account not found"}))

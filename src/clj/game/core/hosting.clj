@@ -48,9 +48,9 @@
 (defn host
   "Host the target onto the card."
   ([state side card target] (host state side card target nil))
-  ([state side card {:keys [zone cid host installed] :as target} {:keys [facedown] :as options}]
+  ([state side card {:keys [zone cid host placed] :as target} {:keys [facedown] :as options}]
    (when (not= cid (:cid card))
-     (when installed
+     (when placed
        (unregister-events state side target))
      (doseq [s [:challenger :contestant]]
        (if host
@@ -63,7 +63,7 @@
      (let [card (get-card state card)
            card (assoc-host-zones card)
            c (assoc target :host (dissoc card :hosted)
-                           :facedown facedown
+                           :facedown (if (is-type? card "Site") true false)
                            :zone '(:onhost) ;; hosted cards should not be in :discard or :hand etc
                            :previous-zone (:zone target))
            ;; Update any cards hosted by the target, so their :host has the updated zone.
@@ -72,11 +72,11 @@
            tdef (card-def c)]
        (update! state side (update-in card [:hosted] #(conj % c)))
 
-       ;; events should be registered for: challenger cards that are installed; contestant cards that are Operations, or are installed and rezzed
-       (when (or (is-type? target "Operation")
-                 (and (is-type? target "Event") (not facedown))
-                 (and installed (card-is? target :side :challenger))
-                 (and installed (card-is? target :side :contestant) (:rezzed target)))
+       ;; events should be registered for: challenger cards that are placed; contestant cards that are Operations, or are placed and revealed
+       (when (or (is-type? target "Hazard")
+                 (and (is-type? target "Hazard") facedown)
+                 (and placed (card-is? target :side :challenger))
+                 (and placed (card-is? target :side :contestant)))
          (when-let [events (:events tdef)]
            (register-events state side events c))
          (when (or (:recurring tdef) (:prevent tdef))
@@ -84,9 +84,13 @@
                                     :init-data true})))
 
        (when-let [events (:events tdef)]
-         (when (and installed (:recurring tdef))
+         (when (and placed (:recurring tdef))
            (unregister-events state side target)
            (register-events state side events c)))
        (when-let [hosted-gained (:hosted-gained cdef)]
          (hosted-gained state side (make-eid state) (get-card state card) [c]))
-       c))))
+       (if (and (is-type? c "Resource")
+                (card-is? c :side :contestant))
+         (reveal state side c)
+         c)
+       ))))

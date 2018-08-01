@@ -2578,7 +2578,7 @@ var $ = {
                       "AddSearchProvider": {
                         "closure_uid_523191572": {}
                       },
-                      "IsSearchProviderInstalled": {
+                      "IsSearchProviderPlaceed": {
                         "closure_uid_523191572": {}
                       },
                       "addSearchEngine": {
@@ -2716,10 +2716,10 @@ var $ = {
                       "getEntriesByName": {
                         "closure_uid_523191572": {}
                       },
-                      "clearMuthereffTimings": {
+                      "clearResourceTimings": {
                         "closure_uid_523191572": {}
                       },
-                      "setMuthereffTimingBufferSize": {
+                      "setResourceTimingBufferSize": {
                         "closure_uid_523191572": {}
                       },
                       "mark": {
@@ -2775,7 +2775,7 @@ var $ = {
                         "TYPE_BACK_FORWARD": {},
                         "TYPE_RESERVED": {}
                       },
-                      "onmutherefftimingbufferfull": {}
+                      "onresourcetimingbufferfull": {}
                     },
                     "caches": {
                       "closure_uid_523191572": {},
@@ -2816,14 +2816,14 @@ var $ = {
                       "AddSearchProvider": {
                         "closure_uid_523191572": {}
                       },
-                      "IsSearchProviderInstalled": {
+                      "IsSearchProviderPlaceed": {
                         "closure_uid_523191572": {}
                       },
                       "addSearchEngine": {
                         "closure_uid_523191572": {}
                       }
                     },
-                    "oninstall": {},
+                    "onplace": {},
                     "crypto": {
                       "closure_uid_523191572": {},
                       "getRandomValues": {
@@ -3751,7 +3751,7 @@ var $ = {
                       "closure_uid_523191572": {}
                     },
                     "closure_uid_523191572": {},
-                    "InstallTrigger": {
+                    "PlaceTrigger": {
                       "closure_uid_523191572": {},
                       "enabled": {
                         "closure_uid_523191572": {}
@@ -3759,10 +3759,10 @@ var $ = {
                       "updateEnabled": {
                         "closure_uid_523191572": {}
                       },
-                      "install": {
+                      "place": {
                         "closure_uid_523191572": {}
                       },
-                      "installChrome": {
+                      "placeChrome": {
                         "closure_uid_523191572": {}
                       },
                       "startSoftwareUpdate": {
@@ -4286,7 +4286,7 @@ var $ = {
                     "AddSearchProvider": {
                       "closure_uid_523191572": {}
                     },
-                    "IsSearchProviderInstalled": {
+                    "IsSearchProviderPlaceed": {
                       "closure_uid_523191572": {}
                     },
                     "addSearchEngine": {
@@ -4424,10 +4424,10 @@ var $ = {
                     "getEntriesByName": {
                       "closure_uid_523191572": {}
                     },
-                    "clearMuthereffTimings": {
+                    "clearResourceTimings": {
                       "closure_uid_523191572": {}
                     },
-                    "setMuthereffTimingBufferSize": {
+                    "setResourceTimingBufferSize": {
                       "closure_uid_523191572": {}
                     },
                     "mark": {
@@ -4483,7 +4483,7 @@ var $ = {
                       "TYPE_BACK_FORWARD": {},
                       "TYPE_RESERVED": {}
                     },
-                    "onmutherefftimingbufferfull": {}
+                    "onresourcetimingbufferfull": {}
                   },
                   "caches": {
                     "closure_uid_523191572": {},
@@ -5198,7 +5198,7 @@ var $ = {
                       "AddSearchProvider": {
                         "closure_uid_523191572": {}
                       },
-                      "IsSearchProviderInstalled": {
+                      "IsSearchProviderPlaceed": {
                         "closure_uid_523191572": {}
                       },
                       "addSearchEngine": {
@@ -5336,10 +5336,10 @@ var $ = {
                       "getEntriesByName": {
                         "closure_uid_523191572": {}
                       },
-                      "clearMuthereffTimings": {
+                      "clearResourceTimings": {
                         "closure_uid_523191572": {}
                       },
-                      "setMuthereffTimingBufferSize": {
+                      "setResourceTimingBufferSize": {
                         "closure_uid_523191572": {}
                       },
                       "mark": {
@@ -5395,7 +5395,7 @@ var $ = {
                         "TYPE_BACK_FORWARD": {},
                         "TYPE_RESERVED": {}
                       },
-                      "onmutherefftimingbufferfull": {}
+                      "onresourcetimingbufferfull": {}
                     },
                     "caches": {
                       "closure_uid_523191572": {},
@@ -5436,14 +5436,14 @@ var $ = {
                       "AddSearchProvider": {
                         "closure_uid_523191572": {}
                       },
-                      "IsSearchProviderInstalled": {
+                      "IsSearchProviderPlaceed": {
                         "closure_uid_523191572": {}
                       },
                       "addSearchEngine": {
                         "closure_uid_523191572": {}
                       }
                     },
-                    "oninstall": {},
+                    "onplace": {},
                     "crypto": {
                       "closure_uid_523191572": {},
                       "getRandomValues": {
@@ -6371,7 +6371,7 @@ var $ = {
                       "closure_uid_523191572": {}
                     },
                     "closure_uid_523191572": {},
-                    "InstallTrigger": {
+                    "PlaceTrigger": {
                       "closure_uid_523191572": {},
                       "enabled": {
                         "closure_uid_523191572": {}
@@ -6379,10 +6379,10 @@ var $ = {
                       "updateEnabled": {
                         "closure_uid_523191572": {}
                       },
-                      "install": {
+                      "place": {
                         "closure_uid_523191572": {}
                       },
-                      "installChrome": {
+                      "placeChrome": {
                         "closure_uid_523191572": {}
                       },
                       "startSoftwareUpdate": {
@@ -6409,14 +6409,14 @@ var $ = {
                     "AddSearchProvider": {
                       "closure_uid_523191572": {}
                     },
-                    "IsSearchProviderInstalled": {
+                    "IsSearchProviderPlaceed": {
                       "closure_uid_523191572": {}
                     },
                     "addSearchEngine": {
                       "closure_uid_523191572": {}
                     }
                   },
-                  "oninstall": {},
+                  "onplace": {},
                   "crypto": {
                     "closure_uid_523191572": {},
                     "getRandomValues": {
@@ -7331,7 +7331,7 @@ var $ = {
                       "AddSearchProvider": {
                         "closure_uid_523191572": {}
                       },
-                      "IsSearchProviderInstalled": {
+                      "IsSearchProviderPlaceed": {
                         "closure_uid_523191572": {}
                       },
                       "addSearchEngine": {
@@ -7469,10 +7469,10 @@ var $ = {
                       "getEntriesByName": {
                         "closure_uid_523191572": {}
                       },
-                      "clearMuthereffTimings": {
+                      "clearResourceTimings": {
                         "closure_uid_523191572": {}
                       },
-                      "setMuthereffTimingBufferSize": {
+                      "setResourceTimingBufferSize": {
                         "closure_uid_523191572": {}
                       },
                       "mark": {
@@ -7528,7 +7528,7 @@ var $ = {
                         "TYPE_BACK_FORWARD": {},
                         "TYPE_RESERVED": {}
                       },
-                      "onmutherefftimingbufferfull": {}
+                      "onresourcetimingbufferfull": {}
                     },
                     "caches": {
                       "closure_uid_523191572": {},
@@ -7569,14 +7569,14 @@ var $ = {
                       "AddSearchProvider": {
                         "closure_uid_523191572": {}
                       },
-                      "IsSearchProviderInstalled": {
+                      "IsSearchProviderPlaceed": {
                         "closure_uid_523191572": {}
                       },
                       "addSearchEngine": {
                         "closure_uid_523191572": {}
                       }
                     },
-                    "oninstall": {},
+                    "onplace": {},
                     "crypto": {
                       "closure_uid_523191572": {},
                       "getRandomValues": {
@@ -8504,7 +8504,7 @@ var $ = {
                       "closure_uid_523191572": {}
                     },
                     "closure_uid_523191572": {},
-                    "InstallTrigger": {
+                    "PlaceTrigger": {
                       "closure_uid_523191572": {},
                       "enabled": {
                         "closure_uid_523191572": {}
@@ -8512,10 +8512,10 @@ var $ = {
                       "updateEnabled": {
                         "closure_uid_523191572": {}
                       },
-                      "install": {
+                      "place": {
                         "closure_uid_523191572": {}
                       },
-                      "installChrome": {
+                      "placeChrome": {
                         "closure_uid_523191572": {}
                       },
                       "startSoftwareUpdate": {
@@ -8538,7 +8538,7 @@ var $ = {
                   },
                   "$": function () {},
                   "jQuery": function () {},
-                  "InstallTrigger": {
+                  "PlaceTrigger": {
                     "closure_uid_523191572": {},
                     "enabled": {
                       "closure_uid_523191572": {}
@@ -8546,10 +8546,10 @@ var $ = {
                     "updateEnabled": {
                       "closure_uid_523191572": {}
                     },
-                    "install": {
+                    "place": {
                       "closure_uid_523191572": {}
                     },
-                    "installChrome": {
+                    "placeChrome": {
                       "closure_uid_523191572": {}
                     },
                     "startSoftwareUpdate": {
@@ -12175,7 +12175,7 @@ var $ = {
                   "AddSearchProvider": {
                     "closure_uid_523191572": {}
                   },
-                  "IsSearchProviderInstalled": {
+                  "IsSearchProviderPlaceed": {
                     "closure_uid_523191572": {}
                   },
                   "addSearchEngine": {
@@ -12313,10 +12313,10 @@ var $ = {
                   "getEntriesByName": {
                     "closure_uid_523191572": {}
                   },
-                  "clearMuthereffTimings": {
+                  "clearResourceTimings": {
                     "closure_uid_523191572": {}
                   },
-                  "setMuthereffTimingBufferSize": {
+                  "setResourceTimingBufferSize": {
                     "closure_uid_523191572": {}
                   },
                   "mark": {
@@ -12372,7 +12372,7 @@ var $ = {
                     "TYPE_BACK_FORWARD": {},
                     "TYPE_RESERVED": {}
                   },
-                  "onmutherefftimingbufferfull": {}
+                  "onresourcetimingbufferfull": {}
                 },
                 "caches": {
                   "closure_uid_523191572": {},
@@ -12413,14 +12413,14 @@ var $ = {
                   "AddSearchProvider": {
                     "closure_uid_523191572": {}
                   },
-                  "IsSearchProviderInstalled": {
+                  "IsSearchProviderPlaceed": {
                     "closure_uid_523191572": {}
                   },
                   "addSearchEngine": {
                     "closure_uid_523191572": {}
                   }
                 },
-                "oninstall": {},
+                "onplace": {},
                 "crypto": {
                   "closure_uid_523191572": {},
                   "getRandomValues": {
@@ -13348,7 +13348,7 @@ var $ = {
                   "closure_uid_523191572": {}
                 },
                 "closure_uid_523191572": {},
-                "InstallTrigger": {
+                "PlaceTrigger": {
                   "closure_uid_523191572": {},
                   "enabled": {
                     "closure_uid_523191572": {}
@@ -13356,10 +13356,10 @@ var $ = {
                   "updateEnabled": {
                     "closure_uid_523191572": {}
                   },
-                  "install": {
+                  "place": {
                     "closure_uid_523191572": {}
                   },
-                  "installChrome": {
+                  "placeChrome": {
                     "closure_uid_523191572": {}
                   },
                   "startSoftwareUpdate": {
@@ -13883,7 +13883,7 @@ var $ = {
                 "AddSearchProvider": {
                   "closure_uid_523191572": {}
                 },
-                "IsSearchProviderInstalled": {
+                "IsSearchProviderPlaceed": {
                   "closure_uid_523191572": {}
                 },
                 "addSearchEngine": {
@@ -14020,10 +14020,10 @@ var $ = {
                 "getEntriesByName": {
                   "closure_uid_523191572": {}
                 },
-                "clearMuthereffTimings": {
+                "clearResourceTimings": {
                   "closure_uid_523191572": {}
                 },
-                "setMuthereffTimingBufferSize": {
+                "setResourceTimingBufferSize": {
                   "closure_uid_523191572": {}
                 },
                 "mark": {
@@ -14079,7 +14079,7 @@ var $ = {
                   "TYPE_BACK_FORWARD": {},
                   "TYPE_RESERVED": {}
                 },
-                "onmutherefftimingbufferfull": {}
+                "onresourcetimingbufferfull": {}
               },
               "caches": {
                 "closure_uid_523191572": {},
@@ -14794,7 +14794,7 @@ var $ = {
                   "AddSearchProvider": {
                     "closure_uid_523191572": {}
                   },
-                  "IsSearchProviderInstalled": {
+                  "IsSearchProviderPlaceed": {
                     "closure_uid_523191572": {}
                   },
                   "addSearchEngine": {
@@ -14932,10 +14932,10 @@ var $ = {
                   "getEntriesByName": {
                     "closure_uid_523191572": {}
                   },
-                  "clearMuthereffTimings": {
+                  "clearResourceTimings": {
                     "closure_uid_523191572": {}
                   },
-                  "setMuthereffTimingBufferSize": {
+                  "setResourceTimingBufferSize": {
                     "closure_uid_523191572": {}
                   },
                   "mark": {
@@ -14991,7 +14991,7 @@ var $ = {
                     "TYPE_BACK_FORWARD": {},
                     "TYPE_RESERVED": {}
                   },
-                  "onmutherefftimingbufferfull": {}
+                  "onresourcetimingbufferfull": {}
                 },
                 "caches": {
                   "closure_uid_523191572": {},
@@ -15032,14 +15032,14 @@ var $ = {
                   "AddSearchProvider": {
                     "closure_uid_523191572": {}
                   },
-                  "IsSearchProviderInstalled": {
+                  "IsSearchProviderPlaceed": {
                     "closure_uid_523191572": {}
                   },
                   "addSearchEngine": {
                     "closure_uid_523191572": {}
                   }
                 },
-                "oninstall": {},
+                "onplace": {},
                 "crypto": {
                   "closure_uid_523191572": {},
                   "getRandomValues": {
@@ -15967,7 +15967,7 @@ var $ = {
                   "closure_uid_523191572": {}
                 },
                 "closure_uid_523191572": {},
-                "InstallTrigger": {
+                "PlaceTrigger": {
                   "closure_uid_523191572": {},
                   "enabled": {
                     "closure_uid_523191572": {}
@@ -15975,10 +15975,10 @@ var $ = {
                   "updateEnabled": {
                     "closure_uid_523191572": {}
                   },
-                  "install": {
+                  "place": {
                     "closure_uid_523191572": {}
                   },
-                  "installChrome": {
+                  "placeChrome": {
                     "closure_uid_523191572": {}
                   },
                   "startSoftwareUpdate": {
@@ -16005,14 +16005,14 @@ var $ = {
                 "AddSearchProvider": {
                   "closure_uid_523191572": {}
                 },
-                "IsSearchProviderInstalled": {
+                "IsSearchProviderPlaceed": {
                   "closure_uid_523191572": {}
                 },
                 "addSearchEngine": {
                   "closure_uid_523191572": {}
                 }
               },
-              "oninstall": {},
+              "onplace": {},
               "crypto": {
                 "closure_uid_523191572": {},
                 "getRandomValues": {
@@ -16927,7 +16927,7 @@ var $ = {
                   "AddSearchProvider": {
                     "closure_uid_523191572": {}
                   },
-                  "IsSearchProviderInstalled": {
+                  "IsSearchProviderPlaceed": {
                     "closure_uid_523191572": {}
                   },
                   "addSearchEngine": {
@@ -17065,10 +17065,10 @@ var $ = {
                   "getEntriesByName": {
                     "closure_uid_523191572": {}
                   },
-                  "clearMuthereffTimings": {
+                  "clearResourceTimings": {
                     "closure_uid_523191572": {}
                   },
-                  "setMuthereffTimingBufferSize": {
+                  "setResourceTimingBufferSize": {
                     "closure_uid_523191572": {}
                   },
                   "mark": {
@@ -17124,7 +17124,7 @@ var $ = {
                     "TYPE_BACK_FORWARD": {},
                     "TYPE_RESERVED": {}
                   },
-                  "onmutherefftimingbufferfull": {}
+                  "onresourcetimingbufferfull": {}
                 },
                 "caches": {
                   "closure_uid_523191572": {},
@@ -17165,14 +17165,14 @@ var $ = {
                   "AddSearchProvider": {
                     "closure_uid_523191572": {}
                   },
-                  "IsSearchProviderInstalled": {
+                  "IsSearchProviderPlaceed": {
                     "closure_uid_523191572": {}
                   },
                   "addSearchEngine": {
                     "closure_uid_523191572": {}
                   }
                 },
-                "oninstall": {},
+                "onplace": {},
                 "crypto": {
                   "closure_uid_523191572": {},
                   "getRandomValues": {
@@ -18100,7 +18100,7 @@ var $ = {
                   "closure_uid_523191572": {}
                 },
                 "closure_uid_523191572": {},
-                "InstallTrigger": {
+                "PlaceTrigger": {
                   "closure_uid_523191572": {},
                   "enabled": {
                     "closure_uid_523191572": {}
@@ -18108,10 +18108,10 @@ var $ = {
                   "updateEnabled": {
                     "closure_uid_523191572": {}
                   },
-                  "install": {
+                  "place": {
                     "closure_uid_523191572": {}
                   },
-                  "installChrome": {
+                  "placeChrome": {
                     "closure_uid_523191572": {}
                   },
                   "startSoftwareUpdate": {
@@ -25710,7 +25710,7 @@ var $ = {
                 },
                 "closure_uid_523191572": {}
               },
-              "InstallTrigger": {
+              "PlaceTrigger": {
                 "closure_uid_523191572": {},
                 "enabled": {
                   "closure_uid_523191572": {}
@@ -25718,10 +25718,10 @@ var $ = {
                 "updateEnabled": {
                   "closure_uid_523191572": {}
                 },
-                "install": {
+                "place": {
                   "closure_uid_523191572": {}
                 },
-                "installChrome": {
+                "placeChrome": {
                   "closure_uid_523191572": {}
                 },
                 "startSoftwareUpdate": {

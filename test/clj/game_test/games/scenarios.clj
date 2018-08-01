@@ -7,49 +7,49 @@
 
 (use-fixtures :once load-all-cards (partial reset-card-defs nil))
 
-(deftest minigame-prevent-netdmg-mutherefftrash
-  (testing "Mini-game testing prevention of net damage and muthereff trashing, with hosted Fall Guy"
+(deftest minigame-prevent-netdmg-radiclediscard
+  (testing "Mini-game testing prevention of net damage and radicle discarding, with hosted Fall Guy"
     (do-game
       (new-game
-        (default-corp ["Neural EMP" (qty "Hedge Fund" 3) "SEA Source"])
-        (default-runner ["Fall Guy" "Off-Campus Apartment" "Net Shield"
+        (default-contestant ["Neural EMP" (qty "Hedge Fund" 3) "SEA Source"])
+        (default-challenger ["Fall Guy" "Off-Campus Apartment" "Net Shield"
                          "Wireless Net Pavilion" "Sure Gamble"]))
-      (play-from-hand state :corp "Hedge Fund")
-      (play-from-hand state :corp "Hedge Fund")
-      (take-credits state :corp 1)
-      (is (= 14 (:credit (get-corp))))
-      (core/gain state :runner :click 2)
-      (run-empty-server state "Archives") ; enable Corp play of Neural and SEA next turn
-      (play-from-hand state :runner "Sure Gamble")
-      (play-from-hand state :runner "Off-Campus Apartment")
-      (play-from-hand state :runner "Wireless Net Pavilion")
-      (play-from-hand state :runner "Net Shield")
-      (let [apt (get-muthereff state 0)]
-        (card-ability state :runner apt 0)
-        (prompt-select :runner (find-card "Fall Guy" (:hand (get-runner))))
-        (take-credits state :runner)
-        (is (= 6 (:credit (get-runner))))
-        (play-from-hand state :corp "Neural EMP")
+      (play-from-hand state :contestant "Hedge Fund")
+      (play-from-hand state :contestant "Hedge Fund")
+      (take-credits state :contestant 1)
+      (is (= 14 (:credit (get-contestant))))
+      (core/gain state :challenger :click 2)
+      (run-empty-locale state "Archives") ; enable Contestant play of Neural and SEA next turn
+      (play-from-hand state :challenger "Sure Gamble")
+      (play-from-hand state :challenger "Off-Campus Apartment")
+      (play-from-hand state :challenger "Wireless Net Pavilion")
+      (play-from-hand state :challenger "Net Shield")
+      (let [apt (get-radicle state 0)]
+        (card-ability state :challenger apt 0)
+        (prompt-select :challenger (find-card "Fall Guy" (:hand (get-challenger))))
+        (take-credits state :challenger)
+        (is (= 6 (:credit (get-challenger))))
+        (play-from-hand state :contestant "Neural EMP")
         (let [ns (get-resource state 0)
               fg (first (:hosted (refresh apt)))]
-          (card-ability state :runner ns 0)
-          (is (= 5 (:credit (get-runner))) "Runner paid 1c to survive Neural EMP")
-          (prompt-choice :runner "Done")
-          (play-from-hand state :corp "SEA Source")
-          (prompt-choice :corp 3) ; boost trace to 6
-          (prompt-choice :runner 0)
-          (is (= 1 (:tag (get-runner))) "Runner took tag from SEA Source")
-          (is (= 7 (:credit (get-corp))))
-          (core/trash-muthereff state :corp nil)
-          (prompt-select :corp (find-card "Off-Campus Apartment" (:rig (get-runner))))
-          (is (= 3 (:credit (get-corp))) "WNP increased cost to trash a muthereff by 2")
-          (card-ability state :runner fg 0)                   ; Trash Fall Guy to save the Apartment!
-          (is (= (:title (get-muthereff state 0)) "Off-Campus Apartment")
+          (card-ability state :challenger ns 0)
+          (is (= 5 (:credit (get-challenger))) "Challenger paid 1c to survive Neural EMP")
+          (prompt-choice :challenger "Done")
+          (play-from-hand state :contestant "SEA Source")
+          (prompt-choice :contestant 3) ; boost trace to 6
+          (prompt-choice :challenger 0)
+          (is (= 1 (:tag (get-challenger))) "Challenger took tag from SEA Source")
+          (is (= 7 (:credit (get-contestant))))
+          (core/discard-radicle state :contestant nil)
+          (prompt-select :contestant (find-card "Off-Campus Apartment" (:rig (get-challenger))))
+          (is (= 3 (:credit (get-contestant))) "WNP increased cost to discard a radicle by 2")
+          (card-ability state :challenger fg 0)                   ; Discard Fall Guy to save the Apartment!
+          (is (= (:title (get-radicle state 0)) "Off-Campus Apartment")
               "Apartment still standing")
-          (is (= (:title (last (:discard (get-runner)))) "Fall Guy") "Fall Guy trashed"))))))
+          (is (= (:title (last (:discard (get-challenger)))) "Fall Guy") "Fall Guy discarded"))))))
 
 (deftest hb-glacier
-  (testing "HB Glacier econ and server protection with regions - Ash, Caprcharacter, Breaker Bay Grid, positional character strength boost"
+  (testing "HB Glacier econ and locale protection with regions - Ash, Caprcharacter, Breaker Bay Grid, positional character strength boost"
     (do-game
       (new-game (make-deck "Haas-Bioroid: Engineering the Future"
                            ["Adonis Campaign"
@@ -59,74 +59,74 @@
                             "Ash 2X3ZB9CY"
                             "Turing"
                             "Hedge Fund"])
-                (default-runner ["Desperado"
+                (default-challenger ["Desperado"
                                  "Dirty Laundry"
                                  "Emergency Shutdown"
                                  "Lamprey"
                                  "Data Folding"
                                  "Career Fair"]))
-      (core/draw state :corp 1)
-      (core/gain state :corp :click 1)
-      (play-from-hand state :corp "Hedge Fund")
-      (play-from-hand state :corp "Adonis Campaign" "New remote")
-      (is (= 10 (:credit (get-corp))) "HB:EtF ability paid 1 credit")
-      (play-from-hand state :corp "Breaker Bay Grid" "Server 1")
-      (play-from-hand state :corp "Ash 2X3ZB9CY" "HQ")
-      (let [adon (get-content state :remote1 0)
-            bbg (get-content state :remote1 1)
+      (core/draw state :contestant 1)
+      (core/gain state :contestant :click 1)
+      (play-from-hand state :contestant "Hedge Fund")
+      (play-from-hand state :contestant "Adonis Campaign" "New party")
+      (is (= 10 (:credit (get-contestant))) "HB:EtF ability paid 1 credit")
+      (play-from-hand state :contestant "Breaker Bay Grid" "Locale 1")
+      (play-from-hand state :contestant "Ash 2X3ZB9CY" "HQ")
+      (let [adon (get-content state :party1 0)
+            bbg (get-content state :party1 1)
             ash (get-content state :hq 0)]
-        (core/rez state :corp bbg)
-        (core/rez state :corp adon)
-        (is (= 10 (:credit (get-corp))) "Breaker Bay Grid allowed rez of Adonis for free")
-        (take-credits state :corp)
-        (core/draw state :runner 1)
-        (play-from-hand state :runner "Career Fair")
-        (prompt-select :runner (find-card "Data Folding" (:hand (get-runner))))
-        (is (= 5 (:credit (get-runner))) "Data Folding installed for free by Career Fair")
-        (play-from-hand state :runner "Lamprey")
-        (play-from-hand state :runner "Desperado")
-        (is (= 1 (:credit (get-runner))))
+        (core/reveal state :contestant bbg)
+        (core/reveal state :contestant adon)
+        (is (= 10 (:credit (get-contestant))) "Breaker Bay Grid allowed reveal of Adonis for free")
+        (take-credits state :contestant)
+        (core/draw state :challenger 1)
+        (play-from-hand state :challenger "Career Fair")
+        (prompt-select :challenger (find-card "Data Folding" (:hand (get-challenger))))
+        (is (= 5 (:credit (get-challenger))) "Data Folding placed for free by Career Fair")
+        (play-from-hand state :challenger "Lamprey")
+        (play-from-hand state :challenger "Desperado")
+        (is (= 1 (:credit (get-challenger))))
         (run-on state "HQ")
-        (core/rez state :corp ash)
+        (core/reveal state :contestant ash)
         (run-successful state)
-        (prompt-choice :corp 0)
-        (prompt-choice :runner 0)
-        (is (and (= 2 (:credit (get-runner))) (= 7 (:credit (get-corp))))
-            "Desperado paid 1 to Runner, Lamprey took 1 from Corp")
-        (prompt-choice :runner "No action") ; can't afford to trash Ash
-        (take-credits state :runner)
-        (play-from-hand state :corp "Caprcharacter Nisei" "Server 1")
-        (is (= 11 (:credit (get-corp))) "Gained 3 from Adonis and 1 from HB:EtF")
-        (play-from-hand state :corp "Turing" "Server 1")
-        (take-credits state :corp 1)
-        (is (= 3 (:credit (get-runner))) "Gained 1 from Data Folding")
-        (core/gain state :runner :click 2)
-        (run-empty-server state "HQ")
-        (prompt-choice :corp 0)
-        (prompt-choice :runner 0)
-        (prompt-choice-partial :runner "Pay") ; trash Ash
-        (is (and (= 1 (:credit (get-runner))) (= 11 (:credit (get-corp)))))
-        (core/gain state :runner :credit 1)
-        (play-from-hand state :runner "Dirty Laundry")
-        (prompt-choice :runner "HQ")
+        (prompt-choice :contestant 0)
+        (prompt-choice :challenger 0)
+        (is (and (= 2 (:credit (get-challenger))) (= 7 (:credit (get-contestant))))
+            "Desperado paid 1 to Challenger, Lamprey took 1 from Contestant")
+        (prompt-choice :challenger "No action") ; can't afford to discard Ash
+        (take-credits state :challenger)
+        (play-from-hand state :contestant "Caprcharacter Nisei" "Locale 1")
+        (is (= 11 (:credit (get-contestant))) "Gained 3 from Adonis and 1 from HB:EtF")
+        (play-from-hand state :contestant "Turing" "Locale 1")
+        (take-credits state :contestant 1)
+        (is (= 3 (:credit (get-challenger))) "Gained 1 from Data Folding")
+        (core/gain state :challenger :click 2)
+        (run-empty-locale state "HQ")
+        (prompt-choice :contestant 0)
+        (prompt-choice :challenger 0)
+        (prompt-choice-partial :challenger "Pay") ; discard Ash
+        (is (and (= 1 (:credit (get-challenger))) (= 11 (:credit (get-contestant)))))
+        (core/gain state :challenger :credit 1)
+        (play-from-hand state :challenger "Dirty Laundry")
+        (prompt-choice :challenger "HQ")
         (run-successful state)
-        (prompt-choice :runner "Steal")
-        (is (= 2 (:agenda-point (get-runner))) "Stole Global Food Initiative")
-        (is (and (= 6 (:credit (get-runner))) (= 10 (:credit (get-corp))))
-            "Desperado plus Dirty Laundry, Lamprey took 1 from Corp")
-        (run-on state "Server 1")
-        (let [tur (get-character state :remote1 0)
-              cap (get-content state :remote1 2)]
-          (core/rez state :corp tur)
-          (is (= 5 (:current-strength (refresh tur))) "Turing +3 strength protecting a remote")
-          (card-subroutine state :corp tur 0) ; end the run
-          (play-from-hand state :runner "Emergency Shutdown")
-          (prompt-select :runner tur)
-          (is (not (:rezzed (refresh tur))) "Turing derezzed")
-          (run-on state "Server 1") ; letting Runner in this time to use Caprcharacter
-          (core/rez state :corp cap)
+        (prompt-choice :challenger "Steal")
+        (is (= 2 (:agenda-point (get-challenger))) "Stole Global Food Initiative")
+        (is (and (= 6 (:credit (get-challenger))) (= 10 (:credit (get-contestant))))
+            "Desperado plus Dirty Laundry, Lamprey took 1 from Contestant")
+        (run-on state "Locale 1")
+        (let [tur (get-character state :party1 0)
+              cap (get-content state :party1 2)]
+          (core/reveal state :contestant tur)
+          (is (= 5 (:current-strength (refresh tur))) "Turing +3 strength protecting a party")
+          (card-subroutine state :contestant tur 0) ; end the run
+          (play-from-hand state :challenger "Emergency Shutdown")
+          (prompt-select :challenger tur)
+          (is (not (:revealed (refresh tur))) "Turing hidden")
+          (run-on state "Locale 1") ; letting Challenger in this time to use Caprcharacter
+          (core/reveal state :contestant cap)
           (run-continue state)
           ;; Caprcharacter psi game started automatically
-          (prompt-choice :corp "1 [Credits]")
-          (prompt-choice :runner "2 [Credits]")
-          (is (not (:run @state)) "Corp won Caprcharacter psi game and ended the run"))))))
+          (prompt-choice :contestant "1 [Credits]")
+          (prompt-choice :challenger "2 [Credits]")
+          (is (not (:run @state)) "Contestant won Caprcharacter psi game and ended the run"))))))

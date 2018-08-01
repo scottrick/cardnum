@@ -13,46 +13,89 @@
    "typingstop" core/typingstop})
 
 (def commands
-  {"ability" core/play-ability
+  {
+   "ability" core/play-ability
    "access" core/successful-run
    "advance" core/advance
+   "back-m-h" core/back-m-h
+   "back-org" core/back-org
+   "back-site" core/back-site
+   "bluff-o-g" core/bluff-o-g
+   "challenger-ability" core/play-challenger-ability
    "change" core/change
    "choice" core/resolve-prompt
    "close-deck" core/close-deck
+   "close-fw-dc-sb" core/close-fw-dc-sb
+   "close-location" core/close-location
+   "close-sideboard" core/close-sideboard
    "concede" core/concede
-   "continue" core/continue
    "contestant-ability" core/play-contestant-ability
    "contestant-phase-43" core/contestant-phase-43
+   "continue" core/continue
    "credit" core/click-credit
-   "derez" #(core/derez %1 %2 (:card %3))
+   "discard-radicle" core/discard-radicle
    "draw" core/click-draw
    "dynamic-ability" core/play-dynamic-ability
    "end-phase-12" core/end-phase-12
    "end-turn" core/end-turn
+   "eot-discard" core/eot-discard
+   "eot-phase" core/eot-phase
+   "equip" #(core/equip %1 %2 (:card %3))
+   "fix-tap" #(core/fix-tap %1 %2 (:card %3))
+   "haz-play-done" core/haz-play-done
+   "hide" #(core/hide %1 %2 (:card %3))
+   "invert" #(core/invert %1 %2 (:card %3))
    "jack-out" core/jack-out
    "keep" core/keep-hand
+   "m-h-phase" core/m-h-phase
+   "move-to-sb" #(core/move-to-sb %1 %2 (:card %3))
    "move" core/move-card
    "mulligan" core/mulligan
+   "next-m-h" core/next-m-h
+   "next-site" core/next-site
    "no-action" core/no-action
+   "no-hazards" core/no-hazards
+   "not-first" core/not-first
+   "on-guard" core/on-guard
+   "org-phase" core/org-phase
+   "organize" #(core/organize %1 %2 (:card %3) nil)
    "play" core/play
+   "pre-bluff" core/pre-bluff
    "purge" core/do-purge
+   "regionize" #(core/regionize %1 %2 (:card %3))
    "remove-tag" core/remove-tag
-   "rez" #(core/rez %1 %2 (:card %3) nil)
+   "reset-done" core/reset-done
+   "reset-m-h" core/reset-m-h
+   "reset-org" core/reset-org
+   "reset-site" core/reset-site
+   "return-o-g" core/return-o-g
+   "reveal-o-g" core/reveal-o-g
+   "reveal" #(core/reveal %1 %2 (:card %3) nil)
+   "rotate" #(core/rotate %1 %2 (:card %3))
    "run" core/click-run
-   "challenger-ability" core/play-challenger-ability
    "score" #(core/score %1 %2 (game.core/get-card %1 (:card %3)))
    "select" core/select
    "shuffle" core/shuffle-deck
+   "site-phase" core/site-phase
    "start-turn" core/start-turn
    "subroutine" core/play-subroutine
    "system-msg" #(core/system-msg %1 %2 (:msg %3))
+   "tap" #(core/tap %1 %2 (:card %3))
    "toast" core/toast
-   "trash-muthereff" core/trash-muthereff
-   "view-deck" core/view-deck})
+   "transfer" #(core/transfer %1 %2 (:card %3))
+   "untap-all" core/untap-all
+   "untap" #(core/untap %1 %2 (:card %3))
+   "view-deck" core/view-deck
+   "view-fw-dc-sb" core/view-fw-dc-sb
+   "view-location" core/view-location
+   "view-sideboard" core/view-sideboard
+   "wait-alert" core/wait-alert
+   "wound" #(core/wound %1 %2 (:card %3))
+   })
 
 (defn strip [state]
   (-> state
-    (dissoc :events :turn-events :per-turn :prevent :damage :effect-completed :click-state :turn-state)
+    (dissoc :events :turn-events :per-turn :prevent :effect-completed :click-state :turn-state)
     (update-in [:contestant :register] dissoc :most-recent-drawn)
     (update-in [:challenger :register] dissoc :most-recent-drawn)))
 
@@ -76,13 +119,16 @@
       (update-in [:hand] #(private-card-vector state :challenger %))
       (update-in [:discard] #(private-card-vector state :challenger %))
       (update-in [:deck] #(private-card-vector state :challenger %))
+      (update-in [:sideboard] #(private-card-vector state :challenger %))
+      (update-in [:fw-dc-sb] #(private-card-vector state :challenger %))
+      (update-in [:location] #(private-card-vector state :challenger %))
       (update-in [:rig :facedown] #(private-card-vector state :challenger %))
-      (update-in [:rig :muthereff] #(private-card-vector state :challenger %))))
+      (update-in [:rig :radicle] #(private-card-vector state :challenger %))))
 
 (defn- make-private-contestant [state]
-  (let [zones (concat [[:hand]] [[:discard]] [[:deck]]
-                      (for [server (keys (:servers (:contestant @state)))] [:servers server :characters])
-                      (for [server (keys (:servers (:contestant @state)))] [:servers server :content]))]
+  (let [zones (concat [[:hand]] [[:discard]] [[:deck]] [[:sideboard]] [[:fw-dc-sb]] [[:location]]
+                      (for [locale (keys (:locales (:contestant @state)))] [:locales locale :characters])
+                      (for [locale (keys (:locales (:contestant @state)))] [:locales locale :content]))]
     (loop [s (:contestant @state)
            z zones]
       (if (empty? z)
@@ -94,6 +140,24 @@
     deck
     (private-card-vector state side deck)))
 
+(defn- make-private-sideboard [state side sideboard]
+  (if (:view-sideboard (side @state))
+    sideboard
+    (private-card-vector state side sideboard)))
+
+(defn- make-private-fw-dc-sb [state side sideboard]
+  (if (:view-fw-dc-sb (side @state))
+    sideboard
+    (private-card-vector state side sideboard)))
+
+(defn- make-private-location [state side location]
+  (let [sorted (if (:cut-region (side @state))
+                 (filter #(= (:Region %) (:cut-region (side @state))) location)
+                 nil)]
+    (if (:view-location (side @state))
+      sorted
+      (private-card-vector state side sorted))))
+
 (defn- private-states
   "Generates privatized states for the Contestant, Challenger and any spectators from the base state.
   If `:spectatorhands` is on, all information is passed on to spectators as well."
@@ -102,19 +166,28 @@
   (let [contestant-private (make-private-contestant state)
         challenger-private (make-private-challenger state)
         contestant-deck (update-in (:contestant @state) [:deck] #(make-private-deck state :contestant %))
-        challenger-deck (update-in (:challenger @state) [:deck] #(make-private-deck state :challenger %))]
-    [(assoc @state :challenger challenger-private
-                   :contestant contestant-deck)
-     (assoc @state :contestant contestant-private
-                   :challenger challenger-deck)
+        challenger-deck (update-in (:challenger @state) [:deck] #(make-private-deck state :challenger %))
+        contestant-sideboard (update-in (:contestant @state) [:sideboard] #(make-private-sideboard state :contestant %))
+        challenger-sideboard (update-in (:challenger @state) [:sideboard] #(make-private-sideboard state :challenger %))
+        contestant-fw-dc-sb (update-in (:contestant @state) [:fw-dc-sb] #(make-private-fw-dc-sb state :contestant %))
+        challenger-fw-dc-sb (update-in (:challenger @state) [:fw-dc-sb] #(make-private-fw-dc-sb state :challenger %))
+        contestant-location (update-in (:contestant @state) [:location] #(make-private-location state :contestant %))
+        challenger-location (update-in (:challenger @state) [:location] #(make-private-location state :challenger %))]
+    [(assoc @state :challenger challenger-private :contestant contestant-deck
+                   :contestant contestant-sideboard :contestant contestant-fw-dc-sb :contestant contestant-location)
+     (assoc @state :contestant contestant-private :challenger challenger-deck
+                   :challenger challenger-sideboard :challenger challenger-fw-dc-sb :challenger challenger-location)
      (if (get-in @state [:options :spectatorhands])
-       (assoc @state :contestant contestant-deck :challenger challenger-deck)
+       (assoc @state :contestant contestant-deck :contestant contestant-sideboard
+                     :contestant contestant-location :contestant contestant-sideboard
+                     :challenger challenger-deck :challenger challenger-fw-dc-sb
+                     :challenger challenger-location :challenger challenger-fw-dc-sb)
        (assoc @state :contestant contestant-private :challenger challenger-private))]))
 
 (defn- reset-all-cards
   [cards]
   (let [;; split the cards into regular cards and alt-art cards
-        [regular alt] ((juxt filter remove) #(not= "Alternates" (:setname %)) cards)
+        [regular alt] ((juxt filter remove) #(not= "Alternates" (:set_code %)) cards)
         regular (into {} (map (juxt :title identity) regular))]
     (reset! all-cards regular)))
 
@@ -132,11 +205,11 @@
         contestant-diff (differ/diff (strip old-contestant) (strip new-contestant))
         spect-diff (differ/diff (strip old-spect) (strip new-spect))]
     {:challenger-diff challenger-diff
-     :contestant-diff   contestant-diff
-     :spect-diff  spect-diff}))
+     :contestant-diff contestant-diff
+     :spect-diff spect-diff}))
 
 (defn set-action-id
-  "Creates a unique action id for each server response - used in client lock"
+  "Creates a unique action id for each locale response - used in client lock"
   [state side]
   (swap! state update-in [side :aid] (fnil inc 0)))
 

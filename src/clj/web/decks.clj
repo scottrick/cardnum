@@ -1,6 +1,6 @@
 (ns web.decks
   (:require [web.db :refer [db object-id]]
-            [web.utils :refer [response]]
+            [web.utils :refer [map-values response]]
             [monger.collection :as mc]
             [monger.result :refer [acknowledged?]]
             [web.config :refer [server-config]]
@@ -17,7 +17,12 @@
                              deck                 :body}]
   (if (and username deck)
     (let [deck (-> deck
-                   (update-in [:cards] (fn [cards] (mapv #(select-keys % [:qty :card :id :art]) cards)))
+                   (update-in [:resources] (fn [cards] (mapv #(select-keys % [:qty :card :id]) cards)))
+                   (update-in [:hazards] (fn [cards] (mapv #(select-keys % [:qty :card :id]) cards)))
+                   (update-in [:sideboard] (fn [cards] (mapv #(select-keys % [:qty :card :id]) cards)))
+                   (update-in [:characters] (fn [cards] (mapv #(select-keys % [:qty :card :id]) cards)))
+                   (update-in [:pool] (fn [cards] (mapv #(select-keys % [:qty :card :id]) cards)))
+                   (update-in [:fwsb] (fn [cards] (mapv #(select-keys % [:qty :card :id]) cards)))
                    (assoc :username username))]
       (response 200 (mc/insert-and-return db "decks" deck)))
     (response 401 {:message "Unauthorized"})))
@@ -25,13 +30,41 @@
 (defn decks-save-handler [{{username :username} :user
                            deck                 :body}]
   (if (and username deck)
-    (let [update-card (fn [c] (update-in c [:card] @all-cards))
+    (let [get-code (fn [c] (if (nil? (:id c))
+                             c
+                             (assoc c :code (str (:card c) " " (:id c)))))
+          get-data (fn [c] (if (nil? (:id c))
+                             (update-in c [:card] @all-cards)
+                             (update-in c [:code] @all-cards)))
+          get-swap (fn [c] (if (nil? (:id c))
+                             c
+                             (do
+                               (dissoc c :card)
+                               (assoc c :card (:code c)))))
+          rid-code (fn [c] (if (nil? (:id c))
+                             c
+                             (dissoc c :code :id)))
+          rid-card (fn [c] (nil? (:card c)))
+
           check-deck (-> deck
-                         (update-in [:cards] #(map update-card %))
+                         (map-values [:resources :hazards :sideboard
+                                        :characters :pool :fwsb]
+                                     #(mapv get-code %))
+                         (map-values [:resources :hazards :sideboard
+                                        :characters :pool :fwsb]
+                                     #(mapv get-data %))
+                         (map-values [:resources :hazards :sideboard
+                                        :characters :pool :fwsb]
+                                     #(mapv get-swap %))
+                         (map-values [:resources :hazards :sideboard
+                                        :characters :pool :fwsb]
+                                     #(mapv rid-code %))
                          (update-in [:identity] #(@all-cards (:title %))))
           deck (-> deck
-                   (update-in [:cards] (fn [cards] (mapv #(select-keys % [:qty :card :id :art]) cards)))
-                   (assoc :username username))
+                   (map-values [:resources :hazards :sideboard
+                                  :characters :pool :fwsb]
+                               (fn [cards] (mapv #(select-keys % [:qty :card :id]) cards)))
+                                      (assoc :username username))
           status (decks/calculate-deck-status check-deck)
           deck (assoc deck :status status)]
       (when (nil? (:identity check-deck))

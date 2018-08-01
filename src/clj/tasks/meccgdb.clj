@@ -1,4 +1,4 @@
-(ns tasks.nrdb
+(ns tasks.meccgdb
   "MECCG import tasks"
   (:require [org.httpkit.client :as http]
             [web.db :refer [db] :as webdb]
@@ -45,7 +45,7 @@
 
 (def card-fields
   {
-   :Set (rename :setname)
+   :Set (rename :set_code)
    :Primary (rename :type)
    :Alignment (rename :alignment)
    :Artist identity
@@ -63,7 +63,7 @@
    :Body identity
    :Corruption identity
    :Home identity
-   :Unique (fn [[k v]] [:uniqueness (if (nil? v) 0 1)])
+   :Unique (fn [[k v]] [:uniqueness (if (= v "unique") true false)])
    :Secondary identity
    :Race identity
    :RWMPs identity
@@ -92,22 +92,6 @@
    :released identity
    })
 
-(def ^:const faction-map
-  {
-   "haas-bioroid"  "Haas-Bioroid"
-   "cardnum"  "Cardnum"
-   "nbn"  "NBN"
-   "weyland-consortium"  "Weyland Consortium"
-   "anarch"  "Anarch"
-   "criminal"  "Criminal"
-   "shaper"  "Shaper"
-   "adam"  "Adam"
-   "sunny-lebeau"  "Sunny Lebeau"
-   "apex"  "Apex"
-   "neutral-challenger"  "Neutral"
-   "neutral-contestant"  "Neutral"
-   })
-
 (def tables
   {:mwl   {:path "mwl"    :fields mwl-fields   :collection "mwl"}
    :set   {:path "sets"   :fields set-fields   :collection "sets"}
@@ -132,7 +116,7 @@
        :data
        (map (partial translate-fields fields))))
 
-(defn download-nrdb-data
+(defn download-meccgdb-data
   "Translate data from NRDB"
   [path fields]
   (println "Downloading" path)
@@ -185,7 +169,8 @@
   "Remove specified fields if the value is nil"
   [c fields]
   (reduce (fn [acc k]
-            (if (nil? (c k))
+            (if (or (nil? (c k))
+                    (= (c k) ""))
               (dissoc acc k)
               acc))
           c fields))
@@ -199,8 +184,15 @@
 (defn- add-card-fields
   "Add additional fields to the card documents"
   [set-map c]
-  (let [s (set-map (:setname c))]
+  (let [s (set-map (:set_code c))]
     (-> c
+        (prune-null-fields [:Artist :Rarity :Precise :subtype :MPs
+                            :Mind :Direct :General :Prowess :Body
+                            :Corruption :Race :RWMPs :Site :Path
+                            :Region :RPath :Playable :GoldRing
+                            :GreaterItem :MajorItem :MinorItem
+                            :Information :Palantiri :Scroll :Haven
+                            :Stage :Strikes :Specific])
         (assoc :full_set (:name s)
                :rotated false
                :normalizedtitle (string/lower-case (deaccent (:title c)))))))
@@ -225,7 +217,7 @@
 (defn- card-image-file
   "Returns the path to a card's image as a File"
   [card]
-  (io/file "resources" "public" "img" "cards" (str (:setname card)) (str (:ImageName card))))
+  (io/file "resources" "public" "img" "cards" (str (:set_code card)) (str (:ImageName card))))
 
 (defn- download-card-image
   "Download a single card image from NRDB"

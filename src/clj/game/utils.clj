@@ -97,10 +97,9 @@
                      (case key
                        :credit (str value " [Credits]")
                        :click (reduce str (for [i (range value)] "[Click]"))
-                       :net-damage (str value " net damage")
                        :mill (str value " card mill")
-                       :hazard (str value " installed hazard")
-                       :shuffle-installed-to-stack (str "shuffling " value " installed "
+                       :hazard (str value " placed hazard")
+                       :shuffle-placed-to-stack (str "shuffling " value " placed "
                                                         (pluralize "card" value) " into the stack")
                        (str value (str key)))) (partition 2 (flatten costs)))))
 
@@ -173,8 +172,6 @@
       :credit (str value " [$]")
       :click (->> "[Click]" repeat (take value) (apply str))
       :forfeit (str value " Agenda" (when (> value 1) "s"))
-      :net (str value " net damage")
-      :meat (str value " meat damage")
       nil)))
 
 (defn build-cost-str
@@ -220,17 +217,17 @@
     (= (func card1) (func card2))))
 
 ;;; Functions for working with zones.
-(defn remote-num->name [num]
-  (str "Server " num))
+(defn party-num->name [num]
+  (str "Locale " num))
 
-(defn remote->name
-  "Converts a remote zone to a string"
+(defn party->name
+  "Converts a party zone to a string"
   [zone]
   (let [kw (if (keyword? zone) zone (last zone))
         s (str kw)]
-    (when (.startsWith s ":remote")
-      (let [num (last (split s #":remote"))]
-        (remote-num->name num)))))
+    (when (.startsWith s ":party")
+      (let [num (last (split s #":party"))]
+        (party-num->name num)))))
 
 (defn central->name
   "Converts a central zone keyword to a string."
@@ -239,42 +236,45 @@
     :hq "HQ"
     :rd "R&D"
     :archives "Archives"
+    :sites "Sites"
     nil))
 
 (defn zone->name
   "Converts a zone to a string."
   [zone]
   (or (central->name zone)
-      (remote->name zone)))
+      (party->name zone)))
 
 (defn zone->sort-key [zone]
   (case (if (keyword? zone) zone (last zone))
+    :sites -4
     :archives -3
     :rd -2
     :hq -1
     (string->num
-      (last (safe-split (str zone) #":remote")))))
+      (last (safe-split (str zone) #":party")))))
 
 (defn zones->sorted-names [zones]
   (->> zones (sort-by zone->sort-key) (map zone->name)))
 
-(defn is-remote?
-  "Returns true if the zone is for a remote server"
+(defn is-party?
+  "Returns true if the zone is for a party locale"
   [zone]
-  (not (nil? (remote->name zone))))
+  (not (nil? (party->name zone))))
 
 (defn is-central?
-  "Returns true if the zone is for a central server"
+  "Returns true if the zone is for a central locale"
   [zone]
-  (not (is-remote? zone)))
+  (not (is-party? zone)))
 
 (defn central->zone
-  "Converts a central server keyword like :discard into a corresponding zone vector"
+  "Converts a central locale keyword like :discard into a corresponding zone vector"
   [zone]
   (case (if (keyword? zone) zone (last zone))
-    :discard [:servers :archives]
-    :hand [:servers :hq]
-    :deck [:servers :rd]
+    :location [:locales :sites]
+    :discard [:locales :archives]
+    :hand [:locales :hq]
+    :deck [:locales :rd]
     nil))
 
 (defn type->rig-zone
@@ -282,8 +282,8 @@
   [type]
   (vec [:rig (-> type .toLowerCase keyword)]))
 
-(defn get-server-type [zone]
-  (or (#{:hq :rd :archives} zone) :remote))
+(defn get-locale-type [zone]
+  (or (#{:hq :rd :archives :sites} zone) :party))
 
 (defn get-cid
   "Gets the cid of a given card"

@@ -5,7 +5,6 @@
             [cljs.core.async :refer [chan put! >! sub pub] :as async]
             [clojure.string :as str]
             [meccg.appstate :refer [app-state]]
-            [meccg.account :refer [alt-art-name]]
             [meccg.ajax :refer [GET]]
             [meccg.utils :refer [toastr-options banned-span restricted-span rotated-span influence-dots]]
             [cardnum.cards :refer [all-cards] :as cards]
@@ -33,7 +32,7 @@
 (defn image-url
   ([card] (image-url card false))
   ([card allow-all-users]
-   (str "/img/cards/" (:setname card) "/" (:ImageName card))))
+   (str "/img/cards/" (:set_code card) "/" (:ImageName card))))
 
 (defn add-symbols [card-text]
   (-> (if (nil? card-text) "" card-text)
@@ -54,6 +53,8 @@
       (make-span "CP" "img/dc/me_cp.png")
       (make-span "corruption points" "img/dc/me_cp.png")
       (make-span "corruption point" "img/dc/me_cp.png")
+      (make-span "Coastal Seas [ccc]" "img/dc/me_tc.png")
+      (make-span "Coastal Seas [cc]" "img/dc/me_dc.png")
       (make-span "Coastal Seas [c]" "img/dc/me_cs.png")
       (make-span "Coastal Sea [c]" "img/dc/me_cs.png")
       (make-span "Dark-domains [d]" "img/dc/me_dd.png")
@@ -63,6 +64,11 @@
       (make-span "Darkhavens [V]" "img/dc/me_dha.png")
       (make-span "Darkhaven [V]" "img/dc/me_dha.png")
       (make-span "Darkhaven" "img/dc/me_dha.png")
+      (make-span "Darkhaven" "img/dc/me_dha.png")
+      (make-span "Deserts [ee]" "img/dc/me_ee.png")
+      (make-span "Deserts" "img/dc/me_ee.png")
+      (make-span "Desert [e]" "img/dc/me_er.png")
+      (make-span "Desert" "img/dc/me_er.png")
       (make-span "Direct influence" "img/dc/me_di.png")
       (make-span "direct influence" "img/dc/me_di.png")
       (make-span "DI" "img/dc/me_di.png")
@@ -99,9 +105,19 @@
       (make-span " tap." "img/dc/me_tap.png")
       (make-span "Wildernesses [w]" "img/dc/me_wi.png")
       (make-span "Wilderness [w]" "img/dc/me_wi.png")
+      (make-span "Wildernesses [ww]" "img/dc/me_dw.png")
+      (make-span "Wilderness [ww]" "img/dc/me_dw.png")
+      (make-span "Wildernesses [www]" "img/dc/me_tw.png")
+      (make-span "Wilderness [www]" "img/dc/me_tw.png")
+      (make-span "[ccc]" "img/dc/me_tc.png")
+      (make-span "[cc]" "img/dc/me_dc.png")
+      (make-span "[ee]" "img/dc/me_ee.png")
+      (make-span "[www]" "img/dc/me_tw.png")
+      (make-span "[ww]" "img/dc/me_dw.png")
       (make-span "[b]" "img/dc/me_bl.png")
       (make-span "[c]" "img/dc/me_cs.png")
       (make-span "[d]" "img/dc/me_dd.png")
+      (make-span "[e]" "img/dc/me_er.png")
       (make-span "[f]" "img/dc/me_fd.png")
       (make-span "[j]" "img/dc/me_ju.png")
       (make-span "[s]" "img/dc/me_sl.png")
@@ -113,13 +129,6 @@
   (set! (.-options js/toastr) (toastr-options options))
   (let [f (aget js/toastr type)]
     (f msg)))
-
-(defn- post-response [cursor response]
-  (if (= 200 (:status response))
-    (let [new-alts (get-in response [:json :altarts] {})]
-      (swap! app-state assoc-in [:user :options :alt-arts] new-alts)
-      (non-game-toast "Updated Art" "success" nil))
-    (non-game-toast "Failed to Update Art" "error" nil)))
 
 (defn- card-text
   "Generate text html representation a card"
@@ -173,10 +182,10 @@
               (card-text selected-card cursor)]]))))))
 
 (def primary-order ["Character" "Resource" "Hazard" "Site" "Region"])
-(def resource-secondaries ["Ally" "Faction" "Greater Item" "Major Item" "Minor Item" "Special Item"])
+(def resource-secondaries ["Ally" "Faction" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
 (def shared-secondaries ["Permanent-event" "Short-event" "Long-event" "Permanent-event/Short-event" "Permanent-event/Long-event" "Short-event/Long-event"])
 (def hazard-secondaries ["Creature" "Creature/Permanent-event" "Creature/Short-event" "Creature/Long-event"])
-(def general-alignments ["Hero" "Minion" "Balrog" "Lord" "Fallen-wizard" "Elf-lord" "Dwarf-lord" "Atani-lord" "Dragon-lord" "FW/DL" "Dual"])
+(def general-alignments ["Hero" "Minion" "Balrog" "Fallen-wizard" "Fallen/Lord" "Lord" "Elf-lord" "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord" "Grey" "Dual"])
 (def set-order ["The Wizards" "The Dragons" "Dark Minions" "The Lidless Eye" "Against the Shadow" "The White Hand" "The Balrog"
                 "Firstborn" "Durin's Folk" "The Necromancer" "Bay of Ormal" "Court of Ardor" "The Central Plains" "Dominion"
                    "The Great Wyrms" "Kingdom of the North" "Morgoth's Legacy" "Mortal Men" "The Northern Waste" "Red Nightfall"
@@ -226,10 +235,10 @@
 (defn sort-field [fieldname]
   (case fieldname
     "Set" #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:full_set %))
-    "Name" (juxt :title #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:full_set %)))
-    "Primary" (juxt #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:full_set %))
+    "Name" (juxt :normalizedtitle #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:full_set %)))
+    "Type" (juxt #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:full_set %))
                     #((into {} (map-indexed (fn [i e] [e i]) primary-order)) (:type %)))
-    "Alignment" (juxt #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:full_set %))
+    "Align" (juxt #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:full_set %))
                       #((into {} (map-indexed (fn [i e] [e i]) (concat general-alignments ["Neutral"]))) (:alignment %)))))
 
 (defn selected-set-name [state]
@@ -353,17 +362,16 @@
                                                    :else
                                                    [nil (filter #(= (:full_set %) s) @all-cards)])]
                           (->> cards
-                               (filter-dreamcards (:hide-dreamcards state))
                                (filter-cards (:primary-filter state) :type)
                                (filter-cards (:alignment-filter state) :alignment)
                                (filter-cards (:secondary-filter state) :Secondary)
+                               (filter-dreamcards (:hide-dreamcards state))
                                (filter-title (:search-query state))
                                (sort-by (sort-field (:sort-field state)))
                                (take (* (:page state) 28))))
-                        {:key-fn #(str (:setname %) (:code %) (:art %))
+                        {:key-fn #(str (:set_code %) (:code %) (:art %))
                          :fn #(assoc % :selected (and (= (:full_set %) (:full_set (:selected-card state)))
-                                                      (= (:code %) (:code (:selected-card state)))
-                                                      (= (:art %) (:art (:selected-card state)))))
+                                                      (= (:code %) (:code (:selected-card state)))))
                          :state {:cursor cursor :decorate-card true}
                          })]]))))
 

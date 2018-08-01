@@ -1,13 +1,17 @@
 (ns web.lobby
   (:require [web.db :refer [db object-id]]
             [web.utils :refer [response tick remove-once]]
+            [clojure.string :refer [split split-lines join escape] :as s]
             [web.ws :as ws]
+            [web.sites :refer [all-standard-sites]]
             [web.stats :as stats]
+            [web.utils :refer [map-values]]
             [game.core :as core]
             [crypto.password.bcrypt :as bcrypt]
             [monger.collection :as mc]
             [cardnum.cards :refer [all-cards]]
             [cardnum.decks :as decks]
+            [cardnum.utils :refer [str->int parse-deck-string INFINITY] :as utils]
             [cheshire.core :as json]
             [clj-time.core :as t])
   (:import org.bson.types.ObjectId))
@@ -162,7 +166,7 @@
 
 (defn join-game
   "Adds the given user as a player in the given gameid."
-  [{options :options :as user} client-id gameid]
+  [{options :options :as user} client-id gameid alignment]
   (let [{players :players :as game} (game-for-id gameid)]
     (when (< (count players) 2)
       (let [{side :side :as fplayer} (first players)
@@ -170,6 +174,7 @@
             new-player {:user    user
                         :ws-id   client-id
                         :side    new-side
+                        :alignment alignment
                         :options options}]
         (swap! all-games update-in [gameid :players] #(conj % new-player))
         (swap! client-gameids assoc client-id gameid)
@@ -208,7 +213,7 @@
 (defn handle-lobby-create
   [{{{:keys [username emailhash] :as user} :user} :ring-req
     client-id                                     :client-id
-    {:keys [title allowspectator spectatorhands password room side options]} :?data :as event}]
+    {:keys [title allowspectator spectatorhands password room side alignment options]} :?data :as event}]
   (let [gameid (java.util.UUID/randomUUID)
         game {:date           (java.util.Date.)
               :gameid         gameid
@@ -221,6 +226,7 @@
               :players        [{:user    user
                                 :ws-id      client-id
                                 :side    side
+                                :alignment alignment
                                 :options options}]
               :spectators     []
               :last-update    (t/now)}]
@@ -274,7 +280,8 @@
 (defn handle-lobby-join
   [{{{:keys [username] :as user} :user} :ring-req
     client-id                           :client-id
-    {:keys [gameid password options]}   :?data
+    {:keys [gameid alignment
+            password options]}          :?data
     reply-fn                            :?reply-fn
     :as                                 msg}]
   (if-let [{game-password :password :as game} (@all-games gameid)]
@@ -282,7 +289,7 @@
       (if (and (not (already-in-game? user game))
                (or (empty? game-password)
                    (bcrypt/check password game-password)))
-        (do (join-game user client-id gameid)
+        (do (join-game user client-id gameid alignment)
             (ws/broadcast-to! (lobby-clients gameid)
                               :lobby/message
                               {:user         "__system__"
@@ -332,13 +339,49 @@
         fplayer (first (:players game))
         gameid (:gameid game)
 
-        map-card (fn [c] (update-in c [:card] @all-cards))
-        unknown-card (fn [c] (nil? (:card c)))
+        get-code (fn [c] (if (nil? (:id c))
+                           c
+                           (assoc c :code (str (:card c) " " (:id c)))))
+        get-data (fn [c] (if (nil? (:id c))
+                           (update-in c [:card] @all-cards)
+                           (update-in c [:code] @all-cards)))
+        get-swap (fn [c] (if (nil? (:id c))
+                           c
+                           (do
+                             (dissoc c :card)
+                             (assoc c :card (:code c)))))
+        rid-code (fn [c] (if (nil? (:id c))
+                           c
+                           (dissoc c :code :id)))
+        rid-card (fn [c] (nil? (:card c)))
+
         deck (as-> (mc/find-one-as-map db "decks" {:_id (object-id deck-id) :username username}) d
-                   (update-in d [:cards] #(mapv map-card %))
-                   (update-in d [:cards] #(vec (remove unknown-card %)))
+                   ;(process-sites d)
+                   (assoc d :location all-standard-sites)
+
+                   (map-values d [:resources :hazards :sideboard
+                                  :characters :pool :fwsb :location]
+                               #(mapv get-code %))
+
+                   (map-values d [:resources :hazards :sideboard
+                                  :characters :pool :fwsb :location]
+                               #(mapv get-data %))
+
+                   (map-values d [:resources :hazards :sideboard
+                                  :characters :pool :fwsb :location]
+                               #(mapv get-swap %))
+
+                   (map-values d [:resources :hazards :sideboard
+                                  :characters :pool :fwsb :location]
+                               #(mapv rid-code %))
+
+                   (map-values d [:resources :hazards :sideboard
+                                  :characters :pool :fwsb :location]
+                               #(vec (remove rid-card %)))
+
                    (update-in d [:identity] #(@all-cards (:title %)))
-                   (assoc d :status (decks/calculate-deck-status d)))]
+                   (assoc d :status (decks/calculate-deck-status d))
+                   )]
     (when (and (:identity deck) (player? client-id gameid))
       (swap! all-games update-in [gameid :players
                               (if (= client-id (:ws-id fplayer)) 0 1)]

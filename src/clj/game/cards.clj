@@ -1,39 +1,32 @@
 (in-ns 'game.core)
 
-(def trash-resource {:prompt "Select a resource to trash"
-                    :label "Trash a resource"
-                    :msg (msg "trash " (:title target))
-                    :choices {:req #(and (installed? %)
+(def discard-resource {:prompt "Select a resource to discard"
+                    :label "Discard a resource"
+                    :msg (msg "discard " (:title target))
+                    :choices {:req #(and (placed? %)
                                          (is-type? % "Resource"))}
-                    :effect (effect (trash target {:cause :subroutine})
+                    :effect (effect (discard target {:cause :subroutine})
                                     (clear-wait-prompt :challenger))})
 
-(def trash-hazard {:prompt "Select a piece of hazard to trash"
-                     :label "Trash a piece of hazard"
-                     :msg (msg "trash " (:title target))
-                     :choices {:req #(and (installed? %)
+(def discard-hazard {:prompt "Select a piece of hazard to discard"
+                     :label "Discard a piece of hazard"
+                     :msg (msg "discard " (:title target))
+                     :choices {:req #(and (placed? %)
                                           (is-type? % "Hazard"))}
-                     :effect (effect (trash target {:cause :subroutine}))})
+                     :effect (effect (discard target {:cause :subroutine}))})
 
-(def trash-muthereff-sub {:prompt "Select a muthereff to trash"
-                         :label "Trash a muthereff"
-                         :msg (msg "trash " (:title target))
-                         :choices {:req #(and (installed? %)
-                                              (is-type? % "Muthereff"))}
-                         :effect (effect (trash target {:cause :subroutine}))})
-
-(def trash-installed {:prompt "Select an installed card to trash"
+(def discard-placed {:prompt "Select an placed card to discard"
                       :player :challenger
-                      :label "Force the Challenger to trash an installed card"
-                      :msg (msg "force the Challenger to trash " (:title target))
-                      :choices {:req #(and (installed? %)
+                      :label "Force the Challenger to discard an placed card"
+                      :msg (msg "force the Challenger to discard " (:title target))
+                      :choices {:req #(and (placed? %)
                                            (= (:side %) "Challenger"))}
-                      :effect (effect (trash target {:cause :subroutine}))})
+                      :effect (effect (discard target {:cause :subroutine}))})
 
-(def contestant-rez-toast
+(def contestant-reveal-toast
   "Effect to be placed with `:challenger-turn-ends` to remind players of 'when turn begins'
   triggers"
-  {:effect (req (toast state :contestant "Reminder: You have unrezzed cards with \"when turn begins\" abilities." "info"))})
+  {:effect (req (toast state :contestant "Reminder: You have unrevealed cards with \"when turn begins\" abilities." "info"))})
 
 (declare reorder-final) ; forward reference since reorder-choice and reorder-final are mutually recursive
 
@@ -72,9 +65,9 @@
   ([reorder-side wait-side chosen original] (reorder-final reorder-side wait-side chosen original nil))
   ([reorder-side wait-side chosen original dest]
    {:prompt (if (= dest "bottom")
-              (str "The bottom cards of " (if (= reorder-side :contestant) "R&D" "your Stack")
+              (str "The bottom cards of " (if (= reorder-side :contestant) "your Play Deck" "your Play Deck")
                    " will be " (join  ", " (map :title (reverse chosen))) ".")
-              (str "The top cards of " (if (= reorder-side :contestant) "R&D" "your Stack")
+              (str "The top cards of " (if (= reorder-side :contestant) "your Play Deck" "your Play Deck")
                    " will be " (join  ", " (map :title chosen)) "."))
    :choices ["Done" "Start over"]
    :async true
@@ -106,7 +99,7 @@
     (swap! state update-in (cons :contestant (:zone b)) #(assoc % b-index a-new))
     (doseq [newcard [a-new b-new]]
       (unregister-events state side newcard)
-      (when (rezzed? newcard)
+      (when (revealed? newcard)
         (register-events state side (:events (card-def newcard)) newcard))
       (doseq [h (:hosted newcard)]
         (let [newh (-> h
@@ -114,18 +107,18 @@
                        (assoc-in [:host :zone] (:zone newcard)))]
           (update! state side newh)
           (unregister-events state side h)
-          (when (rezzed? h)
+          (when (revealed? h)
             (register-events state side (:events (card-def newh)) newh)))))
     (update-character-strength state side a-new)
     (update-character-strength state side b-new)))
 
 (defn card-index
-  "Get the zero-based index of the given card in its server's list of content. Same as character-index"
+  "Get the zero-based index of the given card in its locale's list of content. Same as character-index"
   [state card]
   (first (keep-indexed #(when (= (:cid %2) (:cid card)) %1) (get-in @state (cons :contestant (:zone card))))))
 
-(defn swap-installed
-  "Swaps two installed contestant cards - like swap Character except no strength update"
+(defn swap-placed
+  "Swaps two placed contestant cards - like swap Character except no strength update"
   [state side a b]
   (let [a-index (card-index state a)
         b-index (card-index state b)
@@ -142,30 +135,6 @@
           (unregister-events state side h)
           (register-events state side (:events (card-def newh)) newh))))))
 
-(defn do-net-damage
-  "Do specified amount of net-damage."
-  [dmg]
-  {:label (str "Do " dmg " net damage")
-   :async true
-   :msg (str "do " dmg " net damage")
-   :effect (effect (damage eid :net dmg {:card card}))})
-
-(defn do-meat-damage
-  "Do specified amount of meat damage."
-  [dmg]
-  {:label (str "Do " dmg " meat damage")
-   :async true
-   :msg (str "do " dmg " meat damage")
-   :effect (effect (damage eid :meat dmg {:card card}))})
-
-(defn do-brain-damage
-  "Do specified amount of brain damage."
-  [dmg]
-  {:label (str "Do " dmg " brain damage")
-   :async true
-   :msg (str "do " dmg " brain damage")
-   :effect (effect (damage eid :brain dmg {:card card}))})
-
 (defn pick-virus-counters-to-spend
   "Pick virus counters to spend. For use with Freedom Khumalo and virus breakers, and any other relevant cards.
   This function returns a map for use with resolve-ability or continue-ability.
@@ -180,7 +149,7 @@
                  counter-count (when (and target-count (pos? target-count))
                                  (str " of " target-count))
                  " virus counters)")
-    :choices {:req #(and (installed? %)
+    :choices {:req #(and (placed? %)
                          (pos? (get-counters % :virus)))}
     :effect (req (add-counter state :challenger target :virus -1)
                  (let [selected-cards (update selected-cards (:cid target)

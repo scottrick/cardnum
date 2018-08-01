@@ -13,7 +13,7 @@
             [game-test.cards.identities]
             [game-test.cards.operations]
             [game-test.cards.resources]
-            [game-test.cards.muthereffs]
+            [game-test.cards.radicles]
             [game-test.cards.regions]))
 
 (defn- get-card-by-type
@@ -90,16 +90,16 @@
           show-all (some #{"--show-all"} args)
           show-none (some #{"--show-none"} args)
           nspaces {"Agenda" '(game-test.cards.agendas)
-                   "Site" '(game-test.cards.assets)
+                   "Site" '(game-test.cards.sites)
                    "Event" '(game-test.cards.events)
-                   "Hazard" '(game-test.cards.hardware)
+                   "Hazard" '(game-test.cards.hazard)
                    "Character" '(game-test.cards.ice)
                    "Icebreaker" '(game-test.cards.icebreakers)
                    "Identity" '(game-test.cards.identities)
                    "Operation" '(game-test.cards.operations)
-                   "Resource"  '(game-test.cards.programs)
-                   "Muthereff" '(game-test.cards.resources)
-                   "Region" '(game-test.cards.upgrades)}
+                   "Resource"  '(game-test.cards.resources)
+                   "Radicle" '(game-test.cards.radicles)
+                   "Region" '(game-test.cards.regions)}
           filtered-nspaces (if only
                              (select-keys nspaces [card-type])
                              (into (sorted-map) nspaces))]

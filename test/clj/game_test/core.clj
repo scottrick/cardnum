@@ -14,33 +14,33 @@
   ([state side n]
     (let  [remaining-clicks (get-in @state [side :click])
            n (or n remaining-clicks)
-           other (if (= side :corp) :runner :corp)]
+           other (if (= side :contestant) :challenger :contestant)]
       (dotimes [i n] (core/click-credit state side nil))
       (if (= (get-in @state [side :click]) 0)
         (do (core/end-turn state side nil)
             (core/start-turn state other nil))))))
 
 (defn new-game
-  "Init a new game using given corp and runner. Keep starting hands (no mulligan) and start Corp's turn."
-  ([corp runner] (new-game corp runner nil))
-  ([corp runner {:keys [mulligan start-as dont-start-turn dont-start-game] :as args}]
+  "Init a new game using given contestant and challenger. Keep starting hands (no mulligan) and start Contestant's turn."
+  ([contestant challenger] (new-game contestant challenger nil))
+  ([contestant challenger {:keys [mulligan start-as dont-start-turn dont-start-game] :as args}]
     (let [state (core/init-game
                    {:gameid 1
-                    :players [{:side "Corp"
-                               :deck {:identity (@all-cards (:identity corp))
-                                      :cards (:deck corp)}}
-                              {:side "Runner"
-                               :deck {:identity (@all-cards (:identity runner))
-                                      :cards (:deck runner)}}]})]
+                    :players [{:side "Contestant"
+                               :deck {:identity (@all-cards (:identity contestant))
+                                      :cards (:deck contestant)}}
+                              {:side "Challenger"
+                               :deck {:identity (@all-cards (:identity challenger))
+                                      :cards (:deck challenger)}}]})]
       (when-not dont-start-game
-        (if (#{:both :corp} mulligan)
-          (core/resolve-prompt state :corp {:choice "Mulligan"})
-          (core/resolve-prompt state :corp {:choice "Keep"}))
-        (if (#{:both :runner} mulligan)
-          (core/resolve-prompt state :runner {:choice "Mulligan"})
-          (core/resolve-prompt state :runner {:choice "Keep"}))
-        (when-not dont-start-turn (core/start-turn state :corp nil))
-        (when (= start-as :runner) (take-credits state :corp)))
+        (if (#{:both :contestant} mulligan)
+          (core/resolve-prompt state :contestant {:choice "Mulligan"})
+          (core/resolve-prompt state :contestant {:choice "Keep"}))
+        (if (#{:both :challenger} mulligan)
+          (core/resolve-prompt state :challenger {:choice "Mulligan"})
+          (core/resolve-prompt state :challenger {:choice "Keep"}))
+        (when-not dont-start-turn (core/start-turn state :contestant nil))
+        (when (= start-as :challenger) (take-credits state :contestant)))
       state)))
 
 (defn load-all-cards [tests]
@@ -84,47 +84,47 @@
    (let [ab {:card (core/get-card state card)
              :ability ability
              :targets targets}]
-     (if (= :corp side)
-                (core/play-corp-ability state side ab)
-                (core/play-runner-ability state side ab)))))
+     (if (= :contestant side)
+                (core/play-contestant-ability state side ab)
+                (core/play-challenger-ability state side ab)))))
 
 (defn get-character
-  "Get installed character protecting server by position. If no pos, get all character on the server."
-  ([state server]
-   (get-in @state [:corp :servers server :characters]))
-  ([state server pos]
-   (get-in @state [:corp :servers server :characters pos])))
+  "Get placed character protecting locale by position. If no pos, get all character on the locale."
+  ([state locale]
+   (get-in @state [:contestant :locales locale :characters]))
+  ([state locale pos]
+   (get-in @state [:contestant :locales locale :characters pos])))
 
 (defn get-content
-  "Get card in a server by position. If no pos, get all cards in the server."
-  ([state server]
-   (get-in @state [:corp :servers server :content]))
-  ([state server pos]
-   (get-in @state [:corp :servers server :content pos])))
+  "Get card in a locale by position. If no pos, get all cards in the locale."
+  ([state locale]
+   (get-in @state [:contestant :locales locale :content]))
+  ([state locale pos]
+   (get-in @state [:contestant :locales locale :content pos])))
 
 (defn get-resource
-  "Get non-hosted resource by position. If no pos, get all installed resources."
-  ([state] (get-in @state [:runner :rig :resource]))
+  "Get non-hosted resource by position. If no pos, get all placed resources."
+  ([state] (get-in @state [:challenger :rig :resource]))
   ([state pos]
-   (get-in @state [:runner :rig :resource pos])))
+   (get-in @state [:challenger :rig :resource pos])))
 
 (defn get-hazard
-  "Get hazard by position. If no pos, get all installed hazard."
-  ([state] (get-in @state [:runner :rig :hazard]))
+  "Get hazard by position. If no pos, get all placed hazard."
+  ([state] (get-in @state [:challenger :rig :hazard]))
   ([state pos]
-   (get-in @state [:runner :rig :hazard pos])))
+   (get-in @state [:challenger :rig :hazard pos])))
 
-(defn get-muthereff
-  "Get non-hosted muthereff by position. If no pos, get all installed muthereffs."
-  ([state] (get-in @state [:runner :rig :muthereff]))
+(defn get-radicle
+  "Get non-hosted radicle by position. If no pos, get all placed radicles."
+  ([state] (get-in @state [:challenger :rig :radicle]))
   ([state pos]
-   (get-in @state [:runner :rig :muthereff pos])))
+   (get-in @state [:challenger :rig :radicle pos])))
 
-(defn get-runner-facedown
-  "Get non-hosted runner facedown by position. If no pos, get all runner facedown installed cards."
-  ([state] (get-in @state [:runner :rig :facedown]))
+(defn get-challenger-facedown
+  "Get non-hosted challenger facedown by position. If no pos, get all challenger facedown placed cards."
+  ([state] (get-in @state [:challenger :rig :facedown]))
   ([state pos]
-   (get-in @state [:runner :rig :facedown pos])))
+   (get-in @state [:challenger :rig :facedown pos])))
 
 (defn get-discarded
   "Get discarded card by position. If no pos, selects most recently discarded card."
@@ -147,63 +147,63 @@
 (def get-counters utils/get-counters)
 
 (defn play-from-hand
-  "Play a card from hand based on its title. If installing a Corp card, also indicate
-  the server to install into with a string."
+  "Play a card from hand based on its title. If placing a Contestant card, also indicate
+  the locale to place into with a string."
   ([state side title] (play-from-hand state side title nil))
-  ([state side title server]
+  ([state side title locale]
    (core/play state side {:card (find-card title (get-in @state [side :hand]))
-                          :server server})))
+                          :locale locale})))
 
 
 ;;; Run functions
 (defn play-run-event
-  "Play a run event with a replace-access effect on an unprotected server.
+  "Play a run event with a replace-access effect on an unprotected locale.
   Advances the run timings to the point where replace-access occurs."
-  ([state card server] (play-run-event state card server true))
-  ([state card server show-prompt]
-   (let [card (if (map? card) card (find-card card (get-in @state [:runner :hand])))]
-     (core/play state :runner {:card card})
-     (is (= [server] (get-in @state [:run :server])) "Correct server is run")
+  ([state card locale] (play-run-event state card locale true))
+  ([state card locale show-prompt]
+   (let [card (if (map? card) card (find-card card (get-in @state [:challenger :hand])))]
+     (core/play state :challenger {:card card})
+     (is (= [locale] (get-in @state [:run :locale])) "Correct locale is run")
      (is (get-in @state [:run :run-effect]) "There is a run-effect")
-     (core/no-action state :corp nil)
-     (core/successful-run state :runner nil)
+     (core/no-action state :contestant nil)
+     (core/successful-run state :challenger nil)
      (if show-prompt
-       (is (get-in @state [:runner :prompt]) "A prompt is shown")
-       (is (not (get-in @state [:runner :prompt])) "A prompt is not shown"))
+       (is (get-in @state [:challenger :prompt]) "A prompt is shown")
+       (is (not (get-in @state [:challenger :prompt])) "A prompt is not shown"))
      (is (get-in @state [:run :successful]) "Run is marked successful"))))
 
 (defn run-on
-  "Start run on specified server."
-  [state server]
-  (core/click-run state :runner {:server server}))
+  "Start run on specified locale."
+  [state locale]
+  (core/click-run state :challenger {:locale locale}))
 
 (defn run-continue
-  "No action from corp and continue for runner to proceed in current run."
+  "No action from contestant and continue for challenger to proceed in current run."
   [state]
-  (core/no-action state :corp nil)
-  (core/continue state :runner nil))
+  (core/no-action state :contestant nil)
+  (core/continue state :challenger nil))
 
 (defn run-phase-43
   "Ask for triggered abilities phase 4.3"
   [state]
-  (core/corp-phase-43 state :corp nil)
-  (core/successful-run state :runner nil))
+  (core/contestant-phase-43 state :contestant nil)
+  (core/successful-run state :challenger nil))
 
 (defn run-successful
-  "No action from corp and successful run for runner."
+  "No action from contestant and successful run for challenger."
   [state]
-  (core/no-action state :corp nil)
-  (core/successful-run state :runner nil))
+  (core/no-action state :contestant nil)
+  (core/successful-run state :challenger nil))
 
 (defn run-jack-out
   "Jacks out in run."
   [state]
-  (core/jack-out state :runner nil))
+  (core/jack-out state :challenger nil))
 
-(defn run-empty-server
-  "Make a successful run on specified server, assumes no character in place."
-  [state server]
-  (run-on state server)
+(defn run-empty-locale
+  "Make a successful run on specified locale, assumes no character in place."
+  [state locale]
+  (run-on state locale)
   (run-successful state))
 
 
@@ -213,19 +213,19 @@
   ([state _ card]
    (let [title (:title card)
          advancementcost (:advancementcost card)]
-     (core/gain state :corp :click advancementcost :credit advancementcost)
+     (core/gain state :contestant :click advancementcost :credit advancementcost)
      (dotimes [n advancementcost]
-       (core/advance state :corp {:card (core/get-card state card)}))
+       (core/advance state :contestant {:card (core/get-card state card)}))
      (is (= advancementcost (get-counters (core/get-card state card) :advancement)))
-     (core/score state :corp {:card (core/get-card state card)})
-     (is (find-card title (get-scored state :corp))))))
+     (core/score state :contestant {:card (core/get-card state card)})
+     (is (find-card title (get-scored state :contestant))))))
 
 (defn advance
   "Advance the given card."
   ([state card] (advance state card 1))
   ([state card n]
    (dotimes [_ n]
-     (core/advance state :corp {:card (core/get-card state card)}))))
+     (core/advance state :contestant {:card (core/get-card state card)}))))
 
 (defn last-log-contains?
   [state content]
@@ -237,15 +237,15 @@
   (some? (re-find (re-pattern content)
                   (-> @state :log butlast last :text))))
 
-(defn trash-from-hand
-  "Trash specified card from hand of specified side"
+(defn discard-from-hand
+  "Discard specified card from hand of specified side"
   [state side title]
-  (core/trash state side (find-card title (get-in @state [side :hand]))))
+  (core/discard state side (find-card title (get-in @state [side :hand]))))
 
-(defn trash-muthereff
-  "Trash specified card from rig of the runner"
+(defn discard-radicle
+  "Discard specified card from rig of the challenger"
   [state title]
-  (core/trash state :runner (find-card title (get-in @state [:runner :rig :muthereff]))))
+  (core/discard state :challenger (find-card title (get-in @state [:challenger :rig :radicle]))))
 
 (defn starting-hand
   "Moves all cards in the player's hand to their draw pile, then moves the specified card names
@@ -257,12 +257,12 @@
     (core/move state side (find-card ctitle (get-in @state [side :deck])) :hand)))
 
 (defn accessing
-  "Checks to see if the runner has a prompt accessing the given card title"
+  "Checks to see if the challenger has a prompt accessing the given card title"
   [state title]
-  (= title (-> @state :runner :prompt first :card :title)))
+  (= title (-> @state :challenger :prompt first :card :title)))
 
 (defn play-and-score
-  "Play an agenda from the hand into a new server and score it. Unlike score-agenda, spends a click."
+  "Play an agenda from the hand into a new locale and score it. Unlike score-agenda, spends a click."
   [state title]
-  (play-from-hand state :corp title "New remote")
-  (score-agenda state :corp (get-content state (keyword (str "remote" (:rid @state))) 0)))
+  (play-from-hand state :contestant title "New party")
+  (score-agenda state :contestant (get-content state (keyword (str "party" (:rid @state))) 0)))
