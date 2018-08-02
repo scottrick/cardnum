@@ -43,8 +43,8 @@
           (mc/insert db "config" {:version "0.1.0" :cards-version 0})))
 
     ;; Clear inactive lobbies after 15 minutes
-    (web.utils/tick #(lobby/clear-inactive-lobbies 87400) 88000)
-    (web.utils/tick lobby/send-lobby 88000)
+    (web.utils/tick #(lobby/clear-inactive-lobbies 21600) 22000)
+    (web.utils/tick lobby/send-lobby 22000)
 
     (reset! server (org.httpkit.server/run-server app {:port port}))
     (println "Cardnum server running in" @server-mode "mode on port" port)
