@@ -696,13 +696,23 @@
     facedown))
 
 (defn card-zoom [card owner]
+  (let [me (:side @game-state)]
   (om/component
     (sab/html
-      [:div.card-preview.blue-shade {:class (if (and (#{"Region"} (:type card))
-                                                     (re-find #"tap" (:Home card)))
-                                              "region")}
-       (when-let [url (image-url card)]
-         [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])])))
+      (if (get-in @game-state [me :blind])
+        (do
+          [:div.card-preview.blind.blue-shade {:class (if (and (#{"Region"} (:type card))
+                                                               (re-find #"tap" (:Home card)))
+                                                        "region")}
+           (when-let [url (image-url card)]
+             [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])])
+        (do
+          [:div.card-preview.blue-shade {:class (if (and (#{"Region"} (:type card))
+                                                               (re-find #"tap" (:Home card)))
+                                                        "region")}
+           (when-let [url (image-url card)]
+             [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])]))
+      ))))
 
 (defn card-view [{:keys [zone code type abilities counter advance-counter advancementcost current-cost subtype
                          advanceable revealed tapped rotated strength current-strength title parties selected hosted

@@ -2135,6 +2135,17 @@ align-radio
       position: relative
       transition(all 0.2s ease-in-out)
 
+      .card-preview.blind
+        width: 200%
+        height: 200%
+        transform(translate(-110%, 0%))
+        transition(all 0.2s ease-in-out)
+
+        &.region
+          width: 200%
+          height: 200%
+          transform(translate(-122%, 0%) rotate(-90deg))
+
       .card-preview
         width: 100%
         height: 100%

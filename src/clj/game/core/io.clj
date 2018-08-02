@@ -11,7 +11,10 @@
     (if-let [command (parse-command text)]
       (when (and (not= side nil) (not= side :spectator))
         (command state side)
-        (swap! state update-in [:log] #(conj % {:user nil :text (str "[!]" (:username author) " uses a command: " text)})))
+        (when-not (= text "/z")
+          (swap! state update-in [:log] #(conj % {:user nil :text (str "[!]" (:username author) " uses a command: " text)}))
+          )
+        )
       (swap! state update-in [:log] #(conj % {:user author :text text})))
     (swap! state assoc :typing (remove #{(:username author)} (:typing @state)))))
 
@@ -238,6 +241,12 @@
     (swap! state dissoc-in [side :selected])
     (effect-completed state side (:eid fprompt))))
 
+(defn blind-zoom
+  [state side]
+  (if (get-in @state [side :blind])
+    (swap! state assoc-in [side :blind] false)
+    (swap! state assoc-in [side :blind] true))
+  )
 (defn host-any-card
   [state side args]
   (resolve-ability state side
@@ -368,6 +377,7 @@
                                                          :msg "resolve successful trace effect"}))
           "/undo-click" #(command-undo-click %1 %2)
           "/undo-turn"  #(command-undo-turn %1 %2)
+          "/z"          #(blind-zoom %1 %2)
           nil)))))
 
 (defn contestant-place-msg
