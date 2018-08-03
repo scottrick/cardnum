@@ -1,7 +1,7 @@
 (ns game.cards.resources
   (:require [game.core :refer :all]
             [game.utils :refer :all]
-            [game.macros :refer [effect req msg wait-for continue-ability]]
+            [game.macros :refer [effect req msg wait-for continue-ability while-let]]
             [clojure.string :refer [split-lines split join lower-case includes? starts-with?]]
             [clojure.stacktrace :refer [print-stack-trace]]
             [cardnum.utils :refer [str->int]]
@@ -699,6 +699,21 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Lucky Search"
+   {:abilities [{:label "Search"
+                 :effect (req (while (and (not (some (partial = (:Secondary (first (get-in @state [:contestant :deck]))))
+                                                     ["Greater Item" "Major Item"
+                                                      "Minor Item" "Gold Ring Item"]))
+                                          (not-empty (take 1 (get-in @state [:contestant :deck]))))
+                                (move state side (first (get-in @state [:contestant :deck])) :play-area))
+                              (when (not-empty (take 1 (get-in @state [:contestant :deck])))
+                                (move state side (first (get-in @state [:contestant :deck])) :play-area))
+                              )}
+                {:label "Discard"
+                 :effect (req (doseq [c (get-in @state [:contestant :play-area])]
+                                (move state side c :discard)
+                                (move state side card :discard))
+                           )}]}
    "Many-coloured Robes"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
