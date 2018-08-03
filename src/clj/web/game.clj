@@ -116,7 +116,7 @@
     (if (and started
              (< (count players) 2)
              (some #(= _id (:_id %)) (map :user original-players)))
-      (let [player (lobby/join-game user client-id gameid)
+      (let [player (lobby/join-game user client-id gameid nil)
             side (keyword (str (.toLowerCase (:side player)) "-state"))]
         (main/handle-rejoin state (:user player))
         (lobby/refresh-lobby :update gameid)
