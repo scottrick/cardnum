@@ -81,9 +81,10 @@
                            )}
                 {:label "Top shuffle"
                  :effect (req (move state side card :discard)
-                              (shuffle! state side :play-area)
-                              (doseq [c (get-in @state [side :play-area])]
-                                (move state side c :deck))
+                              (loop [k (count (get-in @state [side :play-area]))]
+                                (when (> k 0)
+                                  (move state side (rand-nth (get-in @state [side :play-area])) :deck {:front true})
+                                  (recur (- k 1))))
                               )}]}
    "Longing for the West"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
