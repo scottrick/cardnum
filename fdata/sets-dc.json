@@ -1,0 +1,194 @@
+[
+ {
+   "code": "METW",
+   "format": "General",
+   "name": "The Wizards",
+   "position": 1,
+   "dreamcards": false,
+   "released": true
+ },
+ {
+   "code": "METD",
+   "format": "General",
+   "name": "The Dragons",
+   "position": 2,
+   "dreamcards": false,
+   "released": true
+ },
+ {
+   "code": "MEDM",
+   "format": "General",
+   "name": "Dark Minions",
+   "position": 3,
+   "dreamcards": false,
+   "released": true
+ },
+ {
+   "code": "MELE",
+   "format": "General",
+   "name": "The Lidless Eye",
+   "position": 4,
+   "dreamcards": false,
+   "released": true
+ },
+ {
+   "code": "MEAS",
+   "format": "General",
+   "name": "Against the Shadow",
+   "position": 5,
+   "dreamcards": false,
+   "released": true
+ },
+ {
+   "code": "MEWH",
+   "format": "General",
+   "name": "The White Hand",
+   "position": 6,
+   "dreamcards": false,
+   "released": true
+ },
+ {
+   "code": "MEBA",
+   "format": "General",
+   "name": "The Balrog",
+   "position": 7,
+   "dreamcards": false,
+   "released": true
+ },
+ {
+   "code": "MEFB",
+   "format": "Dreamcard",
+   "name": "Firstborn",
+   "position": 8,
+   "dreamcards": true,
+   "released": true
+ },
+ {
+   "code": "MEDF",
+   "format": "Dreamcard",
+   "name": "Durin's Folk",
+   "position": 9,
+   "dreamcards": true,
+   "released": true
+ },
+ {
+   "code": "MENE",
+   "format": "Dreamcard",
+   "name": "The Necromancer",
+   "position": 10,
+   "dreamcards": true,
+   "released": false
+ },
+ {
+   "code": "MEBO",
+   "format": "Dreamcard",
+   "name": "Bay of Ormal",
+   "position": 11,
+   "dreamcards": true,
+   "released": false
+ },
+ {
+   "code": "MECA",
+   "format": "Dreamcard",
+   "name": "Court of Ardor",
+   "position": 12,
+   "dreamcards": true,
+   "released": false
+ },
+ {
+   "code": "MECP",
+   "format": "Dreamcard",
+   "name": "The Great Central Plains",
+   "position": 13,
+   "dreamcards": true,
+   "released": false
+ },
+ {
+   "code": "MEDS",
+   "format": "Dreamcard",
+   "name": "The Dominion of the Seven",
+   "position": 14,
+   "dreamcards": true,
+   "released": false
+ },
+ {
+   "code": "MEGW",
+   "format": "Dreamcard",
+   "name": "The Great Wyrms",
+   "position": 15,
+   "dreamcards": true,
+   "released": false
+ },
+ {
+   "code": "MEKN",
+   "format": "Dreamcard",
+   "name": "Kingdom of the North",
+   "position": 16,
+   "dreamcards": true,
+   "released": false
+ },
+ {
+   "code": "MEML",
+   "format": "Dreamcard",
+   "name": "Morgoth's Legacy",
+   "position": 17,
+   "dreamcards": true,
+   "released": false
+ },
+ {
+   "code": "MEMM",
+   "format": "Dreamcard",
+   "name": "Nine Rings for Mortal Men",
+   "position": 18,
+   "dreamcards": true,
+   "released": false
+ },
+ {
+   "code": "MENW",
+   "format": "Dreamcard",
+   "name": "The Northern Waste",
+   "position": 19,
+   "dreamcards": true,
+   "released": false
+ },
+ {
+   "code": "MERN",
+   "format": "Dreamcard",
+   "name": "Red Nightfall",
+   "position": 20,
+   "dreamcards": true,
+   "released": false
+ },
+ {
+   "code": "MERS",
+   "format": "Dreamcard",
+   "name": "Return of the Shadow",
+   "position": 21,
+   "dreamcards": true,
+   "released": false
+ },
+ {
+   "code": "MESL",
+   "format": "Dreamcard",
+   "name": "The Sun Lands",
+   "position": 22,
+   "dreamcards": true,
+   "released": false
+ },
+ {
+   "code": "METI",
+   "format": "Dreamcard",
+   "name": "Treason of Isengard",
+   "position": 23,
+   "dreamcards": true,
+   "released": false
+ },
+ {
+   "code": "MEWR",
+   "format": "Dreamcard",
+   "name": "War of the Ring",
+   "position": 24,
+   "dreamcards": true,
+   "released": false
+ }
+]

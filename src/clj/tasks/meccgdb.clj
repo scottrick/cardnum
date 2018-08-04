@@ -15,6 +15,7 @@
 
 (def ^:const base-url "http://192.168.1.180:8080/rez/")
 (def ^:const dc-image-url "https://github.com/vastorper/dc/blob/master/graphics/Metw/")
+(def ^:const me-image-url "https://github.com/rezwits/meccg/blob/master/fdata/")
 
 (defmacro rename
   "Rename a card field"
@@ -93,9 +94,9 @@
    })
 
 (def tables
-  {:mwl   {:path "mwl"    :fields mwl-fields   :collection "mwl"}
-   :set   {:path "sets"   :fields set-fields   :collection "sets"}
-   :card  {:path "cards"  :fields card-fields  :collection "cards"}
+  {:mwl   {:path "bans-dc"    :fields mwl-fields   :collection "mwl"}
+   :set   {:path "sets-dc"   :fields set-fields   :collection "sets"}
+   :card  {:path "cards-dc"  :fields card-fields  :collection "cards"}
    :config {:collection "config"}})
 
 (defn- translate-fields
@@ -120,7 +121,7 @@
   "Translate data from NRDB"
   [path fields]
   (println "Downloading" path)
-  (let [{:keys [status body error] :as resp} @(http/get (str base-url path))]
+  (let [{:keys [status body error] :as resp} @(http/get (str me-image-url path "?raw=true"))]
     (cond
       error (throw (Exception. (str "Failed to download file " error)))
       (= 200 status) (parse-response (str "{\"data\": " body "}") fields)
