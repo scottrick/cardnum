@@ -271,7 +271,7 @@
         ;; Challenger side
         (= side :challenger)
         (case (first zone)
-          ("hand" "play-area" "current" "scored") (case type
+          ("hand" "current" "scored") (case type
                    ("Character") (if root
                                    (send-command "play" {:card card :locale root})
                                    (-> (om/get-node owner "locales") js/$ .toggle))
@@ -289,7 +289,7 @@
         ;; Contestant side
         (= side :contestant)
         (case (first zone)
-          ("hand" "play-area" "current" "scored") (case type
+          ("hand" "current" "scored") (case type
                    ("Character") (if root
                                    (send-command "play" {:card card :locale root})
                                    (-> (om/get-node owner "locales") js/$ .toggle))
@@ -1120,19 +1120,29 @@
                                (facedown-card "challenger")
                                (om/build card-view c)))])])))))
 
-(defn play-area-view [{:keys [name player] :as cursor}]
+(defn play-area-view [{:keys [name player popup] :as cursor} owner]
   (om/component
     (sab/html
       (let [cards (:play-area player)
             size (count cards)
             side (get-in player [:identity :side])]
         (when-not (empty? cards)
-          [:div.panel.blue-shade.rfg {:class (when (> size 2) "squeeze")}
+          [:div.panel.blue-shade.rfg {:class (when (> size 2) "squeeze")
+                                      :on-click (when popup #(-> (om/get-node owner "rfg-popup") js/$ .fadeToggle))}
            (map-indexed (fn [i card]
                           [:div.card-wrapper {:style {:left (* (/ 128 size) i)}}
                            (om/build card-view card)])
                         cards)
-           (om/build label cards {:opts {:name name}})])))))
+           (om/build label cards {:opts {:name name}})
+           (when popup
+             [:div.panel.blue-shade.popup {:ref "rfg-popup" :class "opponent"}
+              [:div
+               [:a {:on-click #(close-popup % owner "rfg-popup" nil false false false false false)} "Close"]
+               [:label (str size " card" (when (not= 1 size) "s") ".")]]
+              (for [c cards] (if (:hide c)
+                               (facedown-card "challenger")
+                               (om/build card-view c)))])
+           ])))))
 
 (defn current-view [{:keys [name player] :as cursor}]
   (om/component
@@ -1890,8 +1900,8 @@
                  (om/build decks-view {:player opponent :run run})
                  (om/build rfg-view {:cards (:rfg opponent) :name "Removed from play/game" :popup true})
                  (om/build rfg-view {:cards (:rfg me) :name "Removed from play/game" :popup true})
-                 (om/build play-area-view {:player opponent :name "Temporary Zone"})
-                 (om/build play-area-view {:player me :name "Temporary Zone"})
+                 (om/build play-area-view {:player opponent :name "Temporary Zone" :popup true})
+                 (om/build play-area-view {:player me :name "Temporary Zone" :popup true})
                  (om/build current-view {:player opponent :name "Waiting..."})
                  (om/build current-view {:player me :name "Deciding..."})]
                 [:div

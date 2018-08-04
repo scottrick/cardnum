@@ -296,6 +296,18 @@
                                                                        (can-host? %))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Favor of the Valar"
+   {:abilities [{:label "Perform"
+                 :effect (req (doseq [c (get-in @state [side :discard])]
+                                (when (= "Site" (:type c))
+                                  (move state side c :play-area)))
+                              (shuffle-into-deck state side :hand :discard)
+                              (draw state side 8)
+                              (doseq [c (get-in @state [side :play-area])]
+                                (when (= "Site" (:type c))
+                                  (move state side c :discard)))
+                              (move state side card :rfg)
+                              )}]}
    "Fellowship"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
@@ -701,18 +713,18 @@
                                                   :effect (effect (host target card))} card nil)))}]}
    "Lucky Search"
    {:abilities [{:label "Search"
-                 :effect (req (while (and (not (some (partial = (:Secondary (first (get-in @state [:contestant :deck]))))
+                 :effect (req (while (and (not (some (partial = (:Secondary (first (get-in @state [side :deck]))))
                                                      ["Greater Item" "Major Item"
                                                       "Minor Item" "Gold Ring Item"]))
-                                          (not-empty (take 1 (get-in @state [:contestant :deck]))))
-                                (move state side (first (get-in @state [:contestant :deck])) :play-area))
-                              (when (not-empty (take 1 (get-in @state [:contestant :deck])))
-                                (move state side (first (get-in @state [:contestant :deck])) :play-area))
+                                          (not-empty (take 1 (get-in @state [side :deck]))))
+                                (move state side (first (get-in @state [side :deck])) :play-area))
+                              (when (not-empty (take 1 (get-in @state [side :deck])))
+                                (move state side (first (get-in @state [side :deck])) :play-area))
                               )}
                 {:label "Discard"
-                 :effect (req (doseq [c (get-in @state [:contestant :play-area])]
-                                (move state side c :discard)
-                                (move state side card :discard))
+                 :effect (req (doseq [c (get-in @state [side :play-area])]
+                                (move state side c :discard))
+                              (move state side card :discard)
                            )}]}
    "Many-coloured Robes"
    {:abilities [{:label "Place"
