@@ -308,6 +308,7 @@
                               (if (= side :contestant)
                                 (doseq [c (all-placed state side)]
                                   (when (and (not (:wounded c))
+                                             (or (:tapped c) (:rotated c))
                                              (not (boolean (re-find #"Site" (:type c))))
                                              (not (boolean (re-find #"Region" (:type c))))
                                              (not (boolean (re-find #"Permanent" (:Secondary c))))
@@ -315,6 +316,7 @@
                                              (untap state side c)))
                                 (doseq [c (all-placed-challenger state side)]
                                   (when (and (not (:wounded c))
+                                             (or (:tapped c) (:rotated c))
                                              (not (boolean (re-find #"Site" (:type c))))
                                              (not (boolean (re-find #"Region" (:type c))))
                                              (not (boolean (re-find #"Permanent" (:Secondary c))))

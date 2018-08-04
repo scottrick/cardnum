@@ -1711,27 +1711,24 @@
     (om/set-state! owner :sfx-last-played {:gameid gameid :id sfx-current-id})))
 
 (def contestant-stats
-  (let [s #(-> @game-state :stats :contestant)]
-    [["Clicks Gained" #(-> (s) :gain :click)]
-     ["Credits Gained" #(-> (s) :gain :credit)]
-     ["Credits Lost" #(-> (s) :lose :credit)]
-     ["Credits by Click" #(-> (s) :click :credit)]
-     ["Cards Drawn" #(-> (s) :gain :card)]
-     ["Cards Drawn by Click" #(-> (s) :click :draw)]
-     ["Damage Done" #(-> (s) :damage :all)]
-     ["Cards Revealed" #(-> (s) :cards :revealed)]]))
+  (let [s #(-> @game-state :contestant)]
+    [["Character MPs" #(-> (s) :char_mp)]
+     ["Ally MPs" #(-> (s) :ally_mp)]
+     ["Item MPs" #(-> (s) :item_mp)]
+     ["Faction MPs" #(-> (s) :fact_mp)]
+     ["Kill MPs" #(-> (s) :kill_mp)]
+     ["Misc MPs" #(-> (s) :misc_mp)]
+     ["Total MPs" #(-> (s) :total_mp)]]))
 
 (def challenger-stats
-  (let [s #(-> @game-state :stats :challenger)]
-    [["Clicks Gained" #(-> (s) :gain :click)]
-     ["Credits Gained" #(-> (s) :gain :credit)]
-     ["Credits Lost" #(-> (s) :lose :credit)]
-     ["Credits by Click" #(-> (s) :click :credit)]
-     ["Cards Drawn" #(-> (s) :gain :card)]
-     ["Cards Drawn by Click" #(-> (s) :click :draw)]
-     ["Tags Gained" #(-> (s) :gain :tag)]
-     ["Runs Made" #(-> (s) :runs :started)]
-     ["Cards Accessed" #(-> (s) :access :cards)]]))
+  (let [s #(-> @game-state :challenger)]
+    [["Character MPs" #(-> (s) :char_mp)]
+     ["Ally MPs" #(-> (s) :ally_mp)]
+     ["Item MPs" #(-> (s) :item_mp)]
+     ["Faction MPs" #(-> (s) :fact_mp)]
+     ["Kill MPs" #(-> (s) :kill_mp)]
+     ["Misc MPs" #(-> (s) :misc_mp)]
+     ["Total MPs" #(-> (s) :total_mp)]]))
 
 (defn show-stat
   "Determines statistic counter and if it should be shown"
@@ -1758,7 +1755,7 @@
   [game-state]
   [:div.win.centered.blue-shade
    [:div
-    (:winning-user @game-state) " (" (-> @game-state :winner capitalize)
+    (:winning-user @game-state) " (Indûr the Ringwraith" ;(-> @game-state :winner capitalize)
     (cond
       (= "Decked" (@game-state :reason capitalize))
       (str ") wins due to the Contestant being decked on turn " (:turn @game-state))
@@ -1767,8 +1764,8 @@
       (str ") wins by concession on turn " (:turn @game-state))
 
       :else
-      (str ") wins by scoring agenda points on turn "  (:turn @game-state)))]
-   [:div "Time taken: " (-> @game-state :stats :time :elapsed) " minutes"]
+      (str ") wins by scoring more MPs on turn "  (:turn @game-state)))]
+   ;[:div "Time taken: " (-> @game-state :stats :time :elapsed) " minutes"]
    [:br]
    (build-game-stats)
    [:button.win-right {:on-click #(swap! app-state assoc :win-shown true) :type "button"} "✘"]])

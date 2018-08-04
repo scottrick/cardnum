@@ -206,11 +206,8 @@
                                                   :effect (effect (host target card))} card nil)))}]}
    "Dark Tryst"
    {:abilities [{:label "Resolve"
-                 :effect (req (let [r (get-card state card)
-                                    old-host (:host r)]
-                                (resolve-ability state side
-                                                 {:msg (msg "to draw 3 cards.")
-                                                  :effect (effect (draw 3) (move card :rfg))} card nil)))}]}
+                 :msg (msg "to draw 3 cards.")
+                 :effect (req (draw state side 3) (move state side card :rfg))}]}
    "Dreams of Lore"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
@@ -660,6 +657,9 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Longbottom Leaf"
+   {:abilities [{:label "Resolve"
+                 :effect (req (move state side card :rfg))}]}
    "Looking from Mind to Mind"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
