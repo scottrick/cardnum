@@ -217,22 +217,22 @@
                       (#{"locales" "onhost"} (first zone)))
                  (or tapped wounded inverted rotated))
           (cons "untap" %) %))
-      (#(if (and (and (= Secondary "Permanent-event")
+      (#(if (and (and (some (partial = Secondary) ["Permanent-event" "Faction"])
                       (re-find #"rotate" Home)
                       (#{"rig" "onhost"} (first zone)))
                  (and (not rotated)))
           (cons "rotate" %) %))
-      (#(if (and (and (= Secondary "Permanent-event")
+      (#(if (and (and (some (partial = Secondary) ["Permanent-event" "Faction"])
                       (re-find #"invert" Home)
                       (#{"rig" "onhost"} (first zone)))
                  (and (not inverted) (not rotated)))
           (cons "invert" %) %))
-      (#(if (and (and (= Secondary "Permanent-event")
+      (#(if (and (and (some (partial = Secondary) ["Permanent-event" "Faction"])
                       (re-find #"tap" Home)
                       (#{"rig" "onhost"} (first zone)))
                  (and (not tapped) (not inverted) (not rotated)))
           (cons "tap" %) %))
-      (#(if (and (and (= Secondary "Permanent-event")
+      (#(if (and (and (some (partial = Secondary) ["Permanent-event" "Faction"])
                       (or (boolean (re-find #"tap" Home))
                           (boolean (re-find #"invert" Home))
                           (boolean (re-find #"rotate" Home)))
@@ -271,7 +271,7 @@
         ;; Challenger side
         (= side :challenger)
         (case (first zone)
-          "hand" (case type
+          ("hand" "play-area" "current" "scored") (case type
                    ("Character") (if root
                                    (send-command "play" {:card card :locale root})
                                    (-> (om/get-node owner "locales") js/$ .toggle))
@@ -284,12 +284,12 @@
                                   (send-command "play" {:card card})
                                   (send-command "equip" {:card card}))
                    (send-command "play" {:card card}))
-          ("rig" "current" "onhost" "play-area" "locales") (handle-abilities card owner)
+          ("rig" "onhost" "locales") (handle-abilities card owner)
           nil)
         ;; Contestant side
         (= side :contestant)
         (case (first zone)
-          "hand" (case type
+          ("hand" "play-area" "current" "scored") (case type
                    ("Character") (if root
                                    (send-command "play" {:card card :locale root})
                                    (-> (om/get-node owner "locales") js/$ .toggle))
@@ -302,7 +302,7 @@
                                   (send-command "play" {:card card})
                                   (send-command "equip" {:card card}))
                    (send-command "play" {:card card}))
-          ("rig" "locales" "scored" "play-area" "current" "onhost") (handle-abilities card owner)
+          ("rig" "onhost" "locales") (handle-abilities card owner)
           nil)))))
 
 (defn in-play? [card]
@@ -1134,6 +1134,22 @@
                         cards)
            (om/build label cards {:opts {:name name}})])))))
 
+(defn current-view [{:keys [name player] :as cursor}]
+  (om/component
+    (sab/html
+      (let [cards (:current player)
+            size (count cards)
+            side (get-in player [:identity :side])]
+        (when-not (empty? cards)
+          [:div.panel.blue-shade.rfg {:class (when (> size 2) "squeeze")}
+           (map-indexed (fn [i card]
+                          [:div.card-wrapper {:style {:left (* (/ 128 size) i)}}
+                           (if (= (:user player) (:user @app-state))
+                             (om/build card-view card)
+                             (facedown-card side))])
+                        cards)
+           (om/build label cards {:opts {:name name}})])))))
+
 (defn score [cursor owner opts]
   (om/component
     (sab/html
@@ -1324,7 +1340,7 @@
     (sab/html
       (let [is-me (= (:side @game-state) :contestant)]
         [:div.contestant-rig {:class (if is-me "me" "opponent")}
-         (for [zone [:resource :hazard :radicle :facedown]]
+         (for [zone [:resource :hazard :facedown]]
            [:div
             (for [c (zone (:rig player))]
               [:div.card-wrapper {:class (if (and (:tapped c) (not (:inverted c)))
@@ -1342,10 +1358,16 @@
     (sab/html
       (let [is-me (= (:side @game-state) :challenger)]
         [:div.challenger-rig {:class (if is-me "me" "opponent")}
-         (for [zone [:resource :hazard :radicle :facedown]]
+         (for [zone [:resource :hazard :facedown]]
            [:div
             (for [c (zone (:rig player))]
-              [:div.card-wrapper {:class (when (playable? c) "playable")}
+              [:div.card-wrapper {:class (if (and (:tapped c) (not (:inverted c)))
+                                           "tapped"
+                                           (if (and (:inverted c) (not (:rotated c)))
+                                             "inverted"
+                                             (if (:rotated c)
+                                               "rotated"
+                                               nil)))}
                (om/build card-view c)])])
          ]))))
 
@@ -1870,8 +1892,8 @@
                  (om/build rfg-view {:cards (:rfg me) :name "Removed from play/game" :popup true})
                  (om/build play-area-view {:player opponent :name "Temporary Zone"})
                  (om/build play-area-view {:player me :name "Temporary Zone"})
-                 (om/build rfg-view {:cards (:current opponent) :name "Current" :popup false})
-                 (om/build rfg-view {:cards (:current me) :name "Current" :popup false})]
+                 (om/build current-view {:player opponent :name "Waiting..."})
+                 (om/build current-view {:player me :name "Deciding..."})]
                 [:div
                  (when-not (= side :spectator)
                    (om/build button-pane {:side side :active-player active-player :run run :end-turn end-turn :challenger-phase-12 challenger-phase-12 :contestant-phase-12 contestant-phase-12 :contestant contestant :challenger challenger :me me :opponent opponent}))

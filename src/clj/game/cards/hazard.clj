@@ -70,6 +70,21 @@
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
    "Inner Rot"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
+   "Long Dark Reach"
+   {:abilities [{:label "Top seven"
+                 :effect (req
+                           (if (< 9 (count (get-in @state [side :deck])))
+                             (loop [k 7]
+                               (when (> k 0)
+                                 (move state side (first (get-in @state [side :deck])) :play-area)
+                                 (recur (- k 1)))))
+                           )}
+                {:label "Top shuffle"
+                 :effect (req (move state side card :discard)
+                              (shuffle! state side :play-area)
+                              (doseq [c (get-in @state [side :play-area])]
+                                (move state side c :deck))
+                              )}]}
    "Longing for the West"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
    "Lure of Creation"

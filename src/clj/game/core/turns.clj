@@ -73,7 +73,7 @@
                     :sideboard (zone :sideboard contestant-board)
                     :fw-dc-sb (zone :fw-dc-sb contestant-fw-dc)
                     :location (zone :location contestant-location)
-                    :discard [] :scored [] :rfg [] :play-area []
+                    :discard [] :scored [] :rfg [] :play-area [] :current []
                     :locales {:hq {} :rd {} :archives {} :sites {}}
                     :rig {:resource [] :radicle [] :hazard []}
                     :click 0 :credit 20 :bad-publicity 0 :has-bad-pub 0
@@ -92,7 +92,7 @@
                     :sideboard (zone :sideboard challenger-board)
                     :fw-dc-sb (zone :fw-dc-sb challenger-fw-dc)
                     :location (zone :location challenger-location)
-                    :discard [] :scored [] :rfg [] :play-area []
+                    :discard [] :scored [] :rfg [] :play-area [] :current []
                     :locales {:hq {} :rd {} :archives {} :sites {}}
                     :rig {:resource [] :radicle [] :hazard []}
                     :toast [] :blind false

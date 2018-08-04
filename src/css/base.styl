@@ -1779,18 +1779,19 @@ align-radio
     min-width: 90px
     overflow: auto
 
-    .contestant-rig, .challenger-rig
+    .contestant-rig, .challenger-rig, contestant-rig.opponent, .challenger-rig.opponent
       flex(1)
       display-flex()
       flex-direction(row)
       justify-content(flex-end)
+      margin-bottom: -125px
 
       .card-wrapper
         margin: 3px 6px
 
         .abilities, .challenger-abilities, .contestant-abilities
           left: 0%
-          margin: -1px -75px
+          margin: -1px -85px
 
         .abilities
           top: 0
@@ -1804,12 +1805,24 @@ align-radio
       .card-wrapper.tapped
         transform(rotate(90deg))
 
+        .abilities, .challenger-abilities, .contestant-abilities
+          left: 0%
+          margin: 85px 50px
+
         .abilities
           transform-origin(0 0)
           transform(rotate(-90deg) translateX(-25%))
 
+        .challenger-abilities, .contestant-abilities
+          bottom: 0
+          transform-origin(0 100%)
+
       .card-wrapper.inverted
         transform(rotate(180deg))
+
+        .abilities, .challenger-abilities, .contestant-abilities
+          left: 0%
+          margin: 25px 150px
 
         .abilities
           top: 0
@@ -1817,6 +1830,10 @@ align-radio
           bottom: auto
           transform(rotate(180deg) translateY(-100%))
           transform-origin(0 0)
+
+        .challenger-abilities, .contestant-abilities
+          bottom: 0
+          transform-origin(0 100%)
 
       .card-wrapper.rotated
         transform(rotate(270deg))
@@ -2114,13 +2131,6 @@ align-radio
 
           .run-card
             transform(initial)
-
-    .contestant-rig.opponent, .challenger-rig.opponent
-      transform(initial)
-
-      .card-wrapper
-        transform(rotate(0deg), translateY(100%))
-        margin: 3px 6px
 
   .rightpane
     position: relative
