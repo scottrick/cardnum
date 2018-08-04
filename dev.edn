@@ -3,7 +3,7 @@
         {:key     nil
          :token   nil
          :list-id nil}
- :db    {:address "localhost"
+ :db    {:address "localhost" ;; "mongodb", for docker to work
          :port    27017
          :name    "meccg"}
  :auth  {:expiration 60

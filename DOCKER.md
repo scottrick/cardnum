@@ -7,7 +7,7 @@ and [docker-compose](https://docs.docker.com/compose/). Once you've got those,
 just run
 
     ./compose.sh -b
-    
+
 This should start spinning up your own instance of meccg! Easy.
 
 Note that the first run will probably need to download a bunch of docker images,
@@ -28,6 +28,6 @@ with the order that services start in mattering. Here are some specific issues:
     correctly imported into the database. Hence the kludgey `sleep 30` in
     `compose.sh`.
   - The lein* services download there dependencies every time they're run.
-  - For reasons I don't understand, `docker up lein-meccg lein-cljs
-    stylus-css coffee-server` causes the lein* services to throw an exception,
-    but splitting the non-lein services into a separate up command doesn't.
+  - You need to change the db part (line 6) of the dev.edn from localhost to mongodb
+    for the containers to see the database, if you choose to use this docker setup.
+    

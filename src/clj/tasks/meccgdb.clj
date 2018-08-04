@@ -13,9 +13,8 @@
 
 (declare faction-map)
 
-(def ^:const base-url "http://192.168.1.180:8080/rez/")
 (def ^:const dc-image-url "https://github.com/vastorper/dc/blob/master/graphics/Metw/")
-(def ^:const me-image-url "https://github.com/rezwits/meccg/blob/master/fdata/")
+(def ^:const me-image-url "https://github.com/rezwits/cardnum/blob/mext-e/fdata/")
 
 (defmacro rename
   "Rename a card field"
@@ -94,9 +93,9 @@
    })
 
 (def tables
-  {:mwl   {:path "bans-dc"    :fields mwl-fields   :collection "mwl"}
-   :set   {:path "sets-dc"   :fields set-fields   :collection "sets"}
-   :card  {:path "cards-dc"  :fields card-fields  :collection "cards"}
+  {:mwl   {:path "bans-dc.json"    :fields mwl-fields   :collection "mwl"}
+   :set   {:path "sets-dc.json"   :fields set-fields   :collection "sets"}
+   :card  {:path "cards-dc.json"  :fields card-fields  :collection "cards"}
    :config {:collection "config"}})
 
 (defn- translate-fields
@@ -130,7 +129,7 @@
 (defn read-local-data
   "Translate data read from local files"
   [base-path filename fields]
-  (let [filepath (str base-path "/" filename ".json")
+  (let [filepath (str base-path "/" filename)
         _ (println "Reading" filepath)
         content (slurp filepath)
         wrapped (str "{\"data\": " content "}")]
