@@ -1,0 +1,632 @@
+[
+ {
+   "NameEN": "Bane of the Ithil-stone",
+   "code": "metwbaneoftheithil-stone",
+   "playableAlignment": "Ringwraith",
+   "unplayableAlignment": "",
+   "effectedAlignment": "Wizards",
+   "uneffectedAlignment": "Ringwraith",
+   "swapableAlignment": "",
+   "Set": "METW"
+ },
+ {
+   "NameEN": "Foul Fumes",
+   "code": "metwfoulfumes",
+   "playableAlignment": "Ringwraith",
+   "unplayableAlignment": "",
+   "effectedAlignment": "Wizards",
+   "uneffectedAlignment": "Ringwraith",
+   "swapableAlignment": "",
+   "Set": "METW"
+ },
+ {
+   "NameEN": "Mûmak",
+   "code": "metwmumak",
+   "playableAlignment": "Ringwraith",
+   "unplayableAlignment": "",
+   "effectedAlignment": "Wizards",
+   "uneffectedAlignment": "Ringwraith",
+   "swapableAlignment": "",
+   "Set": "METW"
+ },
+ {
+   "NameEN": "Worn and Famished",
+   "code": "metdwornandfamished",
+   "playableAlignment": "Ringwraith",
+   "unplayableAlignment": "",
+   "effectedAlignment": "Wizards",
+   "uneffectedAlignment": "Ringwraith",
+   "swapableAlignment": "",
+   "Set": "METD"
+ },
+ {
+   "NameEN": "The Black Enemy's Wrath",
+   "code": "medmtheblackenemy'swrath",
+   "playableAlignment": "Ringwraith",
+   "unplayableAlignment": "",
+   "effectedAlignment": "Wizards",
+   "uneffectedAlignment": "Ringwraith",
+   "swapableAlignment": "",
+   "Set": "MEDM"
+ },
+ {
+   "NameEN": "In the Heart of His Realm",
+   "code": "medmintheheartofhisrealm",
+   "playableAlignment": "Ringwraith",
+   "unplayableAlignment": "",
+   "effectedAlignment": "Wizards",
+   "uneffectedAlignment": "Ringwraith",
+   "swapableAlignment": "",
+   "Set": "MEDM"
+ },
+ {
+   "NameEN": "Mordor in Arms",
+   "code": "medmmordorinarms",
+   "playableAlignment": "Ringwraith",
+   "unplayableAlignment": "",
+   "effectedAlignment": "Wizards",
+   "uneffectedAlignment": "Ringwraith",
+   "swapableAlignment": "",
+   "Set": "MEDM"
+ },
+ {
+   "NameEN": "Eye of Sauron",
+   "code": "metweyeofsauron",
+   "playableAlignment": "All",
+   "unplayableAlignment": "",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "Ringwraith",
+   "swapableAlignment": "",
+   "Set": "METW"
+ },
+ {
+   "NameEN": "Morgul-knife",
+   "code": "metwmorgul-knife",
+   "playableAlignment": "All",
+   "unplayableAlignment": "",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "Ringwraith",
+   "swapableAlignment": "",
+   "Set": "METW"
+ },
+ {
+   "NameEN": "The Pale Sword",
+   "code": "metwthepalesword",
+   "playableAlignment": "All",
+   "unplayableAlignment": "",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "Ringwraith",
+   "swapableAlignment": "",
+   "Set": "METW"
+ },
+ {
+   "NameEN": "Rogrog",
+   "code": "metwrogrog",
+   "playableAlignment": "All",
+   "unplayableAlignment": "",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "Ringwraith",
+   "swapableAlignment": "",
+   "Set": "METW"
+ },
+ {
+   "NameEN": "Black Breath",
+   "code": "metdblackbreath",
+   "playableAlignment": "All",
+   "unplayableAlignment": "",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "Ringwraith",
+   "swapableAlignment": "",
+   "Set": "METD"
+ },
+ {
+   "NameEN": "Gothmog",
+   "code": "metdgothmog",
+   "playableAlignment": "All",
+   "unplayableAlignment": "",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "Ringwraith",
+   "swapableAlignment": "",
+   "Set": "METD"
+ },
+ {
+   "NameEN": "Many Sorrows Befall",
+   "code": "metdmanysorrowsbefall",
+   "playableAlignment": "All",
+   "unplayableAlignment": "",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "Ringwraith",
+   "swapableAlignment": "",
+   "Set": "METD"
+ },
+ {
+   "NameEN": "Eyes of the Shadow",
+   "code": "medmeyesoftheshadow",
+   "playableAlignment": "All",
+   "unplayableAlignment": "",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "Ringwraith",
+   "swapableAlignment": "",
+   "Set": "MEDM"
+ },
+ {
+   "NameEN": "Above the Abyss",
+   "code": "measabovetheabyss",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MEAS"
+ },
+ {
+   "NameEN": "The Lidless Eye",
+   "code": "melethelidlesseye",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MELE"
+ },
+ {
+   "NameEN": "Bade to Rule",
+   "code": "melebadetorule",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MELE"
+ },
+ {
+   "NameEN": "Morgul-blade",
+   "code": "melemorgul-blade",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MELE"
+ },
+ {
+   "NameEN": "The Balrog",
+   "code": "measthebalrog",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MEAS"
+ },
+ {
+   "NameEN": "News of the Shire",
+   "code": "melenewsoftheshire",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MELE"
+ },
+ {
+   "NameEN": "The Black Council",
+   "code": "mewhtheblackcouncil",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MEWH"
+ },
+ {
+   "NameEN": "Open to the Summons",
+   "code": "mewhopentothesummons",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MEWH"
+ },
+ {
+   "NameEN": "Black Horse",
+   "code": "measblackhorse",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MEAS"
+ },
+ {
+   "NameEN": "Orders from Lugbúrz",
+   "code": "measordersfromlugburz",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MEAS"
+ },
+ {
+   "NameEN": "Black Rider",
+   "code": "meleblackrider",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MELE"
+ },
+ {
+   "NameEN": "Padding Feet",
+   "code": "measpaddingfeet",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MEAS"
+ },
+ {
+   "NameEN": "By the Ringwraith’s Word",
+   "code": "melebytheringwraith’sword",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MELE"
+ },
+ {
+   "NameEN": "The Ring Leaves its Mark",
+   "code": "meletheringleavesitsmark",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MELE"
+ },
+ {
+   "NameEN": "Creature of an Older World",
+   "code": "meascreatureofanolderworld",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MEAS"
+ },
+ {
+   "NameEN": "Fell Rider",
+   "code": "melefellrider",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MELE"
+ },
+ {
+   "NameEN": "Sauron",
+   "code": "melesauron",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MELE"
+ },
+ {
+   "NameEN": "The Fiery Blade",
+   "code": "mewhthefieryblade",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MEWH"
+ },
+ {
+   "NameEN": "They Ride Together",
+   "code": "meletheyridetogether",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MELE"
+ },
+ {
+   "NameEN": "Helm of Fear",
+   "code": "meashelmoffear",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MEAS"
+ },
+ {
+   "NameEN": "Use Your Legs",
+   "code": "measuseyourlegs",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MEAS"
+ },
+ {
+   "NameEN": "Heralded Lord",
+   "code": "meleheraldedlord",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MELE"
+ },
+ {
+   "NameEN": "While the Yellow Face Sleeps",
+   "code": "melewhiletheyellowfacesleeps",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MELE"
+ },
+ {
+   "NameEN": "Durin’s Bane",
+   "code": "medmdurin’sbane",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MEDM"
+ },
+ {
+   "NameEN": "Balrog of Moria",
+   "code": "metwbalrogofmoria",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "METW"
+ },
+ {
+   "NameEN": "Kill All But NOT the Halflings",
+   "code": "melekillallbutnotthehalflings",
+   "playableAlignment": "",
+   "unplayableAlignment": "Balrog",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MELE"
+ },
+ {
+   "NameEN": "The Balrog",
+   "code": "measthebalrog",
+   "playableAlignment": "",
+   "unplayableAlignment": "Fallen-wizard",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MEAS"
+ },
+ {
+   "NameEN": "Cracks of Doom",
+   "code": "metwcracksofdoom",
+   "playableAlignment": "",
+   "unplayableAlignment": "Fallen-wizard",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "METW"
+ },
+ {
+   "NameEN": "Favor of the Valar",
+   "code": "metwfavorofthevalar",
+   "playableAlignment": "",
+   "unplayableAlignment": "Fallen-wizard",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "METW"
+ },
+ {
+   "NameEN": "Gollum’s Fate",
+   "code": "metwgollum’sfate",
+   "playableAlignment": "",
+   "unplayableAlignment": "Fallen-wizard",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "METW"
+ },
+ {
+   "NameEN": "Hour of Need",
+   "code": "medmhourofneed",
+   "playableAlignment": "",
+   "unplayableAlignment": "Fallen-wizard",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MEDM"
+ },
+ {
+   "NameEN": "Kill All But Not the Halflings",
+   "code": "melekillallbutnotthehalflings",
+   "playableAlignment": "",
+   "unplayableAlignment": "Fallen-wizard",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MELE"
+ },
+ {
+   "NameEN": "The Lidless Eye",
+   "code": "melethelidlesseye",
+   "playableAlignment": "",
+   "unplayableAlignment": "Fallen-wizard",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MELE"
+ },
+ {
+   "NameEN": "The Sun Unveiled",
+   "code": "measthesununveiled",
+   "playableAlignment": "",
+   "unplayableAlignment": "Fallen-wizard",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MEAS"
+ },
+ {
+   "NameEN": "Glamour of Surpassing Excellence",
+   "code": "measglamourofsurpassingexcellence",
+   "playableAlignment": "",
+   "unplayableAlignment": "Fallen-wizard",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MEAS"
+ },
+ {
+   "NameEN": "Messenger of Mordor",
+   "code": "melemessengerofmordor",
+   "playableAlignment": "",
+   "unplayableAlignment": "Fallen-wizard",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MELE"
+ },
+ {
+   "NameEN": "News Must Get Through",
+   "code": "melenewsmustgetthrough",
+   "playableAlignment": "",
+   "unplayableAlignment": "Fallen-wizard",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MELE"
+ },
+ {
+   "NameEN": "News of the Shire",
+   "code": "melenewsoftheshire",
+   "playableAlignment": "",
+   "unplayableAlignment": "Fallen-wizard",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MELE"
+ },
+ {
+   "NameEN": "Old Road",
+   "code": "metwoldroad",
+   "playableAlignment": "",
+   "unplayableAlignment": "Fallen-wizard",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "METW"
+ },
+ {
+   "NameEN": "The Windlord Found Me",
+   "code": "medmthewindlordfoundme",
+   "playableAlignment": "",
+   "unplayableAlignment": "Fallen-wizard",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MEDM"
+ },
+ {
+   "NameEN": "Wizard Uncloaked",
+   "code": "metdwizarduncloaked",
+   "playableAlignment": "",
+   "unplayableAlignment": "Fallen-wizard",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "METD"
+ },
+ {
+   "NameEN": "Use Your Legs",
+   "code": "measuseyourlegs",
+   "playableAlignment": "",
+   "unplayableAlignment": "Fallen-wizard",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MEAS"
+ },
+ {
+   "NameEN": "Sauron",
+   "code": "mebasauron",
+   "playableAlignment": "",
+   "unplayableAlignment": "Fallen-wizard",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "",
+   "Set": "MEBA"
+ },
+ {
+   "NameEN": "The Balrog",
+   "code": "measthebalrog",
+   "playableAlignment": "",
+   "unplayableAlignment": "",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "Balrog",
+   "Set": "MEAS"
+ },
+ {
+   "NameEN": "The Black Council",
+   "code": "mewhtheblackcouncil",
+   "playableAlignment": "",
+   "unplayableAlignment": "",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "Balrog",
+   "Set": "MEWH"
+ },
+ {
+   "NameEN": "Durin's Bane",
+   "code": "medmdurin'sbane",
+   "playableAlignment": "",
+   "unplayableAlignment": "",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "Balrog",
+   "Set": "MEDM"
+ },
+ {
+   "NameEN": "Balrog of Moria",
+   "code": "metwbalrogofmoria",
+   "playableAlignment": "",
+   "unplayableAlignment": "",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "Balrog",
+   "Set": "METW"
+ },
+ {
+   "NameEN": "Reluctant Final Parting",
+   "code": "medmreluctantfinalparting",
+   "playableAlignment": "",
+   "unplayableAlignment": "",
+   "effectedAlignment": "",
+   "uneffectedAlignment": "",
+   "swapableAlignment": "Balrog",
+   "Set": "MEDM"
+ }
+]

@@ -1,7 +1,7 @@
 (ns game.cards.resources
   (:require [game.core :refer :all]
             [game.utils :refer :all]
-            [game.macros :refer [effect req msg wait-for continue-ability]]
+            [game.macros :refer [effect req msg wait-for continue-ability while-let]]
             [clojure.string :refer [split-lines split join lower-case includes? starts-with?]]
             [clojure.stacktrace :refer [print-stack-trace]]
             [cardnum.utils :refer [str->int]]
@@ -206,11 +206,8 @@
                                                   :effect (effect (host target card))} card nil)))}]}
    "Dark Tryst"
    {:abilities [{:label "Resolve"
-                 :effect (req (let [r (get-card state card)
-                                    old-host (:host r)]
-                                (resolve-ability state side
-                                                 {:msg (msg "to draw 3 cards.")
-                                                  :effect (effect (draw 3) (move card :rfg))} card nil)))}]}
+                 :msg (msg "to draw 3 cards.")
+                 :effect (req (draw state side 3) (move state side card :rfg))}]}
    "Dreams of Lore"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
@@ -299,6 +296,18 @@
                                                                        (can-host? %))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Favor of the Valar"
+   {:abilities [{:label "Perform"
+                 :effect (req (doseq [c (get-in @state [side :discard])]
+                                (when (= "Site" (:type c))
+                                  (move state side c :play-area)))
+                              (shuffle-into-deck state side :hand :discard)
+                              (draw state side 8)
+                              (doseq [c (get-in @state [side :play-area])]
+                                (when (= "Site" (:type c))
+                                  (move state side c :discard)))
+                              (move state side card :rfg)
+                              )}]}
    "Fellowship"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
@@ -660,6 +669,9 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Longbottom Leaf"
+   {:abilities [{:label "Resolve"
+                 :effect (req (move state side card :rfg))}]}
    "Looking from Mind to Mind"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
@@ -699,6 +711,21 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Lucky Search"
+   {:abilities [{:label "Search"
+                 :effect (req (while (and (not (some (partial = (:Secondary (first (get-in @state [side :deck]))))
+                                                     ["Greater Item" "Major Item"
+                                                      "Minor Item" "Gold Ring Item"]))
+                                          (not-empty (take 1 (get-in @state [side :deck]))))
+                                (move state side (first (get-in @state [side :deck])) :play-area))
+                              (when (not-empty (take 1 (get-in @state [side :deck])))
+                                (move state side (first (get-in @state [side :deck])) :play-area))
+                              )}
+                {:label "Discard"
+                 :effect (req (doseq [c (get-in @state [side :play-area])]
+                                (move state side c :discard))
+                              (move state side card :discard)
+                           )}]}
    "Many-coloured Robes"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)

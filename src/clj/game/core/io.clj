@@ -11,7 +11,10 @@
     (if-let [command (parse-command text)]
       (when (and (not= side nil) (not= side :spectator))
         (command state side)
-        (swap! state update-in [:log] #(conj % {:user nil :text (str "[!]" (:username author) " uses a command: " text)})))
+        (when-not (= text "/z")
+          (swap! state update-in [:log] #(conj % {:user nil :text (str "[!]" (:username author) " uses a command: " text)}))
+          )
+        )
       (swap! state update-in [:log] #(conj % {:user author :text text})))
     (swap! state assoc :typing (remove #{(:username author)} (:typing @state)))))
 
@@ -97,6 +100,12 @@
          ; Challenger card messages
          (if (or (:facedown card) visible) "a facedown card" (:title card)))
        (if (:host card) (str " hosted on " (card-str state (:host card)))))))
+
+(defn card-sb
+  "Gets a string description of an placed card, reflecting whether it is revealed,
+  in/protecting a locale, facedown, or hosted."
+  [card]
+  (str (:type card)))
 
 (defn name-zone
   "Gets a string representation for the given zone."
@@ -193,13 +202,22 @@
 
 (defn command-revealall [state side value]
   (resolve-ability state side
-    {:optional {:prompt "Reveal all cards and turn cards in discard faceup?"
-                :yes-ability {:effect (req
-                                        (swap! state update-in [:contestant :discard] #(map (fn [c] (assoc c :seen true)) %))
-                                        (doseq [c (all-placed state side)]
-                                          (when-not (:revealed c)
-                                            (reveal state side c {:ignore-cost :all-costs :force true}))))}}}
-    {:title "/reveal-all command"} nil))
+                   {:optional {:prompt "Reveal all cards and turn cards in discard faceup?"
+                               :yes-ability {:effect (req
+                                                       (swap! state update-in [:contestant :discard] #(map (fn [c] (assoc c :seen true)) %))
+                                                       (doseq [c (all-placed state side)]
+                                                         (when-not (:revealed c)
+                                                           (reveal state side c {:ignore-cost :all-costs :force true}))))}}}
+                   {:title "/reveal-all command"} nil))
+
+(defn command-revtop [state side value]
+  (resolve-ability state side
+                   {:effect (req
+                              (let [prior (last (get-in @state [side :discard]))]
+                                (update! state side (assoc prior :seen true))
+                                (when-not (:revealed prior)
+                                  (reveal state side prior {:ignore-cost :all-costs :force true}))))}
+                   {:title "/revtop command"} nil))
 
 (defn command-roll [state side value]
   (system-msg state side (str "rolls a " value " sided die and rolls a " (inc (rand-int value)))))
@@ -232,6 +250,12 @@
     (swap! state dissoc-in [side :selected])
     (effect-completed state side (:eid fprompt))))
 
+(defn blind-zoom
+  [state side args]
+  (if (get-in @state [side :blind])
+    (swap! state assoc-in [side :blind] false)
+    (swap! state assoc-in [side :blind] true))
+  )
 (defn host-any-card
   [state side args]
   (resolve-ability state side
@@ -284,6 +308,12 @@
           "/end-run"    #(when (= %2 :contestant) (end-run %1 %2))
           "/error"      show-error-toast
           "/handsize"   #(swap! %1 assoc-in [%2 :hand-size-modification] (- (max 0 value) (:hand-size-base %2)))
+          "/hide"  #(resolve-ability %1 %2
+                                        {:prompt "Select a card to hide"
+                                         :effect (req (let [c (deactivate %1 %2 target)]
+                                                        (hide %1 %2 c)))
+                                         :choices {:req (fn [t] (card-is? t :side %2))}}
+                                        {:title "/hide command"} nil)
           "/host"       #(host-any-card %1 %2 args)
           "/jack-out"   #(when (= %2 :challenger) (jack-out %1 %2 nil))
           "/link"       #(swap! %1 assoc-in [%2 :link] (max 0 value))
@@ -335,6 +365,7 @@
                                              :choices {:req (fn [t] (card-is? t :side %2))}}
                                             {:title "/reveal command"} nil)
           "/reveal-all"    #(when (= %2 :contestant) (command-revealall %1 %2 value))
+          "/revtop"     #(when (= %2 :contestant) (command-revtop %1 %2 value))
           "/rfg"        #(resolve-ability %1 %2
                                           {:prompt "Select a card to remove from the game"
                                            :effect (req (let [c (deactivate %1 %2 target)]
@@ -362,6 +393,7 @@
                                                          :msg "resolve successful trace effect"}))
           "/undo-click" #(command-undo-click %1 %2)
           "/undo-turn"  #(command-undo-turn %1 %2)
+          "/z"          #(blind-zoom %1 %2)
           nil)))))
 
 (defn contestant-place-msg

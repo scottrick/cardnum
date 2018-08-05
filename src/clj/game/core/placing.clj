@@ -224,42 +224,40 @@
       (when (is-type? c "Agenda")
         (update-advancement-cost state side moved-card))
 
-      ;; Check to see if a second agenda/site was placed.
-      (wait-for (contestant-place-site-agenda state side moved-card dest-zone locale)
-                (letfn [(event [state side eid _]
-                          (trigger-event-sync state side eid :contestant-place (get-card state moved-card)))]
-                  (case place-state
-                    ;; Ignore all costs. Pass eid to reveal.
-                    :revealed-no-cost
-                    (wait-for (event state side nil)
-                              (reveal state side eid moved-card {:ignore-cost :all-costs}))
+      (letfn [(event [state side eid _]
+                (trigger-event-sync state side eid :contestant-place (get-card state moved-card)))]
+        (case place-state
+          ;; Ignore all costs. Pass eid to reveal.
+          :revealed-no-cost
+          (wait-for (event state side nil)
+                    (reveal state side eid moved-card {:ignore-cost :all-costs}))
 
-                    ;; Ignore reveal cost only. Pass eid to reveal.
-                    :revealed-no-reveal-cost
-                    (wait-for (event state side nil)
-                              (reveal state side eid moved-card {:ignore-cost :reveal-costs}))
+          ;; Ignore reveal cost only. Pass eid to reveal.
+          :revealed-no-reveal-cost
+          (wait-for (event state side nil)
+                    (reveal state side eid moved-card {:ignore-cost :reveal-costs}))
 
-                    ;; Pay costs. Pass eid to reveal.
-                    :revealed
-                    (wait-for (event state side nil)
-                              (reveal state side eid moved-card nil))
+          ;; Pay costs. Pass eid to reveal.
+          :revealed
+          (wait-for (event state side nil)
+                    (reveal state side eid moved-card nil))
 
-                    ;; "Face-up" cards. Trigger effect-completed manually.
-                    :face-up
-                    (if (:place-state cdef)
-                      (wait-for (card-init state side
-                                           (assoc (get-card state moved-card) :revealed true :seen true)
-                                           {:resolve-effect false
-                                            :init-data true})
-                                (event state side eid nil))
-                      (do (update! state side (assoc (get-card state moved-card) :revealed true :seen true))
-                          (event state side eid nil)))
+          ;; "Face-up" cards. Trigger effect-completed manually.
+          :face-up
+          (if (:place-state cdef)
+            (wait-for (card-init state side
+                                 (assoc (get-card state moved-card) :revealed true :seen true)
+                                 {:resolve-effect false
+                                  :init-data true})
+                      (event state side eid nil))
+            (do (update! state side (assoc (get-card state moved-card) :revealed true :seen true))
+                (event state side eid nil)))
 
-                    ;; All other cards. Trigger events, which will trigger effect-completed
-                    (event state side eid nil))
-                  (when-let [dre (:hidden-events cdef)]
-                    (when-not (:revealed (get-card state moved-card))
-                      (register-events state side dre moved-card))))))))
+          ;; All other cards. Trigger events, which will trigger effect-completed
+          (event state side eid nil))
+        (when-let [dre (:hidden-events cdef)]
+          (when-not (:revealed (get-card state moved-card))
+            (register-events state side dre moved-card)))))))
 
 (defn- contestant-place-pay
   "Used by contestant-place to pay place costs, code continues in contestant-place-continue"

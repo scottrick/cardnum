@@ -1,9 +1,9 @@
 (in-ns 'game.core)
 
 ;; These functions are called by main.clj in response to commands sent by users.
-(declare available-mu card-str can-reveal? can-advance? contestant-place effect-as-handler enforce-msg gain-agenda-point get-party-names get-zones-challenger
+(declare available-mu card-str card-sb can-reveal? can-advance? contestant-place effect-as-handler enforce-msg gain-agenda-point get-party-names get-zones-challenger
          get-party-zones-challenger get-run-characters host can-host? jack-out move name-zone play-instant purge resolve-select run has-subtype? get-party-zones locale->zone
-         challenger-place discard update-breaker-strength demote-character-strength update-character-in-locale update-run-character win can-run?
+         challenger-place discard command-revtop update-breaker-strength demote-character-strength update-character-in-locale update-run-character win can-run?
          can-run-locale? can-score? say play-sfx base-mod-size free-mu)
 
 ;;; Neutral actions
@@ -19,12 +19,18 @@
 
 (defn shuffle-deck
   "Shuffle Play Deck."
-  [state side {:keys [close] :as args}]
+  [state side {:keys [board fwsb close] :as args}]
   (swap! state update-in [side :deck] shuffle)
   (if close
     (do
       (swap! state update-in [side] dissoc :view-deck)
-      (system-msg state side "stops looking at their deck and shuffles it"))
+      (system-msg state side (str "stops looking at their "
+                  (cond
+                    board "sideboard"
+                    fwsb "dc/fw-sideboard"
+                    :else "deck"
+                    )
+                  " and shuffles their deck")))
     (system-msg state side "shuffles their deck")))
 
 (defn click-draw
@@ -129,8 +135,15 @@
                    (same-side? side (:side card))))
       (case locale
         ("Heap" "Archives")
-        (do (let [action-str (if (= (first (:zone c)) :hand) "discards " "discards ")]
-              (discard state s c {:unpreventable true})
+        (do (let [action-str (if (= (first (:zone c)) :hand) "discards " "discards ")
+                  prior (last (get-in @state [side :discard]))]
+              (if false ;; insert Pallando logic here
+                (do
+                  (when prior
+                    (update! state side (dissoc prior :seen :revealed)))
+                  (discard state s (dissoc c :seen :revealed) {:unpreventable true})
+                  (command-revtop state side nil))
+              (discard state s (dissoc c :seen :revealed) {:unpreventable true}))
               (system-msg state side (str action-str label from-str))))
         ("Grip" "HQ")
         (do (move state s (dissoc c :seen :revealed) :hand {:force true})
@@ -424,11 +437,13 @@
 (defn move-to-sb
   [state side card]
   (resolve-ability state side
-                   {:prompt "Select a site to move to your sideboard"
+                   {:label "menu"
+                    :prompt "Select a card to move to your sideboard"
                     :effect (req (let [c (deactivate state side target)]
                                    (move state side c :sideboard)))
+                    :msg (msg "move a " (card-sb target) " to their sideboard")
                     :choices {:req (fn [t] (card-is? t :side side))}}
-                   nil nil))
+                   {:title "menu"} nil))
 
 (defn rotate
   "Rotate a card."
@@ -613,13 +628,13 @@
 (defn view-fw-dc-sb
   "Allows the player to view their deck by making the cards in the deck public."
   [state side args]
-  (system-msg state side "looks at their fallen-wizard sideboard")
+  (system-msg state side "looks at their dc/fw-sideboard")
   (swap! state assoc-in [side :view-fw-dc-sb] true))
 
 (defn close-fw-dc-sb
   "Closes the deck view and makes cards in deck private again."
   [state side args]
-  (system-msg state side "stops looking at their fallen-wizard sideboard")
+  (system-msg state side "stops looking at their dc/fw-sideboard")
   (swap! state update-in [side] dissoc :view-fw-dc-sb))
 
 (defn view-location

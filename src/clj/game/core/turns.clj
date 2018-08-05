@@ -73,14 +73,14 @@
                     :sideboard (zone :sideboard contestant-board)
                     :fw-dc-sb (zone :fw-dc-sb contestant-fw-dc)
                     :location (zone :location contestant-location)
-                    :discard [] :scored [] :rfg [] :play-area []
+                    :discard [] :scored [] :rfg [] :play-area [] :current []
                     :locales {:hq {} :rd {} :archives {} :sites {}}
                     :rig {:resource [] :radicle [] :hazard []}
                     :click 0 :credit 20 :bad-publicity 0 :has-bad-pub 0
                     :free_gi 0 :total_mp 0 :stage_pt 0
                     :char_mp 0 :ally_mp 0 :item_mp 0
                     :fact_mp 0 :kill_mp 0 :misc_mp 0
-                    :toast []
+                    :toast [] :blind false
                     :hand-size-base 8 :hand-size-modification 0
                     :agenda-point 0
                     :click-per-turn 100 :agenda-point-req 7 :keep false}
@@ -92,10 +92,10 @@
                     :sideboard (zone :sideboard challenger-board)
                     :fw-dc-sb (zone :fw-dc-sb challenger-fw-dc)
                     :location (zone :location challenger-location)
-                    :discard [] :scored [] :rfg [] :play-area []
+                    :discard [] :scored [] :rfg [] :play-area [] :current []
                     :locales {:hq {} :rd {} :archives {} :sites {}}
                     :rig {:resource [] :radicle [] :hazard []}
-                    :toast []
+                    :toast [] :blind false
                     :click 0 :credit 20 :run-credit 0 :memory 4 :link 0 :tag 0
                     :free_gi 0 :total_mp 0 :stage_pt 0
                     :char_mp 0 :ally_mp 0 :item_mp 0
@@ -308,6 +308,7 @@
                               (if (= side :contestant)
                                 (doseq [c (all-placed state side)]
                                   (when (and (not (:wounded c))
+                                             (or (:tapped c) (:rotated c))
                                              (not (boolean (re-find #"Site" (:type c))))
                                              (not (boolean (re-find #"Region" (:type c))))
                                              (not (boolean (re-find #"Permanent" (:Secondary c))))
@@ -315,6 +316,7 @@
                                              (untap state side c)))
                                 (doseq [c (all-placed-challenger state side)]
                                   (when (and (not (:wounded c))
+                                             (or (:tapped c) (:rotated c))
                                              (not (boolean (re-find #"Site" (:type c))))
                                              (not (boolean (re-find #"Region" (:type c))))
                                              (not (boolean (re-find #"Permanent" (:Secondary c))))

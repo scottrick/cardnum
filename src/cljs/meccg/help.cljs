@@ -41,6 +41,8 @@
                         [:li [:code "/discard-random"] " - Discard a random card from your hand"]
                         [:li [:code "/draw n"] " - Draw n cards"]
                         [:li [:code "/handsize n"] " - Set your handsize to n"]
+                        [:li [:code "/hide"] " - Hide a card"]
+                        [:li [:code "/host"] " - Host a card on another"]
                         [:li [:code "/move-bottom"] " - Pick a card in your hand to put on the bottom of your deck"]
                         [:li [:code "/move-deck"] " - Pick a card from your play-area to put on top of your deck"]
                         [:li [:code "/move-hand"] " - Pick a card from your play-area to put into your hand"]
@@ -53,7 +55,9 @@
                         [:li [:code "/rfgh"] " - Select a card to remove from the game hidden"]
                         [:li [:code "/facedown"] " - Select a card to place facedown"]
                         [:li [:code "/r"] " - Roll 2d6"]
-                        [:li [:code "/roll n"] " - Roll an n-sided die"]]]}
+                        [:li [:code "/roll n"] " - Roll an n-sided die"]
+                        [:li [:code "/z"] " - Double the zoom"]
+                        ]]}
             {:id "documentation"
              :title "Is there more documentation on how to use Cardnum.net?"
              :content [:p "Read the "

@@ -25,7 +25,7 @@
                              download-meccgdb-data)
           cards (fetch-cards card-download-fn (:card tables) sets (not (some #{"--no-card-images"} args)))]
       (println (count sets) "sets imported")
-      (println (count mwls) "MWL versions imported")
+      (println (count mwls) "restrictions imported")
       (println (count cards) "cards imported")
       (update-config (:config tables)))
     (catch Exception e (do
