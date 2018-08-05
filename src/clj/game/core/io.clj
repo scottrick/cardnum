@@ -393,7 +393,7 @@
                                                          :msg "resolve successful trace effect"}))
           "/undo-click" #(command-undo-click %1 %2)
           "/undo-turn"  #(command-undo-turn %1 %2)
-          "/z"          #(blind-zoom %1 %2)
+          "/z"          #(blind-zoom %1 %2 nil)
           nil)))))
 
 (defn contestant-place-msg

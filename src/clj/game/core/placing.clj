@@ -271,7 +271,7 @@
     (if (and (contestant-can-place? state side card dest-zone)
              (not (place-locked? state :contestant)))
       (wait-for (pay-sync state side card end-cost {:action action})
-                (if-let [cost-str async-result]
+                (if-let [cost-str " "]
                   (if (= locale "New party")
                     (wait-for (trigger-event-sync state side :locale-created card)
                               (contestant-place-continue state side eid card locale args slot cost-str))
