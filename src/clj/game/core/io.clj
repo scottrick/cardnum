@@ -202,13 +202,22 @@
 
 (defn command-revealall [state side value]
   (resolve-ability state side
-    {:optional {:prompt "Reveal all cards and turn cards in discard faceup?"
-                :yes-ability {:effect (req
-                                        (swap! state update-in [:contestant :discard] #(map (fn [c] (assoc c :seen true)) %))
-                                        (doseq [c (all-placed state side)]
-                                          (when-not (:revealed c)
-                                            (reveal state side c {:ignore-cost :all-costs :force true}))))}}}
-    {:title "/reveal-all command"} nil))
+                   {:optional {:prompt "Reveal all cards and turn cards in discard faceup?"
+                               :yes-ability {:effect (req
+                                                       (swap! state update-in [:contestant :discard] #(map (fn [c] (assoc c :seen true)) %))
+                                                       (doseq [c (all-placed state side)]
+                                                         (when-not (:revealed c)
+                                                           (reveal state side c {:ignore-cost :all-costs :force true}))))}}}
+                   {:title "/reveal-all command"} nil))
+
+(defn command-revtop [state side value]
+  (resolve-ability state side
+                   {:effect (req
+                              (let [prior (last (get-in @state [side :discard]))]
+                                (update! state side (assoc prior :seen true))
+                                (when-not (:revealed prior)
+                                  (reveal state side prior {:ignore-cost :all-costs :force true}))))}
+                   {:title "/revtop command"} nil))
 
 (defn command-roll [state side value]
   (system-msg state side (str "rolls a " value " sided die and rolls a " (inc (rand-int value)))))
@@ -356,6 +365,7 @@
                                              :choices {:req (fn [t] (card-is? t :side %2))}}
                                             {:title "/reveal command"} nil)
           "/reveal-all"    #(when (= %2 :contestant) (command-revealall %1 %2 value))
+          "/revtop"     #(when (= %2 :contestant) (command-revtop %1 %2 value))
           "/rfg"        #(resolve-ability %1 %2
                                           {:prompt "Select a card to remove from the game"
                                            :effect (req (let [c (deactivate %1 %2 target)]

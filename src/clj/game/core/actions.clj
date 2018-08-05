@@ -3,7 +3,7 @@
 ;; These functions are called by main.clj in response to commands sent by users.
 (declare available-mu card-str card-sb can-reveal? can-advance? contestant-place effect-as-handler enforce-msg gain-agenda-point get-party-names get-zones-challenger
          get-party-zones-challenger get-run-characters host can-host? jack-out move name-zone play-instant purge resolve-select run has-subtype? get-party-zones locale->zone
-         challenger-place discard update-breaker-strength demote-character-strength update-character-in-locale update-run-character win can-run?
+         challenger-place discard command-revtop update-breaker-strength demote-character-strength update-character-in-locale update-run-character win can-run?
          can-run-locale? can-score? say play-sfx base-mod-size free-mu)
 
 ;;; Neutral actions
@@ -135,8 +135,15 @@
                    (same-side? side (:side card))))
       (case locale
         ("Heap" "Archives")
-        (do (let [action-str (if (= (first (:zone c)) :hand) "discards " "discards ")]
-              (discard state s c {:unpreventable true})
+        (do (let [action-str (if (= (first (:zone c)) :hand) "discards " "discards ")
+                  prior (last (get-in @state [side :discard]))]
+              (if false ;; insert Pallando logic here
+                (do
+                  (when prior
+                    (update! state side (dissoc prior :seen :revealed)))
+                  (discard state s (dissoc c :seen :revealed) {:unpreventable true})
+                  (command-revtop state side nil))
+              (discard state s (dissoc c :seen :revealed) {:unpreventable true}))
               (system-msg state side (str action-str label from-str))))
         ("Grip" "HQ")
         (do (move state s (dissoc c :seen :revealed) :hand {:force true})

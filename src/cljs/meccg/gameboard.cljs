@@ -1071,12 +1071,19 @@
   (om/component
     (sab/html
       (let [faceup? #(or (:seen %) (:revealed %))
-            draw-card #(if (faceup? %)
+            topcard (last discard)
+            draw-card #(if (and
+                             false ;(get-in @game-state [:hpf side etc])
+                             (= topcard %))
                          (om/build card-view %)
                          (if (or (= (:side @game-state) :contestant)
                                  (spectator-view-hidden?))
                            [:div.unseen (om/build card-view %)]
-                           (facedown-card "contestant")))]
+                           (if (or (= (:side @game-state) :challenger)
+                                   (spectator-view-hidden?))
+                             ;(facedown-card "contestant")
+                             [:div.unseen (om/build card-view %)]
+                             (facedown-card "contestant"))))]
         [:div.blue-shade.discard
          (drop-area :contestant "Archives" {:on-click #(-> (om/get-node owner "popup") js/$ .fadeToggle)})
 
