@@ -251,7 +251,7 @@
     (effect-completed state side (:eid fprompt))))
 
 (defn blind-zoom
-  [state side]
+  [state side args]
   (if (get-in @state [side :blind])
     (swap! state assoc-in [side :blind] false)
     (swap! state assoc-in [side :blind] true))

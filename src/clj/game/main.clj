@@ -20,6 +20,7 @@
    "back-m-h" core/back-m-h
    "back-org" core/back-org
    "back-site" core/back-site
+   "blind-zoom" core/blind-zoom
    "bluff-o-g" core/bluff-o-g
    "challenger-ability" core/play-challenger-ability
    "change" core/change

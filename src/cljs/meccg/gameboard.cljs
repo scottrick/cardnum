@@ -460,6 +460,14 @@
     (when (pos? (count code))
       code)))
 
+(defn handle-blindzoom [e]
+  (when (= e.keyCode 16)
+    (do
+      ;(println "wft")
+      (send-command "blind-zoom")
+      (.preventDefault e)))
+  )
+
 (defn card-preview-mouse-over [e channel]
   (.preventDefault e)
   (when-let [code (get-card-code e)]
@@ -504,7 +512,8 @@
     om/IRenderState
     (render-state [this state]
       (sab/html
-        [:div.log {:on-mouse-over #(card-preview-mouse-over % zoom-channel)
+        [:div.log {:on-key-down #(handle-blindzoom %)
+                   :on-mouse-over #(card-preview-mouse-over % zoom-channel)
                    :on-mouse-out  #(card-preview-mouse-out % zoom-channel)}
          [:div.panel.blue-shade.messages {:ref "msg-list"}
           ;; :on-scroll #(let [currElt (.-currentTarget %)
@@ -683,7 +692,8 @@
     (when code
       (sab/html
         [:div.card-frame
-         [:div.blue-shade.card {:on-mouse-enter #(put! zoom-channel cursor)
+         [:div.blue-shade.card {:on-key-down #(handle-blindzoom %)
+                                :on-mouse-enter #(put! zoom-channel cursor)
                                 :on-mouse-leave #(put! zoom-channel false)}
           (when-let [url (image-url cursor)]
             [:div
@@ -738,6 +748,7 @@
                                                          (= (:side @game-state) (keyword (.toLowerCase side))))
                                                  (put! zoom-channel cursor))
                               :on-mouse-leave #(put! zoom-channel false)
+                              :on-key-down #(handle-blindzoom %)
                               :on-click #(handle-card-click cursor owner)}
         (when-let [url (image-url cursor)]
           (if (or (not code) flipped facedown)
@@ -1794,16 +1805,16 @@
   [game-state]
   [:div.win.centered.blue-shade
    [:div
-    (:winning-user @game-state) " (Indûr the Ringwraith" ;(-> @game-state :winner capitalize)
+    (:winning-user @game-state) ;" (" (-> @game-state :winner capitalize)
     (cond
       (= "Decked" (@game-state :reason capitalize))
-      (str ") wins due to the Contestant being decked on turn " (:turn @game-state))
+      (str " wins due to the Contestant being decked on turn " (:turn @game-state))
 
       (= "Concede" (@game-state :reason capitalize))
-      (str ") wins by concession on turn " (:turn @game-state))
+      (str " wins by concession on turn " (:turn @game-state))
 
       :else
-      (str ") wins by scoring more MPs on turn "  (:turn @game-state)))]
+      (str " wins by scoring more MPs on turn "  (:turn @game-state)))]
    ;[:div "Time taken: " (-> @game-state :stats :time :elapsed) " minutes"]
    [:br]
    (build-game-stats)
