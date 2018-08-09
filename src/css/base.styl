@@ -1957,9 +1957,11 @@ align-radio
               transform(rotate(-90deg))
 
           .character
-            margin: -7px 0
             transform(rotate(-180deg))
             cursor: pointer
+
+            &:nth-child(n)
+              margin-top: 20px
 
             &.host
               margin-bottom: 5px
@@ -2017,14 +2019,16 @@ align-radio
                 transform-origin(0 0)
 
           .hosted
-            margin-top: -49px
+            margin-bottom: -60px
+            //margin-left: -12px
             flex-direction(column)
 
-            .card-frame
-              margin-left: 0
+            &:nth-child(odd)
+              margin-left: -22px
 
-              &:not(:first-child)
-                margin-top: -42px
+            .card-frame
+              //margin-top: 42px
+              //margin-left: -42px
 
               .counters
                 transform(rotate(-90deg))
@@ -2049,8 +2053,8 @@ align-radio
             transform(rotate(90deg))
 
           .abilities, .challenger-abilities, .contestant-abilities
-            left: 0%
-            margin: -1px 25px
+            left: 0
+            margin: -30px 25px
 
           .abilities
             top: 0

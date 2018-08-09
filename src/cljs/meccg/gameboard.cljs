@@ -374,7 +374,7 @@
      (.substring item (inc (.indexOf item ci-seperator)) (dec (count item)))]))
 
 (defn create-face [text symbol class]
-  (.replace text (apply str symbol) (str "<img src='" class "'style=\"height:20px;\"></img>")))
+  (.replace text (apply str symbol) (str "<img src='" class "'style=\"height:32px;\"></img>")))
 
 (defn add-faces [card-text]
   (-> (if (nil? card-text) "" card-text)
@@ -538,7 +538,7 @@
                      (not (:mutespectators game)))
              [:form {:on-submit #(send-msg % owner)
                      :on-input #(send-typing % owner)}
-              [:input {:ref "msg-input" :placeholder "Say something" :accessKey "l"}]]))]))))
+              [:input.direct {:ref "msg-input" :placeholder "Say something" :accessKey "l"}]]))]))))
 
 (defn handle-dragstart [e cursor]
   (-> e .-target js/$ (.addClass "dragged"))
@@ -736,6 +736,18 @@
   (om/component
     (sab/html
       [:div.card-frame
+       (when (pos? (count hosted))
+         (for [card (reverse hosted)]
+           [:div.hosted {:class (if (and (:tapped card) (not (:inverted card)))
+                                  "tapped"
+                                  (if (and (:inverted card) (not (:rotated card)))
+                                    "inverted"
+                                    (if (and (:wounded card) (not (:rotated card)))
+                                      "wounded"
+                                      (if (:rotated card)
+                                        "rotated"
+                                        nil))))}
+            (om/build card-view card {:opts {:flipped (face-down? card)}})]))
        [:div.blue-shade.card {:class (str (when selected "selected") (when new " new"))
                               :draggable (when (not-spectator?) true)
                               :on-touch-start #(handle-touchstart % cursor)
@@ -760,7 +772,7 @@
                 (facedown-card "Locations")
                 (facedown-card side ["bg"] alt-str)))
             [:div
-             [:span.cardname title]
+             ;[:span.cardname title]
              [:img.card.bg {:src url :alt title :onError #(-> % .-target js/$ .hide)}]]))
         [:div.counters
          (when counter
@@ -860,18 +872,7 @@
             [:div.panel.blue-shade.menu.abilities {:ref "advance"}
              [:div {:on-click #(send-command "advance" {:card @cursor})} "Advance"]
              [:div {:on-click #(send-command "reveal" {:card @cursor})} "Reveal"]]))]
-       (when (pos? (count hosted))
-         (for [card hosted]
-           [:div.hosted {:class (if (and (:tapped card) (not (:inverted card)))
-                                  "tapped"
-                                  (if (and (:inverted card) (not (:rotated card)))
-                                    "inverted"
-                                    (if (and (:wounded card) (not (:rotated card)))
-                                      "wounded"
-                                      (if (:rotated card)
-                                        "rotated"
-                                      nil))))}
-            (om/build card-view card {:opts {:flipped (face-down? card)}})]))])))
+       ])))
 
 (defn drop-area [side locale hmap]
   (merge hmap {:on-drop #(handle-drop % locale)
@@ -1850,6 +1851,7 @@
     (will-mount [this]
       (go (while true
             (let [card (<! zoom-channel)]
+              (-> ".direct" js/$ .focus)
               (om/set-state! owner :zoom card)))))
 
     om/IDidUpdate
