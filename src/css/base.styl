@@ -708,26 +708,26 @@ align-radio
 .stats-bg
   cover-img: url('/img/bg/MordorGates.jpg')
 
-.traffic-jam-bg
-  cover-img: url('/img/bg/TrafficJam.jpg')
+.barad-dur-john-howe-bg
+  cover-img: url('/img/bg/barad-dur-john-howe.jpg')
 
-.rumor-mill-bg
-  cover-img: url('/img/bg/MordorGates.jpg')
+.bridge-paul-monteagle-bg
+  cover-img: url('/img/bg/bridge-paul-monteagle.jpg')
 
-.find-the-truth-bg
-  cover-img: url('/img/bg/FindTheTruth.jpg')
+.edoras-bakarov-bg
+  cover-img: url('/img/bg/edoras-bakarov.jpg')
 
-.push-your-luck-bg
-  cover-img: url('/img/bg/PushYourLuck.jpg')
+.ted-green-hill-morning-bg
+  cover-img: url('/img/bg/ted-green-hill-morning.jpg')
 
-.apex-bg
-  cover-img: url('/img/bg/Apex.jpg')
+.carn-dum1bw-bg
+  cover-img: url('/img/bg/CarnDum1bw.jpg')
 
-.mushin-no-shin-bg
-  cover-img: url('/img/bg/MushinNoShin.jpg')
+.carn-dum2bw-bg
+  cover-img: url('/img/bg/CarnDum2bw.jpg')
 
-.freelancer-bg
-  cover-img: url('/img/bg/Freelancer.jpg')
+.carn-dum3bw-bg
+  cover-img: url('/img/bg/CarnDum3bw.jpg')
 
 .monochrome-bg
   cover-color: obsidian
@@ -1662,14 +1662,6 @@ align-radio
     &:hover .controls
       display: block
 
-  .hosted
-    margin-left: 24px
-    margin-top: -65px
-    display-flex()
-
-    .card-frame:not(:first-child)
-      margin-left: -15px
-
   .leftpane
     display-flex()
     flex-direction(column)
@@ -1957,9 +1949,11 @@ align-radio
               transform(rotate(-90deg))
 
           .character
-            margin: -7px 0
             transform(rotate(-180deg))
             cursor: pointer
+
+            &:nth-child(n)
+              margin-top: 20px
 
             &.host
               margin-bottom: 5px
@@ -1969,6 +1963,54 @@ align-radio
               bottom: 42px
               left: 57px
               transform: rotate(-90deg)
+
+          .hosted
+            margin-bottom: -60px
+            margin-left: -20px
+
+            .card-frame
+
+              .counters
+                transform(rotate(-90deg))
+
+              .abilities, .challenger-abilities, .contestant-abilities
+                top: 0
+                bottom: auto
+                transform-origin(0 0)
+                transform(initial)
+
+            &.host-tapped
+              transform(rotate(-90deg))
+
+            &.host-wounded
+              transform(rotate(-180deg))
+              margin-right: -20px
+
+            .strength
+              transform(rotate(0deg))
+
+          .subtype-target
+            transform(rotate(90deg), translateX(100%))
+            transform-origin(100% 0)
+
+          .icon
+            transform(rotate(90deg))
+
+          .counter
+            transform(rotate(90deg))
+
+          .abilities, .challenger-abilities, .contestant-abilities
+            left: 0
+            margin: -30px 25px
+
+          .abilities
+            top: 0
+            bottom: auto
+            transform-origin(0 0)
+
+          .challenger-abilities, .contestant-abilities
+            bottom: 0
+            transform-origin(0 100%)
 
           .hosted.rotated
             transform(rotate(-90deg))
@@ -1991,10 +2033,12 @@ align-radio
                 transform-origin(0 0)
 
           .hosted.inverted
-            transform(rotate(180deg))
+            transform(translateX(-22%), rotate(180deg))
+            margin-bottom: -60px
 
           .hosted.wounded
-            transform(rotate(180deg))
+            transform(translateX(-22%), rotate(180deg))
+            margin-bottom: -60px
 
           .hosted.tapped
             transform(rotate(90deg))
@@ -2015,51 +2059,6 @@ align-radio
                 bottom: auto
                 transform(rotate(-90deg))
                 transform-origin(0 0)
-
-          .hosted
-            margin-top: -49px
-            flex-direction(column)
-
-            .card-frame
-              margin-left: 0
-
-              &:not(:first-child)
-                margin-top: -42px
-
-              .counters
-                transform(rotate(-90deg))
-
-              .abilities, .challenger-abilities, .contestant-abilities
-                top: 0
-                bottom: auto
-                transform-origin(0 0)
-                transform(initial)
-
-          .strength
-            transform(rotate(0deg))
-
-          .subtype-target
-            transform(rotate(90deg), translateX(100%))
-            transform-origin(100% 0)
-
-          .icon
-            transform(rotate(90deg))
-
-          .counter
-            transform(rotate(90deg))
-
-          .abilities, .challenger-abilities, .contestant-abilities
-            left: 0%
-            margin: -1px 25px
-
-          .abilities
-            top: 0
-            bottom: auto
-            transform-origin(0 0)
-
-          .challenger-abilities, .contestant-abilities
-            bottom: 0
-            transform-origin(0 100%)
 
         .content
           position: relative
@@ -2148,7 +2147,7 @@ align-radio
       .card-preview.blind
         width: 200%
         height: 200%
-        transform(translate(-110%, 0%))
+        transform(translate(-160%, 0%))
         transition(all 0.2s ease-in-out)
 
         &.region

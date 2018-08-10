@@ -8,6 +8,7 @@
             [meccg.appstate :refer [app-state]]
             [meccg.auth :refer [avatar] :as auth]
             [meccg.cardbrowser :refer [add-symbols] :as cb]
+            [meccg.dice :refer [add-faces create-face]]
             [meccg.standard :refer [standard-map]]
             [meccg.utils :refer [toastr-options influence-dot map-longest]]
             [meccg.ws :as ws]
@@ -168,11 +169,11 @@
           (cons "organize" %) %))
       (#(if (and (#{"Character"} type)
                  (#{"locales" "onhost"} (first zone))
-                 (and revealed (not wounded)))
+                 (and revealed (not tapped) (not wounded) (not rotated)))
           (cons "wound" %) %))
       (#(if (and (#{"Ally"} Secondary)
                  (#{"onhost"} (first zone))
-                 (not wounded))
+                 (and (not tapped) (not wounded) (not rotated)))
           (cons "wound" %) %))
       (#(if (and (#{"Region"} type)
                  (re-find #"tap" Home)
@@ -187,11 +188,11 @@
       (#(if (and (and (#{"Character" "Site"} type)
                       (#{"locales" "onhost"} (first zone)))
                  revealed
-                 (or (not tapped) wounded))
+                 (and revealed (not tapped) (not wounded) (not rotated)))
           (cons "tap" %) %))
       (#(if (and (and (#{"Character" "Site"} type)
                       (#{"locales" "onhost"} (first zone)))
-                 (or tapped wounded))
+                 (or tapped wounded rotated))
           (cons "untap" %) %))
       (#(if (and (= type "Resource")
                  (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
@@ -200,21 +201,21 @@
       (#(if (and (= type "Resource")
                  (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
                  (#{"locales" "onhost"} (first zone))
-                 (not rotated))
+                 (not tapped) (not inverted) (not rotated))
           (cons "invert" %) %))
-      (#(if (and (and (= type "Resource")
-                      (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
-                      (#{"locales" "onhost"} (first zone)))
-                 (and (not inverted) (not rotated)))
+      (#(if (and (= type "Resource")
+                 (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
+                 (#{"locales" "onhost"} (first zone))
+                 (not tapped) (not inverted) (not wounded) (not rotated))
           (cons "rotate" %) %))
-      (#(if (and (and (= type "Resource")
-                      (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
-                      (#{"locales" "onhost"} (first zone)))
-                 (and (not tapped) (not inverted) (not rotated)))
+      (#(if (and (= type "Resource")
+                 (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
+                 (#{"locales" "onhost"} (first zone))
+                 (not tapped) (not inverted) (not wounded) (not rotated))
           (cons "tap" %) %))
-      (#(if (and (and (= type "Resource")
-                      (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
-                      (#{"locales" "onhost"} (first zone)))
+      (#(if (and (= type "Resource")
+                 (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
+                 (#{"locales" "onhost"} (first zone))
                  (or tapped wounded inverted rotated))
           (cons "untap" %) %))
       (#(if (and (and (some (partial = Secondary) ["Permanent-event" "Faction"])
@@ -373,18 +374,6 @@
     [(.substring item 1 (.indexOf item ci-seperator))
      (.substring item (inc (.indexOf item ci-seperator)) (dec (count item)))]))
 
-(defn create-face [text symbol class]
-  (.replace text (apply str symbol) (str "<img src='" class "'style=\"height:20px;\"></img>")))
-
-(defn add-faces [card-text]
-  (-> (if (nil? card-text) "" card-text)
-      (create-face "roll-1" "img/dice1.png")
-      (create-face "roll-2" "img/dice2.png")
-      (create-face "roll-3" "img/dice3.png")
-      (create-face "roll-4" "img/dice4.png")
-      (create-face "roll-5" "img/dice5.png")
-      (create-face "roll-6" "img/dice6.png")))
-
 (defn add-regions [card-text]
   (-> (if (nil? card-text) "" card-text)
       (create-face "Border-land" "img/dc/me_bl.png")
@@ -409,7 +398,8 @@
       [:div.smallwarning "!"]
       (if-let [[title code] (extract-card-info item)]
         [:span {:class "fake-link" :id code} title]
-        (if (boolean (re-find #"roll-" item))
+        (if (or (boolean (re-find #"16mm" item))
+                (boolean (re-find #"18mm" item)))
           [:span {:dangerouslySetInnerHTML #js {:__html (add-faces (add-faces item))}}]
           [:span {:dangerouslySetInnerHTML #js {:__html (add-regions item)}}])))))
 
@@ -460,12 +450,24 @@
     (when (pos? (count code))
       code)))
 
-(defn handle-blindzoom [e]
-  (when (= e.keyCode 16)
-    (do
-      ;(println "wft")
-      (send-command "blind-zoom")
-      (.preventDefault e)))
+(defn handle-key-down [e]
+  (cond
+    (= e.keyCode 16) ;// shift
+    (send-command "blind-zoom")
+    (= e.keyCode 18) ;// option
+    (send-command "option-key-down")
+    ;(= e.keyCode 27) ;// escape
+    (= e.keyCode 39) ;// right-arrow
+    (let [side (:side @game-state)]
+      (if-let [card (get-in @game-state [side :hold-card])]
+        (send-command "system-msg" {:msg (str (:title card))}))))
+  )
+
+(defn handle-key-up [e]
+  (cond
+    (= e.keyCode 16) ;// shift
+    (send-command "blind-zoom")
+    )
   )
 
 (defn card-preview-mouse-over [e channel]
@@ -512,7 +514,8 @@
     om/IRenderState
     (render-state [this state]
       (sab/html
-        [:div.log {:on-key-down #(handle-blindzoom %)
+        [:div.log {:on-key-down #(handle-key-down %)
+                   :on-key-up #(handle-key-up %)
                    :on-mouse-over #(card-preview-mouse-over % zoom-channel)
                    :on-mouse-out  #(card-preview-mouse-out % zoom-channel)}
          [:div.panel.blue-shade.messages {:ref "msg-list"}
@@ -538,7 +541,7 @@
                      (not (:mutespectators game)))
              [:form {:on-submit #(send-msg % owner)
                      :on-input #(send-typing % owner)}
-              [:input {:ref "msg-input" :placeholder "Say something" :accessKey "l"}]]))]))))
+              [:input.direct {:ref "msg-input" :placeholder "Say something" :accessKey "l"}]]))]))))
 
 (defn handle-dragstart [e cursor]
   (-> e .-target js/$ (.addClass "dragged"))
@@ -692,7 +695,7 @@
     (when code
       (sab/html
         [:div.card-frame
-         [:div.blue-shade.card {:on-key-down #(handle-blindzoom %)
+         [:div.blue-shade.card {;:on-key-down #(handle-blindzoom %)
                                 :on-mouse-enter #(put! zoom-channel cursor)
                                 :on-mouse-leave #(put! zoom-channel false)}
           (when-let [url (image-url cursor)]
@@ -708,24 +711,25 @@
          (not= type "Hazard"))
     facedown))
 
+(defn card-blind [card owner]
+    (om/component
+      (sab/html
+        [:div.card-preview.blind.blue-shade {:class (if (and (#{"Region"} (:type card))
+                                                             (re-find #"tap" (:Home card)))
+                                                      "region")}
+         (when-let [url (image-url card)]
+           [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])]
+        )))
+
 (defn card-zoom [card owner]
-  (let [me (:side @game-state)]
-  (om/component
-    (sab/html
-      (if (get-in @game-state [me :blind])
-        (do
-          [:div.card-preview.blind.blue-shade {:class (if (and (#{"Region"} (:type card))
-                                                               (re-find #"tap" (:Home card)))
-                                                        "region")}
-           (when-let [url (image-url card)]
-             [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])])
-        (do
-          [:div.card-preview.blue-shade {:class (if (and (#{"Region"} (:type card))
-                                                               (re-find #"tap" (:Home card)))
-                                                        "region")}
-           (when-let [url (image-url card)]
-             [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])]))
-      ))))
+    (om/component
+      (sab/html
+        [:div.card-preview.blue-shade {:class (if (and (#{"Region"} (:type card))
+                                                       (re-find #"tap" (:Home card)))
+                                                "region")}
+         (when-let [url (image-url card)]
+           [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])]
+        )))
 
 (defn card-view [{:keys [zone code type abilities counter advance-counter advancementcost current-cost subtype
                          advanceable revealed tapped rotated strength current-strength title parties selected hosted
@@ -736,6 +740,46 @@
   (om/component
     (sab/html
       [:div.card-frame
+       (when (pos? (count hosted))
+         (for [card (reverse hosted)]
+           (do
+           ;(println (str "Host is: " (if (:host-tapped card) "tapped" "untapped")))
+           (cond
+             (:host-tapped card)
+             [:div.hosted {:class (if (and (:tapped card) (not (:inverted card)))
+                                    nil
+                                    (if (and (:inverted card) (not (:rotated card)))
+                                      "tapped"
+                                      (if (and (:wounded card) (not (:rotated card)))
+                                        "tapped"
+                                        (if (:rotated card)
+                                          "inverted"
+                                          "host-tapped"))))}
+              (om/build card-view card {:opts {:flipped (face-down? card)}})]
+             (:host-wounded card)
+             [:div.hosted {:class (if (and (:tapped card) (not (:inverted card)))
+                                    "rotated"
+                                    (if (and (:inverted card) (not (:rotated card)))
+                                      nil
+                                      (if (and (:wounded card) (not (:rotated card)))
+                                        nil
+                                        (if (:rotated card)
+                                          "tapped"
+                                          "host-wounded"))))}
+              (om/build card-view card {:opts {:flipped (face-down? card)}})]
+             :else
+             [:div.hosted {:class (if (and (:tapped card) (not (:inverted card)))
+                                    "tapped"
+                                    (if (and (:inverted card) (not (:rotated card)))
+                                      "inverted"
+                                      (if (and (:wounded card) (not (:rotated card)))
+                                        "wounded"
+                                        (if (:rotated card)
+                                          "rotated"
+                                          nil))))}
+              (om/build card-view card {:opts {:flipped (face-down? card)}})]
+             ))
+           ))
        [:div.blue-shade.card {:class (str (when selected "selected") (when new " new"))
                               :draggable (when (not-spectator?) true)
                               :on-touch-start #(handle-touchstart % cursor)
@@ -748,7 +792,7 @@
                                                          (= (:side @game-state) (keyword (.toLowerCase side))))
                                                  (put! zoom-channel cursor))
                               :on-mouse-leave #(put! zoom-channel false)
-                              :on-key-down #(handle-blindzoom %)
+                              ;:on-key-down #(handle-blindzoom %)
                               :on-click #(handle-card-click cursor owner)}
         (when-let [url (image-url cursor)]
           (if (or (not code) flipped facedown)
@@ -760,7 +804,7 @@
                 (facedown-card "Locations")
                 (facedown-card side ["bg"] alt-str)))
             [:div
-             [:span.cardname title]
+             ;[:span.cardname title]
              [:img.card.bg {:src url :alt title :onError #(-> % .-target js/$ .hide)}]]))
         [:div.counters
          (when counter
@@ -860,18 +904,7 @@
             [:div.panel.blue-shade.menu.abilities {:ref "advance"}
              [:div {:on-click #(send-command "advance" {:card @cursor})} "Advance"]
              [:div {:on-click #(send-command "reveal" {:card @cursor})} "Reveal"]]))]
-       (when (pos? (count hosted))
-         (for [card hosted]
-           [:div.hosted {:class (if (and (:tapped card) (not (:inverted card)))
-                                  "tapped"
-                                  (if (and (:inverted card) (not (:rotated card)))
-                                    "inverted"
-                                    (if (and (:wounded card) (not (:rotated card)))
-                                      "wounded"
-                                      (if (:rotated card)
-                                        "rotated"
-                                      nil))))}
-            (om/build card-view card {:opts {:flipped (face-down? card)}})]))])))
+       ])))
 
 (defn drop-area [side locale hmap]
   (merge hmap {:on-drop #(handle-drop % locale)
@@ -1255,7 +1288,7 @@
                tap-arrow (sab/html [:div.tap-arrow [:div]])
                max-hosted (apply max (map #(count (:hosted %)) characters))]
            [:div.characters {:style {:width (when (pos? max-hosted)
-                                              (+ 84 3 (* 42 (dec max-hosted))))}}
+                                              (+ 42 3 (* 21 (dec max-hosted))))}}
             (when-let [run-card (:card (:run-effect run))]
               [:div.run-card (om/build card-img run-card)])
             (for [character (reverse characters)]
@@ -1292,7 +1325,7 @@
       (let [is-challenger (= "Challenger" (:side identity))
             side (if is-challenger :challenger :contestant)
             map-name (if is-challenger "Sites2" "Sites")
-            map-ref (if is-challenger "Ch-map" "Co-map-menu")
+            map-ref (if is-challenger "Ch-map" "Co-map")
             map-menu-ref (str map-ref "-menu")
             map-content-ref (str map-ref "-content")
             site-name (if is-challenger "Location2" "Location")
@@ -1309,10 +1342,21 @@
          (facedown-card "Locations")
          (om/build label-without location {:opts {:name "Location"}})
          (when (= (:side @game-state) side)
-           [:div.panel.blue-shade.menu {:ref map-menu-ref}
-            [:div {:on-click #(show-map % owner reg-ref)} "Regions"]
-            [:div {:on-click #(show-map % owner map-ref)} "Sites"]]
-           )
+            (if (get-in @game-state [side :opt-key])
+              [:div.panel.blue-shade.menu {:ref map-menu-ref}
+               [:div {:on-click #(show-map % owner reg-ref)} "South-regions"]
+               [:div {:on-click #(show-map % owner reg-ref)} "Central-regions"]
+               [:div {:on-click #(show-map % owner reg-ref)} "North-regions"]
+               [:div {:on-click #(show-map % owner reg-ref)} "West-regions"]
+               [:div {:on-click #(show-map % owner reg-ref)} "Std-regions"]
+               ]
+              [:div.panel.blue-shade.menu {:ref map-menu-ref}
+               [:div {:on-click #(show-map % owner map-ref)} "South"]
+               [:div {:on-click #(show-map % owner map-ref)} "Central"]
+               [:div {:on-click #(show-map % owner map-ref)} "North"]
+               [:div {:on-click #(show-map % owner map-ref)} "West"]
+               [:div {:on-click #(show-map % owner map-ref)} "Std-sites"]
+               ]))
          (when (= (:side @game-state) side)
            [:div.panel.blue-shade.popup {:ref reg-content-ref}
             [:div
@@ -1850,6 +1894,8 @@
     (will-mount [this]
       (go (while true
             (let [card (<! zoom-channel)]
+              (-> ".direct" js/$ .focus)
+              (when card (send-command "blind-hold" {:card card}))
               (om/set-state! owner :zoom card)))))
 
     om/IDidUpdate
@@ -1879,7 +1925,9 @@
              [:div.rightpane
               [:div.card-zoom
                (when-let [card (om/get-state owner :zoom)]
-                 (om/build card-zoom card))]
+                 (if (get-in @game-state [side :blind])
+                   (om/build card-blind card)
+                   (om/build card-zoom card)))]
               ;; card implementation info
               (when-let [card (om/get-state owner :zoom)]
                 (let [implemented (:implementation card)]

@@ -109,7 +109,8 @@
     (if (acknowledged? (mc/update db "users"
                                   {:username username}
                                   {"$set" {:options (select-keys body [:background :blocked-users
-                                                                       :deckstats :gamestats])}}))
+                                                                       :deckstats :gamestats
+                                                                       :dice-pick :dice-size])}}))
       (response 200 {:message "Refresh your browser"})
       (response 404 {:message "Account not found"}))
     (response 401 {:message "Unauthorized"})))

@@ -64,6 +64,7 @@
            card (assoc-host-zones card)
            c (assoc target :host (dissoc card :hosted)
                            :facedown (if (is-type? card "Site") true false)
+                           :seen (if (is-type? card "Site") false true)
                            :zone '(:onhost) ;; hosted cards should not be in :discard or :hand etc
                            :previous-zone (:zone target))
            ;; Update any cards hosted by the target, so their :host has the updated zone.
@@ -89,7 +90,8 @@
            (register-events state side events c)))
        (when-let [hosted-gained (:hosted-gained cdef)]
          (hosted-gained state side (make-eid state) (get-card state card) [c]))
-       (if (and (is-type? c "Resource")
+       (if (and (not (is-type? (:host c) "Site"))
+                (is-type? c "Resource")
                 (card-is? c :side :contestant))
          (reveal state side c)
          c)
