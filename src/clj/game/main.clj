@@ -20,6 +20,7 @@
    "back-m-h" core/back-m-h
    "back-org" core/back-org
    "back-site" core/back-site
+   "blind-hold" #(core/blind-hold %1 %2 (:card %3))
    "blind-zoom" core/blind-zoom
    "bluff-o-g" core/bluff-o-g
    "challenger-ability" core/play-challenger-ability
@@ -29,6 +30,7 @@
    "close-fw-dc-sb" core/close-fw-dc-sb
    "close-location" core/close-location
    "close-sideboard" core/close-sideboard
+   "hide-hand" core/hide-hand
    "concede" core/concede
    "contestant-ability" core/play-contestant-ability
    "contestant-phase-43" core/contestant-phase-43
@@ -57,6 +59,7 @@
    "no-hazards" core/no-hazards
    "not-first" core/not-first
    "on-guard" core/on-guard
+   "option-key-down" core/option-key-down
    "org-phase" core/org-phase
    "organize" #(core/organize %1 %2 (:card %3) nil)
    "play" core/play
@@ -69,6 +72,7 @@
    "reset-org" core/reset-org
    "reset-site" core/reset-site
    "return-o-g" core/return-o-g
+   "reveal-hand" core/reveal-hand
    "reveal-o-g" core/reveal-o-g
    "reveal" #(core/reveal %1 %2 (:card %3) nil)
    "rotate" #(core/rotate %1 %2 (:card %3))

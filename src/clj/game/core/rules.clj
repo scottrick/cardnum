@@ -512,8 +512,8 @@
   [state side]
   (swap! state assoc-in [side :openhand] true))
 
-(defn conceal-hand
-  "Conceals a side's revealed hand from opponent and spectators."
+(defn hide-hand
+  "Hides a side's revealed hand from opponent and spectators."
   [state side]
   (swap! state update-in [side] dissoc :openhand))
 

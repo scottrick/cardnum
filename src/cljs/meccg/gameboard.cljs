@@ -460,12 +460,18 @@
     (when (pos? (count code))
       code)))
 
-(defn handle-blindzoom [e]
-  (when (= e.keyCode 16)
-    (do
-      ;(println "wft")
-      (send-command "blind-zoom")
-      (.preventDefault e)))
+
+(defn handle-key-down [e]
+  (cond
+    (= e.keyCode 16) ;// shift
+    (send-command "blind-zoom")
+    (= e.keyCode 18) ;// option
+    (send-command "option-key-down")
+    ;(= e.keyCode 27) ;// escape
+    (= e.keyCode 39) ;// right-arrow
+    (let [side (:side @game-state)]
+      (if-let [card (get-in @game-state [side :hold-card])]
+        (send-command "system-msg" {:msg (str (:title card))}))))
   )
 
 (defn card-preview-mouse-over [e channel]
@@ -512,7 +518,7 @@
     om/IRenderState
     (render-state [this state]
       (sab/html
-        [:div.log {:on-key-down #(handle-blindzoom %)
+        [:div.log {:on-key-down #(handle-key-down %)
                    :on-mouse-over #(card-preview-mouse-over % zoom-channel)
                    :on-mouse-out  #(card-preview-mouse-out % zoom-channel)}
          [:div.panel.blue-shade.messages {:ref "msg-list"}
@@ -692,7 +698,7 @@
     (when code
       (sab/html
         [:div.card-frame
-         [:div.blue-shade.card {:on-key-down #(handle-blindzoom %)
+         [:div.blue-shade.card {;:on-key-down #(handle-blindzoom %)
                                 :on-mouse-enter #(put! zoom-channel cursor)
                                 :on-mouse-leave #(put! zoom-channel false)}
           (when-let [url (image-url cursor)]
@@ -788,7 +794,7 @@
                                                          (= (:side @game-state) (keyword (.toLowerCase side))))
                                                  (put! zoom-channel cursor))
                               :on-mouse-leave #(put! zoom-channel false)
-                              :on-key-down #(handle-blindzoom %)
+                              ;:on-key-down #(handle-blindzoom %)
                               :on-click #(handle-card-click cursor owner)}
         (when-let [url (image-url cursor)]
           (if (or (not code) flipped facedown)
@@ -1321,7 +1327,7 @@
       (let [is-challenger (= "Challenger" (:side identity))
             side (if is-challenger :challenger :contestant)
             map-name (if is-challenger "Sites2" "Sites")
-            map-ref (if is-challenger "Ch-map" "Co-map-menu")
+            map-ref (if is-challenger "Ch-map" "Co-map")
             map-menu-ref (str map-ref "-menu")
             map-content-ref (str map-ref "-content")
             site-name (if is-challenger "Location2" "Location")
@@ -1338,10 +1344,21 @@
          (facedown-card "Locations")
          (om/build label-without location {:opts {:name "Location"}})
          (when (= (:side @game-state) side)
-           [:div.panel.blue-shade.menu {:ref map-menu-ref}
-            [:div {:on-click #(show-map % owner reg-ref)} "Regions"]
-            [:div {:on-click #(show-map % owner map-ref)} "Sites"]]
-           )
+            (if (get-in @game-state [side :opt-key])
+              [:div.panel.blue-shade.menu {:ref map-menu-ref}
+               [:div {:on-click #(show-map % owner reg-ref)} "South-regions"]
+               [:div {:on-click #(show-map % owner reg-ref)} "Central-regions"]
+               [:div {:on-click #(show-map % owner reg-ref)} "North-regions"]
+               [:div {:on-click #(show-map % owner reg-ref)} "West-regions"]
+               [:div {:on-click #(show-map % owner reg-ref)} "Std-regions"]
+               ]
+              [:div.panel.blue-shade.menu {:ref map-menu-ref}
+               [:div {:on-click #(show-map % owner map-ref)} "South"]
+               [:div {:on-click #(show-map % owner map-ref)} "Central"]
+               [:div {:on-click #(show-map % owner map-ref)} "North"]
+               [:div {:on-click #(show-map % owner map-ref)} "West"]
+               [:div {:on-click #(show-map % owner map-ref)} "Std-sites"]
+               ]))
          (when (= (:side @game-state) side)
            [:div.panel.blue-shade.popup {:ref reg-content-ref}
             [:div
@@ -1880,6 +1897,7 @@
       (go (while true
             (let [card (<! zoom-channel)]
               (-> ".direct" js/$ .focus)
+              (when card (send-command "blind-hold" {:card card}))
               (om/set-state! owner :zoom card)))))
 
     om/IDidUpdate

@@ -80,7 +80,7 @@
                     :free_gi 0 :total_mp 0 :stage_pt 0
                     :char_mp 0 :ally_mp 0 :item_mp 0
                     :fact_mp 0 :kill_mp 0 :misc_mp 0
-                    :toast [] :blind false
+                    :toast [] :blind false :hold-card 0 :opt-key false
                     :hand-size-base 8 :hand-size-modification 0
                     :agenda-point 0
                     :click-per-turn 100 :agenda-point-req 7 :keep false}
@@ -95,7 +95,7 @@
                     :discard [] :scored [] :rfg [] :play-area [] :current []
                     :locales {:hq {} :rd {} :archives {} :sites {}}
                     :rig {:resource [] :radicle [] :hazard []}
-                    :toast [] :blind false
+                    :toast [] :blind false :hold-card 0 :opt-key false
                     :click 0 :credit 20 :run-credit 0 :memory 4 :link 0 :tag 0
                     :free_gi 0 :total_mp 0 :stage_pt 0
                     :char_mp 0 :ally_mp 0 :item_mp 0

@@ -256,6 +256,19 @@
     (swap! state assoc-in [side :blind] false)
     (swap! state assoc-in [side :blind] true))
   )
+
+(defn blind-hold
+  [state side card]
+  (swap! state assoc-in [side :hold-card] card)
+  )
+
+(defn option-key-down
+  [state side args]
+  (if (get-in @state [side :opt-key])
+    (swap! state assoc-in [side :opt-key] false)
+    (swap! state assoc-in [side :opt-key] true))
+  )
+
 (defn host-any-card
   [state side args]
   (resolve-ability state side
@@ -314,6 +327,7 @@
                                                         (hide %1 %2 c)))
                                          :choices {:req (fn [t] (card-is? t :side %2))}}
                                         {:title "/hide command"} nil)
+          "/hide-hand"   #(hide-hand %1 %2)
           "/host"       #(host-any-card %1 %2 args)
           "/jack-out"   #(when (= %2 :challenger) (jack-out %1 %2 nil))
           "/link"       #(swap! %1 assoc-in [%2 :link] (max 0 value))
@@ -360,6 +374,7 @@
                                                       {:title "/psi command" :side %2}
                                                       {:equal  {:msg "resolve equal bets effect"}
                                                        :not-equal {:msg "resolve unequal bets effect"}}))
+          "/reveal-hand"   #(reveal-hand %1 %2)
           "/reveal"        #(resolve-ability %1 %2
                                             {:effect (effect (reveal target {:ignore-cost :all-costs :force true}))
                                              :choices {:req (fn [t] (card-is? t :side %2))}}
@@ -408,7 +423,7 @@
         hand "Hand"
         cards (count (get-in @state [side :hand]))
         credits (get-in @state [side :credit])
-        text (str pre " their turn " (:turn @state) " with " credits " [Credit] and " cards " cards in " hand)]
+        text (str pre " their turn " (:turn @state) " with " cards " cards")]
     (system-msg state side text {:hr (not start-of-turn)})))
 
 (defn event-title
