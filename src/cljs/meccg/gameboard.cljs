@@ -714,24 +714,25 @@
          (not= type "Hazard"))
     facedown))
 
+(defn card-blind [card owner]
+    (om/component
+      (sab/html
+        [:div.card-preview.blind.blue-shade {:class (if (and (#{"Region"} (:type card))
+                                                             (re-find #"tap" (:Home card)))
+                                                      "region")}
+         (when-let [url (image-url card)]
+           [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])]
+        )))
+
 (defn card-zoom [card owner]
-  (let [me (:side @game-state)]
-  (om/component
-    (sab/html
-      (if (get-in @game-state [me :blind])
-        (do
-          [:div.card-preview.blind.blue-shade {:class (if (and (#{"Region"} (:type card))
-                                                               (re-find #"tap" (:Home card)))
-                                                        "region")}
-           (when-let [url (image-url card)]
-             [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])])
-        (do
-          [:div.card-preview.blue-shade {:class (if (and (#{"Region"} (:type card))
-                                                               (re-find #"tap" (:Home card)))
-                                                        "region")}
-           (when-let [url (image-url card)]
-             [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])]))
-      ))))
+    (om/component
+      (sab/html
+        [:div.card-preview.blue-shade {:class (if (and (#{"Region"} (:type card))
+                                                       (re-find #"tap" (:Home card)))
+                                                "region")}
+         (when-let [url (image-url card)]
+           [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])]
+        )))
 
 (defn card-view [{:keys [zone code type abilities counter advance-counter advancementcost current-cost subtype
                          advanceable revealed tapped rotated strength current-strength title parties selected hosted
@@ -1927,7 +1928,9 @@
              [:div.rightpane
               [:div.card-zoom
                (when-let [card (om/get-state owner :zoom)]
-                 (om/build card-zoom card))]
+                 (if (get-in @game-state [side :blind])
+                   (om/build card-blind card)
+                   (om/build card-zoom card)))]
               ;; card implementation info
               (when-let [card (om/get-state owner :zoom)]
                 (let [implemented (:implementation card)]
