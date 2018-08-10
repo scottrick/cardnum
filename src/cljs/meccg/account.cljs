@@ -32,6 +32,8 @@
   (om/set-state! owner :flash-message "Updating profile...")
   (swap! app-state assoc-in [:options :sounds] (om/get-state owner :sounds))
   (swap! app-state assoc-in [:options :background] (om/get-state owner :background))
+  (swap! app-state assoc-in [:options :dice-pick] (om/get-state owner :dice-pick))
+  (swap! app-state assoc-in [:options :dice-size] (om/get-state owner :dice-size))
   (swap! app-state assoc-in [:options :sounds-volume] (om/get-state owner :volume))
   (swap! app-state assoc-in [:options :blocked-users] (om/get-state owner :blocked-users))
   (swap! app-state assoc-in [:options :gamestats] (om/get-state owner :gamestats))
@@ -69,6 +71,8 @@
     om/IWillMount
     (will-mount [this]
       (om/set-state! owner :background (get-in @app-state [:options :background]))
+      (om/set-state! owner :dice-pick (get-in @app-state [:options :dice-pick]))
+      (om/set-state! owner :dice-size (get-in @app-state [:options :dice-size]))
       (om/set-state! owner :sounds (get-in @app-state [:options :sounds]))
       (om/set-state! owner :volume (get-in @app-state [:options :sounds-volume]))
       (om/set-state! owner :gamestats (get-in @app-state [:options :gamestats]))
@@ -104,21 +108,54 @@
 
            [:section
             [:h3  "Game board background"]
-            (for [option [{:name "The Root"        :ref "lobby-bg"}
-                          {:name "Freelancer"      :ref "freelancer-bg"}
-                          {:name "Mushin No Shin"  :ref "mushin-no-shin-bg"}
-                          {:name "Traffic Jam"     :ref "traffic-jam-bg"}
-                          {:name "Rumor Mill"      :ref "rumor-mill-bg"}
-                          {:name "Find The Truth"  :ref "find-the-truth-bg"}
-                          {:name "Push Your Luck"  :ref "push-your-luck-bg"}
-                          {:name "Apex"            :ref "apex-bg"}
-                          {:name "Monochrome"      :ref "monochrome-bg"}]]
+            (for [option [{:name "Barad-dûr by John Howe"              :ref "barad-dur-john-howe-bg"}
+                          {:name "Bridge by Paul Monteagle"            :ref "bridge-paul-monteagle-bg"}
+                          {:name "Edoras by Bakarov"                   :ref "edoras-bakarov-bg"}
+                          {:name "Green Hill Morning by Ted Naismith"  :ref "ted-green-hill-morning-bg"}
+                          {:name "Rogrog in Cardolan by Angus McBride" :ref "lobby-bg"}
+                          {:name "Carn Dûm 1 (b&w)"                    :ref "carn-dum1bw-bg"}
+                          {:name "Carn Dûm 2 (b&w)"                    :ref "carn-dum2bw-bg"}
+                          {:name "Carn Dûm 3 (b&w)"                    :ref "carn-dum3bw-bg"}
+                          {:name "Monochrome"                          :ref "monochrome-bg"}
+                          ]]
               [:div.radio
                [:label [:input {:type "radio"
                                 :name "background"
                                 :value (:ref option)
                                 :on-change #(om/set-state! owner :background (.. % -target -value))
                                 :checked (= (om/get-state owner :background) (:ref option))}]
+                (:name option)]])]
+
+           [:section
+            [:h3  "Which Lidless Eye Dice?"]
+            (for [option [{:name "Black Flat Red Pips 16mm"       :ref "blck-16"}
+                          {:name "Black Swirl Red Pips 18mm"      :ref "blacks-18"}
+                          {:name "Silver Swirl Red Pips 16mm"     :ref "greys-16"}
+                          {:name "Grey Swirl Red Pips 18mm"       :ref "greys-18"}
+                          {:name "Dk. Gold Swirl Black Pips 16mm" :ref "gsdark-16"}
+                          {:name "Lt. Gold Swirl Black Pips 18mm" :ref "gslight-18"}
+                          {:name "Orange Flat Black Pips 16mm"    :ref "orgblack-16"}
+                          {:name "Red Swirl Black Pips 16mm"      :ref "rsblack-16"}
+                          {:name "Red Swirl Black Pips 18mm"      :ref "rsblack-18"}
+                          {:name "Red Swirl White Pips 16mm"      :ref "rswhite-16"}]]
+              [:div.radio
+               [:label [:input {:type "radio"
+                                :name "dice-pick"
+                                :value (:ref option)
+                                :on-change #(om/set-state! owner :dice-pick (.. % -target -value))
+                                :checked (= (om/get-state owner :dice-pick) (:ref option))}]
+                (:name option)]])]
+
+           [:section
+            [:h3  "Treat as which size?"]
+            (for [option [{:name "treat as 16mm"      :ref "16mm"}
+                          {:name "treat as 18mm"      :ref "18mm"}]]
+              [:div.radio
+               [:label [:input {:type "radio"
+                                :name "dice-size"
+                                :value (:ref option)
+                                :on-change #(om/set-state! owner :dice-size (.. % -target -value))
+                                :checked (= (om/get-state owner :dice-size) (:ref option))}]
                 (:name option)]])]
 
            [:section

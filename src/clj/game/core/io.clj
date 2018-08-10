@@ -222,8 +222,16 @@
 (defn command-roll [state side value]
   (system-msg state side (str "rolls a " value " sided die and rolls a " (inc (rand-int value)))))
 
+;  :background (:options @app-state))
+;  (system-msg state side (str "rolls a " pick"-"(inc (rand-int 6))"+"size pick"-"(inc (rand-int 6))"+"size))))
+; (get-in p [:user :options :deckstats])
+; player (side @state)
+
 (defn basic-roll [state side]
-  (system-msg state side (str "rolls a roll-" (inc (rand-int 6)) "roll-" (inc (rand-int 6)))))
+  (let [player (side @state)
+        pick (get-in player [:user :options :dice-pick])
+        size (get-in player [:user :options :dice-size])]
+  (system-msg state side (str "rolls a " pick"-"(inc (rand-int 6))"+"size " " pick"-"(inc (rand-int 6))"+"size))))
 
 (defn command-undo-click
   "Resets the game state back to start of the click"

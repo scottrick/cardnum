@@ -8,6 +8,7 @@
             [meccg.appstate :refer [app-state]]
             [meccg.auth :refer [avatar] :as auth]
             [meccg.cardbrowser :refer [add-symbols] :as cb]
+            [meccg.dice :refer [add-faces create-face]]
             [meccg.standard :refer [standard-map]]
             [meccg.utils :refer [toastr-options influence-dot map-longest]]
             [meccg.ws :as ws]
@@ -373,18 +374,6 @@
     [(.substring item 1 (.indexOf item ci-seperator))
      (.substring item (inc (.indexOf item ci-seperator)) (dec (count item)))]))
 
-(defn create-face [text symbol class]
-  (.replace text (apply str symbol) (str "<img src='" class "'style=\"height:32px;\"></img>")))
-
-(defn add-faces [card-text]
-  (-> (if (nil? card-text) "" card-text)
-      (create-face "roll-1" "img/dice1.png")
-      (create-face "roll-2" "img/dice2.png")
-      (create-face "roll-3" "img/dice3.png")
-      (create-face "roll-4" "img/dice4.png")
-      (create-face "roll-5" "img/dice5.png")
-      (create-face "roll-6" "img/dice6.png")))
-
 (defn add-regions [card-text]
   (-> (if (nil? card-text) "" card-text)
       (create-face "Border-land" "img/dc/me_bl.png")
@@ -409,7 +398,8 @@
       [:div.smallwarning "!"]
       (if-let [[title code] (extract-card-info item)]
         [:span {:class "fake-link" :id code} title]
-        (if (boolean (re-find #"roll-" item))
+        (if (or (boolean (re-find #"16mm" item))
+                (boolean (re-find #"18mm" item)))
           [:span {:dangerouslySetInnerHTML #js {:__html (add-faces (add-faces item))}}]
           [:span {:dangerouslySetInnerHTML #js {:__html (add-regions item)}}])))))
 
@@ -460,7 +450,6 @@
     (when (pos? (count code))
       code)))
 
-
 (defn handle-key-down [e]
   (cond
     (= e.keyCode 16) ;// shift
@@ -472,6 +461,13 @@
     (let [side (:side @game-state)]
       (if-let [card (get-in @game-state [side :hold-card])]
         (send-command "system-msg" {:msg (str (:title card))}))))
+  )
+
+(defn handle-key-up [e]
+  (cond
+    (= e.keyCode 16) ;// shift
+    (send-command "blind-zoom")
+    )
   )
 
 (defn card-preview-mouse-over [e channel]
@@ -519,6 +515,7 @@
     (render-state [this state]
       (sab/html
         [:div.log {:on-key-down #(handle-key-down %)
+                   :on-key-up #(handle-key-up %)
                    :on-mouse-over #(card-preview-mouse-over % zoom-channel)
                    :on-mouse-out  #(card-preview-mouse-out % zoom-channel)}
          [:div.panel.blue-shade.messages {:ref "msg-list"}
