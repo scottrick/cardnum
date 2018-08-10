@@ -448,21 +448,31 @@
 (defn rotate
   "Rotate a card."
   [state side card]
-  (let [card (get-card state card)]
+  (let [c (get-card state card)
+        card (update-in c [:hosted] #(map (fn [h]
+                                            (assoc h :host-rotated true)) %))]
     (system-msg state side (str "rotates " (:title card)))
     (update! state side (assoc card :rotated true))))
 
 (defn tap
   "Tap a card."
   [state side card]
-  (let [card (get-card state card)]
+  (let [c (get-card state card)
+        card (update-in c [:hosted] #(map (fn [h]
+                                            (assoc h :host-tapped true)) %))]
     (system-msg state side (str "taps " (:title card)))
-    (update! state side (assoc card :tapped true :wounded false))))
+  (update! state side (assoc card :tapped true))))
 
 (defn untap
   "Untap a card."
   [state side card]
-  (let [card (get-card state card)]
+  (let [c (get-card state card)
+        card (update-in c [:hosted] #(map (fn [h]
+                                            (dissoc h
+                                                    :host-tapped
+                                                    :host-wounded
+                                                    :host-inverted
+                                                    :host-rotated)) %))]
     (if (:revealed card)
       (system-msg state side (str "untaps " (:title card)))
       (system-msg state side "untaps a card"))
@@ -471,22 +481,20 @@
 (defn wound
   "Wounds character."
   [state side card]
-  (let [card (get-card state card)]
+  (let [c (get-card state card)
+        card (update-in c [:hosted] #(map (fn [h]
+                                            (assoc h :host-wounded true)) %))]
     (system-msg state side (str "wounds " (:title card)))
     (update! state side (assoc card :wounded true))))
 
 (defn invert
   "Inverts a resource."
   [state side card]
-  (let [card (get-card state card)]
+  (let [c (get-card state card)
+        card (update-in c [:hosted] #(map (fn [h]
+                                            (assoc h :host-inverted true)) %))]
     (system-msg state side (str "inverts " (:title card)))
     (update! state side (assoc card :inverted true))))
-
-(defn fix-tap
-  [state side card]
-  (if (:tapped card)
-    (untap state side card)
-    (tap state side card)))
 
 (defn regionize
   [state side card]

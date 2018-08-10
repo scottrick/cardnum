@@ -168,11 +168,11 @@
           (cons "organize" %) %))
       (#(if (and (#{"Character"} type)
                  (#{"locales" "onhost"} (first zone))
-                 (and revealed (not wounded)))
+                 (and revealed (not tapped) (not wounded) (not rotated)))
           (cons "wound" %) %))
       (#(if (and (#{"Ally"} Secondary)
                  (#{"onhost"} (first zone))
-                 (not wounded))
+                 (and (not tapped) (not wounded) (not rotated)))
           (cons "wound" %) %))
       (#(if (and (#{"Region"} type)
                  (re-find #"tap" Home)
@@ -187,11 +187,11 @@
       (#(if (and (and (#{"Character" "Site"} type)
                       (#{"locales" "onhost"} (first zone)))
                  revealed
-                 (or (not tapped) wounded))
+                 (and revealed (not tapped) (not wounded) (not rotated)))
           (cons "tap" %) %))
       (#(if (and (and (#{"Character" "Site"} type)
                       (#{"locales" "onhost"} (first zone)))
-                 (or tapped wounded))
+                 (or tapped wounded rotated))
           (cons "untap" %) %))
       (#(if (and (= type "Resource")
                  (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
@@ -200,21 +200,21 @@
       (#(if (and (= type "Resource")
                  (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
                  (#{"locales" "onhost"} (first zone))
-                 (not rotated))
+                 (not tapped) (not inverted) (not rotated))
           (cons "invert" %) %))
-      (#(if (and (and (= type "Resource")
-                      (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
-                      (#{"locales" "onhost"} (first zone)))
-                 (and (not inverted) (not rotated)))
+      (#(if (and (= type "Resource")
+                 (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
+                 (#{"locales" "onhost"} (first zone))
+                 (not tapped) (not inverted) (not wounded) (not rotated))
           (cons "rotate" %) %))
-      (#(if (and (and (= type "Resource")
-                      (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
-                      (#{"locales" "onhost"} (first zone)))
-                 (and (not tapped) (not inverted) (not rotated)))
+      (#(if (and (= type "Resource")
+                 (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
+                 (#{"locales" "onhost"} (first zone))
+                 (not tapped) (not inverted) (not wounded) (not rotated))
           (cons "tap" %) %))
-      (#(if (and (and (= type "Resource")
-                      (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
-                      (#{"locales" "onhost"} (first zone)))
+      (#(if (and (= type "Resource")
+                 (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
+                 (#{"locales" "onhost"} (first zone))
                  (or tapped wounded inverted rotated))
           (cons "untap" %) %))
       (#(if (and (and (some (partial = Secondary) ["Permanent-event" "Faction"])
@@ -738,16 +738,44 @@
       [:div.card-frame
        (when (pos? (count hosted))
          (for [card (reverse hosted)]
-           [:div.hosted {:class (if (and (:tapped card) (not (:inverted card)))
-                                  "tapped"
-                                  (if (and (:inverted card) (not (:rotated card)))
-                                    "inverted"
-                                    (if (and (:wounded card) (not (:rotated card)))
-                                      "wounded"
-                                      (if (:rotated card)
-                                        "rotated"
-                                        nil))))}
-            (om/build card-view card {:opts {:flipped (face-down? card)}})]))
+           (do
+           ;(println (str "Host is: " (if (:host-tapped card) "tapped" "untapped")))
+           (cond
+             (:host-tapped card)
+             [:div.hosted {:class (if (and (:tapped card) (not (:inverted card)))
+                                    nil
+                                    (if (and (:inverted card) (not (:rotated card)))
+                                      "tapped"
+                                      (if (and (:wounded card) (not (:rotated card)))
+                                        "tapped"
+                                        (if (:rotated card)
+                                          "inverted"
+                                          "host-tapped"))))}
+              (om/build card-view card {:opts {:flipped (face-down? card)}})]
+             (:host-wounded card)
+             [:div.hosted {:class (if (and (:tapped card) (not (:inverted card)))
+                                    "rotated"
+                                    (if (and (:inverted card) (not (:rotated card)))
+                                      nil
+                                      (if (and (:wounded card) (not (:rotated card)))
+                                        nil
+                                        (if (:rotated card)
+                                          "tapped"
+                                          "host-wounded"))))}
+              (om/build card-view card {:opts {:flipped (face-down? card)}})]
+             :else
+             [:div.hosted {:class (if (and (:tapped card) (not (:inverted card)))
+                                    "tapped"
+                                    (if (and (:inverted card) (not (:rotated card)))
+                                      "inverted"
+                                      (if (and (:wounded card) (not (:rotated card)))
+                                        "wounded"
+                                        (if (:rotated card)
+                                          "rotated"
+                                          nil))))}
+              (om/build card-view card {:opts {:flipped (face-down? card)}})]
+             ))
+           ))
        [:div.blue-shade.card {:class (str (when selected "selected") (when new " new"))
                               :draggable (when (not-spectator?) true)
                               :on-touch-start #(handle-touchstart % cursor)
@@ -1256,7 +1284,7 @@
                tap-arrow (sab/html [:div.tap-arrow [:div]])
                max-hosted (apply max (map #(count (:hosted %)) characters))]
            [:div.characters {:style {:width (when (pos? max-hosted)
-                                              (+ 84 3 (* 42 (dec max-hosted))))}}
+                                              (+ 42 3 (* 21 (dec max-hosted))))}}
             (when-let [run-card (:card (:run-effect run))]
               [:div.run-card (om/build card-img run-card)])
             (for [character (reverse characters)]

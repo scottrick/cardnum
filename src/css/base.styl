@@ -1662,14 +1662,6 @@ align-radio
     &:hover .controls
       display: block
 
-  .hosted
-    margin-left: 24px
-    margin-top: -65px
-    display-flex()
-
-    .card-frame:not(:first-child)
-      margin-left: -15px
-
   .leftpane
     display-flex()
     flex-direction(column)
@@ -1972,63 +1964,11 @@ align-radio
               left: 57px
               transform: rotate(-90deg)
 
-          .hosted.rotated
-            transform(rotate(-90deg))
-            margin-top: -49px
-            flex-direction(column)
-
-            .card-frame
-              margin-left: 0
-
-              &:not(:first-child)
-                margin-top: -42px
-
-              .counters
-                transform(rotate(-90deg))
-
-              .abilities, .challenger-abilities, .contestant-abilities
-                top: 0
-                bottom: auto
-                transform(rotate(90deg) translateY(-50%))
-                transform-origin(0 0)
-
-          .hosted.inverted
-            transform(rotate(180deg))
-
-          .hosted.wounded
-            transform(rotate(180deg))
-
-          .hosted.tapped
-            transform(rotate(90deg))
-            margin-top: -49px
-            flex-direction(column)
-
-            .card-frame
-              margin-left: 0
-
-              &:not(:first-child)
-                margin-top: -42px
-
-              .counters
-                transform(rotate(-90deg))
-
-              .abilities, .challenger-abilities, .contestant-abilities
-                top: 0
-                bottom: auto
-                transform(rotate(-90deg))
-                transform-origin(0 0)
-
           .hosted
             margin-bottom: -60px
-            //margin-left: -12px
-            flex-direction(column)
-
-            &:nth-child(odd)
-              margin-left: -22px
+            margin-left: -20px
 
             .card-frame
-              //margin-top: 42px
-              //margin-left: -42px
 
               .counters
                 transform(rotate(-90deg))
@@ -2039,8 +1979,15 @@ align-radio
                 transform-origin(0 0)
                 transform(initial)
 
-          .strength
-            transform(rotate(0deg))
+            &.host-tapped
+              transform(rotate(-90deg))
+
+            &.host-wounded
+              transform(rotate(-180deg))
+              margin-right: -20px
+
+            .strength
+              transform(rotate(0deg))
 
           .subtype-target
             transform(rotate(90deg), translateX(100%))
@@ -2064,6 +2011,54 @@ align-radio
           .challenger-abilities, .contestant-abilities
             bottom: 0
             transform-origin(0 100%)
+
+          .hosted.rotated
+            transform(rotate(-90deg))
+            margin-top: -49px
+            flex-direction(column)
+
+            .card-frame
+              margin-left: 0
+
+              &:not(:first-child)
+                margin-top: -42px
+
+              .counters
+                transform(rotate(-90deg))
+
+              .abilities, .challenger-abilities, .contestant-abilities
+                top: 0
+                bottom: auto
+                transform(rotate(90deg) translateY(-50%))
+                transform-origin(0 0)
+
+          .hosted.inverted
+            transform(translateX(-22%), rotate(180deg))
+            margin-bottom: -60px
+
+          .hosted.wounded
+            transform(translateX(-22%), rotate(180deg))
+            margin-bottom: -60px
+
+          .hosted.tapped
+            transform(rotate(90deg))
+            margin-top: -49px
+            flex-direction(column)
+
+            .card-frame
+              margin-left: 0
+
+              &:not(:first-child)
+                margin-top: -42px
+
+              .counters
+                transform(rotate(-90deg))
+
+              .abilities, .challenger-abilities, .contestant-abilities
+                top: 0
+                bottom: auto
+                transform(rotate(-90deg))
+                transform-origin(0 0)
 
         .content
           position: relative
