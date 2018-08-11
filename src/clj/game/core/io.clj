@@ -11,7 +11,7 @@
     (if-let [command (parse-command text)]
       (when (and (not= side nil) (not= side :spectator))
         (command state side)
-        (when-not (= text "/z")
+        (when-not (or (= text "/z") (= text "/o"))
           (swap! state update-in [:log] #(conj % {:user nil :text (str "[!]" (:username author) " uses a command: " text)}))
           )
         )
@@ -375,7 +375,8 @@
                                                         (move %1 %2 c :fw-dc-sb)))
                                          :choices {:req (fn [t] (card-is? t :side %2))}}
                                         {:title "/move-fw-sb command"} nil)
-          "/re-deck"  #(resolve-ability %1 %2
+          "/o"          #(option-key-down %1 %2 nil)
+          "/re-deck"    #(resolve-ability %1 %2
                                         {:effect (effect (shuffle-into-deck {} :discard))}
                                         {:title "/re-deck command"} nil)
           "/psi"        #(when (= %2 :contestant) (psi-game %1 %2
