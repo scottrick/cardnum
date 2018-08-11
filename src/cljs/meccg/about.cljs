@@ -35,7 +35,7 @@
      [:p "A big props to Neal Terrell (nealpro), Joel Koepp (JoelCFC25), Filip Gokstorp (Saintis), Dan Hutchins (danhut, wozzit) and John Warwick (jwarwick, BobTomatoes) who actively contribute to the success of the project with regular code submissions, the management of the issue tracker and answers to questions in the chat. It would not be the same without your help."]
 
      [:h3 "Sub-contributors (MECCG)"]
-     [:p "A special thanks to Nicolai, Eric, and Bill for all there work with the Dreamcards.  Gavin for sure for his constant endeavor with the Council of Elrond.  And to the alpha tester who got us this far"]
+     [:p "A special thanks to Vastor Peredhil, Thorsten the Traveler, and dirhaval for all their work with the Dreamcards.  the Jabberwock for sure for his constant endeavor with the Council of Elrond, and some dice!  And to the alpha testers who got us this far!"]
 
      [:h3 "Donations"]
      [:p "Donations are appreciated and help finance fast servers. You can support the project financially with PayPal or Bitcoin. Alternate art cards will be enabled on your account as a token of gratitude. Please specify your username with your donation."]
