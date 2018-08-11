@@ -1,20 +1,28 @@
 [![Build status](https://circleci.com/gh/rezwits/cardnum/tree/master.svg?style=shield)](https://circleci.com/gh/rezwits/cardnum/tree/master)
 
-Play Middle-earth CCG in the browser.
+Play Middle-earth:CCG in the browser.
 
 ## Live server
 
 http://www.cardnum.net
 
-[Gameplay videos](https://www.youtube.com/results?search_query=cardnum.net)
+[Ch 1 - Basics](https://www.youtube.com/watch?v=NVUjf6YrL_A)
 
-![screenshot](http://i.imgur.com/xkxOMHc.jpg)
+[Ch 2 - Games](https://www.youtube.com/watch?v=kMNXLibDVGE)
 
+[Ch 3 - Drafting](https://www.youtube.com/watch?v=r5tFzhFe6-E)
+
+[Ch 4 - Resources](https://www.youtube.com/watch?v=3-DuGG2NNAc)
+
+[Ch 5 - Hazards](https://www.youtube.com/watch?v=cy8lLzPUBlE)
+
+[Ch 6 - Item Tips](https://www.youtube.com/watch?v=QCURuej2IsY)
+
+![screenshot](/resources/public/img/meccg_shot2.jpg)
 
 ## Card implementation status
 
-
-[Card rules implementation status](https://docs.google.com/spreadsheets/d/1ICv19cNjSaW9C-DoEEGH3iFt09PBTob4CAutGex0gnE/pubhtml)
+[Card rules implementation status](https://docs.google.com/spreadsheets/d/1Ly2RVe4QZRhN6TUfV1YO9DuuYvywzMnnaCunQapzzfs/edit?usp=sharing)
 
 
 ## Dependencies
@@ -61,27 +69,23 @@ Launch web server:
     ```
 * As a standalone process in production mode (must first run `lein uberjar` and `lein cljsbuild once prod`):
     ```
-    $ java -jar target/meccg-standalone.jar
+    $ java -jar target/netrunner-standalone.jar
     ```
 
 Open http://localhost:1042/
 
-## Tests
+
+## Tests (unimplemented)
 
 To run all tests:
 
 ```
-$ lein test
+$ lein test test.all
 ```
 
 To run a single test file:
 ```
-$ lein test game-test.cards.agendas
-```
-
-Or a single test:
-```
-$ lein test :only game-test.cards.agendas/fifteen-minutes
+$ lein test test.cards.agendas
 ```
 
 For more information refer to the [development guide](https://github.com/rezwits/meccg/wiki/Getting-Started-with-Development).

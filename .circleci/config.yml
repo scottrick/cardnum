@@ -11,10 +11,10 @@ jobs:
     branches:
       only:
         - master
+        - table
       ignore:
         - cards
         - decks
-        - table
         - mext
         - mext-e
     steps:
