@@ -11,6 +11,7 @@ jobs:
     branches:
       only:
         - master
+        - table
       ignore:
         - cards
         - decks
