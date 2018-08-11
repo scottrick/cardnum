@@ -2,15 +2,6 @@ version: 2
 
 jobs:
   build:
-  branches:
-        only:
-          - master
-          ignore:
-            – cards
-            – decks
-            – table
-            - mext
-            - mext-e
     docker:
       - image: circleci/clojure:lein-2.7.1
       - image: mongo:3.4.4
