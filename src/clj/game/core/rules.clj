@@ -535,14 +535,12 @@
           now (t/now)]
       (system-msg state side "wins the game")
       (play-sfx state side "game-end")
-      (swap! state assoc-in [:stats :time :ended] now)
-      (swap! state assoc-in [:stats :time :elapsed] (t/in-minutes (t/interval started now)))
       (swap! state assoc
              :winner side
              :loser (other-side side)
              :winning-user (get-in @state [side :user :username])
              :losing-user (get-in @state [(other-side side) :user :username])
-             :reason reason :end-time (java.util.Date.)
+             :reason reason ;:end-time (java.util.Date.)
              :winning-deck-id (get-in @state [side :deck-id])
              :losing-deck-id (get-in @state [(other-side side) :deck-id])))))
 
