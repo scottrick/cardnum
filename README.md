@@ -1,4 +1,4 @@
-[![Build status](https://circleci.com/gh/rezwits/meccg/tree/master.svg?style=shield)](https://circleci.com/gh/rezwits/meccg)
+[![Build status](https://circleci.com/gh/rezwits/cardnum/tree/master.svg?style=shield)](https://circleci.com/gh/rezwits/cardnum/tree/master)
 
 Play Middle-earth CCG in the browser.
 

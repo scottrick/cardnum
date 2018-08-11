@@ -19,4 +19,3 @@ jobs:
             - ~/project/.lein
           key: lein-deps-{{ checksum "project.clj" }}
       - run: lein do fetch --no-card-images
-      
