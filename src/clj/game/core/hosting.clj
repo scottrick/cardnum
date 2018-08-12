@@ -91,8 +91,8 @@
        (when-let [hosted-gained (:hosted-gained cdef)]
          (hosted-gained state side (make-eid state) (get-card state card) [c]))
        (if (and (not (is-type? (:host c) "Site"))
-                (is-type? c "Resource")
-                (card-is? c :side :contestant))
+                (is-type? c "Resource"))
+                ;(card-is? c :side :contestant)
          (reveal state side c)
          c)
        ))))

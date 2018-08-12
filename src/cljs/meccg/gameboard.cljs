@@ -712,24 +712,24 @@
     facedown))
 
 (defn card-blind [card owner]
-    (om/component
-      (sab/html
-        [:div.card-preview.blind.blue-shade {:class (if (and (#{"Region"} (:type card))
-                                                             (re-find #"tap" (:Home card)))
-                                                      "region")}
-         (when-let [url (image-url card)]
-           [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])]
-        )))
+  (om/component
+    (sab/html
+      [:div.card-preview.blind.blue-shade {:class (if (and (#{"Region"} (:type card))
+                                                           (re-find #"tap" (:Home card)))
+                                                    "region")}
+       (when-let [url (image-url card)]
+         [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])]
+      )))
 
 (defn card-zoom [card owner]
-    (om/component
-      (sab/html
-        [:div.card-preview.blue-shade {:class (if (and (#{"Region"} (:type card))
-                                                       (re-find #"tap" (:Home card)))
-                                                "region")}
-         (when-let [url (image-url card)]
-           [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])]
-        )))
+  (om/component
+    (sab/html
+      [:div.card-preview.blue-shade {:class (if (and (#{"Region"} (:type card))
+                                                     (re-find #"tap" (:Home card)))
+                                              "region")}
+       (when-let [url (image-url card)]
+         [:img {:src url :alt (:title card) :onLoad #(-> % .-target js/$ .show)}])]
+      )))
 
 (defn card-view [{:keys [zone code type abilities counter advance-counter advancementcost current-cost subtype
                          advanceable revealed tapped rotated strength current-strength title parties selected hosted
@@ -1895,8 +1895,9 @@
       (go (while true
             (let [card (<! zoom-channel)]
               (-> ".direct" js/$ .focus)
+              (om/set-state! owner :zoom card)
               (when card (send-command "blind-hold" {:card card}))
-              (om/set-state! owner :zoom card)))))
+              ))))
 
     om/IDidUpdate
     (did-update [this prev-props prev-state]
