@@ -38,6 +38,7 @@ Install frontend dependencies:
 ```
 $ npm install -g bower
 $ npm install -g stylus
+$ lein deps
 $ bower install
 ```
 

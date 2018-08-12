@@ -137,7 +137,7 @@
 
 (defn read-card-dir
   [base-path _ fields]
-  (let [dirpath (str base-path "/pack")
+  (let [dirpath base-path
         _ (println "Reading card directory" dirpath)
         files (mapv str (filter #(.isFile %) (file-seq (clojure.java.io/file dirpath))))
         json-files (filter #(string/ends-with? % ".json") files)

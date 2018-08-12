@@ -291,97 +291,11 @@
       (end-phase-12 state side args))))
 
 ;; --- For what goes on between Start/End ;)
-;; Organization Phase
-(defn not-first
-  [state side args]
-  (start-turn state side args)
-  (swap! state update-in [:turn] dec)
-  (system-msg state side "passes first turn")
-  (let [offset (- 70 (get-in @state [side :click]))]
-    (gain state side :click offset))
-  )
 
-(defn untap-all
-  [state side args]
-  (resolve-ability state side
-                   {:effect (req
-                              (if (= side :contestant)
-                                (doseq [c (all-placed state side)]
-                                  (when (and (not (:wounded c))
-                                             (or (:tapped c) (:rotated c))
-                                             (not (boolean (re-find #"Site" (:type c))))
-                                             (not (boolean (re-find #"Region" (:type c))))
-                                             (not (boolean (re-find #"Permanent" (:Secondary c))))
-                                             )
-                                             (untap state side c)))
-                                (doseq [c (all-placed-challenger state side)]
-                                  (when (and (not (:wounded c))
-                                             (or (:tapped c) (:rotated c))
-                                             (not (boolean (re-find #"Site" (:type c))))
-                                             (not (boolean (re-find #"Region" (:type c))))
-                                             (not (boolean (re-find #"Permanent" (:Secondary c))))
-                                             )
-                                             (untap state side c))))
-                              )}
-                   nil nil)
-
-  (system-msg state side "untaps")
-  (gain state side :click -5)
-  )
-(defn org-phase
-  [state side args]
-  (system-msg state side "is done organizing, Long-event Phase")
-  (gain state side :click -5)
-  )
-(defn m-h-phase
-  [state side args]
-  (system-msg state side "enters the Movement/Hazard Phase")
-  (gain state side :click -5)
-  )
-; Movement/Hazard Phase
-(defn back-org
-  [state side args]
-  (system-msg state side "goes back to the Organization Phase")
-  (let [offset (- 100 (get-in @state [side :click]))]
-    (gain state side :click offset))
-  )
-(defn next-m-h
-  [state side args]
-  (system-msg state side "goes to the next companies' M/H Phase")
-  )
-(defn site-phase
-  [state side args]
-  (system-msg state side "goes to the Site Phase")
-  (gain state side :click -5)
-  )
-; Site Phase
-(defn back-m-h
-  [state side args]
-  (system-msg state side "goes back the M/H Phase")
-  (let [offset (- 85 (get-in @state [side :click]))]
-    (gain state side :click offset))
-  )
-(defn next-site
-  [state side args]
-  (system-msg state side "goes to the next companies' Site Phase")
-  )
-(defn eot-phase
-  [state side args]
-  (system-msg state side "goes to the beginning of the End-of-turn")
-  (gain state side :click -5)
-  )
-;; End of Turn Phase
-(defn back-site
-  [state side args]
-  (system-msg state side "goes back the Site Phase")
-  (let [offset (- 80 (get-in @state [side :click]))]
-    (gain state side :click offset))
-  )
-(defn eot-discard
-  [state side args]
-  (system-msg state side "acknowledges EOT discard")
-  (gain state side :click -5)
-  )
+(defn opp-side [side]
+  (if (= side :contestant)
+    :challenger
+    :contestant))
 
 ;;--- Hazard Phase Replies
 ;; Organization Phase
@@ -473,6 +387,104 @@
 (defn haz-play-done
   [state side args]
   (system-msg state side "has NOTHING ELSE")
+  )
+
+;; Organization Phase
+(defn not-first
+  [state side args]
+  (start-turn state side args)
+  (swap! state update-in [:turn] dec)
+  (system-msg state side "passes first turn")
+  (let [offset (- 70 (get-in @state [side :click]))]
+    (gain state side :click offset))
+  )
+
+(defn untap-all
+  [state side args]
+  (resolve-ability state side
+                   {:effect (req
+                              (if (= side :contestant)
+                                (doseq [c (all-placed state side)]
+                                  (when (and (not (:wounded c))
+                                             (or (:tapped c) (:rotated c))
+                                             (not (boolean (re-find #"Site" (:type c))))
+                                             (not (boolean (re-find #"Region" (:type c))))
+                                             (not (boolean (re-find #"Permanent" (:Secondary c))))
+                                             )
+                                             (untap state side c)))
+                                (doseq [c (all-placed-challenger state side)]
+                                  (when (and (not (:wounded c))
+                                             (or (:tapped c) (:rotated c))
+                                             (not (boolean (re-find #"Site" (:type c))))
+                                             (not (boolean (re-find #"Region" (:type c))))
+                                             (not (boolean (re-find #"Permanent" (:Secondary c))))
+                                             )
+                                             (untap state side c))))
+                              )}
+                   nil nil)
+
+  (system-msg state side "untaps")
+  (gain state side :click -5)
+  )
+(defn org-phase
+  [state side args]
+  (system-msg state side "is done organizing, Long-event Phase")
+  (gain state side :click -5)
+  )
+(defn m-h-phase
+  [state side args]
+  (system-msg state side "enters the Movement/Hazard Phase")
+  (gain state side :click -5)
+  (reset-m-h state (opp-side side) nil)
+  )
+; Movement/Hazard Phase
+(defn back-org
+  [state side args]
+  (system-msg state side "goes back to the Organization Phase")
+  (let [offset (- 100 (get-in @state [side :click]))]
+    (gain state side :click offset))
+  (reset-org state (opp-side side) nil)
+  )
+(defn next-m-h
+  [state side args]
+  (system-msg state side "goes to the next companies' M/H Phase")
+  )
+(defn site-phase
+  [state side args]
+  (system-msg state side "goes to the Site Phase")
+  (gain state side :click -5)
+  (reset-site state (opp-side side) nil)
+  )
+; Site Phase
+(defn back-m-h
+  [state side args]
+  (system-msg state side "goes back the M/H Phase")
+  (let [offset (- 85 (get-in @state [side :click]))]
+    (gain state side :click offset))
+  (reset-m-h state (opp-side side) nil)
+  )
+(defn next-site
+  [state side args]
+  (system-msg state side "goes to the next companies' Site Phase")
+  )
+(defn eot-phase
+  [state side args]
+  (system-msg state side "goes to the beginning of the End-of-turn")
+  (gain state side :click -5)
+  (reset-done state (opp-side side) nil)
+  )
+;; End of Turn Phase
+(defn back-site
+  [state side args]
+  (system-msg state side "goes back the Site Phase")
+  (let [offset (- 80 (get-in @state [side :click]))]
+    (gain state side :click offset))
+  (reset-site state (opp-side side) nil)
+  )
+(defn eot-discard
+  [state side args]
+  (system-msg state side "acknowledges EOT discard")
+  (gain state side :click -5)
   )
 
 (defn end-turn

@@ -51,6 +51,7 @@
                         [:li [:code "/move-site"] " - Pick a card from your play-area to put into your location deck"]
                         [:li [:code "/move-sb"] " - Pick a card from your play-area to put into your sideboard"]
                         [:li [:code "/move-fw-sb"] " - Pick a card from your play-area to put into your fw-sideboard"]
+                        [:li [:code "/o"] " - Toggle the option key, for region access from the location deck"]
                         [:li [:code "/re-deck"] " - Use this to move all cards from your discard back to your deck"]
                         [:li [:code "/reveal"] " - Select a card to reveal"]
                         [:li [:code "/reveal-hand"] " - Reveals your hand to opponent, don't forget to hide"]
