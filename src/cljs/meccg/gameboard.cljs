@@ -1606,7 +1606,7 @@
                             (get-in contestant [:locales kw]))]
 
                [:div.panel.blue-shade
-                (when (or (= (:click me) 85) (= (:click me) 80))
+                (if (or (= (:click me) 85) (= (:click me) 80))
                   [:div
                    (cond-button "Next Character" (> n 1) #(send-command "continue"))
                    [:div.run-button
@@ -1626,7 +1626,7 @@
                                 #(send-command "jack-out"))
                    ])
 
-                (when (= (:click opponent) 85);; set to 45, by me
+                (if (= (:click opponent) 85);; set to 45, by me
                   [:div
                    (cond-button "On-guard" (= (:click me) 45) #(send-command "on-guard")) ;; -5
                    (cond-button "No Hazards" (or (= (:click me) 40) (= (:click me) 45)) #(send-command "no-hazards"))
@@ -1634,8 +1634,8 @@
                    (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                    (cond-button "Next M/H" (= (:click me) 35) #(send-command "reset-m-h"))
                    ;; set to 45, by me
-                   ])
-                (when (= (:click opponent) 80) ;; set to 25, by me
+                   ]
+                (if (= (:click opponent) 80) ;; set to 25, by me
                   [:div
                    ;;(when (> (:click me) 25) (send-command "reset-site"))
                    (cond-button "Reveal On-guard" (<= 21 (:click me) 25) #(send-command "reveal-o-g")) ;;-5
@@ -1650,14 +1650,13 @@
                    (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                    (cond-button "Next Site" (or (= (:click me) 20) (= (:click me) 25)) #(send-command "reset-site"))
                    ;; set to 25, by me
-                   ])
+                   ]))
                 ])
-             (do
+             (do ;// else form NOT RUN/Facing attack
                [:div.panel.blue-shade
                 ;; --- Start Turn ---
                 (if (and (not= (keyword active-player) side)
                          (zero? (:click me)) end-turn)
-                  (do
                     [:div
                      (cond-button "Keep Hand" (not (get-in @game-state [:contestant :keep])) #(send-command "keep"))
                      (cond-button "Mulligan" (not (get-in @game-state [:contestant :keep])) #(send-command "mulligan"))
@@ -1670,7 +1669,7 @@
                      (cond-button "Start Turn" (and (get-in @game-state [:contestant :keep])
                                                     (get-in @game-state [:challenger :keep]))
                                   #(send-command "start-turn")) ;; -5
-                     ])
+                     ]
                   (if (and (zero? (:click opponent))
                            (zero? (:click me)))
                     [:div
@@ -1681,14 +1680,14 @@
                      ]
                     )
                   )
-                (when (<= 90 (:click me) 100) ;; set to 100, opponent at 50
+                (if (<= 90 (:click me) 100) ;; set to 100, opponent at 50
                   [:div
                    (cond-button "Untap All" (= (:click me) 100) #(send-command "untap-all")) ;;-5
                    (cond-button "Organized" (= (:click me) 95) #(send-command "org-phase")) ;; -5
                    (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                    (cond-button "M/H Phase" (= (:click me) 90) #(send-command "m-h-phase")) ;; -5
-                   ])
-                (when (= (:click me) 85)
+                   ]
+                (if (= (:click me) 85)
                   [:div
                    [:button {:on-click #(send-command "back-org")} "Back to Organize"]
                    ;; set to 100, and opponent to 50
@@ -1706,8 +1705,8 @@
                                                  (runnable-locales challenger contestant))))]]
                    (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                    [:button {:on-click #(handle-end-of-phase "site-phase")} "Site Phase"] ;; -5
-                   ])
-                (when (= (:click me) 80)
+                   ]
+                (if (= (:click me) 80)
                   [:div
                    [:button {:on-click #(send-command "back-m-h")} "Back to M/H"]
                    ;; set to 85, and opponent to 45
@@ -1725,8 +1724,8 @@
                                                  (runnable-locales challenger contestant))))]]
                    (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                    [:button {:on-click #(send-command "eot-phase")} "EOT Phase"]; -5
-                   ])
-                (when (< 65 (:click me) 80)
+                   ]
+                (if (< 65 (:click me) 80)
                   [:div
                    [:button {:on-click #(send-command "back-site")} "Back to Site"]
                    ;; set to 80, and opponent to 25
@@ -1736,25 +1735,17 @@
                                                    (= (keyword active-player) side) (not end-turn)
                                                    (not contestant-phase-12) (not challenger-phase-12)
                                                    ) #(handle-end-turn))
-                   ])
+                   ]))))
 
                 ;;------BREAK to Hazard Player
 
-                (cond ;;hazard click resets
-                  (and (> (:click me) 0) (<= 90 (:click opponent) 100)) (send-command "reset-org")
-                  (and (zero? (:click me)) (= (:click opponent) 85)) (send-command "reset-m-h")
-                  (and (<= 20 (:click me) 25) (= (:click opponent) 85)) (send-command "reset-m-h")
-                  (and (zero? (:click me)) (= (:click opponent) 80)) (send-command "reset-site")
-                  (and (<= 35 (:click me) 45) (= (:click opponent) 80)) (send-command "reset-site")
-                  (and (<= 20 (:click me) 45) (< 65 (:click opponent) 80)) (send-command "reset-done")
-                  )
-                (when (<= 90 (:click opponent) 100);; set to 50, by me
+                (if (<= 90 (:click opponent) 100);; set to 50, by me
                   [:div
                    (cond-button "Wait!!!" (zero? (:click me)) #(send-command "wait-alert"))
                    (cond-button "Nothing" false nil)
                    (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
-                   (cond-button "Waiting" false nil)])
-                (when (= (:click opponent) 85);; set to 45, by me
+                   (cond-button "Waiting" false nil)]
+                (if (= (:click opponent) 85);; set to 45, by me
                   [:div
                    (cond-button "On-guard" (= (:click me) 45) #(send-command "on-guard")) ;; -5
                    (cond-button "No Hazards" (or (= (:click me) 40) (= (:click me) 45)) #(send-command "no-hazards"))
@@ -1762,8 +1753,8 @@
                    (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                    (cond-button "Next M/H" (= (:click me) 35) #(send-command "reset-m-h"))
                    ;; set to 45, by me
-                   ])
-                (when (= (:click opponent) 80) ;; set to 25, by me
+                   ]
+                (if (= (:click opponent) 80) ;; set to 25, by me
                   [:div
                    ;;(when (> (:click me) 25) (send-command "reset-site"))
                    (cond-button "Reveal On-guard" (<= 21 (:click me) 25) #(send-command "reveal-o-g")) ;;-5
@@ -1778,14 +1769,14 @@
                    (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                    (cond-button "Next Site" (or (= (:click me) 20) (= (:click me) 25)) #(send-command "reset-site"))
                    ;; set to 25, by me
-                   ])
-                (when (< 65 (:click opponent) 80) ;; set to 0, by me
+                   ]
+                (if (< 65 (:click opponent) 80) ;; set to 0, by me
                   [:div
                    ;;(when (> (:click me) 0) (send-command "reset-done"))
                    (cond-button "EOT Phase" false nil)
                    [:button {:on-click #(send-command "return-o-g")} "Return On-guard"]
                    (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
-                   (cond-button "Done" (zero? (:click me)) #(send-command "haz-play-done"))]) ;;-5
+                   (cond-button "Done" (zero? (:click me)) #(send-command "haz-play-done"))])))) ;;-5
                 ])))]))))
 
 (defn update-audio [{:keys [gameid sfx sfx-current-id] :as cursor} owner]
