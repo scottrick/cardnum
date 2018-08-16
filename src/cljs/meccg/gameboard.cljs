@@ -565,7 +565,10 @@
 
 (defn update-card-position [card touch]
   (-> card (.css "left" (str (- (int (aget touch "pageX")) 30) "px")))
-  (-> card (.css "top"  (str (- (int (aget touch "pageY")) 42) "px"))))
+  (-> card (.css "top"  (str (- (int (aget touch "pageY")) 42) "px")))
+  (-> card (.css "right" (str (- (int (aget touch "pageX")) 30) "px")))
+  (-> card (.css "bottom"  (str (- (int (aget touch "pageY")) 42) "px")))
+  )
 
 (defn get-card [e locale]
   (-> e .-target js/$ (.closest ".card-wrapper")))
@@ -740,46 +743,6 @@
   (om/component
     (sab/html
       [:div.card-frame
-       (when (pos? (count hosted))
-         (for [card (reverse hosted)]
-           (do
-           ;(println (str "Host is: " (if (:host-tapped card) "tapped" "untapped")))
-           (cond
-             (:host-tapped card)
-             [:div.hosted {:class (if (and (:tapped card) (not (:inverted card)))
-                                    nil
-                                    (if (and (:inverted card) (not (:rotated card)))
-                                      "tapped"
-                                      (if (and (:wounded card) (not (:rotated card)))
-                                        "tapped"
-                                        (if (:rotated card)
-                                          "inverted"
-                                          "host-tapped"))))}
-              (om/build card-view card {:opts {:flipped (face-down? card)}})]
-             (:host-wounded card)
-             [:div.hosted {:class (if (and (:tapped card) (not (:inverted card)))
-                                    "rotated"
-                                    (if (and (:inverted card) (not (:rotated card)))
-                                      nil
-                                      (if (and (:wounded card) (not (:rotated card)))
-                                        nil
-                                        (if (:rotated card)
-                                          "tapped"
-                                          "host-wounded"))))}
-              (om/build card-view card {:opts {:flipped (face-down? card)}})]
-             :else
-             [:div.hosted {:class (if (and (:tapped card) (not (:inverted card)))
-                                    "tapped"
-                                    (if (and (:inverted card) (not (:rotated card)))
-                                      "inverted"
-                                      (if (and (:wounded card) (not (:rotated card)))
-                                        "wounded"
-                                        (if (:rotated card)
-                                          "rotated"
-                                          nil))))}
-              (om/build card-view card {:opts {:flipped (face-down? card)}})]
-             ))
-           ))
        [:div.blue-shade.card {:class (str (when selected "selected") (when new " new"))
                               :draggable (when (not-spectator?) true)
                               :on-touch-start #(handle-touchstart % cursor)
@@ -903,8 +866,30 @@
             (or (= advanceable "always") (and revealed (= advanceable "revealed-only")))
             [:div.panel.blue-shade.menu.abilities {:ref "advance"}
              [:div {:on-click #(send-command "advance" {:card @cursor})} "Advance"]
-             [:div {:on-click #(send-command "reveal" {:card @cursor})} "Reveal"]]))]
-       ])))
+             [:div {:on-click #(send-command "reveal" {:card @cursor})} "Reveal"]]))]]
+       )))
+
+(defn host-view [hosted]
+  (let [s (count hosted)]
+    (when-not (empty? hosted)
+      (map-indexed (fn [i card]
+                     ;(println (str "Host is: " (if (:host-tapped card) "tapped" "untapped")))
+                     [:div.hosted (if (and (:tapped card) (not (:inverted card)))
+                                    {:class "tapped"
+                                     }
+                                    (if (and (:inverted card) (not (:rotated card)))
+                                      {:class "inverted"
+                                       }
+                                      (if (and (:wounded card) (not (:rotated card)))
+                                        {:class "wounded"
+                                         }
+                                        (if (:rotated card)
+                                          {:class "rotated"
+                                           }
+                                          ))))
+                      (om/build card-view card {:opts {:flipped (face-down? card)}})]
+                     ) (reverse hosted))))
+  )
 
 (defn drop-area [side locale hmap]
   (merge hmap {:on-drop #(handle-drop % locale)
@@ -1292,18 +1277,23 @@
             (when-let [run-card (:card (:run-effect run))]
               [:div.run-card (om/build card-img run-card)])
             (for [character (reverse characters)]
-              [:div.character {:class (if (and (:tapped character) (not (:wounded character)))
-                                        "tapped"
-                                        (if (:wounded character)
-                                          "wounded"
-                                          nil))}
-               (om/build card-view character {:opts {:flipped (not (:revealed character))}})
-               (when (and current-character (= (:cid current-character) (:cid character)))
-                 (if (:tapped character)
-                   tap-arrow
-                   run-arrow))])
-            (when (and run (not current-character))
-              run-arrow)])
+              [:div
+               [:div.character {:class (if (and (:tapped character) (not (:wounded character)))
+                                         "tapped"
+                                         (if (:wounded character)
+                                           "wounded"
+                                           nil))}
+                (om/build card-view character {:opts {:flipped (not (:revealed character))}})
+                (when (and current-character (= (:cid current-character) (:cid character)))
+                  (if (:tapped character)
+                    tap-arrow
+                    run-arrow))]
+               (when (pos? (count (:hosted character)))
+                 [:div.host-group
+                  (host-view (:hosted character))])
+               ])
+            ;(when (and run (not current-character)) run-arrow)
+            ])
          [:div.content
           (when central-view
             central-view)
