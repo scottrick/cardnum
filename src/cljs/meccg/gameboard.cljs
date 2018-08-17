@@ -887,6 +887,8 @@
                                           {:class "rotated"
                                            }
                                           ))))
+                      (when (pos? (count (:hosted card)))
+                         (host-view (:hosted card)))
                       (om/build card-view card {:opts {:flipped (face-down? card)}})]
                      ) (reverse hosted))))
   )
@@ -1209,8 +1211,12 @@
       (let [size (count scored)]
         [:div.panel.blue-shade.scored.squeeze
          (map-indexed (fn [i card]
+                        [:div
                         [:div.card-wrapper {:style {:left (* (/ 128 (dec size)) i)}}
-                         [:div (om/build card-view card)]])
+                         (om/build card-view card)
+                         (when (pos? (count (:hosted card)))
+                           [:div.host-group
+                            (host-view (:hosted card))])]])
                       scored)
          (om/build score scored {:opts {:name "Marshalling Point Pile"}})]))))
 
@@ -1292,7 +1298,7 @@
                  [:div.host-group
                   (host-view (:hosted character))])
                ])
-            ;(when (and run (not current-character)) run-arrow)
+            (when (and run (not current-character)) run-arrow)
             ])
          [:div.content
           (when central-view
@@ -1300,14 +1306,20 @@
           (when (not-empty content)
             (for [card content
                   :let [is-first (= card (first content))]]
-              [:div.locale-card {:class (str (when (:tapped card) "tapped ")
-                                             (when (or central-view
-                                                       (and (< 1 (count content))
-                                                            (not is-first)))
-                                               "shift"))}
-               (om/build card-view card {:opts {:flipped (not (:revealed card)) :location true}})
-               (when (and (not central-view) is-first)
-                 (om/build label-without content {:opts opts}))]))]]))))
+              [:div
+               [:div.locale-card {:class (str (when (:tapped card) "tapped ")
+                                              (when (or central-view
+                                                        (and (< 1 (count content))
+                                                             (not is-first)))
+                                                "shift"))}
+                (om/build card-view card {:opts {:flipped (not (:revealed card)) :location true}})
+                (when (and (not central-view) is-first)
+                  (om/build label-without content {:opts opts}))]
+               (when (pos? (count (:hosted card)))
+                 [:div.host-group
+                  (host-view (:hosted card))])
+               ]
+              ))]]))))
 
 (defn location-view [{:keys [identity location] :as cursor} owner]
   (om/component
@@ -1403,16 +1415,20 @@
       (let [is-me (= (:side @game-state) :contestant)]
         [:div.contestant-rig {:class (if is-me "me" "opponent")}
          (for [zone [:resource :hazard :facedown]]
-           [:div
             (for [c (zone (:rig player))]
-              [:div.card-wrapper {:class (if (and (:tapped c) (not (:inverted c)))
-                                           "tapped"
-                                           (if (and (:inverted c) (not (:rotated c)))
-                                             "inverted"
-                                             (if (:rotated c)
-                                               "rotated"
-                                               nil)))}
-               (om/build card-view c)])])
+              [:div
+               [:div.card-wrapper {:class (if (and (:tapped c) (not (:inverted c)))
+                                            "tapped"
+                                            (if (and (:inverted c) (not (:rotated c)))
+                                              "inverted"
+                                              (if (:rotated c)
+                                                "rotated"
+                                                nil)))}
+                (om/build card-view c)]
+               (when (pos? (count (:hosted c)))
+                 [:div.host-group
+                  (host-view (reverse (:hosted c)))])]
+              ))
          ]))))
 
 (defmethod event-view "Challenger" [{:keys [player run]}]
@@ -1421,16 +1437,20 @@
       (let [is-me (= (:side @game-state) :challenger)]
         [:div.challenger-rig {:class (if is-me "me" "opponent")}
          (for [zone [:resource :hazard :facedown]]
-           [:div
             (for [c (zone (:rig player))]
-              [:div.card-wrapper {:class (if (and (:tapped c) (not (:inverted c)))
-                                           "tapped"
-                                           (if (and (:inverted c) (not (:rotated c)))
-                                             "inverted"
-                                             (if (:rotated c)
-                                               "rotated"
-                                               nil)))}
-               (om/build card-view c)])])
+              [:div
+               [:div.card-wrapper {:class (if (and (:tapped c) (not (:inverted c)))
+                                            "tapped"
+                                            (if (and (:inverted c) (not (:rotated c)))
+                                              "inverted"
+                                              (if (:rotated c)
+                                                "rotated"
+                                                nil)))}
+                (om/build card-view c)]
+               (when (pos? (count (:hosted c)))
+                 [:div.host-group
+                  (host-view (reverse (:hosted c)))])]
+              ))
          ]))))
 
 (defmulti board-view #(get-in % [:player :identity :side]))
