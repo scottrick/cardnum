@@ -448,31 +448,21 @@
 (defn rotate
   "Rotate a card."
   [state side card]
-  (let [c (get-card state card)
-        card (update-in c [:hosted] #(map (fn [h]
-                                            (assoc h :host-rotated true)) %))]
+  (let [card (get-card state card)]
     (system-msg state side (str "rotates " (:title card)))
     (update! state side (assoc card :rotated true))))
 
 (defn tap
   "Tap a card."
   [state side card]
-  (let [c (get-card state card)
-        card (update-in c [:hosted] #(map (fn [h]
-                                            (assoc h :host-tapped true)) %))]
+  (let [card (get-card state card)]
     (system-msg state side (str "taps " (:title card)))
   (update! state side (assoc card :tapped true))))
 
 (defn untap
   "Untap a card."
   [state side card]
-  (let [c (get-card state card)
-        card (update-in c [:hosted] #(map (fn [h]
-                                            (dissoc h
-                                                    :host-tapped
-                                                    :host-wounded
-                                                    :host-inverted
-                                                    :host-rotated)) %))]
+  (let [card (get-card state card)]
     (if (:revealed card)
       (system-msg state side (str "untaps " (:title card)))
       (system-msg state side "untaps a card"))
@@ -481,18 +471,14 @@
 (defn wound
   "Wounds character."
   [state side card]
-  (let [c (get-card state card)
-        card (update-in c [:hosted] #(map (fn [h]
-                                            (assoc h :host-wounded true)) %))]
+  (let [card (get-card state card)]
     (system-msg state side (str "wounds " (:title card)))
     (update! state side (assoc card :wounded true))))
 
 (defn invert
   "Inverts a resource."
   [state side card]
-  (let [c (get-card state card)
-        card (update-in c [:hosted] #(map (fn [h]
-                                            (assoc h :host-inverted true)) %))]
+  (let [card (get-card state card)]
     (system-msg state side (str "inverts " (:title card)))
     (update! state side (assoc card :inverted true))))
 
