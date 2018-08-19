@@ -474,7 +474,7 @@ nav ul
   margin-left: -100px
   padding: 15px
   border: 1px solid #ffa500
-  z-index: 2
+  z-index: 200
   border-radius: 4px
 
 .win-right
@@ -514,6 +514,14 @@ align-radio
   .st3:hover{stroke:#1F7728;opacity:0.5;stroke-width:5.0;stroke-miterlimit:10;}
   .st4:hover{stroke:#0F97BC;opacity:0.5;stroke-width:5.0;stroke-miterlimit:10;}
   .st5:hover{stroke:#F2E9E8;opacity:0.5;stroke-width:5.0;stroke-miterlimit:10;}
+
+#regions_x5F_vector {fill: transparent;}
+  .dc0:hover{stroke:#000000;opacity:0.5;stroke-width:3.0;stroke-miterlimit:10;}
+  .dc1:hover{stroke:#77571C;opacity:0.5;stroke-width:3.0;stroke-miterlimit:10;}
+  .dc2:hover{stroke:#DD2911;opacity:0.5;stroke-width:3.0;stroke-miterlimit:10;}
+  .dc3:hover{stroke:#1F7728;opacity:0.5;stroke-width:3.0;stroke-miterlimit:10;}
+  .dc4:hover{stroke:#0F97BC;opacity:0.5;stroke-width:3.0;stroke-miterlimit:10;}
+  .dc5:hover{stroke:#F2E9E8;opacity:0.5;stroke-width:3.0;stroke-miterlimit:10;}
 
 #stats
   .content-page
@@ -1538,6 +1546,31 @@ align-radio
     a
       display: inline-block
       margin: 0 10px 8px 4px
+
+  .popup-map
+    display: none
+    position: absolute
+    width: 810px
+    left: -100px
+    max-height: 500px
+    min-height: 92px
+    z-index: 50
+    bottom: 100%
+    margin: 6px -1px
+
+    &.opponent
+      top: 100%
+      bottom: auto
+
+    .card
+      float: left
+      margin: 2px
+
+    a
+      display: inline-block
+      margin: 0 10px 8px 4px
+
+
 
   .playable
     cursor: pointer

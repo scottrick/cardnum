@@ -9,6 +9,7 @@
             [meccg.auth :refer [avatar] :as auth]
             [meccg.cardbrowser :refer [add-symbols] :as cb]
             [meccg.dice :refer [add-faces create-face]]
+            [meccg.dreamcard :refer [dreamcard-map-north dreamcard-map-west dreamcard-map-central dreamcard-map-south]]
             [meccg.standard :refer [standard-map]]
             [meccg.utils :refer [toastr-options influence-dot map-longest]]
             [meccg.ws :as ws]
@@ -399,18 +400,18 @@
 (defn add-regions [card-text]
   (-> (if (nil? card-text) "" card-text)
       (create-face "Border-land" "img/dc/me_bl.png")
-      (create-face "Coastal Sea" "img/dc/me_cs.png")
-      (create-face "Double Coastal Sea" "img/dc/me_dc.png")
       (create-face "Triple Coastal Sea" "img/dc/me_tc.png")
+      (create-face "Double Coastal Sea" "img/dc/me_dc.png")
+      (create-face "Coastal Sea" "img/dc/me_cs.png")
       (create-face "Dark-domain" "img/dc/me_dd.png")
-      (create-face "Desert" "img/dc/me_er.png")
       (create-face "Double Desert" "img/dc/me_ee.png")
+      (create-face "Desert" "img/dc/me_er.png")
       (create-face "Free-domain" "img/dc/me_fd.png")
       (create-face "Jungle" "img/dc/me_ju.png")
       (create-face "Shadow-land" "img/dc/me_sl.png")
-      (create-face "Wilderness" "img/dc/me_wi.png")
-      (create-face "Double Wilderness" "img/dc/me_dw.png")
       (create-face "Triple Wilderness" "img/dc/me_tw.png")
+      (create-face "Double Wilderness" "img/dc/me_dw.png")
+      (create-face "Wilderness" "img/dc/me_wi.png")
       ))
 
 (defn create-span-impl [item]
@@ -1013,7 +1014,17 @@
   (send-command "view-fw-dc-sb"))
 
 (defn show-sites [event owner ref menu terrain region]
-  (if (or (= ref "Ch-regions") (= ref "Co-regions"))
+  (if (or (= ref "Ch-regions")
+          (= ref "Co-regions")
+          (= ref "Ch-regions-north")
+          (= ref "Co-regions-north")
+          (= ref "Ch-regions-west")
+          (= ref "Co-regions-west")
+          (= ref "Ch-regions-cent")
+          (= ref "Co-regions-cent")
+          (= ref "Ch-regions-south")
+          (= ref "Co-regions-south")
+          )
     (do (-> (om/get-node owner (str ref "-content")) js/$ .fadeIn)
         (-> (om/get-node owner (str ref "-menu")) js/$ .fadeOut)
         (-> (om/get-node owner menu) js/$ .toggle)
@@ -1359,7 +1370,60 @@
             reg-name (if is-challenger "Regions2" "Regions")
             reg-ref (if is-challenger "Ch-regions" "Co-regions")
             reg-menu-ref (str reg-ref "-menu")
-            reg-content-ref (str reg-ref "-content")]
+            reg-content-ref (str reg-ref "-content")
+            ;;North
+            map-name-notrth (if is-challenger "Sites2-north" "Sites-north")
+            map-ref-north (if is-challenger "Ch-map-north" "Co-map-north")
+            map-menu-ref-north (str map-ref-north "-menu")
+            map-content-ref-north (str map-ref-north "-content")
+            site-name-north (if is-challenger "Location2-north" "Location-north")
+            site-ref-north (if is-challenger "Ch-sites-north" "Co-sites-north")
+            site-menu-ref-north (str site-ref-north "-menu")
+            site-content-ref-north (str site-ref-north "-content")
+            reg-name-north (if is-challenger "Regions2-north" "Regions-north")
+            reg-ref-north (if is-challenger "Ch-regions-north" "Co-regions-north")
+            reg-menu-ref-north (str reg-ref-north "-menu")
+            reg-content-ref-north (str reg-ref-north "-content")
+            ;;West
+            map-name-west (if is-challenger "Sites2-west" "Sites-west")
+            map-ref-west (if is-challenger "Ch-map-west" "Co-map-west")
+            map-menu-ref-west (str map-ref-west "-menu")
+            map-content-ref-west (str map-ref-west "-content")
+            site-name-west (if is-challenger "Location2-west" "Location-west")
+            site-ref-west (if is-challenger "Ch-sites-west" "Co-sites-west")
+            site-menu-ref-west (str site-ref-west "-menu")
+            site-content-ref-west (str site-ref-west "-content")
+            reg-name-west (if is-challenger "Regions2-west" "Regions-west")
+            reg-ref-west (if is-challenger "Ch-regions-west" "Co-regions-west")
+            reg-menu-ref-west (str reg-ref-west "-menu")
+            reg-content-ref-west (str reg-ref-west "-content")
+            ;;Central
+            map-name-cent (if is-challenger "Sites2-cent" "Sites-cent")
+            map-ref-cent (if is-challenger "Ch-map-cent" "Co-map-cent")
+            map-menu-ref-cent (str map-ref-cent "-menu")
+            map-content-ref-cent (str map-ref-cent "-content")
+            site-name-cent (if is-challenger "Location2-cent" "Location-cent")
+            site-ref-cent (if is-challenger "Ch-sites-cent" "Co-sites-cent")
+            site-menu-ref-cent (str site-ref-cent "-menu")
+            site-content-ref-cent (str site-ref-cent "-content")
+            reg-name-cent (if is-challenger "Regions2-cent" "Regions-cent")
+            reg-ref-cent (if is-challenger "Ch-regions-cent" "Co-regions-cent")
+            reg-menu-ref-cent (str reg-ref-cent "-menu")
+            reg-content-ref-cent (str reg-ref-cent "-content")
+            ;;South
+            map-name-south (if is-challenger "Sites2-south" "Sites-south")
+            map-ref-south (if is-challenger "Ch-map-south" "Co-map-south")
+            map-menu-ref-south (str map-ref-south "-menu")
+            map-content-ref-south (str map-ref-south "-content")
+            site-name-south (if is-challenger "Location2-south" "Location-south")
+            site-ref-south (if is-challenger "Ch-sites-south" "Co-sites-south")
+            site-menu-ref-south (str site-ref-south "-menu")
+            site-content-ref-south (str site-ref-south "-content")
+            reg-name-south (if is-challenger "Regions2-south" "Regions-south")
+            reg-ref-south (if is-challenger "Ch-regions-south" "Co-regions-south")
+            reg-menu-ref-south (str reg-ref-south "-menu")
+            reg-content-ref-south (str reg-ref-south "-content")
+            ]
         [:div.blue-shade.deck
          (drop-area (:side @game-state) map-name
                     {:on-click #(-> (om/get-node owner map-menu-ref) js/$ .toggle)})
@@ -1368,17 +1432,17 @@
          (when (= (:side @game-state) side)
             (if (get-in @game-state [side :opt-key])
               [:div.panel.blue-shade.menu {:ref map-menu-ref}
-               [:div {:on-click #(show-map % owner reg-ref)} "South-regions"]
-               [:div {:on-click #(show-map % owner reg-ref)} "Central-regions"]
-               [:div {:on-click #(show-map % owner reg-ref)} "North-regions"]
-               [:div {:on-click #(show-map % owner reg-ref)} "West-regions"]
+               [:div {:on-click #(show-map % owner reg-ref-south)} "South-regions"]
+               [:div {:on-click #(show-map % owner reg-ref-cent)} "Central-regions"]
+               [:div {:on-click #(show-map % owner reg-ref-west)} "West-regions"]
+               [:div {:on-click #(show-map % owner reg-ref-north)} "North-regions"]
                [:div {:on-click #(show-map % owner reg-ref)} "Std-regions"]
                ]
               [:div.panel.blue-shade.menu {:ref map-menu-ref}
-               [:div {:on-click #(show-map % owner map-ref)} "South"]
-               [:div {:on-click #(show-map % owner map-ref)} "Central"]
-               [:div {:on-click #(show-map % owner map-ref)} "North"]
-               [:div {:on-click #(show-map % owner map-ref)} "West"]
+               [:div {:on-click #(show-map % owner map-ref-south)} "South"]
+               [:div {:on-click #(show-map % owner map-ref-cent)} "Central"]
+               [:div {:on-click #(show-map % owner map-ref-west)} "West"]
+               [:div {:on-click #(show-map % owner map-ref-north)} "North"]
                [:div {:on-click #(show-map % owner map-ref)} "Std-sites"]
                ]))
          (when (= (:side @game-state) side)
@@ -1397,6 +1461,82 @@
          [:div.panel.blue-shade.popup {:ref site-content-ref}
           [:div
            [:a {:on-click #(close-popup % owner site-content-ref "stops looking at a region" false true false false false)}
+            "Close"]]
+          (om/build-all card-view location {:key :cid})
+          ]
+         (when (= (:side @game-state) side)
+           [:div.panel.blue-shade.popup-map {:ref reg-content-ref-north}
+            [:div
+             (dreamcard-map-north show-sites owner reg-ref-north map-menu-ref-north)
+             [:a {:on-click #(close-popup % owner reg-content-ref-north "stops looking at the map" false true false false false)}
+              "Close"]]
+            ])
+         [:div.panel.blue-shade.popup-map {:ref map-content-ref-north}
+          [:div
+           (dreamcard-map-north show-sites owner site-ref-north map-menu-ref-north)
+           [:a {:on-click #(close-popup % owner map-content-ref-north "stops looking at the map" false true false false false)}
+            "Close"]]
+          ]
+         [:div.panel.blue-shade.popup-map {:ref site-content-ref-north}
+          [:div
+           [:a {:on-click #(close-popup % owner site-content-ref-north "stops looking at a region" false true false false false)}
+            "Close"]]
+          (om/build-all card-view location {:key :cid})
+          ]
+         (when (= (:side @game-state) side)
+           [:div.panel.blue-shade.popup-map {:ref reg-content-ref-west}
+            [:div
+             (dreamcard-map-west show-sites owner reg-ref-west map-menu-ref-west)
+             [:a {:on-click #(close-popup % owner reg-content-ref-west "stops looking at the map" false true false false false)}
+              "Close"]]
+            ])
+         [:div.panel.blue-shade.popup-map {:ref map-content-ref-west}
+          [:div
+           (dreamcard-map-west show-sites owner site-ref-west map-menu-ref-west)
+           [:a {:on-click #(close-popup % owner map-content-ref-west "stops looking at the map" false true false false false)}
+            "Close"]]
+          ]
+         [:div.panel.blue-shade.popup-map {:ref site-content-ref-west}
+          [:div
+           [:a {:on-click #(close-popup % owner site-content-ref-west "stops looking at a region" false true false false false)}
+            "Close"]]
+          (om/build-all card-view location {:key :cid})
+          ]
+         (when (= (:side @game-state) side)
+           [:div.panel.blue-shade.popup-map {:ref reg-content-ref-cent}
+            [:div
+             (dreamcard-map-central show-sites owner reg-ref-cent map-menu-ref-cent)
+             [:a {:on-click #(close-popup % owner reg-content-ref-cent "stops looking at the map" false true false false false)}
+              "Close"]]
+            ])
+         [:div.panel.blue-shade.popup-map {:ref map-content-ref-cent}
+          [:div
+           (dreamcard-map-central show-sites owner site-ref-cent map-menu-ref-cent)
+           [:a {:on-click #(close-popup % owner map-content-ref-cent "stops looking at the map" false true false false false)}
+            "Close"]]
+          ]
+         [:div.panel.blue-shade.popup-map {:ref site-content-ref-cent}
+          [:div
+           [:a {:on-click #(close-popup % owner site-content-ref-cent "stops looking at a region" false true false false false)}
+            "Close"]]
+          (om/build-all card-view location {:key :cid})
+          ]
+         (when (= (:side @game-state) side)
+           [:div.panel.blue-shade.popup-map {:ref reg-content-ref-south}
+            [:div
+             (dreamcard-map-south show-sites owner reg-ref-south map-menu-ref-south)
+             [:a {:on-click #(close-popup % owner reg-content-ref-south "stops looking at the map" false true false false false)}
+              "Close"]]
+            ])
+         [:div.panel.blue-shade.popup-map {:ref map-content-ref-south}
+          [:div
+           (dreamcard-map-south show-sites owner site-ref-south map-menu-ref-south)
+           [:a {:on-click #(close-popup % owner map-content-ref-south "stops looking at the map" false true false false false)}
+            "Close"]]
+          ]
+         [:div.panel.blue-shade.popup-map {:ref site-content-ref-south}
+          [:div
+           [:a {:on-click #(close-popup % owner site-content-ref-south "stops looking at a region" false true false false false)}
             "Close"]]
           (om/build-all card-view location {:key :cid})
           ]
