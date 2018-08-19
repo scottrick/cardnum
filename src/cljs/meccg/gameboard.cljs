@@ -1447,19 +1447,19 @@
                ]))
          (when (= (:side @game-state) side)
            [:div.panel.blue-shade.popup {:ref reg-content-ref}
-            [:div
+            [:div {:style {:width 708}}
              (standard-map show-sites owner reg-ref map-menu-ref)
              [:a {:on-click #(close-popup % owner reg-content-ref "stops looking at the map" false true false false false)}
               "Close"]]
             ])
          [:div.panel.blue-shade.popup {:ref map-content-ref}
-          [:div
+          [:div {:style {:width 708}}
            (standard-map show-sites owner site-ref map-menu-ref)
            [:a {:on-click #(close-popup % owner map-content-ref "stops looking at the map" false true false false false)}
             "Close"]]
           ]
          [:div.panel.blue-shade.popup {:ref site-content-ref}
-          [:div
+          [:div {:style {:width 708}}
            [:a {:on-click #(close-popup % owner site-content-ref "stops looking at a region" false true false false false)}
             "Close"]]
           (om/build-all card-view location {:key :cid})

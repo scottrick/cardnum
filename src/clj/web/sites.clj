@@ -633,7 +633,7 @@
    {:qty 1 :card "Kref Masar" :id "[H] (SL)"}
    {:qty 1 :card "Kylmätalo" :id "[H] (NW)"}
    {:qty 1 :card "Lake-town" :id "[H] (TW)"}
-   {:qty 1 :card "Lakes of KannSharmunda" :id "[H] (CA)"}
+   {:qty 1 :card "Lakes of Kann-Sharmunda" :id "[H] (CA)"}
    {:qty 1 :card "Lâorkí" :id "[H] (CP)"}
    {:qty 1 :card "Lar-huz" :id "[H] (CP)"}
    {:qty 1 :card "Laurrë's Manor" :id "[H] (CA)"}
