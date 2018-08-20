@@ -41,6 +41,7 @@
      [:p "Donations are appreciated and help finance fast servers. You can support the project financially with PayPal or Bitcoin. Alternate art cards will be enabled on your account as a token of gratitude. Please specify your username with your donation."]
      [:ul.list.compact
       [:li "PayPal: rezwits@me.com or " [:a {:href "https://www.paypal.me/rezwits" :title "PayPal" :target "_blank"} "paypal.me/rezwits"]]
+      [:li "Bitcoin: " [:span.bitcoin "3AtJSL3rdYeiZ5UX9GLABvjNTsbXPr53T3" [:img.qr {:src "/img/bitcoin.png" :alt "Bitcoin QR Code"}]]]
       ]
 
      [:p "Many thanks to all the donors. Your contributions and kind words are greatly appreciated. You help finance fast servers and keep the developer motivated."]
