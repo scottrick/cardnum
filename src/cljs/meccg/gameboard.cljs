@@ -419,19 +419,18 @@
     [:hr]
     (if (= "[!]" item)
       [:div.smallwarning "!"]
-      (if-let [[title code] (extract-card-info item)]
-        [:span {:class "fake-link" :id code} title]
+      (if-let [[title image] (extract-card-info item)]
+        [:span {:class "fake-link" :id image} title]
         (if (or (boolean (re-find #"16mm" item))
                 (boolean (re-find #"18mm" item)))
           [:span {:dangerouslySetInnerHTML #js {:__html (add-faces (add-faces item))}}]
           [:span {:dangerouslySetInnerHTML #js {:__html (add-regions item)}}])))))
 
 (defn get-non-alt-art [[title cards]]
-  {:title title :code (:code (first cards))})
+  {:title title :ImageName (:ImageName (last cards))})
 
 (defn prepare-cards []
   (->> @all-cards
-       (filter #(not (:replaced_by %)))
        (group-by :title)
        (map get-non-alt-art)
        (sort-by #(count (:title %1)))
@@ -439,10 +438,17 @@
 
 (def prepared-cards (memoize prepare-cards))
 
+(defn prepare-image []
+  (->> @all-cards
+       (sort-by #(count (:ImageName %1)))
+       (reverse)))
+
+(def prepared-image (memoize prepare-image))
+
 (def create-span (memoize create-span-impl))
 
-(defn find-card-regex-impl [title]
-  (str "(^|[^" ci-open "\\S])" title "(?![" ci-seperator "\\w]|([^" ci-open "]+" ci-close "))"))
+(defn find-card-regex-impl [delimeter]
+  (str "(^|[^" ci-open "\\S])" delimeter "(?![" ci-seperator "\\w]|([^" ci-open "]+" ci-close "))"))
 
 (def find-card-regex (memoize find-card-regex-impl))
 
@@ -452,10 +458,17 @@
 (def card-image-token (memoize card-image-token-impl))
 
 (defn card-image-reducer [text card]
-  (.replace text (js/RegExp. (find-card-regex (:title card)) "g") (card-image-token (:title card) (:code card))))
+  (.replace text (js/RegExp. (find-card-regex (:ImageName card)) "g") (card-image-token (:title card) (:ImageName card))))
+
+(defn card-title-reducer [text card]
+  (.replace text (js/RegExp. (find-card-regex (:title card)) "g") (card-image-token (:title card) (:ImageName card))))
 
 (defn add-image-codes-impl [text]
-  (reduce card-image-reducer text (prepared-cards)))
+ (let [by-image (reduce card-image-reducer text (prepared-image))
+       by-codes (reduce card-title-reducer text (prepared-cards))]
+   (if (> (count by-image) (count by-codes))
+          by-image
+          by-codes)))
 
 (def add-image-codes (memoize add-image-codes-impl))
 
@@ -468,10 +481,10 @@
 
 (def get-message-parts (memoize get-message-parts-impl))
 
-(defn get-card-code [e]
-  (let [code (str (.. e -target -id))]
-    (when (pos? (count code))
-      code)))
+(defn get-card-image [e]
+  (let [image (str (.. e -target -id))]
+    (when (pos? (count image))
+      image)))
 
 (defn handle-key-down [e]
   (cond
@@ -483,7 +496,7 @@
     (= e.keyCode 39) ;// right-arrow
     (let [side (:side @game-state)]
       (if-let [card (get-in @game-state [side :hold-card])]
-        (send-command "system-msg" {:msg (str (:title card))}))))
+        (send-command "system-msg" {:msg (str (:ImageName card))}))))
   )
 
 (defn handle-key-up [e]
@@ -495,14 +508,14 @@
 
 (defn card-preview-mouse-over [e channel]
   (.preventDefault e)
-  (when-let [code (get-card-code e)]
-    (when-let [card (some #(when (= (:code %) code) %) @all-cards)]
+  (when-let [image (get-card-image e)]
+    (when-let [card (some #(when (= (:ImageName %) image) %) @all-cards)]
       (put! channel (assoc card :implementation :full))))
   nil)
 
 (defn card-preview-mouse-out [e channel]
   (.preventDefault e)
-  (when-let [code (get-card-code e)]
+  (when-let [image (get-card-image e)]
     (put! channel false))
   nil)
 
