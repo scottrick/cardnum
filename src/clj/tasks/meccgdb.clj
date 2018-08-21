@@ -14,7 +14,7 @@
 (declare faction-map)
 
 (def ^:const dc-image-url "https://github.com/vastorper/dc/blob/master/graphics/Metw/")
-(def ^:const me-image-url "https://github.com/rezwits/cardnum/blob/mext-e/fdata/")
+(def ^:const me-image-url "https://github.com/rezwits/cardnum/blob/table/fdata/")
 
 (defmacro rename
   "Rename a card field"
@@ -85,8 +85,8 @@
    :Specific identity
    :code (rename :trimCode)
    :fullCode (rename :code)
-   :alignCode identity
-   :setCode identity
+   :gccgAlign (fn [[k v]] [:gccgAlign (.replace (.replace v "[" "") "]" "")])
+   :gccgSet (fn [[k v]] [:gccgSet (.replace (.replace v "(" "") ")" "")])
    :DCpath identity
    :dreamcard identity
    :released identity
