@@ -311,48 +311,6 @@ span.small
 .image-container
   position: relative
 
-// Faction icons
-
-.faction-icon
-  width: 24px
-  height: 24px
-  margin-left: 5px
-  background: transparent
-  background-repeat: no-repeat
-  background-size: contain
-  display: inline-block
-  vertical-align: middle
-
-  &.adam
-    background-image: url('/img/factions/challenger-adam.png')
-
-  &.anarch
-    background-image: url('/img/factions/challenger-anarch.png')
-
-  &.apex
-    background-image: url('/img/factions/challenger-apex.png')
-
-  &.criminal
-    background-image: url('/img/factions/challenger-criminal.png')
-
-  &.hb
-    background-image: url('/img/factions/contestant-hb.png')
-
-  &.cardnum
-    background-image: url('/img/factions/contestant-cardnum.png')
-
-  &.nbn
-    background-image: url('/img/factions/contestant-nbn.png')
-
-  &.shaper
-    background-image: url('/img/factions/challenger-shaper.png')
-
-  &.sunny
-    background-image: url('/img/factions/challenger-sunny.png')
-
-  &.weyland
-    background-image: url('/img/factions/contestant-weyland.png')
-
 // Dropdown
 .dropdown
   position: relative
@@ -516,7 +474,7 @@ nav ul
   margin-left: -100px
   padding: 15px
   border: 1px solid #ffa500
-  z-index: 2
+  z-index: 200
   border-radius: 4px
 
 .win-right
@@ -556,6 +514,14 @@ align-radio
   .st3:hover{stroke:#1F7728;opacity:0.5;stroke-width:5.0;stroke-miterlimit:10;}
   .st4:hover{stroke:#0F97BC;opacity:0.5;stroke-width:5.0;stroke-miterlimit:10;}
   .st5:hover{stroke:#F2E9E8;opacity:0.5;stroke-width:5.0;stroke-miterlimit:10;}
+
+#regions_x5F_vector {fill: transparent;}
+  .dc0:hover{stroke:#000000;opacity:0.5;stroke-width:3.0;stroke-miterlimit:10;}
+  .dc1:hover{stroke:#77571C;opacity:0.5;stroke-width:3.0;stroke-miterlimit:10;}
+  .dc2:hover{stroke:#DD2911;opacity:0.5;stroke-width:3.0;stroke-miterlimit:10;}
+  .dc3:hover{stroke:#1F7728;opacity:0.5;stroke-width:3.0;stroke-miterlimit:10;}
+  .dc4:hover{stroke:#0F97BC;opacity:0.5;stroke-width:3.0;stroke-miterlimit:10;}
+  .dc5:hover{stroke:#F2E9E8;opacity:0.5;stroke-width:3.0;stroke-miterlimit:10;}
 
 #stats
   .content-page
@@ -1564,10 +1530,13 @@ align-radio
   .popup
     display: none
     position: absolute
-    width: 708px
-    max-height: 500px
+    width: 850px
+    max-height: 600px
     min-height: 92px
     z-index: 50
+    left: -63px
+    bottom: 100%
+    margin: 6px -1px
 
     &.opponent
       top: 100%
@@ -1580,6 +1549,31 @@ align-radio
     a
       display: inline-block
       margin: 0 10px 8px 4px
+
+  .popup-map
+    display: none
+    position: absolute
+    width: 810px
+    left: -100px
+    max-height: 500px
+    min-height: 92px
+    z-index: 50
+    bottom: 100%
+    margin: 6px -1px
+
+    &.opponent
+      top: 100%
+      bottom: auto
+
+    .card
+      float: left
+      margin: 2px
+
+    a
+      display: inline-block
+      margin: 0 10px 8px 4px
+
+
 
   .playable
     cursor: pointer
@@ -1598,6 +1592,7 @@ align-radio
     height: 84px
     width: 60px
     border-radius: 4px
+
 
   .locale-card
     position: relative
@@ -1696,7 +1691,7 @@ align-radio
           justify-content(space-between)
 
           .locale
-            margin-left: 0px
+            margin-left: 0
             margin-right: 2px
 
         .challenger-board, .contestant-board
@@ -1712,7 +1707,7 @@ align-radio
           display-flex()
 
           .deck, .discard, .identity
-            margin-left: 0px
+            margin-left: 0
             margin-right: 2px
 
         > div
@@ -1777,19 +1772,31 @@ align-radio
       flex-direction(row)
       justify-content(flex-end)
       margin-bottom: -125px
+      z-index: 15
 
       .hosted
-        margin-bottom: -60px
-        margin-left: -20px
-
-        &:nth-child(n+1)
-          margin-top: -20px
+        &:nth-child(0)
+          margin-top: 0
+          z-index: 5
+        &:nth-child(1)
+          margin-top: -40px
+          z-index: 4
+        &:nth-child(2)
+          margin-top: -40px
+          z-index: 3
+        &:nth-child(3)
+          margin-top: -40px
+          z-index: 2
+        &:nth-child(4)
+          margin-top: -40px
+          z-index: 1
 
       .card-wrapper
         margin: 3px 6px
+        cursor: pointer
 
         .abilities, .challenger-abilities, .contestant-abilities
-          left: 0%
+          left: 0
           margin: -1px -85px
 
         .abilities
@@ -1805,7 +1812,7 @@ align-radio
         transform(rotate(90deg))
 
         .abilities, .challenger-abilities, .contestant-abilities
-          left: 0%
+          left: 0
           margin: 85px 50px
 
         .abilities
@@ -1820,7 +1827,7 @@ align-radio
         transform(rotate(180deg))
 
         .abilities, .challenger-abilities, .contestant-abilities
-          left: 0%
+          left: 0
           margin: 25px 150px
 
         .abilities
@@ -1843,25 +1850,162 @@ align-radio
           transform(rotate(90deg) translateY(-50%))
           transform-origin(0 0)
 
+      .host-group
+        position: relative
+        display-flex()
+        flex-direction(column-reverse)
+        justify-content(flex-start)
+        align-items(center)
+        transform(rotate(-180deg))
+        cursor: pointer
+        bottom: 63px
+        right: 30px
+        z-index: -5
+
+        .hosted
+          transform(rotate(-180deg))
+          cursor: pointer
+          margin-bottom: -63px
+
+          .hosted
+            transform(translateX(15px) rotate(0deg))
+
+          .hosted.tapped
+            transform(translateX(15px) rotate(90deg))
+
+          .hosted.inverted, hosted.wounded
+            transform(translateX(15px) rotate(180deg))
+
+          .hosted.rotated
+            transform(translateX(15px) rotate(-90deg))
+
+          .counters
+            transform(rotate(-90deg))
+
+          .abilities, .challenger-abilities, .contestant-abilities
+            left: 0
+            margin: -1px -85px
+
+          .abilities
+            top: 0
+            bottom: auto
+            transform-origin(0 0)
+
+          .challenger-abilities, .contestant-abilities
+            bottom: 0
+            transform-origin(0 100%)
+
+        .hosted.tapped
+          transform(rotate(-90deg))
+          cursor: pointer
+          margin-left: -24px
+          margin-bottom: -63px
+
+          .hosted
+            transform(translateX(-10px) translateY(8px) rotate(-90deg)) //(0)
+
+          .hosted.tapped
+            transform(translateX(10px) translateY(8px) rotate(0deg))
+
+          .hosted.inverted, hosted.wounded
+            transform(translateX(-10px) translateY(8px) rotate(90deg))
+
+          .hosted.rotated
+            transform(translateX(-10px) translateY(8px) rotate(-180deg))
+
+          .counters
+            transform(rotate(-90deg))
+
+          .abilities, .challenger-abilities, .contestant-abilities
+            left: 0
+            margin: 85px 50px
+
+          .abilities
+            transform-origin(0 0)
+            transform(rotate(-90deg) translateX(-25%))
+
+          .challenger-abilities, .contestant-abilities
+            bottom: 0
+            transform-origin(0 100%)
+
+        .hosted.rotated
+          transform(rotate(90deg))
+          cursor: pointer
+          margin-bottom: -63px
+
+          .counters
+            transform(rotate(-90deg))
+
+          .hosted
+            transform(translateX(10px) translateY(26px) rotate(90deg)) //(-90)
+
+          .hosted.tapped
+            transform(translateX(20px) translateY(26px) rotate(180deg))
+
+          .hosted.inverted, hosted.wounded
+            transform(translateX(10px) translateY(26px) rotate(-90deg))
+
+          .hosted.rotated
+            transform(translateX(20px) translateY(26px) rotate(0deg))
+
+          .abilities
+            top: 0
+            bottom: auto
+            transform(rotate(90deg) translateY(-50%))
+            transform-origin(0 0)
+
+        .hosted.inverted, .hosted.wounded
+          transform(rotate(0deg))
+          cursor: pointer
+          margin-bottom: -63px
+
+          .hosted
+            transform(translateX(15px) rotate(180deg)) //(90)
+
+          .hosted.tapped
+            transform(translateX(15px) rotate(-90deg))
+
+          .hosted.inverted
+            transform(translateX(15px) rotate(0deg))
+
+          .hosted.rotated
+            transform(translateX(15px) rotate(90deg))
+
+          .abilities, .challenger-abilities, .contestant-abilities
+            left: 0
+            margin: 25px 150px
+
+          .abilities
+            top: 0
+            right: 25
+            bottom: auto
+            transform(rotate(180deg) translateY(-100%))
+            transform-origin(0 0)
+
+          .challenger-abilities, .contestant-abilities
+            bottom: 0
+            transform-origin(0 100%)
+
     .contestant-board, .challenger-board
       flex(1)
       display-flex()
       flex-direction(row-reverse)
       justify-content(flex-end)
-      margin-left: 40px
+      margin-left: 60px
 
       .card-wrapper
         margin: 3px 6px
 
       .locale
         position: relative
-        min-width: 84px
+        min-width: 96px
         margin: 0 4px
         transform(rotate(180deg))
         display-flex()
         flex-direction(column-reverse)
         justify-content(flex-end)
         align-items(center)
+        z-index: 25
 
         .characters
           position: relative
@@ -1869,6 +2013,8 @@ align-radio
           flex-direction(column-reverse)
           justify-content(flex-end)
           align-items(center)
+          bottom: -42px
+          z-index: -5
 
           .run-card
             margin-top: 100px
@@ -1935,12 +2081,18 @@ align-radio
           .character.wounded
             transform(rotate(0deg))
 
+            .abilities, .challenger-abilities, .contestant-abilities
+              transform(rotate(180deg))
+              left: 0
+              margin-left: 0
+              margin-top: 84px
+
             .abilities
               top: 0
-              right: 25
               bottom: auto
-              transform(rotate(180deg) translateY(-100%))
-              transform-origin(0 0)
+
+            .challenger-abilities, .contestant-abilities
+              bottom: 0
 
             .strength
               transform(rotate(180deg))
@@ -1948,22 +2100,27 @@ align-radio
           .character.tapped
             transform(rotate(-90deg))
 
+            .abilities, .challenger-abilities, .contestant-abilities
+              transform(rotate(-90deg))
+              margin-left: 0
+              margin-top: 0
+
             .abilities
-              transform-origin(0 0)
-              transform(rotate(-90deg) translateX(-25%))
+              top: 0
+              bottom: auto
+
+            .challenger-abilities, .contestant-abilities
+              bottom: 0
 
             .strength
               transform(rotate(-90deg))
 
           .character
             transform(rotate(-180deg))
+            position: relative
             cursor: pointer
-
-            &:nth-child(n)
-              margin-top: 20px
-
-            &.host
-              margin-bottom: 5px
+            bottom: 0
+            z-index: 25
 
             .run-arrow
               top: auto
@@ -1971,32 +2128,160 @@ align-radio
               left: 57px
               transform: rotate(-90deg)
 
-          .hosted
-            margin-bottom: -60px
-            margin-left: -20px
+            .abilities, .challenger-abilities, .contestant-abilities
+              left: 0
+              margin-left: 60px
+              margin-top: 0
 
-            .card-frame
+            .abilities
+              top: 0
+              bottom: auto
+              transform-origin(0 0)
+
+            .challenger-abilities, .contestant-abilities
+              bottom: 0
+
+          .host-group
+            position: relative
+            display-flex()
+            flex-direction(column-reverse)
+            justify-content(flex-end)
+            align-items(center)
+            cursor: pointer
+            bottom: 63px
+            left: 30px
+
+            .hosted
+              transform(rotate(-180deg))
+              cursor: pointer
+              margin-bottom: -63px
+
+              .hosted
+                transform(translateX(15px) rotate(0deg))
+
+              .hosted.tapped
+                transform(translateX(15px) rotate(90deg))
+
+              .hosted.inverted, hosted.wounded
+                transform(translateX(15px) rotate(180deg))
+
+              .hosted.rotated
+                transform(translateX(15px) rotate(-90deg))
 
               .counters
                 transform(rotate(-90deg))
 
               .abilities, .challenger-abilities, .contestant-abilities
+                margin-left: 90px
+                margin-top: 0
+
+              .abilities
                 top: 0
                 bottom: auto
                 transform-origin(0 0)
-                transform(initial)
 
-            &.host-tapped
+              .challenger-abilities, .contestant-abilities
+                bottom: 0
+
+             .strength
+               transform(rotate(0deg))
+
+            .hosted.tapped
               transform(rotate(-90deg))
+              cursor: pointer
+              margin-left: -24px
+              margin-bottom: -63px
 
-            &.host-wounded
-              transform(rotate(-180deg))
-              margin-right: -20px
+              .hosted
+                transform(translateX(-10px) translateY(8px) rotate(-90deg)) //(0)
 
-            .strength
+              .hosted.tapped
+                transform(translateX(10px) translateY(8px) rotate(0deg))
+
+              .hosted.inverted, hosted.wounded
+                transform(translateX(-10px) translateY(8px) rotate(90deg))
+
+              .hosted.rotated
+                transform(translateX(-10px) translateY(8px) rotate(-180deg))
+
+              .counters
+                transform(rotate(-90deg))
+
+              .abilities, .challenger-abilities, .contestant-abilities
+                transform(rotate(-90deg))
+                margin-left: 0
+                margin-bottom: 0
+
+              .abilities
+                top: 0
+                bottom: auto
+
+              .challenger-abilities, .contestant-abilities
+                bottom: 0
+
+            .hosted.rotated
+              transform(rotate(90deg))
+              cursor: pointer
+              margin-bottom: -63px
+
+              .counters
+                transform(rotate(-90deg))
+
+              .hosted
+                transform(translateX(10px) translateY(26px) rotate(90deg)) //(-90)
+
+              .hosted.tapped
+                transform(translateX(20px) translateY(26px) rotate(180deg))
+
+              .hosted.inverted, hosted.wounded
+                transform(translateX(10px) translateY(26px) rotate(-90deg))
+
+              .hosted.rotated
+                transform(translateX(20px) translateY(26px) rotate(0deg))
+
+              .abilities, .challenger-abilities, .contestant-abilities
+                transform(rotate(90deg))
+                margin-left: 60px
+                margin-top: 84px
+
+              .abilities
+                top: 0
+                bottom: auto
+
+              .challenger-abilities, .contestant-abilities
+                bottom: 0
+
+            .hosted.inverted, .hosted.wounded
               transform(rotate(0deg))
+              cursor: pointer
+              margin-bottom: -63px
 
-          .subtype-target
+              .hosted
+               transform(translateX(15px) rotate(180deg)) //(90)
+
+              .hosted.tapped
+                transform(translateX(15px) rotate(-90deg))
+
+              .hosted.inverted
+                transform(translateX(15px) rotate(0deg))
+
+              .hosted.rotated
+                transform(translateX(15px) rotate(90deg))
+
+              .abilities, .challenger-abilities, .contestant-abilities
+                transform(rotate(180deg))
+                left: 0
+                margin-left: 0
+                margin-top: 84px
+
+              .abilities
+                top: 0
+                bottom: auto
+
+              .challenger-abilities, .contestant-abilities
+                bottom: 0
+
+        .subtype-target
             transform(rotate(90deg), translateX(100%))
             transform-origin(100% 0)
 
@@ -2017,60 +2302,10 @@ align-radio
 
           .challenger-abilities, .contestant-abilities
             bottom: 0
-            transform-origin(0 100%)
-
-          .hosted.rotated
-            transform(rotate(-90deg))
-            margin-top: -49px
-            flex-direction(column)
-
-            .card-frame
-              margin-left: 0
-
-              &:not(:first-child)
-                margin-top: -42px
-
-              .counters
-                transform(rotate(-90deg))
-
-              .abilities, .challenger-abilities, .contestant-abilities
-                top: 0
-                bottom: auto
-                transform(rotate(90deg) translateY(-50%))
-                transform-origin(0 0)
-
-          .hosted.inverted
-            transform(translateX(-22%), rotate(180deg))
-            margin-bottom: -60px
-
-          .hosted.wounded
-            transform(translateX(-22%), rotate(180deg))
-            margin-bottom: -60px
-
-          .hosted.tapped
-            transform(rotate(90deg))
-            margin-top: -49px
-            flex-direction(column)
-
-            .card-frame
-              margin-left: 0
-
-              &:not(:first-child)
-                margin-top: -42px
-
-              .counters
-                transform(rotate(-90deg))
-
-              .abilities, .challenger-abilities, .contestant-abilities
-                top: 0
-                bottom: auto
-                transform(rotate(-90deg))
-                transform-origin(0 0)
 
         .content
           position: relative
           min-height: 84px
-          margin: 5px
           transform(rotate(180deg))
           display-flex()
 
@@ -2089,16 +2324,68 @@ align-radio
           .locale-card
             margin: -7px 0
             cursor: pointer
+            z-index: 20
 
             &.shift
               margin-left: -36px
 
-          .hosted
-            margin-bottom: -84px
-            margin-left: 50px
+          .host-group
+            transform(rotate(-180deg))
+            position: relative
+            display-flex()
+            flex-direction(column-reverse)
+            justify-content(flex-end)
+            align-items(center)
+            cursor: pointer
+            bottom: 35px
+            left: -15px
 
-            &:nth-child(n+1)
-              margin-top: 20px
+            .hosted
+              transform(rotate(-180deg))
+              cursor: pointer
+              margin-bottom: -63px
+
+              .counters
+                transform(rotate(-90deg))
+
+              .abilities, .challenger-abilities, .contestant-abilities
+                top: 0
+                bottom: auto
+                transform-origin(0 0)
+                transform(initial)
+
+            .hosted.tapped
+              transform(rotate(-90deg))
+              cursor: pointer
+              margin-bottom: -63px
+
+              .counters
+                transform(rotate(-90deg))
+
+              .abilities, .challenger-abilities, .contestant-abilities
+                top: 0
+                bottom: auto
+                transform(rotate(-90deg))
+                transform-origin(0 0)
+
+            .hosted.rotated
+              transform(rotate(-90deg))
+              cursor: pointer
+              margin-bottom: -63px
+
+              .counters
+                transform(rotate(-90deg))
+
+              .abilities, .challenger-abilities, .contestant-abilities
+                top: 0
+                bottom: auto
+                transform(rotate(90deg) translateY(-50%))
+                transform-origin(0 0)
+
+            .hosted.inverted
+              transform(rotate(180deg))
+              cursor: pointer
+              margin-bottom: -63px
 
     .contestant-board.opponent, .challenger-board.opponent
       transform(initial)
@@ -2111,6 +2398,7 @@ align-radio
 
         .content
           transform(initial)
+          margin-top: 21px
 
         .strength
           transform(rotate(0deg))
@@ -2122,6 +2410,7 @@ align-radio
           opacity: 0.99
           flex-direction(column)
           transform(rotate(180deg), translateY(0%))
+          margin-top: -21px
 
           .subtype-target
             transform(rotate(-90deg), translateY(-100%))
@@ -2157,6 +2446,7 @@ align-radio
       margin-right: 5px
       position: relative
       transition(all 0.2s ease-in-out)
+      z-index: 250
 
       .card-preview.blind
         width: 200%

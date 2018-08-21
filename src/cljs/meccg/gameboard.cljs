@@ -9,6 +9,7 @@
             [meccg.auth :refer [avatar] :as auth]
             [meccg.cardbrowser :refer [add-symbols] :as cb]
             [meccg.dice :refer [add-faces create-face]]
+            [meccg.dreamcard :refer [dreamcard-map-north dreamcard-map-west dreamcard-map-central dreamcard-map-south]]
             [meccg.standard :refer [standard-map]]
             [meccg.utils :refer [toastr-options influence-dot map-longest]]
             [meccg.ws :as ws]
@@ -240,6 +241,28 @@
                       (#{"rig" "onhost"} (first zone)))
                  (or tapped inverted rotated))
           (cons "untap" %) %))
+      (#(if (and (and (= type "Hazard")
+                      (re-find #"rotate" Home)
+                      (#{"rig" "onhost"} (first zone)))
+                 (and (not rotated)))
+          (cons "rotate" %) %))
+      (#(if (and (and (= type "Hazard")
+                      (re-find #"invert" Home)
+                      (#{"rig" "onhost"} (first zone)))
+                 (and (not inverted) (not rotated)))
+          (cons "invert" %) %))
+      (#(if (and (and (= type "Hazard")
+                      (re-find #"tap" Home)
+                      (#{"rig" "onhost"} (first zone)))
+                 (and (not tapped) (not inverted) (not rotated)))
+          (cons "tap" %) %))
+      (#(if (and (and (= type "Hazard")
+                      (or (boolean (re-find #"tap" Home))
+                          (boolean (re-find #"invert" Home))
+                          (boolean (re-find #"rotate" Home)))
+                      (#{"rig" "onhost"} (first zone)))
+                 (or tapped inverted rotated))
+          (cons "untap" %) %))
       ))
 
 (defn handle-abilities [{:keys [abilities facedown side type] :as card} owner]
@@ -377,18 +400,18 @@
 (defn add-regions [card-text]
   (-> (if (nil? card-text) "" card-text)
       (create-face "Border-land" "img/dc/me_bl.png")
-      (create-face "Coastal Sea" "img/dc/me_cs.png")
-      (create-face "Double Coastal Sea" "img/dc/me_dc.png")
       (create-face "Triple Coastal Sea" "img/dc/me_tc.png")
+      (create-face "Double Coastal Sea" "img/dc/me_dc.png")
+      (create-face "Coastal Sea" "img/dc/me_cs.png")
       (create-face "Dark-domain" "img/dc/me_dd.png")
-      (create-face "Desert" "img/dc/me_er.png")
       (create-face "Double Desert" "img/dc/me_ee.png")
+      (create-face "Desert" "img/dc/me_er.png")
       (create-face "Free-domain" "img/dc/me_fd.png")
       (create-face "Jungle" "img/dc/me_ju.png")
       (create-face "Shadow-land" "img/dc/me_sl.png")
-      (create-face "Wilderness" "img/dc/me_wi.png")
-      (create-face "Double Wilderness" "img/dc/me_dw.png")
       (create-face "Triple Wilderness" "img/dc/me_tw.png")
+      (create-face "Double Wilderness" "img/dc/me_dw.png")
+      (create-face "Wilderness" "img/dc/me_wi.png")
       ))
 
 (defn create-span-impl [item]
@@ -565,7 +588,10 @@
 
 (defn update-card-position [card touch]
   (-> card (.css "left" (str (- (int (aget touch "pageX")) 30) "px")))
-  (-> card (.css "top"  (str (- (int (aget touch "pageY")) 42) "px"))))
+  (-> card (.css "top"  (str (- (int (aget touch "pageY")) 42) "px")))
+  (-> card (.css "right" (str (- (int (aget touch "pageX")) 30) "px")))
+  (-> card (.css "bottom"  (str (- (int (aget touch "pageY")) 42) "px")))
+  )
 
 (defn get-card [e locale]
   (-> e .-target js/$ (.closest ".card-wrapper")))
@@ -740,46 +766,6 @@
   (om/component
     (sab/html
       [:div.card-frame
-       (when (pos? (count hosted))
-         (for [card (reverse hosted)]
-           (do
-           ;(println (str "Host is: " (if (:host-tapped card) "tapped" "untapped")))
-           (cond
-             (:host-tapped card)
-             [:div.hosted {:class (if (and (:tapped card) (not (:inverted card)))
-                                    nil
-                                    (if (and (:inverted card) (not (:rotated card)))
-                                      "tapped"
-                                      (if (and (:wounded card) (not (:rotated card)))
-                                        "tapped"
-                                        (if (:rotated card)
-                                          "inverted"
-                                          "host-tapped"))))}
-              (om/build card-view card {:opts {:flipped (face-down? card)}})]
-             (:host-wounded card)
-             [:div.hosted {:class (if (and (:tapped card) (not (:inverted card)))
-                                    "rotated"
-                                    (if (and (:inverted card) (not (:rotated card)))
-                                      nil
-                                      (if (and (:wounded card) (not (:rotated card)))
-                                        nil
-                                        (if (:rotated card)
-                                          "tapped"
-                                          "host-wounded"))))}
-              (om/build card-view card {:opts {:flipped (face-down? card)}})]
-             :else
-             [:div.hosted {:class (if (and (:tapped card) (not (:inverted card)))
-                                    "tapped"
-                                    (if (and (:inverted card) (not (:rotated card)))
-                                      "inverted"
-                                      (if (and (:wounded card) (not (:rotated card)))
-                                        "wounded"
-                                        (if (:rotated card)
-                                          "rotated"
-                                          nil))))}
-              (om/build card-view card {:opts {:flipped (face-down? card)}})]
-             ))
-           ))
        [:div.blue-shade.card {:class (str (when selected "selected") (when new " new"))
                               :draggable (when (not-spectator?) true)
                               :on-touch-start #(handle-touchstart % cursor)
@@ -903,8 +889,32 @@
             (or (= advanceable "always") (and revealed (= advanceable "revealed-only")))
             [:div.panel.blue-shade.menu.abilities {:ref "advance"}
              [:div {:on-click #(send-command "advance" {:card @cursor})} "Advance"]
-             [:div {:on-click #(send-command "reveal" {:card @cursor})} "Reveal"]]))]
-       ])))
+             [:div {:on-click #(send-command "reveal" {:card @cursor})} "Reveal"]]))]]
+       )))
+
+(defn host-view [hosted]
+  (let [s (count hosted)]
+    (when-not (empty? hosted)
+      (map-indexed (fn [i card]
+                     ;(println (str "Host is: " (if (:host-tapped card) "tapped" "untapped")))
+                     [:div.hosted (if (and (:tapped card) (not (:inverted card)))
+                                    {:class "tapped"
+                                     }
+                                    (if (and (:inverted card) (not (:rotated card)))
+                                      {:class "inverted"
+                                       }
+                                      (if (and (:wounded card) (not (:rotated card)))
+                                        {:class "wounded"
+                                         }
+                                        (if (:rotated card)
+                                          {:class "rotated"
+                                           }
+                                          ))))
+                      (when (pos? (count (:hosted card)))
+                         (host-view (:hosted card)))
+                      (om/build card-view card {:opts {:flipped (face-down? card)}})]
+                     ) (reverse hosted))))
+  )
 
 (defn drop-area [side locale hmap]
   (merge hmap {:on-drop #(handle-drop % locale)
@@ -1004,7 +1014,17 @@
   (send-command "view-fw-dc-sb"))
 
 (defn show-sites [event owner ref menu terrain region]
-  (if (or (= ref "Ch-regions") (= ref "Co-regions"))
+  (if (or (= ref "Ch-regions")
+          (= ref "Co-regions")
+          (= ref "Ch-regions-north")
+          (= ref "Co-regions-north")
+          (= ref "Ch-regions-west")
+          (= ref "Co-regions-west")
+          (= ref "Ch-regions-cent")
+          (= ref "Co-regions-cent")
+          (= ref "Ch-regions-south")
+          (= ref "Co-regions-south")
+          )
     (do (-> (om/get-node owner (str ref "-content")) js/$ .fadeIn)
         (-> (om/get-node owner (str ref "-menu")) js/$ .fadeOut)
         (-> (om/get-node owner menu) js/$ .toggle)
@@ -1224,8 +1244,12 @@
       (let [size (count scored)]
         [:div.panel.blue-shade.scored.squeeze
          (map-indexed (fn [i card]
+                        [:div
                         [:div.card-wrapper {:style {:left (* (/ 128 (dec size)) i)}}
-                         [:div (om/build card-view card)]])
+                         (om/build card-view card)
+                         (when (pos? (count (:hosted card)))
+                           [:div.host-group
+                            (host-view (:hosted card))])]])
                       scored)
          (om/build score scored {:opts {:name "Marshalling Point Pile"}})]))))
 
@@ -1292,32 +1316,43 @@
             (when-let [run-card (:card (:run-effect run))]
               [:div.run-card (om/build card-img run-card)])
             (for [character (reverse characters)]
-              [:div.character {:class (if (and (:tapped character) (not (:wounded character)))
-                                        "tapped"
-                                        (if (:wounded character)
-                                          "wounded"
-                                          nil))}
-               (om/build card-view character {:opts {:flipped (not (:revealed character))}})
-               (when (and current-character (= (:cid current-character) (:cid character)))
-                 (if (:tapped character)
-                   tap-arrow
-                   run-arrow))])
-            (when (and run (not current-character))
-              run-arrow)])
+              [:div
+               [:div.character {:class (if (and (:tapped character) (not (:wounded character)))
+                                         "tapped"
+                                         (if (:wounded character)
+                                           "wounded"
+                                           nil))}
+                (om/build card-view character {:opts {:flipped (not (:revealed character))}})
+                (when (and current-character (= (:cid current-character) (:cid character)))
+                  (if (:tapped character)
+                    tap-arrow
+                    run-arrow))]
+               (when (pos? (count (:hosted character)))
+                 [:div.host-group
+                  (host-view (:hosted character))])
+               ])
+            (when (and run (not current-character)) run-arrow)
+            ])
          [:div.content
           (when central-view
             central-view)
           (when (not-empty content)
             (for [card content
                   :let [is-first (= card (first content))]]
-              [:div.locale-card {:class (str (when (:tapped card) "tapped ")
-                                             (when (or central-view
-                                                       (and (< 1 (count content))
-                                                            (not is-first)))
-                                               "shift"))}
-               (om/build card-view card {:opts {:flipped (not (:revealed card)) :location true}})
-               (when (and (not central-view) is-first)
-                 (om/build label-without content {:opts opts}))]))]]))))
+              [:div
+               [:div.locale-card {:class (str (when (:tapped card) "tapped ")
+                                              (when (or central-view
+                                                        (and (< 1 (count content))
+                                                             (not is-first)))
+                                                "shift"))}
+                (om/build card-view card {:opts {:flipped (not (:revealed card)) :location true}})
+                (when (and (not central-view) is-first)
+                  (om/build label-without content {:opts opts}))]
+               (when (pos? (count (:hosted card)))
+                 [:div.host-group
+                  (host-view (:hosted card))])
+               ]
+              ))]]))))
 
 (defn location-view [{:keys [identity location] :as cursor} owner]
   (om/component
@@ -1335,7 +1370,60 @@
             reg-name (if is-challenger "Regions2" "Regions")
             reg-ref (if is-challenger "Ch-regions" "Co-regions")
             reg-menu-ref (str reg-ref "-menu")
-            reg-content-ref (str reg-ref "-content")]
+            reg-content-ref (str reg-ref "-content")
+            ;;North
+            map-name-notrth (if is-challenger "Sites2-north" "Sites-north")
+            map-ref-north (if is-challenger "Ch-map-north" "Co-map-north")
+            map-menu-ref-north (str map-ref-north "-menu")
+            map-content-ref-north (str map-ref-north "-content")
+            site-name-north (if is-challenger "Location2-north" "Location-north")
+            site-ref-north (if is-challenger "Ch-sites-north" "Co-sites-north")
+            site-menu-ref-north (str site-ref-north "-menu")
+            site-content-ref-north (str site-ref-north "-content")
+            reg-name-north (if is-challenger "Regions2-north" "Regions-north")
+            reg-ref-north (if is-challenger "Ch-regions-north" "Co-regions-north")
+            reg-menu-ref-north (str reg-ref-north "-menu")
+            reg-content-ref-north (str reg-ref-north "-content")
+            ;;West
+            map-name-west (if is-challenger "Sites2-west" "Sites-west")
+            map-ref-west (if is-challenger "Ch-map-west" "Co-map-west")
+            map-menu-ref-west (str map-ref-west "-menu")
+            map-content-ref-west (str map-ref-west "-content")
+            site-name-west (if is-challenger "Location2-west" "Location-west")
+            site-ref-west (if is-challenger "Ch-sites-west" "Co-sites-west")
+            site-menu-ref-west (str site-ref-west "-menu")
+            site-content-ref-west (str site-ref-west "-content")
+            reg-name-west (if is-challenger "Regions2-west" "Regions-west")
+            reg-ref-west (if is-challenger "Ch-regions-west" "Co-regions-west")
+            reg-menu-ref-west (str reg-ref-west "-menu")
+            reg-content-ref-west (str reg-ref-west "-content")
+            ;;Central
+            map-name-cent (if is-challenger "Sites2-cent" "Sites-cent")
+            map-ref-cent (if is-challenger "Ch-map-cent" "Co-map-cent")
+            map-menu-ref-cent (str map-ref-cent "-menu")
+            map-content-ref-cent (str map-ref-cent "-content")
+            site-name-cent (if is-challenger "Location2-cent" "Location-cent")
+            site-ref-cent (if is-challenger "Ch-sites-cent" "Co-sites-cent")
+            site-menu-ref-cent (str site-ref-cent "-menu")
+            site-content-ref-cent (str site-ref-cent "-content")
+            reg-name-cent (if is-challenger "Regions2-cent" "Regions-cent")
+            reg-ref-cent (if is-challenger "Ch-regions-cent" "Co-regions-cent")
+            reg-menu-ref-cent (str reg-ref-cent "-menu")
+            reg-content-ref-cent (str reg-ref-cent "-content")
+            ;;South
+            map-name-south (if is-challenger "Sites2-south" "Sites-south")
+            map-ref-south (if is-challenger "Ch-map-south" "Co-map-south")
+            map-menu-ref-south (str map-ref-south "-menu")
+            map-content-ref-south (str map-ref-south "-content")
+            site-name-south (if is-challenger "Location2-south" "Location-south")
+            site-ref-south (if is-challenger "Ch-sites-south" "Co-sites-south")
+            site-menu-ref-south (str site-ref-south "-menu")
+            site-content-ref-south (str site-ref-south "-content")
+            reg-name-south (if is-challenger "Regions2-south" "Regions-south")
+            reg-ref-south (if is-challenger "Ch-regions-south" "Co-regions-south")
+            reg-menu-ref-south (str reg-ref-south "-menu")
+            reg-content-ref-south (str reg-ref-south "-content")
+            ]
         [:div.blue-shade.deck
          (drop-area (:side @game-state) map-name
                     {:on-click #(-> (om/get-node owner map-menu-ref) js/$ .toggle)})
@@ -1344,35 +1432,111 @@
          (when (= (:side @game-state) side)
             (if (get-in @game-state [side :opt-key])
               [:div.panel.blue-shade.menu {:ref map-menu-ref}
-               [:div {:on-click #(show-map % owner reg-ref)} "South-regions"]
-               [:div {:on-click #(show-map % owner reg-ref)} "Central-regions"]
-               [:div {:on-click #(show-map % owner reg-ref)} "North-regions"]
-               [:div {:on-click #(show-map % owner reg-ref)} "West-regions"]
+               [:div {:on-click #(show-map % owner reg-ref-south)} "South-regions"]
+               [:div {:on-click #(show-map % owner reg-ref-cent)} "Central-regions"]
+               [:div {:on-click #(show-map % owner reg-ref-west)} "West-regions"]
+               [:div {:on-click #(show-map % owner reg-ref-north)} "North-regions"]
                [:div {:on-click #(show-map % owner reg-ref)} "Std-regions"]
                ]
               [:div.panel.blue-shade.menu {:ref map-menu-ref}
-               [:div {:on-click #(show-map % owner map-ref)} "South"]
-               [:div {:on-click #(show-map % owner map-ref)} "Central"]
-               [:div {:on-click #(show-map % owner map-ref)} "North"]
-               [:div {:on-click #(show-map % owner map-ref)} "West"]
+               [:div {:on-click #(show-map % owner map-ref-south)} "South"]
+               [:div {:on-click #(show-map % owner map-ref-cent)} "Central"]
+               [:div {:on-click #(show-map % owner map-ref-west)} "West"]
+               [:div {:on-click #(show-map % owner map-ref-north)} "North"]
                [:div {:on-click #(show-map % owner map-ref)} "Std-sites"]
                ]))
          (when (= (:side @game-state) side)
            [:div.panel.blue-shade.popup {:ref reg-content-ref}
-            [:div
+            [:div {:style {:width 708}}
              (standard-map show-sites owner reg-ref map-menu-ref)
              [:a {:on-click #(close-popup % owner reg-content-ref "stops looking at the map" false true false false false)}
               "Close"]]
             ])
          [:div.panel.blue-shade.popup {:ref map-content-ref}
-          [:div
+          [:div {:style {:width 708}}
            (standard-map show-sites owner site-ref map-menu-ref)
            [:a {:on-click #(close-popup % owner map-content-ref "stops looking at the map" false true false false false)}
             "Close"]]
           ]
          [:div.panel.blue-shade.popup {:ref site-content-ref}
-          [:div
+          [:div {:style {:width 708}}
            [:a {:on-click #(close-popup % owner site-content-ref "stops looking at a region" false true false false false)}
+            "Close"]]
+          (om/build-all card-view location {:key :cid})
+          ]
+         (when (= (:side @game-state) side)
+           [:div.panel.blue-shade.popup-map {:ref reg-content-ref-north}
+            [:div
+             (dreamcard-map-north show-sites owner reg-ref-north map-menu-ref-north)
+             [:a {:on-click #(close-popup % owner reg-content-ref-north "stops looking at the map" false true false false false)}
+              "Close"]]
+            ])
+         [:div.panel.blue-shade.popup-map {:ref map-content-ref-north}
+          [:div
+           (dreamcard-map-north show-sites owner site-ref-north map-menu-ref-north)
+           [:a {:on-click #(close-popup % owner map-content-ref-north "stops looking at the map" false true false false false)}
+            "Close"]]
+          ]
+         [:div.panel.blue-shade.popup-map {:ref site-content-ref-north}
+          [:div
+           [:a {:on-click #(close-popup % owner site-content-ref-north "stops looking at a region" false true false false false)}
+            "Close"]]
+          (om/build-all card-view location {:key :cid})
+          ]
+         (when (= (:side @game-state) side)
+           [:div.panel.blue-shade.popup-map {:ref reg-content-ref-west}
+            [:div
+             (dreamcard-map-west show-sites owner reg-ref-west map-menu-ref-west)
+             [:a {:on-click #(close-popup % owner reg-content-ref-west "stops looking at the map" false true false false false)}
+              "Close"]]
+            ])
+         [:div.panel.blue-shade.popup-map {:ref map-content-ref-west}
+          [:div
+           (dreamcard-map-west show-sites owner site-ref-west map-menu-ref-west)
+           [:a {:on-click #(close-popup % owner map-content-ref-west "stops looking at the map" false true false false false)}
+            "Close"]]
+          ]
+         [:div.panel.blue-shade.popup-map {:ref site-content-ref-west}
+          [:div
+           [:a {:on-click #(close-popup % owner site-content-ref-west "stops looking at a region" false true false false false)}
+            "Close"]]
+          (om/build-all card-view location {:key :cid})
+          ]
+         (when (= (:side @game-state) side)
+           [:div.panel.blue-shade.popup-map {:ref reg-content-ref-cent}
+            [:div
+             (dreamcard-map-central show-sites owner reg-ref-cent map-menu-ref-cent)
+             [:a {:on-click #(close-popup % owner reg-content-ref-cent "stops looking at the map" false true false false false)}
+              "Close"]]
+            ])
+         [:div.panel.blue-shade.popup-map {:ref map-content-ref-cent}
+          [:div
+           (dreamcard-map-central show-sites owner site-ref-cent map-menu-ref-cent)
+           [:a {:on-click #(close-popup % owner map-content-ref-cent "stops looking at the map" false true false false false)}
+            "Close"]]
+          ]
+         [:div.panel.blue-shade.popup-map {:ref site-content-ref-cent}
+          [:div
+           [:a {:on-click #(close-popup % owner site-content-ref-cent "stops looking at a region" false true false false false)}
+            "Close"]]
+          (om/build-all card-view location {:key :cid})
+          ]
+         (when (= (:side @game-state) side)
+           [:div.panel.blue-shade.popup-map {:ref reg-content-ref-south}
+            [:div
+             (dreamcard-map-south show-sites owner reg-ref-south map-menu-ref-south)
+             [:a {:on-click #(close-popup % owner reg-content-ref-south "stops looking at the map" false true false false false)}
+              "Close"]]
+            ])
+         [:div.panel.blue-shade.popup-map {:ref map-content-ref-south}
+          [:div
+           (dreamcard-map-south show-sites owner site-ref-south map-menu-ref-south)
+           [:a {:on-click #(close-popup % owner map-content-ref-south "stops looking at the map" false true false false false)}
+            "Close"]]
+          ]
+         [:div.panel.blue-shade.popup-map {:ref site-content-ref-south}
+          [:div
+           [:a {:on-click #(close-popup % owner site-content-ref-south "stops looking at a region" false true false false false)}
             "Close"]]
           (om/build-all card-view location {:key :cid})
           ]
@@ -1413,16 +1577,20 @@
       (let [is-me (= (:side @game-state) :contestant)]
         [:div.contestant-rig {:class (if is-me "me" "opponent")}
          (for [zone [:resource :hazard :facedown]]
-           [:div
             (for [c (zone (:rig player))]
-              [:div.card-wrapper {:class (if (and (:tapped c) (not (:inverted c)))
-                                           "tapped"
-                                           (if (and (:inverted c) (not (:rotated c)))
-                                             "inverted"
-                                             (if (:rotated c)
-                                               "rotated"
-                                               nil)))}
-               (om/build card-view c)])])
+              [:div
+               [:div.card-wrapper {:class (if (and (:tapped c) (not (:inverted c)))
+                                            "tapped"
+                                            (if (and (:inverted c) (not (:rotated c)))
+                                              "inverted"
+                                              (if (:rotated c)
+                                                "rotated"
+                                                nil)))}
+                (om/build card-view c)]
+               (when (pos? (count (:hosted c)))
+                 [:div.host-group
+                  (host-view (reverse (:hosted c)))])]
+              ))
          ]))))
 
 (defmethod event-view "Challenger" [{:keys [player run]}]
@@ -1431,16 +1599,20 @@
       (let [is-me (= (:side @game-state) :challenger)]
         [:div.challenger-rig {:class (if is-me "me" "opponent")}
          (for [zone [:resource :hazard :facedown]]
-           [:div
             (for [c (zone (:rig player))]
-              [:div.card-wrapper {:class (if (and (:tapped c) (not (:inverted c)))
-                                           "tapped"
-                                           (if (and (:inverted c) (not (:rotated c)))
-                                             "inverted"
-                                             (if (:rotated c)
-                                               "rotated"
-                                               nil)))}
-               (om/build card-view c)])])
+              [:div
+               [:div.card-wrapper {:class (if (and (:tapped c) (not (:inverted c)))
+                                            "tapped"
+                                            (if (and (:inverted c) (not (:rotated c)))
+                                              "inverted"
+                                              (if (:rotated c)
+                                                "rotated"
+                                                nil)))}
+                (om/build card-view c)]
+               (when (pos? (count (:hosted c)))
+                 [:div.host-group
+                  (host-view (reverse (:hosted c)))])]
+              ))
          ]))))
 
 (defmulti board-view #(get-in % [:player :identity :side]))
@@ -1916,10 +2088,10 @@
              [:div {:class (:background (:options @app-state))}]
              [:div.rightpane
               [:div.card-zoom
-               (when-let [card (om/get-state owner :zoom)]
+               ;(when-let [card (om/get-state owner :zoom)]
                  (if (get-in @game-state [side :blind])
-                   (om/build card-blind card)
-                   (om/build card-zoom card)))]
+                   (om/build card-blind (get-in @game-state [side :hold-card]))
+                   (om/build card-zoom (get-in @game-state [side :hold-card])))]
               ;; card implementation info
               (when-let [card (om/get-state owner :zoom)]
                 (let [implemented (:implementation card)]

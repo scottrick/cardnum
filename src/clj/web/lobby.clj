@@ -3,7 +3,7 @@
             [web.utils :refer [response tick remove-once]]
             [clojure.string :refer [split split-lines join escape] :as s]
             [web.ws :as ws]
-            [web.sites :refer [all-standard-sites]]
+            [web.sites :refer [all-standard-sites all-dreamcard-sites]]
             [web.stats :as stats]
             [web.utils :refer [map-values]]
             [game.core :as core]
@@ -357,7 +357,7 @@
 
         deck (as-> (mc/find-one-as-map db "decks" {:_id (object-id deck-id) :username username}) d
                    ;(process-sites d)
-                   (assoc d :location all-standard-sites)
+                   (assoc d :location all-dreamcard-sites)
 
                    (map-values d [:resources :hazards :sideboard
                                   :characters :pool :fwsb :location]
