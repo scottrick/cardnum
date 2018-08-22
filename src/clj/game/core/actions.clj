@@ -394,7 +394,7 @@
                                                (update-in [:zone] #(map to-keyword %))
                                                (update-in [:host :zone] #(map to-keyword %)))))
                      (system-msg state side (str (build-spend-msg cost-str "reveal" "reveals")
-                                                 (:title card)))
+                                                 (:ImageName card)))
                      (if (character? card)
                        (play-sfx state side "reveal-character")
                        (play-sfx state side "reveal-other"))
