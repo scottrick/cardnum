@@ -424,7 +424,13 @@
         (if (or (boolean (re-find #"16mm" item))
                 (boolean (re-find #"18mm" item)))
           [:span {:dangerouslySetInnerHTML #js {:__html (add-faces (add-faces item))}}]
-          [:span {:dangerouslySetInnerHTML #js {:__html (add-regions item)}}])))))
+          ;[:span {:dangerouslySetInnerHTML #js {:__html (add-regions item)}}]
+          [:span {:dangerouslySetInnerHTML #js {:__html
+                                               (loop [new-text item]
+                                                 (if (= new-text (add-regions new-text))
+                                                   new-text
+                                                   (recur (add-regions new-text))))}}]
+          )))))
 
 (defn get-non-alt-art [[title cards]]
   {:title title :ImageName (:ImageName (last cards))})
@@ -1045,7 +1051,18 @@
     (do (-> (om/get-node owner (str ref "-content")) js/$ .fadeIn)
         (-> (om/get-node owner (str ref "-menu")) js/$ .fadeOut)
         (-> (om/get-node owner menu) js/$ .toggle)
-        (send-command "view-location" region))))
+        (if (or (= ref "Ch-sites-north")
+                (= ref "Co-sites-north")
+                (= ref "Ch-sites-west")
+                (= ref "Co-sites-west")
+                (= ref "Ch-sites-cent")
+                (= ref "Co-sites-cent")
+                (= ref "Ch-sites-south")
+                (= ref "Co-sites-south"))
+          (send-command "view-location" {:region region :dc true})
+          (send-command "view-location" {:region region :dc false})
+          ))))
+
 
 (defn show-map [event owner ref]
   (-> (om/get-node owner (str ref "-content")) js/$ .fadeIn)

@@ -155,12 +155,17 @@
     (private-card-vector state side sideboard)))
 
 (defn- make-private-location [state side location]
-  (let [sorted (if (:cut-region (side @state))
+  (let [dc-sorted (if (:cut-region (side @state))
                  (filter #(= (:Region %) (:cut-region (side @state))) location)
-                 nil)]
+                 nil)
+        standard (if (:dc (side @state))
+                   nil
+                   (filter #(= (:dreamcard %) false) dc-sorted))]
     (if (:view-location (side @state))
-      sorted
-      (private-card-vector state side sorted))))
+      (if (:dc (side @state))
+        dc-sorted
+        standard)
+      (private-card-vector state side dc-sorted))))
 
 (defn- private-states
   "Generates privatized states for the Contestant, Challenger and any spectators from the base state.

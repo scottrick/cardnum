@@ -292,6 +292,17 @@
   (system-msg state side "host a card")
   )
 
+(defn starter-path [state side t-path]
+  (let [b-path (.replace t-path " b " " Border-land ")
+        c-path (.replace b-path " c " " Coastal Sea ")
+        d-path (.replace c-path " d " " Dark-domain ")
+        e-path (.replace d-path " e " " Desert ")
+        f-path (.replace e-path " f " " Free-domain ")
+        j-path (.replace f-path " j " " Jungle ")
+        s-path (.replace j-path " s " " Shadow-land ")
+        w-path (.replace s-path " w " " Wilderness ")]
+    (system-msg state side (str "path: " w-path))))
+
 (defn parse-command [text]
   (let [[command & args] (split text #" ");"
         value (if-let [n (string->num (first args))] n 1)
@@ -376,6 +387,14 @@
                                          :choices {:req (fn [t] (card-is? t :side %2))}}
                                         {:title "/move-fw-sb command"} nil)
           "/o"          #(option-key-down %1 %2 nil)
+          "/p"          #(resolve-ability %1 %2
+                                          {:prompt "Select a site for starter movement"
+                                           :effect (req (starter-path %1 %2 (:Path target)))
+                                           :choices {:req (fn [t] (and (card-is? t :side %2)
+                                                                       (= "Site" (:type t))
+                                                                       (or  (= "Hero" (:alignment t))
+                                                                            (= "Minion" (:alignment t)))))}}
+                                          {:title "/p command"} nil)
           "/re-deck"    #(resolve-ability %1 %2
                                         {:effect (effect (shuffle-into-deck {} :discard))}
                                         {:title "/re-deck command"} nil)
