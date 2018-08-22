@@ -292,16 +292,26 @@
   (system-msg state side "host a card")
   )
 
-(defn starter-path [state side t-path]
-  (let [b-path (.replace t-path " b " " Border-land ")
-        c-path (.replace b-path " c " " Coastal Sea ")
-        d-path (.replace c-path " d " " Dark-domain ")
-        e-path (.replace d-path " e " " Desert ")
-        f-path (.replace e-path " f " " Free-domain ")
-        j-path (.replace f-path " j " " Jungle ")
-        s-path (.replace j-path " s " " Shadow-land ")
-        w-path (.replace s-path " w " " Wilderness ")]
-    (system-msg state side (str "path: " w-path))))
+(defn starter-path [state side st-path]
+  (let [
+        b-path1 (.replace st-path " b " " Border-land ")
+        b-path2 (.replace b-path1 " b " " Border-land ")
+        c-path1 (.replace b-path2 " c " " Coastal Sea ")
+        c-path2 (.replace c-path1 " c " " Coastal Sea ")
+        d-path1 (.replace c-path2 " d " " Dark-domain ")
+        d-path2 (.replace d-path1 " d " " Dark-domain ")
+        e-path1 (.replace d-path2 " e " " Desert ")
+        e-path2 (.replace e-path1 " e " " Desert ")
+        f-path1 (.replace e-path2 " f " " Free-domain ")
+        f-path2 (.replace f-path1 " f " " Free-domain ")
+        j-path1 (.replace f-path2 " j " " Jungle ")
+        j-path2 (.replace j-path1 " j " " Jungle ")
+        s-path1 (.replace j-path2 " s " " Shadow-land ")
+        s-path2 (.replace s-path1 " s " " Shadow-land ")
+        w-path1 (.replace s-path2 " w " " Wilderness ")
+        w-path2 (.replace w-path1 " w " " Wilderness ")
+        ]
+    (system-msg state side w-path2)))
 
 (defn parse-command [text]
   (let [[command & args] (split text #" ");"
