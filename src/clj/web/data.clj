@@ -8,6 +8,7 @@
 (defn cards-handler [req]
   (let [r (map #(dissoc % :_id) (mc/find-maps db "cards"))]
     (response 200 r)))
+
 (defn sets-handler [req]
   (response 200 (map #(dissoc % :_id) (mc/find-maps db "sets"))))
 

@@ -33,7 +33,7 @@
 (defn- insert-msg [{{{:keys [username emailhash]} :user} :ring-req
                     client-id :client-id
                     {:keys [:channel :msg]} :?data :as event}]
-  (let [len-valid (<= (count msg) (:max-length chat-config 144))
+  (let [len-valid (<= (count msg) (:max-length chat-config 600))
         rate-valid (within-rate-limit username)]
     (when (and username
                emailhash
