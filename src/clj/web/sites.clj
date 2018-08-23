@@ -1125,7 +1125,7 @@
    {:qty 1 :card "Târik an-Bawîba" :id "[M] (BO)"}
    {:qty 1 :card "Tartaust" :id "[M] (SL)"}
    {:qty 1 :card "Tarû-Makar" :id "[M] (CA)"}
-   {:qty 1 :card "Taurang" :id "[M] (CA)"}
+   {:qty 1 :card "Taurondë" :id "[M] (CA)"}
    {:qty 1 :card "Telpëmar" :id "[M] (FB)"}
    {:qty 1 :card "Temple of Kondri Odchi" :id "[M] (CP)"}
    {:qty 1 :card "Temple of Lokuthor" :id "[M] (NE)"}
