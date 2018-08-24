@@ -137,13 +137,11 @@
         ("Heap" "Archives")
         (do (let [action-str (if (= (first (:zone c)) :hand) "discards " "discards ")
                   prior (last (get-in @state [side :discard]))]
-              (if false ;; insert Pallando logic here
-                (do
-                  (when prior
-                    (update! state side (dissoc prior :seen :revealed)))
-                  (discard state s (dissoc c :seen :revealed) {:unpreventable true})
+              (when prior
+                (update! state side (dissoc prior :seen :revealed)))
+              (discard state s (dissoc c :seen :revealed) {:unpreventable true})
+              (when (get-in @state [(other-side side) :hpf])
                   (command-revtop state side nil))
-              (discard state s (dissoc c :seen :revealed) {:unpreventable true}))
               (system-msg state side (str action-str label from-str))))
         ("Grip" "HQ")
         (do (move state s (dissoc c :seen :revealed) :hand {:force true})

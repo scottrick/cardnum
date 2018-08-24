@@ -423,7 +423,7 @@
                                              :choices {:req (fn [t] (card-is? t :side %2))}}
                                             {:title "/reveal command"} nil)
           "/reveal-all"    #(when (= %2 :contestant) (command-revealall %1 %2 value))
-          "/revtop"     #(when (= %2 :contestant) (command-revtop %1 %2 value))
+          "/revtop"     #(command-revtop %1 %2 value)
           "/rfg"        #(resolve-ability %1 %2
                                           {:prompt "Select a card to remove from the game"
                                            :effect (req (let [c (deactivate %1 %2 target)]

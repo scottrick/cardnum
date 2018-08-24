@@ -88,7 +88,7 @@
                     :char_mp 0 :ally_mp 0 :item_mp 0
                     :fact_mp 0 :kill_mp 0 :misc_mp 0
                     :toast [] :blind false :hold-card 0 :opt-key false
-                    :hand-size-base 8 :hand-size-modification 0
+                    :hand-size-base 8 :hand-size-modification 0 :hpf false
                     :agenda-point 0
                     :click-per-turn 100 :agenda-point-req 7 :keep false}
        :challenger {:user (:user challenger) :identity challenger-identity
@@ -109,7 +109,7 @@
                     :free_gi 0 :total_mp 0 :stage_pt 0
                     :char_mp 0 :ally_mp 0 :item_mp 0
                     :fact_mp 0 :kill_mp 0 :misc_mp 0
-                    :hand-size-base 8 :hand-size-modification 0
+                    :hand-size-base 8 :hand-size-modification 0 :hpf false
                     :agenda-point 0
                     :hq-access 1 :rd-access 1 :tagged 0
                     :click-per-turn 100 :agenda-point-req 7 :keep false}})))
