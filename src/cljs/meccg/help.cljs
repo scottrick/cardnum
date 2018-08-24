@@ -221,6 +221,10 @@
             {:id "donations"
              :title "How can I make a donation?"
              :content [:p "Donation info can be found on the " [:a {:href "/about"} "About"] " page."]}
+            {:id "deck-dice"
+             :title "How do I have different dice per deck?"
+             :content [:p "Dice per deck are enabled for " [:a {:href "/about"} "donators"] " and developers of the site. If you belong to one of the aforementioned groups and you feel like you should have them enabled, "
+                       "but you don't, " [:a {:href "/about"} "contact us"] "."]}
             {:id "devs"
              :title "How can I help with the coding/webdesign?"
              :content (list [:p "Visit the project page on " [:a {:href "https://github.com/rezwits/meccg/" :target "_blank"} "GitHub"] " and fork "
