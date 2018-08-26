@@ -229,12 +229,12 @@
                       (#{"rig" "onhost"} (first zone)))
                  (and (not inverted) (not rotated)))
           (cons "invert" %) %))
-      (#(if (and (and (some (partial = Secondary) ["Permanent-event" "Faction"])
+      (#(if (and (and (some (partial = Secondary) ["Permanent-event" "Faction" "Avatar"])
                       (re-find #"tap" Home)
                       (#{"rig" "onhost"} (first zone)))
                  (and (not tapped) (not inverted) (not rotated)))
           (cons "tap" %) %))
-      (#(if (and (and (some (partial = Secondary) ["Permanent-event" "Faction"])
+      (#(if (and (and (some (partial = Secondary) ["Permanent-event" "Faction" "Avatar"])
                       (or (boolean (re-find #"tap" Home))
                           (boolean (re-find #"invert" Home))
                           (boolean (re-find #"rotate" Home)))
@@ -435,6 +435,7 @@
 (defn get-non-alt-art [[title cards]]
   {:title title :ImageName (:ImageName (last cards))})
 
+(comment
 (defn prepare-cards []
   (->> @all-cards
        (group-by :title)
@@ -443,6 +444,7 @@
        (reverse)))
 
 (def prepared-cards (memoize prepare-cards))
+)
 
 (defn prepare-image []
   (->> @all-cards
@@ -469,12 +471,16 @@
 (defn card-title-reducer [text card]
   (.replace text (js/RegExp. (find-card-regex (:title card)) "g") (card-image-token (:title card) (:ImageName card))))
 
+(comment
+  (defn add-image-codes-impl [text]
+    (let [by-image (reduce card-image-reducer text (prepared-image))
+          by-codes (reduce card-title-reducer text (prepared-cards))]
+      (if (> (count by-image) (count by-codes))
+        by-image
+        by-codes)))
+  )
 (defn add-image-codes-impl [text]
- (let [by-image (reduce card-image-reducer text (prepared-image))
-       by-codes (reduce card-title-reducer text (prepared-cards))]
-   (if (> (count by-image) (count by-codes))
-          by-image
-          by-codes)))
+  (reduce card-image-reducer text (prepared-image)))
 
 (def add-image-codes (memoize add-image-codes-impl))
 
@@ -494,11 +500,11 @@
 
 (defn handle-key-down [e]
   (cond
-    (= e.keyCode 16) ;// shift
-    (send-command "blind-zoom")
     (= e.keyCode 18) ;// option
     (send-command "option-key-down")
     ;(= e.keyCode 27) ;// escape
+    (= e.keyCode 37) ;// shift
+    (send-command "blind-zoom")
     (= e.keyCode 39) ;// right-arrow
     (let [side (:side @game-state)]
       (if-let [card (get-in @game-state [side :hold-card])]
@@ -507,7 +513,7 @@
 
 (defn handle-key-up [e]
   (cond
-    (= e.keyCode 16) ;// shift
+    (= e.keyCode 37) ;// shift
     (send-command "blind-zoom")
     )
   )
@@ -557,7 +563,7 @@
     (render-state [this state]
       (sab/html
         [:div.log {:on-key-down #(handle-key-down %)
-                   :on-key-up #(handle-key-up %)
+                   ;:on-key-up #(handle-key-up %)
                    :on-mouse-over #(card-preview-mouse-over % zoom-channel)
                    :on-mouse-out  #(card-preview-mouse-out % zoom-channel)}
          [:div.panel.blue-shade.messages {:ref "msg-list"}
