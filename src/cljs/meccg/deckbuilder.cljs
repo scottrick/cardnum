@@ -820,16 +820,16 @@
                           [:button {:on-click #(save-deck cursor owner)} "Save"]
                           [:button {:on-click #(cancel-edit owner)} "Cancel"]
                           (if (om/get-state owner :vs-wizard)
-                            [:button {:on-click #(wizard-edit owner)} "√ vs Wizard"]
-                            [:button {:on-click #(wizard-edit owner)} "? vs Wizard"]
+                            [:button {:on-click #(wizard-edit owner)} "√ v Wizard"]
+                            [:button {:on-click #(wizard-edit owner)} "? v Wizard"]
                             )
                           (if (om/get-state owner :vs-minion)
-                            [:button {:on-click #(minion-edit owner)} "√ vs Minion"]
-                            [:button {:on-click #(minion-edit owner)} "? vs Minion"]
+                            [:button {:on-click #(minion-edit owner)} "√ v Minion"]
+                            [:button {:on-click #(minion-edit owner)} "? v Minion"]
                             )
                           (if (om/get-state owner :vs-fallen)
-                            [:button {:on-click #(fallen-edit owner)} "√ vs Fallen"]
-                            [:button {:on-click #(fallen-edit owner)} "? vs Fallen"]
+                            [:button {:on-click #(fallen-edit owner)} "√ v Fallen"]
+                            [:button {:on-click #(fallen-edit owner)} "? v Fallen"]
                             )
                           (if (some #{(get-in @app-state [:user :username])} (get-in @app-state [:donators]))
                           [:h3.rgtlabel "Donator deck dice:  "

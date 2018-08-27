@@ -41,6 +41,7 @@
                         [:li [:code "/discard-n #n"] " - Discard card number n from your hand"]
                         [:li [:code "/discard-random"] " - Discard a random card from your hand"]
                         [:li [:code "/draw n"] " - Draw n cards"]
+                        [:li [:code "/facedown"] " - Select a card to place facedown"]
                         [:li [:code "/handsize n"] " - Set your handsize to n"]
                         [:li [:code "/hide"] " - Hide a card"]
                         [:li [:code "/hide-hand"] " - Hide your hand after revealing"]
@@ -58,9 +59,9 @@
                         [:li [:code "/reveal-hand"] " - Reveals your hand to opponent, don't forget to hide"]
                         [:li [:code "/rfg"] " - Select a card to remove from the game"]
                         [:li [:code "/rfgh"] " - Select a card to remove from the game hidden"]
-                        [:li [:code "/facedown"] " - Select a card to place facedown"]
                         [:li [:code "/r"] " - Roll 2d6"]
                         [:li [:code "/roll n"] " - Roll an n-sided die"]
+                        [:li [:code "/score"] " - Use this to score a card"]
                         [:li [:code "/z"] " - Double the zoom"]
                         ]]}
             {:id "documentation"

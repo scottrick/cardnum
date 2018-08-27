@@ -2030,8 +2030,8 @@
     [:div
      [:table.win.table
       [:tr.win.th
-       [:td.win.th "Contestant"] [:td.win.th]
-       [:td.win.th "Challenger"] [:td.win.th]]
+       [:td.win.th (get-in @game-state [:contestant :identity :title])] [:td.win.th]
+       [:td.win.th (get-in @game-state [:challenger :identity :title])] [:td.win.th]]
       (for [[contestant challenger] stats]
         [:tr [:td (first contestant)] [:td (show-stat contestant)]
          [:td (first challenger)] [:td (show-stat challenger)]])]]))
@@ -2043,9 +2043,6 @@
    [:div
     (:winning-user @game-state) ;" (" (-> @game-state :winner capitalize)
     (cond
-      (= "Decked" (@game-state :reason capitalize))
-      (str " wins due to the Contestant being decked on turn " (:turn @game-state))
-
       (= "Concede" (@game-state :reason capitalize))
       (str " wins by concession on turn " (:turn @game-state))
 
