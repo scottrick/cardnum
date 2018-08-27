@@ -757,7 +757,7 @@
 (defn face-down?
   "Returns true if the placed card should be drawn face down."
   [{:keys [side type facedown revealed host] :as card}]
-  (if (= side "Contestant")
+  (if (or (= side "Contestant") (= side "Challenger"))
     (and (not= type "Resource")
          (not= type "Hazard"))
     facedown))

@@ -167,10 +167,9 @@
 (defn command-facedown [state side]
   (resolve-ability state side
                    {:prompt "Select a card to place facedown"
-                    :choices {:req #(and (= (:side %) "Challenger")
-                                         (in-hand? %))}
+                    :choices {:req #(and (in-hand? %))}
                     :effect (effect (challenger-place target {:facedown true}))}
-                   {:title "/faceup command"} nil))
+                   {:title "/facedown command"} nil))
 
 (defn command-counter [state side args]
   (cond
@@ -297,6 +296,24 @@
   (system-msg state side "host a card")
   )
 
+(defn host-any-card-hidden
+  [state side args]
+  (resolve-ability state side
+                   {:prompt "Select hosting card"
+                    :choices {:req (fn [t] true)}
+                    :msg (msg "host " (:title target))
+                    :effect (req (let [c (get-card state target)] (resolve-ability state side
+                                                                                   {:prompt "Select card to host"
+                                                                                    :choices {:req (fn [t] true)}
+                                                                                    :effect (effect (do
+                                                                                                      (host state side c (get-card state target))
+                                                                                                      (update! state side (dissoc (get-card state target) :seen :revealed))
+                                                                                                      (hide state side (get-card state target))))
+                                                                                    ; host target onto card
+                                                                                    } c nil )))} nil nil)
+  (system-msg state side "host a card")
+  )
+
 (defn starter-path [state side st-path]
   (let [
         b-path1 (.replace st-path " b " " Border-land ")
@@ -363,6 +380,7 @@
                                         {:title "/hide command"} nil)
           "/hide-hand"   #(hide-hand %1 %2)
           "/host"       #(host-any-card %1 %2 args)
+          "/hosth"      #(host-any-card-hidden %1 %2 args)
           "/jack-out"   #(when (= %2 :challenger) (jack-out %1 %2 nil))
           "/link"       #(swap! %1 assoc-in [%2 :link] (max 0 value))
           "/memory"     #(swap! %1 assoc-in [%2 :memory] value)

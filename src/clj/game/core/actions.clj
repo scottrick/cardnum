@@ -403,11 +403,11 @@
        (effect-completed state side eid)))))
 
 (defn hide
-  "Hide a contestant card."
+  "Hide a card."
   [state side card]
   (let [card (get-card state card)]
     (system-msg state side (str "hides " (:title card)))
-    (update! state :contestant (deactivate state :contestant card true))
+    (update! state side (deactivate state side card true))
     (let [cdef (card-def card)]
       (when-let [hide-effect (:hide-effect cdef)]
         (resolve-ability state side hide-effect (get-card state card) nil))
