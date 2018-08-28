@@ -490,20 +490,6 @@
       (update! state side (dissoc card :flip))
       (update! state side (assoc card :flip true)))))
 
-(defn flip1
-  "Flips a quest."
-  [state side card]
-  (let [card (get-card state card)]
-    (system-msg state side (str "flips " (:title card)))
-    (if (contains? card :flip)
-      (if (:flip card)
-        (swap! state assoc-in [card :flip] false)
-        (swap! state assoc-in [card :flip] true)
-        )
-      (update! state side (assoc card :flip true))
-      )))
-
-
 (defn regionize
   [state side card]
   (system-msg state side (str (:RPath card) " " (:title card))))
