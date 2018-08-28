@@ -44,6 +44,7 @@
    "eot-discard" core/eot-discard
    "eot-phase" core/eot-phase
    "equip" #(core/equip %1 %2 (:card %3))
+   "flip" #(core/flip %1 %2 (:card %3))
    "haz-play-done" core/haz-play-done
    "hide" #(core/hide %1 %2 (:card %3))
    "invert" #(core/invert %1 %2 (:card %3))

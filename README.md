@@ -6,17 +6,17 @@ Play Middle-earth:CCG in the browser.
 
 http://www.cardnum.net
 
-[Ch 1 - Basics](https://www.youtube.com/watch?v=NVUjf6YrL_A)
+[Ch 1 - Chat and Cards](https://www.youtube.com/watch?v=27lbYB9PstY)
 
-[Ch 2 - Games](https://www.youtube.com/watch?v=kMNXLibDVGE)
+[Ch 2 - Deck Building](https://www.youtube.com/watch?v=JIjT3JyNm5k)
 
-[Ch 3 - Drafting](https://www.youtube.com/watch?v=r5tFzhFe6-E)
+[Ch 3 - Help and Settings](https://www.youtube.com/watch?v=G8O5e7fnwjc)
 
-[Ch 4 - Resources](https://www.youtube.com/watch?v=3-DuGG2NNAc)
+[Ch 4a - Resource Game Play](https://www.youtube.com/watch?v=Yx7zJTljFZY)
 
-[Ch 5 - Hazards](https://www.youtube.com/watch?v=cy8lLzPUBlE)
+[Ch 4b - Resource Game Play (cont.)](https://www.youtube.com/watch?v=RN56FMJzAT8)
 
-[Ch 6 - Item Tips](https://www.youtube.com/watch?v=QCURuej2IsY)
+[Ch 5 - Hazard Game Play](https://www.youtube.com/watch?v=rLkp0cLsOXg)
 
 ![screenshot](/resources/public/img/meccg_shot2.jpg)
 

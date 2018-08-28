@@ -21,8 +21,11 @@
 (defonce last-state (atom {}))
 (defonce lock (atom false))
 
-(defn image-url [{:keys [set_code ImageName] :as card}]
-  (str "/img/cards/" (:set_code card) "/" (:ImageName card)))
+(defn image-url [{:keys [set_code ImageName flip] :as card}]
+  (if flip
+  (str "/img/cards/" (:set_code card) "/flip-" (:ImageName card))
+  (str "/img/cards/" (:set_code card) "/" (:ImageName card))
+  ))
 
 (defn get-side [state]
   (let [user-id (:_id (:user @app-state))]
@@ -241,6 +244,9 @@
                       (#{"rig" "onhost"} (first zone)))
                  (or tapped inverted rotated))
           (cons "untap" %) %))
+      (#(if (and (re-find #"flip" Home)
+                 (#{"rig" "onhost"} (first zone)))
+          (cons "flip" %) %))
       (#(if (and (and (= type "Hazard")
                       (re-find #"rotate" Home)
                       (#{"rig" "onhost"} (first zone)))
