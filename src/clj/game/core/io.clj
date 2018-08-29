@@ -167,10 +167,9 @@
 (defn command-facedown [state side]
   (resolve-ability state side
                    {:prompt "Select a card to place facedown"
-                    :choices {:req #(and (= (:side %) "Challenger")
-                                         (in-hand? %))}
+                    :choices {:req #(and (in-hand? %))}
                     :effect (effect (challenger-place target {:facedown true}))}
-                   {:title "/faceup command"} nil))
+                   {:title "/facedown command"} nil))
 
 (defn command-counter [state side args]
   (cond
@@ -222,16 +221,21 @@
 (defn command-roll [state side value]
   (system-msg state side (str "rolls a " value " sided die and rolls a " (inc (rand-int value)))))
 
-;  :background (:options @app-state))
-;  (system-msg state side (str "rolls a " pick"-"(inc (rand-int 6))"+"size pick"-"(inc (rand-int 6))"+"size))))
-; (get-in p [:user :options :deckstats])
-; player (side @state)
-
 (defn basic-roll [state side]
   (let [player (side @state)
-        pick (get-in player [:user :options :dice-pick])
-        size (get-in player [:user :options :dice-size])]
-  (system-msg state side (str "rolls a " pick"-"(inc (rand-int 6))"+"size " " pick"-"(inc (rand-int 6))"+"size))))
+        pick1 (get-in @state [side :deck-dice])
+        size1 (get-in @state [side :deck-mmsz])
+        pick2 (get-in player [:user :options :dice-pick])
+        size2 (get-in player [:user :options :dice-size])]
+    (if (and (not (or (= pick1 "empty") (= size1 "none")))
+             pick1 size1)
+      (system-msg state side (str "rolls a " pick1"-"(inc (rand-int 6))"+"size1
+                                  " " pick1"-"(inc (rand-int 6))"+"size1))
+        (if (and pick2 size2)
+          (system-msg state side (str "rolls a " pick2"-"(inc (rand-int 6))"+"size2
+                                      " " pick2"-"(inc (rand-int 6))"+"size2))
+          (system-msg state side (str "rolls a " "roll-"(inc (rand-int 6))"+16mm"
+                                      " roll-"(inc (rand-int 6))"+16mm"))))))
 
 (defn command-undo-click
   "Resets the game state back to start of the click"
@@ -292,6 +296,45 @@
   (system-msg state side "host a card")
   )
 
+(defn host-any-card-hidden
+  [state side args]
+  (resolve-ability state side
+                   {:prompt "Select hosting card"
+                    :choices {:req (fn [t] true)}
+                    :msg (msg "host " (:title target))
+                    :effect (req (let [c (get-card state target)] (resolve-ability state side
+                                                                                   {:prompt "Select card to host"
+                                                                                    :choices {:req (fn [t] true)}
+                                                                                    :effect (effect (do
+                                                                                                      (host state side c (get-card state target))
+                                                                                                      (update! state side (dissoc (get-card state target) :seen :revealed))
+                                                                                                      (hide state side (get-card state target))))
+                                                                                    ; host target onto card
+                                                                                    } c nil )))} nil nil)
+  (system-msg state side "host a card")
+  )
+
+(defn starter-path [state side st-path]
+  (let [
+        b-path1 (.replace st-path " b " " Border-land ")
+        b-path2 (.replace b-path1 " b " " Border-land ")
+        c-path1 (.replace b-path2 " c " " Coastal Sea ")
+        c-path2 (.replace c-path1 " c " " Coastal Sea ")
+        d-path1 (.replace c-path2 " d " " Dark-domain ")
+        d-path2 (.replace d-path1 " d " " Dark-domain ")
+        e-path1 (.replace d-path2 " e " " Desert ")
+        e-path2 (.replace e-path1 " e " " Desert ")
+        f-path1 (.replace e-path2 " f " " Free-domain ")
+        f-path2 (.replace f-path1 " f " " Free-domain ")
+        j-path1 (.replace f-path2 " j " " Jungle ")
+        j-path2 (.replace j-path1 " j " " Jungle ")
+        s-path1 (.replace j-path2 " s " " Shadow-land ")
+        s-path2 (.replace s-path1 " s " " Shadow-land ")
+        w-path1 (.replace s-path2 " w " " Wilderness ")
+        w-path2 (.replace w-path1 " w " " Wilderness ")
+        ]
+    (system-msg state side w-path2)))
+
 (defn parse-command [text]
   (let [[command & args] (split text #" ");"
         value (if-let [n (string->num (first args))] n 1)
@@ -337,6 +380,7 @@
                                         {:title "/hide command"} nil)
           "/hide-hand"   #(hide-hand %1 %2)
           "/host"       #(host-any-card %1 %2 args)
+          "/hosth"      #(host-any-card-hidden %1 %2 args)
           "/jack-out"   #(when (= %2 :challenger) (jack-out %1 %2 nil))
           "/link"       #(swap! %1 assoc-in [%2 :link] (max 0 value))
           "/memory"     #(swap! %1 assoc-in [%2 :memory] value)
@@ -376,6 +420,14 @@
                                          :choices {:req (fn [t] (card-is? t :side %2))}}
                                         {:title "/move-fw-sb command"} nil)
           "/o"          #(option-key-down %1 %2 nil)
+          "/p"          #(resolve-ability %1 %2
+                                          {:prompt "Select a site for starter movement"
+                                           :effect (req (starter-path %1 %2 (:Path target)))
+                                           :choices {:req (fn [t] (and (card-is? t :side %2)
+                                                                       (= "Site" (:type t))
+                                                                       (or  (= "Hero" (:alignment t))
+                                                                            (= "Minion" (:alignment t)))))}}
+                                          {:title "/p command"} nil)
           "/re-deck"    #(resolve-ability %1 %2
                                         {:effect (effect (shuffle-into-deck {} :discard))}
                                         {:title "/re-deck command"} nil)
@@ -389,7 +441,7 @@
                                              :choices {:req (fn [t] (card-is? t :side %2))}}
                                             {:title "/reveal command"} nil)
           "/reveal-all"    #(when (= %2 :contestant) (command-revealall %1 %2 value))
-          "/revtop"     #(when (= %2 :contestant) (command-revtop %1 %2 value))
+          "/revtop"     #(command-revtop %1 %2 value)
           "/rfg"        #(resolve-ability %1 %2
                                           {:prompt "Select a card to remove from the game"
                                            :effect (req (let [c (deactivate %1 %2 target)]

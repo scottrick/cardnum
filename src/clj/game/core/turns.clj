@@ -57,7 +57,12 @@
         contestant-identity (assoc (or (get-in contestant [:deck :identity]) {:side "Contestant" :type "Identity"}) :cid (make-cid))
         contestant-identity (assoc contestant-identity :side "Contestant" :implementation (card-implemented contestant-identity))
         challenger-identity (assoc (or (get-in challenger [:deck :identity]) {:side "Challenger" :type "Identity"}) :cid (make-cid))
-        challenger-identity (assoc challenger-identity :side "Challenger" :implementation (card-implemented challenger-identity))]
+        challenger-identity (assoc challenger-identity :side "Challenger" :implementation (card-implemented challenger-identity))
+        contestant-dice-pick (get-in contestant [:deck :donate-dice])
+        contestant-dice-size (get-in contestant [:deck :donate-size])
+        challenger-dice-pick (get-in challenger [:deck :donate-dice])
+        challenger-dice-size (get-in challenger [:deck :donate-size])
+        ]
     (atom
       {:gameid gameid :log [] :active-player :challenger :end-turn true
        :room room
@@ -66,6 +71,8 @@
        :stats {:time {:started (t/now)}}
        :options {:spectatorhands spectatorhands}
        :contestant {:user (:user contestant) :identity contestant-identity
+                    :deck-dice contestant-dice-pick
+                    :deck-mmsz contestant-dice-size
                     :options contestant-options
                     :deck (zone :deck contestant-deck)
                     :deck-id contestant-deck-id
@@ -81,10 +88,12 @@
                     :char_mp 0 :ally_mp 0 :item_mp 0
                     :fact_mp 0 :kill_mp 0 :misc_mp 0
                     :toast [] :blind false :hold-card 0 :opt-key false
-                    :hand-size-base 8 :hand-size-modification 0
+                    :hand-size-base 8 :hand-size-modification 0 :hpf false
                     :agenda-point 0
                     :click-per-turn 100 :agenda-point-req 7 :keep false}
        :challenger {:user (:user challenger) :identity challenger-identity
+                    :deck-dice challenger-dice-pick
+                    :deck-mmsz challenger-dice-size
                     :options challenger-options
                     :deck (zone :deck challenger-deck)
                     :deck-id challenger-deck-id
@@ -100,7 +109,7 @@
                     :free_gi 0 :total_mp 0 :stage_pt 0
                     :char_mp 0 :ally_mp 0 :item_mp 0
                     :fact_mp 0 :kill_mp 0 :misc_mp 0
-                    :hand-size-base 8 :hand-size-modification 0
+                    :hand-size-base 8 :hand-size-modification 0 :hpf false
                     :agenda-point 0
                     :hq-access 1 :rd-access 1 :tagged 0
                     :click-per-turn 100 :agenda-point-req 7 :keep false}})))

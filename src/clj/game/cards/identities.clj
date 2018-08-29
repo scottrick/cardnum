@@ -34,4 +34,20 @@
 
 ;;; Card definitions
 (def card-definitions
-  {})
+  {
+   "Pallando"
+   {:effect (req (when (and (= (:alignment card) "Hero")
+                            (revealed? card))
+                   (swap! state assoc-in [side :hpf] true)
+                 (add-watch state :pallando-hero-in-play
+                            (fn [k ref old new]
+                              (when (and (revealed? new) (not (revealed? old)))
+                                (swap! state assoc-in [side :hpf] true))
+                              (when (and (revealed? old) (not (revealed? new)))
+                                (swap! state assoc-in [side :hpf] false))
+                                ))))
+    :leave-play (req (when (and (= (:alignment card) "Hero")
+                                (revealed? card))
+                       (swap! state assoc-in [side :hpf] false))
+                     (remove-watch state :pallando-hero-in-play))}
+   })

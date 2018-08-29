@@ -14,7 +14,7 @@
 (declare faction-map)
 
 (def ^:const dc-image-url "https://github.com/vastorper/dc/blob/master/graphics/Metw/")
-(def ^:const me-image-url "https://github.com/rezwits/cardnum/blob/mext-e/fdata/")
+(def ^:const me-image-url "https://github.com/rezwits/cardnum/blob/table/fdata/")
 
 (defmacro rename
   "Rename a card field"
@@ -85,15 +85,15 @@
    :Specific identity
    :code (rename :trimCode)
    :fullCode (rename :code)
-   :alignCode identity
-   :setCode identity
+   :gccgAlign (fn [[k v]] [:gccgAlign (.replace (.replace v "[" "") "]" "")])
+   :gccgSet (fn [[k v]] [:gccgSet (.replace (.replace v "(" "") ")" "")])
    :DCpath identity
    :dreamcard identity
    :released identity
    })
 
 (def tables
-  {:mwl   {:path "bans-dc.json"    :fields mwl-fields   :collection "mwl"}
+  {:mwl   {:path "bans-dc.json"   :fields mwl-fields   :collection "mwl"}
    :set   {:path "sets-dc.json"   :fields set-fields   :collection "sets"}
    :card  {:path "cards-dc.json"  :fields card-fields  :collection "cards"}
    :config {:collection "config"}})
@@ -237,10 +237,10 @@
 (defn download-card-images
   "Download card images (if necessary) from NRDB"
   [card-map]
-  (doseq [set ["METW" "METD" "MEDM" "MELE" "MEAS" "MEWH" "MEBA"
-               "MEFB" "MEDF" "MENE" "MEBO" "MECA" "MECP" "MEDS"
-               "MEGW" "MEKN" "MEML" "MEMM" "MENW" "MERN" "MERS"
-               "MESL" "METI" "MEWR"]]
+  (doseq [set ["METW" "METD" "MEDM" "MELE" "MEAS" "MEWH"
+               "MEBA" "MEFB" "MEDF" "MENE" "MEBO" "MECA"
+               "MECP" "MEDS" "MEGW" "MEKN" "MEML" "MEMM"
+               "MENW" "MERN" "MERS" "MESL" "METI" "MEWR"]]
     (let [img-dir (io/file "resources" "public" "img" "cards" set)]
       (when-not (.isDirectory img-dir)
         (println "Creating card images directory [" (.getPath img-dir) "]")
@@ -262,19 +262,13 @@
   (let [cards (fetch-data download-fn
                           card-table
                           (partial add-card-fields sets)
-                          (fn [c d] true))
-        cards-replaced (->> cards
-                            vals
-                            (group-by :title)
-                            (filter (fn [[k v]] (>= (count v) 5)))
-                            vals
-                            (reduce rotate-cards cards))]
+                          (fn [c d] true))]
     (spit "data/cards.json" (str cards))
     (mc/remove db collection)
-    (mc/insert-batch db collection (vals cards-replaced))
+    (mc/insert-batch db collection (vals cards))
     (when download-images
-      (download-card-images cards-replaced))
-    cards-replaced))
+      (download-card-images cards))
+    cards))
 
 (defn update-config
   "Store import meta info in the db"

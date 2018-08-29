@@ -41,6 +41,7 @@
                         [:li [:code "/discard-n #n"] " - Discard card number n from your hand"]
                         [:li [:code "/discard-random"] " - Discard a random card from your hand"]
                         [:li [:code "/draw n"] " - Draw n cards"]
+                        [:li [:code "/facedown"] " - Select a card to place facedown"]
                         [:li [:code "/handsize n"] " - Set your handsize to n"]
                         [:li [:code "/hide"] " - Hide a card"]
                         [:li [:code "/hide-hand"] " - Hide your hand after revealing"]
@@ -52,14 +53,15 @@
                         [:li [:code "/move-sb"] " - Pick a card from your play-area to put into your sideboard"]
                         [:li [:code "/move-fw-sb"] " - Pick a card from your play-area to put into your fw-sideboard"]
                         [:li [:code "/o"] " - Toggle the option key, for region access from the location deck"]
+                        [:li [:code "/p"] " - Select a site for starter movement site path, quicker access"]
                         [:li [:code "/re-deck"] " - Use this to move all cards from your discard back to your deck"]
                         [:li [:code "/reveal"] " - Select a card to reveal"]
                         [:li [:code "/reveal-hand"] " - Reveals your hand to opponent, don't forget to hide"]
                         [:li [:code "/rfg"] " - Select a card to remove from the game"]
                         [:li [:code "/rfgh"] " - Select a card to remove from the game hidden"]
-                        [:li [:code "/facedown"] " - Select a card to place facedown"]
                         [:li [:code "/r"] " - Roll 2d6"]
                         [:li [:code "/roll n"] " - Roll an n-sided die"]
+                        [:li [:code "/score"] " - Use this to score a card"]
                         [:li [:code "/z"] " - Double the zoom"]
                         ]]}
             {:id "documentation"
@@ -220,6 +222,10 @@
             {:id "donations"
              :title "How can I make a donation?"
              :content [:p "Donation info can be found on the " [:a {:href "/about"} "About"] " page."]}
+            {:id "deck-dice"
+             :title "How do I have different dice per deck?"
+             :content [:p "Dice per deck are enabled for " [:a {:href "/about"} "donators"] " and developers of the site. If you belong to one of the aforementioned groups and you feel like you should have them enabled, "
+                       "but you don't, " [:a {:href "/about"} "contact us"] "."]}
             {:id "devs"
              :title "How can I help with the coding/webdesign?"
              :content (list [:p "Visit the project page on " [:a {:href "https://github.com/rezwits/meccg/" :target "_blank"} "GitHub"] " and fork "

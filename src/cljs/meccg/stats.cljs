@@ -69,6 +69,7 @@
            (om/build stat-view {:stats stats
                                 :start-key :games-started :complete-key :games-completed
                                 :win-key :wins :lose-key :loses})]
+          (comment
           [:div
            [:h3 "Contestant Stats"]
            (om/build stat-view {:stats stats
@@ -78,7 +79,8 @@
            [:h3 "Challenger Stats"]
            (om/build stat-view {:stats stats
                                 :start-key :games-started-challenger :complete-key :games-completed-challenger
-                                :win-key :wins-challenger :lose-key :loses-challenger})]]
+                                :win-key :wins-challenger :lose-key :loses-challenger})])
+          ]
          [:p
           [:button {:on-click #(clear-user-stats)} "Clear Stats"]]]))))
 

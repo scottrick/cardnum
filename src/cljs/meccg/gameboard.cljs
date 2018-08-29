@@ -21,8 +21,11 @@
 (defonce last-state (atom {}))
 (defonce lock (atom false))
 
-(defn image-url [{:keys [set_code ImageName] :as card}]
-  (str "/img/cards/" (:set_code card) "/" (:ImageName card)))
+(defn image-url [{:keys [set_code ImageName flip] :as card}]
+  (if flip
+  (str "/img/cards/" (:set_code card) "/flip-" (:ImageName card))
+  (str "/img/cards/" (:set_code card) "/" (:ImageName card))
+  ))
 
 (defn get-side [state]
   (let [user-id (:_id (:user @app-state))]
@@ -229,18 +232,21 @@
                       (#{"rig" "onhost"} (first zone)))
                  (and (not inverted) (not rotated)))
           (cons "invert" %) %))
-      (#(if (and (and (some (partial = Secondary) ["Permanent-event" "Faction"])
+      (#(if (and (and (some (partial = Secondary) ["Permanent-event" "Faction" "Avatar"])
                       (re-find #"tap" Home)
                       (#{"rig" "onhost"} (first zone)))
                  (and (not tapped) (not inverted) (not rotated)))
           (cons "tap" %) %))
-      (#(if (and (and (some (partial = Secondary) ["Permanent-event" "Faction"])
+      (#(if (and (and (some (partial = Secondary) ["Permanent-event" "Faction" "Avatar"])
                       (or (boolean (re-find #"tap" Home))
                           (boolean (re-find #"invert" Home))
                           (boolean (re-find #"rotate" Home)))
                       (#{"rig" "onhost"} (first zone)))
                  (or tapped inverted rotated))
           (cons "untap" %) %))
+      (#(if (and (re-find #"flip" Home)
+                 (#{"rig" "onhost"} (first zone)))
+          (cons "flip" %) %))
       (#(if (and (and (= type "Hazard")
                       (re-find #"rotate" Home)
                       (#{"rig" "onhost"} (first zone)))
@@ -419,30 +425,44 @@
     [:hr]
     (if (= "[!]" item)
       [:div.smallwarning "!"]
-      (if-let [[title code] (extract-card-info item)]
-        [:span {:class "fake-link" :id code} title]
+      (if-let [[title image] (extract-card-info item)]
+        [:span {:class "fake-link" :id image} title]
         (if (or (boolean (re-find #"16mm" item))
                 (boolean (re-find #"18mm" item)))
           [:span {:dangerouslySetInnerHTML #js {:__html (add-faces (add-faces item))}}]
-          [:span {:dangerouslySetInnerHTML #js {:__html (add-regions item)}}])))))
+          ;[:span {:dangerouslySetInnerHTML #js {:__html (add-regions item)}}]
+          [:span {:dangerouslySetInnerHTML #js {:__html
+                                               (loop [new-text item]
+                                                 (if (= new-text (add-regions new-text))
+                                                   new-text
+                                                   (recur (add-regions new-text))))}}]
+          )))))
 
 (defn get-non-alt-art [[title cards]]
-  {:title title :code (:code (first cards))})
+  {:title title :ImageName (:ImageName (last cards))})
 
+(comment
 (defn prepare-cards []
   (->> @all-cards
-       (filter #(not (:replaced_by %)))
        (group-by :title)
        (map get-non-alt-art)
        (sort-by #(count (:title %1)))
        (reverse)))
 
 (def prepared-cards (memoize prepare-cards))
+)
+
+(defn prepare-image []
+  (->> @all-cards
+       (sort-by #(count (:ImageName %1)))
+       (reverse)))
+
+(def prepared-image (memoize prepare-image))
 
 (def create-span (memoize create-span-impl))
 
-(defn find-card-regex-impl [title]
-  (str "(^|[^" ci-open "\\S])" title "(?![" ci-seperator "\\w]|([^" ci-open "]+" ci-close "))"))
+(defn find-card-regex-impl [delimeter]
+  (str "(^|[^" ci-open "\\S])" delimeter "(?![" ci-seperator "\\w]|([^" ci-open "]+" ci-close "))"))
 
 (def find-card-regex (memoize find-card-regex-impl))
 
@@ -452,10 +472,21 @@
 (def card-image-token (memoize card-image-token-impl))
 
 (defn card-image-reducer [text card]
-  (.replace text (js/RegExp. (find-card-regex (:title card)) "g") (card-image-token (:title card) (:code card))))
+  (.replace text (js/RegExp. (find-card-regex (:ImageName card)) "g") (card-image-token (:title card) (:ImageName card))))
 
+(defn card-title-reducer [text card]
+  (.replace text (js/RegExp. (find-card-regex (:title card)) "g") (card-image-token (:title card) (:ImageName card))))
+
+(comment
+  (defn add-image-codes-impl [text]
+    (let [by-image (reduce card-image-reducer text (prepared-image))
+          by-codes (reduce card-title-reducer text (prepared-cards))]
+      (if (> (count by-image) (count by-codes))
+        by-image
+        by-codes)))
+  )
 (defn add-image-codes-impl [text]
-  (reduce card-image-reducer text (prepared-cards)))
+  (reduce card-image-reducer text (prepared-image)))
 
 (def add-image-codes (memoize add-image-codes-impl))
 
@@ -468,41 +499,41 @@
 
 (def get-message-parts (memoize get-message-parts-impl))
 
-(defn get-card-code [e]
-  (let [code (str (.. e -target -id))]
-    (when (pos? (count code))
-      code)))
+(defn get-card-image [e]
+  (let [image (str (.. e -target -id))]
+    (when (pos? (count image))
+      image)))
 
 (defn handle-key-down [e]
   (cond
-    (= e.keyCode 16) ;// shift
-    (send-command "blind-zoom")
     (= e.keyCode 18) ;// option
     (send-command "option-key-down")
     ;(= e.keyCode 27) ;// escape
+    (= e.keyCode 37) ;// shift
+    (send-command "blind-zoom")
     (= e.keyCode 39) ;// right-arrow
     (let [side (:side @game-state)]
       (if-let [card (get-in @game-state [side :hold-card])]
-        (send-command "system-msg" {:msg (str (:title card))}))))
+        (send-command "system-msg" {:msg (str (:ImageName card))}))))
   )
 
 (defn handle-key-up [e]
   (cond
-    (= e.keyCode 16) ;// shift
+    (= e.keyCode 37) ;// shift
     (send-command "blind-zoom")
     )
   )
 
 (defn card-preview-mouse-over [e channel]
   (.preventDefault e)
-  (when-let [code (get-card-code e)]
-    (when-let [card (some #(when (= (:code %) code) %) @all-cards)]
+  (when-let [image (get-card-image e)]
+    (when-let [card (some #(when (= (:ImageName %) image) %) @all-cards)]
       (put! channel (assoc card :implementation :full))))
   nil)
 
 (defn card-preview-mouse-out [e channel]
   (.preventDefault e)
-  (when-let [code (get-card-code e)]
+  (when-let [image (get-card-image e)]
     (put! channel false))
   nil)
 
@@ -538,7 +569,7 @@
     (render-state [this state]
       (sab/html
         [:div.log {:on-key-down #(handle-key-down %)
-                   :on-key-up #(handle-key-up %)
+                   ;:on-key-up #(handle-key-up %)
                    :on-mouse-over #(card-preview-mouse-over % zoom-channel)
                    :on-mouse-out  #(card-preview-mouse-out % zoom-channel)}
          [:div.panel.blue-shade.messages {:ref "msg-list"}
@@ -732,7 +763,7 @@
 (defn face-down?
   "Returns true if the placed card should be drawn face down."
   [{:keys [side type facedown revealed host] :as card}]
-  (if (= side "Contestant")
+  (if (or (= side "Contestant") (= side "Challenger"))
     (and (not= type "Resource")
          (not= type "Hazard"))
     facedown))
@@ -1032,7 +1063,18 @@
     (do (-> (om/get-node owner (str ref "-content")) js/$ .fadeIn)
         (-> (om/get-node owner (str ref "-menu")) js/$ .fadeOut)
         (-> (om/get-node owner menu) js/$ .toggle)
-        (send-command "view-location" region))))
+        (if (or (= ref "Ch-sites-north")
+                (= ref "Co-sites-north")
+                (= ref "Ch-sites-west")
+                (= ref "Co-sites-west")
+                (= ref "Ch-sites-cent")
+                (= ref "Co-sites-cent")
+                (= ref "Ch-sites-south")
+                (= ref "Co-sites-south"))
+          (send-command "view-location" {:region region :dc true})
+          (send-command "view-location" {:region region :dc false})
+          ))))
+
 
 (defn show-map [event owner ref]
   (-> (om/get-node owner (str ref "-content")) js/$ .fadeIn)
@@ -1135,19 +1177,12 @@
   (om/component
     (sab/html
       (let [faceup? #(or (:seen %) (:revealed %))
-            topcard (last discard)
-            draw-card #(if (and
-                             false ;(get-in @game-state [:hpf side etc])
-                             (= topcard %))
+            draw-card #(if (faceup? %)
                          (om/build card-view %)
                          (if (or (= (:side @game-state) :contestant)
                                  (spectator-view-hidden?))
                            [:div.unseen (om/build card-view %)]
-                           (if (or (= (:side @game-state) :challenger)
-                                   (spectator-view-hidden?))
-                             ;(facedown-card "contestant")
-                             [:div.unseen (om/build card-view %)]
-                             (facedown-card "contestant"))))]
+                           (facedown-card "contestant")))]
         [:div.blue-shade.discard
          (drop-area :contestant "Archives" {:on-click #(-> (om/get-node owner "popup") js/$ .fadeToggle)})
 
@@ -2001,8 +2036,8 @@
     [:div
      [:table.win.table
       [:tr.win.th
-       [:td.win.th "Contestant"] [:td.win.th]
-       [:td.win.th "Challenger"] [:td.win.th]]
+       [:td.win.th (get-in @game-state [:contestant :identity :title])] [:td.win.th]
+       [:td.win.th (get-in @game-state [:challenger :identity :title])] [:td.win.th]]
       (for [[contestant challenger] stats]
         [:tr [:td (first contestant)] [:td (show-stat contestant)]
          [:td (first challenger)] [:td (show-stat challenger)]])]]))
@@ -2014,9 +2049,6 @@
    [:div
     (:winning-user @game-state) ;" (" (-> @game-state :winner capitalize)
     (cond
-      (= "Decked" (@game-state :reason capitalize))
-      (str " wins due to the Contestant being decked on turn " (:turn @game-state))
-
       (= "Concede" (@game-state :reason capitalize))
       (str " wins by concession on turn " (:turn @game-state))
 

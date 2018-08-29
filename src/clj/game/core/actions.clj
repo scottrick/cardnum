@@ -137,13 +137,11 @@
         ("Heap" "Archives")
         (do (let [action-str (if (= (first (:zone c)) :hand) "discards " "discards ")
                   prior (last (get-in @state [side :discard]))]
-              (if false ;; insert Pallando logic here
-                (do
-                  (when prior
-                    (update! state side (dissoc prior :seen :revealed)))
-                  (discard state s (dissoc c :seen :revealed) {:unpreventable true})
+              (when prior
+                (update! state side (dissoc prior :seen :revealed)))
+              (discard state s (dissoc c :seen :revealed) {:unpreventable true})
+              (when (get-in @state [(other-side side) :hpf])
                   (command-revtop state side nil))
-              (discard state s (dissoc c :seen :revealed) {:unpreventable true}))
               (system-msg state side (str action-str label from-str))))
         ("Grip" "HQ")
         (do (move state s (dissoc c :seen :revealed) :hand {:force true})
@@ -394,7 +392,8 @@
                                                (update-in [:zone] #(map to-keyword %))
                                                (update-in [:host :zone] #(map to-keyword %)))))
                      (system-msg state side (str (build-spend-msg cost-str "reveal" "reveals")
-                                                 (:title card)))
+                                                 (:ImageName card) " " (when (= "Region" (:type card))
+                                                                     (:RPath card))))
                      (if (character? card)
                        (play-sfx state side "reveal-character")
                        (play-sfx state side "reveal-other"))
@@ -404,11 +403,11 @@
        (effect-completed state side eid)))))
 
 (defn hide
-  "Hide a contestant card."
+  "Hide a card."
   [state side card]
   (let [card (get-card state card)]
     (system-msg state side (str "hides " (:title card)))
-    (update! state :contestant (deactivate state :contestant card true))
+    (update! state side (deactivate state side card true))
     (let [cdef (card-def card)]
       (when-let [hide-effect (:hide-effect cdef)]
         (resolve-ability state side hide-effect (get-card state card) nil))
@@ -481,6 +480,15 @@
   (let [card (get-card state card)]
     (system-msg state side (str "inverts " (:title card)))
     (update! state side (assoc card :inverted true))))
+
+(defn flip
+  "Flips a quest."
+  [state side card]
+  (let [card (get-card state card)]
+    (system-msg state side (str "flips " (:title card)))
+    (if (:flip card)
+      (update! state side (dissoc card :flip))
+      (update! state side (assoc card :flip true)))))
 
 (defn regionize
   [state side card]
@@ -633,14 +641,16 @@
 
 (defn view-location
   "Allows the player to view their deck by making the cards in the deck public."
-  [state side region]
+  [state side {:keys [region dc] :as args}]
   (system-msg state side "looks at their location deck")
-  (swap! state assoc-in [side :cut-region] region)
+  (swap! state assoc-in [side :dc] (:dc args))
+  (swap! state assoc-in [side :cut-region] (:region args))
   (swap! state assoc-in [side :view-location] true))
 
 (defn close-location
   "Closes the deck view and makes cards in deck private again."
   [state side args]
   (system-msg state side "stops looking at their location deck")
+  (swap! state update-in [side] dissoc :dc)
   (swap! state update-in [side] dissoc :cut-region)
   (swap! state update-in [side] dissoc :view-location))

@@ -108,6 +108,8 @@
   [decks]
   (for [deck decks]
     (let [identity (parse-identity (:identity deck))
+          donate-dice (:donate-dice deck)
+          donate-size (:donate-size deck)
           resources (lookup-deck (:resources deck))
           hazards (lookup-deck (:hazards deck))
           sideboard (lookup-deck (:sideboard deck))
@@ -116,7 +118,9 @@
           fwsb (lookup-deck (:fwsb deck))]
       (assoc deck :resources resources :hazards hazards :sideboard sideboard
                   :characters characters :pool pool :fwsb fwsb
-                  :identity identity))))
+                  :identity identity
+                  :donate-dice donate-dice :donate-size donate-size
+                  ))))
 
 (defn distinct-by [f coll]
   (letfn [(step [xs seen]
@@ -299,7 +303,9 @@
                 (sort-by :title)
                 first)]
     (om/set-state! owner :deck {:name "New deck" :resources [] :hazards [] :sideboard []
-                                :characters [] :pool [] :fwsb [] :identity id})
+                                :characters [] :pool [] :fwsb [] :identity id
+                                :donate-dice "empty" :donate-size "none"
+                                })
     (try (js/ga "send" "event" "deckbuilder" "new" alignment) (catch js/Error e))
     (edit-deck owner)
     (om/set-state! owner :old-deck old-deck)))
@@ -331,9 +337,13 @@
                      (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)))
             ;; only include keys that are relevant
             identity (select-keys (:identity deck) [:title :alignment :trimCode])
+            donate-dice (:donate-dice deck)
+            donate-size (:donate-size deck)
             data (assoc deck :resources resources :hazards hazards :sideboard sideboard
                              :characters characters :pool pool :fwsb fwsb
-                             :identity identity)]
+                             :identity identity
+                             :donate-dice donate-dice :donate-size donate-size
+                             )]
         (try (js/ga "send" "event" "deckbuilder" "save") (catch js/Error e))
         (go (let [new-id (get-in (<! (if (:_id deck)
                                        (PUT "/data/decks" data :json)
@@ -463,8 +473,8 @@
         card (nth (om/get-state owner :matches) (om/get-state owner :selected))
         best-card (utils/lookup card)]
     (if (js/isNaN qty)
-      (om/set-state! owner :quantity 3)
-      (let [max-qty (or (:limited best-card) 3)
+      (om/set-state! owner :quantity 1)
+      (let [max-qty (or (:limited best-card) 1)
             limit-qty (if (> qty max-qty) max-qty qty)]
         (if (= (:type best-card) "Resource")
           (put! (om/get-state owner :resource-edit-channel)
@@ -478,7 +488,7 @@
           (put! (om/get-state owner :character-edit-channel)
                 {:qty limit-qty
                  :card best-card}))
-        (om/set-state! owner :quantity 3)
+        (om/set-state! owner :quantity 1)
         (om/set-state! owner :query "")
         (-> ".deckedit .lookup" js/$ .select)))))
 
@@ -488,7 +498,7 @@
     (init-state [this]
       {:query ""
        :matches []
-       :quantity 3
+       :quantity 1
        :selected 0})
 
     om/IRenderState
@@ -610,9 +620,7 @@
         json-map (.parse js/JSON (.. target-value -target -value))
         id-map (js->clj json-map :keywordize-keys true)
         card (identity-lookup alignment id-map)]
-    (if-let [art (:art id-map)]
-      (assoc card :art art)
-      card)))
+      card))
 
 (defn- identity-option-string
   [card]
@@ -647,7 +655,7 @@
         (go (while true
               (let [edit (<! edit-channel)
                     card (:card edit)
-                    max-qty (or (:limited card) 3)
+                    max-qty (or (:limited card) 5)
                     cards (om/get-state owner [:deck :resources])
                     match? #(when (= (get-in % [:card :title]) (:title card)) %)
                     existing-line (some match? cards)]
@@ -668,7 +676,7 @@
         (go (while true
               (let [edit (<! edit-channel)
                     card (:card edit)
-                    max-qty (or (:limited card) 3)
+                    max-qty (or (:limited card) 5)
                     cards (om/get-state owner [:deck :hazards])
                     match? #(when (= (get-in % [:card :title]) (:title card)) %)
                     existing-line (some match? cards)]
@@ -689,7 +697,7 @@
         (go (while true
               (let [edit (<! edit-channel)
                     card (:card edit)
-                    max-qty (or (:limited card) 3)
+                    max-qty (or (:limited card) 5)
                     cards (om/get-state owner [:deck :sideboard])
                     match? #(when (= (get-in % [:card :title]) (:title card)) %)
                     existing-line (some match? cards)]
@@ -710,7 +718,7 @@
         (go (while true
               (let [edit (<! edit-channel)
                     card (:card edit)
-                    max-qty (or (:limited card) 3)
+                    max-qty (or (:limited card) 5)
                     cards (om/get-state owner [:deck :characters])
                     match? #(when (= (get-in % [:card :title]) (:title card)) %)
                     existing-line (some match? cards)]
@@ -731,7 +739,7 @@
         (go (while true
               (let [edit (<! edit-channel)
                     card (:card edit)
-                    max-qty (or (:limited card) 3)
+                    max-qty (or (:limited card) 5)
                     cards (om/get-state owner [:deck :pool])
                     match? #(when (= (get-in % [:card :title]) (:title card)) %)
                     existing-line (some match? cards)]
@@ -752,7 +760,7 @@
         (go (while true
               (let [edit (<! edit-channel)
                     card (:card edit)
-                    max-qty (or (:limited card) 3)
+                    max-qty (or (:limited card) 5)
                     cards (om/get-state owner [:deck :fwsb])
                     match? #(when (= (get-in % [:card :title]) (:title card)) %)
                     existing-line (some match? cards)]
@@ -812,17 +820,41 @@
                           [:button {:on-click #(save-deck cursor owner)} "Save"]
                           [:button {:on-click #(cancel-edit owner)} "Cancel"]
                           (if (om/get-state owner :vs-wizard)
-                            [:button {:on-click #(wizard-edit owner)} "√ vs Wizard"]
-                            [:button {:on-click #(wizard-edit owner)} "? vs Wizard"]
+                            [:button {:on-click #(wizard-edit owner)} "√ v Wizard"]
+                            [:button {:on-click #(wizard-edit owner)} "? v Wizard"]
                             )
                           (if (om/get-state owner :vs-minion)
-                            [:button {:on-click #(minion-edit owner)} "√ vs Minion"]
-                            [:button {:on-click #(minion-edit owner)} "? vs Minion"]
+                            [:button {:on-click #(minion-edit owner)} "√ v Minion"]
+                            [:button {:on-click #(minion-edit owner)} "? v Minion"]
                             )
                           (if (om/get-state owner :vs-fallen)
-                            [:button {:on-click #(fallen-edit owner)} "√ vs Fallen"]
-                            [:button {:on-click #(fallen-edit owner)} "? vs Fallen"]
+                            [:button {:on-click #(fallen-edit owner)} "√ v Fallen"]
+                            [:button {:on-click #(fallen-edit owner)} "? v Fallen"]
                             )
+                          (if (some #{(get-in @app-state [:user :username])} (get-in @app-state [:donators]))
+                          [:h3.rgtlabel "Donator deck dice:  "
+                          [:select {:value (:donate-dice deck)
+                                             :on-change #(om/set-state! owner [:deck :donate-dice] (.. % -target -value))}
+                           (for [option [{:name "empty"                          :ref "empty"}
+                                         {:name "Black Flat Red Pips 16mm"       :ref "blck-16"}
+                                         {:name "Black Swirl Red Pips 18mm"      :ref "blacks-18"}
+                                         {:name "Silver Swirl Red Pips 16mm"     :ref "greys-16"}
+                                         {:name "Grey Swirl Red Pips 18mm"       :ref "greys-18"}
+                                         {:name "Dk. Gold Swirl Black Pips 16mm" :ref "gsdark-16"}
+                                         {:name "Lt. Gold Swirl Black Pips 18mm" :ref "gslight-18"}
+                                         {:name "Orange Flat Black Pips 16mm"    :ref "orgblack-16"}
+                                         {:name "Red Swirl Black Pips 16mm"      :ref "rsblack-16"}
+                                         {:name "Red Swirl Black Pips 18mm"      :ref "rsblack-18"}
+                                         {:name "Red Swirl White Pips 16mm"      :ref "rswhite-16"}]]
+                             [:option {:value (:ref option)} (:name option)])]
+                           [:select {:value (:donate-size deck)
+                           ;[:select {:value (get-in state [:deck :donate-size])
+                                     :on-change #(om/set-state! owner [:deck :donate-size] (.. % -target -value))}
+                            (for [option [{:name "none"     :ref "none"}
+                                          {:name "16mm"     :ref "16mm"}
+                                          {:name "18mm"     :ref "18mm"}]]
+                              [:option {:value (:ref option)} (:name option)])]
+                           ])
                           ]
                    delete? [:div.button-bar
                             [:button {:on-click #(handle-delete cursor owner)} "Confirm Delete"]
@@ -1001,6 +1033,8 @@
              [:textarea.txtbot {:ref "fwsb-edit" :value (:fwsb-edit state)
                                 :on-change #(handle-fwsb-edit owner)}]
              ]]]]]))))
+
+(go (swap! app-state assoc :donators (:json (<! (GET "/data/donors")))))
 
 (go (let [cards (<! cards-channel)
           decks (process-decks (:json (<! (GET (str "/data/decks")))))]
