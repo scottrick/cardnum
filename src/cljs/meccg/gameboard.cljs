@@ -161,7 +161,7 @@
       (.play (sfx-key soundbank)))
     (play-sfx (rest sfx) soundbank)))
 
-(defn action-list [{:keys [type Secondary Home zone revealed tapped wounded rotated inverted] :as card}]
+(defn action-list [{:keys [type Secondary Home set_code zone revealed tapped wounded rotated inverted] :as card}]
   (-> []
       (#(if (and (and (#{"Character" "Site" "Region"} type)
                       (#{"locales" "onhost"} (first zone)))
@@ -244,7 +244,9 @@
                       (#{"rig" "onhost"} (first zone)))
                  (or tapped inverted rotated))
           (cons "untap" %) %))
-      (#(if (and (re-find #"flip" Home)
+      (#(if (and (some (partial = set_code) ["MENE" "MEWR"])
+                 (some (partial = Secondary) ["Permanent-event"])
+                 (boolean (re-find #"flip" Home))
                  (#{"rig" "onhost"} (first zone)))
           (cons "flip" %) %))
       (#(if (and (and (= type "Hazard")
