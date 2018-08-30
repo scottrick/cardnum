@@ -447,39 +447,47 @@
 (defn rotate
   "Rotate a card."
   [state side card]
-  (let [card (get-card state card)]
-    (system-msg state side (str "rotates " (:title card)))
-    (update! state side (assoc card :rotated true))))
+  (let [rcard (get-card state card)]
+    (update! state side (-> rcard
+                            (assoc :rotated true)
+                            (dissoc :tapped :wounded :inverted)))
+    (system-msg state side (str "rotates " (:title rcard)))))
 
 (defn tap
   "Tap a card."
   [state side card]
-  (let [card (get-card state card)]
-    (system-msg state side (str "taps " (:title card)))
-  (update! state side (assoc card :tapped true))))
+  (let [tcard (get-card state card)]
+    (update! state side (-> tcard
+                            (assoc :tapped true)
+                            (dissoc :wounded :inverted :rotated)))
+    (system-msg state side (str "taps " (:title tcard)))))
 
 (defn untap
   "Untap a card."
   [state side card]
-  (let [card (get-card state card)]
-    (if (:revealed card)
-      (system-msg state side (str "untaps " (:title card)))
-      (system-msg state side "untaps a card"))
-    (update! state side (dissoc card :tapped :wounded :inverted :rotated))))
+  (let [ucard (get-card state card)]
+    (update! state side (dissoc ucard :tapped :wounded :inverted :rotated))
+    (if (:revealed ucard)
+      (system-msg state side (str "untaps " (:title ucard)))
+      (system-msg state side "untaps a card"))))
 
 (defn wound
   "Wounds character."
   [state side card]
-  (let [card (get-card state card)]
-    (system-msg state side (str "wounds " (:title card)))
-    (update! state side (assoc card :wounded true))))
+  (let [wcard (get-card state card)]
+    (update! state side (-> wcard
+                            (assoc :wounded true)
+                            (dissoc :tapped :inverted :rotated)))
+    (system-msg state side (str "wounds " (:title wcard)))))
 
 (defn invert
   "Inverts a resource."
   [state side card]
-  (let [card (get-card state card)]
-    (system-msg state side (str "inverts " (:title card)))
-    (update! state side (assoc card :inverted true))))
+  (let [icard (get-card state card)]
+    (update! state side (-> icard
+                            (assoc :inverted true)
+                            (dissoc :tapped :wounded :rotated)))
+    (system-msg state side (str "inverts " (:title icard)))))
 
 (defn flip
   "Flips a quest."

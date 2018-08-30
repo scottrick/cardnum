@@ -380,7 +380,7 @@
                                         {:title "/hide command"} nil)
           "/hide-hand"   #(hide-hand %1 %2)
           "/host"       #(host-any-card %1 %2 args)
-          "/hosth"      #(host-any-card-hidden %1 %2 args)
+          ;"/hosth"      #(host-any-card-hidden %1 %2 args)
           "/jack-out"   #(when (= %2 :challenger) (jack-out %1 %2 nil))
           "/link"       #(swap! %1 assoc-in [%2 :link] (max 0 value))
           "/memory"     #(swap! %1 assoc-in [%2 :memory] value)
