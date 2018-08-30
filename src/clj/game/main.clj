@@ -63,6 +63,7 @@
    "option-key-down" core/option-key-down
    "org-phase" core/org-phase
    "organize" #(core/organize %1 %2 (:card %3) nil)
+   "place" #(core/equip %1 %2 (:card %3))
    "play" core/play
    "pre-bluff" core/pre-bluff
    "purge" core/do-purge
