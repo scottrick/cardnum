@@ -31,11 +31,9 @@
                        [:ul
                         [:li [:code "/card-info"] " - display debug info about a card (player's own cards only)"]
                         [:li [:code "/clear-win"] " - requests game to clear the current win state.  Requires both players to request it"]
-                        [:li [:code "/click 100"] " - Backdoor for solo play and get a draw menu"]
-                        [:li [:code "/click 80"] " - Backdoor for solo play to get end turn menu, to go backwards thru menus"]
                         [:li [:code "/close-prompt"] " - close an active prompt and show the next waiting prompt, or the core actions"]
                         [:li [:code "/counter n"] " - set counters on a card to n (player's own cards only). Attempts to infer the type of counter to place. If the inference fails, you must use the next command to specify the counter type."]
-                        [:li [:code "/counter type n"] " - set the specified counter type on a card to n (player's own cards only). Type must be " [:code "agenda"] ", " [:code "advance"] ", " [:code "credit"] ", " [:code "power"] ", or " [:code "virus"] ". Can be abbreviated as " [:code "ag"] ", "  [:code "ad"] ", "  [:code "c"] ", "  [:code "p"] ", or " [:code "v"] " respectively."]
+                        ;[:li [:code "/counter type n"] " - set the specified counter type on a card to n (player's own cards only). Type must be " [:code "agenda"] ", " [:code "advance"] ", " [:code "credit"] ", " [:code "power"] ", or " [:code "virus"] ". Can be abbreviated as " [:code "ag"] ", "  [:code "ad"] ", "  [:code "c"] ", "  [:code "p"] ", or " [:code "v"] " respectively."]
                         [:li [:code "/deck #n"] " - Put card number n from your hand on top of your deck"]
                         [:li [:code "/discard"] " - Discard card hard to get to"]
                         [:li [:code "/discard-n #n"] " - Discard card number n from your hand"]
