@@ -161,10 +161,10 @@
       (.play (sfx-key soundbank)))
     (play-sfx (rest sfx) soundbank)))
 
-(defn action-list [{:keys [type Secondary Home zone revealed tapped wounded rotated inverted] :as card}]
+(defn action-list [{:keys [type Secondary Home set_code zone revealed tapped wounded rotated inverted] :as card}]
   (-> []
-      (#(if (and (and (#{"Character" "Site" "Region"} type)
-                      (#{"locales" "onhost"} (first zone)))
+      (#(if (and (#{"Character" "Site" "Region"} type)
+                 (#{"locales" "onhost"} (first zone))
                  (not revealed))
           (cons "reveal" %) %))
       (#(if (and (#{"Character"} type)
@@ -173,29 +173,27 @@
           (cons "organize" %) %))
       (#(if (and (#{"Character"} type)
                  (#{"locales" "onhost"} (first zone))
-                 (and revealed (not tapped) (not wounded) (not rotated)))
+                 revealed (not wounded))
           (cons "wound" %) %))
       (#(if (and (#{"Ally"} Secondary)
                  (#{"onhost"} (first zone))
-                 (and (not tapped) (not wounded) (not rotated)))
+                 (not wounded))
           (cons "wound" %) %))
       (#(if (and (#{"Region"} type)
-                 (re-find #"tap" Home)
-                 revealed
-                 (not tapped))
+                 (boolean (re-find #"tap" Home))
+                 revealed (not tapped))
           (cons "tap" %) %))
       (#(if (and (#{"Region"} type)
-                 (or (and (re-find #"tap" Home) tapped)
-                     (and (not (re-find #"tap" Home)) (not tapped)))
+                 (or (and (boolean (re-find #"tap" Home)) tapped)
+                     (and (not (boolean (re-find #"tap" Home))) (not tapped)))
                  revealed)
           (cons "regionize" %) %))
-      (#(if (and (and (#{"Character" "Site"} type)
-                      (#{"locales" "onhost"} (first zone)))
-                 revealed
-                 (and revealed (not tapped) (not wounded) (not rotated)))
+      (#(if (and (#{"Character" "Site"} type)
+                 (#{"locales" "onhost"} (first zone))
+                 revealed (not tapped))
           (cons "tap" %) %))
-      (#(if (and (and (#{"Character" "Site"} type)
-                      (#{"locales" "onhost"} (first zone)))
+      (#(if (and (#{"Character" "Site"} type)
+                 (#{"locales" "onhost"} (first zone))
                  (or tapped wounded rotated))
           (cons "untap" %) %))
       (#(if (and (= type "Resource")
@@ -205,70 +203,54 @@
       (#(if (and (= type "Resource")
                  (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
                  (#{"locales" "onhost"} (first zone))
-                 (not tapped) (not inverted) (not rotated))
+                 (not rotated))
+          (cons "rotate" %) %))
+      (#(if (and (= type "Resource")
+                 (some (partial = Secondary) ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
+                 (#{"locales" "onhost"} (first zone))
+                 (not inverted))
           (cons "invert" %) %))
       (#(if (and (= type "Resource")
                  (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
                  (#{"locales" "onhost"} (first zone))
-                 (not tapped) (not inverted) (not wounded) (not rotated))
-          (cons "rotate" %) %))
-      (#(if (and (= type "Resource")
-                 (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
-                 (#{"locales" "onhost"} (first zone))
-                 (not tapped) (not inverted) (not wounded) (not rotated))
+                 (not tapped))
           (cons "tap" %) %))
       (#(if (and (= type "Resource")
                  (some (partial = Secondary) ["Ally" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
                  (#{"locales" "onhost"} (first zone))
                  (or tapped wounded inverted rotated))
           (cons "untap" %) %))
-      (#(if (and (and (some (partial = Secondary) ["Permanent-event" "Faction"])
-                      (re-find #"rotate" Home)
-                      (#{"rig" "onhost"} (first zone)))
-                 (and (not rotated)))
+      (#(if (and (#{"Resource" "Hazard"} type)
+                 (some (partial = Secondary) ["Permanent-event" "Long-event" "Faction" "Avatar"])
+                 (boolean (re-find #"rotate" Home))
+                 (#{"rig" "onhost"} (first zone))
+                 (not rotated))
           (cons "rotate" %) %))
-      (#(if (and (and (some (partial = Secondary) ["Permanent-event" "Faction"])
-                      (re-find #"invert" Home)
-                      (#{"rig" "onhost"} (first zone)))
-                 (and (not inverted) (not rotated)))
+      (#(if (and (#{"Resource" "Hazard"} type)
+                 (some (partial = Secondary) ["Permanent-event" "Long-event" "Faction" "Avatar"])
+                 (boolean (re-find #"invert" Home))
+                 (#{"rig" "onhost"} (first zone))
+                 (not inverted))
           (cons "invert" %) %))
-      (#(if (and (and (some (partial = Secondary) ["Permanent-event" "Faction" "Avatar"])
-                      (re-find #"tap" Home)
-                      (#{"rig" "onhost"} (first zone)))
-                 (and (not tapped) (not inverted) (not rotated)))
+      (#(if (and (#{"Resource" "Hazard"} type)
+                 (some (partial = Secondary) ["Permanent-event" "Creature/Permanent-event" "Long-event" "Faction" "Avatar"])
+                 (boolean (re-find #"tap" Home))
+                 (#{"rig" "onhost"} (first zone))
+                 (not tapped))
           (cons "tap" %) %))
-      (#(if (and (and (some (partial = Secondary) ["Permanent-event" "Faction" "Avatar"])
-                      (or (boolean (re-find #"tap" Home))
-                          (boolean (re-find #"invert" Home))
-                          (boolean (re-find #"rotate" Home)))
-                      (#{"rig" "onhost"} (first zone)))
+      (#(if (and (#{"Resource" "Hazard"} type)
+                 (some (partial = Secondary) ["Permanent-event" "Creature/Permanent-event" "Long-event" "Faction" "Avatar"])
+                 (or (boolean (re-find #"tap" Home))
+                     (boolean (re-find #"invert" Home))
+                     (boolean (re-find #"rotate" Home)))
+                 (#{"rig" "onhost"} (first zone))
                  (or tapped inverted rotated))
           (cons "untap" %) %))
-      (#(if (and (re-find #"flip" Home)
+      (#(if (and (some (partial = set_code) ["MENE" "MEWR"])
+                 (some (partial = Secondary) ["Permanent-event"])
+                 (boolean (re-find #"flip" Home))
                  (#{"rig" "onhost"} (first zone)))
           (cons "flip" %) %))
-      (#(if (and (and (= type "Hazard")
-                      (re-find #"rotate" Home)
-                      (#{"rig" "onhost"} (first zone)))
-                 (and (not rotated)))
-          (cons "rotate" %) %))
-      (#(if (and (and (= type "Hazard")
-                      (re-find #"invert" Home)
-                      (#{"rig" "onhost"} (first zone)))
-                 (and (not inverted) (not rotated)))
-          (cons "invert" %) %))
-      (#(if (and (and (= type "Hazard")
-                      (re-find #"tap" Home)
-                      (#{"rig" "onhost"} (first zone)))
-                 (and (not tapped) (not inverted) (not rotated)))
-          (cons "tap" %) %))
-      (#(if (and (and (= type "Hazard")
-                      (or (boolean (re-find #"tap" Home))
-                          (boolean (re-find #"invert" Home))
-                          (boolean (re-find #"rotate" Home)))
-                      (#{"rig" "onhost"} (first zone)))
-                 (or tapped inverted rotated))
-          (cons "untap" %) %))
       ))
 
 (defn handle-abilities [{:keys [abilities facedown side type] :as card} owner]
@@ -927,14 +909,13 @@
   (let [s (count hosted)]
     (when-not (empty? hosted)
       (map-indexed (fn [i card]
-                     ;(println (str "Host is: " (if (:host-tapped card) "tapped" "untapped")))
-                     [:div.hosted (if (and (:tapped card) (not (:inverted card)))
+                     [:div.hosted (if (:tapped card)
                                     {:class "tapped"
                                      }
-                                    (if (and (:inverted card) (not (:rotated card)))
+                                    (if (:inverted card)
                                       {:class "inverted"
                                        }
-                                      (if (and (:wounded card) (not (:rotated card)))
+                                      (if (:wounded card)
                                         {:class "wounded"
                                          }
                                         (if (:rotated card)
@@ -1352,7 +1333,7 @@
               [:div.run-card (om/build card-img run-card)])
             (for [character (reverse characters)]
               [:div
-               [:div.character {:class (if (and (:tapped character) (not (:wounded character)))
+               [:div.character {:class (if (:tapped character)
                                          "tapped"
                                          (if (:wounded character)
                                            "wounded"
@@ -1614,9 +1595,9 @@
          (for [zone [:resource :hazard :facedown]]
             (for [c (zone (:rig player))]
               [:div
-               [:div.card-wrapper {:class (if (and (:tapped c) (not (:inverted c)))
+               [:div.card-wrapper {:class (if (:tapped c)
                                             "tapped"
-                                            (if (and (:inverted c) (not (:rotated c)))
+                                            (if (:inverted c)
                                               "inverted"
                                               (if (:rotated c)
                                                 "rotated"
@@ -1636,9 +1617,9 @@
          (for [zone [:resource :hazard :facedown]]
             (for [c (zone (:rig player))]
               [:div
-               [:div.card-wrapper {:class (if (and (:tapped c) (not (:inverted c)))
+               [:div.card-wrapper {:class (if (:tapped c)
                                             "tapped"
-                                            (if (and (:inverted c) (not (:rotated c)))
+                                            (if (:inverted c)
                                               "inverted"
                                               (if (:rotated c)
                                                 "rotated"
@@ -1691,7 +1672,8 @@
         opp-max-size (max (+ (:hand-size-base opp) (:hand-size-modification opp)) 0)]
     (if (not= (count (:hand me)) max-size)
       (toast (str "Resolve hand to " max-size " card" (when (not= 1 max-size) "s")) "warning" nil)
-      (if (not= (count (:hand opp)) opp-max-size)
+      (if (and (not= (count (:hand opp)) opp-max-size)
+               (not (empty? (get-in @game-state [:challenger :identity :title]))))
         (toast (str "Hazard player needs to get to " opp-max-size " card" (when (not= 1 opp-max-size) "s")) "warning" nil)
         (send-command resolve)))))
 
@@ -1700,7 +1682,8 @@
         opp (if (= (:side @game-state) :contestant) (:challenger @game-state) (:contestant @game-state))
         max-size (max (+ (:hand-size-base me) (:hand-size-modification me)) 0)
         opp-max-size (max (+ (:hand-size-base opp) (:hand-size-modification opp)) 0)]
-    (if (not= (count (:hand opp)) opp-max-size)
+    (if (and (not= (count (:hand opp)) opp-max-size)
+             (not (empty? (get-in @game-state [:challenger :identity :title]))))
       (toast (str "Hazard player needs to get to " opp-max-size " card" (when (not= 1 opp-max-size) "s")) "warning" nil)
       (send-command "end-turn"))))
 
@@ -1866,7 +1849,7 @@
                          (zero? (:click me)) end-turn)
                     [:div
                      (cond-button "Keep Hand" (not (get-in @game-state [:contestant :keep])) #(send-command "keep"))
-                     (cond-button "Mulligan" (not (get-in @game-state [:contestant :keep])) #(send-command "mulligan"))
+                     (cond-button "Draw Hand" (not (get-in @game-state [:contestant :keep])) #(send-command "mulligan"))
 
                      (cond-button "Pass 1st Turn" (and (get-in @game-state [:contestant :keep])
                                                        (get-in @game-state [:challenger :keep])
@@ -1874,14 +1857,15 @@
                                                        (= (get-in @game-state [:turn]) 0))
                                   #(send-command "not-first"))
                      (cond-button "Start Turn" (and (get-in @game-state [:contestant :keep])
-                                                    (get-in @game-state [:challenger :keep]))
+                                                    (or (get-in @game-state [:challenger :keep])
+                                                        (empty? (get-in @game-state [:challenger :identity :title]))))
                                   #(send-command "start-turn")) ;; -5
                      ]
                   (if (and (zero? (:click opponent))
                            (zero? (:click me)))
                     [:div
                      (cond-button "Keep Hand" (not (get-in @game-state [:challenger :keep])) #(send-command "keep"))
-                     (cond-button "Mulligan" (not (get-in @game-state [:challenger :keep])) #(send-command "mulligan"))
+                     (cond-button "Draw Hand" (not (get-in @game-state [:challenger :keep])) #(send-command "mulligan"))
                      (cond-button "Pass 1st Turn" nil nil)
                      (cond-button "Start Turn" nil nil)
                      ]
@@ -1941,6 +1925,7 @@
                    (cond-button "End of Turn" (and (= (:click me) 70)
                                                    (= (keyword active-player) side) (not end-turn)
                                                    (not contestant-phase-12) (not challenger-phase-12)
+                                                   (not (empty? (get-in @game-state [:challenger :identity :title])))
                                                    ) #(handle-end-turn))
                    ]))))
 

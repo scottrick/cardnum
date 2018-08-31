@@ -38,7 +38,7 @@
      [:p "A special thanks to Vastor Peredhil, Thorsten the Traveler, and dirhaval for all their work with the Dreamcards.  the Jabberwock for sure for his constant endeavor with the Council of Elrond, and some dice!  Germanico for the inspiration of creating the mapping of sites.  And to the alpha testers who got us this far!"]
 
      [:h3 "Donations"]
-     [:p "Donations are appreciated and help finance fast servers. You can support the project financially with PayPal or Bitcoin. Alternate art cards will be enabled on your account as a token of gratitude. Please specify your username with your donation."]
+     [:p "Donations are appreciated and help finance fast servers. You can support the project financially with PayPal or Bitcoin. Lidless Eye Dice per Deck will be enabled on your account as a token of gratitude. Please specify your username with your donation."]
      [:ul.list.compact
       [:li "PayPal: rezwits@me.com or " [:a {:href "https://www.paypal.me/rezwits" :title "PayPal" :target "_blank"} "paypal.me/rezwits"]]
       [:li "Bitcoin: " [:span.bitcoin "3AtJSL3rdYeiZ5UX9GLABvjNTsbXPr53T3" [:img.qr {:src "/img/bitcoin.png" :alt "Bitcoin QR Code"}]]]
