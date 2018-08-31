@@ -1849,7 +1849,7 @@
                          (zero? (:click me)) end-turn)
                     [:div
                      (cond-button "Keep Hand" (not (get-in @game-state [:contestant :keep])) #(send-command "keep"))
-                     (cond-button "Mulligan" (not (get-in @game-state [:contestant :keep])) #(send-command "mulligan"))
+                     (cond-button "Draw Hand" (not (get-in @game-state [:contestant :keep])) #(send-command "mulligan"))
 
                      (cond-button "Pass 1st Turn" (and (get-in @game-state [:contestant :keep])
                                                        (get-in @game-state [:challenger :keep])
@@ -1865,7 +1865,7 @@
                            (zero? (:click me)))
                     [:div
                      (cond-button "Keep Hand" (not (get-in @game-state [:challenger :keep])) #(send-command "keep"))
-                     (cond-button "Mulligan" (not (get-in @game-state [:challenger :keep])) #(send-command "mulligan"))
+                     (cond-button "Draw Hand" (not (get-in @game-state [:challenger :keep])) #(send-command "mulligan"))
                      (cond-button "Pass 1st Turn" nil nil)
                      (cond-button "Start Turn" nil nil)
                      ]

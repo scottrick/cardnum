@@ -220,11 +220,11 @@
   (assoc eid :result result))
 
 (defn mulligan
-  "Mulligan starting hand."
+  "Mulligan/Draw Hand starting hand."
   [state side args]
   (shuffle-into-deck state side :hand)
   (draw state side 8 {:suppress-event true}) ; was true
-  (system-msg state side "takes a mulligan"))
+  (system-msg state side "draws a new hand"))
 
 ;(trigger-event state side :pre-first-turn)
 ;(when (and (= side :contestant) (-> @state :challenger :identity :title))
