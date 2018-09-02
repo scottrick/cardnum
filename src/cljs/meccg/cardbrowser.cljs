@@ -183,6 +183,7 @@
 
 (def primary-order ["Character" "Resource" "Hazard" "Site" "Region"])
 (def resource-secondaries ["Ally" "Faction" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
+(def site-secondaries ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Information" "Palantír" "Scroll"])
 (def shared-secondaries ["Permanent-event" "Short-event" "Long-event" "Permanent-event/Short-event" "Permanent-event/Long-event" "Short-event/Long-event"])
 (def hazard-secondaries ["Creature" "Creature/Permanent-event" "Creature/Short-event" "Creature/Long-event"])
 (def general-alignments ["Hero" "Minion" "Balrog" "Fallen-wizard" "Fallen/Lord" "Lord" "Elf-lord" "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord" "Grey" "Dual"])
@@ -197,7 +198,7 @@
     "Character" ["character" "Avatar" "Leader" "Agent"]
     "Resource" (concat resource-secondaries shared-secondaries)
     "Hazard" (concat hazard-secondaries shared-secondaries)
-    "Site" ["site"]
+    "Site" site-secondaries
     "Region" ["region"]))
 
 (defn alignments [primary]
@@ -218,6 +219,34 @@
   (if (= filter-value "All")
     cards
     (filter #(= (field %) filter-value) cards)))
+
+(defn filter-sites [strict cards]
+  (case strict
+    "All"
+    cards
+    "Greater Item"
+    (filter-cards true :GreaterItem cards)
+    "Major Item"
+    (filter-cards true :MajorItem cards)
+    "Minor Item"
+    (filter-cards true :MinorItem cards)
+    "Gold Ring Item"
+    (filter-cards true :GoldRing cards)
+    "Information"
+    (filter-cards true :Information cards)
+    "Palantír"
+    (filter-cards true :Palantiri cards)
+    "Scroll"
+    (filter-cards true :Scroll cards)
+    )
+  )
+
+(defn filter-second [site-filter filter-value cards]
+  (if site-filter
+    (filter-sites filter-value cards)
+    (filter-cards filter-value :Secondary cards)
+    )
+  )
 
 (defn filter-dreamcards [should-filter cards]
   (if should-filter
@@ -364,7 +393,7 @@
                           (->> cards
                                (filter-cards (:primary-filter state) :type)
                                (filter-cards (:alignment-filter state) :alignment)
-                               (filter-cards (:secondary-filter state) :Secondary)
+                               (filter-second (if (= (:primary-filter state) "Site") true false) (:secondary-filter state))
                                (filter-dreamcards (:hide-dreamcards state))
                                (filter-title (:search-query state))
                                (sort-by (sort-field (:sort-field state)))
