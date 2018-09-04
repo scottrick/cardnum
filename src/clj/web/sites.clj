@@ -813,7 +813,7 @@
    {:qty 1 :card "Ulk Chey Sart" :id "[H] (CP)"}
    {:qty 1 :card "Ulk Jey Ama" :id "[H] (CP)"}
    {:qty 1 :card "Umbar" :id "[H] (SL)"}
-   {:qty 1 :card "Urcheldor" :id "[H] (ML)"}
+   {:qty 1 :card "Úrcheldor" :id "[H] (ML)"}
    {:qty 1 :card "Urdic Camp" :id "[H] (NW)"}
    {:qty 1 :card "Ûrêzâyan" :id "[H] (SL)"}
    {:qty 1 :card "Urlurtsu Nurn" :id "[H] (DM)"}
@@ -1189,7 +1189,7 @@
    {:qty 1 :card "Ulk Chey Sart" :id "[M] (CP)"}
    {:qty 1 :card "Ulk Jey Ama" :id "[M] (CP)"}
    {:qty 1 :card "Umbar" :id "[M] (SL)"}
-   {:qty 1 :card "Urcheldor" :id "[M] (ML)"}
+   {:qty 1 :card "Úrcheldor" :id "[M] (ML)"}
    {:qty 1 :card "Urdic Camp" :id "[M] (NW)"}
    {:qty 1 :card "Ûrêzâyan" :id "[M] (SL)"}
    {:qty 1 :card "Urlurtsu Nurn" :id "[M] (LE)"}

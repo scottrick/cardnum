@@ -79,6 +79,9 @@
    :Information (fn [[k v]] [:Information (if (= v "yes") true "")])
    :Palantiri (fn [[k v]] [:Palantiri (if (= v "yes") true "")])
    :Scroll (fn [[k v]] [:Scroll (if (= v "yes") true "")])
+   :Hoard (fn [[k v]] [:Hoard (if (= v "yes") true "")])
+   :Gear (fn [[k v]] [:Gear (if (= v "yes") true "")])
+   :Non (fn [[k v]] [:Non (if (= v "yes") true "")])
    :Haven identity
    :Stage identity
    :Strikes identity
