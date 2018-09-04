@@ -71,14 +71,16 @@
   "Update stats for player decks on game ending"
   [all-games gameid]
   (let [start-players (get-in @all-games [gameid :original-players])
-        end-players (get-in @all-games [gameid :ending-players])]
+        end-players (get-in @all-games [gameid :ending-players])
+        official-game (if (> (count start-players) 1) true false)]
     (doseq [p start-players]
       (let [enable-deckstats (get-in p [:user :options :deckstats])
             deck-id (get-in p [:deck :_id])]
-        (when (and enable-deckstats deck-id)
+        (when (and enable-deckstats deck-id official-game)
           (inc-deck-stats deck-id '{:stats.games-started 1}))))
+    (when official-game
     (doseq [p end-players]
-      (inc-deck-stats (get-in p [:deck :_id]) (deck-record-end all-games gameid p)))))
+      (inc-deck-stats (get-in p [:deck :_id]) (deck-record-end all-games gameid p))))))
 
 (defn inc-game-stats
   "Update user's game stats for a given counter"
@@ -113,11 +115,13 @@
   "Update game stats for users on game ending"
   [all-games gameid]
   (let [start-players (get-in @all-games [gameid :original-players])
-        end-players (get-in @all-games [gameid :ending-players])]
+        end-players (get-in @all-games [gameid :ending-players])
+        official-game (if (> (count start-players) 1) true false)]
+    (when official-game
     (doseq [p start-players]
       (inc-game-stats (get-in p [:user :_id]) (game-record-start all-games gameid p)))
     (doseq [p end-players]
-      (inc-game-stats (get-in p [:user :_id]) (game-record-end all-games gameid p)))))
+      (inc-game-stats (get-in p [:user :_id]) (game-record-end all-games gameid p))))))
 
 
 (defn push-stats-update

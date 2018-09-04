@@ -72,13 +72,16 @@
    :Region identity
    :RPath identity
    :Playable identity
-   :GoldRing identity
-   :GreaterItem identity
-   :MajorItem identity
-   :MinorItem identity
-   :Information identity
-   :Palantiri identity
-   :Scroll identity
+   :GoldRing (fn [[k v]] [:GoldRing (if (= v "yes") true "")])
+   :GreaterItem (fn [[k v]] [:GreaterItem (if (= v "yes") true "")])
+   :MajorItem (fn [[k v]] [:MajorItem (if (= v "yes") true "")])
+   :MinorItem (fn [[k v]] [:MinorItem (if (= v "yes") true "")])
+   :Information (fn [[k v]] [:Information (if (= v "yes") true "")])
+   :Palantiri (fn [[k v]] [:Palantiri (if (= v "yes") true "")])
+   :Scroll (fn [[k v]] [:Scroll (if (= v "yes") true "")])
+   :Hoard (fn [[k v]] [:Hoard (if (= v "yes") true "")])
+   :Gear (fn [[k v]] [:Gear (if (= v "yes") true "")])
+   :Non (fn [[k v]] [:Non (if (= v "yes") true "")])
    :Haven identity
    :Stage identity
    :Strikes identity

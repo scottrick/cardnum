@@ -82,9 +82,8 @@
                                         (update-in [:deck] #(select-keys % [:_id :identity]))
                                         (update-in [:deck :identity] #(select-keys % [:title :faction]))))
             stripped-players (mapv strip-deck players)
-            started (if (> (count players) 1) true false)
             game (as-> game g
-                       (assoc g :started started
+                       (assoc g :started true
                                 :original-players stripped-players
                                 :ending-players stripped-players
                                 :last-update (t/now))
