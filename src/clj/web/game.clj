@@ -1,12 +1,14 @@
 (ns web.game
   (:require [web.ws :as ws]
             [web.lobby :refer [all-games old-states already-in-game? spectator?] :as lobby]
-            [web.utils :refer [response]]
+            [web.utils :refer [my-value-reader response]]
             [web.stats :as stats]
             [game.main :as main]
             [game.core :as core]
             [cardnum.utils :refer [side-from-str]]
             [cheshire.core :as json]
+            [clojure.data.json :as j-data]
+            [monger.json]
             [crypto.password.bcrypt :as bcrypt]
             [clj-time.core :as t]))
 
@@ -45,6 +47,17 @@
                               {:gameid gameid
                                :state spect-state})]))))
 
+(defn handle-game-patch
+  [{{{:keys [username] :as user} :user} :ring-req
+    client-id                           :client-id
+    {:keys [gameid-str] :as msg}        :?data}]
+  (let [gameid (java.util.UUID/fromString gameid-str)
+        {:keys [started players state] :as game} (lobby/game-for-id gameid)
+        side (some #(when (= client-id (:ws-id %)) (:side %)) players)]
+    (when (lobby/player? client-id gameid)
+      (spit (str "data/rezwits vs rezmote-s1.json")
+            (json/generate-string @(:state game))))))
+
 (defn swap-and-send-state!
   "Updates the old-states atom with the new game state, then sends a :meccg/state
   message to game clients."
@@ -72,7 +85,7 @@
            game-from-gameid
            (= (:gameid game-from-clientid) (:gameid game-from-gameid))))))
 
-(defn handle-game-start
+(defn handle-game-start-og
   [{{{:keys [username] :as user} :user} :ring-req
     client-id                           :client-id}]
   (when-let [{:keys [players gameid started] :as game} (lobby/game-for-client client-id)]
@@ -94,6 +107,35 @@
         (stats/game-started game)
         (lobby/refresh-lobby :update gameid)
         (send-state! :meccg/start game (main/public-states (:state game)))))))
+
+(defn handle-game-start
+  [{{{:keys [username] :as user} :user} :ring-req
+    client-id                           :client-id}]
+  (when-let [{:keys [title players gameid started] :as game} (lobby/game-for-client client-id)]
+    (when (and (lobby/first-player? client-id gameid)
+               (not started))
+      (let [strip-deck (fn [player] (-> player
+                                        (update-in [:deck] #(select-keys % [:_id :identity]))
+                                        (update-in [:deck :identity] #(select-keys % [:title :faction]))))
+            stripped-players (mapv strip-deck players)
+            init (j-data/read-str
+                   (slurp "data/rezwits vs rezmote-s1.json")
+                   :value-fn my-value-reader
+                   :key-fn keyword)
+            game (as-> game g
+                       (assoc g :started true
+                                :original-players stripped-players
+                                :ending-players stripped-players
+                                :last-update (t/now))
+                       (assoc g :state (core/load-game init))
+                       (update-in g [:players] #(mapv strip-deck %)))
+            ]
+        (swap! all-games assoc gameid game)
+        (swap! old-states assoc gameid @(:state game))
+        (stats/game-started game)
+        (lobby/refresh-lobby :update gameid)
+        (send-state! :meccg/start game (main/public-states (:state game)))
+        ))))
 
 (defn handle-game-leave
   [{{{:keys [username] :as user} :user} :ring-req
@@ -262,6 +304,7 @@
   :meccg/action handle-game-action
   :meccg/leave handle-game-leave
   :meccg/rejoin handle-game-rejoin
+  :meccg/patch handle-game-patch
   :meccg/concede handle-game-concede
   :meccg/mute-spectators handle-mute-spectators
   :meccg/say handle-game-say

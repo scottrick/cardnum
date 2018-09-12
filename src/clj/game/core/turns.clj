@@ -114,6 +114,22 @@
                     :hq-access 1 :rd-access 1 :tagged 0
                     :click-per-turn 100 :agenda-point-req 7 :keep false}})))
 
+(defn load-game
+  "Initializes a new game with the given players vector."
+  [game]
+  (let [state (atom game)
+        contestant-identity (get-in @state [:contestant :identity])
+        challenger-identity (get-in @state [:challenger :identity])]
+    (init-identity state :contestant contestant-identity)
+    (init-identity state :challenger challenger-identity)
+    (swap! state assoc :active-player :challenger :per-turn nil :end-turn false)
+    ;(swap! game-states assoc gameid state)
+    (let [side :contestant]
+      (wait-for (trigger-event-sync state side :pre-start-game)
+                (let [side :challenger]
+                  (wait-for (trigger-event-sync state side :pre-start-game)
+                            (init-hands state))))) state))
+
 (defn init-game
   "Initializes a new game with the given players vector."
   [game]

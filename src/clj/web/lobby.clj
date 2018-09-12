@@ -1,6 +1,6 @@
 (ns web.lobby
   (:require [web.db :refer [db object-id]]
-            [web.utils :refer [response tick remove-once]]
+            [web.utils :refer [my-value-reader response tick remove-once]]
             [clojure.string :refer [split split-lines join escape] :as s]
             [web.ws :as ws]
             [web.sites :refer [all-standard-sites all-dreamcard-sites]]
@@ -13,6 +13,8 @@
             [cardnum.decks :as decks]
             [cardnum.utils :refer [str->int parse-deck-string INFINITY] :as utils]
             [cheshire.core :as json]
+            [clojure.data.json :as j-data]
+            [monger.json]
             [clj-time.core :as t])
   (:import org.bson.types.ObjectId))
 
@@ -214,22 +216,56 @@
   [{{{:keys [username emailhash] :as user} :user} :ring-req
     client-id                                     :client-id
     {:keys [title allowspectator spectatorhands password room side alignment options]} :?data :as event}]
-  (let [gameid (java.util.UUID/randomUUID)
+  (let [gameid (java.util.UUID/fromString "cca96966-ae2f-4ad2-9afd-8d93931b7a79")
+        load (j-data/read-str (slurp (str "data/rezwits vs rezmote-g1.json")) :key-fn keyword)
+        game {:date           (:date load)
+              :gameid         gameid
+              :title          (:title load)
+              :allowspectator (:allowspecator load)
+              :spectatorhands true
+              :mute-spectators false
+              :password       (:password load)
+              :room           (:room load)
+              :players        [{:user
+                                           user
+                                :ws-id     client-id
+                                :side      "Contestant"
+                                :alignment alignment
+                                :options   options}]
+              :spectators     []
+              :last-update    (:last-update load)}
+        ]
+    (swap! all-games assoc gameid game)
+    (swap! client-gameids assoc client-id gameid)
+    (ws/send! client-id [:lobby/select {:gameid gameid}])
+    (refresh-lobby :create gameid)
+    ))
+
+(defn handle-lobby-create-save
+  [{{{:keys [username emailhash] :as user} :user} :ring-req
+    client-id                                     :client-id
+    {:keys [title allowspectator spectatorhands password room side alignment options]} :?data :as event}]
+  ;(let [gameid (java.util.UUID/randomUUID)
+  (let [gameid (java.util.UUID/fromString "cca96966-ae2f-4ad2-9afd-8d93931b7a79")
         game {:date           (java.util.Date.)
               :gameid         gameid
               :title          title
               :allowspectator allowspectator
-              :spectatorhands spectatorhands
+              :spectatorhands true
               :mute-spectators false
               :password       (when (not-empty password) (bcrypt/encrypt password))
               :room           room
-              :players        [{:user    user
-                                :ws-id      client-id
-                                :side    side
+              :players        [{:user      user
+                                :ws-id     client-id
+                                :side      side
                                 :alignment alignment
-                                :options options}]
+                                :options   options}]
               :spectators     []
               :last-update    (t/now)}]
+    (spit (str "data/" title "-game.json")
+          (json/generate-string
+            game
+            {:pretty true}))
     (swap! all-games assoc gameid game)
     (swap! client-gameids assoc client-id gameid)
     (ws/send! client-id [:lobby/select {:gameid gameid}])

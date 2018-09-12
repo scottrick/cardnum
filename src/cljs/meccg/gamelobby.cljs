@@ -387,11 +387,54 @@
   [players user]
   (= (-> players first :user :_id) (:_id user)))
 
+(def decks [{:name "rezwits's game w/rezmote", :date "2018-09-09T22:11:48.787Z"
+             :identity1 {:title "The Witch King ":set_code "MELE", :ImageName "mele_thewitchking.jpg"}
+             :identity2 {:title "Alatar" :set_code "METW", :ImageName "metw_alatar.jpg"}}
+            {:name "rezwits's game w/demoP1", :date "2018-09-10T22:09:24.787Z"
+             :identity1 {:title "Ren the Ringwraith":set_code "MELE", :ImageName "mele_rentheringwraith.jpg"}
+             :identity2 {:title "Gandalf" :set_code "METW", :ImageName "metw_gandalf.jpg"}}
+            ])
+
+(comment
+  (not true) [:h4 "Loading saved games collection..."]
+  (false) [:div
+           [:div.button-bar
+            (if false
+              [:button.float-left {:class "disabled"} "Load game"]
+              [:button.float-left {:on-click nil} "Load game"])]
+           [:h4 "No saved games"]])
+
+(defn saved-games
+  [{:keys [sets decks-loaded active-deck]} owner]
+  (reify
+    om/IRenderState
+    (render-state [this state]
+      (sab/html
+        [:div.saved-collection
+         [:div.button-bar
+          (if true
+            [:button.float-left {:class "disabled"} "Load game"]
+            [:button.float-left {:on-click nil} "Load game"])]
+         (for [deck (sort-by :date > decks)]
+           [:div.saved-line {:class (when (= "test" deck) "active") ;active-deck
+                             :on-click nil}
+            [:img {:src (image-url (:identity1 deck))
+                   :alt (get-in deck [:identity1 :title] "")}]
+            [:img {:src (image-url (:identity2 deck))
+                   :alt (get-in deck [:identity2 :title] "")}]
+            [:h4 (:name deck)]
+            [:div.float-right (-> (:date deck) js/Date. js/moment (.format "MMM Do YYYY"))]
+            [:p (str (get-in deck [:identity1 :title]) " vs " (get-in deck [:identity2 :title]))]
+            ])
+         ]
+        ))))
+
 (defn game-lobby [{:keys [games gameid messages sets user password-gameid] :as cursor} owner]
   (reify
     om/IInitState
     (init-state [this]
-      {:current-room "casual"})
+      {:current-room "casual"
+       :loading true})
 
     om/IRenderState
     (render-state [this state]
@@ -404,7 +447,8 @@
            [:div.button-bar
             (if (or gameid (:editing state))
               [:button.float-left {:class "disabled"} "New game"]
-              [:button.float-left {:on-click #(do (new-game cursor owner) (resume-sound))} "New game"])
+              [:button.float-left {:on-click #(do (new-game cursor owner) (resume-sound)
+                                                  (om/set-state! owner :loading false))} "New game"])
             [:div.rooms
              (room-tab cursor owner games "competitive" "Competitive")
              (room-tab cursor owner games "casual" "Casual")]]
@@ -416,7 +460,8 @@
              [:div
               [:div.button-bar
                [:button {:type "button" :on-click #(create-game cursor owner)} "Create"]
-               [:button {:type "button" :on-click #(om/set-state! owner :editing false)} "Cancel"]]
+               [:button {:type "button" :on-click #(do (om/set-state! owner :editing false)
+                                                       (om/set-state! owner :loading true))} "Cancel"]]
 
               (when-let [flash-message (:flash-message state)]
                 [:p.flash-message flash-message])
@@ -474,7 +519,8 @@
                      (if (every? :deck players)
                        [:button {:on-click #(ws/ws-send! [:meccg/start gameid])} "Start"]
                        [:button {:class "disabled"} "Start"]))
-                   [:button {:on-click #(leave-lobby cursor owner)} "Leave"]]
+                   [:button {:on-click #(do (om/set-state! owner :loading true)
+                                          (leave-lobby cursor owner))} "Leave"]]
                   [:div.content
                    [:h2 (:title game)]
                    (when-not (every? :deck players)
@@ -503,7 +549,9 @@
                         [:h3 (str c " Spectator" (when (not= c 1) "s"))])
                       (for [spectator (:spectators game)]
                         (om/build player-view {:player spectator}))])]
-                  (om/build chat-view messages {:state state})])))]
-          (om/build deckselect-modal cursor)]]]))))
+                  (om/build chat-view messages {:state state})])))
+]
+          (om/build deckselect-modal cursor)
+          ]]]))))
 
 (om/root game-lobby app-state {:target (. js/document (getElementById "gamelobby"))})

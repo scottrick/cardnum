@@ -1328,6 +1328,38 @@ align-radio
       overflow: auto
       padding: 5px 10px
 
+    .saved-collection
+      overflow: auto
+      -webkit-overflow-scrolling: touch
+      flex(1)
+
+      .saved-line
+        height: 65px
+        padding: 5px 8px
+        margin: 0 0 5px
+        border: 1px solid white
+        border-radius: 4px
+        cursor: pointer
+        clear: both
+
+        &:hover
+          border-color: orange
+
+        p
+          margin-top: 0
+
+        h4
+          margin: 0
+          text-overflow: ellipsis
+          white-space: nowrap
+          overflow: hidden
+          width: 260px
+
+        > img
+          float: left
+          height: 100%
+          margin-right: 10px
+
   .game-title
     width: 250px
 

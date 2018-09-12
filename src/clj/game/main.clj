@@ -128,7 +128,8 @@
       (update-in [:sideboard] #(private-card-vector state :challenger %))
       (update-in [:fw-dc-sb] #(private-card-vector state :challenger %))
       (update-in [:location] #(private-card-vector state :challenger %))
-      (update-in [:rig :facedown] #(private-card-vector state :challenger %))
+      (update-in [:rig :resource] #(private-card-vector state :challenger %))
+      (update-in [:rig :hazards] #(private-card-vector state :challenger %))
       (update-in [:rig :radicle] #(private-card-vector state :challenger %))))
 
 (defn- make-private-contestant [state]
@@ -205,8 +206,8 @@
 (defn public-states [state]
   (let [[new-contestant new-challenger new-spect] (private-states state)]
     {:challenger-state (strip new-challenger)
-     :contestant-state   (strip new-contestant)
-     :spect-state  (strip new-spect)}))
+     :contestant-state (strip new-contestant)
+     :spect-state (strip new-spect)}))
 
 (defn public-diffs [old-state new-state]
   (let [[old-contestant old-challenger old-spect] (when old-state (private-states (atom old-state)))
