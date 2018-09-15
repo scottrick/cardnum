@@ -16,7 +16,9 @@
          :cards-loaded false
          :sets [] :mwl []
          :decks [] :decks-loaded false
+         :saves [] :saves-loaded false
          :stats (:stats (js->clj js/user :keywordize-keys true))
          :games [] :gameid nil :messages []
+         :save-pref nil :resumed false
          :channels {:general []}
          }))

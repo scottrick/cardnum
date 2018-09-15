@@ -1,7 +1,10 @@
 (ns web.utils
   (:require [ring.util.response :as resp]
             [monger.collection :as mc]
+            [clojure.java.io :as io]
             [web.db :refer [db]]))
+
+(def proj-dir (str (io/file (System/getProperty "user.dir"))))
 
 (defn tick
   "Call f with args every ms. First call will be after ms"
