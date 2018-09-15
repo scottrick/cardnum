@@ -121,9 +121,11 @@
         (ws/ws-send! [:meccg/typing {:gameid-str (:gameid @game-state) :typing true}])))))
 
 (defn mute-spectators [mute-state]
-  (ws/ws-send! [:meccg/patch {:gameid-str (:gameid @game-state)
+  (ws/ws-send! [:meccg/mute-spectators {:gameid-str (:gameid @game-state) :mute-state mute-state}]))
+
+(defn save-game []
+  (ws/ws-send! [:meccg/save {:gameid-str (:gameid @game-state)
                               :save-pref (:save-pref @app-state)}]))
-  ;(ws/ws-send! [:meccg/mute-spectators {:gameid-str (:gameid @game-state) :mute-state mute-state}]))
 
 (defn concede []
   (ws/ws-send! [:meccg/concede {:gameid-str (:gameid @game-state)}]))

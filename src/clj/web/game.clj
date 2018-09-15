@@ -65,7 +65,7 @@
                               {:gameid gameid
                                :state spect-state})]))))
 
-(defn handle-game-patch
+(defn handle-game-save
   [{{{:keys [username] :as user} :user} :ring-req
     client-id                           :client-id
     {:keys [gameid-str save-pref] :as msg}  :?data}]
@@ -407,12 +407,12 @@
       (swap-and-send-diffs! game))))
 
 (ws/register-ws-handlers!
+  :meccg/save handle-game-save
   :meccg/load handle-game-start-load
   :meccg/start handle-game-start-new
   :meccg/action handle-game-action
   :meccg/leave handle-game-leave
   :meccg/rejoin handle-game-rejoin
-  :meccg/patch handle-game-patch
   :meccg/concede handle-game-concede
   :meccg/mute-spectators handle-mute-spectators
   :meccg/say handle-game-say

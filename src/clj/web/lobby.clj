@@ -298,7 +298,8 @@
     client-id                                     :client-id}]
   (when-let [{gameid :gameid} (game-for-client client-id)]
     (when (player-or-spectator client-id gameid)
-      (io/delete-file (str proj-dir "/all-pre-g/" username "/" username "'s game.json"))
+      (when (.exists (io/file (str proj-dir "/all-pre-g/" username "/" username "'s game.json")))
+        (io/delete-file (str proj-dir "/all-pre-g/" username "/" username "'s game.json")))
       (remove-user client-id gameid)
       (ws/broadcast-to! (lobby-clients gameid)
                         :lobby/message

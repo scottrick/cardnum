@@ -29,8 +29,8 @@
                                   :identity2 {:title (:id_title2 load)
                                               :set_code (:id_scode2 load)
                                               :ImageName (:id_image2 load)}
-                                  :date (:game-date load)
-                                  :game-save (:game-save load)}]
+                                  :game-save (:game-save load)
+                                  :date (:game-date load)}]
                         save)))]
         ;(println (str saves))
         (response 200 (json/generate-string saves))))))
