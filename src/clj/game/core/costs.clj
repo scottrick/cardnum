@@ -152,7 +152,9 @@
      :click (let [a (first (keep :action action))]
               (when (not= a :steal-cost)
                 ;; do not create an undo state if click is being spent due to a steal cost (eg. Ikawah Project)
-                (swap! state assoc :click-state (dissoc @state :log)))
+                ;; do NOT create UNDO! 
+                ; (swap! state assoc :click-state (dissoc @state :log))
+                )
               (trigger-event state side
                              (if (= side :contestant) :contestant-spent-click :challenger-spent-click)
                              a (:click (into {} costs)))

@@ -11,6 +11,7 @@
             [web.admin :as admin]
             [web.news :as news]
             [web.decks :as decks]
+            [web.saves :as saves]
             [compojure.route :as route]
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
@@ -64,7 +65,12 @@
            (GET "/data/decks" [] decks/decks-handler)
            (POST "/data/decks" [] decks/decks-create-handler)
            (PUT "/data/decks" [] decks/decks-save-handler)
-           (DELETE "/data/decks/:id" [] decks/decks-delete-handler))
+           (DELETE "/data/decks/:id" [] decks/decks-delete-handler)
+
+           (GET "/saves" [] saves/saves-handler)
+           (POST "/saves" [] saves/saves-create-handler)
+           (PUT "/saves" [] saves/saves-save-handler)
+           (DELETE "/saves/:game-save" [] saves/saves-delete-handler))
 
 (defroutes routes
            (-> user-routes

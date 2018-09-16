@@ -1,11 +1,11 @@
 (ns web.lobby
   (:require [web.db :refer [db object-id]]
-            [web.utils :refer [response tick remove-once]]
+            [web.utils :refer [proj-dir map-values my-value-reader response tick remove-once]]
             [clojure.string :refer [split split-lines join escape] :as s]
+            [clojure.java.io :as io]
             [web.ws :as ws]
             [web.sites :refer [all-standard-sites all-dreamcard-sites]]
             [web.stats :as stats]
-            [web.utils :refer [map-values]]
             [game.core :as core]
             [crypto.password.bcrypt :as bcrypt]
             [monger.collection :as mc]
@@ -13,6 +13,8 @@
             [cardnum.decks :as decks]
             [cardnum.utils :refer [str->int parse-deck-string INFINITY] :as utils]
             [cheshire.core :as json]
+            [clojure.data.json :as j-data]
+            [monger.json]
             [clj-time.core :as t])
   (:import org.bson.types.ObjectId))
 
@@ -223,23 +225,81 @@
               :mute-spectators false
               :password       (when (not-empty password) (bcrypt/encrypt password))
               :room           room
-              :players        [{:user    user
-                                :ws-id      client-id
-                                :side    side
+              :players        [{:user      user
+                                :ws-id     client-id
+                                :side      side
                                 :alignment alignment
-                                :options options}]
+                                :options   options}]
               :spectators     []
-              :last-update    (t/now)}]
+              :last-update    (t/now)
+              }]
+
+    (when (not (.exists (io/file (str proj-dir "/all-pre-g/" username))))
+      (do
+        (.mkdir (io/file (io/file (str proj-dir "/all-pre-g/" username))))
+        (.mkdir (io/file (io/file (str proj-dir "/all-saves/" username))))
+        (.mkdir (io/file (io/file (str proj-dir "/all-states/" username))))
+        ))
+
+    (spit (str "all-pre-g/" username "/" username "'s game.json")
+          (json/generate-string
+            game
+            {:pretty true}))
     (swap! all-games assoc gameid game)
     (swap! client-gameids assoc client-id gameid)
     (ws/send! client-id [:lobby/select {:gameid gameid}])
     (refresh-lobby :create gameid)))
+
+(defn handle-lobby-loader
+  [{{{:keys [username emailhash] :as user} :user} :ring-req
+    client-id                                     :client-id
+    {:keys [game-save]} :?data :as event}]
+  (let [load (j-data/read-str (slurp (str "all-saves/" username "/" game-save "g.json")) :key-fn keyword)
+        gameid (java.util.UUID/fromString (str (:gameid load)))
+        game {:date           (:date load)
+              :gameid         gameid
+              :title          (:title load)
+              :allowspectator true
+              :spectatorhands (:spectatorhands load)
+              :mute-spectators false
+              :password       (:password load)
+              :room           (:room load)
+              :players        [{:user      user
+                                :ws-id     client-id
+                                :side      (if (= (:id_usern1 load) username)
+                                             "Contestant"
+                                             "Challenger")
+                                :alignment (if (= (:id_usern1 load) username)
+                                             (:id_align1 load)
+                                             (:id_align2 load))
+                                :options   (:options load)}]
+              :spectators     []
+              :last-update    (:last-update load)}]
+    (swap! all-games assoc gameid game)
+    (swap! client-gameids assoc client-id gameid)
+    (ws/send! client-id [:lobby/relay {:save game-save}])
+    (ws/send! client-id [:lobby/select {:gameid gameid}])
+    (refresh-lobby :create gameid)
+    ))
+
+(defn handle-lobby-delete
+  [{{{:keys [username emailhash] :as user} :user} :ring-req
+    client-id                                     :client-id
+    {:keys [game-save]} :?data :as event}]
+  (when (and (.exists (io/file (str proj-dir "/all-saves/" username "/" game-save "g.json" )))
+             (.exists (io/file (str proj-dir "/all-states/" username "/" game-save "s.json" ))))
+    (do
+      (io/delete-file (str proj-dir "/all-saves/" username "/" game-save "g.json" ))
+      (io/delete-file (str proj-dir "/all-states/" username "/" game-save "s.json")))
+    ))
 
 (defn handle-lobby-leave
   [{{{:keys [username emailhash] :as user} :user} :ring-req
     client-id                                     :client-id}]
   (when-let [{gameid :gameid} (game-for-client client-id)]
     (when (player-or-spectator client-id gameid)
+      (when (.exists (io/file (str proj-dir "/all-pre-g/" username "/" username "'s game.json")))
+        (io/delete-file (str proj-dir "/all-pre-g/" username "/" username "'s game.json")))
       (remove-user client-id gameid)
       (ws/broadcast-to! (lobby-clients gameid)
                         :lobby/message
@@ -379,7 +439,7 @@
                                   :characters :pool :fwsb :location]
                                #(vec (remove rid-card %)))
 
-                   (update-in d [:identity] #(@all-cards (:title %)))
+                   (update-in d [:identity] #(@all-cards (str (:title %) " " (:trimCode %))))
                    (assoc d :status (decks/calculate-deck-status d))
                    )]
     (when (and (:identity deck) (player? client-id gameid))
@@ -394,6 +454,8 @@
 (ws/register-ws-handlers!
   :chsk/uidport-open handle-ws-connect
   :lobby/create handle-lobby-create
+  :lobby/delete handle-lobby-delete
+  :lobby/loader handle-lobby-loader
   :lobby/leave handle-lobby-leave
   :lobby/join handle-lobby-join
   :lobby/watch handle-lobby-watch

@@ -54,8 +54,11 @@
                 [:a.concede-button {:on-click gameboard/concede} "Concede"])
               [:a.leave-button {:on-click gamelobby/leave-game} "Leave game"]
               (when is-player
+                [:a.save-button {:on-click gameboard/save-game} "Save game"])
+              (when is-player
                 [:a.mute-button {:on-click #(gameboard/mute-spectators (not (:mute-spectators game)))}
-                 (if (:mute-spectators game) "Unmute spectators" "Mute spectators")])]))
+                 (if (:mute-spectators game) "Unmute spectators" "Mute spectators")])
+              ]))
          (when (not (nil? (:gameid cursor)))
            [:div.float-right [:a {:on-click gamelobby/leave-game} "Leave game"]]))
        (when-let [game (some #(when (= (:gameid cursor) (:gameid %)) %) (:games cursor))]

@@ -88,6 +88,8 @@
 (ws/register-ws-handler! :meccg/start #(launch-game (parse-state %)))
 (ws/register-ws-handler! :meccg/diff #(handle-diff (parse-state %)))
 (ws/register-ws-handler! :meccg/timeout #(handle-timeout (parse-state %)))
+(ws/register-ws-handler! :meccg/relay #(swap! app-state assoc :save-pref (:save %)
+                                              :resumed false))
 
 (defn send-command
   ([command] (send-command command nil))
@@ -120,6 +122,10 @@
 
 (defn mute-spectators [mute-state]
   (ws/ws-send! [:meccg/mute-spectators {:gameid-str (:gameid @game-state) :mute-state mute-state}]))
+
+(defn save-game []
+  (ws/ws-send! [:meccg/save {:gameid-str (:gameid @game-state)
+                              :save-pref (:save-pref @game-state)}]))
 
 (defn concede []
   (ws/ws-send! [:meccg/concede {:gameid-str (:gameid @game-state)}]))

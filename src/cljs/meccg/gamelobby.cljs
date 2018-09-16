@@ -15,6 +15,7 @@
             [meccg.stats :refer [notnum->zero]]
             [meccg.deckbuilder :refer [format-deck-status-span deck-status-span process-decks load-decks num->percent]]))
 
+(def loader-channel (chan))
 (def socket-channel (chan))
 
 (defn- play-sound
@@ -38,6 +39,15 @@
                       [:started :date :mygame]))
            > games))
 
+(defn load-saves [saves]
+  ;(println (str saves "again"))
+  (if (= saves [nil])
+    (swap! app-state assoc :saves [])
+    (swap! app-state assoc :saves saves))
+  (when-let [selected-save (first (sort-by :date > saves))]
+    (put! loader-channel selected-save))
+  (swap! app-state assoc :saves-loaded true))
+
 (ws/register-ws-handler!
   :games/list
   #(swap! app-state assoc :games (sort-games-list %)))
@@ -54,6 +64,10 @@
                (sort-games-list (vals delete)))))
     (when (and notification (not (:gameid @app-state)))
       (play-sound notification))))
+
+(ws/register-ws-handler!
+  :lobby/relay
+  #(swap! app-state assoc :save-pref (:save %) :resumed true))
 
 (ws/register-ws-handler!
   :lobby/select
@@ -142,6 +156,20 @@
                            :room           (om/get-state owner :current-room)
                            :options        (:options @app-state)}])))))))
 
+(defn load-game [save]
+  (authenticated
+    (fn [user]
+      (do (swap! app-state assoc :messages [])
+          (ws/ws-send! [:lobby/loader {:game-save save}])))))
+
+(defn delete-game [save]
+  (authenticated
+    (fn [user]
+      (do
+        (swap! app-state assoc :messages [])
+        (ws/ws-send! [:lobby/delete {:game-save save}])
+        ))))
+
 (defn join-game [gameid owner action alignment password]
   (authenticated
    (fn [user]
@@ -206,7 +234,6 @@
              [:h4 (:name deck)]
              [:div.float-right (-> (:date deck) js/Date. js/moment (.format "MMM Do YYYY"))]
              [:p (get-in deck [:identity :title])]])])]]])))
-
 
 (defn faction-icon
   [faction identity]
@@ -294,7 +321,8 @@
         [:div.gameline {:class (when (= current-game gameid) "active")}
          [:section
           [:h3 "Pick your alignment..."]
-          (for [option ["Hero" "Minion" "Balrog" "Fallen-wizard" "Elf-lord" "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord"]]
+          (for [option ["Hero" "Minion" "Balrog" "Fallen-wizard" "Elf-lord"
+                        "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord"]]
             [:align-radio
              [:label [:input {:type "radio"
                               :name "alignment"
@@ -387,11 +415,60 @@
   [players user]
   (= (-> players first :user :_id) (:_id user)))
 
-(defn game-lobby [{:keys [games gameid messages sets user password-gameid] :as cursor} owner]
+(defn saved-games
+  [{:keys [saves saves-loaded active-save]} cursor owner]
+  (reify
+    om/IRenderState
+    (render-state [this state]
+      (sab/html
+        (cond
+          (not saves-loaded) [:div
+                              [:div.button-bar
+                               [:button.float-left {:class "disabled"} "Load game"]
+                               [:button.float-left {:class "disabled"} "Delete"]]
+                              [:h4 "Loading saved games..."]]
+          (empty? saves) [:div
+                          [:div.button-bar
+                             [:button.float-left {:class "disabled"} "Load game"]
+                             [:button.float-left {:class "disabled"} "Delete"]]
+                          [:h4 "No saved games, refesh browser to see any changes..."]]
+          :else [:div.saved-collection
+                 [:div.button-bar
+                  [:button.float-left {:on-click #(load-game (:game-save active-save))} "Load game"]
+                  [:button.float-left {:on-click #(delete-game (:game-save active-save))} "Delete"]
+                  [:h4 " refesh browser to see any changes..."]]
+                 (let [saves (:saves @app-state)]
+                   (for [save (sort-by :date > saves)]
+                     (when (not= nil save)
+                     [:div.saved-line {:class (when (= active-save save) "active")
+                                       :on-click #(put! loader-channel save)}
+                      [:img {:src (image-url (:identity1 save))
+                             :alt (get-in save [:identity1 :title] "")}]
+                      [:img {:src (if (= "" (get-in save [:identity2 :title]))
+                                    (str "/img/contestant.jpg")
+                                    (image-url (:identity2 save)))
+                             :alt (get-in save [:identity2 :title] "")}]
+                      [:h4 (:title save)]
+                      [:h4 (:name save)]
+                      [:div.float-right (-> (:date save) js/Date. js/moment (.format "MMM Do YYYY"))]
+                      [:p (str (get-in save [:identity1 :title]) " vs " (get-in save [:identity2 :title]))]
+                      ])))
+                 ])
+        ))))
+
+(defn game-lobby [{:keys [games gameid saves saves-loaded messages sets user password-gameid] :as cursor} owner]
   (reify
     om/IInitState
     (init-state [this]
-      {:current-room "casual"})
+      {:current-room "casual"
+       :loading true
+       :save nil
+       })
+
+    om/IWillMount
+    (will-mount [this]
+    (go (while true
+          (om/set-state! owner :save (<! loader-channel)))))
 
     om/IRenderState
     (render-state [this state]
@@ -404,7 +481,8 @@
            [:div.button-bar
             (if (or gameid (:editing state))
               [:button.float-left {:class "disabled"} "New game"]
-              [:button.float-left {:on-click #(do (new-game cursor owner) (resume-sound))} "New game"])
+              [:button.float-left {:on-click #(do (new-game cursor owner) (resume-sound)
+                                                  (om/set-state! owner :loading false))} "New game"])
             [:div.rooms
              (room-tab cursor owner games "competitive" "Competitive")
              (room-tab cursor owner games "casual" "Casual")]]
@@ -416,7 +494,8 @@
              [:div
               [:div.button-bar
                [:button {:type "button" :on-click #(create-game cursor owner)} "Create"]
-               [:button {:type "button" :on-click #(om/set-state! owner :editing false)} "Cancel"]]
+               [:button {:type "button" :on-click #(do (om/set-state! owner :editing false)
+                                                       (om/set-state! owner :loading true))} "Cancel"]]
 
               (when-let [flash-message (:flash-message state)]
                 [:p.flash-message flash-message])
@@ -428,7 +507,8 @@
 
               [:section
                [:h3 "Alignment"]
-               (for [option ["Hero" "Minion" "Balrog" "Fallen-wizard" "Elf-lord" "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord"]]
+               (for [option ["Hero" "Minion" "Balrog" "Fallen-wizard" "Elf-lord"
+                             "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord"]]
                  [:align-radio
                   [:label [:input {:type "radio"
                                    :name "alignment"
@@ -471,10 +551,18 @@
                  [:div
                   [:div.button-bar
                    (when (first-user? players user)
-                     (if (every? :deck players)
-                       [:button {:on-click #(ws/ws-send! [:meccg/start gameid])} "Start"]
-                       [:button {:class "disabled"} "Start"]))
-                   [:button {:on-click #(leave-lobby cursor owner)} "Leave"]]
+                     (if (not (every? :deck players))
+                       [:button {:class "disabled"} "Start"]
+                       (if (:resumed @app-state)
+                         [:button {:on-click #(do (ws/ws-send! [:meccg/load {:save-pref (:save-pref @app-state)}])
+                                                  ;(println "resume")
+                                                  (om/set-state! owner :loading true))} "Start"]
+                         [:button {:on-click #(do (ws/ws-send! [:meccg/start gameid])
+                                                  ;(println "fresh")
+                                                  (om/set-state! owner :loading true))} "Start"]))
+                       )
+                   [:button {:on-click #(do (om/set-state! owner :loading true)
+                                          (leave-lobby cursor owner))} "Leave"]]
                   [:div.content
                    [:h2 (:title game)]
                    (when-not (every? :deck players)
@@ -503,7 +591,14 @@
                         [:h3 (str c " Spectator" (when (not= c 1) "s"))])
                       (for [spectator (:spectators game)]
                         (om/build player-view {:player spectator}))])]
-                  (om/build chat-view messages {:state state})])))]
-          (om/build deckselect-modal cursor)]]]))))
+                  (om/build chat-view messages {:state state})])))
+           (if (and (:loading state) (not (some #(when (= gameid (:gameid %)) %) games)))
+             (om/build saved-games {:saves saves :saves-loaded saves-loaded :active-save (om/get-state owner :save)}))
+           ]
+          (om/build deckselect-modal cursor)
+          ]]]))))
+
+(go (let [saves (:json (<! (GET (str "/saves"))))]
+      (load-saves saves)))
 
 (om/root game-lobby app-state {:target (. js/document (getElementById "gamelobby"))})

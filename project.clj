@@ -8,6 +8,7 @@
   :dependencies [[org.clojure/clojure "1.9.0"]
                  [org.clojure/clojurescript "1.9.946"]
                  [org.clojure/core.async "0.3.443"]
+                 [org.clojure/data.json "0.2.6"]
                  [cheshire "5.6.3"]
                  [org.omcljs/om "0.9.0"]
                  [sablono "0.3.4"]
