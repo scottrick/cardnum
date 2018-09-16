@@ -122,13 +122,17 @@
         challenger-identity (get-in @state [:challenger :identity])]
     (init-identity state :contestant contestant-identity)
     (init-identity state :challenger challenger-identity)
-    (swap! state assoc :active-player :challenger :per-turn nil :end-turn false)
     ;(swap! game-states assoc gameid state)
     (let [side :contestant]
-      (wait-for (trigger-event-sync state side :pre-start-game)
-                (let [side :challenger]
-                  (wait-for (trigger-event-sync state side :pre-start-game)
-                            (init-hands state))))) state))
+      (swap! state assoc-in [side :keep] true)
+      (swap! state assoc :active-player side :per-turn nil :end-turn false)
+      (let [offset (- 100 (get-in @state [side :click]))]
+        (gain state side :click offset)))
+    (let [side :challenger]
+      (swap! state assoc-in [side :keep] true)
+      (let [offset (* -1 (get-in @state [side :click]))]
+        (gain state side :click offset)))
+    state))
 
 (defn init-game
   "Initializes a new game with the given players vector."
