@@ -125,7 +125,7 @@
 
 (defn save-game []
   (ws/ws-send! [:meccg/save {:gameid-str (:gameid @game-state)
-                              :save-pref (:save-pref @app-state)}]))
+                              :save-pref (:save-pref @game-state)}]))
 
 (defn concede []
   (ws/ws-send! [:meccg/concede {:gameid-str (:gameid @game-state)}]))
