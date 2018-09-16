@@ -183,10 +183,24 @@
 
 (def primary-order ["Character" "Resource" "Hazard" "Site" "Region"])
 (def resource-secondaries ["Ally" "Faction" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
-(def site-secondaries ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Information" "Palantír" "Scroll"])
+(def site-secondaries ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Information" "Hoard" "Scroll" "Palantír" "Battle-gear" "Non-battle-gear"])
 (def shared-secondaries ["Permanent-event" "Short-event" "Long-event" "Permanent-event/Short-event" "Permanent-event/Long-event" "Short-event/Long-event"])
 (def hazard-secondaries ["Creature" "Creature/Permanent-event" "Creature/Short-event" "Creature/Long-event"])
-(def general-alignments ["Hero" "Minion" "Balrog" "Fallen-wizard" "Fallen/Lord" "Lord" "Elf-lord" "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord" "Grey" "Dual"])
+(def general-alignments ["Hero" "Minion" "Balrog" "Fallen-wizard" "Fallen/Lord" "Lord"
+                         "Elf-lord" "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord"
+                         "Grey" "Dual"])
+(def standard-havens ["Carn Dûm" "Dol Guldur" "Edhellond" "Geann a-Lisch"
+                      "Grey Havens" "Lórien" "Minas Morgul" "Rivendell"])
+(def standard-hero-havens ["Edhellond" "Grey Havens" "Lórien" "Rivendell"])
+(def standard-minion-havens ["Carn Dûm" "Dol Guldur" "Geann a-Lisch" "Minas Morgul"])
+(def dreamcard-havens ["Amaru" "Bozisha-Dar" "Carn Dûm" "Chey Goumal" "Dol Guldur"
+                       "Edhellond" "Elanthia" "Evermist" "Geann a-Lisch" "Grey Havens"
+                       "Hau Nysrin" "Inyalonî" "Lórien" "Minas Morgul" "Mornost" "Rhûbar"
+                       "Rivendell" "Shapôl Udûn" "Taurondë" "Tower of Hargrog" "Valagalen"])
+(def dreamcard-hero-havens ["Edhellond" "Elanthia" "Evermist" "Grey Havens" "Hau Nysrin"
+                           "Inyalonî" "Lórien" "Rhûbar" "Rivendell" "Taurondë" "Valagalen"])
+(def dreamcard-minion-havens ["Amaru" "Bozisha-Dar" "Carn Dûm" "Chey Goumal" "Dol Guldur"
+                              "Geann a-Lisch" "Minas Morgul" "Mornost" "Shapôl Udûn" "Tower of Hargrog"])
 (def set-order ["The Wizards" "The Dragons" "Dark Minions" "The Lidless Eye" "Against the Shadow" "The White Hand" "The Balrog"
                 "Firstborn" "Durin's Folk" "The Necromancer" "Bay of Ormal" "Court of Ardor" "The Great Central Plains" "The Dominion of the Seven"
                 "The Great Wyrms" "Kingdom of the North" "Morgoth's Legacy" "Nine Rings for Mortal Men" "The Northern Waste" "Red Nightfall"
@@ -234,10 +248,16 @@
     (filter-cards true :GoldRing cards)
     "Information"
     (filter-cards true :Information cards)
-    "Palantír"
-    (filter-cards true :Palantiri cards)
+    "Hoard"
+    (filter-cards true :Hoard cards)
     "Scroll"
     (filter-cards true :Scroll cards)
+    "Palantír"
+    (filter-cards true :Palantiri cards)
+    "Battle-gear"
+    (filter-cards true :Gear cards)
+    "Non-battle-gear"
+    (filter-cards true :Non cards)
     )
   )
 
@@ -306,6 +326,7 @@
        :primary-filter "All"
        :alignment-filter "All"
        :secondary-filter "All"
+       :haven-filter "All"
        :hide-dreamcards true
        :page 1
        :filter-ch (chan)
@@ -359,15 +380,44 @@
                 set-names (map :name
                                (sort-by (juxt :cycle_position :position)
                                         sets-list))]
-            (for [filter [["Set" :set-filter set-names]
-                          ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
-                          ["Align" :alignment-filter (alignments (:primary-filter state))]
-                          ["Strict" :secondary-filter (secondaries (:primary-filter state))]]]
-              [:div
-               [:h4 (first filter)]
-               [:select {:value ((second filter) state)
-                         :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
-                (options (last filter))]]))
+
+            (if (= (:primary-filter state) "Site")
+              (let [haven-options (if hide-dreamcards
+                                    (case (:alignment-filter state)
+                                      "All" standard-havens
+                                      "Hero" standard-hero-havens
+                                      "Minion" standard-minion-havens
+                                      ("Balrog" "Fallen-wizard" "Fallen/Lord" "Lord"
+                                        "Elf-lord" "Dwarf-lord" "Atani-lord"
+                                        "War-lord" "Dragon-lord" "Grey" "Dual") [])
+                                    (case (:alignment-filter state)
+                                      "All" dreamcard-havens
+                                      "Hero" dreamcard-hero-havens
+                                      "Minion" dreamcard-minion-havens
+                                      ("Balrog" "Fallen-wizard" "Fallen/Lord" "Lord"
+                                        "Elf-lord" "Dwarf-lord" "Atani-lord"
+                                        "War-lord" "Dragon-lord" "Grey" "Dual") [])
+                                    )]
+                (for [filter [["Set" :set-filter set-names]
+                              ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
+                              ["Align" :alignment-filter (alignments (:primary-filter state))]
+                              ["Strict" :secondary-filter (secondaries (:primary-filter state))]
+                              ["Haven" :haven-filter haven-options]]]
+                  [:div
+                   [:h4 (first filter)]
+                   [:select {:value ((second filter) state)
+                             :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
+                    (options (last filter))]]))
+              (for [filter [["Set" :set-filter set-names]
+                            ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
+                            ["Align" :alignment-filter (alignments (:primary-filter state))]
+                            ["Strict" :secondary-filter (secondaries (:primary-filter state))]]]
+                [:div
+                 [:h4 (first filter)]
+                 [:select {:value ((second filter) state)
+                           :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
+                  (options (last filter))]]))
+            )
 
           [:div.hide-dreamcards-div
            [:label [:input.hide-dreamcards {:type "checkbox"
@@ -391,10 +441,11 @@
                                                    :else
                                                    [nil (filter #(= (:full_set %) s) @all-cards)])]
                           (->> cards
+                               (filter-dreamcards (:hide-dreamcards state))
                                (filter-cards (:primary-filter state) :type)
                                (filter-cards (:alignment-filter state) :alignment)
                                (filter-second (if (= (:primary-filter state) "Site") true false) (:secondary-filter state))
-                               (filter-dreamcards (:hide-dreamcards state))
+                               (filter-cards (:haven-filter state) :Haven)
                                (filter-title (:search-query state))
                                (sort-by (sort-field (:sort-field state)))
                                (take (* (:page state) 28))))
