@@ -203,6 +203,7 @@
                 (when (not (= nil id_usern2))
                   (spit (str "all-states/" id_usern2 "/" id_usern1 " vs " id_usern2 "-" k "s.json")
                       (json/generate-string @(:state game))))
+                (swap! (:state game) assoc :save-pref (str id_usern1 " vs " id_usern2 "-" k))
                 ) ;end of do
               (recur (+ k 1))) ;end of if
             ) ; end of loop

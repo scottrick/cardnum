@@ -377,7 +377,7 @@
           "/draw"       #(draw %1 %2 (max 0 value))
           "/end-run"    #(when (= %2 :contestant) (end-run %1 %2))
           "/error"      show-error-toast
-          "/handsize"   #(swap! %1 assoc-in [%2 :hand-size-modification] (- (max 0 value) (:hand-size-base %2)))
+              ;"/handsize"   #(swap! %1 assoc-in [%2 :hand-size-modification] (- (max 0 value) (:hand-size-base %2)))
           "/hide"  #(resolve-ability %1 %2
                                         {:prompt "Select a card to hide"
                                          :effect (req (let [c (deactivate %1 %2 target)]
