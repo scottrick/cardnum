@@ -88,6 +88,8 @@
 (ws/register-ws-handler! :meccg/start #(launch-game (parse-state %)))
 (ws/register-ws-handler! :meccg/diff #(handle-diff (parse-state %)))
 (ws/register-ws-handler! :meccg/timeout #(handle-timeout (parse-state %)))
+(ws/register-ws-handler! :meccg/relay #(swap! app-state assoc :save-pref (:save %)
+                                              :resumed false))
 
 (defn send-command
   ([command] (send-command command nil))
@@ -120,6 +122,10 @@
 
 (defn mute-spectators [mute-state]
   (ws/ws-send! [:meccg/mute-spectators {:gameid-str (:gameid @game-state) :mute-state mute-state}]))
+
+(defn save-game []
+  (ws/ws-send! [:meccg/save {:gameid-str (:gameid @game-state)
+                              :save-pref (:save-pref @game-state)}]))
 
 (defn concede []
   (ws/ws-send! [:meccg/concede {:gameid-str (:gameid @game-state)}]))
@@ -1649,15 +1655,25 @@
 (defmethod board-view "Challenger" [{:keys [player run]}]
   (om/component
     (sab/html
-      (let [locales (:locales player)
+      (let [is-me (= (:side @game-state) :challenger)
+            locales (:locales player)
             s (:locale run)
             locale-type (first s)]
+        (if is-me
         [:div.challenger-board {:class (if (= (:side @game-state) :contestant) "opponent" "me")}
          (for [locale (reverse (get-parties locales))
                :let [num (party->num (first locale))]]
            (om/build locale-view {:locale (second locale)
                                   :run (when (= locale-type (str "party" num)) run)}
-                     {:opts {:name (party->name (first locale))}}))]))))
+                     {:opts {:name (party->name (first locale))}}))]
+        [:div.challenger-board.opponent {:class (if (= (:side @game-state) :contestant) "opponent" "me")}
+         (for [locale (reverse (get-parties locales))
+               :let [num (party->num (first locale))]]
+           (om/build locale-view {:locale (second locale)
+                                  :run (when (= locale-type (str "party" num)) run)}
+                     {:opts {:name (party->name (first locale))}}))]
+        )
+        ))))
 
 (defn cond-button [text cond f]
   (sab/html
@@ -2105,10 +2121,13 @@
              [:div {:class (:background (:options @app-state))}]
              [:div.rightpane
               [:div.card-zoom
-               ;(when-let [card (om/get-state owner :zoom)]
+               (if (= side :spectator)
+                 (when-let [card (om/get-state owner :zoom)]
+                   (om/build card-zoom card))
                  (if (get-in @game-state [side :blind])
                    (om/build card-blind (get-in @game-state [side :hold-card]))
-                   (om/build card-zoom (get-in @game-state [side :hold-card])))]
+                   (om/build card-zoom (get-in @game-state [side :hold-card])))
+                 )]
               ;; card implementation info
               (when-let [card (om/get-state owner :zoom)]
                 (let [implemented (:implementation card)]

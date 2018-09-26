@@ -40,7 +40,7 @@
                         [:li [:code "/discard-random"] " - Discard a random card from your hand"]
                         [:li [:code "/draw n"] " - Draw n cards"]
                         [:li [:code "/facedown"] " - Select a card to place facedown"]
-                        [:li [:code "/handsize n"] " - Set your handsize to n"]
+                        ; [:li [:code "/handsize n"] " - Set your handsize to n"]
                         [:li [:code "/hide"] " - Hide a card"]
                         [:li [:code "/hide-hand"] " - Hide your hand after revealing"]
                         [:li [:code "/host"] " - Host a card on another"]

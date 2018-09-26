@@ -596,6 +596,9 @@ align-radio
   .concede-button
     margin-right: 12px
 
+  .save-button
+    margin-left: 12px
+
   .mute-button
     margin-left: 12px
 
@@ -1328,6 +1331,38 @@ align-radio
       overflow: auto
       padding: 5px 10px
 
+    .saved-collection
+      overflow: auto
+      -webkit-overflow-scrolling: touch
+      flex(1)
+
+      .saved-line
+        height: 65px
+        padding: 5px 8px
+        margin: 0 0 5px
+        border: 1px solid white
+        border-radius: 4px
+        cursor: pointer
+        clear: both
+
+        &:hover
+          border-color: orange
+
+        p
+          margin-top: 0
+
+        h4
+          margin: 0
+          text-overflow: ellipsis
+          white-space: nowrap
+          overflow: hidden
+          width: 260px
+
+        > img
+          float: left
+          height: 100%
+          margin-right: 10px
+
   .game-title
     width: 250px
 
@@ -1684,7 +1719,7 @@ align-radio
         display-flex()
         flex-direction(column)
 
-        .contestant-board
+        .contestant-board, .challenger-board
           flex(1)
           display-flex()
           flex-direction(row-reverse)
@@ -1693,12 +1728,6 @@ align-radio
           .locale
             margin-left: 0
             margin-right: 2px
-
-        .challenger-board, .contestant-board
-          flex(1)
-          display-flex()
-          flex-direction(row-reverse)
-          justify-content(space-between)
 
         > div
           display-flex()

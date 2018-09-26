@@ -262,6 +262,12 @@
     (swap! state dissoc-in [side :selected])
     (effect-completed state side (:eid fprompt))))
 
+(defn command-save
+  "save a game locally"
+  [state side]
+
+  )
+
 (defn blind-zoom
   [state side args]
   (if (get-in @state [side :blind])
@@ -371,7 +377,7 @@
           "/draw"       #(draw %1 %2 (max 0 value))
           "/end-run"    #(when (= %2 :contestant) (end-run %1 %2))
           "/error"      show-error-toast
-          "/handsize"   #(swap! %1 assoc-in [%2 :hand-size-modification] (- (max 0 value) (:hand-size-base %2)))
+              ;"/handsize"   #(swap! %1 assoc-in [%2 :hand-size-modification] (- (max 0 value) (:hand-size-base %2)))
           "/hide"  #(resolve-ability %1 %2
                                         {:prompt "Select a card to hide"
                                          :effect (req (let [c (deactivate %1 %2 target)]
@@ -453,6 +459,7 @@
                                            :effect (req (move %1 %2 (assoc target :hide true) :rfg))
                                            :choices {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/rfgh command"} nil)
+          "/save"       #(command-save %1 %2)
           "/score"      #(resolve-ability %1 %2
                                           {:prompt "Select a card to score"
                                            :effect (req (let [c  target]

@@ -65,7 +65,7 @@
         ]
     (atom
       {:gameid gameid :log [] :active-player :challenger :end-turn true
-       :room room
+       :room room :save-pref ""
        :rid 0 :turn 0 :eid 0
        :sfx [] :sfx-current-id 0
        :stats {:time {:started (t/now)}}
@@ -113,6 +113,26 @@
                     :agenda-point 0
                     :hq-access 1 :rd-access 1 :tagged 0
                     :click-per-turn 100 :agenda-point-req 7 :keep false}})))
+
+(defn load-game
+  "Initializes a new game with the given players vector."
+  [game save-pref]
+  (let [state (atom game)
+        contestant-identity (get-in @state [:contestant :identity])
+        challenger-identity (get-in @state [:challenger :identity])]
+    (init-identity state :contestant contestant-identity)
+    (init-identity state :challenger challenger-identity)
+    (swap! state assoc :save-pref save-pref)
+    (let [side :contestant]
+      (swap! state assoc-in [side :keep] true)
+      (swap! state assoc :active-player side :per-turn nil :end-turn false)
+      (let [offset (- 100 (get-in @state [side :click]))]
+        (gain state side :click offset)))
+    (let [side :challenger]
+      (swap! state assoc-in [side :keep] true)
+      (let [offset (* -1 (get-in @state [side :click]))]
+        (gain state side :click offset)))
+    state))
 
 (defn init-game
   "Initializes a new game with the given players vector."
