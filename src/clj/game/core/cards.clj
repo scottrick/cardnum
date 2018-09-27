@@ -110,8 +110,10 @@
              c (if to-placed (assoc c :placed true) (dissoc c :placed))
              c (if to-facedown (assoc c :facedown true) (dissoc c :facedown))
              moved-card (assoc c :zone dest :host nil :hosted hosted :previous-zone (:zone c))
-             moved-card (if (and (= side :contestant) (#{:hand :deck} (first dest)))
+             moved-card (if (and (#{:hand :deck} (first dest)))
                           (dissoc moved-card :seen) moved-card)
+             moved-card (if (and (#{:discard} (first dest)))
+                          (dissoc moved-card :seen :revealed) moved-card)
              moved-card (if (and (= (first (:zone moved-card)) :scored) (card-flag? moved-card :has-abilities-when-stolen true))
                           (merge moved-card {:abilities (:abilities (card-def moved-card))}) moved-card)]
          (if front

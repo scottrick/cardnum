@@ -124,8 +124,9 @@
   (ws/ws-send! [:meccg/mute-spectators {:gameid-str (:gameid @game-state) :mute-state mute-state}]))
 
 (defn save-game []
+  (do (send-command "system-msg" {:msg "just SAVED the GAME"})
   (ws/ws-send! [:meccg/save {:gameid-str (:gameid @game-state)
-                              :save-pref (:save-pref @game-state)}]))
+                              :save-pref (:save-pref @game-state)}])))
 
 (defn concede []
   (ws/ws-send! [:meccg/concede {:gameid-str (:gameid @game-state)}]))
@@ -592,8 +593,13 @@
 (defn handle-drop [e locale]
   (-> e .-target js/$ (.removeClass "dragover"))
   (let [card (-> e .-dataTransfer (.getData "card") ((.-parse js/JSON)) (js->clj :keywordize-keys true))
-        side (if (#{"HQ" "R&D" "Archives" "Sites"} locale) "Contestant" "Challenger")]
-    (send-command "move" {:card card :locale locale})))
+        side (if (#{"HQ" "R&D" "Archives" "Sites"} locale) "Contestant" "Challenger")
+        location (if (#{"Sites"} locale) true false)]
+    (if location
+      (when (or (= "Site" (:type card)) (= "Region" (:type card)))
+        (send-command "move" {:card card :locale locale}))
+      (send-command "move" {:card card :locale locale})
+      )))
 
 (defn abs [n] (max n (- n)))
 
@@ -949,7 +955,7 @@
     board? (send-command "close-sideboard")
     fw-dc? (send-command "close-fw-dc-sb")
     deck? (send-command "close-deck")
-    msg (send-command "system-msg" {:msg msg}))
+    msg (when (not (= "" msg)) (send-command "system-msg" {:msg msg})))
   (.stopPropagation event))
 
 (defn label [cursor owner opts]
@@ -1334,7 +1340,7 @@
                tap-arrow (sab/html [:div.tap-arrow [:div]])
                max-hosted (apply max (map #(count (:hosted %)) characters))]
            [:div.characters {:style {:width (when (pos? max-hosted)
-                                              (+ 42 3 (* 21 (dec max-hosted))))}}
+                                              (+ 14 3 (* 7 (dec max-hosted))))}}
             (when-let [run-card (:card (:run-effect run))]
               [:div.run-card (om/build card-img run-card)])
             (for [character (reverse characters)]
@@ -1468,21 +1474,21 @@
                [:div {:on-click #(show-map % owner map-ref)} "Std-sites"]
                ]))
          (when (= (:side @game-state) side)
-           [:div.panel.blue-shade.popup {:ref reg-content-ref}
-            [:div {:style {:width 708}}
+           [:div.panel.blue-shade.popup {:ref reg-content-ref :style {:width 716}}
+            [:div {:style {:width 716}}
              (standard-map show-sites owner reg-ref map-menu-ref)
-             [:a {:on-click #(close-popup % owner reg-content-ref "stops looking at the map" false true false false false)}
+             [:a {:on-click #(close-popup % owner reg-content-ref "" false true false false false)}
               "Close"]]
             ])
-         [:div.panel.blue-shade.popup {:ref map-content-ref}
-          [:div {:style {:width 708}}
+         [:div.panel.blue-shade.popup {:ref map-content-ref :style {:width 716}}
+          [:div {:style {:width 716}}
            (standard-map show-sites owner site-ref map-menu-ref)
-           [:a {:on-click #(close-popup % owner map-content-ref "stops looking at the map" false true false false false)}
+           [:a {:on-click #(close-popup % owner map-content-ref "" false true false false false)}
             "Close"]]
           ]
-         [:div.panel.blue-shade.popup {:ref site-content-ref}
-          [:div {:style {:width 708}}
-           [:a {:on-click #(close-popup % owner site-content-ref "stops looking at a region" false true false false false)}
+         [:div.panel.blue-shade.popup {:ref site-content-ref :style {:width 716}}
+          [:div {:style {:width 716}}
+           [:a {:on-click #(close-popup % owner site-content-ref "" false true false false false)}
             "Close"]]
           (om/build-all card-view location {:key :cid})
           ]
@@ -1490,18 +1496,18 @@
            [:div.panel.blue-shade.popup-map {:ref reg-content-ref-north}
             [:div
              (dreamcard-map-north show-sites owner reg-ref-north map-menu-ref-north)
-             [:a {:on-click #(close-popup % owner reg-content-ref-north "stops looking at the map" false true false false false)}
+             [:a {:on-click #(close-popup % owner reg-content-ref-north "" false true false false false)}
               "Close"]]
             ])
          [:div.panel.blue-shade.popup-map {:ref map-content-ref-north}
           [:div
            (dreamcard-map-north show-sites owner site-ref-north map-menu-ref-north)
-           [:a {:on-click #(close-popup % owner map-content-ref-north "stops looking at the map" false true false false false)}
+           [:a {:on-click #(close-popup % owner map-content-ref-north "" false true false false false)}
             "Close"]]
           ]
          [:div.panel.blue-shade.popup-map {:ref site-content-ref-north}
           [:div
-           [:a {:on-click #(close-popup % owner site-content-ref-north "stops looking at a region" false true false false false)}
+           [:a {:on-click #(close-popup % owner site-content-ref-north "" false true false false false)}
             "Close"]]
           (om/build-all card-view location {:key :cid})
           ]
@@ -1509,18 +1515,18 @@
            [:div.panel.blue-shade.popup-map {:ref reg-content-ref-west}
             [:div
              (dreamcard-map-west show-sites owner reg-ref-west map-menu-ref-west)
-             [:a {:on-click #(close-popup % owner reg-content-ref-west "stops looking at the map" false true false false false)}
+             [:a {:on-click #(close-popup % owner reg-content-ref-west "" false true false false false)}
               "Close"]]
             ])
          [:div.panel.blue-shade.popup-map {:ref map-content-ref-west}
           [:div
            (dreamcard-map-west show-sites owner site-ref-west map-menu-ref-west)
-           [:a {:on-click #(close-popup % owner map-content-ref-west "stops looking at the map" false true false false false)}
+           [:a {:on-click #(close-popup % owner map-content-ref-west "" false true false false false)}
             "Close"]]
           ]
          [:div.panel.blue-shade.popup-map {:ref site-content-ref-west}
           [:div
-           [:a {:on-click #(close-popup % owner site-content-ref-west "stops looking at a region" false true false false false)}
+           [:a {:on-click #(close-popup % owner site-content-ref-west "" false true false false false)}
             "Close"]]
           (om/build-all card-view location {:key :cid})
           ]
@@ -1528,18 +1534,18 @@
            [:div.panel.blue-shade.popup-map {:ref reg-content-ref-cent}
             [:div
              (dreamcard-map-central show-sites owner reg-ref-cent map-menu-ref-cent)
-             [:a {:on-click #(close-popup % owner reg-content-ref-cent "stops looking at the map" false true false false false)}
+             [:a {:on-click #(close-popup % owner reg-content-ref-cent "" false true false false false)}
               "Close"]]
             ])
          [:div.panel.blue-shade.popup-map {:ref map-content-ref-cent}
           [:div
            (dreamcard-map-central show-sites owner site-ref-cent map-menu-ref-cent)
-           [:a {:on-click #(close-popup % owner map-content-ref-cent "stops looking at the map" false true false false false)}
+           [:a {:on-click #(close-popup % owner map-content-ref-cent "" false true false false false)}
             "Close"]]
           ]
          [:div.panel.blue-shade.popup-map {:ref site-content-ref-cent}
           [:div
-           [:a {:on-click #(close-popup % owner site-content-ref-cent "stops looking at a region" false true false false false)}
+           [:a {:on-click #(close-popup % owner site-content-ref-cent "" false true false false false)}
             "Close"]]
           (om/build-all card-view location {:key :cid})
           ]
@@ -1547,18 +1553,18 @@
            [:div.panel.blue-shade.popup-map {:ref reg-content-ref-south}
             [:div
              (dreamcard-map-south show-sites owner reg-ref-south map-menu-ref-south)
-             [:a {:on-click #(close-popup % owner reg-content-ref-south "stops looking at the map" false true false false false)}
+             [:a {:on-click #(close-popup % owner reg-content-ref-south "" false true false false false)}
               "Close"]]
             ])
          [:div.panel.blue-shade.popup-map {:ref map-content-ref-south}
           [:div
            (dreamcard-map-south show-sites owner site-ref-south map-menu-ref-south)
-           [:a {:on-click #(close-popup % owner map-content-ref-south "stops looking at the map" false true false false false)}
+           [:a {:on-click #(close-popup % owner map-content-ref-south "" false true false false false)}
             "Close"]]
           ]
          [:div.panel.blue-shade.popup-map {:ref site-content-ref-south}
           [:div
-           [:a {:on-click #(close-popup % owner site-content-ref-south "stops looking at a region" false true false false false)}
+           [:a {:on-click #(close-popup % owner site-content-ref-south "" false true false false false)}
             "Close"]]
           (om/build-all card-view location {:key :cid})
           ]

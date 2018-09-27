@@ -882,6 +882,7 @@
                     [:div count " cards"
                      (when (< count min-count)
                        [:span.invalid (str " (minimum " min-count ")")])])
+                  (comment
                   (let [inf (decks/influence-count deck)
                         id-limit (decks/id-inf-limit identity)]
                     [:div "Influence: "
@@ -889,7 +890,7 @@
                      [:span {:class (if (> inf id-limit) (if (> inf id-limit) "invalid" "casual") "legal")} inf]
                      "/" (if (= INFINITY id-limit) "∞" id-limit)
                      (if (pos? inf)
-                       (list " " (deck-influence-html deck)))])
+                       (list " " (deck-influence-html deck)))]))
                   (when (= (:alignment identity) "Crazy")
                     (let [min-point (decks/min-agenda-points deck)
                           points (decks/agenda-points deck)]

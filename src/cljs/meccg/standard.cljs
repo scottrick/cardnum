@@ -8,7 +8,7 @@
                  :id "Layer_1"
                  :x "0px" :y "0px"
                  ;;:enableBackground "new 0 0 702 468;"
-                 :background-image "url('/img/map-alt@2x.png')"
+                 :background-image "url('/img/map-small@2x.png')"
                  :background-size "702px 468px"
                  :viewBox "0 0 702 468"
                  :xmlSpace "preserve"
