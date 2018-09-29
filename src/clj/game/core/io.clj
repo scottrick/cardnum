@@ -378,6 +378,7 @@
           "/end-run"    #(when (= %2 :contestant) (end-run %1 %2))
           "/error"      show-error-toast
               ;"/handsize"   #(swap! %1 assoc-in [%2 :hand-size-modification] (- (max 0 value) (:hand-size-base %2)))
+          "/facedown"   #(command-facedown %1 %2)
           "/hide"  #(resolve-ability %1 %2
                                         {:prompt "Select a card to hide"
                                          :effect (req (let [c (deactivate %1 %2 target)]
@@ -441,6 +442,7 @@
                                                       {:title "/psi command" :side %2}
                                                       {:equal  {:msg "resolve equal bets effect"}
                                                        :not-equal {:msg "resolve unequal bets effect"}}))
+          "/re-order"      #(re-order %1 %2 value)
           "/reveal-hand"   #(reveal-hand %1 %2)
           "/reveal"        #(resolve-ability %1 %2
                                             {:effect (effect (reveal target {:ignore-cost :all-costs :force true}))
@@ -466,7 +468,6 @@
                                                           (move %1 %2 c :scored)))
                                            :choices {:req (fn [t] true)}}
                                           {:title "/score command"} nil)
-          "/facedown"   #(command-facedown %1 %2)
           "/roll"       #(command-roll %1 %2 value)
           "/r"          #(basic-roll %1 %2)
           "/tag"        #(swap! %1 assoc-in [%2 :tag] (max 0 value))

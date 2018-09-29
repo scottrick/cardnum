@@ -512,6 +512,21 @@
   [state side]
   (swap! state assoc-in [side :openhand] true))
 
+(defn vec-order [n]
+  (into [] (if (pos? n)
+             (conj (vec-order (quot n 10)) (mod n 10) )
+             [])))
+
+(defn new-index [index new-order] (.indexOf new-order (inc index)))
+
+(defn re-order [state side value]
+  (swap! state update-in [side :hand]
+             (fn [hand]
+               (->> hand
+                    (map-indexed (fn [index card] [(new-index index (vec-order value)) card]))
+                    (sort-by first)
+                    (mapv second)))))
+
 (defn hide-hand
   "Hides a side's revealed hand from opponent and spectators."
   [state side]
