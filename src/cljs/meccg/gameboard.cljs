@@ -1008,14 +1008,17 @@
     (sab/html
       (let [side (get-in player [:identity :side])
             size (count (:hand player))
-            name (if (= side "Contestant") "HQ" "Grip")]
+            name (if (= side "Contestant") "HQ" "Grip")
+            status (if (= side "Contestant")
+                      (if (not (get-in @game-state [:contestant :drew])) "Pool" "Hand")
+                      (if (not (get-in @game-state [:challenger :drew])) "Pool" "Hand"))]
         [:div.hand-container
          [:div.hand-controls
           [:div.panel.blue-shade.hand
            (drop-area (:side @game-state) name {:class (when (> size 6) "squeeze")})
            [:div
             (build-hand-card-view player parties "card-wrapper")]
-           (om/build label (:hand player) {:opts {:name "Hand"}})]
+           (om/build label (:hand player) {:opts {:name status}})]
           (when popup
             [:div.panel.blue-shade.hand-expand
              {:on-click #(-> (om/get-node owner "hand-popup") js/$ .fadeToggle)}
@@ -1345,8 +1348,7 @@
                run-arrow (sab/html [:div.run-arrow [:div]])
                tap-arrow (sab/html [:div.tap-arrow [:div]])
                max-hosted (apply max (map #(count (:hosted %)) characters))]
-           [:div.characters {:style {:width (when (pos? max-hosted)
-                                              (+ 14 3 (* 7 (dec max-hosted))))}}
+           [:div.characters
             (when-let [run-card (:card (:run-effect run))]
               [:div.run-card (om/build card-img run-card)])
             (for [character (reverse characters)]
@@ -1946,10 +1948,12 @@
                    (cond-button "EOT Discard" (= (:click me) 75) #(handle-end-of-phase "eot-discard"));; -5
                    (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                    (cond-button "End of Turn" (and (= (:click me) 70)
+                                                   (and (get-in @game-state [:contestant :eot])
+                                                        (get-in @game-state [:challenger :eot]))
                                                    (= (keyword active-player) side) (not end-turn)
                                                    (not contestant-phase-12) (not challenger-phase-12)
                                                    (not (empty? (get-in @game-state [:challenger :identity :title])))
-                                                   ) #(handle-end-turn))
+                                                   ) #(send-command "end-turn"))
                    ]))))
 
                 ;;------BREAK to Hazard Player
