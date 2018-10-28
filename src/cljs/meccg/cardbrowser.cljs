@@ -63,6 +63,8 @@
       (make-span "Dark-hold [D]" "img/dc/me_dh.png")
       (make-span "Darkhavens [V]" "img/dc/me_dha.png")
       (make-span "Darkhaven [V]" "img/dc/me_dha.png")
+      (make-span "Darkhavens [K]" "img/dc/me_dha.png")
+      (make-span "Darkhaven [K]" "img/dc/me_dha.png")
       (make-span "Darkhaven" "img/dc/me_dha.png")
       (make-span "Darkhaven" "img/dc/me_dha.png")
       (make-span "Deserts [ee]" "img/dc/me_ee.png")
@@ -121,7 +123,15 @@
       (make-span "[f]" "img/dc/me_fd.png")
       (make-span "[j]" "img/dc/me_ju.png")
       (make-span "[s]" "img/dc/me_sl.png")
-      (make-span "[w]" "img/dc/me_wi.png")))
+      (make-span "[w]" "img/dc/me_wi.png")
+      (make-span "[B]" "img/dc/me_bh.png")
+      (make-span "[D]" "img/dc/me_dh.png")
+      (make-span "[V]" "img/dc/me_dha.png")
+      (make-span "[K]" "img/dc/me_dha.png")
+      (make-span "[F]" "img/dc/me_fh.png")
+      (make-span "[H]" "img/dc/me_ha.png")
+      (make-span "[R]" "img/dc/me_rl.png")
+      (make-span "[S]" "img/dc/me_sh.png")))
 
 (defn non-game-toast
   "Display a toast warning with the specified message."

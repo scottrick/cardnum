@@ -303,7 +303,10 @@
                                   (send-command "play" {:card card})
                                   (send-command "equip" {:card card}))
                    (send-command "play" {:card card}))
-          ("rig" "onhost" "locales") (handle-abilities card owner)
+          ("onhost") (case type
+                       ("Hazard") (send-command "play" {:card card})
+                       (handle-abilities card owner))
+          ("rig" "locales") (handle-abilities card owner)
           nil)
         ;; Contestant side
         (= side :contestant)
@@ -321,7 +324,10 @@
                                   (send-command "play" {:card card})
                                   (send-command "equip" {:card card}))
                    (send-command "play" {:card card}))
-          ("rig" "onhost" "locales") (handle-abilities card owner)
+          ("onhost") (case type
+                       ("Hazard") (send-command "play" {:card card})
+                       (handle-abilities card owner))
+          ("rig" "locales") (handle-abilities card owner)
           nil)))))
 
 (defn in-play? [card]
@@ -1458,21 +1464,18 @@
          (facedown-card "Locations")
          (om/build label-without location {:opts {:name "Location"}})
          (when (= (:side @game-state) side)
-            (if (get-in @game-state [side :opt-key])
               [:div.panel.blue-shade.menu {:ref map-menu-ref}
                [:div {:on-click #(show-map % owner reg-ref-south)} "South-regions"]
                [:div {:on-click #(show-map % owner reg-ref-cent)} "Central-regions"]
                [:div {:on-click #(show-map % owner reg-ref-west)} "West-regions"]
                [:div {:on-click #(show-map % owner reg-ref-north)} "North-regions"]
                [:div {:on-click #(show-map % owner reg-ref)} "Std-regions"]
-               ]
-              [:div.panel.blue-shade.menu {:ref map-menu-ref}
                [:div {:on-click #(show-map % owner map-ref-south)} "South"]
                [:div {:on-click #(show-map % owner map-ref-cent)} "Central"]
                [:div {:on-click #(show-map % owner map-ref-west)} "West"]
                [:div {:on-click #(show-map % owner map-ref-north)} "North"]
                [:div {:on-click #(show-map % owner map-ref)} "Std-sites"]
-               ]))
+               ])
          (when (= (:side @game-state) side)
            [:div.panel.blue-shade.popup {:ref reg-content-ref :style {:width 716}}
             [:div {:style {:width 716}}
@@ -1873,10 +1876,8 @@
                      (cond-button "Keep Hand" (not (get-in @game-state [:contestant :keep])) #(send-command "keep"))
                      (cond-button "Draw Hand" (not (get-in @game-state [:contestant :keep])) #(send-command "mulligan"))
 
-                     (cond-button "Pass 1st Turn" (and (get-in @game-state [:contestant :keep])
-                                                       (get-in @game-state [:challenger :keep])
-                                                       (= side :contestant)
-                                                       (= (get-in @game-state [:turn]) 0))
+                     (cond-button "Pass Turn" (and (get-in @game-state [:contestant :keep])
+                                                       (get-in @game-state [:challenger :keep]))
                                   #(send-command "not-first"))
                      (cond-button "Start Turn" (and (get-in @game-state [:contestant :keep])
                                                     (or (get-in @game-state [:challenger :keep])
@@ -1888,7 +1889,7 @@
                     [:div
                      (cond-button "Keep Hand" (not (get-in @game-state [:challenger :keep])) #(send-command "keep"))
                      (cond-button "Draw Hand" (not (get-in @game-state [:challenger :keep])) #(send-command "mulligan"))
-                     (cond-button "Pass 1st Turn" nil nil)
+                     (cond-button "Pass Turn" nil nil)
                      (cond-button "Start Turn" nil nil)
                      ]
                     )

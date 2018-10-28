@@ -474,7 +474,7 @@
         best-card (utils/lookup card)]
     (if (js/isNaN qty)
       (om/set-state! owner :quantity 1)
-      (let [max-qty (or (:limited best-card) 1)
+      (let [max-qty 5
             limit-qty (if (> qty max-qty) max-qty qty)]
         (if (= (:type best-card) "Resource")
           (put! (om/get-state owner :resource-edit-channel)
