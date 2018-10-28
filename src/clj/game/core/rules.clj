@@ -517,13 +517,13 @@
              (conj (vec-order (quot n 10)) (mod n 10) )
              [])))
 
-(defn new-index [index new-order] (.indexOf new-order (inc index)))
+(defn new-index [new-order index] (.indexOf new-order (inc index)))
 
 (defn re-order [state side value]
   (swap! state update-in [side :hand]
              (fn [hand]
                (->> hand
-                    (map-indexed (fn [index card] [(new-index index (vec-order value)) card]))
+                    (map-indexed (fn [index card] [(new-index (vec-order value) index) card]))
                     (sort-by first)
                     (mapv second)))))
 
