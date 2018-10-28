@@ -427,16 +427,6 @@
   )
 
 ;; Organization Phase
-(defn not-first
-  [state side args]
-  (start-turn state side args)
-  (swap! state update-in [:turn] dec)
-  (swap! state assoc-in [:contestant :eot] true)
-  (swap! state assoc-in [:challenger :eot] true)
-  (system-msg state side "passes first turn")
-  (let [offset (- 70 (get-in @state [side :click]))]
-    (gain state side :click offset))
-  )
 
 (defn untap-all
   [state side args]
@@ -552,3 +542,15 @@
            (let [turns (if (= 1 extra-turns) "turn" "turns")]
              (system-msg state side (clojure.string/join ["will have " extra-turns " extra " turns " remaining."])))))
        (effect-completed state side eid)))))
+
+(defn not-first
+  [state side args]
+  (start-turn state side args)
+  (swap! state update-in [:turn] dec)
+  (swap! state assoc-in [:contestant :eot] true)
+  (swap! state assoc-in [:challenger :eot] true)
+  (system-msg state side "passes first turn")
+  (let [offset (- 70 (get-in @state [side :click]))]
+    (gain state side :click offset))
+  (end-turn state side args)
+  )
