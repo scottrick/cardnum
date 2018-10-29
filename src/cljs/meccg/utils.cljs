@@ -16,7 +16,8 @@
   [:span {:title "Restricted"} " " restricted-dot])
 
 (def rotated-span
-  [:span.casual {:title "Rotated"} " " rotated-dot])
+  ;[:span.casual {:title "Rotated"} " " rotated-dot])
+  [:span.casual])
 
 (defn- make-dots
   "Returns string of specified dots and number. Uses number for n > 20"

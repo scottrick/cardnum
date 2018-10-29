@@ -99,7 +99,7 @@
   (let [card-set (:set_code card)
         released (:released card)
         date (some #(when (= (:name %) card-set) (:available %)) sets)]
-    (and (released)
+    (and released
          (not= date "")
          (not (nil? date))
          (before-today? date))))
