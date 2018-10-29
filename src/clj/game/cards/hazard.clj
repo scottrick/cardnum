@@ -123,7 +123,7 @@
                  :effect (req (let [r (get-card state card)
                                     old-host (:host r)]
                                 (resolve-ability state side
-                                                 {:msg (msg "to draw 3 cards.")
+                                                 {:msg (msg "reveals hand")
                                                   :effect (effect (set-hand-aside :hand) (move card :discard))} card nil)))}]}
    "Shut Yer Mouth"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}

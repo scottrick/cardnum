@@ -286,6 +286,23 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Eyes of Mandos"
+   {:abilities [{:effect (req
+                           (move state side card :discard)
+                           (let [kount (count (get-in @state [side :deck]))]
+                             (loop [k (if (< kount 8) kount 8)]
+                               (when (> k 0)
+                                 (move state side (first (get-in @state [side :deck])) :play-area)
+                                 (recur (- k 1))))
+                             (resolve-ability state side
+                                              {:prompt "Select a card to put in your hand"
+                                               :choices {:req (fn [t] (card-is? t :side side))}
+                                               :effect (req (doseq [c (get-in @state [side :play-area])]
+                                                              (if (= c target)
+                                                                (move state side c :hand)
+                                                                (move state side c :deck)))
+                                                            (shuffle! state side :deck))
+                                               } nil nil)))}]}
    "Fate of the Ithil-stone"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
