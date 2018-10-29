@@ -220,7 +220,7 @@
                    "Elf" "Nando Elf" "Noldo Elf" "Silvan Elf" "Sinda Elf"
                    "Ringwraith" "Olog-hai Troll" "Troll" "Half-troll" "Uruk-hai Orc" "Half-orc" "Orc"
                    "Balrog" "Demon" "Dragon"])
-(def fact-options ["Dúnadan" "Hobbit" "Dwarf" "Elf" "Man" "Wose" "Umit" "Umli"
+(def fact-options ["Dúnadan" "Hobbit" "Dwarf" "Elf" "Man" "Wose" "Umit"
                    "Mercenary" "Slayer" "Slave" "Undead"
                    "Giant" "Troll" "Orc" "Balrog" "Demon" "Drake" "Dragon"
                    "Ent" "Animal" "Eagle" "Wolf" "Spider" "Special" "Other"])
