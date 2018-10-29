@@ -28,7 +28,7 @@
    :format identity
    :position identity
    :dreamcards (rename :dreamcard)
-   :released (rename :rotated)
+   :released identity
    })
 
 (def mwl-fields
@@ -197,7 +197,6 @@
                             :Information :Palantiri :Scroll :Haven
                             :Stage :Strikes :Specific])
         (assoc :full_set (:name s)
-               :rotated false
                :normalizedtitle (string/lower-case (deaccent (:title c)))))))
 
 (defn fetch-data

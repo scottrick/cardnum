@@ -375,7 +375,7 @@
   (let [influence (* (:factioncost card) qty)
         banned (decks/banned? card)
         restricted (decks/restricted? card)
-        rotated (:rotated card)]
+        released (:released card)]
     (list " "
           (when (and (not banned) (not in-faction))
             [:span.influence {:class (utils/faction-label card)}
@@ -386,7 +386,7 @@
             banned-span
             [:span
              (when restricted restricted-span)
-             (when rotated rotated-span)]))))
+             (when released rotated-span)]))))
 
 (defn deck-influence-html
   "Returns hiccup-ready vector with dots colored appropriately to deck's influence."
@@ -874,7 +874,7 @@
                    (:title identity)
                    (if (decks/banned? identity)
                      banned-span
-                     (when (:rotated identity) rotated-span))]
+                     (when (:released identity) rotated-span))]
                   (let [count (+ (+ (decks/card-count (:resources deck))
                                     (decks/card-count (:hazards deck)))
                                  (decks/card-count (:characters deck)))

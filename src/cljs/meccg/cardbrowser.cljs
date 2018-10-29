@@ -283,6 +283,11 @@
     (filter-cards false :dreamcard cards)
     cards))
 
+(defn filter-released [should-filter cards]
+  (if should-filter
+    (filter-cards true :released cards)
+    cards))
+
 (defn filter-title [query cards]
   (if (empty? query)
     cards
@@ -315,6 +320,16 @@
            (first)
            (:dreamcards)))))
 
+(defn selected-set-released? [{:keys [sets]} state]
+  (let [s (selected-set-name state)
+        combined sets]
+    (if (= s "All")
+      false
+      (->> combined
+           (filter #(= s (:name %)))
+           (first)
+           (:released)))))
+
 (defn handle-scroll [e owner {:keys [page]}]
   (let [$cardlist (js/$ ".card-list")
         height (- (.prop $cardlist "scrollHeight") (.innerHeight $cardlist))]
@@ -337,7 +352,8 @@
        :alignment-filter "All"
        :secondary-filter "All"
        :haven-filter "All"
-       :hide-dreamcards true
+       :hide-dreamcards false
+       :only-released true
        :page 1
        :filter-ch (chan)
        :selected-card nil})
@@ -380,7 +396,9 @@
 
           (let [format-pack-name (fn [name] (str "&nbsp;&nbsp;&nbsp;&nbsp;" name))
                 hide-dreamcards (:hide-dreamcards state)
-                sets-filtered (filter-dreamcards hide-dreamcards sets)
+                released-only (:only-released state)
+                dc-filtered (filter-dreamcards hide-dreamcards sets)
+                sets-filtered (filter-released released-only dc-filtered)
                 ;; Draft is specified as a cycle, but contains no set, nor is it marked as a bigbox
                 ;; so we handled it specifically here for formatting purposes
                 sets-list (map #(if (not (or (:bigbox %) (= (:name %) "Draft")))
@@ -439,6 +457,16 @@
                                                             (om/set-state! owner :set-filter "All"))
                                                           )}]
             "Hide Dreamcards"]]
+          [:div.only-released-div
+           [:label [:input.only-released {:type "checkbox"
+                                            :value true
+                                            :checked (om/get-state owner :only-released)
+                                            :on-change #(let [hide (.. % -target -checked)]
+                                                          (om/set-state! owner :only-released hide)
+                                                          (when (and hide (selected-set-released? cursor state))
+                                                            (om/set-state! owner :set-filter "All"))
+                                                          )}]
+            "Only Released"]]
 
           (om/build card-info-view cursor {:state {:selected-card (:selected-card state)}})
           ]
@@ -452,6 +480,7 @@
                                                    [nil (filter #(= (:full_set %) s) @all-cards)])]
                           (->> cards
                                (filter-dreamcards (:hide-dreamcards state))
+                               (filter-released (:only-released state))
                                (filter-cards (:primary-filter state) :type)
                                (filter-cards (:alignment-filter state) :alignment)
                                (filter-second (if (= (:primary-filter state) "Site") true false) (:secondary-filter state))
