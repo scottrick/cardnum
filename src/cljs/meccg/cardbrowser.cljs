@@ -215,6 +215,16 @@
                 "Firstborn" "Durin's Folk" "The Necromancer" "Bay of Ormal" "Court of Ardor" "The Great Central Plains" "The Dominion of the Seven"
                 "The Great Wyrms" "Kingdom of the North" "Morgoth's Legacy" "Nine Rings for Mortal Men" "The Northern Waste" "Red Nightfall"
                 "Return of the Shadow" "The Sun Lands" "Treason of Isengard" "War of the Ring"])
+(def race-options ["Wizard" "Dúnadan" "Hobbit" "Man" "Wose" "Umit"
+                   "Dwarf" "Firebeard Dwarf" "Ironfist Dwarf" "Longbeard Dwarf"
+                   "Elf" "Nando Elf" "Noldo Elf" "Silvan Elf" "Sinda Elf"
+                   "Ringwraith" "Olog-hai Troll" "Troll" "Half-troll" "Uruk-hai Orc" "Half-orc" "Orc"
+                   "Balrog" "Demon" "Dragon"])
+(def fact-options ["Dúnadan" "Hobbit" "Dwarf" "Elf" "Man" "Wose" "Umit" "Umli"
+                   "Mercenary" "Slayer" "Slave" "Undead"
+                   "Giant" "Troll" "Orc" "Balrog" "Demon" "Drake" "Dragon"
+                   "Ent" "Animal" "Eagle" "Wolf" "Spider" "Special" "Other"])
+(def skill-options ["Diplomat" "Warrior" "Ranger" "Scout" "Sage"])
 
 (defn secondaries [primary]
   (case primary
@@ -268,15 +278,13 @@
     (filter-cards true :Gear cards)
     "Non-battle-gear"
     (filter-cards true :Non cards)
-    )
-  )
+    ))
 
 (defn filter-second [site-filter filter-value cards]
   (if site-filter
     (filter-sites filter-value cards)
     (filter-cards filter-value :Secondary cards)
-    )
-  )
+    ))
 
 (defn filter-dreamcards [should-filter cards]
   (if should-filter
@@ -352,6 +360,7 @@
        :alignment-filter "All"
        :secondary-filter "All"
        :haven-filter "All"
+       :race-filter "All"
        :hide-dreamcards false
        :only-released true
        :page 1
@@ -436,16 +445,32 @@
                    [:select {:value ((second filter) state)
                              :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
                     (options (last filter))]]))
-              (for [filter [["Set" :set-filter set-names]
-                            ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
-                            ["Align" :alignment-filter (alignments (:primary-filter state))]
-                            ["Strict" :secondary-filter (secondaries (:primary-filter state))]]]
-                [:div
-                 [:h4 (first filter)]
-                 [:select {:value ((second filter) state)
-                           :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
-                  (options (last filter))]]))
-            )
+              (if (or (= (:primary-filter state) "Character")
+                      (= (:secondary-filter state) "Faction"))
+                (let [type-options (if (= (:primary-filter state) "Character")
+                                     race-options
+                                     fact-options)]
+                  (for [filter [["Set" :set-filter set-names]
+                                ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
+                                ["Align" :alignment-filter (alignments (:primary-filter state))]
+                                ["Strict" :secondary-filter (secondaries (:primary-filter state))]
+                                ["Race" :race-filter type-options]
+                                ]]
+                    [:div
+                     [:h4 (first filter)]
+                     [:select {:value     ((second filter) state)
+                               :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
+                      (options (last filter))]]))
+                (for [filter [["Set" :set-filter set-names]
+                              ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
+                              ["Align" :alignment-filter (alignments (:primary-filter state))]
+                              ["Strict" :secondary-filter (secondaries (:primary-filter state))]]]
+                  [:div
+                   [:h4 (first filter)]
+                   [:select {:value     ((second filter) state)
+                             :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
+                    (options (last filter))]])
+                )))
 
           [:div.hide-dreamcards-div
            [:label [:input.hide-dreamcards {:type "checkbox"
@@ -485,6 +510,7 @@
                                (filter-cards (:alignment-filter state) :alignment)
                                (filter-second (if (= (:primary-filter state) "Site") true false) (:secondary-filter state))
                                (filter-cards (:haven-filter state) :Haven)
+                               (filter-cards (:race-filter state) :Race)
                                (filter-title (:search-query state))
                                (sort-by (sort-field (:sort-field state)))
                                (take (* (:page state) 28))))
