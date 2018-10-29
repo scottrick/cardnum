@@ -1602,14 +1602,14 @@
        (om/build deck-view player)
        (om/build discard-view player)])))
 
-(defmulti event-view #(get-in % [:player :identity :side]))
+(defmulti resource-view #(get-in % [:player :identity :side]))
 
-(defmethod event-view "Contestant" [{:keys [player run]}]
+(defmethod resource-view "Contestant" [{:keys [player run]}]
   (om/component
     (sab/html
       (let [is-me (= (:side @game-state) :contestant)]
         [:div.contestant-rig {:class (if is-me "me" "opponent")}
-         (for [zone [:resource :hazard :facedown]]
+         (for [zone [:resource :facedown]]
             (for [c (zone (:rig player))]
               [:div
                [:div.card-wrapper {:class (if (:tapped c)
@@ -1626,12 +1626,12 @@
               ))
          ]))))
 
-(defmethod event-view "Challenger" [{:keys [player run]}]
+(defmethod resource-view "Challenger" [{:keys [player run]}]
   (om/component
     (sab/html
       (let [is-me (= (:side @game-state) :challenger)]
         [:div.challenger-rig {:class (if is-me "me" "opponent")}
-         (for [zone [:resource :hazard :facedown]]
+         (for [zone [:resource :facedown]]
             (for [c (zone (:rig player))]
               [:div
                [:div.card-wrapper {:class (if (:tapped c)
@@ -1646,6 +1646,52 @@
                  [:div.host-group
                   (host-view (reverse (:hosted c)))])]
               ))
+         ]))))
+
+(defmulti hazard-view #(get-in % [:player :identity :side]))
+
+(defmethod hazard-view "Contestant" [{:keys [player run]}]
+  (om/component
+    (sab/html
+      (let [is-me (= (:side @game-state) :contestant)]
+        [:div.contestant-rig {:class (if is-me "me" "opponent")}
+         (for [zone [:hazard]]
+           (for [c (zone (:rig player))]
+             [:div
+              [:div.card-wrapper {:class (if (:tapped c)
+                                           "tapped"
+                                           (if (:inverted c)
+                                             "inverted"
+                                             (if (:rotated c)
+                                               "rotated"
+                                               nil)))}
+               (om/build card-view c)]
+              (when (pos? (count (:hosted c)))
+                [:div.host-group
+                 (host-view (reverse (:hosted c)))])]
+             ))
+         ]))))
+
+(defmethod hazard-view "Challenger" [{:keys [player run]}]
+  (om/component
+    (sab/html
+      (let [is-me (= (:side @game-state) :challenger)]
+        [:div.challenger-rig {:class (if is-me "me" "opponent")}
+         (for [zone [:hazard]]
+           (for [c (zone (:rig player))]
+             [:div
+              [:div.card-wrapper {:class (if (:tapped c)
+                                           "tapped"
+                                           (if (:inverted c)
+                                             "inverted"
+                                             (if (:rotated c)
+                                               "rotated"
+                                               nil)))}
+               (om/build card-view c)]
+              (when (pos? (count (:hosted c)))
+                [:div.host-group
+                 (host-view (reverse (:hosted c)))])]
+             ))
          ]))))
 
 (defmulti board-view #(get-in % [:player :identity :side]))
@@ -2152,8 +2198,10 @@
 
              [:div.centralpane
               (om/build board-view {:player opponent :run run})
-              (om/build event-view {:player opponent :run run})
-              (om/build event-view {:player me :run run})
+              (om/build resource-view {:player opponent :run run})
+              (om/build hazard-view {:player opponent :run run})
+              (om/build hazard-view {:player me :run run})
+              (om/build resource-view {:player me :run run})
               (om/build board-view {:player me :run run})]
 
              [:div.leftpane

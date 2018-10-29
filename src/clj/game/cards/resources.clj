@@ -1112,7 +1112,7 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
-   "Saruman's Ring"
+   "Sarumans Ring"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
