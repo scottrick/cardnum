@@ -192,7 +192,7 @@
               (card-text selected-card cursor)]]))))))
 
 (def primary-order ["Character" "Resource" "Hazard" "Site" "Region"])
-(def resource-secondaries ["Ally" "Faction" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
+(def resource-secondaries ["Ally" "Avatar" "Faction" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
 (def site-secondaries ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Information" "Hoard" "Scroll" "Palantír" "Battle-gear" "Non-battle-gear"])
 (def shared-secondaries ["Permanent-event" "Short-event" "Long-event" "Permanent-event/Short-event" "Permanent-event/Long-event" "Short-event/Long-event"])
 (def hazard-secondaries ["Creature" "Creature/Permanent-event" "Creature/Short-event" "Creature/Long-event"])

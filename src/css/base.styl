@@ -79,7 +79,7 @@ section
 
 input, select, textarea
   font-family: "Titillium Web", "Helvetica Neue", sans-serif
-  font-size: 13px
+  font-size: 10px
   border-radius: 4px
   padding: 0 5px
   margin: 0
@@ -1627,7 +1627,14 @@ align-radio
     top: 0
     left: 0
 
-  .deck, .discard, .identity
+  .deck, .identity
+    position: relative
+    height: 84px
+    width: 60px
+    border-radius: 4px
+
+  .discard
+    z-index: 60
     position: relative
     height: 84px
     width: 60px

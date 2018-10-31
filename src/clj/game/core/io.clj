@@ -430,8 +430,12 @@
                                                                             (= "Minion" (:alignment t)))))}}
                                           {:title "/p command"} nil)
           "/re-deck"    #(resolve-ability %1 %2
-                                        {:effect (effect (shuffle-into-deck {} :discard))}
-                                        {:title "/re-deck command"} nil)
+                                          {:effect (req (doseq [c (get-in @%1 [%2 :discard])]
+                                                          (if (= (:type c) "Site")
+                                                            (move %1 %2 c :location)
+                                                            (move %1 %2 c :deck)))
+                                                        (shuffle! %1 %2 :deck))
+                                           } {:title "/re-deck command"} nil)
           "/psi"        #(when (= %2 :contestant) (psi-game %1 %2
                                                       {:title "/psi command" :side %2}
                                                       {:equal  {:msg "resolve equal bets effect"}
