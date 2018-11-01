@@ -128,8 +128,8 @@
     (let [side :contestant]
       (swap! state assoc-in [side :keep] true)
       (swap! state assoc-in [side :drew] true)
-      (swap! state assoc :active-player side :per-turn nil :end-turn false)
-      (let [offset (- 100 (get-in @state [side :click]))]
+      (swap! state assoc :active-player side :per-turn nil :end-turn true)
+      (let [offset (* -1 (get-in @state [side :click]))]
         (gain state side :click offset)))
     (let [side :challenger]
       (swap! state assoc-in [side :keep] true)

@@ -54,11 +54,10 @@
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
                                                  {:prompt (if hosted?
-                                                            (msg "You may not play this on a different character")
-                                                            (msg "Place this card on a character"))
+                                                            (msg "You may not play this on a different Palantîr")
+                                                            (msg "Place this card on a Palantîr"))
                                                   :choices {:req #(if (not hosted?)
-                                                                    (and (character? %)
-                                                                         (can-host? %)))}
+                                                                    (can-host? %))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Ancient Knowledge"
@@ -336,6 +335,18 @@
                                                   :choices {:req #(if (not hosted?)
                                                                     (and (character? %)
                                                                          (can-host? %)))}
+                                                  :msg (msg "host it on " (card-str state target))
+                                                  :effect (effect (host target card))} card nil)))}]}
+   "Focus Palantír"
+   {:abilities [{:label "Place"
+                 :effect (req (let [r (get-card state card)
+                                    hosted? (character? (:host r))]
+                                (resolve-ability state side
+                                                 {:prompt (if hosted?
+                                                            (msg "You may not play this on a different Palantîr")
+                                                            (msg "Place this card on a Palantîr"))
+                                                  :choices {:req #(if (not hosted?)
+                                                                    (can-host? %))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Fosterhome of Royal Heirs"

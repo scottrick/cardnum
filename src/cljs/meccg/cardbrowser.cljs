@@ -280,6 +280,18 @@
     (filter-cards true :Non cards)
     ))
 
+(defn filter-race [race-filter filter-value cards]
+  (if race-filter
+    cards
+    (filter-cards filter-value :Race cards)
+    ))
+
+(defn filter-haven [haven-filter filter-value cards]
+  (if haven-filter
+    cards
+    (filter-cards filter-value :Haven cards)
+    ))
+
 (defn filter-second [site-filter filter-value cards]
   (if site-filter
     (filter-sites filter-value cards)
@@ -509,8 +521,9 @@
                                (filter-cards (:primary-filter state) :type)
                                (filter-cards (:alignment-filter state) :alignment)
                                (filter-second (if (= (:primary-filter state) "Site") true false) (:secondary-filter state))
-                               (filter-cards (:haven-filter state) :Haven)
-                               (filter-cards (:race-filter state) :Race)
+                               (filter-haven (if (= (:primary-filter state) "Site") false true) (:haven-filter state))
+                               (filter-race (if (= (:primary-filter state) "Character") false true) (:race-filter state))
+                               (filter-race (if (= (:secondary-filter state) "Faction") false true) (:race-filter state))
                                (filter-title (:search-query state))
                                (sort-by (sort-field (:sort-field state)))
                                (take (* (:page state) 28))))

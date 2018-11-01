@@ -488,7 +488,7 @@
    {:qty 1 :card "Arig's Tomb" :id "[H] (DS)"}
    {:qty 1 :card "Arpel" :id "[H] (DS)"}
    {:qty 1 :card "Auz Azunan" :id "[H] (SL)"}
-   {:qty 1 :card "Azagarbhun" :id "[H] (BO)"}
+   {:qty 1 :card "Azagarbhun" :id "[H] (CP)"}
    {:qty 1 :card "Bag End" :id "[H] (TW)"}
    {:qty 1 :card "Balchoth Camp" :id "[H] (CP)"}
    {:qty 1 :card "Bandit Lair" :id "[H] (TW)"}
@@ -605,6 +605,7 @@
    {:qty 1 :card "Hollow Spire" :id "[H] (ML)"}
    {:qty 1 :card "Hostel of the Sisters of Nienna" :id "[H] (KN)"}
    {:qty 1 :card "Hyvät Kalat" :id "[H] (NW)"}
+   {:qty 1 :card "Iorag Camp" :id "[H] (CP)"}
    {:qty 4 :card "Inyalonî" :id "[H] (BO)"}
    {:qty 1 :card "Irerock" :id "[H] (TW)"}
    {:qty 1 :card "Iron Hill Dwarf-hold" :id "[H] (TW)"}
@@ -651,7 +652,7 @@
    {:qty 1 :card "Lossadan Camp" :id "[H] (TW)"}
    {:qty 1 :card "Lossarnach" :id "[H] (WR)"}
    {:qty 1 :card "Lothragh Camp" :id "[H] (ML)"}
-   {:qty 1 :card "Lugarlur" :id "[H] (NE)"}
+   {:qty 1 :card "Lugarlûr" :id "[H] (NE)"}
    {:qty 1 :card "Lugdruong" :id "[H] (ML)"}
    {:qty 1 :card "Mablad-dûm" :id "[H] (SL)"}
    {:qty 1 :card "Maglgolodh's Cave" :id "[H] (NW)"}
@@ -832,7 +833,7 @@
    {:qty 1 :card "Wellinghall" :id "[H] (TW)"}
    {:qty 1 :card "Woodmen-town" :id "[H] (TW)"}
    {:qty 1 :card "Wose Passage-hold" :id "[H] (TW)"}
-   {:qty 1 :card "Xyunai" :id "[H] (BO)"}
+   {:qty 1 :card "Xyunaï" :id "[H] (BO)"}
    {:qty 1 :card "Yatali Kîrgan" :id "[H] (BO)"}
    {:qty 1 :card "Yjuvït" :id "[H] (ML)"}
    {:qty 1 :card "Zarak Dûm" :id "[H] (TD)"}
@@ -864,7 +865,7 @@
    {:qty 1 :card "Arig's Tomb" :id "[M] (DS)"}
    {:qty 1 :card "Arpel" :id "[M] (DS)"}
    {:qty 1 :card "Auz Azunan" :id "[M] (SL)"}
-   {:qty 1 :card "Azagarbhun" :id "[M] (BO)"}
+   {:qty 1 :card "Azagarbhun" :id "[M] (CP)"}
    {:qty 1 :card "Bag End" :id "[M] (LE)"}
    {:qty 1 :card "Balchoth Camp" :id "[M] (CP)"}
    {:qty 1 :card "Bandit Lair" :id "[M] (LE)"}
@@ -981,6 +982,7 @@
    {:qty 1 :card "Hollow Spire" :id "[M] (ML)"}
    {:qty 1 :card "Hostel of the Sisters of Nienna" :id "[M] (KN)"}
    {:qty 1 :card "Hyvät Kalat" :id "[M] (NW)"}
+   {:qty 1 :card "Iorag Camp" :id "[M] (CP)"}
    {:qty 1 :card "Inyalonî" :id "[M] (BO)"}
    {:qty 1 :card "Irerock" :id "[M] (AS)"}
    {:qty 1 :card "Iron Hill Dwarf-hold" :id "[M] (LE)"}
@@ -1027,7 +1029,7 @@
    {:qty 1 :card "Lossadan Camp" :id "[M] (LE)"}
    {:qty 1 :card "Lossarnach" :id "[M] (WR)"}
    {:qty 1 :card "Lothragh Camp" :id "[M] (ML)"}
-   {:qty 1 :card "Lugarlur" :id "[M] (NE)"}
+   {:qty 1 :card "Lugarlûr" :id "[M] (NE)"}
    {:qty 1 :card "Lugdruong" :id "[M] (ML)"}
    {:qty 1 :card "Mablad-dûm" :id "[M] (SL)"}
    {:qty 1 :card "Maglgolodh's Cave" :id "[M] (NW)"}
@@ -1208,7 +1210,7 @@
    {:qty 1 :card "Wellinghall" :id "[M] (AS)"}
    {:qty 1 :card "Woodmen-town" :id "[M] (LE)"}
    {:qty 1 :card "Wose Passage-hold" :id "[M] (LE)"}
-   {:qty 1 :card "Xyunai" :id "[M] (BO)"}
+   {:qty 1 :card "Xyunaï" :id "[M] (BO)"}
    {:qty 1 :card "Yatali Kîrgan" :id "[M] (BO)"}
    {:qty 1 :card "Yjuvït" :id "[M] (ML)"}
    {:qty 1 :card "Zarak Dûm" :id "[M] (LE)"}
@@ -1216,6 +1218,7 @@
 
    ;; BALROG SITES
    {:qty 1 :card "Ancient Deep-hold" :id "[B] (BA)"}
+   {:qty 1 :card "Amaru" :id "[B] (CA)"}
    {:qty 1 :card "Barad-dûr" :id "[B] (BA)"}
    {:qty 1 :card "Carn Dûm" :id "[B] (BA)"}
    {:qty 1 :card "Cirith Gorgor" :id "[B] (BA)"}
