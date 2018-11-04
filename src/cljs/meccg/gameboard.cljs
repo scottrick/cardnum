@@ -509,7 +509,7 @@
     (= e.keyCode 39) ;// right-arrow
     (let [side (:side @game-state)]
       (if-let [card (get-in @game-state [side :hold-card])]
-        (send-command "system-msg" {:msg (str (:ImageName card))}))))
+        (send-command "system-msg" {:msg card}))))
   )
 
 (defn handle-key-up [e]
@@ -2151,6 +2151,7 @@
             (let [card (<! zoom-channel)]
               (-> ".direct" js/$ .focus)
               (om/set-state! owner :zoom card)
+              (if card (send-command "blind-hold" {:card (:ImageName card)}))
               ))))
 
     om/IDidUpdate
