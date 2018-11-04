@@ -499,7 +499,7 @@
     (when (pos? (count image))
       image)))
 
-(defn handle-key-down [e]
+(defn handle-key-down [e owner]
   (cond
     (= e.keyCode 18) ;// option
     (send-command "option-key-down")
@@ -516,6 +516,8 @@
   (cond
     (= e.keyCode 37) ;// shift
     (send-command "blind-zoom")
+    (= e.keyCode 39) ;// shift
+    (send-command "blind-hold")
     )
   )
 
@@ -563,7 +565,7 @@
     om/IRenderState
     (render-state [this state]
       (sab/html
-        [:div.log {:on-key-down #(handle-key-down %)
+        [:div.log {:on-key-down #(handle-key-down % owner)
                    ;:on-key-up #(handle-key-up %)
                    :on-mouse-over #(card-preview-mouse-over % zoom-channel)
                    :on-mouse-out  #(card-preview-mouse-out % zoom-channel)}
@@ -2149,7 +2151,6 @@
             (let [card (<! zoom-channel)]
               (-> ".direct" js/$ .focus)
               (om/set-state! owner :zoom card)
-              (when card (send-command "blind-hold" {:card card}))
               ))))
 
     om/IDidUpdate
@@ -2178,10 +2179,10 @@
              [:div {:class (:background (:options @app-state))}]
              [:div.rightpane
               [:div.card-zoom
-                 (if-let [card (om/get-state owner :zoom)]
-                   (om/build card-zoom card)
-                   (if (get-in @game-state [side :blind])
-                     (om/build card-blind (get-in @game-state [side :hold-card]))))]
+               (if-let [card (om/get-state owner :zoom)]
+                 (if (get-in @game-state [side :blind])
+                   (om/build card-blind card)
+                   (om/build card-zoom card)))]
               ;; card implementation info
               (when-let [card (om/get-state owner :zoom)]
                 (let [implemented (:implementation card)]
