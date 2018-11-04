@@ -2178,13 +2178,10 @@
              [:div {:class (:background (:options @app-state))}]
              [:div.rightpane
               [:div.card-zoom
-               (if (= side :spectator)
-                 (when-let [card (om/get-state owner :zoom)]
-                   (om/build card-zoom card))
-                 (if (get-in @game-state [side :blind])
-                   (om/build card-blind (get-in @game-state [side :hold-card]))
-                   (om/build card-zoom (get-in @game-state [side :hold-card])))
-                 )]
+                 (if-let [card (om/get-state owner :zoom)]
+                   (om/build card-zoom card)
+                   (if (get-in @game-state [side :blind])
+                     (om/build card-blind (get-in @game-state [side :hold-card]))))]
               ;; card implementation info
               (when-let [card (om/get-state owner :zoom)]
                 (let [implemented (:implementation card)]
