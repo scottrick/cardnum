@@ -124,8 +124,9 @@
   (ws/ws-send! [:meccg/mute-spectators {:gameid-str (:gameid @game-state) :mute-state mute-state}]))
 
 (defn save-game []
+  (do (send-command "system-msg" {:msg "just SAVED the GAME"})
   (ws/ws-send! [:meccg/save {:gameid-str (:gameid @game-state)
-                              :save-pref (:save-pref @game-state)}]))
+                              :save-pref (:save-pref @game-state)}])))
 
 (defn concede []
   (ws/ws-send! [:meccg/concede {:gameid-str (:gameid @game-state)}]))
@@ -302,7 +303,10 @@
                                   (send-command "play" {:card card})
                                   (send-command "equip" {:card card}))
                    (send-command "play" {:card card}))
-          ("rig" "onhost" "locales") (handle-abilities card owner)
+          ("onhost") (case type
+                       ("Hazard") (send-command "play" {:card card})
+                       (handle-abilities card owner))
+          ("rig" "locales") (handle-abilities card owner)
           nil)
         ;; Contestant side
         (= side :contestant)
@@ -320,7 +324,10 @@
                                   (send-command "play" {:card card})
                                   (send-command "equip" {:card card}))
                    (send-command "play" {:card card}))
-          ("rig" "onhost" "locales") (handle-abilities card owner)
+          ("onhost") (case type
+                       ("Hazard") (send-command "play" {:card card})
+                       (handle-abilities card owner))
+          ("rig" "locales") (handle-abilities card owner)
           nil)))))
 
 (defn in-play? [card]
@@ -500,15 +507,16 @@
     (= e.keyCode 37) ;// shift
     (send-command "blind-zoom")
     (= e.keyCode 39) ;// right-arrow
-    (let [side (:side @game-state)]
-      (if-let [card (get-in @game-state [side :hold-card])]
-        (send-command "system-msg" {:msg (str (:ImageName card))}))))
+    (send-command "blind-send")
+    )
   )
 
 (defn handle-key-up [e]
   (cond
     (= e.keyCode 37) ;// shift
     (send-command "blind-zoom")
+    (= e.keyCode 39) ;// shift
+    (send-command "blind-hold")
     )
   )
 
@@ -592,8 +600,13 @@
 (defn handle-drop [e locale]
   (-> e .-target js/$ (.removeClass "dragover"))
   (let [card (-> e .-dataTransfer (.getData "card") ((.-parse js/JSON)) (js->clj :keywordize-keys true))
-        side (if (#{"HQ" "R&D" "Archives" "Sites"} locale) "Contestant" "Challenger")]
-    (send-command "move" {:card card :locale locale})))
+        side (if (#{"HQ" "R&D" "Archives" "Sites"} locale) "Contestant" "Challenger")
+        location (if (#{"Sites"} locale) true false)]
+    (if location
+      (when (or (= "Site" (:type card)) (= "Region" (:type card)))
+        (send-command "move" {:card card :locale locale}))
+      (send-command "move" {:card card :locale locale})
+      )))
 
 (defn abs [n] (max n (- n)))
 
@@ -797,6 +810,7 @@
                                                          (= (:side @game-state) (keyword (.toLowerCase side))))
                                                  (put! zoom-channel cursor))
                               :on-mouse-leave #(put! zoom-channel false)
+                              ;:on-key-up #(handle-key-up %)
                               ;:on-key-down #(handle-blindzoom %)
                               :on-click #(handle-card-click cursor owner)}
         (when-let [url (image-url cursor)]
@@ -949,7 +963,7 @@
     board? (send-command "close-sideboard")
     fw-dc? (send-command "close-fw-dc-sb")
     deck? (send-command "close-deck")
-    msg (send-command "system-msg" {:msg msg}))
+    msg (when (not (= "" msg)) (send-command "system-msg" {:msg msg})))
   (.stopPropagation event))
 
 (defn label [cursor owner opts]
@@ -996,14 +1010,17 @@
     (sab/html
       (let [side (get-in player [:identity :side])
             size (count (:hand player))
-            name (if (= side "Contestant") "HQ" "Grip")]
+            name (if (= side "Contestant") "HQ" "Grip")
+            status (if (= side "Contestant")
+                      (if (not (get-in @game-state [:contestant :drew])) "Pool" "Hand")
+                      (if (not (get-in @game-state [:challenger :drew])) "Pool" "Hand"))]
         [:div.hand-container
          [:div.hand-controls
           [:div.panel.blue-shade.hand
            (drop-area (:side @game-state) name {:class (when (> size 6) "squeeze")})
            [:div
             (build-hand-card-view player parties "card-wrapper")]
-           (om/build label (:hand player) {:opts {:name "Hand"}})]
+           (om/build label (:hand player) {:opts {:name status}})]
           (when popup
             [:div.panel.blue-shade.hand-expand
              {:on-click #(-> (om/get-node owner "hand-popup") js/$ .fadeToggle)}
@@ -1102,7 +1119,7 @@
             [:div {:on-click #(show-sideboard % owner side-ref)} "Sideboard"]
             [:div {:on-click #(show-fw-dc-sb % owner fwdc-ref)} "FW-DC-SB"]])
          (when (= (:side @game-state) side)
-           [:div.panel.blue-shade.popup {:ref deck-content-ref}
+           [:div.panel.blue-shade.popup {:ref deck-content-ref :style {:left -63}}
             [:div
              [:a {:on-click #(close-popup % owner deck-content-ref "stops looking at their deck" false false false false true)}
               "Close"]
@@ -1110,7 +1127,7 @@
               "Close & Shuffle"]]
             (om/build-all card-view deck {:key :cid})])
          (when (= (:side @game-state) side)
-           [:div.panel.blue-shade.popup {:ref side-content-ref}
+           [:div.panel.blue-shade.popup {:ref side-content-ref :style {:left -63}}
             [:div
              [:a {:on-click #(close-popup % owner side-content-ref "stops looking at their sideboard" false false true false false)}
               "Close"]
@@ -1119,7 +1136,7 @@
             (om/build-all card-view sideboard {:key :cid})]
            )
          (when (= (:side @game-state) side)
-           [:div.panel.blue-shade.popup {:ref fwdc-content-ref}
+           [:div.panel.blue-shade.popup {:ref fwdc-content-ref :style {:left -63}}
             [:div
              [:a {:on-click #(close-popup % owner fwdc-content-ref "stops looking at their dc/fw-sideboard" false false false true false)}
               "Close"]
@@ -1333,8 +1350,7 @@
                run-arrow (sab/html [:div.run-arrow [:div]])
                tap-arrow (sab/html [:div.tap-arrow [:div]])
                max-hosted (apply max (map #(count (:hosted %)) characters))]
-           [:div.characters {:style {:width (when (pos? max-hosted)
-                                              (+ 42 3 (* 21 (dec max-hosted))))}}
+           [:div.characters
             (when-let [run-card (:card (:run-effect run))]
               [:div.run-card (om/build card-img run-card)])
             (for [character (reverse characters)]
@@ -1452,37 +1468,34 @@
          (facedown-card "Locations")
          (om/build label-without location {:opts {:name "Location"}})
          (when (= (:side @game-state) side)
-            (if (get-in @game-state [side :opt-key])
               [:div.panel.blue-shade.menu {:ref map-menu-ref}
                [:div {:on-click #(show-map % owner reg-ref-south)} "South-regions"]
                [:div {:on-click #(show-map % owner reg-ref-cent)} "Central-regions"]
                [:div {:on-click #(show-map % owner reg-ref-west)} "West-regions"]
                [:div {:on-click #(show-map % owner reg-ref-north)} "North-regions"]
                [:div {:on-click #(show-map % owner reg-ref)} "Std-regions"]
-               ]
-              [:div.panel.blue-shade.menu {:ref map-menu-ref}
                [:div {:on-click #(show-map % owner map-ref-south)} "South"]
                [:div {:on-click #(show-map % owner map-ref-cent)} "Central"]
                [:div {:on-click #(show-map % owner map-ref-west)} "West"]
                [:div {:on-click #(show-map % owner map-ref-north)} "North"]
                [:div {:on-click #(show-map % owner map-ref)} "Std-sites"]
-               ]))
+               ])
          (when (= (:side @game-state) side)
-           [:div.panel.blue-shade.popup {:ref reg-content-ref}
-            [:div {:style {:width 708}}
+           [:div.panel.blue-shade.popup {:ref reg-content-ref :style {:width 716}}
+            [:div {:style {:width 716}}
              (standard-map show-sites owner reg-ref map-menu-ref)
-             [:a {:on-click #(close-popup % owner reg-content-ref "stops looking at the map" false true false false false)}
+             [:a {:on-click #(close-popup % owner reg-content-ref "" false true false false false)}
               "Close"]]
             ])
-         [:div.panel.blue-shade.popup {:ref map-content-ref}
-          [:div {:style {:width 708}}
+         [:div.panel.blue-shade.popup {:ref map-content-ref :style {:width 716}}
+          [:div {:style {:width 716}}
            (standard-map show-sites owner site-ref map-menu-ref)
-           [:a {:on-click #(close-popup % owner map-content-ref "stops looking at the map" false true false false false)}
+           [:a {:on-click #(close-popup % owner map-content-ref "" false true false false false)}
             "Close"]]
           ]
-         [:div.panel.blue-shade.popup {:ref site-content-ref}
-          [:div {:style {:width 708}}
-           [:a {:on-click #(close-popup % owner site-content-ref "stops looking at a region" false true false false false)}
+         [:div.panel.blue-shade.popup {:ref site-content-ref :style {:width 716}}
+          [:div {:style {:width 716}}
+           [:a {:on-click #(close-popup % owner site-content-ref "" false true false false false)}
             "Close"]]
           (om/build-all card-view location {:key :cid})
           ]
@@ -1490,18 +1503,18 @@
            [:div.panel.blue-shade.popup-map {:ref reg-content-ref-north}
             [:div
              (dreamcard-map-north show-sites owner reg-ref-north map-menu-ref-north)
-             [:a {:on-click #(close-popup % owner reg-content-ref-north "stops looking at the map" false true false false false)}
+             [:a {:on-click #(close-popup % owner reg-content-ref-north "" false true false false false)}
               "Close"]]
             ])
          [:div.panel.blue-shade.popup-map {:ref map-content-ref-north}
           [:div
            (dreamcard-map-north show-sites owner site-ref-north map-menu-ref-north)
-           [:a {:on-click #(close-popup % owner map-content-ref-north "stops looking at the map" false true false false false)}
+           [:a {:on-click #(close-popup % owner map-content-ref-north "" false true false false false)}
             "Close"]]
           ]
          [:div.panel.blue-shade.popup-map {:ref site-content-ref-north}
           [:div
-           [:a {:on-click #(close-popup % owner site-content-ref-north "stops looking at a region" false true false false false)}
+           [:a {:on-click #(close-popup % owner site-content-ref-north "" false true false false false)}
             "Close"]]
           (om/build-all card-view location {:key :cid})
           ]
@@ -1509,18 +1522,18 @@
            [:div.panel.blue-shade.popup-map {:ref reg-content-ref-west}
             [:div
              (dreamcard-map-west show-sites owner reg-ref-west map-menu-ref-west)
-             [:a {:on-click #(close-popup % owner reg-content-ref-west "stops looking at the map" false true false false false)}
+             [:a {:on-click #(close-popup % owner reg-content-ref-west "" false true false false false)}
               "Close"]]
             ])
          [:div.panel.blue-shade.popup-map {:ref map-content-ref-west}
           [:div
            (dreamcard-map-west show-sites owner site-ref-west map-menu-ref-west)
-           [:a {:on-click #(close-popup % owner map-content-ref-west "stops looking at the map" false true false false false)}
+           [:a {:on-click #(close-popup % owner map-content-ref-west "" false true false false false)}
             "Close"]]
           ]
          [:div.panel.blue-shade.popup-map {:ref site-content-ref-west}
           [:div
-           [:a {:on-click #(close-popup % owner site-content-ref-west "stops looking at a region" false true false false false)}
+           [:a {:on-click #(close-popup % owner site-content-ref-west "" false true false false false)}
             "Close"]]
           (om/build-all card-view location {:key :cid})
           ]
@@ -1528,18 +1541,18 @@
            [:div.panel.blue-shade.popup-map {:ref reg-content-ref-cent}
             [:div
              (dreamcard-map-central show-sites owner reg-ref-cent map-menu-ref-cent)
-             [:a {:on-click #(close-popup % owner reg-content-ref-cent "stops looking at the map" false true false false false)}
+             [:a {:on-click #(close-popup % owner reg-content-ref-cent "" false true false false false)}
               "Close"]]
             ])
          [:div.panel.blue-shade.popup-map {:ref map-content-ref-cent}
           [:div
            (dreamcard-map-central show-sites owner site-ref-cent map-menu-ref-cent)
-           [:a {:on-click #(close-popup % owner map-content-ref-cent "stops looking at the map" false true false false false)}
+           [:a {:on-click #(close-popup % owner map-content-ref-cent "" false true false false false)}
             "Close"]]
           ]
          [:div.panel.blue-shade.popup-map {:ref site-content-ref-cent}
           [:div
-           [:a {:on-click #(close-popup % owner site-content-ref-cent "stops looking at a region" false true false false false)}
+           [:a {:on-click #(close-popup % owner site-content-ref-cent "" false true false false false)}
             "Close"]]
           (om/build-all card-view location {:key :cid})
           ]
@@ -1547,18 +1560,18 @@
            [:div.panel.blue-shade.popup-map {:ref reg-content-ref-south}
             [:div
              (dreamcard-map-south show-sites owner reg-ref-south map-menu-ref-south)
-             [:a {:on-click #(close-popup % owner reg-content-ref-south "stops looking at the map" false true false false false)}
+             [:a {:on-click #(close-popup % owner reg-content-ref-south "" false true false false false)}
               "Close"]]
             ])
          [:div.panel.blue-shade.popup-map {:ref map-content-ref-south}
           [:div
            (dreamcard-map-south show-sites owner site-ref-south map-menu-ref-south)
-           [:a {:on-click #(close-popup % owner map-content-ref-south "stops looking at the map" false true false false false)}
+           [:a {:on-click #(close-popup % owner map-content-ref-south "" false true false false false)}
             "Close"]]
           ]
          [:div.panel.blue-shade.popup-map {:ref site-content-ref-south}
           [:div
-           [:a {:on-click #(close-popup % owner site-content-ref-south "stops looking at a region" false true false false false)}
+           [:a {:on-click #(close-popup % owner site-content-ref-south "" false true false false false)}
             "Close"]]
           (om/build-all card-view location {:key :cid})
           ]
@@ -1591,14 +1604,14 @@
        (om/build deck-view player)
        (om/build discard-view player)])))
 
-(defmulti event-view #(get-in % [:player :identity :side]))
+(defmulti resource-view #(get-in % [:player :identity :side]))
 
-(defmethod event-view "Contestant" [{:keys [player run]}]
+(defmethod resource-view "Contestant" [{:keys [player run]}]
   (om/component
     (sab/html
       (let [is-me (= (:side @game-state) :contestant)]
         [:div.contestant-rig {:class (if is-me "me" "opponent")}
-         (for [zone [:resource :hazard :facedown]]
+         (for [zone [:resource :facedown]]
             (for [c (zone (:rig player))]
               [:div
                [:div.card-wrapper {:class (if (:tapped c)
@@ -1615,12 +1628,12 @@
               ))
          ]))))
 
-(defmethod event-view "Challenger" [{:keys [player run]}]
+(defmethod resource-view "Challenger" [{:keys [player run]}]
   (om/component
     (sab/html
       (let [is-me (= (:side @game-state) :challenger)]
         [:div.challenger-rig {:class (if is-me "me" "opponent")}
-         (for [zone [:resource :hazard :facedown]]
+         (for [zone [:resource :facedown]]
             (for [c (zone (:rig player))]
               [:div
                [:div.card-wrapper {:class (if (:tapped c)
@@ -1635,6 +1648,52 @@
                  [:div.host-group
                   (host-view (reverse (:hosted c)))])]
               ))
+         ]))))
+
+(defmulti hazard-view #(get-in % [:player :identity :side]))
+
+(defmethod hazard-view "Contestant" [{:keys [player run]}]
+  (om/component
+    (sab/html
+      (let [is-me (= (:side @game-state) :contestant)]
+        [:div.contestant-rig {:class (if is-me "me" "opponent")}
+         (for [zone [:hazard]]
+           (for [c (zone (:rig player))]
+             [:div
+              [:div.card-wrapper {:class (if (:tapped c)
+                                           "tapped"
+                                           (if (:inverted c)
+                                             "inverted"
+                                             (if (:rotated c)
+                                               "rotated"
+                                               nil)))}
+               (om/build card-view c)]
+              (when (pos? (count (:hosted c)))
+                [:div.host-group
+                 (host-view (reverse (:hosted c)))])]
+             ))
+         ]))))
+
+(defmethod hazard-view "Challenger" [{:keys [player run]}]
+  (om/component
+    (sab/html
+      (let [is-me (= (:side @game-state) :challenger)]
+        [:div.challenger-rig {:class (if is-me "me" "opponent")}
+         (for [zone [:hazard]]
+           (for [c (zone (:rig player))]
+             [:div
+              [:div.card-wrapper {:class (if (:tapped c)
+                                           "tapped"
+                                           (if (:inverted c)
+                                             "inverted"
+                                             (if (:rotated c)
+                                               "rotated"
+                                               nil)))}
+               (om/build card-view c)]
+              (when (pos? (count (:hosted c)))
+                [:div.host-group
+                 (host-view (reverse (:hosted c)))])]
+             ))
          ]))))
 
 (defmulti board-view #(get-in % [:player :identity :side]))
@@ -1867,10 +1926,8 @@
                      (cond-button "Keep Hand" (not (get-in @game-state [:contestant :keep])) #(send-command "keep"))
                      (cond-button "Draw Hand" (not (get-in @game-state [:contestant :keep])) #(send-command "mulligan"))
 
-                     (cond-button "Pass 1st Turn" (and (get-in @game-state [:contestant :keep])
-                                                       (get-in @game-state [:challenger :keep])
-                                                       (= side :contestant)
-                                                       (= (get-in @game-state [:turn]) 0))
+                     (cond-button "Pass Turn" (and (get-in @game-state [:contestant :keep])
+                                                       (get-in @game-state [:challenger :keep]))
                                   #(send-command "not-first"))
                      (cond-button "Start Turn" (and (get-in @game-state [:contestant :keep])
                                                     (or (get-in @game-state [:challenger :keep])
@@ -1882,7 +1939,7 @@
                     [:div
                      (cond-button "Keep Hand" (not (get-in @game-state [:challenger :keep])) #(send-command "keep"))
                      (cond-button "Draw Hand" (not (get-in @game-state [:challenger :keep])) #(send-command "mulligan"))
-                     (cond-button "Pass 1st Turn" nil nil)
+                     (cond-button "Pass Turn" nil nil)
                      (cond-button "Start Turn" nil nil)
                      ]
                     )
@@ -1939,10 +1996,12 @@
                    (cond-button "EOT Discard" (= (:click me) 75) #(handle-end-of-phase "eot-discard"));; -5
                    (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                    (cond-button "End of Turn" (and (= (:click me) 70)
+                                                   (and (get-in @game-state [:contestant :eot])
+                                                        (get-in @game-state [:challenger :eot]))
                                                    (= (keyword active-player) side) (not end-turn)
                                                    (not contestant-phase-12) (not challenger-phase-12)
                                                    (not (empty? (get-in @game-state [:challenger :identity :title])))
-                                                   ) #(handle-end-turn))
+                                                   ) #(send-command "end-turn"))
                    ]))))
 
                 ;;------BREAK to Hazard Player
@@ -2092,7 +2151,7 @@
             (let [card (<! zoom-channel)]
               (-> ".direct" js/$ .focus)
               (om/set-state! owner :zoom card)
-              (when card (send-command "blind-hold" {:card card}))
+              ;(if card (send-command "blind-hold" {:card (:ImageName card)}))
               ))))
 
     om/IDidUpdate
@@ -2121,13 +2180,13 @@
              [:div {:class (:background (:options @app-state))}]
              [:div.rightpane
               [:div.card-zoom
-               (if (= side :spectator)
-                 (when-let [card (om/get-state owner :zoom)]
-                   (om/build card-zoom card))
+               (if-let [card (om/get-state owner :zoom)]
                  (if (get-in @game-state [side :blind])
-                   (om/build card-blind (get-in @game-state [side :hold-card]))
-                   (om/build card-zoom (get-in @game-state [side :hold-card])))
-                 )]
+                   (om/build card-blind card)
+                   (om/build card-zoom card)))
+               (when-let [card (om/get-state owner :zoom)]
+                 (when (get-in @game-state [side :hold-card])
+                   (send-command "blind-send" {:msg (:ImageName card)})))]
               ;; card implementation info
               (when-let [card (om/get-state owner :zoom)]
                 (let [implemented (:implementation card)]
@@ -2141,8 +2200,10 @@
 
              [:div.centralpane
               (om/build board-view {:player opponent :run run})
-              (om/build event-view {:player opponent :run run})
-              (om/build event-view {:player me :run run})
+              (om/build resource-view {:player opponent :run run})
+              (om/build hazard-view {:player opponent :run run})
+              (om/build hazard-view {:player me :run run})
+              (om/build resource-view {:player me :run run})
               (om/build board-view {:player me :run run})]
 
              [:div.leftpane

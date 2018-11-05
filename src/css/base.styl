@@ -79,7 +79,7 @@ section
 
 input, select, textarea
   font-family: "Titillium Web", "Helvetica Neue", sans-serif
-  font-size: 13px
+  font-size: 10px
   border-radius: 4px
   padding: 0 5px
   margin: 0
@@ -832,7 +832,14 @@ align-radio
 
   .hide-dreamcards-div
     margin-top: 10px
-    margin-bottom: 20px
+    margin-bottom: 10px
+
+  input.only-released
+    width: auto
+
+  .only-released-div
+    margin-top: 10px
+    margin-bottom: 10px
 
   h4
     margin-top: 5px
@@ -1569,7 +1576,7 @@ align-radio
     max-height: 600px
     min-height: 92px
     z-index: 80
-    left: -63px
+    //left: -63px
     bottom: 100%
     margin: 6px -1px
 
@@ -1608,8 +1615,6 @@ align-radio
       display: inline-block
       margin: 0 10px 8px 4px
 
-
-
   .playable
     cursor: pointer
     border-radius: 4px
@@ -1622,12 +1627,18 @@ align-radio
     top: 0
     left: 0
 
-  .deck, .discard, .identity
+  .deck, .identity
     position: relative
     height: 84px
     width: 60px
     border-radius: 4px
 
+  .discard
+    z-index: 60
+    position: relative
+    height: 84px
+    width: 60px
+    border-radius: 4px
 
   .locale-card
     position: relative
@@ -2110,6 +2121,9 @@ align-radio
           .character.wounded
             transform(rotate(0deg))
 
+            .counters
+              transform(rotate(90deg))
+
             .abilities, .challenger-abilities, .contestant-abilities
               transform(rotate(180deg))
               left: 0
@@ -2128,6 +2142,10 @@ align-radio
 
           .character.tapped
             transform(rotate(-90deg))
+
+
+            .counters
+              transform(rotate(180deg))
 
             .abilities, .challenger-abilities, .contestant-abilities
               transform(rotate(-90deg))
@@ -2150,6 +2168,9 @@ align-radio
             cursor: pointer
             bottom: 0
             z-index: 25
+
+            .counters
+              transform(rotate(-90deg))
 
             .run-arrow
               top: auto
@@ -2448,20 +2469,27 @@ align-radio
             .card-frame
               transform(rotate(0deg))
 
-            .counters
-              transform(rotate(90deg))
-
             .abilities, .challenger-abilities, contestant-abilitities
               top: 0
               bottom: auto
               transform-origin(0 0)
               transform(initial)
 
-          .counter
-            transform(rotate(-90deg))
-
           .run-card
             transform(initial)
+
+          .character.wounded
+            .counters
+              transform(rotate(90deg))
+
+          .character.tapped
+            .counters
+              transform(rotate(-180deg))
+
+          .character
+            .counters
+              transform(rotate(-90deg))
+
 
   .rightpane
     position: relative

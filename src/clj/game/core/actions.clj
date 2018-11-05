@@ -650,7 +650,7 @@
 (defn view-location
   "Allows the player to view their deck by making the cards in the deck public."
   [state side {:keys [region dc] :as args}]
-  (system-msg state side "looks at their location deck")
+  ;(system-msg state side "looks at their location deck")
   (swap! state assoc-in [side :dc] (:dc args))
   (swap! state assoc-in [side :cut-region] (:region args))
   (swap! state assoc-in [side :view-location] true))
@@ -658,7 +658,7 @@
 (defn close-location
   "Closes the deck view and makes cards in deck private again."
   [state side args]
-  (system-msg state side "stops looking at their location deck")
+  ;(system-msg state side "stops looking at their location deck")
   (swap! state update-in [side] dissoc :dc)
   (swap! state update-in [side] dissoc :cut-region)
   (swap! state update-in [side] dissoc :view-location))

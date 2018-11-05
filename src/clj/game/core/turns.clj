@@ -87,10 +87,11 @@
                     :free_gi 0 :total_mp 0 :stage_pt 0
                     :char_mp 0 :ally_mp 0 :item_mp 0
                     :fact_mp 0 :kill_mp 0 :misc_mp 0
-                    :toast [] :blind false :hold-card 0 :opt-key false
+                    :toast [] :blind false :hold-card false :opt-key false
                     :hand-size-base 8 :hand-size-modification 0 :hpf false
                     :agenda-point 0
-                    :click-per-turn 100 :agenda-point-req 7 :keep false}
+                    :click-per-turn 100 :agenda-point-req 7
+                    :keep false :drew false :eot false}
        :challenger {:user (:user challenger) :identity challenger-identity
                     :deck-dice challenger-dice-pick
                     :deck-mmsz challenger-dice-size
@@ -104,7 +105,7 @@
                     :discard [] :scored [] :rfg [] :play-area [] :current []
                     :locales {:hq {} :rd {} :archives {} :sites {}}
                     :rig {:resource [] :radicle [] :hazard []}
-                    :toast [] :blind false :hold-card 0 :opt-key false
+                    :toast [] :blind false :hold-card false :opt-key false
                     :click 0 :credit 20 :run-credit 0 :memory 4 :link 0 :tag 0
                     :free_gi 0 :total_mp 0 :stage_pt 0
                     :char_mp 0 :ally_mp 0 :item_mp 0
@@ -112,7 +113,8 @@
                     :hand-size-base 8 :hand-size-modification 0 :hpf false
                     :agenda-point 0
                     :hq-access 1 :rd-access 1 :tagged 0
-                    :click-per-turn 100 :agenda-point-req 7 :keep false}})))
+                    :click-per-turn 100 :agenda-point-req 7
+                    :keep false :drew false :eot false}})))
 
 (defn load-game
   "Initializes a new game with the given players vector."
@@ -124,12 +126,16 @@
     (init-identity state :challenger challenger-identity)
     (swap! state assoc :save-pref save-pref)
     (let [side :contestant]
+      (swap! state assoc-in [side :hold-card] false)
       (swap! state assoc-in [side :keep] true)
-      (swap! state assoc :active-player side :per-turn nil :end-turn false)
-      (let [offset (- 100 (get-in @state [side :click]))]
+      (swap! state assoc-in [side :drew] true)
+      (swap! state assoc :active-player side :per-turn nil :end-turn true)
+      (let [offset (* -1 (get-in @state [side :click]))]
         (gain state side :click offset)))
     (let [side :challenger]
+      (swap! state assoc-in [side :hold-card] false)
       (swap! state assoc-in [side :keep] true)
+      (swap! state assoc-in [side :drew] true)
       (let [offset (* -1 (get-in @state [side :click]))]
         (gain state side :click offset)))
     state))
@@ -242,6 +248,7 @@
 (defn mulligan
   "Mulligan/Draw Hand starting hand."
   [state side args]
+  (swap! state assoc-in [side :drew] true)
   (shuffle-into-deck state side :hand)
   (draw state side 8 {:suppress-event true}) ; was true
   (system-msg state side "draws a new hand"))
@@ -293,6 +300,8 @@
   "Start turn."
   [state side args]
 
+  (swap! state assoc-in [:contestant :eot] false)
+  (swap! state assoc-in [:challenger :eot] false)
   ; Functions to set up state for undo-turn functionality
   (doseq [s [:challenger :contestant]] (swap! state dissoc-in [s :undo-turn]))
   (swap! state assoc :turn-state (dissoc @state :log))
@@ -415,18 +424,11 @@
   )
 (defn haz-play-done
   [state side args]
+  (swap! state assoc-in [side :eot] true)
   (system-msg state side "has NOTHING ELSE")
   )
 
 ;; Organization Phase
-(defn not-first
-  [state side args]
-  (start-turn state side args)
-  (swap! state update-in [:turn] dec)
-  (system-msg state side "passes first turn")
-  (let [offset (- 70 (get-in @state [side :click]))]
-    (gain state side :click offset))
-  )
 
 (defn untap-all
   [state side args]
@@ -512,6 +514,7 @@
   )
 (defn eot-discard
   [state side args]
+  (swap! state assoc-in [side :eot] true)
   (system-msg state side "acknowledges EOT discard")
   (gain state side :click -5)
   )
@@ -519,27 +522,37 @@
 (defn end-turn
   ([state side args] (end-turn state side (make-eid state) args))
   ([state side eid args]
-   (let [max-hand-size (max (hand-size state side) 0)]
-     (when (<= (count (get-in @state [side :hand])) max-hand-size)
-       (turn-message state side false)
-       (wait-for
-         (trigger-event-sync state side (if (= side :challenger) :challenger-turn-ends :contestant-turn-ends))
-         (do
-           (gain state side :click -70)
-           (doseq [a (get-in @state [side :register :end-turn])]
-             (resolve-ability state side (:ability a) (:card a) (:targets a)))
-           (swap! state assoc-in [side :register-last-turn] (-> @state side :register))
-           (swap! state assoc :end-turn true)
-           (swap! state update-in [side :register] dissoc :cannot-draw)
-           (swap! state update-in [side :register] dissoc :drawn-this-turn)
-           (doseq [c (filter #(= :this-turn (:revealed %)) (all-placed state :contestant))]
-             (update! state side (assoc c :revealed true)))
-           (clear-turn-register! state)
-           (swap! state dissoc :turn-events)
-           (when-let [extra-turns (get-in @state [side :extra-turns])]
-             (when (pos? extra-turns)
-               (start-turn state side nil)
-               (swap! state update-in [side :extra-turns] dec)
-               (let [turns (if (= 1 extra-turns) "turn" "turns")]
-                 (system-msg state side (clojure.string/join ["will have " extra-turns " extra " turns " remaining."])))))
-           (effect-completed state side eid)))))))
+   (turn-message state side false)
+   (wait-for
+     (trigger-event-sync state side (if (= side :challenger) :challenger-turn-ends :contestant-turn-ends))
+     (do
+       (gain state side :click -70)
+       (doseq [a (get-in @state [side :register :end-turn])]
+         (resolve-ability state side (:ability a) (:card a) (:targets a)))
+       (swap! state assoc-in [side :register-last-turn] (-> @state side :register))
+       (swap! state assoc :end-turn true)
+       (swap! state update-in [side :register] dissoc :cannot-draw)
+       (swap! state update-in [side :register] dissoc :drawn-this-turn)
+       (doseq [c (filter #(= :this-turn (:revealed %)) (all-placed state :contestant))]
+         (update! state side (assoc c :revealed true)))
+       (clear-turn-register! state)
+       (swap! state dissoc :turn-events)
+       (when-let [extra-turns (get-in @state [side :extra-turns])]
+         (when (pos? extra-turns)
+           (start-turn state side nil)
+           (swap! state update-in [side :extra-turns] dec)
+           (let [turns (if (= 1 extra-turns) "turn" "turns")]
+             (system-msg state side (clojure.string/join ["will have " extra-turns " extra " turns " remaining."])))))
+       (effect-completed state side eid)))))
+
+(defn not-first
+  [state side args]
+  (start-turn state side args)
+  (swap! state update-in [:turn] dec)
+  (swap! state assoc-in [:contestant :eot] true)
+  (swap! state assoc-in [:challenger :eot] true)
+  (system-msg state side "passes first turn")
+  (let [offset (- 70 (get-in @state [side :click]))]
+    (gain state side :click offset))
+  (end-turn state side args)
+  )

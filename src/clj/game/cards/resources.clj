@@ -54,11 +54,10 @@
                                     hosted? (character? (:host r))]
                                 (resolve-ability state side
                                                  {:prompt (if hosted?
-                                                            (msg "You may not play this on a different character")
-                                                            (msg "Place this card on a character"))
+                                                            (msg "You may not play this on a different Palantîr")
+                                                            (msg "Place this card on a Palantîr"))
                                                   :choices {:req #(if (not hosted?)
-                                                                    (and (character? %)
-                                                                         (can-host? %)))}
+                                                                    (can-host? %))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Ancient Knowledge"
@@ -286,6 +285,23 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Eyes of Mandos"
+   {:abilities [{:effect (req
+                           (move state side card :discard)
+                           (let [kount (count (get-in @state [side :deck]))]
+                             (loop [k (if (< kount 8) kount 8)]
+                               (when (> k 0)
+                                 (move state side (first (get-in @state [side :deck])) :play-area)
+                                 (recur (- k 1))))
+                             (resolve-ability state side
+                                              {:prompt "Select a card to put in your hand"
+                                               :choices {:req (fn [t] (card-is? t :side side))}
+                                               :effect (req (doseq [c (get-in @state [side :play-area])]
+                                                              (if (= c target)
+                                                                (move state side c :hand)
+                                                                (move state side c :deck)))
+                                                            (shuffle! state side :deck))
+                                               } nil nil)))}]}
    "Fate of the Ithil-stone"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
@@ -319,6 +335,18 @@
                                                   :choices {:req #(if (not hosted?)
                                                                     (and (character? %)
                                                                          (can-host? %)))}
+                                                  :msg (msg "host it on " (card-str state target))
+                                                  :effect (effect (host target card))} card nil)))}]}
+   "Focus Palantír"
+   {:abilities [{:label "Place"
+                 :effect (req (let [r (get-card state card)
+                                    hosted? (character? (:host r))]
+                                (resolve-ability state side
+                                                 {:prompt (if hosted?
+                                                            (msg "You may not play this on a different Palantîr")
+                                                            (msg "Place this card on a Palantîr"))
+                                                  :choices {:req #(if (not hosted?)
+                                                                    (can-host? %))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Fosterhome of Royal Heirs"
@@ -811,6 +839,32 @@
                                                                        (can-host? %))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Narya"
+   {:abilities [{:label "Place"
+                 :effect (req (let [r (get-card state card)
+                                    hosted? (character? (:host r))]
+                                (resolve-ability state side
+                                                 {:prompt (if hosted?
+                                                            (msg "You may not play this on a different character")
+                                                            (msg "Place this card on Gandalf"))
+                                                  :choices {:req #(if (not hosted?)
+                                                                    (and (character? %)
+                                                                         (can-host? %)))}
+                                                  :msg (msg "host it on " (card-str state target))
+                                                  :effect (effect (host target card))} card nil)))}]}
+   "Nenya"
+   {:abilities [{:label "Place"
+                 :effect (req (let [r (get-card state card)
+                                    hosted? (character? (:host r))]
+                                (resolve-ability state side
+                                                 {:prompt (if hosted?
+                                                            (msg "You may not play this on a different character")
+                                                            (msg "Place this card on Galadriel"))
+                                                  :choices {:req #(if (not hosted?)
+                                                                    (and (character? %)
+                                                                         (can-host? %)))}
+                                                  :msg (msg "host it on " (card-str state target))
+                                                  :effect (effect (host target card))} card nil)))}]}
    "New Closeness to His Kin"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
@@ -1069,7 +1123,7 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
-   "Saruman's Ring"
+   "Sarumans Ring"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
@@ -1426,6 +1480,19 @@
                                                  {:prompt (if hosted?
                                                             (msg "You may not play this on a different character")
                                                             (msg "Place this card on Galadriel"))
+                                                  :choices {:req #(if (not hosted?)
+                                                                    (and (character? %)
+                                                                         (can-host? %)))}
+                                                  :msg (msg "host it on " (card-str state target))
+                                                  :effect (effect (host target card))} card nil)))}]}
+   "Vilya"
+   {:abilities [{:label "Place"
+                 :effect (req (let [r (get-card state card)
+                                    hosted? (character? (:host r))]
+                                (resolve-ability state side
+                                                 {:prompt (if hosted?
+                                                            (msg "You may not play this on a different character")
+                                                            (msg "Place this card on Elrond"))
                                                   :choices {:req #(if (not hosted?)
                                                                     (and (character? %)
                                                                          (can-host? %)))}

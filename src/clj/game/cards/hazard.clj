@@ -60,6 +60,70 @@
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
    "Foolish Words"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
+   "Great Secrets Buried There"
+   {:abilities [{:label "as Resource"
+                 :effect (req
+                           (let [kount (count (get-in @state [side :deck]))
+                                 secrets (get-card state card)]
+                             (loop [k (if (< kount 10) 0 10)]
+                               (when (> k 0)
+                                 (move state side (first (get-in @state [side :deck])) :current)
+                                 (recur (- k 1))))
+                             (resolve-ability state side
+                                              {:prompt "Select an item for Great Secrets..."
+                                               :choices {:req (fn [t] (card-is? t :side side))}
+                                               :effect (req (doseq [c (get-in @state [side :current])]
+                                                              (if (= c target)
+                                                                (host state side secrets c)
+                                                                (move state side c :deck)))
+                                                              (shuffle! state side :deck))
+                                               } nil nil)))}
+                {:label "as Hazard"
+                 :effect (req
+                           (let [opp-side (if (= side :contestant)
+                                            :challenger
+                                            side)
+                                 secrets (get-card state card)
+                                 kount (count (get-in @state [opp-side :deck]))]
+                             (loop [k (if (< kount 10) 0 10)]
+                               (when (> k 0)
+                                 (move state opp-side (first (get-in @state [opp-side :deck])) :current)
+                                 (recur (- k 1))))
+                             (resolve-ability state opp-side
+                                              {:prompt "Select an item for Great Secrets..."
+                                               :choices {:req (fn [t] (card-is? t :side opp-side))}
+                                               :effect (req (doseq [c (get-in @state [opp-side :current])]
+                                                              (if (= c target)
+                                                                (host state opp-side secrets c)
+                                                                (move state opp-side c :deck)))
+                                                            (shuffle! state opp-side :deck))
+                                               } nil nil)))}
+                {:label "No item" ;; reveal to opponent
+                 :effect (req
+                           (let [opp-side (if (= side :contestant)
+                                            :challenger
+                                            side)
+                                 the-side (if (= 0 (count (get-in @state [side :current])))
+                                            opp-side
+                                            side)]
+                             (resolve-ability state the-side
+                                              {:effect (req (doseq [c (get-in @state [the-side :current])]
+                                                                (move state the-side c :play-area)))
+                                               } nil nil)))}
+                {:label "Shuffle"
+                 :effect (req
+                           (let [opp-side (if (= side :contestant)
+                                            :challenger
+                                            side)
+                                 the-side (if (= 0 (count (get-in @state [side :play-area])))
+                                            opp-side
+                                            side)]
+                             (resolve-ability state the-side
+                                              {:effect (req (doseq [c (get-in @state [the-side :play-area])]
+                                                              (move state the-side c :deck))
+                                                            (shuffle! state the-side :deck))
+                                               } nil nil)))}
+                ]}
    "He is Lost to Us"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
    "Heritage Forsaken"
@@ -119,12 +183,18 @@
    "Rebel-talk"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
    "Revealed to all Watchers"
-   {:abilities [{:label "Resolve"
+   {:abilities [{:label "Revealed"
                  :effect (req (let [r (get-card state card)
                                     old-host (:host r)]
                                 (resolve-ability state side
-                                                 {:msg (msg "to draw 3 cards.")
-                                                  :effect (effect (set-hand-aside :hand) (move card :discard))} card nil)))}]}
+                                                 {:msg (msg "reveals hand")
+                                                  :effect (effect (set-hand-aside :hand))} card nil)))}
+                {:label "Hide"
+                 :effect (req (resolve-ability state side
+                                               {:effect (req (doseq [c (get-in @state [side :play-area])]
+                                                               (move state side c :current)))
+                                                } nil nil))}
+                ]}
    "Shut Yer Mouth"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
    "So Youve Come Back"

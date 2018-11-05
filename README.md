@@ -70,7 +70,7 @@ Launch web server:
     ```
 * As a standalone process in production mode (must first run `lein uberjar` and `lein cljsbuild once prod`):
     ```
-    $ java -jar target/netrunner-standalone.jar
+    $ java -jar target/meccg-standalone.jar
     ```
 
 Open http://localhost:1042/

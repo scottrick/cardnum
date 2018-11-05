@@ -20,7 +20,7 @@
    "back-m-h" core/back-m-h
    "back-org" core/back-org
    "back-site" core/back-site
-   "blind-hold" #(core/blind-hold %1 %2 (:card %3))
+   "blind-send" core/blind-send
    "blind-zoom" core/blind-zoom
    "bluff-o-g" core/bluff-o-g
    "challenger-ability" core/play-challenger-ability

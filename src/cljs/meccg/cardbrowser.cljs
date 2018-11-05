@@ -63,6 +63,8 @@
       (make-span "Dark-hold [D]" "img/dc/me_dh.png")
       (make-span "Darkhavens [V]" "img/dc/me_dha.png")
       (make-span "Darkhaven [V]" "img/dc/me_dha.png")
+      (make-span "Darkhavens [K]" "img/dc/me_dha.png")
+      (make-span "Darkhaven [K]" "img/dc/me_dha.png")
       (make-span "Darkhaven" "img/dc/me_dha.png")
       (make-span "Darkhaven" "img/dc/me_dha.png")
       (make-span "Deserts [ee]" "img/dc/me_ee.png")
@@ -121,7 +123,15 @@
       (make-span "[f]" "img/dc/me_fd.png")
       (make-span "[j]" "img/dc/me_ju.png")
       (make-span "[s]" "img/dc/me_sl.png")
-      (make-span "[w]" "img/dc/me_wi.png")))
+      (make-span "[w]" "img/dc/me_wi.png")
+      (make-span "[B]" "img/dc/me_bh.png")
+      (make-span "[D]" "img/dc/me_dh.png")
+      (make-span "[V]" "img/dc/me_dha.png")
+      (make-span "[K]" "img/dc/me_dha.png")
+      (make-span "[F]" "img/dc/me_fh.png")
+      (make-span "[H]" "img/dc/me_ha.png")
+      (make-span "[R]" "img/dc/me_rl.png")
+      (make-span "[S]" "img/dc/me_sh.png")))
 
 (defn non-game-toast
   "Display a toast warning with the specified message."
@@ -182,7 +192,7 @@
               (card-text selected-card cursor)]]))))))
 
 (def primary-order ["Character" "Resource" "Hazard" "Site" "Region"])
-(def resource-secondaries ["Ally" "Faction" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
+(def resource-secondaries ["Ally" "Avatar" "Faction" "Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
 (def site-secondaries ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Information" "Hoard" "Scroll" "Palantír" "Battle-gear" "Non-battle-gear"])
 (def shared-secondaries ["Permanent-event" "Short-event" "Long-event" "Permanent-event/Short-event" "Permanent-event/Long-event" "Short-event/Long-event"])
 (def hazard-secondaries ["Creature" "Creature/Permanent-event" "Creature/Short-event" "Creature/Long-event"])
@@ -205,6 +215,16 @@
                 "Firstborn" "Durin's Folk" "The Necromancer" "Bay of Ormal" "Court of Ardor" "The Great Central Plains" "The Dominion of the Seven"
                 "The Great Wyrms" "Kingdom of the North" "Morgoth's Legacy" "Nine Rings for Mortal Men" "The Northern Waste" "Red Nightfall"
                 "Return of the Shadow" "The Sun Lands" "Treason of Isengard" "War of the Ring"])
+(def race-options ["Wizard" "Dúnadan" "Hobbit" "Man" "Wose" "Umit"
+                   "Dwarf" "Firebeard Dwarf" "Ironfist Dwarf" "Longbeard Dwarf"
+                   "Elf" "Nando Elf" "Noldo Elf" "Silvan Elf" "Sinda Elf"
+                   "Ringwraith" "Olog-hai Troll" "Troll" "Half-troll" "Uruk-hai Orc" "Half-orc" "Orc"
+                   "Balrog" "Demon" "Dragon"])
+(def fact-options ["Dúnadan" "Hobbit" "Dwarf" "Elf" "Man" "Wose" "Umit"
+                   "Mercenary" "Slayer" "Slave" "Undead"
+                   "Giant" "Troll" "Orc" "Balrog" "Demon" "Drake" "Dragon"
+                   "Ent" "Animal" "Eagle" "Wolf" "Spider" "Special" "Other"])
+(def skill-options ["Diplomat" "Warrior" "Ranger" "Scout" "Sage"])
 
 (defn secondaries [primary]
   (case primary
@@ -258,19 +278,34 @@
     (filter-cards true :Gear cards)
     "Non-battle-gear"
     (filter-cards true :Non cards)
-    )
-  )
+    ))
+
+(defn filter-race [race-filter filter-value cards]
+  (if race-filter
+    cards
+    (filter-cards filter-value :Race cards)
+    ))
+
+(defn filter-haven [haven-filter filter-value cards]
+  (if haven-filter
+    cards
+    (filter-cards filter-value :Haven cards)
+    ))
 
 (defn filter-second [site-filter filter-value cards]
   (if site-filter
     (filter-sites filter-value cards)
     (filter-cards filter-value :Secondary cards)
-    )
-  )
+    ))
 
 (defn filter-dreamcards [should-filter cards]
   (if should-filter
     (filter-cards false :dreamcard cards)
+    cards))
+
+(defn filter-released [should-filter cards]
+  (if should-filter
+    (filter-cards true :released cards)
     cards))
 
 (defn filter-title [query cards]
@@ -305,6 +340,16 @@
            (first)
            (:dreamcards)))))
 
+(defn selected-set-released? [{:keys [sets]} state]
+  (let [s (selected-set-name state)
+        combined sets]
+    (if (= s "All")
+      false
+      (->> combined
+           (filter #(= s (:name %)))
+           (first)
+           (:released)))))
+
 (defn handle-scroll [e owner {:keys [page]}]
   (let [$cardlist (js/$ ".card-list")
         height (- (.prop $cardlist "scrollHeight") (.innerHeight $cardlist))]
@@ -327,7 +372,9 @@
        :alignment-filter "All"
        :secondary-filter "All"
        :haven-filter "All"
-       :hide-dreamcards true
+       :race-filter "All"
+       :hide-dreamcards false
+       :only-released true
        :page 1
        :filter-ch (chan)
        :selected-card nil})
@@ -370,7 +417,9 @@
 
           (let [format-pack-name (fn [name] (str "&nbsp;&nbsp;&nbsp;&nbsp;" name))
                 hide-dreamcards (:hide-dreamcards state)
-                sets-filtered (filter-dreamcards hide-dreamcards sets)
+                released-only (:only-released state)
+                dc-filtered (filter-dreamcards hide-dreamcards sets)
+                sets-filtered (filter-released released-only dc-filtered)
                 ;; Draft is specified as a cycle, but contains no set, nor is it marked as a bigbox
                 ;; so we handled it specifically here for formatting purposes
                 sets-list (map #(if (not (or (:bigbox %) (= (:name %) "Draft")))
@@ -408,16 +457,32 @@
                    [:select {:value ((second filter) state)
                              :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
                     (options (last filter))]]))
-              (for [filter [["Set" :set-filter set-names]
-                            ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
-                            ["Align" :alignment-filter (alignments (:primary-filter state))]
-                            ["Strict" :secondary-filter (secondaries (:primary-filter state))]]]
-                [:div
-                 [:h4 (first filter)]
-                 [:select {:value ((second filter) state)
-                           :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
-                  (options (last filter))]]))
-            )
+              (if (or (= (:primary-filter state) "Character")
+                      (= (:secondary-filter state) "Faction"))
+                (let [type-options (if (= (:primary-filter state) "Character")
+                                     race-options
+                                     fact-options)]
+                  (for [filter [["Set" :set-filter set-names]
+                                ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
+                                ["Align" :alignment-filter (alignments (:primary-filter state))]
+                                ["Strict" :secondary-filter (secondaries (:primary-filter state))]
+                                ["Race" :race-filter type-options]
+                                ]]
+                    [:div
+                     [:h4 (first filter)]
+                     [:select {:value     ((second filter) state)
+                               :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
+                      (options (last filter))]]))
+                (for [filter [["Set" :set-filter set-names]
+                              ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
+                              ["Align" :alignment-filter (alignments (:primary-filter state))]
+                              ["Strict" :secondary-filter (secondaries (:primary-filter state))]]]
+                  [:div
+                   [:h4 (first filter)]
+                   [:select {:value     ((second filter) state)
+                             :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
+                    (options (last filter))]])
+                )))
 
           [:div.hide-dreamcards-div
            [:label [:input.hide-dreamcards {:type "checkbox"
@@ -429,6 +494,16 @@
                                                             (om/set-state! owner :set-filter "All"))
                                                           )}]
             "Hide Dreamcards"]]
+          [:div.only-released-div
+           [:label [:input.only-released {:type "checkbox"
+                                            :value true
+                                            :checked (om/get-state owner :only-released)
+                                            :on-change #(let [hide (.. % -target -checked)]
+                                                          (om/set-state! owner :only-released hide)
+                                                          (when (and hide (selected-set-released? cursor state))
+                                                            (om/set-state! owner :set-filter "All"))
+                                                          )}]
+            "Only Released"]]
 
           (om/build card-info-view cursor {:state {:selected-card (:selected-card state)}})
           ]
@@ -442,10 +517,13 @@
                                                    [nil (filter #(= (:full_set %) s) @all-cards)])]
                           (->> cards
                                (filter-dreamcards (:hide-dreamcards state))
+                               (filter-released (:only-released state))
                                (filter-cards (:primary-filter state) :type)
                                (filter-cards (:alignment-filter state) :alignment)
                                (filter-second (if (= (:primary-filter state) "Site") true false) (:secondary-filter state))
-                               (filter-cards (:haven-filter state) :Haven)
+                               (filter-haven (if (= (:primary-filter state) "Site") false true) (:haven-filter state))
+                               (filter-race (if (= (:primary-filter state) "Character") false true) (:race-filter state))
+                               (filter-race (if (= (:secondary-filter state) "Faction") false true) (:race-filter state))
                                (filter-title (:search-query state))
                                (sort-by (sort-field (:sort-field state)))
                                (take (* (:page state) 28))))

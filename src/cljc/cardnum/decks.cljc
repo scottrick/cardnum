@@ -97,9 +97,9 @@
   "Returns false if the card comes from a spoiled set or is out of competitive rotation."
   [sets card]
   (let [card-set (:set_code card)
-        rotated (:rotated card)
+        released (:released card)
         date (some #(when (= (:name %) card-set) (:available %)) sets)]
-    (and (not rotated)
+    (and released
          (not= date "")
          (not (nil? date))
          (before-today? date))))

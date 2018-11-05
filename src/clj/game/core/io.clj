@@ -262,12 +262,6 @@
     (swap! state dissoc-in [side :selected])
     (effect-completed state side (:eid fprompt))))
 
-(defn command-save
-  "save a game locally"
-  [state side]
-
-  )
-
 (defn blind-zoom
   [state side args]
   (if (get-in @state [side :blind])
@@ -275,9 +269,13 @@
     (swap! state assoc-in [side :blind] true))
   )
 
-(defn blind-hold
-  [state side card]
-  (swap! state assoc-in [side :hold-card] card)
+(defn blind-send
+  [state side args]
+  (if-let [msg (:msg args)]
+    (system-msg state side msg))
+  (if (get-in @state [side :hold-card])
+    (swap! state assoc-in [side :hold-card] false)
+    (swap! state assoc-in [side :hold-card] true))
   )
 
 (defn option-key-down
@@ -378,6 +376,7 @@
           "/end-run"    #(when (= %2 :contestant) (end-run %1 %2))
           "/error"      show-error-toast
               ;"/handsize"   #(swap! %1 assoc-in [%2 :hand-size-modification] (- (max 0 value) (:hand-size-base %2)))
+          "/facedown"   #(command-facedown %1 %2)
           "/hide"  #(resolve-ability %1 %2
                                         {:prompt "Select a card to hide"
                                          :effect (req (let [c (deactivate %1 %2 target)]
@@ -435,12 +434,17 @@
                                                                             (= "Minion" (:alignment t)))))}}
                                           {:title "/p command"} nil)
           "/re-deck"    #(resolve-ability %1 %2
-                                        {:effect (effect (shuffle-into-deck {} :discard))}
-                                        {:title "/re-deck command"} nil)
+                                          {:effect (req (doseq [c (get-in @%1 [%2 :discard])]
+                                                          (if (= (:type c) "Site")
+                                                            (move %1 %2 c :location)
+                                                            (move %1 %2 c :deck)))
+                                                        (shuffle! %1 %2 :deck))
+                                           } {:title "/re-deck command"} nil)
           "/psi"        #(when (= %2 :contestant) (psi-game %1 %2
                                                       {:title "/psi command" :side %2}
                                                       {:equal  {:msg "resolve equal bets effect"}
                                                        :not-equal {:msg "resolve unequal bets effect"}}))
+          "/re-order"      #(re-order %1 %2 value)
           "/reveal-hand"   #(reveal-hand %1 %2)
           "/reveal"        #(resolve-ability %1 %2
                                             {:effect (effect (reveal target {:ignore-cost :all-costs :force true}))
@@ -459,14 +463,12 @@
                                            :effect (req (move %1 %2 (assoc target :hide true) :rfg))
                                            :choices {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/rfgh command"} nil)
-          "/save"       #(command-save %1 %2)
           "/score"      #(resolve-ability %1 %2
                                           {:prompt "Select a card to score"
                                            :effect (req (let [c  target]
                                                           (move %1 %2 c :scored)))
                                            :choices {:req (fn [t] true)}}
                                           {:title "/score command"} nil)
-          "/facedown"   #(command-facedown %1 %2)
           "/roll"       #(command-roll %1 %2 value)
           "/r"          #(basic-roll %1 %2)
           "/tag"        #(swap! %1 assoc-in [%2 :tag] (max 0 value))
