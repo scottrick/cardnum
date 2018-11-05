@@ -499,7 +499,7 @@
     (when (pos? (count image))
       image)))
 
-(defn handle-key-down [e owner]
+(defn handle-key-down [e]
   (cond
     (= e.keyCode 18) ;// option
     (send-command "option-key-down")
@@ -507,9 +507,8 @@
     (= e.keyCode 37) ;// shift
     (send-command "blind-zoom")
     (= e.keyCode 39) ;// right-arrow
-    (let [side (:side @game-state)]
-      (if-let [card (get-in @game-state [side :hold-card])]
-        (send-command "system-msg" {:msg card}))))
+    (send-command "blind-send")
+    )
   )
 
 (defn handle-key-up [e]
@@ -565,7 +564,7 @@
     om/IRenderState
     (render-state [this state]
       (sab/html
-        [:div.log {:on-key-down #(handle-key-down % owner)
+        [:div.log {:on-key-down #(handle-key-down %)
                    ;:on-key-up #(handle-key-up %)
                    :on-mouse-over #(card-preview-mouse-over % zoom-channel)
                    :on-mouse-out  #(card-preview-mouse-out % zoom-channel)}
@@ -811,6 +810,7 @@
                                                          (= (:side @game-state) (keyword (.toLowerCase side))))
                                                  (put! zoom-channel cursor))
                               :on-mouse-leave #(put! zoom-channel false)
+                              ;:on-key-up #(handle-key-up %)
                               ;:on-key-down #(handle-blindzoom %)
                               :on-click #(handle-card-click cursor owner)}
         (when-let [url (image-url cursor)]
@@ -2151,7 +2151,7 @@
             (let [card (<! zoom-channel)]
               (-> ".direct" js/$ .focus)
               (om/set-state! owner :zoom card)
-              (if card (send-command "blind-hold" {:card (:ImageName card)}))
+              ;(if card (send-command "blind-hold" {:card (:ImageName card)}))
               ))))
 
     om/IDidUpdate
@@ -2183,7 +2183,10 @@
                (if-let [card (om/get-state owner :zoom)]
                  (if (get-in @game-state [side :blind])
                    (om/build card-blind card)
-                   (om/build card-zoom card)))]
+                   (om/build card-zoom card)))
+               (when-let [card (om/get-state owner :zoom)]
+                 (when (get-in @game-state [side :hold-card])
+                   (send-command "blind-send" {:msg (:ImageName card)})))]
               ;; card implementation info
               (when-let [card (om/get-state owner :zoom)]
                 (let [implemented (:implementation card)]

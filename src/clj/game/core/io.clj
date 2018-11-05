@@ -269,9 +269,13 @@
     (swap! state assoc-in [side :blind] true))
   )
 
-(defn blind-hold
-  [state side card]
-  (swap! state assoc-in [side :hold-card] card)
+(defn blind-send
+  [state side args]
+  (if-let [msg (:msg args)]
+    (system-msg state side msg))
+  (if (get-in @state [side :hold-card])
+    (swap! state assoc-in [side :hold-card] false)
+    (swap! state assoc-in [side :hold-card] true))
   )
 
 (defn option-key-down

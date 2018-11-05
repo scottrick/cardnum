@@ -87,7 +87,7 @@
                     :free_gi 0 :total_mp 0 :stage_pt 0
                     :char_mp 0 :ally_mp 0 :item_mp 0
                     :fact_mp 0 :kill_mp 0 :misc_mp 0
-                    :toast [] :blind false :hold-card 0 :opt-key false
+                    :toast [] :blind false :hold-card false :opt-key false
                     :hand-size-base 8 :hand-size-modification 0 :hpf false
                     :agenda-point 0
                     :click-per-turn 100 :agenda-point-req 7
@@ -105,7 +105,7 @@
                     :discard [] :scored [] :rfg [] :play-area [] :current []
                     :locales {:hq {} :rd {} :archives {} :sites {}}
                     :rig {:resource [] :radicle [] :hazard []}
-                    :toast [] :blind false :hold-card 0 :opt-key false
+                    :toast [] :blind false :hold-card false :opt-key false
                     :click 0 :credit 20 :run-credit 0 :memory 4 :link 0 :tag 0
                     :free_gi 0 :total_mp 0 :stage_pt 0
                     :char_mp 0 :ally_mp 0 :item_mp 0
@@ -126,12 +126,14 @@
     (init-identity state :challenger challenger-identity)
     (swap! state assoc :save-pref save-pref)
     (let [side :contestant]
+      (swap! state assoc-in [side :hold-card] false)
       (swap! state assoc-in [side :keep] true)
       (swap! state assoc-in [side :drew] true)
       (swap! state assoc :active-player side :per-turn nil :end-turn true)
       (let [offset (* -1 (get-in @state [side :click]))]
         (gain state side :click offset)))
     (let [side :challenger]
+      (swap! state assoc-in [side :hold-card] false)
       (swap! state assoc-in [side :keep] true)
       (swap! state assoc-in [side :drew] true)
       (let [offset (* -1 (get-in @state [side :click]))]
