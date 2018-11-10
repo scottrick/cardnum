@@ -280,6 +280,8 @@
 
 (defn option-key-down
   [state side args]
+  (if-let [msg (:msg args)]
+    (system-msg state side msg))
   (if (get-in @state [side :opt-key])
     (swap! state assoc-in [side :opt-key] false)
     (swap! state assoc-in [side :opt-key] true))

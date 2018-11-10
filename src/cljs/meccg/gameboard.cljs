@@ -2186,7 +2186,13 @@
                    (om/build card-zoom card)))
                (when-let [card (om/get-state owner :zoom)]
                  (when (get-in @game-state [side :hold-card])
-                   (send-command "blind-send" {:msg (:ImageName card)})))]
+                   (send-command "blind-send" {:msg (:ImageName card)})))
+               (when-let [card (om/get-state owner :zoom)]
+                 (when (get-in @game-state [side :opt-key])
+                   (if (:tapped card)
+                   (send-command "option-key-down" {:msg (str (:ImageName card) " AUTO Tapped")})
+                   (send-command "option-key-down" {:msg (str (:ImageName card) " AUTO Untapped")})
+                   )))]
               ;; card implementation info
               (when-let [card (om/get-state owner :zoom)]
                 (let [implemented (:implementation card)]
