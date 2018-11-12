@@ -49,4 +49,7 @@ services:
     ports:
       - 27017:27017
     volumes:
-      - /tmp/meccg/mongo-data:/data/db
+      - mongodata:/data/db
+
+volumes:
+  mongodata:
