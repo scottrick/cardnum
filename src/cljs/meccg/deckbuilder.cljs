@@ -819,18 +819,18 @@
                    edit? [:div.button-bar
                           [:button {:on-click #(save-deck cursor owner)} "Save"]
                           [:button {:on-click #(cancel-edit owner)} "Cancel"]
-                          (if (om/get-state owner :vs-wizard)
-                            [:button {:on-click #(wizard-edit owner)} "√ v Wizard"]
-                            [:button {:on-click #(wizard-edit owner)} "? v Wizard"]
-                            )
-                          (if (om/get-state owner :vs-minion)
-                            [:button {:on-click #(minion-edit owner)} "√ v Minion"]
-                            [:button {:on-click #(minion-edit owner)} "? v Minion"]
-                            )
-                          (if (om/get-state owner :vs-fallen)
-                            [:button {:on-click #(fallen-edit owner)} "√ v Fallen"]
-                            [:button {:on-click #(fallen-edit owner)} "? v Fallen"]
-                            )
+;                          (if (om/get-state owner :vs-wizard)
+;                            [:button {:on-click #(wizard-edit owner)} "√ v Wizard"]
+;                            [:button {:on-click #(wizard-edit owner)} "? v Wizard"]
+;                            )
+;                          (if (om/get-state owner :vs-minion)
+;                            [:button {:on-click #(minion-edit owner)} "√ v Minion"]
+;                            [:button {:on-click #(minion-edit owner)} "? v Minion"]
+;                            )
+;                          (if (om/get-state owner :vs-fallen)
+;                            [:button {:on-click #(fallen-edit owner)} "√ v Fallen"]
+;                            [:button {:on-click #(fallen-edit owner)} "? v Fallen"]
+;                            )
                           (if (some #{(get-in @app-state [:user :username])} (get-in @app-state [:donators]))
                           [:h3.rgtlabel "Donator deck dice:  "
                           [:select {:value (:donate-dice deck)
@@ -901,7 +901,7 @@
                          [:span.invalid " (maximum " (inc min-point) ")"])]))
                   [:div (deck-status-span sets deck true true false)]]
                  [:div.cards
-                  (if (not-empty pool) [:h3 "{Pool}"])
+                  (if (not-empty pool) [:h3 "Pool"])
                   (for [group (sort-by first (group-by #(get-in % [:card :Secondary]) pool))]
                     [:div.group
                      [:h4 (str (or (first group) "Unknown") " (" (decks/card-count (last group)) ")") ]
@@ -916,7 +916,7 @@
                                              :type "button"} "-"]]))
                         (line-span sets deck line)])])]
                  [:div.cards
-                  (if (not-empty characters) [:h3 "{Characters}"])
+                  (if (not-empty characters) [:h3 "Characters"])
                   (for [group (sort-by first (group-by #(get-in % [:card :Race]) characters))]
                     [:div.group
                      [:h4 (str (or (first group) "Unknown") " (" (decks/card-count (last group)) ")") ]
@@ -931,7 +931,7 @@
                                              :type "button"} "-"]]))
                         (line-span sets deck line)])])]
                  [:div.cards
-                  (if (not-empty resources) [:h3 (str "{Resources: " (decks/card-count resources) "}")])
+                  (if (not-empty resources) [:h3 (str "Resources: " (decks/card-count resources) "")])
                   (for [group (sort-by first (group-by #(get-in % [:card :Secondary]) resources))]
                     [:div.group
                      [:h4 (str (or (first group) "Unknown") " (" (decks/card-count (last group)) ")") ]
@@ -946,7 +946,7 @@
                                              :type "button"} "-"]]))
                         (line-span sets deck line)])])]
                  [:div.cards
-                  (if (not-empty hazards) [:h3 (str "{Hazards: " (decks/card-count hazards) "}")])
+                  (if (not-empty hazards) [:h3 (str "Hazards: " (decks/card-count hazards) "")])
                   (for [group (sort-by first (group-by #(get-in % [:card :Secondary]) hazards))]
                     [:div.group
                      [:h4 (str (or (first group) "Unknown") " (" (decks/card-count (last group)) ")") ]
@@ -961,7 +961,7 @@
                                              :type "button"} "-"]]))
                         (line-span sets deck line)])])]
                  [:div.cards
-                  (if (not-empty sideboard) [:h3 (str "{Sideboard: " (decks/card-count sideboard) "}")])
+                  (if (not-empty sideboard) [:h3 (str "Sideboard: " (decks/card-count sideboard) "")])
                   (for [group (sort-by first (group-by #(get-in % [:card :type]) sideboard))]
                     [:div.group
                      [:h4 (str (or (first group) "Unknown") " (" (decks/card-count (last group)) ")") ]
@@ -976,7 +976,7 @@
                                              :type "button"} "-"]]))
                         (line-span sets deck line)])])]
                  [:div.cards
-                  (if (not-empty fwsb) [:h3 "{DC-FW-SB}"])
+                  (if (not-empty fwsb) [:h3 "DC-FW-SB"])
                   (for [group (sort-by first (group-by #(get-in % [:card :type]) fwsb))]
                     [:div.group
                      [:h4 (str (or (first group) "Unknown") " (" (decks/card-count (last group)) ")") ]
