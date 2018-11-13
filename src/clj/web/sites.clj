@@ -279,7 +279,7 @@
    {:qty 1 :card "The Wind-deeps" :id "[B] (BA)"}
 
    ;; FALLEN SITES
-   {:qty 4 :card "Deep Mines" :id "[F] (WH)"}
+   {:qty 4 :card "Deep Mines" :id "(WH)"}
    {:qty 4 :card "Isengard" :id "[F] (WH)"}
    {:qty 4 :card "Rhosgobel" :id "[F] (WH)"}
    {:qty 4 :card "The White Towers" :id "[F] (WH)"}
@@ -1264,7 +1264,7 @@
    ;; LORD SITES
    {:qty 1 :card "Aurax-dûr" :id "(CA)"}
    {:qty 1 :card "Citadel of Ardor" :id "(CA)"}
-   {:qty 4 :card "Deep Mines" :id "[F] (WH)"}
+   {:qty 4 :card "Deep Mines" :id "(WH)"}
    {:qty 1 :card "Edhellond" :id "[F] (FB)"}
    {:qty 1 :card "Engkîr" :id "(CA)"}
    {:qty 1 :card "Grey Havens" :id "[F] (FB)"}

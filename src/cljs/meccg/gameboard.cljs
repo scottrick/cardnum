@@ -2190,9 +2190,9 @@
                (when-let [card (om/get-state owner :zoom)]
                  (when (get-in @game-state [side :opt-key])
                    (if (:tapped card)
-                   (send-command "option-key-down" {:msg (str (:ImageName card) " AUTO Tapped")})
-                   (send-command "option-key-down" {:msg (str (:ImageName card) " AUTO Untapped")})
-                   )))]
+                     (send-command "option-key-down" {:msg (str (:ImageName card) " AUTO")})
+                     (send-command "option-key-down" {:msg (str (:ImageName card) " AUTO no-tap")})
+                     )))]
               ;; card implementation info
               (when-let [card (om/get-state owner :zoom)]
                 (let [implemented (:implementation card)]
