@@ -137,7 +137,7 @@
                (not started))
       (let [strip-deck (fn [player] (-> player
                                         (update-in [:deck] #(select-keys % [:_id :identity]))
-                                        (update-in [:deck :identity] #(select-keys % [:title :alignment :trimCode]))))
+                                        (update-in [:deck :identity] #(select-keys % [:title :alignment :trimCode :side]))))
             stripped-players (mapv strip-deck players)
             game (as-> game g
                        (assoc g :started true
@@ -225,7 +225,7 @@
                (not started))
       (let [strip-deck (fn [player] (-> player
                                         (update-in [:deck] #(select-keys % [:_id :identity]))
-                                        (update-in [:deck :identity] #(select-keys % [:title :alignment]))))
+                                        (update-in [:deck :identity] #(select-keys % [:title :alignment :trimCode :side]))))
             stripped-players (mapv strip-deck players)
             ;_ (println (str save-pref))
             init (j-data/read-str

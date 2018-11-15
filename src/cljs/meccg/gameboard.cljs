@@ -1259,12 +1259,13 @@
     (sab/html
       (let [cards (:current player)
             size (count cards)
-            side (get-in player [:identity :side])]
+            card-side (:side (first cards))
+            side (if (= card-side "Contestant") :contestant :challenger)]
         (when-not (empty? cards)
           [:div.panel.blue-shade.rfg {:class (when (> size 2) "squeeze")}
            (map-indexed (fn [i card]
                           [:div.card-wrapper {:style {:left (* (/ 128 size) i)}}
-                           (if (= (:user player) (:user @app-state))
+                           (if (= side (:side @game-state))
                              (om/build card-view card)
                              (facedown-card side))])
                         cards)
