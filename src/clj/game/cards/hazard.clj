@@ -184,14 +184,14 @@
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
    "Revealed to all Watchers"
    {:abilities [{:label "Revealed"
-                 :effect (req (let [r (get-card state card)
-                                    old-host (:host r)]
-                                (resolve-ability state side
-                                                 {:msg (msg "reveals hand")
-                                                  :effect (effect (set-hand-aside :hand))} card nil)))}
+                 :effect (req (resolve-ability state side
+                                               {:msg (msg "reveal hand")
+                                                :effect (effect (set-hand-aside :hand))
+                                                } nil nil))}
                 {:label "Hide"
                  :effect (req (resolve-ability state side
-                                               {:effect (req (doseq [c (get-in @state [side :play-area])]
+                                               {:msg (msg "stack deck")
+                                                :effect (req (doseq [c (get-in @state [side :play-area])]
                                                                (move state side c :current)))
                                                 } nil nil))}
                 ]}
