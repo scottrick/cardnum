@@ -275,7 +275,7 @@
            specs (:allowspectator game)]
        (cond
          (and (some? faction) (not= "Neutral" faction) specs) (faction-icon faction identity)
-         alignment [:span.alignment (str " (Align-Hidden)")]))])))
+         alignment [:span.alignment (str " (Aligned)")]))])))
 
 (defn chat-view [messages owner]
   (reify
