@@ -4,7 +4,8 @@
 (def app-state
   (atom {:active-page "/"
          :user (js->clj js/user :keywordize-keys true)
-         :options (merge {:background "lobby-bg"
+         :options (merge {:keys-pick "default"
+                          :background "lobby-bg"
                           :deckstats "always"
                           :gamestats "always"
                           :sounds (let [sounds (js->clj (.getItem js/localStorage "sounds"))]

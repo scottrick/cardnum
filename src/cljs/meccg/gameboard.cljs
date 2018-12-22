@@ -500,23 +500,39 @@
       image)))
 
 (defn handle-key-down [e]
-  (cond
-    (= e.keyCode 18) ;// option
-    (send-command "option-key-down")
-    ;(= e.keyCode 27) ;// escape
-    (= e.keyCode 37) ;// shift
-    (send-command "blind-zoom")
-    (= e.keyCode 39) ;// right-arrow
-    (send-command "blind-send")
-    )
+  (if (= (:keys-pick (:options @app-state)) "default")
+    (cond
+      (= e.keyCode 220) ;// slash
+      (send-command "option-key-down")
+      (= e.keyCode 219) ;// open-bracket
+      (send-command "blind-zoom")
+      (= e.keyCode 221) ;// close-bracket
+      (send-command "blind-send")
+      )
+    (cond
+      (= e.keyCode 18) ;// option
+      (send-command "option-key-down")
+      (= e.keyCode 37) ;// left-arrow
+      (send-command "blind-zoom")
+      (= e.keyCode 39) ;// right-arrow
+      (send-command "blind-send")
+      ))
   )
 
 (defn handle-key-up [e]
-  (cond
-    (= e.keyCode 37) ;// shift
-    (send-command "blind-zoom")
-    (= e.keyCode 39) ;// shift
-    (send-command "blind-hold")
+  (if (= (:keys-pick (:options @app-state)) "default")
+    (cond
+      (= e.keyCode 219) ;// open-bracket
+      (send-command "blind-zoom")
+      (= e.keyCode 221) ;// close-bracket
+      (send-command "blind-hold")
+      )
+    (cond
+      (= e.keyCode 37) ;// left-arrow
+      (send-command "blind-zoom")
+      (= e.keyCode 39) ;// right-arrow
+      (send-command "blind-hold")
+      )
     )
   )
 
@@ -2190,10 +2206,13 @@
                    (send-command "blind-send" {:msg (:ImageName card)})))
                (when-let [card (om/get-state owner :zoom)]
                  (when (get-in @game-state [side :opt-key])
-                   (if (:tapped card)
-                     (send-command "option-key-down" {:msg (str (:ImageName card) " AUTO")})
-                     (send-command "option-key-down" {:msg (str (:ImageName card) " AUTO no-tap")})
-                     )))]
+                     (send-command "option-key-down" {:msg (str (:ImageName card)
+                                                                (cond
+                                                                  (:tapped card) " auto tapped"
+                                                                  (:wounded card) " auto wounded"
+                                                                  :else " auto no-tap")
+                                                                )})
+                     ))]
               ;; card implementation info
               (when-let [card (om/get-state owner :zoom)]
                 (let [implemented (:implementation card)]
