@@ -31,6 +31,7 @@
   (.preventDefault event)
   (om/set-state! owner :flash-message "Updating profile...")
   (swap! app-state assoc-in [:options :sounds] (om/get-state owner :sounds))
+  (swap! app-state assoc-in [:options :keys-pick] (om/get-state owner :keys-pick))
   (swap! app-state assoc-in [:options :background] (om/get-state owner :background))
   (swap! app-state assoc-in [:options :dice-pick] (om/get-state owner :dice-pick))
   (swap! app-state assoc-in [:options :dice-size] (om/get-state owner :dice-size))

@@ -1325,7 +1325,7 @@
         [:div.panel.blue-shade.stats {:class (when active "active-player")}
          [:h4.ellipsis (om/build avatar user {:opts {:size 22}}) (:username user)]
          [:div (str free_gi " Free G.I.") (when me? (controls :free_gi))]
-         [:div (str stage_pt " Stage pt" (if (not= stage_pt 1) "s" "")) (when me? (controls :stage_pt))]
+         [:div (str stage_pt " Stage Point" (if (not= stage_pt 1) "s" "")) (when me? (controls :stage_pt))]
          [:div (str total_mp " Total MP" (if (not= total_mp 1) "s" "")) (when me? (controls :total_mp))]
          [:div (str char_mp " Character MP" (if (not= char_mp 1) "s" "")) (when me? (controls :char_mp))]
          [:div (str ally_mp " Ally MP" (if (not= ally_mp 1) "s" "")) (when me? (controls :ally_mp))]
@@ -1344,7 +1344,7 @@
         [:div.panel.blue-shade.stats {:class (when active "active-player")}
          [:h4.ellipsis (om/build avatar user {:opts {:size 22}}) (:username user)]
          [:div (str free_gi " Free G.I.") (when me? (controls :free_gi))]
-         [:div (str stage_pt " Stage pt" (if (not= stage_pt 1) "s" "")) (when me? (controls :stage_pt))]
+         [:div (str stage_pt " Stage Point" (if (not= stage_pt 1) "s" "")) (when me? (controls :stage_pt))]
          [:div (str total_mp " Total MP" (if (not= total_mp 1) "s" "")) (when me? (controls :total_mp))]
          [:div (str char_mp " Character MP" (if (not= char_mp 1) "s" "")) (when me? (controls :char_mp))]
          [:div (str ally_mp " Ally MP" (if (not= ally_mp 1) "s" "")) (when me? (controls :ally_mp))]
