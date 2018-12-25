@@ -605,9 +605,18 @@
          (if-let [game (some #(when (= (:gameid cursor) (str (:gameid %))) %) (:games @app-state))]
            (when (or (not-spectator?)
                      (not (:mutespectators game)))
-             [:form {:on-submit #(send-msg % owner)
-                     :on-input #(send-typing % owner)}
-              [:input.direct {:ref "msg-input" :placeholder "Say something" :accessKey "l"}]]))]))))
+               [:form {:on-submit #(send-msg % owner)
+                       :on-input #(send-typing % owner)}
+                [:input.direct {:ref "msg-input" :placeholder "Say something" :accessKey "l"
+                                :on-key-up #(if (= (:keys-pick (:options @app-state)) "default")
+                                              (case (.-which %)
+                                                219 (set! (.-value (om/get-node owner "msg-input"))
+                                                          (.replace (.-value (om/get-node owner "msg-input")) #"\[" ""))
+                                                220 (set! (.-value (om/get-node owner "msg-input"))
+                                                          (.replace (.-value (om/get-node owner "msg-input")) #"\\" ""))
+                                                221 (set! (.-value (om/get-node owner "msg-input"))
+                                                          (.replace (.-value (om/get-node owner "msg-input")) #"]" ""))
+                                                nil))}]]))]))))
 
 (defn handle-dragstart [e cursor]
   (-> e .-target js/$ (.addClass "dragged"))
