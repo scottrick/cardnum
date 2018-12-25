@@ -93,7 +93,7 @@
          (str (if (or (revealed? card) visible) (:title card) (if (character? card) "Character" "a card"))
               ; Hosted cards do not need "in locale 1" messages, host has them
               (if-not (:host card)
-                (str (if (character? card) " protecting " " in ")
+                (str (if (character? card) " in " " for ")
                      ;TODO add naming of scoring area of contestant/challenger
                      (zone->name (second (:zone card)))
                      (if (character? card) (str " at position " (character-index state card))))))
@@ -115,7 +115,7 @@
          [:discard] "Discard"
          [:deck] "Play Deck"
          [:sideboard] "Sideboard"
-         [:fw-dc-sb] "FW-DC-SB"
+         [:fw-dc-sb] "Sideboard"
          [:location] "Location Deck"
          [:rig _] "in play"
          [:locales :hq _] "the root of Hand"

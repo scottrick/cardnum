@@ -116,17 +116,22 @@
                    (if (= :content last-zone)
                      (str " in " src) ; this string matches the message when a card is discarded via (discard)
                      (str " from their " src)))
-        label (if (and (not= last-zone :play-area)
-                       (not (and (= (:side c) "Challenger")
-                                 (= last-zone :hand)
-                                 (= locale "Grip")))
-                       (or (and (= (:side c) "Challenger")
-                                (not (:facedown c)))
-                           (revealed? c)
-                           (:seen c)
-                           (= last-zone :deck)))
-                "a card";;(:title c)
-                "a card")
+        label (if (and
+                    (not (:facedown c))
+                    (revealed? c)
+                    ;(:seen c)
+                    (not= last-zone :deck)
+                       )
+                (:ImageName c)
+                (if (= last-zone :hand)
+                  "a card"
+                  (cond
+                    (character? card) (str "a " (:alignment c) " Character")
+                    (resource? card) (str "a " (:alignment c) " Resource")
+                    (site? card) "a Site"
+                    (hazard? card) "a Hazard"
+                    (region? card) "a Region"
+                    :else "a card")))
         s (if (#{"HQ" "R&D" "Archives" "Sites"} locale) :contestant :challenger)]
     ;; allow moving from play-area always, otherwise only when same side, and to valid zone
     (when (and (not= src locale)
@@ -392,8 +397,7 @@
                                                (update-in [:zone] #(map to-keyword %))
                                                (update-in [:host :zone] #(map to-keyword %)))))
                      (system-msg state side (str (build-spend-msg cost-str "reveal" "reveals")
-                                                 (:ImageName card) " " (when (= "Region" (:type card))
-                                                                     (:RPath card))))
+                                                 (:ImageName card)))
                      (if (character? card)
                        (play-sfx state side "reveal-character")
                        (play-sfx state side "reveal-other"))

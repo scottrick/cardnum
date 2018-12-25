@@ -1163,7 +1163,7 @@
          (when (= (:side @game-state) side)
            [:div.panel.blue-shade.popup {:ref fwdc-content-ref :style {:left -63}}
             [:div
-             [:a {:on-click #(close-popup % owner fwdc-content-ref "stops looking at their dc/fw-sideboard" false false false true false)}
+             [:a {:on-click #(close-popup % owner fwdc-content-ref "stops looking at their sideboard" false false false true false)}
               "Close"]
              [:a {:on-click #(close-popup % owner fwdc-content-ref "" true false false true false)}
               "Close & Shuffle"]]
