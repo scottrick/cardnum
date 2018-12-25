@@ -287,6 +287,20 @@
     (swap! state assoc-in [side :opt-key] true))
   )
 
+(defn tell-bool
+  [state side args]
+  (if (get-in @state [side :tell])
+    (swap! state assoc-in [side :tell] false)
+    (swap! state assoc-in [side :tell] true))
+  )
+
+(defn tall-bool
+  [state side args]
+  (if (get-in @state [side :tall])
+    (swap! state assoc-in [side :tall] false)
+    (swap! state assoc-in [side :tall] true))
+  )
+
 (defn host-any-card
   [state side args]
   (resolve-ability state side
@@ -474,6 +488,8 @@
           "/roll"       #(command-roll %1 %2 value)
           "/r"          #(basic-roll %1 %2)
           "/tag"        #(swap! %1 assoc-in [%2 :tag] (max 0 value))
+          "/tell"       #(tell-bool %1 %2 nil)
+          "/tall"       #(tall-bool %1 %2 nil)
           "/trace"      #(when (= %2 :contestant) (init-trace %1 %2
                                                         {:title "/trace command" :side %2}
                                                         {:base (max 0 value)

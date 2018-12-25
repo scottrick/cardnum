@@ -116,22 +116,30 @@
                    (if (= :content last-zone)
                      (str " in " src) ; this string matches the message when a card is discarded via (discard)
                      (str " from their " src)))
-        label (if (and
-                    (not (:facedown c))
-                    (revealed? c)
-                    ;(:seen c)
-                    (not= last-zone :deck)
-                       )
+        label (if (or (and
+                        (not (:facedown c))
+                        (revealed? c)
+                        ;(:seen c)
+                        (not= last-zone :deck))
+                      (get-in @state [side :tall]))
                 (:ImageName c)
-                (if (= last-zone :hand)
+                (if (and (= last-zone :hand) (not (get-in @state [side :tell])))
                   "a card"
-                  (cond
-                    (character? card) (str "a " (:alignment c) " Character")
-                    (resource? card) (str "a " (:alignment c) " Resource")
-                    (site? card) "a Site"
-                    (hazard? card) "a Hazard"
-                    (region? card) "a Region"
-                    :else "a card")))
+                  (if (get-in @state [side :tell])
+                    (cond
+                      (character? card) (str "a " (:alignment c) " " (:Race c) " " (:Skill c) " Character")
+                      (resource? card) (str "a " (:alignment c) " " (:Secondary c) " Resource")
+                      (site? card) "a Site"
+                      (hazard? card) "a " (:Secondary c) " Hazard"
+                      (region? card) "a Region"
+                      :else "a card")
+                    (cond
+                      (character? card) (str "a " (:alignment c) " Character")
+                      (resource? card) (str "a " (:alignment c) " Resource")
+                      (site? card) "a Site"
+                      (hazard? card) "a Hazard"
+                      (region? card) "a Region"
+                      :else "a card"))))
         s (if (#{"HQ" "R&D" "Archives" "Sites"} locale) :contestant :challenger)]
     ;; allow moving from play-area always, otherwise only when same side, and to valid zone
     (when (and (not= src locale)

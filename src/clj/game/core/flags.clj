@@ -252,11 +252,6 @@
   [card type]
   (card-is? card :type type))
 
-(defn is-more?
-  "Checks if the card is of the specified type, where the type is a string."
-  [card more]
-  (card-is? card :Secondary more))
-
 (defn has-subtype?
   "Checks if the specified subtype is present in the card."
   [card subtype]
