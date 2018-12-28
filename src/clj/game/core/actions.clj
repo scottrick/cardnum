@@ -116,30 +116,33 @@
                    (if (= :content last-zone)
                      (str " in " src) ; this string matches the message when a card is discarded via (discard)
                      (str " from their " src)))
-        label (if (or (and
-                        (not (:facedown c))
-                        (revealed? c)
-                        ;(:seen c)
-                        (not= last-zone :deck))
-                      (get-in @state [side :tall]))
-                (:ImageName c)
-                (if (and (= last-zone :hand) (not (get-in @state [side :tell])))
-                  "a card"
-                  (if (get-in @state [side :tell])
-                    (cond
-                      (character? card) (str "a " (:alignment c) " " (:Race c) " " (:Skill c) " Character")
-                      (resource? card) (str "a " (:alignment c) " " (:Secondary c) " Resource")
-                      (site? card) "a Site"
-                      (hazard? card) "a " (:Secondary c) " Hazard"
-                      (region? card) "a Region"
-                      :else "a card")
-                    (cond
-                      (character? card) (str "a " (:alignment c) " Character")
-                      (resource? card) (str "a " (:alignment c) " Resource")
-                      (site? card) "a Site"
-                      (hazard? card) "a Hazard"
-                      (region? card) "a Region"
-                      :else "a card"))))
+        label (if (get-in @state [side :talk])
+                (if (or (and
+                          (not (:facedown c))
+                          (revealed? c)
+                          ;(:seen c)
+                          (not= last-zone :deck))
+                        (get-in @state [side :tall]))
+                  (:ImageName c)
+                  (if (and (= last-zone :hand) (not (get-in @state [side :tell])))
+                    "a card"
+                    (if (get-in @state [side :tell])
+                      (cond
+                        (character? card) (str "a " (:alignment c) " " (:Race c) " " (:Skill c) " Character")
+                        (resource? card) (str "a " (:alignment c) " " (:Secondary c) " Resource")
+                        (site? card) "a Site"
+                        (hazard? card) "a " (:Secondary c) " Hazard"
+                        (region? card) "a Region"
+                        :else "a card")
+                      (cond
+                        (character? card) (str "a " (:alignment c) " Character")
+                        (resource? card) (str "a " (:alignment c) " Resource")
+                        (site? card) "a Site"
+                        (hazard? card) "a Hazard"
+                        (region? card) "a Region"
+                        :else "a card"))))
+                "a card")
+
         s (if (#{"HQ" "R&D" "Archives" "Sites"} locale) :contestant :challenger)]
     ;; allow moving from play-area always, otherwise only when same side, and to valid zone
     (when (and (not= src locale)
@@ -151,8 +154,12 @@
         (do (let [action-str (if (= (first (:zone c)) :hand) "discards " "discards ")
                   prior (last (get-in @state [side :discard]))]
               (when prior
-                (update! state side (dissoc prior :seen :revealed)))
-              (discard state s (dissoc c :seen :revealed) {:unpreventable true})
+                (update! state side (dissoc prior :seen :revealed
+                                            :tapped :wounded :rotated
+                                            :inverted)))
+              (discard state s (dissoc c :seen :revealed
+                                       :tapped :wounded :rotated
+                                       :inverted) {:unpreventable true})
               (when (get-in @state [(other-side side) :hpf])
                   (command-revtop state side nil))
               (system-msg state side (str action-str label from-str))))

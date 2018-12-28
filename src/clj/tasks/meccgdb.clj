@@ -189,9 +189,9 @@
   [set-map c]
   (let [s (set-map (:set_code c))]
     (-> c
-        (prune-null-fields [:Artist :Rarity :Precise :subtype :MPs
+        (prune-null-fields [:Artist :Rarity :Precise :MPs
                             :Mind :Direct :General :Prowess :Body
-                            :Corruption :Race :RWMPs :Site :Path
+                            :Corruption :RWMPs :Site :Path
                             :Region :RPath :Playable :GoldRing
                             :GreaterItem :MajorItem :MinorItem
                             :Information :Palantiri :Scroll :Haven

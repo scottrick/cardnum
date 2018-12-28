@@ -416,7 +416,7 @@
   (= (-> players first :user :_id) (:_id user)))
 
 (defn saved-games
-  [{:keys [saves saves-loaded active-save]} cursor owner]
+  [{:keys [saves saves-loaded password password-game active-save]} cursor owner]
   (reify
     om/IRenderState
     (render-state [this state]
@@ -592,7 +592,8 @@
                       (for [spectator (:spectators game)]
                         (om/build player-view {:player spectator}))])]
                   (om/build chat-view messages {:state state})])))
-           (if (and (:loading state) (not (some #(when (= gameid (:gameid %)) %) games)))
+           (if (and (:loading state) (not (or (some #(when (= password-gameid (:gameid %)) %) games)
+                                            (some #(when (= gameid (:gameid %)) %) games))))
              (om/build saved-games {:saves saves :saves-loaded saves-loaded :active-save (om/get-state owner :save)}))
            ]
           (om/build deckselect-modal cursor)
