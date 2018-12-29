@@ -1,9 +1,7 @@
 (ns web.sites)
 
-(def all-standard-sites
-  [
-   ;; REGIONS
-   {:qty 3 :card "Andrast" :id "(TW)"}
+(def standard-region
+  [{:qty 3 :card "Andrast" :id "(TW)"}
    {:qty 3 :card "Andrast Coast" :id "(TW)"}
    {:qty 3 :card "Anduin Vales" :id "(TW)"}
    {:qty 3 :card "Anfalas" :id "(TW)"}
@@ -54,10 +52,10 @@
    {:qty 3 :card "Western Mirkwood" :id "(TW)"}
    {:qty 3 :card "Withered Heath" :id "(TW)"}
    {:qty 3 :card "Wold & Foothills" :id "(TW)"}
-   {:qty 3 :card "Woodland Realm" :id "(TW)"}
+   {:qty 3 :card "Woodland Realm" :id "(TW)"}])
 
-   ;; HERO SITES
-   {:qty 1 :card "Amon Hen" :id "[H] (TW)"}
+(def standard-wizard
+  [{:qty 1 :card "Amon Hen" :id "[H] (TW)"}
    {:qty 1 :card "Bag End" :id "[H] (TW)"}
    {:qty 1 :card "Bandit Lair" :id "[H] (TW)"}
    {:qty 1 :card "Barad-dûr" :id "[H] (TW)"}
@@ -82,7 +80,6 @@
    {:qty 1 :card "Dunnish Clan-hold" :id "[H] (TW)"}
    {:qty 1 :card "Eagles' Eyrie" :id "[H] (TW)"}
    {:qty 1 :card "Easterling Camp" :id "[H] (TW)"}
-   {:qty 4 :card "Edhellond" :id "[H] (TW)"}
    {:qty 1 :card "Edoras" :id "[H] (TW)"}
    {:qty 1 :card "Ettenmoors" :id "[H] (TW)"}
    {:qty 1 :card "Framsburg" :id "[H] (TD)"}
@@ -93,7 +90,6 @@
    {:qty 1 :card "Goblin-gate" :id "[H] (TW)"}
    {:qty 1 :card "Gold Hill" :id "[H] (TD)"}
    {:qty 1 :card "Gondmaeglom" :id "[H] (TD)"}
-   {:qty 4 :card "Grey Havens" :id "[H] (TW)"}
    {:qty 1 :card "Haudh-in-Gwanûr" :id "[H] (DM)"}
    {:qty 1 :card "Henneth Annûn" :id "[H] (TW)"}
    {:qty 1 :card "Hermit's Hill" :id "[H] (DM)"}
@@ -105,7 +101,6 @@
    {:qty 1 :card "Isles of the Dead that Live" :id "[H] (TW)"}
    {:qty 1 :card "Lake-town" :id "[H] (TW)"}
    {:qty 1 :card "Lond Galen" :id "[H] (TW)"}
-   {:qty 4 :card "Lórien" :id "[H] (TW)"}
    {:qty 1 :card "Lossadan Cairn" :id "[H] (TW)"}
    {:qty 1 :card "Lossadan Camp" :id "[H] (TW)"}
    {:qty 1 :card "Minas Morgul" :id "[H] (TW)"}
@@ -121,7 +116,6 @@
    {:qty 1 :card "Pelargir" :id "[H] (TW)"}
    {:qty 1 :card "Raider-hold" :id "[H] (AS)"}
    {:qty 1 :card "Rhosgobel" :id "[H] (TW)"}
-   {:qty 4 :card "Rivendell" :id "[H] (TW)"}
    {:qty 1 :card "Ruined Signal Tower" :id "[H] (TW)"}
    {:qty 1 :card "Sarn Goriwing" :id "[H] (TW)"}
    {:qty 1 :card "Shelob's Lair" :id "[H] (TW)"}
@@ -153,29 +147,24 @@
    {:qty 1 :card "Wellinghall" :id "[H] (TW)"}
    {:qty 1 :card "Woodmen-town" :id "[H] (TW)"}
    {:qty 1 :card "Wose Passage-hold" :id "[H] (TW)"}
-   {:qty 1 :card "Zarak Dûm" :id "[H] (TD)"}
+   {:qty 1 :card "Zarak Dûm" :id "[H] (TD)"}])
 
-   ;; MINION SITES
-   {:qty 1 :card "Amon Hen" :id "[M] (LE)"}
+(def standard-minion
+  [{:qty 1 :card "Amon Hen" :id "[M] (LE)"}
    {:qty 1 :card "Bag End" :id "[M] (LE)"}
    {:qty 1 :card "Bandit Lair" :id "[M] (LE)"}
-   {:qty 1 :card "Barad-dûr" :id "[M] (LE)"}
    {:qty 1 :card "Barrow-downs" :id "[M] (LE)"}
    {:qty 1 :card "Beorn's House" :id "[M] (LE)"}
    {:qty 1 :card "Blue Mountain Dwarf-hold" :id "[M] (LE)"}
    {:qty 1 :card "Bree" :id "[M] (LE)"}
    {:qty 1 :card "Buhr Widu" :id "[M] (LE)"}
    {:qty 1 :card "Cameth Brin" :id "[M] (LE)"}
-   {:qty 4 :card "Carn Dûm" :id "[M] (LE)"}
    {:qty 1 :card "Caves of Ûlund" :id "[M] (LE)"}
-   {:qty 1 :card "Cirith Gorgor" :id "[M] (LE)"}
-   {:qty 1 :card "Cirith Ungol" :id "[M] (LE)"}
    {:qty 1 :card "Dale" :id "[M] (LE)"}
    {:qty 1 :card "Dancing Spire" :id "[M] (AS)"}
    {:qty 1 :card "Dead Marshes" :id "[M] (LE)"}
    {:qty 1 :card "Dimrill Dale" :id "[M] (LE)"}
    {:qty 1 :card "Dol Amroth" :id "[M] (LE)"}
-   {:qty 4 :card "Dol Guldur" :id "[M] (LE)"}
    {:qty 1 :card "Drúadan Forest" :id "[M] (LE)"}
    {:qty 1 :card "Dunharrow" :id "[M] (LE)"}
    {:qty 1 :card "Dunnish Clan-hold" :id "[M] (LE)"}
@@ -185,7 +174,6 @@
    {:qty 1 :card "Edoras" :id "[M] (LE)"}
    {:qty 1 :card "Ettenmoors" :id "[M] (LE)"}
    {:qty 1 :card "Framsburg" :id "[M] (AS)"}
-   {:qty 4 :card "Geann a-Lisch" :id "[M] (LE)"}
    {:qty 1 :card "Gladden Fields" :id "[M] (LE)"}
    {:qty 1 :card "Glittering Caves" :id "[M] (LE)"}
    {:qty 1 :card "Gobel Mírlond" :id "[M] (LE)"}
@@ -207,9 +195,7 @@
    {:qty 1 :card "Lórien" :id "[M] (AS)"}
    {:qty 1 :card "Lossadan Cairn" :id "[M] (LE)"}
    {:qty 1 :card "Lossadan Camp" :id "[M] (LE)"}
-   {:qty 4 :card "Minas Morgul" :id "[M] (LE)"}
    {:qty 1 :card "Minas Tirith" :id "[M] (LE)"}
-   {:qty 1 :card "Moria" :id "[M] (LE)"}
    {:qty 1 :card "Mount Doom" :id "[M] (LE)"}
    {:qty 1 :card "Mount Gram" :id "[M] (LE)"}
    {:qty 1 :card "Mount Gundabad" :id "[M] (LE)"}
@@ -228,18 +214,8 @@
    {:qty 1 :card "Southron Oasis" :id "[M] (LE)"}
    {:qty 1 :card "Stone-circle" :id "[M] (LE)"}
    {:qty 1 :card "Tharbad" :id "[M] (LE)"}
-   {:qty 1 :card "The Gem-deeps" :id "[M] (AS)"}
-   {:qty 1 :card "The Iron-deeps" :id "[M] (AS)"}
    {:qty 1 :card "The Lonely Mountain" :id "[M] (LE)"}
-   {:qty 1 :card "The Pûkel-deeps" :id "[M] (AS)"}
    {:qty 1 :card "The Stones" :id "[M] (LE)"}
-   {:qty 1 :card "The Sulfur-deeps" :id "[M] (AS)"}
-   {:qty 1 :card "The Under-courts" :id "[M] (AS)"}
-   {:qty 1 :card "The Under-galleries" :id "[M] (AS)"}
-   {:qty 1 :card "The Under-gates" :id "[M] (AS)"}
-   {:qty 1 :card "The Under-grottos" :id "[M] (AS)"}
-   {:qty 1 :card "The Under-leas" :id "[M] (AS)"}
-   {:qty 1 :card "The Under-vaults" :id "[M] (AS)"}
    {:qty 1 :card "The White Towers" :id "[M] (LE)"}
    {:qty 1 :card "The Wind Throne" :id "[M] (LE)"}
    {:qty 1 :card "The Worthy Hills" :id "[M] (LE)"}
@@ -252,10 +228,10 @@
    {:qty 1 :card "Wellinghall" :id "[M] (AS)"}
    {:qty 1 :card "Woodmen-town" :id "[M] (LE)"}
    {:qty 1 :card "Wose Passage-hold" :id "[M] (LE)"}
-   {:qty 1 :card "Zarak Dûm" :id "[M] (LE)"}
+   {:qty 1 :card "Zarak Dûm" :id "[M] (LE)"}])
 
-   ;; BALROG SITES
-   {:qty 1 :card "Ancient Deep-hold" :id "[B] (BA)"}
+(def standard-balrog
+  [{:qty 1 :card "Ancient Deep-hold" :id "[B] (BA)"}
    {:qty 1 :card "Barad-dûr" :id "[B] (BA)"}
    {:qty 1 :card "Carn Dûm" :id "[B] (BA)"}
    {:qty 1 :card "Cirith Gorgor" :id "[B] (BA)"}
@@ -276,14 +252,62 @@
    {:qty 1 :card "The Under-grottos" :id "[B] (BA)"}
    {:qty 1 :card "The Under-leas" :id "[B] (BA)"}
    {:qty 1 :card "The Under-vaults" :id "[B] (BA)"}
-   {:qty 1 :card "The Wind-deeps" :id "[B] (BA)"}
+   {:qty 1 :card "The Wind-deeps" :id "[B] (BA)"}])
 
-   ;; FALLEN SITES
-   {:qty 4 :card "Deep Mines" :id "(WH)"}
+(def standard-wizard-havens
+  [{:qty 4 :card "Edhellond" :id "[H] (TW)"}
+   {:qty 4 :card "Grey Havens" :id "[H] (TW)"}
+   {:qty 4 :card "Lórien" :id "[H] (TW)"}
+   {:qty 4 :card "Rivendell" :id "[H] (TW)"}])
+
+(def standard-wizard-haven
+  [{:qty 1 :card "Edhellond" :id "[H] (TW)"}
+   {:qty 1 :card "Grey Havens" :id "[H] (TW)"}
+   {:qty 1 :card "Lórien" :id "[H] (TW)"}
+   {:qty 1 :card "Rivendell" :id "[H] (TW)"}])
+
+(def standard-minion-havens
+  [{:qty 4 :card "Carn Dûm" :id "[M] (LE)"}
+   {:qty 4 :card "Dol Guldur" :id "[M] (LE)"}
+   {:qty 4 :card "Geann a-Lisch" :id "[M] (LE)"}
+   {:qty 4 :card "Minas Morgul" :id "[M] (LE)"}])
+
+(def standard-minion-haven
+  [{:qty 1 :card "Carn Dûm" :id "[M] (LE)"}
+   {:qty 1 :card "Dol Guldur" :id "[M] (LE)"}
+   {:qty 1 :card "Geann a-Lisch" :id "[M] (LE)"}
+   {:qty 1 :card "Minas Morgul" :id "[M] (LE)"}])
+
+(def standard-fallen-havens
+  [{:qty 4 :card "Deep Mines" :id "(WH)"}
    {:qty 4 :card "Isengard" :id "[F] (WH)"}
    {:qty 4 :card "Rhosgobel" :id "[F] (WH)"}
    {:qty 4 :card "The White Towers" :id "[F] (WH)"}
    ])
+
+(def standard-minion-balrog
+  [{:qty 1 :card "Barad-dûr" :id "[M] (LE)"}
+   {:qty 1 :card "Cirith Gorgor" :id "[M] (LE)"}
+   {:qty 1 :card "Cirith Ungol" :id "[M] (LE)"}
+   {:qty 1 :card "Moria" :id "[M] (LE)"}
+   {:qty 1 :card "The Gem-deeps" :id "[M] (AS)"}
+   {:qty 1 :card "The Iron-deeps" :id "[M] (AS)"}
+   {:qty 1 :card "The Pûkel-deeps" :id "[M] (AS)"}
+   {:qty 1 :card "The Sulfur-deeps" :id "[M] (AS)"}
+   {:qty 1 :card "The Under-courts" :id "[M] (AS)"}
+   {:qty 1 :card "The Under-galleries" :id "[M] (AS)"}
+   {:qty 1 :card "The Under-gates" :id "[M] (AS)"}
+   {:qty 1 :card "The Under-grottos" :id "[M] (AS)"}
+   {:qty 1 :card "The Under-leas" :id "[M] (AS)"}
+   {:qty 1 :card "The Under-vaults" :id "[M] (AS)"}])
+
+(def standard-balrog-extras
+  [{:qty 1 :card "Ancient Deep-hold" :id "[B] (BA)"}
+   {:qty 1 :card "Remains of Thangorodrim" :id "[B] (BA)"}
+   {:qty 1 :card "The Drowning-deeps" :id "[B] (BA)"}
+   {:qty 1 :card "The Rusted-deeps" :id "[B] (BA)"}
+   {:qty 1 :card "The Wind-deeps" :id "[B] (BA)"}])
+
 
 (def all-dreamcard-sites
   [
@@ -1307,3 +1331,71 @@
    {:qty 1 :card "The Rusted-deeps" :id "[D] (DF)"}
    {:qty 1 :card "The Wind-deeps" :id "[D] (DF)"}
    ])
+
+
+(def standard-wizard-sites
+  (into standard-region
+        (into standard-wizard
+              (into standard-wizard-havens
+                    standard-balrog-extras))))
+
+(def standard-minion-sites
+  (into standard-region
+        (into standard-minion
+              (into standard-minion-balrog
+                    (into standard-minion-havens
+                          standard-balrog-extras)))))
+
+(def standard-fallen-sites
+  (into standard-region
+        (into standard-wizard
+              (into standard-wizard-haven
+                    (into standard-minion
+                          (into standard-minion-balrog
+                                (into standard-minion-haven
+                                      (into standard-fallen-havens
+                                            standard-balrog-extras))))))))
+
+(def standard-balrog-sites
+  (into standard-region
+        (into standard-minion standard-balrog)))
+
+(def dreamcard-region)
+(def dreamcard-wizard [])
+(def dreamcard-wizard-haven [])
+(def dreamcard-wizard-havens [])
+(def dreamcard-minion [])
+(def dreamcard-minion-balrog [])
+(def dreamcard-minion-haven [])
+(def dreamcard-minion-havens [])
+(def dreamcard-fallen-havens [])
+(def dreamcard-balrog-extras [])
+(def dreamcard-balrog [])
+
+(def dreamcard-wizard-sites
+  (into dreamcard-region
+        (into dreamcard-wizard
+              (into dreamcard-wizard-havens
+                    dreamcard-balrog-extras))))
+
+(def dreamcard-minion-sites
+  (into dreamcard-region
+        (into dreamcard-minion
+              (into dreamcard-minion-balrog
+                    (into dreamcard-minion-havens
+                          dreamcard-balrog-extras)))))
+
+(def dreamcard-fallen-sites
+  (into dreamcard-region
+        (into dreamcard-wizard
+              (into dreamcard-wizard-haven
+                    (into dreamcard-minion
+                          (into dreamcard-minion-balrog
+                                (into dreamcard-minion-haven
+                                      (into dreamcard-fallen-havens
+                                            dreamcard-balrog-extras))))))))
+
+(def dreamcard-balrog-sites
+  (into dreamcard-region
+        (into dreamcard-minion dreamcard-balrog)))
+

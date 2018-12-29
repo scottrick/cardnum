@@ -399,10 +399,12 @@
   [:div {:class (if (:legal format) "legal" "invalid") :title (when violation-details? (:reason format))}
    [:span.tick (if (:legal format) "✔" "✘")] message " compliant"])
 
-(defn- build-deck-status-label [valid mwl rotation cache-refresh onesies modded violation-details?]
-  (let [status (decks/deck-status mwl valid rotation)
+(defn- build-deck-status-label [valid mwl standard rotation cache-refresh onesies modded violation-details?]
+  (let [status (decks/deck-status mwl valid standard rotation)
         message (case status
                   "legal" "Tournament legal"
+                  "standard" "Standard"
+                  "dreamcard" "Dreamcard"
                   "casual" "Casual play only"
                   "invalid" "Invalid"
                   "")]
@@ -425,15 +427,17 @@
 
 (defn format-deck-status-span
   [deck-status tooltip? violation-details?]
-  (let [{:keys [valid mwl rotation cache-refresh onesies modded status]} deck-status
+  (let [{:keys [valid mwl standard rotation cache-refresh onesies modded status]} deck-status
         message (case status
                   "legal" "Tournament legal"
+                  "standard" "Standard"
+                  "dreamcard" "Dreamcard"
                   "casual" "Casual play only"
                   "invalid" "Invalid"
                   "")]
     [:span.deck-status.shift-tooltip {:class status} message
      (when tooltip?
-       (build-deck-status-label valid mwl rotation cache-refresh onesies modded violation-details?))]))
+       (build-deck-status-label valid mwl standard rotation cache-refresh onesies modded violation-details?))]))
 
 (defn deck-status-span-impl [sets deck tooltip? violation-details? use-trusted-info]
   (format-deck-status-span (deck-status-details deck use-trusted-info) tooltip? violation-details?))

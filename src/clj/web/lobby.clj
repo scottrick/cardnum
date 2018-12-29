@@ -4,7 +4,14 @@
             [clojure.string :refer [split split-lines join escape] :as s]
             [clojure.java.io :as io]
             [web.ws :as ws]
-            [web.sites :refer [all-standard-sites all-dreamcard-sites]]
+            [web.sites :refer [standard-wizard-sites standard-minion-sites
+                               standard-fallen-sites standard-balrog-sites
+                               dreamcard-wizard-sites dreamcard-minion-sites
+                               dreamcard-fallen-sites dreamcard-balrog-sites
+                               ;dreamcard-elf-sites dreamcard-dwarf-sites
+                               ;dreamcard-atani-sites dreamcard-dragon-sites
+                               ;dreamcard-war-sites
+                               ]]
             [web.stats :as stats]
             [game.core :as core]
             [crypto.password.bcrypt :as bcrypt]
@@ -415,10 +422,55 @@
                            (dissoc c :code :id)))
         rid-card (fn [c] (nil? (:card c)))
 
+        check (as-> (mc/find-one-as-map db "decks" {:_id (object-id deck-id) :username username}) d
+
+                   (map-values d [:resources :hazards :sideboard
+                                  :characters :pool :fwsb]
+                               #(mapv get-code %))
+
+                   (map-values d [:resources :hazards :sideboard
+                                  :characters :pool :fwsb]
+                               #(mapv get-data %))
+
+                   (map-values d [:resources :hazards :sideboard
+                                  :characters :pool :fwsb]
+                               #(mapv get-swap %))
+
+                   (map-values d [:resources :hazards :sideboard
+                                  :characters :pool :fwsb]
+                               #(mapv rid-code %))
+
+                   (map-values d [:resources :hazards :sideboard
+                                  :characters :pool :fwsb]
+                               #(vec (remove rid-card %)))
+
+                   (update-in d [:identity] #(@all-cards (str (:title %) " " (:trimCode %))))
+                   (assoc d :status (decks/calculate-deck-status d))
+                   )
+
         deck (as-> (mc/find-one-as-map db "decks" {:_id (object-id deck-id) :username username}) d
                    ;(process-sites d)
-                   (assoc d :location all-dreamcard-sites)
-
+                   (assoc d :location
+                            (let [{:keys [status]} (get-in check [:status])]
+                              (cond
+                                (= "standard" status)
+                                (cond
+                                  (= (get-in d [:identity :alignment]) "Hero") standard-wizard-sites
+                                  (= (get-in d [:identity :alignment]) "Minion") standard-minion-sites
+                                  (= (get-in d [:identity :alignment]) "Fallen-wizard") standard-fallen-sites
+                                  (= (get-in d [:identity :alignment]) "Balrog") standard-balrog-sites)
+                                :else
+                                (cond
+                                  (= (get-in d [:identity :alignment]) "Hero") dreamcard-wizard-sites
+                                  (= (get-in d [:identity :alignment]) "Minion") dreamcard-minion-sites
+                                  (= (get-in d [:identity :alignment]) "Fallen-wizard") dreamcard-fallen-sites
+                                  (= (get-in d [:identity :alignment]) "Balrog") dreamcard-balrog-sites
+                                  ;(= (get-in d [:identity :alignment]) "Elf-lord") dreamcard-elf-sites
+                                  ;(= (get-in d [:identity :alignment]) "Dwarf-lord") dreamcard-dwarf-sites
+                                  ;(= (get-in d [:identity :alignment]) "Atani-lord") dreamcard-atani-sites
+                                  ;(= (get-in d [:identity :alignment]) "Dragon-lord") dreamcard-dragon-sites
+                                  ;(= (get-in d [:identity :alignment]) "War-lord") dreamcard-war-sites
+                                  ))))
                    (map-values d [:resources :hazards :sideboard
                                   :characters :pool :fwsb :location]
                                #(mapv get-code %))
