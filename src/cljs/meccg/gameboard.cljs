@@ -606,7 +606,10 @@
            (when (or (not-spectator?)
                      (not (:mutespectators game)))
                [:form {:on-submit #(send-msg % owner)
-                       :on-input #(send-typing % owner)}
+                       :on-input #(send-typing % owner)
+                       :on-key-up #(case (.-which %)
+                                     (219 220 221) (ws/ws-send! [:meccg/typing {:gameid-str (:gameid @game-state) :typing false}])
+                                     nil)}
                 [:input.direct {:ref "msg-input" :placeholder "Say something" :accessKey "l"
                                 :on-key-up #(if (= (:keys-pick (:options @app-state)) "default")
                                               (case (.-which %)
