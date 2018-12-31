@@ -287,21 +287,11 @@
     (swap! state assoc-in [side :opt-key] true))
   )
 
-(defn hush-talk
-  [state side args]
-  (swap! state assoc-in [side :talk] false)
-  )
-
 (defn talk-bool
   [state side args]
-  (swap! state assoc-in [side :talk] true)
-  )
-
-(defn tell-bool
-  [state side args]
-  (if (get-in @state [side :tell])
-    (swap! state assoc-in [side :tell] false)
-    (swap! state assoc-in [side :tell] true))
+  (if (get-in @state [side :talk])
+    (swap! state assoc-in [side :talk] false)
+    (swap! state assoc-in [side :talk] true))
   )
 
 (defn tall-bool
@@ -309,6 +299,13 @@
   (if (get-in @state [side :tall])
     (swap! state assoc-in [side :tall] false)
     (swap! state assoc-in [side :tall] true))
+  )
+
+(defn tell-bool
+  [state side args]
+  (if (get-in @state [side :tell])
+    (swap! state assoc-in [side :tell] false)
+    (swap! state assoc-in [side :tell] true))
   )
 
 (defn host-any-card
@@ -412,7 +409,6 @@
           "/hide-hand"   #(hide-hand %1 %2)
           "/host"       #(host-any-card %1 %2 args)
           ;"/hosth"      #(host-any-card-hidden %1 %2 args)
-          "/hush"       #(hush-talk %1 %2 nil)
           "/jack-out"   #(when (= %2 :challenger) (jack-out %1 %2 nil))
           "/link"       #(swap! %1 assoc-in [%2 :link] (max 0 value))
           "/memory"     #(swap! %1 assoc-in [%2 :memory] value)

@@ -27,7 +27,7 @@
       (system-msg state side (str "stops looking at their "
                   (cond
                     board "sideboard"
-                    fwsb "dc/fw-sideboard"
+                    fwsb "sideboard"
                     :else "deck"
                     )
                   " and shuffles their deck")))
@@ -128,7 +128,7 @@
                     "a card"
                     (if (get-in @state [side :tell])
                       (cond
-                        (character? card) (str "a " (:alignment c) " " (:Race c) " " (:Skill c) " Character")
+                        (character? card) (str "a " (:alignment c) " " (:Race c) " Character")
                         (resource? card) (str "a " (:alignment c) " " (:Secondary c) " Resource")
                         (site? card) "a Site"
                         (hazard? card) "a " (:Secondary c) " Hazard"
