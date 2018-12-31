@@ -15,6 +15,13 @@
       (do (Thread/sleep ms)
           (callback)))))
 
+(defn deaccent
+  "Remove diacritical marks from a string, from http://www.matt-reid.co.uk/blog_post.php?id=69"
+  [s]
+  (if (nil? s) ""
+               (let [normalized (java.text.Normalizer/normalize s java.text.Normalizer$Form/NFD)]
+                 (string/replace normalized #"\p{InCombiningDiacriticalMarks}+" ""))))
+
 (defn deaccent-strip
   "Remove diacritical marks from a string, from http://www.matt-reid.co.uk/blog_post.php?id=69"
   [s]
