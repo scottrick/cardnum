@@ -2024,7 +2024,7 @@
                    ;; set to 80, and opponent to 25
                    (cond-button "EOT Discard" (= (:click me) 75) #(handle-end-of-phase "eot-discard"));; -5
                    (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
-                   (cond-button "EOT (HHLimit?)" (and (= (:click me) 70)
+                   (cond-button "EOT (1/2-Haz?)" (and (= (:click me) 70)
                                                    (and (get-in @game-state [:contestant :eot])
                                                         (get-in @game-state [:challenger :eot]))
                                                    (= (keyword active-player) side) (not end-turn)

@@ -1,6 +1,7 @@
 (ns web.utils
   (:require [ring.util.response :as resp]
             [monger.collection :as mc]
+            [clojure.string :as string]
             [clojure.java.io :as io]
             [web.db :refer [db]]))
 
@@ -13,6 +14,14 @@
     (while true
       (do (Thread/sleep ms)
           (callback)))))
+
+(defn deaccent-strip
+  "Remove diacritical marks from a string, from http://www.matt-reid.co.uk/blog_post.php?id=69"
+  [s]
+  (if (nil? s) ""
+               (let [normalized (java.text.Normalizer/normalize s java.text.Normalizer$Form/NFD)]
+                 (string/replace (string/replace normalized #"\p{InCombiningDiacriticalMarks}+" "")
+                                 #"(\bt+)(\w+)(.*)" ""))))
 
 (defn map-values
   [m keys f]

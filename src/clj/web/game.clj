@@ -1,7 +1,7 @@
 (ns web.game
   (:require [web.ws :as ws]
             [web.lobby :refer [all-games old-states already-in-game? spectator?] :as lobby]
-            [web.utils :refer [proj-dir my-value-reader response]]
+            [web.utils :refer [proj-dir my-value-reader response deaccent-strip]]
             [web.stats :as stats]
             [game.main :as main]
             [game.core :as core]
@@ -12,6 +12,7 @@
             [monger.json]
             [crypto.password.bcrypt :as bcrypt]
             [clj-time.core :as t]))
+
 (import '[java.io RandomAccessFile])
 
 (defn append-to-json [file-name new-json-text]
@@ -146,16 +147,16 @@
                                 :last-update (t/now))
                        (assoc g :state (core/init-game g))
                        (update-in g [:players] #(mapv strip-deck %)))]
-        (let [id_title1 (get-in @(:state game) [:contestant :identity :title])
+        (let [id_title1 (deaccent-strip (get-in @(:state game) [:contestant :identity :title]))
               id_scode1 (get-in @(:state game) [:contestant :identity :set_code])
               id_image1 (get-in @(:state game) [:contestant :identity :ImageName])
               id_align1 (get-in @(:state game) [:contestant :identity :alignment])
-              id_usern1 (get-in @(:state game) [:contestant :user :username])
-              id_title2 (get-in @(:state game) [:challenger :identity :title])
+              id_usern1 (deaccent-strip (get-in @(:state game) [:contestant :user :username]))
+              id_title2 (deaccent-strip (get-in @(:state game) [:challenger :identity :title]))
               id_scode2 (get-in @(:state game) [:challenger :identity :set_code])
               id_image2 (get-in @(:state game) [:challenger :identity :ImageName])
               id_align2 (get-in @(:state game) [:challenger :identity :alignment])
-              id_usern2 (get-in @(:state game) [:challenger :user :username])
+              id_usern2 (deaccent-strip(get-in @(:state game) [:challenger :user :username]))
               game-name (str id_usern1 "'s game w/" id_usern2)
               game-date (t/now)]
 
