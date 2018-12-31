@@ -299,7 +299,12 @@
 (defn all-standard?
   "Returns true if not one dreamcard"
   [deck]
-  (if (nil? (some #(dreamcard? (:card %)) (:resources deck))) true false))
+  (and (if (nil? (some #(dreamcard? (:card %)) (:resources deck))) true false)
+       (if (nil? (some #(dreamcard? (:card %)) (:hazards deck))) true false)
+       (if (nil? (some #(dreamcard? (:card %)) (:sideboard deck))) true false)
+       (if (nil? (some #(dreamcard? (:card %)) (:characters deck))) true false)
+       (if (nil? (some #(dreamcard? (:card %)) (:pool deck))) true false)
+       (if (nil? (some #(dreamcard? (:card %)) (:fwsb deck))) true false)))
 
 (defn deck-status
   [mwl-legal valid standard in-rotation]

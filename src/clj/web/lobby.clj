@@ -8,10 +8,9 @@
                                standard-fallen-sites standard-balrog-sites
                                dreamcard-wizard-sites dreamcard-minion-sites
                                dreamcard-fallen-sites dreamcard-balrog-sites
-                               ;dreamcard-elf-sites dreamcard-dwarf-sites
-                               ;dreamcard-atani-sites dreamcard-dragon-sites
-                               ;dreamcard-war-sites
-                               ]]
+                               dreamcard-dwarf-sites dreamcard-elf-sites
+                               dreamcard-atani-sites dreamcard-dragon-sites
+                               dreamcard-warlord-sites]]
             [web.stats :as stats]
             [game.core :as core]
             [crypto.password.bcrypt :as bcrypt]
@@ -465,12 +464,12 @@
                                   (= (get-in d [:identity :alignment]) "Minion") dreamcard-minion-sites
                                   (= (get-in d [:identity :alignment]) "Fallen-wizard") dreamcard-fallen-sites
                                   (= (get-in d [:identity :alignment]) "Balrog") dreamcard-balrog-sites
-                                  ;(= (get-in d [:identity :alignment]) "Elf-lord") dreamcard-elf-sites
-                                  ;(= (get-in d [:identity :alignment]) "Dwarf-lord") dreamcard-dwarf-sites
-                                  ;(= (get-in d [:identity :alignment]) "Atani-lord") dreamcard-atani-sites
-                                  ;(= (get-in d [:identity :alignment]) "Dragon-lord") dreamcard-dragon-sites
-                                  ;(= (get-in d [:identity :alignment]) "War-lord") dreamcard-war-sites
-                                  ))))
+                                  (= (get-in d [:identity :alignment]) "Elf-lord") dreamcard-elf-sites
+                                  (= (get-in d [:identity :alignment]) "Dwarf-lord") dreamcard-dwarf-sites
+                                  (= (get-in d [:identity :alignment]) "Atani-lord") dreamcard-atani-sites
+                                  (= (get-in d [:identity :alignment]) "Dragon-lord") dreamcard-dragon-sites
+                                  (= (get-in d [:identity :alignment]) "War-lord") dreamcard-warlord-sites))))
+
                    (map-values d [:resources :hazards :sideboard
                                   :characters :pool :fwsb :location]
                                #(mapv get-code %))
