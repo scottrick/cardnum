@@ -1288,7 +1288,10 @@
       (let [cards (:current player)
             size (count cards)
             card-side (:side (first cards))
-            side (if (= card-side "Contestant") :contestant :challenger)]
+            side-swap (:swap (first cards))
+            side (if side-swap
+                   (if (= card-side "Contestant") :challenger :contestant)
+                   (if (= card-side "Contestant") :contestant :challenger))]
         (when-not (empty? cards)
           [:div.panel.blue-shade.rfg {:class (when (> size 2) "squeeze")}
            (map-indexed (fn [i card]
@@ -2024,7 +2027,7 @@
                    ;; set to 80, and opponent to 25
                    (cond-button "EOT Discard" (= (:click me) 75) #(handle-end-of-phase "eot-discard"));; -5
                    (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
-                   (cond-button "EOT (1/2-Haz?)" (and (= (:click me) 70)
+                   (cond-button "EOT (1/2 HL?)" (and (= (:click me) 70)
                                                    (and (get-in @game-state [:contestant :eot])
                                                         (get-in @game-state [:challenger :eot]))
                                                    (= (keyword active-player) side) (not end-turn)
