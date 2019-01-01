@@ -104,6 +104,11 @@
          (not (nil? date))
          (before-today? date))))
 
+(defn dreamcard?
+  "Returns true if the card is from the Dreamcards."
+  [card]
+  (:dreamcard card))
+
 ;; Influence
 ;; Note: line is a map with a :card and a :qty
 (defn line-base-cost
@@ -291,23 +296,37 @@
   (and (every? #(released? sets (:card %)) (:cards deck))
        (released? sets (:identity deck))))
 
+(defn all-standard?
+  "Returns true if not one dreamcard"
+  [deck]
+  (and (if (nil? (some #(dreamcard? (:card %)) (:resources deck))) true false)
+       (if (nil? (some #(dreamcard? (:card %)) (:hazards deck))) true false)
+       (if (nil? (some #(dreamcard? (:card %)) (:sideboard deck))) true false)
+       (if (nil? (some #(dreamcard? (:card %)) (:characters deck))) true false)
+       (if (nil? (some #(dreamcard? (:card %)) (:pool deck))) true false)
+       (if (nil? (some #(dreamcard? (:card %)) (:fwsb deck))) true false)))
+
 (defn deck-status
-  [mwl-legal valid in-rotation]
+  [mwl-legal valid standard in-rotation]
   (cond
-    (and mwl-legal valid in-rotation) "legal"
+    ;(and mwl-legal valid in-rotation) "legal"
+    standard "standard"
+    (not standard) "dreamcard"
     valid "casual"
     :else "invalid"))
 
 (defn calculate-deck-status [deck]
   (let [valid (valid-deck? deck)
         mwl (mwl-legal? deck)
+        standard (all-standard? deck)
         rotation (only-in-rotation? @cards/sets deck)
         onesies (onesies-legal @cards/sets deck)
         cache-refresh (cache-refresh-legal @cards/sets deck)
         modded (modded-legal @cards/sets deck)
-        status (deck-status mwl valid rotation)]
+        status (deck-status mwl valid standard rotation)]
     {:valid         valid
      :mwl           mwl
+     :standard      standard
      :rotation      rotation
      :status        status
      :onesies       onesies

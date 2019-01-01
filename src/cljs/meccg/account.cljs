@@ -31,6 +31,7 @@
   (.preventDefault event)
   (om/set-state! owner :flash-message "Updating profile...")
   (swap! app-state assoc-in [:options :sounds] (om/get-state owner :sounds))
+  (swap! app-state assoc-in [:options :keys-pick] (om/get-state owner :keys-pick))
   (swap! app-state assoc-in [:options :background] (om/get-state owner :background))
   (swap! app-state assoc-in [:options :dice-pick] (om/get-state owner :dice-pick))
   (swap! app-state assoc-in [:options :dice-size] (om/get-state owner :dice-size))
@@ -70,6 +71,7 @@
 
     om/IWillMount
     (will-mount [this]
+      (om/set-state! owner :keys-pick (get-in @app-state [:options :keys-pick]))
       (om/set-state! owner :background (get-in @app-state [:options :background]))
       (om/set-state! owner :dice-pick (get-in @app-state [:options :dice-pick]))
       (om/set-state! owner :dice-size (get-in @app-state [:options :dice-size]))
@@ -105,6 +107,18 @@
                       :on-change #(om/set-state! owner :volume (.. % -target -value))
                       :value (om/get-state owner :volume)
                       :disabled (not (om/get-state owner :sounds))}]]]
+
+           [:section
+            [:h3  "Hot Keys"]
+            (for [option [{:name "[ for Zoom, ] for Send, and \\ for Auto"          :ref "default"}
+                          {:name "<- for Zoom, -> for Send, alt/option for Auto"    :ref "classic"}]]
+              [:div.radio
+               [:label [:input {:type "radio"
+                                :name "keys-pick"
+                                :value (:ref option)
+                                :on-change #(om/set-state! owner :keys-pick (.. % -target -value))
+                                :checked (= (om/get-state owner :keys-pick) (:ref option))}]
+                (:name option)]])]
 
            [:section
             [:h3  "Game board background"]

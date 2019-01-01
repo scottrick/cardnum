@@ -86,6 +86,20 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Andúril, the Flame of the West"
+   {:abilities [{:label "Place"
+                 :effect (req (let [r (get-card state card)
+                                    hosted? (character? (:host r))]
+                                (resolve-ability state side
+                                                 {:prompt (if hosted?
+                                                            (msg "You may not play this on a different character")
+                                                            (msg "Place this card on the sage"))
+                                                  :choices {:req #(if (not hosted?)
+                                                                    (and (character? %)
+                                                                         (can-host? %)))}
+                                                  :msg (msg "host it on " (card-str state target))
+                                                  :effect (effect (host target card))} card nil)))}]}
+
    "Arcane School"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
@@ -120,6 +134,19 @@
                                                  {:prompt (if hosted?
                                                             (msg "You may not play this on a different character")
                                                             (msg "Place this card on Balin"))
+                                                  :choices {:req #(if (not hosted?)
+                                                                    (and (character? %)
+                                                                         (can-host? %)))}
+                                                  :msg (msg "host it on " (card-str state target))
+                                                  :effect (effect (host target card))} card nil)))}]}
+   "Black Rider"
+   {:abilities [{:label "Place"
+                 :effect (req (let [r (get-card state card)
+                                    hosted? (character? (:host r))]
+                                (resolve-ability state side
+                                                 {:prompt (if hosted?
+                                                            (msg "You may not play this on a different character")
+                                                            (msg "Place this card your Ringwraith"))
                                                   :choices {:req #(if (not hosted?)
                                                                     (and (character? %)
                                                                          (can-host? %)))}
@@ -291,12 +318,12 @@
                            (let [kount (count (get-in @state [side :deck]))]
                              (loop [k (if (< kount 8) kount 8)]
                                (when (> k 0)
-                                 (move state side (first (get-in @state [side :deck])) :play-area)
+                                 (move state side (first (get-in @state [side :deck])) :current)
                                  (recur (- k 1))))
                              (resolve-ability state side
                                               {:prompt "Select a card to put in your hand"
                                                :choices {:req (fn [t] (card-is? t :side side))}
-                                               :effect (req (doseq [c (get-in @state [side :play-area])]
+                                               :effect (req (doseq [c (get-in @state [side :current])]
                                                               (if (= c target)
                                                                 (move state side c :hand)
                                                                 (move state side c :deck)))
@@ -324,7 +351,19 @@
                                   (move state side c :discard)))
                               (move state side card :rfg)
                               )}]}
-   "Fellowship"
+   "Fell Rider"
+   {:abilities [{:label "Place"
+                 :effect (req (let [r (get-card state card)
+                                    hosted? (character? (:host r))]
+                                (resolve-ability state side
+                                                 {:prompt (if hosted?
+                                                            (msg "You may not play this on a different character")
+                                                            (msg "Place this card your Ringwraith"))
+                                                  :choices {:req #(if (not hosted?)
+                                                                    (and (character? %)
+                                                                         (can-host? %)))}
+                                                  :msg (msg "host it on " (card-str state target))
+                                                  :effect (effect (host target card))} card nil)))}]}   "Fellowship"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
@@ -492,7 +531,19 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
-   "Herb-lore"
+   "Heralded Lord"
+   {:abilities [{:label "Place"
+                 :effect (req (let [r (get-card state card)
+                                    hosted? (character? (:host r))]
+                                (resolve-ability state side
+                                                 {:prompt (if hosted?
+                                                            (msg "You may not play this on a different character")
+                                                            (msg "Place this card your Ringwraith"))
+                                                  :choices {:req #(if (not hosted?)
+                                                                    (and (character? %)
+                                                                         (can-host? %)))}
+                                                  :msg (msg "host it on " (card-str state target))
+                                                  :effect (effect (host target card))} card nil)))}]}   "Herb-lore"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
                                     hosted? (character? (:host r))]
@@ -764,9 +815,11 @@
                               )}
                 {:label "Discard"
                  :effect (req (doseq [c (get-in @state [side :play-area])]
-                                (move state side c :discard))
+                                (move state side c :deck))
+                              (shuffle! state side :deck)
                               (move state side card :discard)
-                           )}]}
+                              (system-msg state side "uses metw_luckysearch.jpg to return cards and shuffle")
+                              )}]}
    "Many-coloured Robes"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
@@ -793,6 +846,52 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Mirror of Galadriel"
+   {:abilities [{:label "Yours"
+                 :effect (req
+                           (let [kount (count (get-in @state [side :deck]))]
+                             (loop [k (if (< kount 5) kount 5)]
+                               (when (> k 0)
+                                 (move state side (first (get-in @state [side :deck])) :current)
+                                 (recur (- k 1))))
+                             (resolve-ability state side
+                                              {:delayed-completion true
+                                               :player  side
+                                               :prompt  "Click done when ready"
+                                               :choices ["Done"]
+                                               :effect  (req (case target
+                                                               "Done"
+                                                               (loop [k (count (get-in @state [side :current]))]
+                                                                 (when (> k 0)
+                                                                   (move state side (rand-nth (get-in @state [side :current])) :deck {:front true})
+                                                                   (recur (- k 1)))))
+                                                             (effect-completed state side nil)
+                                                             (system-msg state side "uses metw_mirrorofgaladriel.jpg to look at his top 5 cards")
+                                                             )} nil nil)))}
+                {:label "Theirs"
+                 :effect (req
+                           (let [opp-side (if (= side :contestant)
+                                            :challenger
+                                            side)
+                                 kount (count (get-in @state [opp-side :deck]))]
+                             (loop [k (if (< kount 5) kount 5)]
+                               (when (> k 0)
+                                 (move state side (assoc (first (get-in @state [opp-side :deck])) :swap true) :current)
+                                 (recur (- k 1))))
+                             (resolve-ability state side
+                                              {:delayed-completion true
+                                               :player  side
+                                               :prompt  "Click done when ready"
+                                               :choices ["Done"]
+                                               :effect  (req (case target
+                                                               "Done"
+                                                               (loop [k (count (get-in @state [side :current]))]
+                                                                 (when (> k 0)
+                                                                   (move state opp-side (dissoc (rand-nth (get-in @state [side :current])) :swap) :deck {:front true})
+                                                                   (recur (- k 1)))))
+                                                             (effect-completed state side nil)
+                                                             (system-msg state side "uses metw_mirrorofgaladriel.jpg to look at your top 5 cards")
+                                                             )} nil nil)))}]}
    "Mithrandir"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
@@ -931,6 +1030,144 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Palantír of Minas Ithil"
+   {:abilities [{:label "Yours-if"
+                 :effect (req
+                           (let [kount (count (get-in @state [side :deck]))]
+                             (loop [k (if (< kount 5) kount 5)]
+                               (when (> k 0)
+                                 (move state side (first (get-in @state [side :deck])) :current)
+                                 (recur (- k 1))))
+                             (resolve-ability state side
+                                              {:delayed-completion true
+                                               :player  side
+                                               :prompt  "Click done when ready"
+                                               :choices ["Done"]
+                                               :effect  (req (case target
+                                                               "Done"
+                                                               (loop [k (count (get-in @state [side :current]))]
+                                                                 (when (> k 0)
+                                                                   (move state side (rand-nth (get-in @state [side :current])) :deck {:front true})
+                                                                   (recur (- k 1)))))
+                                                             (effect-completed state side nil)
+                                                             (system-msg state side "uses Palantír of Minas Tirith to look at his top 5 cards")
+                                                             )} nil nil)))}
+                {:label "Theirs-if"
+                 :effect (req
+                           (let [opp-side (if (= side :contestant)
+                                            :challenger
+                                            side)
+                                 kount (count (get-in @state [opp-side :deck]))]
+                             (loop [k (if (< kount 5) kount 5)]
+                               (when (> k 0)
+                                 (move state side (assoc (first (get-in @state [opp-side :deck])) :swap true) :current)
+                                 (recur (- k 1))))
+                             (resolve-ability state side
+                                              {:delayed-completion true
+                                               :player  side
+                                               :prompt  "Click done when ready"
+                                               :choices ["Done"]
+                                               :effect  (req (case target
+                                                               "Done"
+                                                               (loop [k (count (get-in @state [side :current]))]
+                                                                 (when (> k 0)
+                                                                   (move state opp-side (dissoc (rand-nth (get-in @state [side :current])) :swap) :deck {:front true})
+                                                                   (recur (- k 1)))))
+                                                             (effect-completed state side nil)
+                                                             (system-msg state side "uses Palantír of Minas Tirith to look at your top 5 cards")
+                                                             )} nil nil)))}]}
+   "Palantír of Minas Tirith"
+   {:abilities [{:label "Yours"
+                 :effect (req
+                           (let [kount (count (get-in @state [side :deck]))]
+                             (loop [k (if (< kount 5) kount 5)]
+                               (when (> k 0)
+                                 (move state side (first (get-in @state [side :deck])) :current)
+                                 (recur (- k 1))))
+                             (resolve-ability state side
+                                              {:delayed-completion true
+                                               :player  side
+                                               :prompt  "Click done when ready"
+                                               :choices ["Done"]
+                                               :effect  (req (case target
+                                                               "Done"
+                                                               (loop [k (count (get-in @state [side :current]))]
+                                                                 (when (> k 0)
+                                                                   (move state side (rand-nth (get-in @state [side :current])) :deck {:front true})
+                                                                   (recur (- k 1)))))
+                                                             (effect-completed state side nil)
+                                                             (system-msg state side "uses Palantír of Minas Tirith to look at his top 5 cards")
+                                                             )} nil nil)))}
+                {:label "Theirs"
+                 :effect (req
+                           (let [opp-side (if (= side :contestant)
+                                            :challenger
+                                            side)
+                                 kount (count (get-in @state [opp-side :deck]))]
+                             (loop [k (if (< kount 5) kount 5)]
+                               (when (> k 0)
+                                 (move state side (assoc (first (get-in @state [opp-side :deck])) :swap true) :current)
+                                 (recur (- k 1))))
+                             (resolve-ability state side
+                                              {:delayed-completion true
+                                               :player  side
+                                               :prompt  "Click done when ready"
+                                               :choices ["Done"]
+                                               :effect  (req (case target
+                                                               "Done"
+                                                               (loop [k (count (get-in @state [side :current]))]
+                                                                 (when (> k 0)
+                                                                   (move state opp-side (dissoc (rand-nth (get-in @state [side :current])) :swap) :deck {:front true})
+                                                                   (recur (- k 1)))))
+                                                             (effect-completed state side nil)
+                                                             (system-msg state side "uses Palantír of Minas Tirith to look at your top 5 cards")
+                                                             )} nil nil)))}]}
+   "Palantír of Osgiliath"
+   {:abilities [{:label "Yours-if"
+                 :effect (req
+                           (let [kount (count (get-in @state [side :deck]))]
+                             (loop [k (if (< kount 5) kount 5)]
+                               (when (> k 0)
+                                 (move state side (first (get-in @state [side :deck])) :current)
+                                 (recur (- k 1))))
+                             (resolve-ability state side
+                                              {:delayed-completion true
+                                               :player  side
+                                               :prompt  "Click done when ready"
+                                               :choices ["Done"]
+                                               :effect  (req (case target
+                                                               "Done"
+                                                               (loop [k (count (get-in @state [side :current]))]
+                                                                 (when (> k 0)
+                                                                   (move state side (rand-nth (get-in @state [side :current])) :deck {:front true})
+                                                                   (recur (- k 1)))))
+                                                             (effect-completed state side nil)
+                                                             (system-msg state side "uses Palantír of Minas Tirith to look at his top 5 cards")
+                                                             )} nil nil)))}
+                {:label "Theirs-if"
+                 :effect (req
+                           (let [opp-side (if (= side :contestant)
+                                            :challenger
+                                            side)
+                                 kount (count (get-in @state [opp-side :deck]))]
+                             (loop [k (if (< kount 5) kount 5)]
+                               (when (> k 0)
+                                 (move state side (assoc (first (get-in @state [opp-side :deck])) :swap true) :current)
+                                 (recur (- k 1))))
+                             (resolve-ability state side
+                                              {:delayed-completion true
+                                               :player  side
+                                               :prompt  "Click done when ready"
+                                               :choices ["Done"]
+                                               :effect  (req (case target
+                                                               "Done"
+                                                               (loop [k (count (get-in @state [side :current]))]
+                                                                 (when (> k 0)
+                                                                   (move state opp-side (dissoc (rand-nth (get-in @state [side :current])) :swap) :deck {:front true})
+                                                                   (recur (- k 1)))))
+                                                             (effect-completed state side nil)
+                                                             (system-msg state side "uses Palantír of Minas Tirith to look at your top 5 cards")
+                                                             )} nil nil)))}]}
    "Pallandos Apprentice"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
@@ -952,6 +1189,19 @@
                                                  {:prompt (if hosted?
                                                             (msg "You may not play this on a different character")
                                                             (msg "Place this card on Pallando"))
+                                                  :choices {:req #(if (not hosted?)
+                                                                    (and (character? %)
+                                                                         (can-host? %)))}
+                                                  :msg (msg "host it on " (card-str state target))
+                                                  :effect (effect (host target card))} card nil)))}]}
+   "Piercing All Shadows"
+   {:abilities [{:label "Place"
+                 :effect (req (let [r (get-card state card)
+                                    hosted? (character? (:host r))]
+                                (resolve-ability state side
+                                                 {:prompt (if hosted?
+                                                            (msg "You may not play this on a different character")
+                                                            (msg "Place this card on a ranger"))
                                                   :choices {:req #(if (not hosted?)
                                                                     (and (character? %)
                                                                          (can-host? %)))}
@@ -1136,6 +1386,32 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Secret News"
+   {:abilities [{:label "News"
+                 :effect (req
+                           (let [opp-side (if (= side :contestant)
+                                            :challenger
+                                            side)
+                                 kount (count (get-in @state [opp-side :deck]))]
+                             (loop [k (if (< kount 5) kount 5)]
+                               (when (> k 0)
+                                 (move state side (rand-nth (get-in @state [opp-side :hand])) :play-area)
+                                 (recur (- k 1))))
+                             (resolve-ability state side
+                                              {:delayed-completion true
+                                               :player  side
+                                               :prompt  "Click done when ready"
+                                               :choices ["Done"]
+                                               :effect  (req (case target
+                                                               "Done"
+                                                               (loop [k (count (get-in @state [side :play-area]))]
+                                                                 (when (> k 0)
+                                                                   (move state opp-side (first (get-in @state [side :play-area])) :hand {:front true})
+                                                                   (recur (- k 1)))))
+                                                             (effect-completed state side nil)
+                                                             (system-msg state side "uses metd_secretnews.jpg to look at your top 5 cards")
+                                                             )} nil nil)))}]}
+
    "Shifter of Hues"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)

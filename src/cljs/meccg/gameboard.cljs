@@ -500,23 +500,39 @@
       image)))
 
 (defn handle-key-down [e]
-  (cond
-    (= e.keyCode 18) ;// option
-    (send-command "option-key-down")
-    ;(= e.keyCode 27) ;// escape
-    (= e.keyCode 37) ;// shift
-    (send-command "blind-zoom")
-    (= e.keyCode 39) ;// right-arrow
-    (send-command "blind-send")
-    )
+  (if (= (:keys-pick (:options @app-state)) "default")
+    (cond
+      (= e.keyCode 220) ;// slash
+      (send-command "option-key-down")
+      (= e.keyCode 219) ;// open-bracket
+      (send-command "blind-zoom")
+      (= e.keyCode 221) ;// close-bracket
+      (send-command "blind-send")
+      )
+    (cond
+      (= e.keyCode 18) ;// option
+      (send-command "option-key-down")
+      (= e.keyCode 37) ;// left-arrow
+      (send-command "blind-zoom")
+      (= e.keyCode 39) ;// right-arrow
+      (send-command "blind-send")
+      ))
   )
 
 (defn handle-key-up [e]
-  (cond
-    (= e.keyCode 37) ;// shift
-    (send-command "blind-zoom")
-    (= e.keyCode 39) ;// shift
-    (send-command "blind-hold")
+  (if (= (:keys-pick (:options @app-state)) "default")
+    (cond
+      (= e.keyCode 219) ;// open-bracket
+      (send-command "blind-zoom")
+      (= e.keyCode 221) ;// close-bracket
+      (send-command "blind-hold")
+      )
+    (cond
+      (= e.keyCode 37) ;// left-arrow
+      (send-command "blind-zoom")
+      (= e.keyCode 39) ;// right-arrow
+      (send-command "blind-hold")
+      )
     )
   )
 
@@ -589,9 +605,21 @@
          (if-let [game (some #(when (= (:gameid cursor) (str (:gameid %))) %) (:games @app-state))]
            (when (or (not-spectator?)
                      (not (:mutespectators game)))
-             [:form {:on-submit #(send-msg % owner)
-                     :on-input #(send-typing % owner)}
-              [:input.direct {:ref "msg-input" :placeholder "Say something" :accessKey "l"}]]))]))))
+               [:form {:on-submit #(send-msg % owner)
+                       :on-input #(send-typing % owner)
+                       :on-key-up #(case (.-which %)
+                                     (219 220 221) (ws/ws-send! [:meccg/typing {:gameid-str (:gameid @game-state) :typing false}])
+                                     nil)}
+                [:input.direct {:ref "msg-input" :placeholder "Say something" :accessKey "l"
+                                :on-key-up #(if (= (:keys-pick (:options @app-state)) "default")
+                                              (case (.-which %)
+                                                219 (set! (.-value (om/get-node owner "msg-input"))
+                                                          (.replace (.-value (om/get-node owner "msg-input")) #"\[" ""))
+                                                220 (set! (.-value (om/get-node owner "msg-input"))
+                                                          (.replace (.-value (om/get-node owner "msg-input")) #"\\" ""))
+                                                221 (set! (.-value (om/get-node owner "msg-input"))
+                                                          (.replace (.-value (om/get-node owner "msg-input")) #"]" ""))
+                                                nil))}]]))]))))
 
 (defn handle-dragstart [e cursor]
   (-> e .-target js/$ (.addClass "dragged"))
@@ -1138,7 +1166,7 @@
          (when (= (:side @game-state) side)
            [:div.panel.blue-shade.popup {:ref fwdc-content-ref :style {:left -63}}
             [:div
-             [:a {:on-click #(close-popup % owner fwdc-content-ref "stops looking at their dc/fw-sideboard" false false false true false)}
+             [:a {:on-click #(close-popup % owner fwdc-content-ref "stops looking at their sideboard" false false false true false)}
               "Close"]
              [:a {:on-click #(close-popup % owner fwdc-content-ref "" true false false true false)}
               "Close & Shuffle"]]
@@ -1260,7 +1288,10 @@
       (let [cards (:current player)
             size (count cards)
             card-side (:side (first cards))
-            side (if (= card-side "Contestant") :contestant :challenger)]
+            side-swap (:swap (first cards))
+            side (if side-swap
+                   (if (= card-side "Contestant") :challenger :contestant)
+                   (if (= card-side "Contestant") :contestant :challenger))]
         (when-not (empty? cards)
           [:div.panel.blue-shade.rfg {:class (when (> size 2) "squeeze")}
            (map-indexed (fn [i card]
@@ -1309,7 +1340,7 @@
         [:div.panel.blue-shade.stats {:class (when active "active-player")}
          [:h4.ellipsis (om/build avatar user {:opts {:size 22}}) (:username user)]
          [:div (str free_gi " Free G.I.") (when me? (controls :free_gi))]
-         [:div (str stage_pt " Stage pt" (if (not= stage_pt 1) "s" "")) (when me? (controls :stage_pt))]
+         [:div (str stage_pt " Stage Point" (if (not= stage_pt 1) "s" "")) (when me? (controls :stage_pt))]
          [:div (str total_mp " Total MP" (if (not= total_mp 1) "s" "")) (when me? (controls :total_mp))]
          [:div (str char_mp " Character MP" (if (not= char_mp 1) "s" "")) (when me? (controls :char_mp))]
          [:div (str ally_mp " Ally MP" (if (not= ally_mp 1) "s" "")) (when me? (controls :ally_mp))]
@@ -1328,7 +1359,7 @@
         [:div.panel.blue-shade.stats {:class (when active "active-player")}
          [:h4.ellipsis (om/build avatar user {:opts {:size 22}}) (:username user)]
          [:div (str free_gi " Free G.I.") (when me? (controls :free_gi))]
-         [:div (str stage_pt " Stage pt" (if (not= stage_pt 1) "s" "")) (when me? (controls :stage_pt))]
+         [:div (str stage_pt " Stage Point" (if (not= stage_pt 1) "s" "")) (when me? (controls :stage_pt))]
          [:div (str total_mp " Total MP" (if (not= total_mp 1) "s" "")) (when me? (controls :total_mp))]
          [:div (str char_mp " Character MP" (if (not= char_mp 1) "s" "")) (when me? (controls :char_mp))]
          [:div (str ally_mp " Ally MP" (if (not= ally_mp 1) "s" "")) (when me? (controls :ally_mp))]
@@ -1996,7 +2027,7 @@
                    ;; set to 80, and opponent to 25
                    (cond-button "EOT Discard" (= (:click me) 75) #(handle-end-of-phase "eot-discard"));; -5
                    (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
-                   (cond-button "End of Turn" (and (= (:click me) 70)
+                   (cond-button "EOT (1/2 HL?)" (and (= (:click me) 70)
                                                    (and (get-in @game-state [:contestant :eot])
                                                         (get-in @game-state [:challenger :eot]))
                                                    (= (keyword active-player) side) (not end-turn)
@@ -2190,10 +2221,13 @@
                    (send-command "blind-send" {:msg (:ImageName card)})))
                (when-let [card (om/get-state owner :zoom)]
                  (when (get-in @game-state [side :opt-key])
-                   (if (:tapped card)
-                     (send-command "option-key-down" {:msg (str (:ImageName card) " AUTO")})
-                     (send-command "option-key-down" {:msg (str (:ImageName card) " AUTO no-tap")})
-                     )))]
+                     (send-command "option-key-down" {:msg (str (:ImageName card)
+                                                                (cond
+                                                                  (:tapped card) " auto tapped"
+                                                                  (:wounded card) " auto wounded"
+                                                                  :else " auto no-tap")
+                                                                )})
+                     ))]
               ;; card implementation info
               (when-let [card (om/get-state owner :zoom)]
                 (let [implemented (:implementation card)]

@@ -186,12 +186,18 @@
                           (= :face-up place-state)
                           (:revealed card))
                     (:title card)
-                    (if (character? card) "Character" "a card"))
+                    (cond
+                      (character? card) "Character"
+                      (resource? card) "Resource"
+                      (site? card) "Site"
+                      (hazard? card) "Hazard"
+                      (region? card) "Region"
+                      :else "card"))
         locale-name (if (= locale "New party")
                       (str (party-num->name (get-in @state [:rid])) " (new party)")
                       locale)]
-    (system-msg state side (str (build-spend-msg cost-str "place") card-name
-                                (if (character? card) " protecting " " in ") locale-name))))
+    (system-msg state side (str (build-spend-msg cost-str "places a") card-name
+                                (if (character? card) " at " " for ") locale-name))))
 
 (defn contestant-place-list
   "Returns a list of targets for where a given card can be placed."
@@ -410,7 +416,8 @@
       (system-msg state side
                   (str (build-spend-msg cost-str "place") card-title
                        (when host-card (str " on " (card-str state host-card)))
-                       (when no-cost " at no cost"))))))
+                       (when no-cost ""))))))
+                       ;(when no-cost " at no cost"))))))
 
 (defn- handle-virus-counter-flag
   "Deal with setting the added-virus-counter flag"
@@ -446,7 +453,7 @@
                                      (update! state side c)
                                      (card-init state side c {:resolve-effect false
                                                               :init-data true}))]
-                   (challenger-place-message state side (:title card) nil params)
+                   (challenger-place-message state side (:ImageName card) nil params)
                    (play-sfx state side "place-challenger")
                    (when (is-type? card "Radicle")
                      (swap! state assoc-in [:challenger :register :placed-radicle] true))

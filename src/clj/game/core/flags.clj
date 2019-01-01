@@ -273,6 +273,12 @@
 (defn hazard? [card]
   (is-type? card "Hazard"))
 
+(defn site? [card]
+  (is-type? card "Site"))
+
+(defn region? [card]
+  (is-type? card "Region"))
+
 (defn radicle? [card]
   (is-type? card "Radicle"))
 

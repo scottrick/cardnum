@@ -61,6 +61,9 @@
                         [:li [:code "/r"] " - Roll 2d6"]
                         [:li [:code "/roll n"] " - Roll an n-sided die"]
                         [:li [:code "/score"] " - Use this to score a card"]
+                        [:li [:code "/talk"] " - The first toggle turns off any info about any card movement"]
+                        [:li [:code "/tall"] " - The first toggle turns on the names of a moved cards"]
+                        [:li [:code "/tell"] " - The first toggle turns on more info about moved cards"]
                         [:li [:code "/z"] " - Double the zoom"]
                         ]]}
             {:id "documentation"

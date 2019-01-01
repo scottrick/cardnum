@@ -108,7 +108,8 @@
   (if username
     (if (acknowledged? (mc/update db "users"
                                   {:username username}
-                                  {"$set" {:options (select-keys body [:background :blocked-users
+                                  {"$set" {:options (select-keys body [:keys-pick
+                                                                       :background :blocked-users
                                                                        :deckstats :gamestats
                                                                        :dice-pick :dice-size])}}))
       (response 200 {:message "Refresh your browser"})

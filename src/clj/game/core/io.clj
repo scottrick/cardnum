@@ -93,7 +93,7 @@
          (str (if (or (revealed? card) visible) (:title card) (if (character? card) "Character" "a card"))
               ; Hosted cards do not need "in locale 1" messages, host has them
               (if-not (:host card)
-                (str (if (character? card) " protecting " " in ")
+                (str (if (character? card) " in " " for ")
                      ;TODO add naming of scoring area of contestant/challenger
                      (zone->name (second (:zone card)))
                      (if (character? card) (str " at position " (character-index state card))))))
@@ -115,7 +115,7 @@
          [:discard] "Discard"
          [:deck] "Play Deck"
          [:sideboard] "Sideboard"
-         [:fw-dc-sb] "FW-DC-SB"
+         [:fw-dc-sb] "Sideboard"
          [:location] "Location Deck"
          [:rig _] "in play"
          [:locales :hq _] "the root of Hand"
@@ -219,7 +219,7 @@
                    {:title "/revtop command"} nil))
 
 (defn command-roll [state side value]
-  (system-msg state side (str "rolls a " value " sided die and rolls a " (inc (rand-int value)))))
+  (system-msg state side (str "rolls a " value " sided die and rolls " (inc (rand-int value)))))
 
 (defn basic-roll [state side]
   (let [player (side @state)
@@ -229,12 +229,12 @@
         size2 (get-in player [:user :options :dice-size])]
     (if (and (not (or (= pick1 "empty") (= size1 "none")))
              pick1 size1)
-      (system-msg state side (str "rolls a " pick1"-"(inc (rand-int 6))"+"size1
+      (system-msg state side (str "rolls " pick1"-"(inc (rand-int 6))"+"size1
                                   " " pick1"-"(inc (rand-int 6))"+"size1))
         (if (and pick2 size2)
-          (system-msg state side (str "rolls a " pick2"-"(inc (rand-int 6))"+"size2
+          (system-msg state side (str "rolls " pick2"-"(inc (rand-int 6))"+"size2
                                       " " pick2"-"(inc (rand-int 6))"+"size2))
-          (system-msg state side (str "rolls a " "roll-"(inc (rand-int 6))"+16mm"
+          (system-msg state side (str "rolls " "roll-"(inc (rand-int 6))"+16mm"
                                       " roll-"(inc (rand-int 6))"+16mm"))))))
 
 (defn command-undo-click
@@ -285,6 +285,27 @@
   (if (get-in @state [side :opt-key])
     (swap! state assoc-in [side :opt-key] false)
     (swap! state assoc-in [side :opt-key] true))
+  )
+
+(defn talk-bool
+  [state side args]
+  (if (get-in @state [side :talk])
+    (swap! state assoc-in [side :talk] false)
+    (swap! state assoc-in [side :talk] true))
+  )
+
+(defn tall-bool
+  [state side args]
+  (if (get-in @state [side :tall])
+    (swap! state assoc-in [side :tall] false)
+    (swap! state assoc-in [side :tall] true))
+  )
+
+(defn tell-bool
+  [state side args]
+  (if (get-in @state [side :tell])
+    (swap! state assoc-in [side :tell] false)
+    (swap! state assoc-in [side :tell] true))
   )
 
 (defn host-any-card
@@ -474,6 +495,9 @@
           "/roll"       #(command-roll %1 %2 value)
           "/r"          #(basic-roll %1 %2)
           "/tag"        #(swap! %1 assoc-in [%2 :tag] (max 0 value))
+          "/talk"       #(talk-bool %1 %2 nil)
+          "/tall"       #(tall-bool %1 %2 nil)
+          "/tell"       #(tell-bool %1 %2 nil)
           "/trace"      #(when (= %2 :contestant) (init-trace %1 %2
                                                         {:title "/trace command" :side %2}
                                                         {:base (max 0 value)

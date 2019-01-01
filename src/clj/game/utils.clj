@@ -190,7 +190,8 @@
    (if (or (not (instance? String cost-str))
            (= "" cost-str))
      (str (or verb2 (str verb "s")) " ")
-     (str "spends " cost-str " to " verb " "))))
+     (str verb " "))))
+     ;(str "spends " cost-str " to " verb " "))))
 
 (defn other-side [side]
   (cond (= side :contestant) :challenger
