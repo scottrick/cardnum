@@ -724,7 +724,6 @@
    {:qty 1 :card "Pendrath na-Udûn" :id "[H] (NW)"}
    {:qty 1 :card "Pharabâs" :id "[H] (CA)"}
    {:qty 1 :card "Pieni Satama" :id "[H] (NW)"}
-   {:qty 1 :card "The Pits of Angband" :id "[H] (ML)"}
    {:qty 1 :card "Poison Rock" :id "[H] (BO)"}
    {:qty 1 :card "Pred" :id "[H] (SL)"}
    {:qty 1 :card "Puolihmisten Satama" :id "[H] (NW)"}
@@ -777,6 +776,7 @@
    {:qty 1 :card "The Iron-deeps" :id "[H] (DM)"}
    {:qty 1 :card "The Last Bridge" :id "[H] (RS)"}
    {:qty 1 :card "The Lonely Mountain" :id "[H] (TW)"}
+   {:qty 1 :card "The Pits of Angband" :id "[H] (ML)"}
    {:qty 1 :card "The Pûkel-deeps" :id "[H] (DM)"}
    {:qty 1 :card "The Riddle Caves" :id "[H] (KN)"}
    {:qty 1 :card "The Stones" :id "[H] (TW)"}
@@ -1413,7 +1413,6 @@
    {:qty 1 :card "Pendrath na-Udûn" :id "[M] (NW)"}
    {:qty 1 :card "Pharabâs" :id "[M] (CA)"}
    {:qty 1 :card "Pieni Satama" :id "[M] (NW)"}
-   {:qty 1 :card "The Pits of Angband" :id "[M] (ML)"}
    {:qty 1 :card "Poison Rock" :id "[M] (BO)"}
    {:qty 1 :card "Pred" :id "[M] (SL)"}
    {:qty 1 :card "Puolihmisten Satama" :id "[M] (NW)"}
@@ -1466,6 +1465,7 @@
    {:qty 1 :card "The Hospice of Lost Faith" :id "[M] (SL)"}
    {:qty 1 :card "The Last Bridge" :id "[M] (RS)"}
    {:qty 1 :card "The Lonely Mountain" :id "[M] (LE)"}
+   {:qty 1 :card "The Pits of Angband" :id "[M] (ML)"}
    {:qty 1 :card "The Riddle Caves" :id "[M] (KN)"}
    {:qty 1 :card "The Stones" :id "[M] (LE)"}
    {:qty 1 :card "The Tower of Birds" :id "[M] (SL)"}
