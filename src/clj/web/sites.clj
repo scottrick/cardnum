@@ -724,7 +724,7 @@
    {:qty 1 :card "Pendrath na-Udûn" :id "[H] (NW)"}
    {:qty 1 :card "Pharabâs" :id "[H] (CA)"}
    {:qty 1 :card "Pieni Satama" :id "[H] (NW)"}
-   {:qty 1 :card "Pits of Angband" :id "[H] (ML)"}
+   {:qty 1 :card "The Pits of Angband" :id "[H] (ML)"}
    {:qty 1 :card "Poison Rock" :id "[H] (BO)"}
    {:qty 1 :card "Pred" :id "[H] (SL)"}
    {:qty 1 :card "Puolihmisten Satama" :id "[H] (NW)"}
@@ -1413,7 +1413,7 @@
    {:qty 1 :card "Pendrath na-Udûn" :id "[M] (NW)"}
    {:qty 1 :card "Pharabâs" :id "[M] (CA)"}
    {:qty 1 :card "Pieni Satama" :id "[M] (NW)"}
-   {:qty 1 :card "Pits of Angband" :id "[M] (ML)"}
+   {:qty 1 :card "The Pits of Angband" :id "[M] (ML)"}
    {:qty 1 :card "Poison Rock" :id "[M] (BO)"}
    {:qty 1 :card "Pred" :id "[M] (SL)"}
    {:qty 1 :card "Puolihmisten Satama" :id "[M] (NW)"}
