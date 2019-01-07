@@ -657,13 +657,13 @@
 (defn view-fw-dc-sb
   "Allows the player to view their deck by making the cards in the deck public."
   [state side args]
-  (system-msg state side "looks at their dc/fw-sideboard")
+  (system-msg state side "looks at their sideboard")
   (swap! state assoc-in [side :view-fw-dc-sb] true))
 
 (defn close-fw-dc-sb
   "Closes the deck view and makes cards in deck private again."
   [state side args]
-  (system-msg state side "stops looking at their dc/fw-sideboard")
+  (system-msg state side "stops looking at their sideboard")
   (swap! state update-in [side] dissoc :view-fw-dc-sb))
 
 (defn view-location
