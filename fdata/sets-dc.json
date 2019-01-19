@@ -77,7 +77,7 @@
    "name": "The Necromancer",
    "position": 10,
    "dreamcards": true,
-   "released": false
+   "released": true
  },
  {
    "code": "MEBO",

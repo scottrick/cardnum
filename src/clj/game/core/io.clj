@@ -519,7 +519,7 @@
         hand "Hand"
         cards (count (get-in @state [side :hand]))
         credits (get-in @state [side :credit])
-        text (str pre " their turn " (:turn @state) " with " cards " cards")]
+        text (str pre " turn " (:turn @state) " with " cards " cards")]
     (system-msg state side text {:hr (not start-of-turn)})))
 
 (defn event-title

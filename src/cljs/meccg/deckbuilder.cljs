@@ -404,7 +404,7 @@
         message (case status
                   "legal" "Tournament legal"
                   "standard" "Standard"
-                  "dreamcard" "Dreamcard"
+                  "dreamcard" "Dreamcards"
                   "casual" "Casual play only"
                   "invalid" "Invalid"
                   "")]
@@ -431,7 +431,7 @@
         message (case status
                   "legal" "Tournament legal"
                   "standard" "Standard"
-                  "dreamcard" "Dreamcard"
+                  "dreamcard" "Dreamcards"
                   "casual" "Casual play only"
                   "invalid" "Invalid"
                   "")]

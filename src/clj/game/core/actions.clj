@@ -164,13 +164,16 @@
                   (command-revtop state side nil))
               (system-msg state side (str action-str label from-str))))
         ("Grip" "HQ")
-        (do (move state s (dissoc c :seen :revealed) :hand {:force true})
+        (do (move state s (dissoc c :seen :revealed :tapped :wounded :rotated
+                                  :inverted) :hand {:force true})
             (system-msg state side (str "moves " label from-str " to their Hand")))
         ("Stack" "R&D")
-        (do (move state s (dissoc c :seen :revealed) :deck {:front true :force true})
+        (do (move state s (dissoc c :seen :revealed :tapped :wounded :rotated
+                                  :inverted) :deck {:front true :force true})
             (system-msg state side (str "moves " label from-str " to the top of their Play Deck")))
         ("Sites2" "Sites")
-        (do (move state s (dissoc c :seen :revealed) :location {:front true :force true})
+        (do (move state s (dissoc c :seen :revealed :tapped :wounded :rotated
+                                  :inverted) :location {:front true :force true})
             (system-msg state side (str "moves " label from-str " to the their Location Deck")))
         nil))))
 
