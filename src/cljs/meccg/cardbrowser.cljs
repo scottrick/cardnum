@@ -221,10 +221,11 @@
                    "Animals" "Apes" "Bears" "Boars" "Eagles"
                    "Plants" "Pûkel-creatures" "Spiders" "Vermin" "Wolves"])
 (def race-options ["Wizard" "Dúnadan" "Hobbit" "Man" "Slayer" "Wose" "Umit"
-                   "Dwarf" "Firebeard Dwarf" "Ironfist Dwarf" "Longbeard Dwarf"
-                   "Elf" "Nando Elf" "Noldo Elf" "Silvan Elf" "Sinda Elf"
-                   "Ringwraith" "Olog-hai Troll" "Troll" "Half-troll" "Uruk-hai Orc" "Half-orc" "Orc"
-                   "Balrog" "Demon" "Dragon"])
+                   "Dwarf" "Firebeard" "Ironfist" "Longbeard" "Stiffbeard"
+                   "Elf" "Nando" "Noldo" "Silvan" "Sinda" "Kelno" "Tatya" "Nelya"
+                   "Ringwraith" "Balrog" "Demon" "Dragon"
+                   "Troll" "Half-troll" "Olog-hai" "Mountain-troll" "Wild-troll"
+                   "Orc" "Half-orc" "Uruk-hai" "Scara-hai" "Ice-orc"])
 (def fact-options ["Dúnadan" "Hobbit" "Dwarf" "Elf" "Man" "Wose" "Umit"
                    "Mercenary" "Slayer" "Slave" "Undead"
                    "Giant" "Troll" "Orc" "Balrog" "Demon" "Drake" "Dragon"
