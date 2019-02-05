@@ -224,7 +224,7 @@
                    "Dwarf" "Firebeard" "Ironfist" "Longbeard" "Stiffbeard"
                    "Elf" "Nando" "Noldo" "Silvan" "Sinda" "Kelno" "Tatya" "Nelya"
                    "Ringwraith" "Balrog" "Demon" "Dragon"
-                   "Troll" "Half-troll" "Olog-hai" "Mountain-troll" "Wild-troll"
+                   "Troll" "Half-troll" "Olog-hai" "Forest-troll" "Mountain-troll" "Wild-troll"
                    "Orc" "Half-orc" "Uruk-hai" "Scara-hai" "Ice-orc"])
 (def fact-options ["Dúnadan" "Hobbit" "Dwarf" "Elf" "Man" "Wose" "Umit"
                    "Mercenary" "Slayer" "Slave" "Undead"

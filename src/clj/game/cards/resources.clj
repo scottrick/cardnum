@@ -328,6 +328,7 @@
                                                                 (move state side c :hand)
                                                                 (move state side c :deck)))
                                                             (shuffle! state side :deck))
+                                               :msg (msg "picks a card from his top 8")
                                                } nil nil)))}]}
    "Fate of the Ithil-stone"
    {:abilities [{:label "Place"
@@ -1207,6 +1208,28 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Pipe Weed"
+   {:abilities [{:label "Look"
+                 :effect (req
+                           (let [kount (count (get-in @state [side :deck]))]
+                             (loop [k (if (< kount 5) kount 5)]
+                               (when (> k 0)
+                                 (move state side (first (get-in @state [side :deck])) :current)
+                                 (recur (- k 1))))
+                             (resolve-ability state side
+                                              {:delayed-completion true
+                                               :player  side
+                                               :prompt  "Click done when ready"
+                                               :choices ["Done"]
+                                               :effect  (req (case target
+                                                               "Done"
+                                                               (loop [k (count (get-in @state [side :current]))]
+                                                                 (when (> k 0)
+                                                                   (move state side (last (get-in @state [side :current])) :deck {:front true})
+                                                                   (recur (- k 1)))))
+                                                             (effect-completed state side nil)
+                                                             (system-msg state side "uses Pipe Weed to look at his top 5 cards")
+                                                             )} nil nil)))}]}
    "Pocketed Robes"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
@@ -1337,6 +1360,28 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Rivermen of the Anduin Vales"
+   {:abilities [{:label "Fish"
+                 :effect (req
+                           (let [kount (count (get-in @state [side :deck]))]
+                             (loop [k (if (< kount 5) kount 5)]
+                               (when (> k 0)
+                                 (move state side (first (get-in @state [side :deck])) :play-area)
+                                 (recur (- k 1))))
+                             (resolve-ability state side
+                                              {:delayed-completion true
+                                               :player  side
+                                               :prompt "Put a ring item in hand, or click done"
+                                               :choices ["Done"]
+                                               :effect (req (case target
+                                                              "Done"
+                                                              (do (loop [k (count (get-in @state [side :play-area]))]
+                                                                    (when (> k 0)
+                                                                      (move state side (first (get-in @state [side :play-area])) :deck {:front true})
+                                                                      (recur (- k 1))))
+                                                                  (shuffle! state side :deck))))
+                                               :msg (msg "find a ring item")
+                                               } nil nil)))}]}
    "Rómestámo"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
@@ -1360,6 +1405,17 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Rumours of Rings"
+   {:abilities [{:label "With"
+                 :effect (req (let [r (get-card state card)
+                                    hosted (count (:host r))]
+                                (resolve-ability state side
+                                                 {:prompt (if (= hosted 2)
+                                                            (msg "There are two rings with Rumours")
+                                                            (msg "Pick a ring to place off to the side"))
+                                                  :choices {:req (fn [t] (card-is? t :side side))}
+                                                  :msg (msg "place " (card-str state target) "off to the side")
+                                                  :effect (effect (host card target))} card nil)))}]}
    "Sacrifice of Form"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
@@ -1826,6 +1882,17 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Whispers of Rings"
+   {:abilities [{:label "With"
+                 :effect (req (let [r (get-card state card)
+                                    hosted (count (:host r))]
+                                (resolve-ability state side
+                                                 {:prompt (if (= hosted 2)
+                                                            (msg "There are two rings with Whispers")
+                                                            (msg "Pick a ring to place off to the side"))
+                                                  :choices {:req (fn [t] (card-is? t :side side))}
+                                                  :msg (msg "place " (card-str state target) "off to the side")
+                                                  :effect (effect (host card target))} card nil)))}]}
    "Wizards Myrmidon"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)

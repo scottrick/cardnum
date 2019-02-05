@@ -431,7 +431,7 @@
         message (case status
                   "legal" "Tournament legal"
                   "standard" "Standard"
-                  "dreamcard" "Dreamcards"
+                  "dreamcard" "Dreamcard"
                   "casual" "Casual play only"
                   "invalid" "Invalid"
                   "")]
