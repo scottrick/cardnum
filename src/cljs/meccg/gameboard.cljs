@@ -1332,14 +1332,18 @@
 
 (defmulti stats-view #(get-in % [:identity :side]))
 
-(defmethod stats-view "Challenger" [{:keys [user free_gi char_mp ally_mp item_mp fact_mp kill_mp misc_mp
+(defmethod stats-view "Challenger" [{:keys [identity user free_gi char_mp ally_mp item_mp fact_mp kill_mp misc_mp
                                             total_mp stage_pt hand-size-base hand-size-modification active]} owner]
   (om/component
     (sab/html
       (let [me? (= (:side @game-state) :challenger)]
         [:div.panel.blue-shade.stats {:class (when active "active-player")}
          [:h4.ellipsis (om/build avatar user {:opts {:size 22}}) (:username user)]
-         [:div (str free_gi " Free G.I.") (when me? (controls :free_gi))]
+         [:div (str free_gi " Free G.I." (if (or (= (:alignment identity) "Minion")
+                                                 (= (:alignment identity) "Balrog")
+                                                 (= (:alignment identity) "War-lord")
+                                                 (= (:alignment identity) "Dragon-lord"))
+                                           " (5 unusable)" "")) (when me? (controls :free_gi))]
          [:div (str stage_pt " Stage Point" (if (not= stage_pt 1) "s" "")) (when me? (controls :stage_pt))]
          [:div (str total_mp " Total MP" (if (not= total_mp 1) "s" "")) (when me? (controls :total_mp))]
          [:div (str char_mp " Character MP" (if (not= char_mp 1) "s" "")) (when me? (controls :char_mp))]
@@ -1351,15 +1355,18 @@
          [:div (str (+ hand-size-base hand-size-modification) " Max hand size")
           (when me? (controls :hand-size-modification))]]))))
 
-(defmethod stats-view "Contestant" [{:keys [user free_gi char_mp ally_mp item_mp fact_mp kill_mp misc_mp
+(defmethod stats-view "Contestant" [{:keys [identity user free_gi char_mp ally_mp item_mp fact_mp kill_mp misc_mp
                                             total_mp stage_pt hand-size-base hand-size-modification active]} owner]
   (om/component
     (sab/html
       (let [me? (= (:side @game-state) :contestant)]
         [:div.panel.blue-shade.stats {:class (when active "active-player")}
          [:h4.ellipsis (om/build avatar user {:opts {:size 22}}) (:username user)]
-         [:div (str free_gi " Free G.I.") (when me? (controls :free_gi))]
-         [:div (str stage_pt " Stage Point" (if (not= stage_pt 1) "s" "")) (when me? (controls :stage_pt))]
+         [:div (str free_gi " Free G.I." (if (or (= (:alignment identity) "Minion")
+                                                 (= (:alignment identity) "Balrog")
+                                                 (= (:alignment identity) "War-lord")
+                                                 (= (:alignment identity) "Dragon-lord"))
+                                           " (5 unusable)" "")) (when me? (controls :free_gi))]         [:div (str stage_pt " Stage Point" (if (not= stage_pt 1) "s" "")) (when me? (controls :stage_pt))]
          [:div (str total_mp " Total MP" (if (not= total_mp 1) "s" "")) (when me? (controls :total_mp))]
          [:div (str char_mp " Character MP" (if (not= char_mp 1) "s" "")) (when me? (controls :char_mp))]
          [:div (str ally_mp " Ally MP" (if (not= ally_mp 1) "s" "")) (when me? (controls :ally_mp))]
