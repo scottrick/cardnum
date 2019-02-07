@@ -221,11 +221,12 @@
 (defn handle-lobby-create
   [{{{:keys [username emailhash] :as user} :user} :ring-req
     client-id                                     :client-id
-    {:keys [title allowspectator spectatorhands password room side alignment options]} :?data :as event}]
+    {:keys [title eot-auto-save allowspectator spectatorhands password room side alignment options]} :?data :as event}]
   (let [gameid (java.util.UUID/randomUUID)
         game {:date           (java.util.Date.)
               :gameid         gameid
               :title          title
+              :eot-auto-save  eot-auto-save
               :allowspectator allowspectator
               :spectatorhands spectatorhands
               :mute-spectators false
@@ -265,7 +266,8 @@
         game {:date           (:date load)
               :gameid         gameid
               :title          (:title load)
-              :allowspectator true
+              :eot-auto-save  (:eot-auto-save load)
+              :allowspectator (:allowspectator load)
               :spectatorhands (:spectatorhands load)
               :mute-spectators false
               :password       (:password load)

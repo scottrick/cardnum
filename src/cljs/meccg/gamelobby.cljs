@@ -132,6 +132,7 @@
      (om/set-state! owner :flash-message "")
      (om/set-state! owner :protected false)
      (om/set-state! owner :password "")
+     (om/set-state! owner :eot-auto-save true)
      (om/set-state! owner :allowspectator true)
      (om/set-state! owner :spectatorhands false)
      (-> ".game-title" js/$ .select))))
@@ -149,6 +150,7 @@
             (ws/ws-send! [:lobby/create
                           {:title          (om/get-state owner :title)
                            :password       (om/get-state owner :password)
+                           :eot-auto-save  (om/get-state owner :eot-auto-save)
                            :allowspectator (om/get-state owner :allowspectator)
                            :spectatorhands (om/get-state owner :spectatorhands)
                            :side           (om/get-state owner :side)
@@ -518,6 +520,11 @@
 
               [:section
                [:h3 "Options"]
+               [:p
+                [:label
+                 [:input {:type "checkbox" :checked (om/get-state owner :eot-auto-save)
+                          :on-change #(om/set-state! owner :eot-auto-save (.. % -target -checked))}]
+                 "EOT auto save game"]]
                [:p
                 [:label
                  [:input {:type "checkbox" :checked (om/get-state owner :allowspectator)

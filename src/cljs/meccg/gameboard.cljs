@@ -128,6 +128,20 @@
   (ws/ws-send! [:meccg/save {:gameid-str (:gameid @game-state)
                               :save-pref (:save-pref @game-state)}])))
 
+(defn auto-save-send
+  ([command] (auto-save-send command nil))
+  ([command {:keys [no-lock] :as args}]
+   (when (or (not @lock) no-lock)
+     (when (get-in @game-state [:options :eot-auto-save])
+       (do
+       (send-command "system-msg" {:msg "just SAVED the GAME"})
+       (ws/ws-send! [:meccg/save {:gameid-str (:gameid @game-state)
+                                  :save-pref (:save-pref @game-state)}])))
+     (try (js/ga "send" "event" "game" command) (catch js/Error e))
+     (when-not no-lock (reset! lock true))
+     (ws/ws-send! [:meccg/action {:gameid-str (:gameid @game-state) :command command :args args}])
+     )))
+
 (defn concede []
   (ws/ws-send! [:meccg/concede {:gameid-str (:gameid @game-state)}]))
 
@@ -2035,13 +2049,12 @@
                    (cond-button "EOT Discard" (= (:click me) 75) #(handle-end-of-phase "eot-discard"));; -5
                    (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                    (cond-button "EOT (1/2 HL?)" (and (= (:click me) 70)
-                                                   (and (get-in @game-state [:contestant :eot])
-                                                        (get-in @game-state [:challenger :eot]))
-                                                   (= (keyword active-player) side) (not end-turn)
-                                                   (not contestant-phase-12) (not challenger-phase-12)
-                                                   (not (empty? (get-in @game-state [:challenger :identity :title])))
-                                                   ) #(send-command "end-turn"))
-                   ]))))
+                                                     (and (get-in @game-state [:contestant :eot])
+                                                          (get-in @game-state [:challenger :eot]))
+                                                     (= (keyword active-player) side) (not end-turn)
+                                                     (not contestant-phase-12) (not challenger-phase-12)
+                                                     (not (empty? (get-in @game-state [:challenger :identity :title])))
+                                                     ) #(auto-save-send "end-turn"))]))))
 
                 ;;------BREAK to Hazard Player
 
