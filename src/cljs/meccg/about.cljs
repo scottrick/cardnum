@@ -31,7 +31,7 @@
       [:a {:href "https://docs.google.com/spreadsheets/d/1Ly2RVe4QZRhN6TUfV1YO9DuuYvywzMnnaCunQapzzfs/edit?usp=sharing"
            :target "_blank"} "status"] "."]
 
-     [:h3 "Contributors (Netruner)"]
+     [:h3 "Contributors (Netrunner)"]
      [:p "A big props to Neal Terrell (nealpro), Joel Koepp (JoelCFC25), Filip Gokstorp (Saintis), Dan Hutchins (danhut, wozzit) and John Warwick (jwarwick, BobTomatoes) who actively contribute to the success of the project with regular code submissions, the management of the issue tracker and answers to questions in the chat. It would not be the same without your help."]
 
      [:h3 "Sub-contributors (MECCG)"]
