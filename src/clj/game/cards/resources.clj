@@ -1414,7 +1414,7 @@
                                                             (msg "There are two rings with Rumours")
                                                             (msg "Pick a ring to place off to the side"))
                                                   :choices {:req (fn [t] (card-is? t :side side))}
-                                                  :msg (msg "place " (card-str state target) "off to the side")
+                                                  :msg (msg "place " (card-str state target) " off to the side")
                                                   :effect (effect (host card target))} card nil)))}]}
    "Sacrifice of Form"
    {:abilities [{:label "Place"
@@ -1891,7 +1891,7 @@
                                                             (msg "There are two rings with Whispers")
                                                             (msg "Pick a ring to place off to the side"))
                                                   :choices {:req (fn [t] (card-is? t :side side))}
-                                                  :msg (msg "place " (card-str state target) "off to the side")
+                                                  :msg (msg "place " (card-str state target) " off to the side")
                                                   :effect (effect (host card target))} card nil)))}]}
    "Wizards Myrmidon"
    {:abilities [{:label "Place"
