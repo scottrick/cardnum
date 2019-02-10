@@ -102,7 +102,7 @@
                  :effect (req
                            (let [opp-side (if (= side :contestant)
                                             :challenger
-                                            side)
+                                            :contestant)
                                  the-side (if (= 0 (count (get-in @state [side :current])))
                                             opp-side
                                             side)]
@@ -114,7 +114,7 @@
                  :effect (req
                            (let [opp-side (if (= side :contestant)
                                             :challenger
-                                            side)
+                                            :contestant)
                                  the-side (if (= 0 (count (get-in @state [side :play-area])))
                                             opp-side
                                             side)]
