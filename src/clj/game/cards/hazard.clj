@@ -82,7 +82,7 @@
                  :effect (req
                            (let [opp-side (if (= side :contestant)
                                             :challenger
-                                            side)
+                                            :contestant)
                                  secrets (get-card state card)
                                  kount (count (get-in @state [opp-side :deck]))]
                              (loop [k (if (< kount 10) 0 10)]
