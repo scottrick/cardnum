@@ -873,7 +873,7 @@
                  :effect (req
                            (let [opp-side (if (= side :contestant)
                                             :challenger
-                                            side)
+                                            :contestant)
                                  kount (count (get-in @state [opp-side :deck]))]
                              (loop [k (if (< kount 5) kount 5)]
                                (when (> k 0)
@@ -1057,7 +1057,7 @@
                  :effect (req
                            (let [opp-side (if (= side :contestant)
                                             :challenger
-                                            side)
+                                            :contestant)
                                  kount (count (get-in @state [opp-side :deck]))]
                              (loop [k (if (< kount 5) kount 5)]
                                (when (> k 0)
@@ -1103,7 +1103,7 @@
                  :effect (req
                            (let [opp-side (if (= side :contestant)
                                             :challenger
-                                            side)
+                                            :contestant)
                                  kount (count (get-in @state [opp-side :deck]))]
                              (loop [k (if (< kount 5) kount 5)]
                                (when (> k 0)
@@ -1149,7 +1149,7 @@
                  :effect (req
                            (let [opp-side (if (= side :contestant)
                                             :challenger
-                                            side)
+                                            :contestant)
                                  kount (count (get-in @state [opp-side :deck]))]
                              (loop [k (if (< kount 5) kount 5)]
                                (when (> k 0)
@@ -1447,7 +1447,7 @@
                  :effect (req
                            (let [opp-side (if (= side :contestant)
                                             :challenger
-                                            side)
+                                            :contestant)
                                  kount (count (get-in @state [opp-side :deck]))]
                              (loop [k (if (< kount 5) kount 5)]
                                (when (> k 0)

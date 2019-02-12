@@ -12,13 +12,31 @@
    "Alone and Unadvised"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
    "Aware of Their Ways"
-   {:abilities [{:effect (req
-                           (move state side card :discard)
+   {:abilities [{:label "Four"
+                 :effect (req
                            (let [opp-side (if (= side :contestant)
                                             :challenger
-                                            side)
+                                            :contestant)
                                  kount (count (get-in @state [opp-side :discard]))]
                              (loop [k (if (< kount 4) kount 4)]
+                               (when (> k 0)
+                                 (move state opp-side (rand-nth (get-in @state [opp-side :discard])) :play-area)
+                                 (recur (- k 1))))
+                             (resolve-ability state side
+                                              {:prompt "Select a card to remove from the game"
+                                               :choices {:req (fn [t] (card-is? t :side opp-side))}
+                                               :effect (req (doseq [c (get-in @state [opp-side :play-area])]
+                                                              (if (= c target)
+                                                                (move state opp-side c :rfg)
+                                                                (move state opp-side c :discard)
+                                                                )))} nil nil)))}
+                {:label "Six"
+                 :effect (req
+                           (let [opp-side (if (= side :contestant)
+                                            :challenger
+                                            :contestant)
+                                 kount (count (get-in @state [opp-side :discard]))]
+                             (loop [k (if (< kount 6) kount 6)]
                                (when (> k 0)
                                  (move state opp-side (rand-nth (get-in @state [opp-side :discard])) :play-area)
                                  (recur (- k 1))))
