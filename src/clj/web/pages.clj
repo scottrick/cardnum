@@ -49,6 +49,7 @@
                          "meccg.deckbuilder"
                          "meccg.help"
                          "meccg.about"
+                         "meccg.rules"
                          "meccg.account"
                          "meccg.stats"
                          "meccg.news"
@@ -101,7 +102,10 @@
         [:div#stats]]
        [:div.item
         [:div.about-bg]
-        [:div#about]]]]
+        [:div#about]]
+       [:div.item
+        [:div.rules-bg]
+        [:div#rules]]]]
     [:audio#ting
       [:source {:src "/sound/ting.mp3" :type "audio/mp3"}]
      [:source {:src "/sound/ting.ogg" :type "audio/ogg"}]]

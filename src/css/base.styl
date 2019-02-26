@@ -668,6 +668,9 @@ align-radio
 .about-bg
   cover-img: url('/img/bg/About.jpg')
 
+.rules-bg
+  cover-img: url('/img/bg/Rules.jpg')
+
 .account-bg
   cover-img: url('/img/bg/Settings.jpg')
 
@@ -1067,6 +1070,18 @@ align-radio
         button.small
           margin: 3px 6px 3px 0
 
+      .note
+        position: relative
+        overflow-wrap: break-word
+        hyphens: auto
+        line-height: 20px
+        white-space: normal
+        width: 190%
+
+        button.small
+          margin: 3px 6px 3px 0
+
+
       .group
         display: inline-block
         width: 100%
@@ -1160,11 +1175,15 @@ align-radio
 
       .txttop
         width: 32%
-        height: 44%
+        height: 34%
 
       .txtbot
         width: 32%
         height: 20%
+
+      .txtnte
+        width: 96%
+        height: 10%
 
 .deck-status.shift-tooltip
     padding-right: 0px
@@ -2709,6 +2728,36 @@ align-radio
   margin: 40px auto 10px
 
 .about
+  .bitcoin
+    color: orange
+    position: relative
+
+    .qr
+      display: none
+      position: absolute
+      top: 25px
+      left: 0
+      border: 10px solid white
+      background-color: white
+      transition(all 0.2s ease-in-out)
+
+    &:hover .qr
+      display: block
+
+#rules
+  position: absolute
+  top: 0
+  left: 0
+  right: 0
+  bottom: 0
+  overflow: auto
+
+.content-page
+  padding: 12px 20px
+  width: 650px
+  margin: 40px auto 10px
+
+.rules
   .bitcoin
     color: orange
     position: relative

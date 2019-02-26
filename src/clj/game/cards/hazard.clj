@@ -78,6 +78,8 @@
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
    "Foolish Words"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
+   "Grasping and Ungracious"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
    "Great Secrets Buried There"
    {:abilities [{:label "as Resource"
                  :effect (req

@@ -11,7 +11,7 @@
 
 (enable-console-print!)
 
-(def tokens #js ["/" "/cards" "/deckbuilder" "/play" "/help" "/account" "/stats" "/about"])
+(def tokens #js ["/" "/cards" "/deckbuilder" "/play" "/help" "/account" "/stats" "/about" "/rules"])
 
 (def history (Html5History.))
 

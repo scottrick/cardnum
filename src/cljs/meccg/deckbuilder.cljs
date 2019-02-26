@@ -115,10 +115,11 @@
           sideboard (lookup-deck (:sideboard deck))
           characters (lookup-deck (:characters deck))
           pool (lookup-deck (:pool deck))
-          fwsb (lookup-deck (:fwsb deck))]
+          fwsb (lookup-deck (:fwsb deck))
+          note (:note deck)]
       (assoc deck :resources resources :hazards hazards :sideboard sideboard
                   :characters characters :pool pool :fwsb fwsb
-                  :identity identity
+                  :identity identity :note note
                   :donate-dice donate-dice :donate-size donate-size
                   ))))
 
@@ -186,6 +187,10 @@
         str (reduce #(str %1 (:qty %2) " " (get-in %2 [:card :title]) (insert-params (get-in %2 [:card :trimCode])) "\n") "" fwsb)]
     (om/set-state! owner :fwsb-edit str)))
 
+(defn note->str [owner]
+  (let [note (om/get-state owner [:deck :note])]
+    (om/set-state! owner :deck-note note)))
+
 (defn edit-deck [owner]
   (let [deck (om/get-state owner :deck)]
     (om/set-state! owner :old-deck deck)
@@ -196,6 +201,7 @@
     (characters->str owner)
     (pool->str owner)
     (fwsb->str owner)
+    (note->str owner)
     (-> owner (om/get-node "viewport") js/$ (.addClass "edit"))
     (try (js/ga "send" "event" "deckbuilder" "edit") (catch js/Error e))
     (go (<! (timeout 500))
@@ -242,26 +248,10 @@
     (om/set-state! owner :fwsb-edit text)
     (om/set-state! owner [:deck :fwsb] cards)))
 
-(defn wizard-edit [owner]
-  (if (om/get-state owner :vs-wizard)
-    (om/set-state! owner :vs-wizard false)
-    (om/set-state! owner :vs-wizard true))
-  (if (and (om/get-state owner :vs-wizard) (om/get-state owner :vs-minion))
-    (om/set-state! owner :vs-fallen true)))
-
-(defn minion-edit [owner]
-  (if (om/get-state owner :vs-minion)
-    (om/set-state! owner :vs-minion false)
-    (om/set-state! owner :vs-minion true))
-  (if (and (om/get-state owner :vs-wizard) (om/get-state owner :vs-minion))
-    (om/set-state! owner :vs-fallen true)))
-
-(defn fallen-edit [owner]
-  (if (and (om/get-state owner :vs-wizard) (om/get-state owner :vs-minion))
-    (om/set-state! owner :vs-fallen true)
-    (if (om/get-state owner :vs-fallen)
-      (om/set-state! owner :vs-fallen false)
-      (om/set-state! owner :vs-fallen true))))
+(defn handle-deck-note [owner]
+  (let [text (.-value (om/get-node owner "deck-note"))]
+    (om/set-state! owner :deck-note text)
+    (om/set-state! owner [:deck :note] text)))
 
 (defn cancel-edit [owner]
   (end-edit owner)
@@ -278,6 +268,7 @@
   (characters->str owner)
   (pool->str owner)
   (fwsb->str owner)
+  (note->str owner)
   (-> owner (om/get-node "viewport") js/$ (.addClass "delete"))
   (try (js/ga "send" "event" "deckbuilder" "delete") (catch js/Error e)))
 
@@ -303,7 +294,7 @@
                 (sort-by :title)
                 first)]
     (om/set-state! owner :deck {:name "New deck" :resources [] :hazards [] :sideboard []
-                                :characters [] :pool [] :fwsb [] :identity id
+                                :characters [] :pool [] :fwsb [] :identity id :note []
                                 :donate-dice "empty" :donate-size "none"
                                 })
     (try (js/ga "send" "event" "deckbuilder" "new" alignment) (catch js/Error e))
@@ -335,13 +326,14 @@
             fwsb (for [card (:fwsb deck) :when (get-in card [:card :title])]
                    (let [card-map {:qty (:qty card) :card (get-in card [:card :title])}]
                      (if (contains? card :id) (conj card-map {:id (:id card)}) card-map)))
+            note (:note deck)
             ;; only include keys that are relevant
             identity (select-keys (:identity deck) [:title :alignment :trimCode])
             donate-dice (:donate-dice deck)
             donate-size (:donate-size deck)
             data (assoc deck :resources resources :hazards hazards :sideboard sideboard
                              :characters characters :pool pool :fwsb fwsb
-                             :identity identity
+                             :identity identity :note note
                              :donate-dice donate-dice :donate-size donate-size
                              )]
         (try (js/ga "send" "event" "deckbuilder" "save") (catch js/Error e))
@@ -647,6 +639,7 @@
        :character-edit-channel (chan)
        :pool-edit-channel (chan)
        :fwsb-edit-channel (chan)
+       :note-edit-channel (chan)
        :deck nil
        })
 
@@ -778,6 +771,11 @@
                                       :else (conj rest (assoc existing-line :qty new-qty)))]
                   (om/set-state! owner [:deck :fwsb] new-cards))
                 (fwsb->str owner)))))
+      (let [edit-channel (om/get-state owner :note-edit-channel)]
+        (go (while true
+              (let [edit (<! edit-channel)]
+                (om/set-state! owner [:deck :note] edit)
+                (note->str owner)))))
       (go (while true
             (om/set-state! owner :deck (<! select-channel)))))
 
@@ -816,6 +814,7 @@
                     characters (:characters deck)
                     pool (:pool deck)
                     fwsb (:fwsb deck)
+                    note (:note deck)
                     edit? (:edit state)
                     delete? (:delete state)]
                 [:div
@@ -823,18 +822,6 @@
                    edit? [:div.button-bar
                           [:button {:on-click #(save-deck cursor owner)} "Save"]
                           [:button {:on-click #(cancel-edit owner)} "Cancel"]
-;                          (if (om/get-state owner :vs-wizard)
-;                            [:button {:on-click #(wizard-edit owner)} "√ v Wizard"]
-;                            [:button {:on-click #(wizard-edit owner)} "? v Wizard"]
-;                            )
-;                          (if (om/get-state owner :vs-minion)
-;                            [:button {:on-click #(minion-edit owner)} "√ v Minion"]
-;                            [:button {:on-click #(minion-edit owner)} "? v Minion"]
-;                            )
-;                          (if (om/get-state owner :vs-fallen)
-;                            [:button {:on-click #(fallen-edit owner)} "√ v Fallen"]
-;                            [:button {:on-click #(fallen-edit owner)} "? v Fallen"]
-;                            )
                           (if (some #{(get-in @app-state [:user :username])} (get-in @app-state [:donators]))
                           [:h3.rgtlabel "Donator deck dice:  "
                           [:select {:value (:donate-dice deck)
@@ -852,7 +839,6 @@
                                          {:name "Red Swirl White Pips 16mm"      :ref "rswhite-16"}]]
                              [:option {:value (:ref option)} (:name option)])]
                            [:select {:value (:donate-size deck)
-                           ;[:select {:value (get-in state [:deck :donate-size])
                                      :on-change #(om/set-state! owner [:deck :donate-size] (.. % -target -value))}
                             (for [option [{:name "none"     :ref "none"}
                                           {:name "16mm"     :ref "16mm"}
@@ -994,6 +980,10 @@
                              [:button.small {:on-click #(put! ch {:qty -1 :card (:card line)})
                                              :type "button"} "-"]]))
                         (line-span sets deck line)])])]
+                 [:div.cards
+                  (if (not-empty note) [:h3 "Deck Notes"])
+                    [:div.note
+                     [:h4 (str note)]]]
                  ]))]
 
            [:div.deckedit
@@ -1037,6 +1027,11 @@
                                 :on-change #(handle-pool-edit owner)}]
              [:textarea.txtbot {:ref "fwsb-edit" :value (:fwsb-edit state)
                                 :on-change #(handle-fwsb-edit owner)}]
+             [:div
+              [:h3 "Deck Notes"]]
+
+             [:textarea.txtnte {:ref "deck-note" :value (:deck-note state)
+                                :on-change #(handle-deck-note owner)}]
              ]]]]]))))
 
 (go (swap! app-state assoc :donators (:json (<! (GET "/data/donors")))))
