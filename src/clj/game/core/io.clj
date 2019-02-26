@@ -320,8 +320,7 @@
                                                                                     :effect (effect (host c (get-card state target)))
                                                                                     ; host target onto card
                                                                                     } c nil )))} nil nil)
-  (system-msg state side "host a card")
-  )
+  (system-msg state side "host a card"))
 
 (defn host-any-card-hidden
   [state side args]
@@ -332,14 +331,24 @@
                     :effect (req (let [c (get-card state target)] (resolve-ability state side
                                                                                    {:prompt "Select card to host"
                                                                                     :choices {:req (fn [t] true)}
-                                                                                    :effect (effect (do
-                                                                                                      (host state side c (get-card state target))
-                                                                                                      (update! state side (dissoc (get-card state target) :seen :revealed))
-                                                                                                      (hide state side (get-card state target))))
+                                                                                    :effect (effect (host-hidden c (get-card state target)))
                                                                                     ; host target onto card
                                                                                     } c nil )))} nil nil)
-  (system-msg state side "host a card")
-  )
+  (system-msg state side "host a card hidden"))
+
+(defn host-any-card-reveal
+  [state side args]
+  (resolve-ability state side
+                   {:prompt "Select hosting card"
+                    :choices {:req (fn [t] true)}
+                    :msg (msg "host " (:title target))
+                    :effect (req (let [c (get-card state target)] (resolve-ability state side
+                                                                                   {:prompt "Select card to host"
+                                                                                    :choices {:req (fn [t] true)}
+                                                                                    :effect (effect (host-reveal c (get-card state target)))
+                                                                                    ; host target onto card
+                                                                                    } c nil )))} nil nil)
+  (system-msg state side "host a card revealed"))
 
 (defn starter-path [state side st-path]
   (let [
@@ -408,7 +417,9 @@
                                         {:title "/hide command"} nil)
           "/hide-hand"   #(hide-hand %1 %2)
           "/host"       #(host-any-card %1 %2 args)
-          ;"/hosth"      #(host-any-card-hidden %1 %2 args)
+          "/h"          #(host-any-card %1 %2 args)
+          "/hh"         #(host-any-card-hidden %1 %2 args)
+          "/hr"         #(host-any-card-reveal %1 %2 args)
           "/jack-out"   #(when (= %2 :challenger) (jack-out %1 %2 nil))
           "/link"       #(swap! %1 assoc-in [%2 :link] (max 0 value))
           "/memory"     #(swap! %1 assoc-in [%2 :memory] value)
