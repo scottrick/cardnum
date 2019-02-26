@@ -668,6 +668,9 @@ align-radio
 .about-bg
   cover-img: url('/img/bg/About.jpg')
 
+.rules-bg
+  cover-img: url('/img/bg/Rules.jpg')
+
 .account-bg
   cover-img: url('/img/bg/Settings.jpg')
 
@@ -2725,6 +2728,36 @@ align-radio
   margin: 40px auto 10px
 
 .about
+  .bitcoin
+    color: orange
+    position: relative
+
+    .qr
+      display: none
+      position: absolute
+      top: 25px
+      left: 0
+      border: 10px solid white
+      background-color: white
+      transition(all 0.2s ease-in-out)
+
+    &:hover .qr
+      display: block
+
+#rules
+  position: absolute
+  top: 0
+  left: 0
+  right: 0
+  bottom: 0
+  overflow: auto
+
+.content-page
+  padding: 12px 20px
+  width: 650px
+  margin: 40px auto 10px
+
+.rules
   .bitcoin
     color: orange
     position: relative
