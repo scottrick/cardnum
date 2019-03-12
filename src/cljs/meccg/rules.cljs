@@ -29,9 +29,12 @@
        [:li [:a {:href "https://www.dropbox.com/s/l6bnzs95zka6tuy/9_Errata.pdf?dl=0" :target "_blank"} "Errata"]]
        [:li [:a {:href "https://councilofelrond.org/forum/viewtopic.php?f=103&t=3541" :target "_blank"} "ARV"]]
 
-       [:p "Official Rulings & Clarifications"]
+       [:p "Official Digests, Rulings & Clarifications"]
 
-       [:li [:a {:href "https://www.dropbox.com/s/drk0jpopjddmwkl/B_Digests.pdf?dl=0" :target "_blank"} "Digest"]]
+       [:li [:a {:href "https://www.dropbox.com/s/u2tb71hehuj6mq2/A_1_Digests_%28Ichabod%29.pdf?dl=0" :target "_blank"} "Digests (Ichabod)"]]
+       [:li [:a {:href "https://www.dropbox.com/s/i1rtieg7vvz0cwj/A_2_Digests_%28Gnome%29.pdf?dl=0" :target "_blank"} "Digests (Gnome)"]]
+       [:li [:a {:href "https://www.dropbox.com/s/ucgnvclhb1qc4kk/A_3_Digests_%28Van%29.pdf?dl=0" :target "_blank"} "Digests (Van)"]]
+       [:li [:a {:href "https://www.dropbox.com/s/drk0jpopjddmwkl/B_CoE.pdf?dl=0" :target "_blank"} "CoE Rulings"]]
 
        [:p "Tournament Rules"]
 
