@@ -179,11 +179,11 @@
     (when (< (count players) 2)
       (let [{side :side :as fplayer} (first players)
             new-side (if (= "Contestant" side) "Challenger" "Contestant")
-            new-player {:user    user
-                        :ws-id   client-id
-                        :side    new-side
+            new-player {:user      user
+                        :ws-id     client-id
+                        :side      new-side
                         :alignment alignment
-                        :options options}]
+                        :options   options}]
         (swap! all-games update-in [gameid :players] #(conj % new-player))
         (swap! client-gameids assoc client-id gameid)
         (refresh-lobby :update gameid)

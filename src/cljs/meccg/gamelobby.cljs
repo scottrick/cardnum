@@ -217,6 +217,26 @@
       (aset input "value" "")
       (.focus input))))
 
+(defn deckselect-modal-fake [{:keys [gameid games decks sets user]} owner opts]
+  (om/component
+   (sab/html
+    [:div.modal.fade#deck-select-fake
+     [:div.modal-dialog
+      [:h3 "Select your fake"]
+      [:div.deck-collection
+       (let [players (:players (some #(when (= (:gameid %) gameid) %) games))
+             alignment (:alignment (some #(when (= (-> % :user :_id) (:_id user)) %) players))
+             side (:side (some #(when (= (-> % :user :_id) (:_id user)) %) players))]
+         [:div {:data-dismiss "modal"}
+          (for [deck (sort-by :date > (filter #(= (get-in % [:identity :alignment]) alignment) decks))]
+            [:div.deckline {:on-click #(ws/ws-send! [:lobby/deck (:_id deck)])}
+             [:img {:src (image-url (:identity deck))
+                    :alt (get-in deck [:identity :title] "")}]
+             [:div.float-right (deck-status-span sets deck)]
+             [:h4 (:name deck)]
+             [:div.float-right (-> (:date deck) js/Date. js/moment (.format "MMM Do YYYY"))]
+             [:p (get-in deck [:identity :title])]])])]]])))
+
 (defn deckselect-modal [{:keys [gameid games decks sets user]} owner opts]
   (om/component
    (sab/html
@@ -307,7 +327,7 @@
           [:input {:ref "msg-input" :placeholder "Say something" :accessKey "l"}]
           [:button "Send"]]]]))))
 
-(defn game-view [{:keys [title password started players gameid current-game password-game original-players editing] :as game} owner]
+(defn game-view [{:keys [title password started players gameid current-game password-game room original-players editing] :as game} owner]
   (reify
     om/IRenderState
     (render-state [this state]
@@ -323,14 +343,22 @@
         [:div.gameline {:class (when (= current-game gameid) "active")}
          [:section
           [:h3 "Pick your alignment..."]
-          (for [option ["Hero" "Minion" "Balrog" "Fallen-wizard" "Elf-lord"
-                        "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord"]]
-            [:align-radio
-             [:label [:input {:type "radio"
-                              :name "alignment"
-                              :value option
-                              :on-change #(om/set-state! owner :alignment (.. % -target -value))
-                              :checked (= (om/get-state owner :alignment) option)}] option]])]
+          (if (= "dreamcard" room)
+            (for [option ["Hero" "Minion" "Balrog" "Fallen-wizard" "Elf-lord"
+                          "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord"]]
+              [:align-radio-dc
+               [:label [:input {:type "radio"
+                                :name "alignment"
+                                :value option
+                                :on-change #(om/set-state! owner :alignment (.. % -target -value))
+                                :checked (= (om/get-state owner :alignment) option)}] option]])
+            (for [option ["Hero" "Minion" "Fallen-wizard" "Balrog"]]
+              [:align-radio
+               [:label [:input {:type "radio"
+                                :name "alignment"
+                                :value option
+                                :on-change #(om/set-state! owner :alignment (.. % -target -value))
+                                :checked (= (om/get-state owner :alignment) option)}] option]]))]
          (when (and (:allowspectator game) (not (or password-game current-game editing)))
            [:button {:on-click #(do (join "watch") (resume-sound))} "Watch" editing])
          (when-not (or current-game editing (= (count players) 2) started password-game)
@@ -462,7 +490,7 @@
   (reify
     om/IInitState
     (init-state [this]
-      {:current-room "casual"
+      {:current-room "dreamcard"
        :loading true
        :save nil
        })
@@ -486,8 +514,8 @@
               [:button.float-left {:on-click #(do (new-game cursor owner) (resume-sound)
                                                   (om/set-state! owner :loading false))} "New game"])
             [:div.rooms
-             (room-tab cursor owner games "competitive" "Competitive")
-             (room-tab cursor owner games "casual" "Casual")]]
+             (room-tab cursor owner games "standard" "Standard")
+             (room-tab cursor owner games "dreamcard" "Dreamcard")]]
            (let [password-game (some #(when (= password-gameid (:gameid %)) %) games)]
              (game-list (assoc cursor :password-game password-game :editing (:editing state)) owner))]
 
@@ -509,14 +537,22 @@
 
               [:section
                [:h3 "Alignment"]
-               (for [option ["Hero" "Minion" "Balrog" "Fallen-wizard" "Elf-lord"
-                             "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord"]]
-                 [:align-radio
-                  [:label [:input {:type "radio"
-                                   :name "alignment"
-                                   :value option
-                                   :on-change #(om/set-state! owner :alignment (.. % -target -value))
-                                   :checked (= (om/get-state owner :alignment) option)}] option]])]
+               (if (= "dreamcard" (om/get-state owner :current-room))
+                 (for [option ["Hero" "Minion" "Balrog" "Fallen-wizard" "Elf-lord"
+                               "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord"]]
+                   [:align-radio-dc
+                    [:label [:input {:type "radio"
+                                     :name "alignment"
+                                     :value option
+                                     :on-change #(om/set-state! owner :alignment (.. % -target -value))
+                                     :checked (= (om/get-state owner :alignment) option)}] option]])
+                 (for [option ["Hero" "Minion" "Fallen-wizard" "Balrog"]]
+                   [:align-radio
+                    [:label [:input {:type "radio"
+                                     :name "alignment"
+                                     :value option
+                                     :on-change #(om/set-state! owner :alignment (.. % -target -value))
+                                     :checked (= (om/get-state owner :alignment) option)}] option]]))]
 
               [:section
                [:h3 "Options"]
@@ -577,21 +613,96 @@
                    [:h3 "Players"]
                    [:div.players
                     (for [player (:players game)]
+                      (let [opp-align (:alignment (if (first-user? players user)
+                                                    (last players)
+                                                    (first players)))]
                       [:div
                        (om/build player-view {:player player})
-                       (when-let [{:keys [_id name status] :as deck} (:deck player)]
-                         [:span {:class (:status status)}
-                          [:span.label
-                           (if (= (-> player :user :_id) (:_id user))
-                             name
-                             "Deck selected")]])
-                       (when-let [deck (:deck player)]
-                         [:div.float-right (format-deck-status-span (:status deck) true false)])
-                       (when (= (-> player :user :_id) (:_id user))
+                       (when (and (= (-> player :user :_id) (:_id user)) (< (count players) 2))
                          [:span.fake-link.deck-load
                           {:data-target "#deck-select" :data-toggle "modal"
                            :on-click (fn [] (send {:action "deck" :gameid (:gameid @app-state) :deck nil}))
-                           } "Select deck"])])]
+                           } "Practice"])
+                       (when (and (= (-> player :user :_id) (:_id user)) (not= opp-align "Hero") (> (count players) 1))
+                         [:span.fake-link.deck-load
+                          {:data-target "#deck-select-fake" :data-toggle "modal"
+                           :on-click (fn [] (send {:action "deck" :gameid (:gameid @app-state) :deck nil}))
+                           } "Hero"])
+                       (when (and (= (-> player :user :_id) (:_id user)) (= opp-align "Hero"))
+                         [:span.fake-link.deck-load
+                          {:data-target "#deck-select" :data-toggle "modal"
+                           :on-click (fn [] (send {:action "deck" :gameid (:gameid @app-state) :deck nil}))
+                           } "Hero"])
+                       (when (and (= (-> player :user :_id) (:_id user)) (and (not= opp-align "Minion") (not= opp-align "Balrog")) (> (count players) 1))
+                         [:span.fake-link.deck-load
+                          {:data-target "#deck-select-fake" :data-toggle "modal"
+                           :on-click (fn [] (send {:action "deck" :gameid (:gameid @app-state) :deck nil}))
+                           } "Minion"])
+                       (when (and (= (-> player :user :_id) (:_id user)) (or (= opp-align "Minion") (= opp-align "Balrog")))
+                         [:span.fake-link.deck-load
+                          {:data-target "#deck-select" :data-toggle "modal"
+                           :on-click (fn [] (send {:action "deck" :gameid (:gameid @app-state) :deck nil}))
+                           } "Minion"])
+                       (when (and (= (-> player :user :_id) (:_id user)) (not= opp-align "Fallen-wizard") (> (count players) 1))
+                         [:span.fake-link.deck-load
+                          {:data-target "#deck-select-fake" :data-toggle "modal"
+                           :on-click (fn [] (send {:action "deck" :gameid (:gameid @app-state) :deck nil}))
+                           } "FW"])
+                       (when (and (= (-> player :user :_id) (:_id user)) (= opp-align "Fallen-wizard"))
+                         [:span.fake-link.deck-load
+                          {:data-target "#deck-select" :data-toggle "modal"
+                           :on-click (fn [] (send {:action "deck" :gameid (:gameid @app-state) :deck nil}))
+                           } "FW"])
+                       (when (and (= (-> player :user :_id) (:_id user)) (not= opp-align "Elf-lord") (> (count players) 1) (= "dreamcard" (:room game)))
+                         [:span.fake-link.deck-load
+                          {:data-target "#deck-select-fake" :data-toggle "modal"
+                           :on-click (fn [] (send {:action "deck" :gameid (:gameid @app-state) :deck nil}))
+                           } "EL"])
+                       (when (and (= (-> player :user :_id) (:_id user)) (= opp-align "Elf-lord") (= "dreamcard" (:room game)))
+                         [:span.fake-link.deck-load
+                          {:data-target "#deck-select" :data-toggle "modal"
+                           :on-click (fn [] (send {:action "deck" :gameid (:gameid @app-state) :deck nil}))
+                           } "EL"])
+                       (when (and (= (-> player :user :_id) (:_id user)) (not= opp-align "Dwarf-lord") (> (count players) 1) (= "dreamcard" (:room game)))
+                         [:span.fake-link.deck-load
+                          {:data-target "#deck-select-fake" :data-toggle "modal"
+                           :on-click (fn [] (send {:action "deck" :gameid (:gameid @app-state) :deck nil}))
+                           } "DL"])
+                       (when (and (= (-> player :user :_id) (:_id user)) (= opp-align "Dwarf-lord") (= "dreamcard" (:room game)))
+                         [:span.fake-link.deck-load
+                          {:data-target "#deck-select" :data-toggle "modal"
+                           :on-click (fn [] (send {:action "deck" :gameid (:gameid @app-state) :deck nil}))
+                           } "DL"])
+                       (when (and (= (-> player :user :_id) (:_id user)) (not= opp-align "Atani-lord") (> (count players) 1) (= "dreamcard" (:room game)))
+                         [:span.fake-link.deck-load
+                          {:data-target "#deck-select-fake" :data-toggle "modal"
+                           :on-click (fn [] (send {:action "deck" :gameid (:gameid @app-state) :deck nil}))
+                           } "AL"])
+                       (when (and (= (-> player :user :_id) (:_id user)) (= opp-align "Atani-lord") (= "dreamcard" (:room game)))
+                         [:span.fake-link.deck-load
+                          {:data-target "#deck-select" :data-toggle "modal"
+                           :on-click (fn [] (send {:action "deck" :gameid (:gameid @app-state) :deck nil}))
+                           } "AL"])
+                       (when (and (= (-> player :user :_id) (:_id user)) (not= opp-align "War-lord") (> (count players) 1) (= "dreamcard" (:room game)))
+                         [:span.fake-link.deck-load
+                          {:data-target "#deck-select-fake" :data-toggle "modal"
+                           :on-click (fn [] (send {:action "deck" :gameid (:gameid @app-state) :deck nil}))
+                           } "WL"])
+                       (when (and (= (-> player :user :_id) (:_id user)) (= opp-align "War-lord") (= "dreamcard" (:room game)))
+                         [:span.fake-link.deck-load
+                          {:data-target "#deck-select" :data-toggle "modal"
+                           :on-click (fn [] (send {:action "deck" :gameid (:gameid @app-state) :deck nil}))
+                           } "WL"])
+                       (when (and (= (-> player :user :_id) (:_id user)) (not= opp-align "Dragon-lord") (> (count players) 1) (= "dreamcard" (:room game)))
+                         [:span.fake-link.deck-load
+                          {:data-target "#deck-select-fake" :data-toggle "modal"
+                           :on-click (fn [] (send {:action "deck" :gameid (:gameid @app-state) :deck nil}))
+                           } "Dragon"])
+                       (when (and (= (-> player :user :_id) (:_id user)) (= opp-align "Dragon-lord") (= "dreamcard" (:room game)))
+                         [:span.fake-link.deck-load
+                          {:data-target "#deck-select" :data-toggle "modal"
+                           :on-click (fn [] (send {:action "deck" :gameid (:gameid @app-state) :deck nil}))
+                           } "Dragon"])]))]
                    (when (:allowspectator game)
                      [:div.spectators
                       (let [c (count (:spectators game))]
@@ -604,6 +715,7 @@
              (om/build saved-games {:saves saves :saves-loaded saves-loaded :active-save (om/get-state owner :save)}))
            ]
           (om/build deckselect-modal cursor)
+          (om/build deckselect-modal-fake cursor)
           ]]]))))
 
 (go (let [saves (:json (<! (GET (str "/saves"))))]
