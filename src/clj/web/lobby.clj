@@ -221,24 +221,28 @@
 (defn handle-lobby-create
   [{{{:keys [username emailhash] :as user} :user} :ring-req
     client-id                                     :client-id
-    {:keys [title eot-auto-save allowspectator spectatorhands password room side alignment options]} :?data :as event}]
+    {:keys [title eot-auto-save allowspectator spectatorhands password
+            room side alignment hero standard dreamcard options]} :?data :as event}]
   (let [gameid (java.util.UUID/randomUUID)
-        game {:date           (java.util.Date.)
-              :gameid         gameid
-              :title          title
-              :eot-auto-save  eot-auto-save
-              :allowspectator allowspectator
-              :spectatorhands spectatorhands
+        game {:date            (java.util.Date.)
+              :gameid          gameid
+              :title           title
+              :eot-auto-save   eot-auto-save
+              :allowspectator  allowspectator
+              :spectatorhands  spectatorhands
               :mute-spectators false
-              :password       (when (not-empty password) (bcrypt/encrypt password))
-              :room           room
-              :players        [{:user      user
-                                :ws-id     client-id
-                                :side      side
-                                :alignment alignment
-                                :options   options}]
-              :spectators     []
-              :last-update    (t/now)
+              :password        (when (not-empty password) (bcrypt/encrypt password))
+              :room            room
+              :players         [{:user      user
+                                 :ws-id     client-id
+                                 :side      side
+                                 :alignment alignment
+                                 :hero      hero
+                                 :standard  standard
+                                 :dreamcard dreamcard
+                                 :options   options}]
+              :spectators      []
+              :last-update     (t/now)
               }]
 
     (when (not (.exists (io/file (str proj-dir "/all-pre-g/" username))))
@@ -263,26 +267,29 @@
     {:keys [game-save]} :?data :as event}]
   (let [load (j-data/read-str (slurp (str "all-saves/" username "/" game-save "g.json")) :key-fn keyword)
         gameid (java.util.UUID/fromString (str (:gameid load)))
-        game {:date           (:date load)
-              :gameid         gameid
-              :title          (:title load)
-              :eot-auto-save  (:eot-auto-save load)
-              :allowspectator (:allowspectator load)
-              :spectatorhands (:spectatorhands load)
+        game {:date            (:date load)
+              :gameid          gameid
+              :title           (:title load)
+              :resumed         true
+              :eot-auto-save   (:eot-auto-save load)
+              :allowspectator  (:allowspectator load)
+              :spectatorhands  (:spectatorhands load)
               :mute-spectators false
-              :password       (:password load)
-              :room           (:room load)
-              :players        [{:user      user
-                                :ws-id     client-id
-                                :side      (if (= (:id_usern1 load) username)
-                                             "Contestant"
-                                             "Challenger")
-                                :alignment (if (= (:id_usern1 load) username)
-                                             (:id_align1 load)
-                                             (:id_align2 load))
-                                :options   (:options load)}]
-              :spectators     []
-              :last-update    (:last-update load)}]
+              :password        (:password load)
+              :room            (:room load)
+              :reserve1        (:id_usern1 load)
+              :reserve2        (:id_usern2 load)
+              :players         [{:user      user
+                                 :ws-id     client-id
+                                 :side      (if (= (:id_usern1 load) username)
+                                              "Contestant"
+                                              "Challenger")
+                                 :alignment (if (= (:id_usern1 load) username)
+                                              (:id_align1 load)
+                                              (:id_align2 load))
+                                 :options   (:options load)}]
+              :spectators      []
+              :last-update     (:last-update load)}]
     (swap! all-games assoc gameid game)
     (swap! client-gameids assoc client-id gameid)
     (ws/send! client-id [:lobby/relay {:save game-save}])
@@ -399,12 +406,33 @@
       (reply-fn 404)
       false)))
 
+(defn align-match
+  [align code hero-go minion-go fw-go]
+  (cond
+    (= align code) true
+    (and (= align "Hero") (= code "Hero/Any")) true
+    (and (= align "Fallen-wizard") (= code "Fallen-wizard/Lords")) true
+    (and (= align "Balrog") (= code "Minion")) true
+    (and (= align "War-lord") (= code "Minion")) true
+    (and minion-go (= align "Dragon-lord") (= code "Minion")) true
+    (and fw-go (or (= align "Elf-lord")
+                   (= align "Dwarf-lord")
+                   (= align "Atani-lord"))
+         (= code "Fallen-wizard/Lords")) true
+    (and hero-go (= code "Hero/Any")) true
+    :else false))
+
 (defn handle-select-deck
   [{{{:keys [username] :as user} :user} :ring-req
     client-id                           :client-id
-    deck-id                             :?data}]
+    {:keys [deck-id match-code]}       :?data}]
   (let [game (game-for-client client-id)
         fplayer (first (:players game))
+        opp-align (if (> (count (:players game)) 1)
+                    (:alignment (if (= client-id (:ws-id fplayer))
+                                  (last (:players game))
+                                  fplayer))
+                    "Practice")
         gameid (:gameid game)
 
         get-code (fn [c] (if (nil? (:id c))
@@ -493,12 +521,30 @@
                                #(vec (remove rid-card %)))
 
                    (update-in d [:identity] #(@all-cards (str (:title %) " " (:trimCode %))))
-                   (assoc d :status (decks/calculate-deck-status d))
-                   )]
+                   (assoc d :status (decks/calculate-deck-status d)))]
     (when (and (:identity deck) (player? client-id gameid))
-      (swap! all-games update-in [gameid :players
-                              (if (= client-id (:ws-id fplayer)) 0 1)]
-             (fn [p] (assoc p :deck deck)))
+      (let [player [gameid :players (if (= client-id (:ws-id fplayer)) 0 1)]]
+        (swap! all-games update-in player (fn [p]
+                                            (let [hero-go (if (and (= 0 (count (:standard p)))
+                                                                   (= 0 (count (:dreamcard p)))) true false)
+                                                  minion-go (if (:dragon (:dreamcard p)) false true)
+                                                  fw-go (if (or (= 0 (count (:dreamcard p)))
+                                                                (and (count (= 1 (count (:dreamcard p))))
+                                                                     (:dragon (:dreamcard p)))) true false)]
+                                              (if (align-match opp-align match-code hero-go minion-go fw-go)
+                                                (assoc p :deck deck)
+                                                (assoc p :deck (:deck p))))))
+        (swap! all-games update-in player
+               (fn [p] (case match-code
+                         "Practice" (assoc p :hero true)
+                         "Hero/Any" (assoc p :hero true)
+                         "Minion" (assoc-in p [:standard :minion] true)
+                         "Fallen-wizard" (assoc-in p [:standard :fallen] true)
+                         "Fallen-wizard/Lords" (assoc-in p [:standard :fallen] true)
+                         "Elf-lord" (assoc-in p [:dreamcard :el] true)
+                         "Dwarf-lord" (assoc-in p [:dreamcard :dl] true)
+                         "Atani-lord" (assoc-in p [:dreamcard :al] true)
+                         "Dragon-lord" (assoc-in p [:dreamcard :dragon] true)))))
       (ws/broadcast-to! (lobby-clients gameid)
                         :games/diff
                         {:diff {:update {gameid (game-public-view (game-for-id gameid))}}}))))
