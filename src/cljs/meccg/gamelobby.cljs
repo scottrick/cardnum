@@ -128,6 +128,9 @@
      (om/set-state! owner :title (str (:username user) "'s game"))
      (om/set-state! owner :side "Contestant")
      (om/set-state! owner :alignment "Hero")
+     (om/set-state! owner :hero false)
+     (om/set-state! owner :standard nil)
+     (om/set-state! owner :dreamcard nil)
      (om/set-state! owner :editing true)
      (om/set-state! owner :flash-message "")
      (om/set-state! owner :protected false)
@@ -155,6 +158,9 @@
                            :spectatorhands (om/get-state owner :spectatorhands)
                            :side           (om/get-state owner :side)
                            :alignment      (om/get-state owner :alignment)
+                           :hero           (om/get-state owner :hero)
+                           :standard       (om/get-state owner :standard)
+                           :dreamcard      (om/get-state owner :dreamcard)
                            :room           (om/get-state owner :current-room)
                            :options        (:options @app-state)}])))))))
 
@@ -219,23 +225,31 @@
 
 (defn deckselect-modal [{:keys [gameid games decks sets user]} owner opts]
   (om/component
-   (sab/html
-    [:div.modal.fade#deck-select
-     [:div.modal-dialog
-      [:h3 "Select your deck"]
-      [:div.deck-collection
-       (let [players (:players (some #(when (= (:gameid %) gameid) %) games))
-             alignment (:alignment (some #(when (= (-> % :user :_id) (:_id user)) %) players))
-             side (:side (some #(when (= (-> % :user :_id) (:_id user)) %) players))]
-         [:div {:data-dismiss "modal"}
-          (for [deck (sort-by :date > (filter #(= (get-in % [:identity :alignment]) alignment) decks))]
-            [:div.deckline {:on-click #(ws/ws-send! [:lobby/deck (:_id deck)])}
-             [:img {:src (image-url (:identity deck))
-                    :alt (get-in deck [:identity :title] "")}]
-             [:div.float-right (deck-status-span sets deck)]
-             [:h4 (:name deck)]
-             [:div.float-right (-> (:date deck) js/Date. js/moment (.format "MMM Do YYYY"))]
-             [:p (get-in deck [:identity :title])]])])]]])))
+    (sab/html
+      [(case (:selector opts)
+         "Practice" :div.modal.fade#deck-select-Practice
+         "Hero/Any" :div.modal.fade#deck-select-Hero-Any
+         "Minion" :div.modal.fade#deck-select-Minion
+         "Fallen-wizard" :div.modal.fade#deck-select-FW
+         "Fallen-wizard/Lords" :div.modal.fade#deck-select-FW-Lord
+         "Elf-lord" :div.modal.fade#deck-select-EL
+         "Dwarf-lord" :div.modal.fade#deck-select-DL
+         "Atani-lord" :div.modal.fade#deck-select-AL
+         "Dragon-lord" :div.modal.fade#deck-select-Dragon)
+       [:div.modal-dialog
+        [:h3 (str "Select your deck vs " (:selector opts))]
+        [:div.deck-collection
+         (let [players (:players (some #(when (= (:gameid %) gameid) %) games))
+               alignment (:alignment (some #(when (= (-> % :user :_id) (:_id user)) %) players))]
+           [:div {:data-dismiss "modal"}
+            (for [deck (sort-by :date > (filter #(= (get-in % [:identity :alignment]) alignment) decks))]
+              [:div.deckline {:on-click #(ws/ws-send! [:lobby/deck {:deck-id (:_id deck) :match-code (:selector opts)}])}
+               [:img {:src (image-url (:identity deck))
+                      :alt (get-in deck [:identity :title] "")}]
+               [:div.float-right (deck-status-span sets deck)]
+               [:h4 (:name deck)]
+               [:div.float-right (-> (:date deck) js/Date. js/moment (.format "MMM Do YYYY"))]
+               [:p (get-in deck [:identity :title])]])])]]])))
 
 (defn faction-icon
   [faction identity]
@@ -276,6 +290,7 @@
            identity (:title (:identity (:deck player)))
            specs (:allowspectator game)]
        (cond
+         (:resumed game) [:span.alignment (str " (Aligned)")]
          (and (some? faction) (not= "Neutral" faction) specs) (faction-icon faction identity)
          alignment [:span.alignment (str " (Aligned)")]))])))
 
@@ -307,7 +322,7 @@
           [:input {:ref "msg-input" :placeholder "Say something" :accessKey "l"}]
           [:button "Send"]]]]))))
 
-(defn game-view [{:keys [title password started players gameid current-game password-game original-players editing] :as game} owner]
+(defn game-view [{:keys [title password started players gameid current-game password-game room original-players editing] :as game} owner]
   (reify
     om/IRenderState
     (render-state [this state]
@@ -322,15 +337,26 @@
        (sab/html
         [:div.gameline {:class (when (= current-game gameid) "active")}
          [:section
-          [:h3 "Pick your alignment..."]
-          (for [option ["Hero" "Minion" "Balrog" "Fallen-wizard" "Elf-lord"
-                        "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord"]]
-            [:align-radio
-             [:label [:input {:type "radio"
-                              :name "alignment"
-                              :value option
-                              :on-change #(om/set-state! owner :alignment (.. % -target -value))
-                              :checked (= (om/get-state owner :alignment) option)}] option]])]
+          (if (:resumed game)
+            [:h4 (str "Resumed game of:  " (:reserve1 game) " & " (:reserve2 game) )]
+            [:h3 "Pick your alignment..."])
+          (when-not (:resumed game)
+            (if (= "standard" room)
+              (for [option ["Hero" "Minion" "Fallen-wizard" "Balrog"]]
+                [:align-radio
+                 [:label [:input {:type "radio"
+                                  :name "alignment"
+                                  :value option
+                                  :on-change #(om/set-state! owner :alignment (.. % -target -value))
+                                  :checked (= (om/get-state owner :alignment) option)}] option]])
+              (for [option ["Hero" "Minion" "Balrog" "Fallen-wizard" "Elf-lord"
+                            "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord"]]
+                [:align-radio-dc
+                 [:label [:input {:type "radio"
+                                  :name "alignment"
+                                  :value option
+                                  :on-change #(om/set-state! owner :alignment (.. % -target -value))
+                                  :checked (= (om/get-state owner :alignment) option)}] option]])))]
          (when (and (:allowspectator game) (not (or password-game current-game editing)))
            [:button {:on-click #(do (join "watch") (resume-sound))} "Watch" editing])
          (when-not (or current-game editing (= (count players) 2) started password-game)
@@ -458,11 +484,42 @@
                  ])
         ))))
 
+(defn deck-component
+  [alignment color owner]
+    [(case color
+       "yellow" :span.fake-link.deck-warned
+       "green" :span.fake-link.deck-loaded
+       "red" :span.fake-link.deck-load)
+     {:data-target (case alignment
+                     "Practice" "#deck-select-Practice"
+                     "Hero/Any" "#deck-select-Hero-Any"
+                     "Minion" "#deck-select-Minion"
+                     "Fallen-wizard" "#deck-select-FW"
+                     "FW/Lords" "#deck-select-FW-Lord"
+                     "EL" "#deck-select-EL"
+                     "DL" "#deck-select-DL"
+                     "AL" "#deck-select-AL"
+                     "Dragon" "#deck-select-Dragon")
+      :data-toggle "modal"
+      :on-click (fn [] (send {:action "deck" :gameid (:gameid @app-state) :deck nil}))
+      } alignment])
+
+
+(defn decks-ready
+  [player]
+  (cond
+    (and (:hero player) (= 0 (count (:standard player))) (= 0 (count (:dreamcard player)))) true
+    (and (:hero player) (= 2 (count (:standard player))) (= 0 (count (:dreamcard player)))) true
+    (and (:hero player) (= 2 (count (:standard player))) (= 4 (count (:dreamcard player)))) true
+    (and (:hero player) (= 2 (count (:standard player))) (= 3 (count (:dreamcard player))) (nil? (:dragon (:dreamcard player)))) true
+    (and (:hero player) (= 2 (count (:standard player))) (= 1 (count (:dreamcard player))) (:dragon (:dreamcard player))) true
+    :else false))
+
 (defn game-lobby [{:keys [games gameid saves saves-loaded messages sets user password-gameid] :as cursor} owner]
   (reify
     om/IInitState
     (init-state [this]
-      {:current-room "casual"
+      {:current-room "dreamcard"
        :loading true
        :save nil
        })
@@ -486,8 +543,9 @@
               [:button.float-left {:on-click #(do (new-game cursor owner) (resume-sound)
                                                   (om/set-state! owner :loading false))} "New game"])
             [:div.rooms
-             (room-tab cursor owner games "competitive" "Competitive")
-             (room-tab cursor owner games "casual" "Casual")]]
+             (room-tab cursor owner games "casual" "Casual")
+             (room-tab cursor owner games "standard" "Standard")
+             (room-tab cursor owner games "dreamcard" "Dreamcard")]]
            (let [password-game (some #(when (= password-gameid (:gameid %)) %) games)]
              (game-list (assoc cursor :password-game password-game :editing (:editing state)) owner))]
 
@@ -509,14 +567,22 @@
 
               [:section
                [:h3 "Alignment"]
-               (for [option ["Hero" "Minion" "Balrog" "Fallen-wizard" "Elf-lord"
-                             "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord"]]
-                 [:align-radio
-                  [:label [:input {:type "radio"
-                                   :name "alignment"
-                                   :value option
-                                   :on-change #(om/set-state! owner :alignment (.. % -target -value))
-                                   :checked (= (om/get-state owner :alignment) option)}] option]])]
+               (if (= "standard" (om/get-state owner :current-room))
+                 (for [option ["Hero" "Minion" "Fallen-wizard" "Balrog"]]
+                   [:align-radio
+                    [:label [:input {:type "radio"
+                                     :name "alignment"
+                                     :value option
+                                     :on-change #(om/set-state! owner :alignment (.. % -target -value))
+                                     :checked (= (om/get-state owner :alignment) option)}] option]])
+                 (for [option ["Hero" "Minion" "Balrog" "Fallen-wizard" "Elf-lord"
+                               "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord"]]
+                   [:align-radio-dc
+                    [:label [:input {:type "radio"
+                                     :name "alignment"
+                                     :value option
+                                     :on-change #(om/set-state! owner :alignment (.. % -target -value))
+                                     :checked (= (om/get-state owner :alignment) option)}] option]]))]
 
               [:section
                [:h3 "Options"]
@@ -558,40 +624,88 @@
                  [:div
                   [:div.button-bar
                    (when (first-user? players user)
-                     (if (not (every? :deck players))
-                       [:button {:class "disabled"} "Start"]
+                     (if (or (every? decks-ready players)
+                             (:resumed @app-state))
                        (if (:resumed @app-state)
                          [:button {:on-click #(do (ws/ws-send! [:meccg/load {:save-pref (:save-pref @app-state)}])
                                                   ;(println "resume")
                                                   (om/set-state! owner :loading true))} "Start"]
                          [:button {:on-click #(do (ws/ws-send! [:meccg/start gameid])
                                                   ;(println "fresh")
-                                                  (om/set-state! owner :loading true))} "Start"]))
+                                                  (om/set-state! owner :loading true))} "Start"])
+                       [:button {:class "disabled"} "Start"])
                        )
                    [:button {:on-click #(do (om/set-state! owner :loading true)
                                           (leave-lobby cursor owner))} "Leave"]]
                   [:div.content
                    [:h2 (:title game)]
-                   (when-not (every? :deck players)
+                   (when-not (or (every? decks-ready players)
+                                 (:resumed game))
                      [:div.flash-message "Waiting players deck selection"])
                    [:h3 "Players"]
                    [:div.players
                     (for [player (:players game)]
                       [:div
-                       (om/build player-view {:player player})
-                       (when-let [{:keys [_id name status] :as deck} (:deck player)]
-                         [:span {:class (:status status)}
-                          [:span.label
-                           (if (= (-> player :user :_id) (:_id user))
-                             name
-                             "Deck selected")]])
-                       (when-let [deck (:deck player)]
-                         [:div.float-right (format-deck-status-span (:status deck) true false)])
-                       (when (= (-> player :user :_id) (:_id user))
-                         [:span.fake-link.deck-load
-                          {:data-target "#deck-select" :data-toggle "modal"
-                           :on-click (fn [] (send {:action "deck" :gameid (:gameid @app-state) :deck nil}))
-                           } "Select deck"])])]
+                       (om/build player-view {:player player :game game})
+                       (when (and (= (-> player :user :_id) (:_id user)) (not (:resumed game)))
+                         (deck-component (if (< (count players) 2) "Practice" "Hero/Any") (if (-> player :hero) "green" "red") owner))
+                       (when (and (= (-> player :user :_id) (:_id user)) (> (count players) 1) (not (:resumed game)) (not= "casual" (:room game)))
+                         (deck-component "Minion" (if (-> player :standard :minion) "green"
+                                                                                    (if (and (-> player :hero)
+                                                                                             (= 0 (count (-> player :standard)))
+                                                                                             (= 0 (count (-> player :dreamcard))))
+                                                                                      "yellow"
+                                                                                      "red")) owner))
+                       (when (and (= (-> player :user :_id) (:_id user)) (> (count players) 1) (not (:resumed game)) (not= "casual" (:room game)))
+                         (deck-component (if (= "dreamcard" (:room game)) "FW/Lords" "Fallen-wizard") (if (-> player :standard :fallen) "green"
+                                                                                                                                        (if (and (-> player :hero)
+                                                                                                                                                 (= 0 (count (-> player :standard)))
+                                                                                                                                                 (= 0 (count (-> player :dreamcard))))
+                                                                                                                                          "yellow"
+                                                                                                                                          "red")) owner))
+                       (when (and (= (-> player :user :_id) (:_id user)) (> (count players) 1) (= "dreamcard" (:room game)) (not (:resumed game)))
+                         (deck-component "EL" (if (-> player :dreamcard :el) "green"
+                                                                             (if (or (and (-> player :hero)
+                                                                                          (= 0 (count (-> player :standard)))
+                                                                                          (= 0 (count (-> player :dreamcard))))
+                                                                                     (and (-> player :standard :fallen)
+                                                                                          (or (= 0 (count (-> player :dreamcard)))
+                                                                                              (and (= 1 (count (-> player :dreamcard)))
+                                                                                                   (-> player :dreamcard :dragon)))))
+                                                                               "yellow"
+                                                                               "red")) owner))
+                       (when (and (= (-> player :user :_id) (:_id user)) (> (count players) 1) (= "dreamcard" (:room game)) (not (:resumed game)))
+                         (deck-component "DL" (if (-> player :dreamcard :dl) "green"
+                                                                             (if (or (and (-> player :hero)
+                                                                                          (= 0 (count (-> player :standard)))
+                                                                                          (= 0 (count (-> player :dreamcard))))
+                                                                                     (and (-> player :standard :fallen)
+                                                                                          (or (= 0 (count (-> player :dreamcard)))
+                                                                                              (and (= 1 (count (-> player :dreamcard)))
+                                                                                                   (-> player :dreamcard :dragon)))))
+                                                                               "yellow"
+                                                                               "red")) owner))
+                       (when (and (= (-> player :user :_id) (:_id user)) (> (count players) 1) (= "dreamcard" (:room game)) (not (:resumed game)))
+                         (deck-component "AL" (if (-> player :dreamcard :al) "green"
+                                                                             (if (or (and (-> player :hero)
+                                                                                          (= 0 (count (-> player :standard)))
+                                                                                          (= 0 (count (-> player :dreamcard))))
+                                                                                     (and (-> player :standard :fallen)
+                                                                                          (or (= 0 (count (-> player :dreamcard)))
+                                                                                              (and (= 1 (count (-> player :dreamcard)))
+                                                                                                   (-> player :dreamcard :dragon)))))
+                                                                               "yellow"
+                                                                               "red")) owner))
+                       (when (and (= (-> player :user :_id) (:_id user)) (> (count players) 1) (= "dreamcard" (:room game)) (not (:resumed game)))
+                         (deck-component "Dragon" (if (-> player :dreamcard :dragon) "green"
+                                                                                     (if (or (and (-> player :hero)
+                                                                                                  (= 0 (count (-> player :standard)))
+                                                                                                  (= 0 (count (-> player :dreamcard))))
+                                                                                             (and (-> player :standard :minion)
+                                                                                                  (= 0 (count (-> player :dreamcard)))))
+                                                                                       "yellow"
+                                                                                       "red")) owner))
+                       ])]
                    (when (:allowspectator game)
                      [:div.spectators
                       (let [c (count (:spectators game))]
@@ -603,7 +717,15 @@
                                             (some #(when (= gameid (:gameid %)) %) games))))
              (om/build saved-games {:saves saves :saves-loaded saves-loaded :active-save (om/get-state owner :save)}))
            ]
-          (om/build deckselect-modal cursor)
+          (om/build deckselect-modal cursor {:opts {:selector "Practice"}})
+          (om/build deckselect-modal cursor {:opts {:selector "Hero/Any"}})
+          (om/build deckselect-modal cursor {:opts {:selector "Minion"}})
+          (om/build deckselect-modal cursor {:opts {:selector "Fallen-wizard"}})
+          (om/build deckselect-modal cursor {:opts {:selector "Fallen-wizard/Lords"}})
+          (om/build deckselect-modal cursor {:opts {:selector "Elf-lord"}})
+          (om/build deckselect-modal cursor {:opts {:selector "Dwarf-lord"}})
+          (om/build deckselect-modal cursor {:opts {:selector "Atani-lord"}})
+          (om/build deckselect-modal cursor {:opts {:selector "Dragon-lord"}})
           ]]]))))
 
 (go (let [saves (:json (<! (GET (str "/saves"))))]
