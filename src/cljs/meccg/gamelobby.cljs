@@ -696,7 +696,7 @@
                                                                                                    (-> player :dreamcard :dragon)))))
                                                                                "yellow"
                                                                                "red")) owner))
-                       (when (and (= (-> player :user :_id) (:_id user)) (> (count players) 1) (= "dreamcard" (:room game)) (not (:resumed gamee)))
+                       (when (and (= (-> player :user :_id) (:_id user)) (> (count players) 1) (= "dreamcard" (:room game)) (not (:resumed game)))
                          (deck-component "Dragon" (if (-> player :dreamcard :dragon) "green"
                                                                                      (if (or (and (-> player :hero)
                                                                                                   (= 0 (count (-> player :standard)))
