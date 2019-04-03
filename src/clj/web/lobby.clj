@@ -529,7 +529,7 @@
                                                                    (= 0 (count (:dreamcard p)))) true false)
                                                   minion-go (if (:dragon (:dreamcard p)) false true)
                                                   fw-go (if (or (= 0 (count (:dreamcard p)))
-                                                                (and (count (= 1 (count (:dreamcard p))))
+                                                                (and (= 1 (count (:dreamcard p)))
                                                                      (:dragon (:dreamcard p)))) true false)]
                                               (if (align-match opp-align match-code hero-go minion-go fw-go)
                                                 (assoc p :deck deck)

@@ -640,30 +640,30 @@
                   [:div.content
                    [:h2 (:title game)]
                    (when-not (or (every? decks-ready players)
-                                 (:resumed @app-state))
+                                 (:resumed game))
                      [:div.flash-message "Waiting players deck selection"])
                    [:h3 "Players"]
                    [:div.players
                     (for [player (:players game)]
                       [:div
                        (om/build player-view {:player player :game game})
-                       (when (and (= (-> player :user :_id) (:_id user)) (not (:resumed @app-state)))
+                       (when (and (= (-> player :user :_id) (:_id user)) (not (:resumed game)))
                          (deck-component (if (< (count players) 2) "Practice" "Hero/Any") (if (-> player :hero) "green" "red") owner))
-                       (when (and (= (-> player :user :_id) (:_id user)) (> (count players) 1) (not (:resumed @app-state)) (not= "casual" (:room game)))
+                       (when (and (= (-> player :user :_id) (:_id user)) (> (count players) 1) (not (:resumed game)) (not= "casual" (:room game)))
                          (deck-component "Minion" (if (-> player :standard :minion) "green"
                                                                                     (if (and (-> player :hero)
                                                                                              (= 0 (count (-> player :standard)))
                                                                                              (= 0 (count (-> player :dreamcard))))
                                                                                       "yellow"
                                                                                       "red")) owner))
-                       (when (and (= (-> player :user :_id) (:_id user)) (> (count players) 1) (not (:resumed @app-state)) (not= "casual" (:room game)))
+                       (when (and (= (-> player :user :_id) (:_id user)) (> (count players) 1) (not (:resumed game)) (not= "casual" (:room game)))
                          (deck-component (if (= "dreamcard" (:room game)) "FW/Lords" "Fallen-wizard") (if (-> player :standard :fallen) "green"
                                                                                                                                         (if (and (-> player :hero)
                                                                                                                                                  (= 0 (count (-> player :standard)))
                                                                                                                                                  (= 0 (count (-> player :dreamcard))))
                                                                                                                                           "yellow"
                                                                                                                                           "red")) owner))
-                       (when (and (= (-> player :user :_id) (:_id user)) (> (count players) 1) (= "dreamcard" (:room game)) (not (:resumed @app-state)))
+                       (when (and (= (-> player :user :_id) (:_id user)) (> (count players) 1) (= "dreamcard" (:room game)) (not (:resumed game)))
                          (deck-component "EL" (if (-> player :dreamcard :el) "green"
                                                                              (if (or (and (-> player :hero)
                                                                                           (= 0 (count (-> player :standard)))
@@ -674,7 +674,7 @@
                                                                                                    (-> player :dreamcard :dragon)))))
                                                                                "yellow"
                                                                                "red")) owner))
-                       (when (and (= (-> player :user :_id) (:_id user)) (> (count players) 1) (= "dreamcard" (:room game)) (not (:resumed @app-state)))
+                       (when (and (= (-> player :user :_id) (:_id user)) (> (count players) 1) (= "dreamcard" (:room game)) (not (:resumed game)))
                          (deck-component "DL" (if (-> player :dreamcard :dl) "green"
                                                                              (if (or (and (-> player :hero)
                                                                                           (= 0 (count (-> player :standard)))
@@ -685,7 +685,7 @@
                                                                                                    (-> player :dreamcard :dragon)))))
                                                                                "yellow"
                                                                                "red")) owner))
-                       (when (and (= (-> player :user :_id) (:_id user)) (> (count players) 1) (= "dreamcard" (:room game)) (not (:resumed @app-state)))
+                       (when (and (= (-> player :user :_id) (:_id user)) (> (count players) 1) (= "dreamcard" (:room game)) (not (:resumed game)))
                          (deck-component "AL" (if (-> player :dreamcard :al) "green"
                                                                              (if (or (and (-> player :hero)
                                                                                           (= 0 (count (-> player :standard)))
@@ -696,7 +696,7 @@
                                                                                                    (-> player :dreamcard :dragon)))))
                                                                                "yellow"
                                                                                "red")) owner))
-                       (when (and (= (-> player :user :_id) (:_id user)) (> (count players) 1) (= "dreamcard" (:room game)) (not (:resumed @app-state)))
+                       (when (and (= (-> player :user :_id) (:_id user)) (> (count players) 1) (= "dreamcard" (:room game)) (not (:resumed gamee)))
                          (deck-component "Dragon" (if (-> player :dreamcard :dragon) "green"
                                                                                      (if (or (and (-> player :hero)
                                                                                                   (= 0 (count (-> player :standard)))
