@@ -103,6 +103,37 @@
     (put! select-channel selected-deck))
   (swap! app-state assoc :decks-loaded true))
 
+(defn org-decks [decks owner]
+  (let [wizard-decks (when (om/get-state owner :wizard) (sort-by :date > (filter #(= (get-in % [:identity :alignment]) "Hero") decks)))
+        minion-decks (if (om/get-state owner :minion)
+                       (into wizard-decks (sort-by :date > (filter #(= (get-in % [:identity :alignment]) "Minion") decks)))
+                       wizard-decks)
+        fallen-decks (if (om/get-state owner :fallen)
+                       (into minion-decks (sort-by :date > (filter #(= (get-in % [:identity :alignment]) "Fallen-wizard") decks)))
+                       minion-decks)
+        balrog-decks (if (om/get-state owner :balrog)
+                       (into fallen-decks (sort-by :date > (filter #(= (get-in % [:identity :alignment]) "Balrog") decks)))
+                       fallen-decks)
+        el-decks (if (om/get-state owner :el)
+                   (into balrog-decks (sort-by :date > (filter #(= (get-in % [:identity :alignment]) "Elf-lord") decks)))
+                   balrog-decks)
+        dl-decks (if (om/get-state owner :dl)
+                   (into el-decks (sort-by :date > (filter #(= (get-in % [:identity :alignment]) "Dwarf-lord") decks)))
+                   el-decks)
+        al-decks (if (om/get-state owner :al)
+                   (into dl-decks (sort-by :date > (filter #(= (get-in % [:identity :alignment]) "Atani-lord") decks)))
+                   dl-decks)
+        wl-decks (if (om/get-state owner :wl)
+                   (into al-decks (sort-by :date > (filter #(= (get-in % [:identity :alignment]) "War-lord") decks)))
+                   al-decks)
+        dragon-decks (if (om/get-state owner :dragon)
+                       (into wl-decks (sort-by :date > (filter #(= (get-in % [:identity :alignment]) "Dragon-lord") decks)))
+                       wl-decks)]
+    (om/set-state! owner :decks-filtered dragon-decks)
+    (when-let [selected-deck (first (sort-by :date > :decks-filtered))]
+      (put! select-channel selected-deck))
+    (swap! app-state assoc :decks-loaded true)))
+
 (defn process-decks
   "Process the raw deck from the database into a more useful format"
   [decks]
@@ -629,9 +660,6 @@
     om/IInitState
     (init-state [this]
       {:edit false
-       :vs-wizard false
-       :vs-minion false
-       :vs-fallen false
        :old-deck nil
        :resource-edit-channel (chan)
        :hazard-edit-channel (chan)
@@ -640,6 +668,16 @@
        :pool-edit-channel (chan)
        :fwsb-edit-channel (chan)
        :note-edit-channel (chan)
+       :wizard true
+       :minion true
+       :fallen true
+       :balrog true
+       :el true
+       :dl true
+       :al true
+       :wl true
+       :dragon true
+       :deck-filtered nil
        :deck nil
        })
 
@@ -797,9 +835,83 @@
              [:button {:on-click #(new-deck "War-lord" owner)} "New Warlord deck"]
              [:button {:on-click #(new-deck "Dragon-lord" owner)} "New Dragon deck"]
              ]
+            [:div
+             [:label [:input {:type "checkbox"
+                                            :value true
+                                            :checked (om/get-state owner :wizard)
+                                            :on-change #(do
+                                                          (om/set-state! owner :wizard (.. % -target -checked))
+                                                          (org-decks decks owner)
+                                                          )}]
+              "Hero   "]
+             [:label [:input {:type "checkbox"
+                              :value true
+                              :checked (om/get-state owner :minion)
+                              :on-change #(do
+                                            (om/set-state! owner :minion (.. % -target -checked))
+                                            (org-decks decks owner)
+                                            )}]
+              "Minion    "]
+             [:label [:input {:type "checkbox"
+                              :value true
+                              :checked (om/get-state owner :fallen)
+                              :on-change #(do
+                                            (om/set-state! owner :fallen (.. % -target -checked))
+                                            (org-decks decks owner)
+                                            )}]
+              "FW    "]
+             [:label [:input {:type "checkbox"
+                              :value true
+                              :checked (om/get-state owner :balrog)
+                              :on-change #(do
+                                            (om/set-state! owner :balrog (.. % -target -checked))
+                                            (org-decks decks owner)
+                                            )}]
+              "BA    "]
+             [:label [:input {:type "checkbox"
+                              :value true
+                              :checked (om/get-state owner :el)
+                              :on-change #(do
+                                            (om/set-state! owner :el (.. % -target -checked))
+                                            (org-decks decks owner)
+                                            )}]
+              "EL   "]
+             [:label [:input {:type "checkbox"
+                              :value true
+                              :checked (om/get-state owner :dl)
+                              :on-change #(do
+                                            (om/set-state! owner :dl (.. % -target -checked))
+                                            (org-decks decks owner)
+                                            )}]
+              "DL    "]
+             [:label [:input {:type "checkbox"
+                              :value true
+                              :checked (om/get-state owner :al)
+                              :on-change #(do
+                                            (om/set-state! owner :al (.. % -target -checked))
+                                            (org-decks decks owner)
+                                            )}]
+              "AL    "]             [:label [:input {:type "checkbox"
+                              :value true
+                              :checked (om/get-state owner :wl)
+                              :on-change #(do
+                                            (om/set-state! owner :wl (.. % -target -checked))
+                                            (org-decks decks owner)
+                                            )}]
+              "WL    "]             [:label [:input {:type "checkbox"
+                              :value true
+                              :checked (om/get-state owner :dragon)
+                              :on-change #(do
+                                            (om/set-state! owner :dragon (.. % -target -checked))
+                                            (org-decks decks owner)
+                                            )}]
+              "Dragon"]]
+
             [:div.deck-collection
              (when-not (:edit state)
-               (om/build deck-collection {:sets sets :decks decks :decks-loaded decks-loaded :active-deck (om/get-state owner :deck)}))
+               (if (nil? (om/get-state owner :decks-filtered))
+               (om/build deck-collection {:sets sets :decks decks :decks-loaded decks-loaded :active-deck (om/get-state owner :deck)})
+               (om/build deck-collection {:sets sets :decks (om/get-state owner :decks-filtered) :decks-loaded decks-loaded :active-deck (om/get-state owner :deck)})))
              ]
             [:div {:class (when (:edit state) "edit")}
              (when-let [line (om/get-state owner :zoom)]
