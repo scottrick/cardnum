@@ -43,7 +43,7 @@
           (mc/insert db "config" {:version "0.1.0" :cards-version 0})))
 
     ;; Clear inactive lobbies after 15 minutes
-    (web.utils/tick #(lobby/clear-inactive-lobbies 3600) 4000)
+    (web.utils/tick #(lobby/clear-inactive-lobbies 14400) 16000)
     (web.utils/tick lobby/send-lobby 1000)
 
     (reset! server (org.httpkit.server/run-server app {:port port}))

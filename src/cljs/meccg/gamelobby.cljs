@@ -459,12 +459,12 @@
                           [:div.button-bar
                              [:button.float-left {:class "disabled"} "Load game"]
                              [:button.float-left {:class "disabled"} "Delete"]]
-                          [:h4 "No saved games, refesh browser to see any changes..."]]
+                          [:h4 "No saved games, refresh browser to see any changes..."]]
           :else [:div.saved-collection
                  [:div.button-bar
                   [:button.float-left {:on-click #(load-game (:game-save active-save))} "Load game"]
                   [:button.float-left {:on-click #(delete-game (:game-save active-save))} "Delete"]
-                  [:h4 " refesh browser to see any changes..."]]
+                  [:h4 " refresh browser to see any changes..."]]
                  (let [saves (:saves @app-state)]
                    (for [save (sort-by :date > saves)]
                      (when (not= nil save)
