@@ -91,12 +91,12 @@
 (defn swap-character
   "Swaps two pieces of Character."
   [state side a b]
-  (let [a-index (character-index state a)
-        b-index (character-index state b)
+  (let [a-index (character-index state side a)
+        b-index (character-index state side b)
         a-new (assoc a :zone (:zone b))
         b-new (assoc b :zone (:zone a))]
-    (swap! state update-in (cons :contestant (:zone a)) #(assoc % a-index b-new))
-    (swap! state update-in (cons :contestant (:zone b)) #(assoc % b-index a-new))
+    (swap! state update-in (cons side (:zone a)) #(assoc % a-index b-new))
+    (swap! state update-in (cons side (:zone b)) #(assoc % b-index a-new))
     (doseq [newcard [a-new b-new]]
       (unregister-events state side newcard)
       (when (revealed? newcard)
@@ -109,23 +109,24 @@
           (unregister-events state side h)
           (when (revealed? h)
             (register-events state side (:events (card-def newh)) newh)))))
-    (update-character-strength state side a-new)
-    (update-character-strength state side b-new)))
+    ;(update-character-strength state side a-new)
+    ;(update-character-strength state side b-new)
+    ))
 
 (defn card-index
   "Get the zero-based index of the given card in its locale's list of content. Same as character-index"
-  [state card]
-  (first (keep-indexed #(when (= (:cid %2) (:cid card)) %1) (get-in @state (cons :contestant (:zone card))))))
+  [state side card]
+  (first (keep-indexed #(when (= (:cid %2) (:cid card)) %1) (get-in @state (cons side (:zone card))))))
 
 (defn swap-placed
   "Swaps two placed contestant cards - like swap Character except no strength update"
   [state side a b]
-  (let [a-index (card-index state a)
-        b-index (card-index state b)
+  (let [a-index (card-index state side a)
+        b-index (card-index state side b)
         a-new (assoc a :zone (:zone b))
         b-new (assoc b :zone (:zone a))]
-    (swap! state update-in (cons :contestant (:zone a)) #(assoc % a-index b-new))
-    (swap! state update-in (cons :contestant (:zone b)) #(assoc % b-index a-new))
+    (swap! state update-in (cons side (:zone a)) #(assoc % a-index b-new))
+    (swap! state update-in (cons side (:zone b)) #(assoc % b-index a-new))
     (doseq [newcard [a-new b-new]]
       (doseq [h (:hosted newcard)]
         (let [newh (-> h

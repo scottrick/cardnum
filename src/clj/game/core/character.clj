@@ -134,5 +134,11 @@
 (defn character-index
   "Get the zero-based index of the given character in its locale's list of character, where index 0
   is the innermost character."
+  [state side character]
+  (first (keep-indexed #(when (= (:cid %2) (:cid character)) %1) (get-in @state (cons side (:zone character))))))
+
+(defn character-txt-index
+  "Get the zero-based index of the given character in its locale's list of character, where index 0
+  is the innermost character."
   [state character]
   (first (keep-indexed #(when (= (:cid %2) (:cid character)) %1) (get-in @state (cons :contestant (:zone character))))))

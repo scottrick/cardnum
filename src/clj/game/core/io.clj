@@ -1,6 +1,6 @@
 (in-ns 'game.core)
 
-(declare character-index parse-command show-error-toast)
+(declare character-txt-index parse-command show-error-toast swap-character)
 
 (defn say
   "Prints a message to the log as coming from the given username. The special user string
@@ -96,7 +96,7 @@
                 (str (if (character? card) " in " " for ")
                      ;TODO add naming of scoring area of contestant/challenger
                      (zone->name (second (:zone card)))
-                     (if (character? card) (str " at position " (character-index state card))))))
+                     (if (character? card) (str " at position " (character-txt-index state card))))))
          ; Challenger card messages
          (if (or (:facedown card) visible) "a facedown card" (:title card)))
        (if (:host card) (str " hosted on " (card-str state (:host card)))))))
@@ -350,6 +350,33 @@
                                                                                     } c nil )))} nil nil)
   (system-msg state side "host a card revealed"))
 
+
+(defn escher-true
+  [state side args]
+  (resolve-ability state side
+  (letfn [(msr [] {:prompt "Select two pieces of ICE to swap positions"
+                   :choices {:req #(and (placed? %)
+                                        (character? %))
+                             :max 2}
+                   :delayed-completion true
+                   :effect (req (if (= (count targets) 2)
+                                  (do (swap-character state side (first targets) (second targets))
+                                      (system-msg state side
+                                                  (str "swaps the position of "
+                                                       (card-str state (first targets))
+                                                       " and "
+                                                       (card-str state (second targets))))
+                                      (continue-ability state side (msr) card nil))
+                                  (do (system-msg state side (str "has finished rearranging ICE"))
+                                      (effect-completed state side eid))))})]
+    {:delayed-completion true
+     :msg "rearrange any number of ICE"
+     :effect (effect (continue-ability (msr) card nil))})nil nil))
+
+
+
+
+
 (defn starter-path [state side st-path]
   (let [
         b-path1 (.replace st-path " b " " Border-land ")
@@ -505,6 +532,7 @@
                                           {:title "/score command"} nil)
           "/roll"       #(command-roll %1 %2 value)
           "/r"          #(basic-roll %1 %2)
+          "/swap"       #(escher-true %1 %2 args)
           "/tag"        #(swap! %1 assoc-in [%2 :tag] (max 0 value))
           "/talk"       #(talk-bool %1 %2 nil)
           "/tall"       #(tall-bool %1 %2 nil)
