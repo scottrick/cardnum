@@ -350,32 +350,55 @@
                                                                                     } c nil )))} nil nil)
   (system-msg state side "host a card revealed"))
 
-
-(defn escher-true
+(defn escher-char
   [state side args]
   (resolve-ability state side
-  (letfn [(msr [] {:prompt "Select two pieces of ICE to swap positions"
-                   :choices {:req #(and (placed? %)
-                                        (character? %))
-                             :max 2}
-                   :delayed-completion true
-                   :effect (req (if (= (count targets) 2)
-                                  (do (swap-character state side (first targets) (second targets))
-                                      (system-msg state side
-                                                  (str "swaps the position of "
-                                                       (card-str state (first targets))
-                                                       " and "
-                                                       (card-str state (second targets))))
-                                      (continue-ability state side (msr) card nil))
-                                  (do (system-msg state side (str "has finished rearranging ICE"))
-                                      (effect-completed state side eid))))})]
-    {:delayed-completion true
-     :msg "rearrange any number of ICE"
-     :effect (effect (continue-ability (msr) card nil))})nil nil))
+                   (letfn [(msr [] {:prompt "Select two Characters to swap"
+                                    :choices {:req #(and (placed? %)
+                                                         (character? %)
+                                                         (= (:side %) (if (= side :contestant)
+                                                                        "Contestant"
+                                                                        "Challenger")))
+                                              :max 2}
+                                    :delayed-completion true
+                                    :effect (req (if (= (count targets) 2)
+                                                   (do (swap-character state side (first targets) (second targets))
+                                                       (system-msg state side
+                                                                   (str "swaps the position of "
+                                                                        (card-str state (first targets))
+                                                                        " and "
+                                                                        (card-str state (second targets))))
+                                                       (continue-ability state side (msr) card nil))
+                                                   (do (system-msg state side (str "has finished rearranging Characters"))
+                                                       (effect-completed state side eid))))})]
+                     {:delayed-completion true
+                      :msg "rearrange any number of Characters"
+                      :effect (effect (continue-ability (msr) card nil))})nil nil))
 
-
-
-
+(defn escher-site
+  [state side args]
+  (resolve-ability state side
+                   (letfn [(msr [] {:prompt "Select two Sites to swap"
+                                    :choices {:req #(and (placed? %)
+                                                         (site? %)
+                                                         (= (:side %) (if (= side :contestant)
+                                                                        "Contestant"
+                                                                        "Challenger")))
+                                              :max 2}
+                                    :delayed-completion true
+                                    :effect (req (if (= (count targets) 2)
+                                                   (do (swap-character state side (first targets) (second targets))
+                                                       (system-msg state side
+                                                                   (str "swaps the position of "
+                                                                        (card-str state (first targets))
+                                                                        " and "
+                                                                        (card-str state (second targets))))
+                                                       (continue-ability state side (msr) card nil))
+                                                   (do (system-msg state side (str "has finished rearranging Sites"))
+                                                       (effect-completed state side eid))))})]
+                     {:delayed-completion true
+                      :msg "rearrange any number of Sites"
+                      :effect (effect (continue-ability (msr) card nil))})nil nil))
 
 (defn starter-path [state side st-path]
   (let [
@@ -532,7 +555,9 @@
                                           {:title "/score command"} nil)
           "/roll"       #(command-roll %1 %2 value)
           "/r"          #(basic-roll %1 %2)
-          "/swap"       #(escher-true %1 %2 args)
+          "/swap"       #(escher-char %1 %2 args)
+          "/swapc"      #(escher-char %1 %2 args)
+          "/swaps"      #(escher-site %1 %2 args)
           "/tag"        #(swap! %1 assoc-in [%2 :tag] (max 0 value))
           "/talk"       #(talk-bool %1 %2 nil)
           "/tall"       #(tall-bool %1 %2 nil)
