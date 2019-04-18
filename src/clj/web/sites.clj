@@ -577,7 +577,7 @@
    {:qty 1 :card "Dunharrow" :id "[H] (TW)"}
    {:qty 1 :card "Dunnish Clan-hold" :id "[H] (TW)"}
    {:qty 1 :card "Dûrdamal" :id "[H] (CA)"}
-   {:qty 1 :card "Durthrang" :id "[H] (NE)"}
+   {:qty 1 :card "Durthang" :id "[H] (NE)"}
    {:qty 1 :card "Dûsalan" :id "[H] (SL)"}
    {:qty 1 :card "Eagles' Eyrie" :id "[H] (TW)"}
    {:qty 1 :card "Easterling Camp" :id "[H] (TW)"}
@@ -752,7 +752,7 @@
    {:qty 1 :card "Shrel-Kain" :id "[H] (TW)"}
    {:qty 1 :card "Sonondor's Mound" :id "[H] (GW)"}
    {:qty 1 :card "Southron Oasis" :id "[H] (TW)"}
-   {:qty 1 :card "Steel Fell" :id "[H] (GW)"}
+   {:qty 1 :card "Steel Fall" :id "[H] (GW)"}
    {:qty 1 :card "Stone-circle" :id "[H] (TW)"}
    {:qty 1 :card "Strayhold" :id "[H] (NE)"}
    {:qty 1 :card "Sturlurtsa" :id "[H] (CP)"}
@@ -1099,7 +1099,7 @@
    {:qty 1 :card "Shrel-Kain" :id "[M] (LE)"}
    {:qty 1 :card "Sonondor's Mound" :id "[M] (GW)"}
    {:qty 1 :card "Southron Oasis" :id "[M] (LE)"}
-   {:qty 1 :card "Steel Fell" :id "[M] (GW)"}
+   {:qty 1 :card "Steel Fall" :id "[M] (GW)"}
    {:qty 1 :card "Stone-circle" :id "[M] (LE)"}
    {:qty 1 :card "Strayhold" :id "[M] (NE)"}
    {:qty 1 :card "Sud Sicanna" :id "[M] (SL)"}
@@ -1264,7 +1264,7 @@
    {:qty 1 :card "Dunharrow" :id "[M] (LE)"}
    {:qty 1 :card "Dunnish Clan-hold" :id "[M] (LE)"}
    {:qty 1 :card "Dûrdamal" :id "[M] (CA)"}
-   {:qty 1 :card "Durthrang" :id "[M] (NE)"}
+   {:qty 1 :card "Durthang" :id "[M] (NE)"}
    {:qty 1 :card "Dûsalan" :id "[M] (SL)"}
    {:qty 1 :card "Eagles' Eyrie" :id "[M] (AS)"}
    {:qty 1 :card "Easterling Camp" :id "[M] (LE)"}
@@ -1442,7 +1442,7 @@
    {:qty 1 :card "Shrel-Kain" :id "[M] (LE)"}
    {:qty 1 :card "Sonondor's Mound" :id "[M] (GW)"}
    {:qty 1 :card "Southron Oasis" :id "[M] (LE)"}
-   {:qty 1 :card "Steel Fell" :id "[M] (GW)"}
+   {:qty 1 :card "Steel Fall" :id "[M] (GW)"}
    {:qty 1 :card "Stone-circle" :id "[M] (LE)"}
    {:qty 1 :card "Strayhold" :id "[M] (NE)"}
    {:qty 1 :card "Sturlurtsa" :id "[M] (CP)"}
@@ -1585,7 +1585,7 @@
    {:qty 1 :card "Creb Durga" :id "[H] (KN)"}
    {:qty 1 :card "Dead Marshes" :id "[H] (TW)"}
    {:qty 1 :card "Deep Cleft" :id "[H] (GW)"}
-   {:qty 1 :card "Durthrang" :id "[H] (NE)"}
+   {:qty 1 :card "Durthang" :id "[H] (NE)"}
    {:qty 1 :card "Dûsalan" :id "[H] (SL)"}
    {:qty 1 :card "Eithel Morgoth" :id "[H] (NW)"}
    {:qty 1 :card "Eregost" :id "[H] (DS)"}
