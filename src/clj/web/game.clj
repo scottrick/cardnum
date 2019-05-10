@@ -147,16 +147,16 @@
                                 :last-update (t/now))
                        (assoc g :state (core/init-game g))
                        (update-in g [:players] #(mapv strip-deck %)))]
-        (let [id_title1 (deaccent-strip (get-in @(:state game) [:contestant :identity :title]))
+        (let [id_title1 (get-in @(:state game) [:contestant :identity :title])
               id_scode1 (get-in @(:state game) [:contestant :identity :set_code])
               id_image1 (get-in @(:state game) [:contestant :identity :ImageName])
               id_align1 (get-in @(:state game) [:contestant :identity :alignment])
-              id_usern1 (deaccent (get-in @(:state game) [:contestant :user :username]))
-              id_title2 (deaccent-strip (get-in @(:state game) [:challenger :identity :title]))
+              id_usern1 (get-in @(:state game) [:contestant :user :username])
+              id_title2 (get-in @(:state game) [:challenger :identity :title])
               id_scode2 (get-in @(:state game) [:challenger :identity :set_code])
               id_image2 (get-in @(:state game) [:challenger :identity :ImageName])
               id_align2 (get-in @(:state game) [:challenger :identity :alignment])
-              id_usern2 (deaccent (get-in @(:state game) [:challenger :user :username]))
+              id_usern2 (get-in @(:state game) [:challenger :user :username])
               game-name (str id_usern1 "'s game w/" id_usern2)
               game-date (t/now)]
 
