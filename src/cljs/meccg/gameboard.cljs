@@ -21,11 +21,13 @@
 (defonce last-state (atom {}))
 (defonce lock (atom false))
 
-(defn image-url [{:keys [set_code ImageName flip] :as card}]
+(defn image-url [{:keys [set_code ImageName flip erratum] :as card}]
   (if flip
-  (str "/img/cards/" (:set_code card) "/flip-" (:ImageName card))
-  (str "/img/cards/" (:set_code card) "/" (:ImageName card))
-  ))
+    (str "/img/cards/" (:set_code card) "/flip-" (:ImageName card))
+    (if (and erratum (get-in @game-state [:options :use-dce]))
+      (str "/img/cards/" (:set_code card) "/dc-" (:ImageName card))
+      (str "/img/cards/" (:set_code card) "/" (:ImageName card))
+      )))
 
 (defn get-side [state]
   (let [user-id (:_id (:user @app-state))]

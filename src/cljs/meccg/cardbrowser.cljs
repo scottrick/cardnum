@@ -29,6 +29,11 @@
 (defn make-span [text symbol class]
   (.replace text (apply str symbol) (str "<img src='" class "'style=\"width:16px;height:16px;\"></img>")))
 
+(defn image-dc
+  ([card] (image-dc card true))
+  ([card allow-all-users]
+   (str "/img/cards/" (:set_code card) "/dc-" (:ImageName card))))
+
 (defn image-url
   ([card] (image-url card false))
   ([card allow-all-users]
@@ -168,7 +173,60 @@
              {:class (cond (:selected card) "selected")})
            (if (:showText state)
              (card-text card cursor)
+             (when-let [url (if (and (:erratum card)
+                                  (= "always" (get-in @app-state [:options :dc-erratum])))
+                              (image-dc card true)
+                              (image-url card true))]
+               [:img {:src url
+                      :alt (:title card)
+                      :onClick #(do (.preventDefault %)
+                                    (put! (:pub-chan (om/get-shared owner))
+                                          {:topic :card-selected :data card})
+                                    nil)
+                      :onError #(-> (om/set-state! owner {:showText true}))
+                      :onLoad #(-> % .-target js/$ .show)}]))])))))
+
+(defn card-ndce [card owner]
+  (reify
+    om/IInitState
+    (init-state [_] {:showText false})
+    om/IRenderState
+    (render-state [_ state]
+      (let [cursor (om/get-state owner :cursor)]
+        (sab/html
+          [:div.card-preview.blue-shade
+           (when (om/get-state owner :decorate-card)
+             {:class (cond (:selected card) "selected")})
+           (if (:showText state)
+             (card-text card cursor)
              (when-let [url (image-url card true)]
+               [:img {:src url
+                      :alt (:title card)
+                      :onClick #(do (.preventDefault %)
+                                    (put! (:pub-chan (om/get-shared owner))
+                                          {:topic :card-selected :data card})
+                                    nil)
+                      :onError #(-> (om/set-state! owner {:showText true}))
+                      :onLoad #(-> % .-target js/$ .show)}]))])))))
+
+
+(defn card-dce [card owner]
+  (reify
+    om/IInitState
+    (init-state [_] {:showText false})
+    om/IRenderState
+    (render-state [_ state]
+      (let [cursor (om/get-state owner :cursor)]
+        (sab/html
+          [:div.card-preview.blue-shade
+           (when (om/get-state owner :decorate-card)
+             {:class (cond (:selected card) "selected")})
+           (if (:showText state)
+             (card-text card cursor)
+             (when-let [url (if (and (:erratum card)
+                                  (= "always" (get-in @app-state [:options :dc-erratum])))
+                              (image-dc card true)
+                              (image-url card true))]
                [:img {:src url
                       :alt (:title card)
                       :onClick #(do (.preventDefault %)

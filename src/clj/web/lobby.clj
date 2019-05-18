@@ -221,12 +221,13 @@
 (defn handle-lobby-create
   [{{{:keys [username emailhash] :as user} :user} :ring-req
     client-id                                     :client-id
-    {:keys [title eot-auto-save allowspectator spectatorhands password
+    {:keys [title use-dce eot-auto-save allowspectator spectatorhands password
             room side alignment hero standard dreamcard options]} :?data :as event}]
   (let [gameid (java.util.UUID/randomUUID)
         game {:date            (java.util.Date.)
               :gameid          gameid
               :title           title
+              :use-dce         use-dce
               :eot-auto-save   eot-auto-save
               :allowspectator  allowspectator
               :spectatorhands  spectatorhands
@@ -271,6 +272,7 @@
               :gameid          gameid
               :title           (:title load)
               :resumed         true
+              :use-dce         (:use-dce load)
               :eot-auto-save   (:eot-auto-save load)
               :allowspectator  (:allowspectator load)
               :spectatorhands  (:spectatorhands load)

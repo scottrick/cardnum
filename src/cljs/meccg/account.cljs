@@ -39,6 +39,7 @@
   (swap! app-state assoc-in [:options :blocked-users] (om/get-state owner :blocked-users))
   (swap! app-state assoc-in [:options :gamestats] (om/get-state owner :gamestats))
   (swap! app-state assoc-in [:options :deckstats] (om/get-state owner :deckstats))
+  (swap! app-state assoc-in [:options :dc-erratum] (om/get-state owner :dc-erratum))
   (.setItem js/localStorage "sounds" (om/get-state owner :sounds))
   (.setItem js/localStorage "sounds_volume" (om/get-state owner :volume))
   (post-options url (partial post-response owner)))
@@ -79,6 +80,7 @@
       (om/set-state! owner :volume (get-in @app-state [:options :sounds-volume]))
       (om/set-state! owner :gamestats (get-in @app-state [:options :gamestats]))
       (om/set-state! owner :deckstats (get-in @app-state [:options :deckstats]))
+      (om/set-state! owner :dc-erratum (get-in @app-state [:options :dc-erratum]))
       (om/set-state! owner :blocked-users (sort (get-in @app-state [:options :blocked-users] []))))
 
     om/IRenderState
@@ -199,7 +201,19 @@
                 (:name option)]])]
 
            [:section
-            [:h3 "Blocked users"]
+            [:h3 " Use DC Erratum"]
+            (for [option [{:name "Always"                   :ref "always"}
+                          {:name "Never"                    :ref "never"}]]
+              [:div
+               [:label [:input {:type "radio"
+                                :name "dc-erratum"
+                                :value (:ref option)
+                                :on-change #(om/set-state! owner :dc-erratum (.. % -target -value))
+                                :checked (= (om/get-state owner :dc-erratum) (:ref option))}]
+                (:name option)]])]
+
+           [:section
+            [:h3 " Blocked users"]
             [:div
              [:input {:on-key-down (fn [e]
                                      (when (= e.keyCode 13)
