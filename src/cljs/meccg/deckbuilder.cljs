@@ -6,7 +6,7 @@
             [clojure.string :refer [split split-lines join escape] :as s]
             [meccg.appstate :refer [app-state]]
             [meccg.auth :refer [authenticated] :as auth]
-            [meccg.cardbrowser :refer [cards-channel image-url card-view filter-title] :as cb]
+            [meccg.cardbrowser :refer [cards-channel image-url card-view card-ndce card-dce filter-title] :as cb]
             [meccg.ajax :refer [POST GET DELETE PUT]]
             [meccg.utils :refer [banned-span restricted-span rotated-span influence-dot influence-dots alliance-dots dots-html make-dots]]
             [goog.string :as gstring]
@@ -915,7 +915,9 @@
              ]
             [:div {:class (when (:edit state) "edit")}
              (when-let [line (om/get-state owner :zoom)]
-               (om/build card-view (:card line) {:state {:cursor cursor}}))]]
+               (if (:standard (decks/calculate-deck-status (om/get-state owner :deck)))
+                 (om/build card-ndce (:card line) {:state {:cursor cursor}})
+                 (om/build card-dce (:card line) {:state {:cursor cursor}})))]]
 
            [:div.decklist
             (when-let [deck (:deck state)]

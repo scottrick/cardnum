@@ -110,7 +110,7 @@
                                   {:username username}
                                   {"$set" {:options (select-keys body [:keys-pick
                                                                        :background :blocked-users
-                                                                       :deckstats :gamestats
+                                                                       :deckstats :dc-erratum :gamestats
                                                                        :dice-pick :dice-size])}}))
       (response 200 {:message "Refresh your browser"})
       (response 404 {:message "Account not found"}))

@@ -93,6 +93,7 @@
    :DCpath identity
    :dreamcard identity
    :released identity
+   :erratum identity
    })
 
 (def tables
