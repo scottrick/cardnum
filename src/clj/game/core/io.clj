@@ -465,7 +465,8 @@
                                                         (hide %1 %2 c)))
                                          :choices {:req (fn [t] (card-is? t :side %2))}}
                                         {:title "/hide command"} nil)
-          "/hide-hand"   #(hide-hand %1 %2)
+          ;"/reveal-site"   #(hide-hand %1 %2)
+          "/reveal-hand"   #(hide-site %1 %2)
           "/host"       #(host-any-card %1 %2 args)
           "/h"          #(host-any-card %1 %2 args)
           "/hh"         #(host-any-card-hidden %1 %2 args)
@@ -529,7 +530,8 @@
                                                       {:equal  {:msg "resolve equal bets effect"}
                                                        :not-equal {:msg "resolve unequal bets effect"}}))
           "/re-order"      #(re-order %1 %2 value)
-          "/reveal-hand"   #(reveal-hand %1 %2)
+          ;"/hide-site"   #(reveal-hand %1 %2)
+          "/hide-hand"   #(reveal-site %1 %2)
           "/reveal"        #(resolve-ability %1 %2
                                             {:effect (effect (reveal target {:ignore-cost :all-costs :force true}))
                                              :choices {:req (fn [t] (card-is? t :side %2))}}

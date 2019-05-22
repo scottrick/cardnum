@@ -512,6 +512,11 @@
   [state side]
   (swap! state assoc-in [side :openhand] true))
 
+(defn reveal-site
+  "Reveals a side's hand to opponent and spectators."
+  [state side]
+  (swap! state assoc-in [side :sitehand] true))
+
 (defn vec-order [n]
   (into [] (if (pos? n)
              (conj (vec-order (quot n 10)) (mod n 10) )
@@ -531,6 +536,11 @@
   "Hides a side's revealed hand from opponent and spectators."
   [state side]
   (swap! state update-in [side] dissoc :openhand))
+
+(defn hide-site
+  "Hides a side's revealed hand from opponent and spectators."
+  [state side]
+  (swap! state update-in [side] dissoc :sitehand))
 
 (defn clear-win
   "Clears the current win condition.  Requires both sides to have issued the command"
