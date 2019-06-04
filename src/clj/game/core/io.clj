@@ -476,7 +476,7 @@
           "/memory"     #(swap! %1 assoc-in [%2 :memory] value)
           "/move-bottom"  #(resolve-ability %1 %2
                                             {:prompt "Select a card in hand to put on the bottom of your deck"
-                                             :effect (effect (move target :deck))
+                                             :effect (effect (move %1 %2 target :deck))
                                              :choices {:req (fn [t] (and (card-is? t :side %2) (in-hand? t)))}}
                                             {:title "/move-bottom command"} nil)
           "/move-deck"   #(resolve-ability %1 %2

@@ -501,7 +501,7 @@
         best-card (utils/lookup card)]
     (if (js/isNaN qty)
       (om/set-state! owner :quantity 1)
-      (let [max-qty 5
+      (let [max-qty 9
             limit-qty (if (> qty max-qty) max-qty qty)]
         (if (= (:type best-card) "Resource")
           (put! (om/get-state owner :resource-edit-channel)
@@ -690,7 +690,7 @@
         (go (while true
               (let [edit (<! edit-channel)
                     card (:card edit)
-                    max-qty (or (:limited card) 5)
+                    max-qty (or (:limited card) 9)
                     cards (om/get-state owner [:deck :resources])
                     match? #(when (= (get-in % [:card :title]) (:title card)) %)
                     existing-line (some match? cards)]
@@ -711,7 +711,7 @@
         (go (while true
               (let [edit (<! edit-channel)
                     card (:card edit)
-                    max-qty (or (:limited card) 5)
+                    max-qty (or (:limited card) 9)
                     cards (om/get-state owner [:deck :hazards])
                     match? #(when (= (get-in % [:card :title]) (:title card)) %)
                     existing-line (some match? cards)]
@@ -732,7 +732,7 @@
         (go (while true
               (let [edit (<! edit-channel)
                     card (:card edit)
-                    max-qty (or (:limited card) 5)
+                    max-qty (or (:limited card) 9)
                     cards (om/get-state owner [:deck :sideboard])
                     match? #(when (= (get-in % [:card :title]) (:title card)) %)
                     existing-line (some match? cards)]
@@ -753,7 +753,7 @@
         (go (while true
               (let [edit (<! edit-channel)
                     card (:card edit)
-                    max-qty (or (:limited card) 5)
+                    max-qty (or (:limited card) 9)
                     cards (om/get-state owner [:deck :characters])
                     match? #(when (= (get-in % [:card :title]) (:title card)) %)
                     existing-line (some match? cards)]
@@ -774,7 +774,7 @@
         (go (while true
               (let [edit (<! edit-channel)
                     card (:card edit)
-                    max-qty (or (:limited card) 5)
+                    max-qty (or (:limited card) 9)
                     cards (om/get-state owner [:deck :pool])
                     match? #(when (= (get-in % [:card :title]) (:title card)) %)
                     existing-line (some match? cards)]
@@ -795,7 +795,7 @@
         (go (while true
               (let [edit (<! edit-channel)
                     card (:card edit)
-                    max-qty (or (:limited card) 5)
+                    max-qty (or (:limited card) 9)
                     cards (om/get-state owner [:deck :fwsb])
                     match? #(when (= (get-in % [:card :title]) (:title card)) %)
                     existing-line (some match? cards)]

@@ -71,8 +71,12 @@
 (defn legal-num-copies?
   "Returns true if there is a legal number of copies of a particular card."
   [identity {:keys [qty card]}]
-  (or (and (= (:Secondary card) "Avatar")
+  (or (and (= (:title card) "Black Horse")
+           (<= qty 9))
+      (and (= (:Secondary card) "Avatar")
            (<= qty 5))
+      (and (= (:title card) "Tear of Yavanna")
+           (<= qty 4))
       (and (not (:uniqueness card))
            (<= qty 3))
       (and (:uniqueness card)
