@@ -837,79 +837,82 @@
              ]
             [:div
              [:label [:input {:type "checkbox"
-                                            :value true
-                                            :checked (om/get-state owner :wizard)
-                                            :on-change #(do
-                                                          (om/set-state! owner :wizard (.. % -target -checked))
-                                                          (org-decks decks owner)
-                                                          )}]
-              "Hero   "]
+                              :value true
+                              :checked (om/get-state owner :wizard)
+                              :on-change #(do
+                                            (om/set-state! owner :wizard (.. % -target -checked))
+                                            (org-decks decks owner)
+                                            )}] "Hero   "]
              [:label [:input {:type "checkbox"
                               :value true
                               :checked (om/get-state owner :minion)
                               :on-change #(do
                                             (om/set-state! owner :minion (.. % -target -checked))
                                             (org-decks decks owner)
-                                            )}]
-              "Minion    "]
+                                            )}] "Minion    "]
              [:label [:input {:type "checkbox"
                               :value true
                               :checked (om/get-state owner :fallen)
                               :on-change #(do
                                             (om/set-state! owner :fallen (.. % -target -checked))
                                             (org-decks decks owner)
-                                            )}]
-              "FW    "]
+                                            )}] "FW    "]
              [:label [:input {:type "checkbox"
                               :value true
                               :checked (om/get-state owner :balrog)
                               :on-change #(do
                                             (om/set-state! owner :balrog (.. % -target -checked))
                                             (org-decks decks owner)
-                                            )}]
-              "BA    "]
+                                            )}] "BA    "]
              [:label [:input {:type "checkbox"
                               :value true
                               :checked (om/get-state owner :el)
                               :on-change #(do
                                             (om/set-state! owner :el (.. % -target -checked))
                                             (org-decks decks owner)
-                                            )}]
-              "EL   "]
+                                            )}] "EL   "]
              [:label [:input {:type "checkbox"
                               :value true
                               :checked (om/get-state owner :dl)
                               :on-change #(do
                                             (om/set-state! owner :dl (.. % -target -checked))
                                             (org-decks decks owner)
-                                            )}]
-              "DL    "]
+                                            )}] "DL    "]
              [:label [:input {:type "checkbox"
                               :value true
                               :checked (om/get-state owner :al)
                               :on-change #(do
                                             (om/set-state! owner :al (.. % -target -checked))
                                             (org-decks decks owner)
-                                            )}]
-              "AL    "]             [:label [:input {:type "checkbox"
+                                            )}] "AL    "]
+             [:label [:input {:type "checkbox"
                               :value true
                               :checked (om/get-state owner :wl)
                               :on-change #(do
                                             (om/set-state! owner :wl (.. % -target -checked))
                                             (org-decks decks owner)
-                                            )}]
-              "WL    "]             [:label [:input {:type "checkbox"
+                                            )}] "WL    "]
+             [:label [:input {:type "checkbox"
                               :value true
                               :checked (om/get-state owner :dragon)
                               :on-change #(do
                                             (om/set-state! owner :dragon (.. % -target -checked))
                                             (org-decks decks owner)
-                                            )}]
-              "Dragon"]]
+                                            )}] "Dragon"]]
 
             [:div.deck-collection
              (when-not (:edit state)
-               (if (nil? (om/get-state owner :decks-filtered))
+               (if (and (nil? (om/get-state owner :decks-filtered))
+                       (and
+                         (om/get-state owner :wizard)
+                         (om/get-state owner :minion)
+                         (om/get-state owner :fallen)
+                         (om/get-state owner :balrog)
+                         (om/get-state owner :el)
+                         (om/get-state owner :dl)
+                         (om/get-state owner :al)
+                         (om/get-state owner :wl)
+                         (om/get-state owner :dragon)))
                (om/build deck-collection {:sets sets :decks decks :decks-loaded decks-loaded :active-deck (om/get-state owner :deck)})
                (om/build deck-collection {:sets sets :decks (om/get-state owner :decks-filtered) :decks-loaded decks-loaded :active-deck (om/get-state owner :deck)})))
              ]

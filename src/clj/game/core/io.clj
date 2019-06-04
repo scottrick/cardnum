@@ -380,7 +380,7 @@
   (resolve-ability state side
                    (letfn [(msr [] {:prompt "Select two Sites to swap"
                                     :choices {:req #(and (placed? %)
-                                                         (site? %)
+                                                         (or (region? %) (site? %))
                                                          (= (:side %) (if (= side :contestant)
                                                                         "Contestant"
                                                                         "Challenger")))

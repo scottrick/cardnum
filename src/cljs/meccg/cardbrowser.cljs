@@ -276,7 +276,7 @@
                 "The Great Wyrms" "Kingdom of the North" "Morgoth's Legacy" "Nine Rings for Mortal Men" "The Northern Waste" "Red Nightfall"
                 "Return of the Shadow" "The Sun Lands" "Treason of Isengard" "War of the Ring"])
 (def hazard-races ["Maia" "Dúnedain" "Hobbits" "Men" "Slayers" "Woses" "Umli"
-                   "Dwarves" "Elves" "Nazgûl" "Trolls" "Orcs"
+                   "Dwarves" "Elves" "Giants" "Nazgûl" "Trolls" "Orcs"
                    "Balrogs" "Demons" "Drakes" "Dragons" "Spawn" "Undead"
                    "Animals" "Apes" "Bears" "Boars" "Eagles"
                    "Plants" "Pûkel-creatures" "Spiders" "Vermin" "Wolves"])
