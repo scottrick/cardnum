@@ -350,6 +350,11 @@
                                                                                     } c nil )))} nil nil)
   (system-msg state side "host a card revealed"))
 
+(defn hero-pal-flag
+  [state side args]
+  (swap! state assoc-in [side :hpf] false)
+  (system-msg state side "New discards hidden"))
+
 (defn escher-char
   [state side args]
   (resolve-ability state side
@@ -470,6 +475,7 @@
           "/host"       #(host-any-card %1 %2 args)
           "/h"          #(host-any-card %1 %2 args)
           "/hh"         #(host-any-card-hidden %1 %2 args)
+          "/pal"        #(hero-pal-flag %1 %2 args)
           "/hr"         #(host-any-card-reveal %1 %2 args)
           "/jack-out"   #(when (= %2 :challenger) (jack-out %1 %2 nil))
           "/link"       #(swap! %1 assoc-in [%2 :link] (max 0 value))
