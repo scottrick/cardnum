@@ -350,6 +350,11 @@
                                                                                     } c nil )))} nil nil)
   (system-msg state side "host a card revealed"))
 
+(defn hero-pal-flag
+  [state side args]
+  (swap! state assoc-in [side :hpf] false)
+  (system-msg state side "New discards hidden"))
+
 (defn escher-char
   [state side args]
   (resolve-ability state side
@@ -380,7 +385,7 @@
   (resolve-ability state side
                    (letfn [(msr [] {:prompt "Select two Sites to swap"
                                     :choices {:req #(and (placed? %)
-                                                         (site? %)
+                                                         (or (region? %) (site? %))
                                                          (= (:side %) (if (= side :contestant)
                                                                         "Contestant"
                                                                         "Challenger")))
@@ -470,13 +475,14 @@
           "/host"       #(host-any-card %1 %2 args)
           "/h"          #(host-any-card %1 %2 args)
           "/hh"         #(host-any-card-hidden %1 %2 args)
+          "/pal"        #(hero-pal-flag %1 %2 args)
           "/hr"         #(host-any-card-reveal %1 %2 args)
           "/jack-out"   #(when (= %2 :challenger) (jack-out %1 %2 nil))
           "/link"       #(swap! %1 assoc-in [%2 :link] (max 0 value))
           "/memory"     #(swap! %1 assoc-in [%2 :memory] value)
           "/move-bottom"  #(resolve-ability %1 %2
                                             {:prompt "Select a card in hand to put on the bottom of your deck"
-                                             :effect (effect (move target :deck))
+                                             :effect (effect (move %1 %2 target :deck))
                                              :choices {:req (fn [t] (and (card-is? t :side %2) (in-hand? t)))}}
                                             {:title "/move-bottom command"} nil)
           "/move-deck"   #(resolve-ability %1 %2

@@ -91,8 +91,10 @@
       (make-span "Jungles [j]" "img/dc/me_ju.png")
       (make-span "Jungle [j]" "img/dc/me_ju.png")
       (make-span " MP." "img/dc/me_mp.png")
+      (make-span " MP;" "img/dc/me_mp.png")
       (make-span " MP " "img/dc/me_mp.png")
       (make-span " mp." "img/dc/me_mp.png")
+      (make-span " mp;" "img/dc/me_mp.png")
       (make-span " mp " "img/dc/me_mp.png")
       (make-span "marshalling points" "img/dc/me_mp.png")
       (make-span "marshalling point" "img/dc/me_mp.png")
@@ -274,7 +276,7 @@
                 "The Great Wyrms" "Kingdom of the North" "Morgoth's Legacy" "Nine Rings for Mortal Men" "The Northern Waste" "Red Nightfall"
                 "Return of the Shadow" "The Sun Lands" "Treason of Isengard" "War of the Ring"])
 (def hazard-races ["Maia" "Dúnedain" "Hobbits" "Men" "Slayers" "Woses" "Umli"
-                   "Dwarves" "Elves" "Nazgûl" "Trolls" "Orcs"
+                   "Dwarves" "Elves" "Giants" "Nazgûl" "Trolls" "Orcs"
                    "Balrogs" "Demons" "Drakes" "Dragons" "Spawn" "Undead"
                    "Animals" "Apes" "Bears" "Boars" "Eagles"
                    "Plants" "Pûkel-creatures" "Spiders" "Vermin" "Wolves"])
@@ -505,7 +507,6 @@
                 set-names (map :name
                                (sort-by (juxt :cycle_position :position)
                                         sets-list))]
-
             (if (= (:primary-filter state) "Site")
               (let [haven-options (if hide-dreamcards
                                     (case (:alignment-filter state)
@@ -539,44 +540,38 @@
                 (let [type-options (cond
                                      (= (:primary-filter state) "Hazard") hazard-races
                                      (= (:primary-filter state) "Character") race-options
-                                     (= (:secondary-filter state) "Faction") fact-options
-                                     )]
+                                     (= (:secondary-filter state) "Faction") fact-options)]
                   (if (= (:primary-filter state) "Character")
                     (for [filter [["Set" :set-filter set-names]
                                   ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
                                   ["Align" :alignment-filter (alignments (:primary-filter state))]
                                   ["Strict" :secondary-filter (secondaries (:primary-filter state))]
                                   ["Skill" :skill-filter skill-options]
-                                  ["Race" :race-filter type-options]
-                                  ]]
+                                  ["Race" :race-filter type-options]]]
                       [:div
                        [:h4 (first filter)]
-                       [:select {:value     ((second filter) state)
+                       [:select {:value ((second filter) state)
                                  :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
                         (options (last filter))]])
                     (for [filter [["Set" :set-filter set-names]
                                   ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
                                   ["Align" :alignment-filter (alignments (:primary-filter state))]
                                   ["Strict" :secondary-filter (secondaries (:primary-filter state))]
-                                  ["Race" :race-filter type-options]
-                                  ]]
+                                  ["Race" :race-filter type-options]]]
                       [:div
                        [:h4 (first filter)]
-                       [:select {:value     ((second filter) state)
+                       [:select {:value ((second filter) state)
                                  :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
-                        (options (last filter))]])
-                    )
-                  )
+                        (options (last filter))]])))
                 (for [filter [["Set" :set-filter set-names]
                               ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
                               ["Align" :alignment-filter (alignments (:primary-filter state))]
                               ["Strict" :secondary-filter (secondaries (:primary-filter state))]]]
                   [:div
                    [:h4 (first filter)]
-                   [:select {:value     ((second filter) state)
+                   [:select {:value ((second filter) state)
                              :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
-                    (options (last filter))]])
-                )))
+                    (options (last filter))]]))))
 
           [:div.hide-dreamcards-div
            [:label [:input.hide-dreamcards {:type "checkbox"
@@ -598,9 +593,16 @@
                                                             (om/set-state! owner :set-filter "All"))
                                                           )}]
             "Only Released"]]
+          [:button {:on-click #(do
+                                 ;(om/set-state! owner :set-filter "All")
+                                 ;(om/set-state! owner :primary-filter "All")
+                                 (om/set-state! owner :alignment-filter "All")
+                                 (om/set-state! owner :secondary-filter "All")
+                                 (om/set-state! owner :haven-filter "All")
+                                 (om/set-state! owner :skill-filter "All")
+                                 (om/set-state! owner :race-filter "All"))} "Semi-refine"]
 
-          (om/build card-info-view cursor {:state {:selected-card (:selected-card state)}})
-          ]
+          (om/build card-info-view cursor {:state {:selected-card (:selected-card state)}})]
 
          [:div.card-list {:on-scroll #(handle-scroll % owner state)}
           (om/build-all card-view
@@ -626,8 +628,8 @@
                         {:key-fn #(str (:set_code %) (:code %) (:art %))
                          :fn #(assoc % :selected (and (= (:full_set %) (:full_set (:selected-card state)))
                                                       (= (:code %) (:code (:selected-card state)))))
-                         :state {:cursor cursor :decorate-card true}
-                         })]]))))
+                         :state {:cursor cursor :decorate-card true}})]
+         ]))))
 
 (om/root card-browser
          app-state
