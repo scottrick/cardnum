@@ -708,7 +708,7 @@
    {:qty 1 :card "Nurunkhizdín" :id "[H] (DF)"}
    {:qty 1 :card "Ny Chennacatt" :id "[H] (SL)"}
    {:qty 1 :card "Oasis of Fult" :id "[H] (SL)"}
-   {:qty 1 :card "Old Forest" :id "[H] (TW)"}
+   ;{:qty 1 :card "Old Forest" :id "[H] (TW)"}
    {:qty 1 :card "Olyavud" :id "[H] (ML)"}
    {:qty 1 :card "Oraishapek's Mound" :id "[H] (NE)"}
    {:qty 1 :card "Orod Certhas" :id "[H] (NW)"}
@@ -1056,7 +1056,7 @@
    {:qty 1 :card "Númenórean Tomb" :id "[M] (ML)"}
    {:qty 1 :card "Nurunkhizdín" :id "[M] (DF)"}
    {:qty 1 :card "Oasis of Fult" :id "[M] (SL)"}
-   {:qty 1 :card "Old Forest" :id "[M] (AS)"}
+   ;{:qty 1 :card "Old Forest" :id "[M] (AS)"}
    {:qty 1 :card "Olyavud" :id "[M] (ML)"}
    {:qty 1 :card "Oraishapek's Mound" :id "[M] (NE)"}
    {:qty 1 :card "Orod Certhas" :id "[M] (NW)"}
@@ -1397,7 +1397,7 @@
    {:qty 1 :card "Nurunkhizdín" :id "[M] (DF)"}
    {:qty 1 :card "Ny Chennacatt" :id "[M] (SL)"}
    {:qty 1 :card "Oasis of Fult" :id "[M] (SL)"}
-   {:qty 1 :card "Old Forest" :id "[M] (AS)"}
+   ;{:qty 1 :card "Old Forest" :id "[M] (AS)"}
    {:qty 1 :card "Olyavud" :id "[M] (ML)"}
    {:qty 1 :card "Oraishapek's Mound" :id "[M] (NE)"}
    {:qty 1 :card "Orod Certhas" :id "[M] (NW)"}
