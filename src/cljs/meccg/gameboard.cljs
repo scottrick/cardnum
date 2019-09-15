@@ -395,9 +395,6 @@
               (or (#{"Agenda" "Site" "Region" "Character" "Resource"} type) (>= (:credit me) cost))
               (pos? (:click me))))))
 
-(defn location? [{:keys [side zone type] :as card}]
-  (or (= type "Site") (= type "Region")))
-
 (defn spectator-view-hidden?
   "Checks if spectators are allowed to see hidden information, such as hands and face-down cards"
   []
@@ -841,7 +838,7 @@
                          side rec-counter facedown locale-target subtype-target icon new challenger-abilities
                          contestant-abilities subroutines]
                   :as cursor}
-                 owner {:keys [flipped location alternate] :as opts}]
+                 owner {:keys [flipped location] :as opts}]
   (om/component
     (sab/html
       [:div.card-frame
@@ -861,7 +858,7 @@
                               ;:on-key-down #(handle-blindzoom %)
                               :on-click #(handle-card-click cursor owner)}
         (when-let [url (image-url cursor)]
-          (if (or (not code) flipped facedown alternate)
+          (if (or (not code) flipped facedown)
             (let [facedown-but-known (or (not (or (not code) flipped facedown))
                                          (spectator-view-hidden?)
                                          (= (:side @game-state) (keyword (.toLowerCase side))))
@@ -992,7 +989,8 @@
                       (when (pos? (count (:hosted card)))
                          (host-view (:hosted card)))
                       (om/build card-view card {:opts {:flipped (face-down? card)}})]
-                     ) (reverse hosted)))))
+                     ) (reverse hosted))))
+  )
 
 (defn drop-area [side locale hmap]
   (merge hmap {:on-drop #(handle-drop % locale)
@@ -1048,36 +1046,10 @@
                    (:openhand player)
                    (spectator-view-hidden?))
              (om/build card-view (assoc card :parties parties))
-             (om/build card-view (assoc card :parties parties))
-             ;(facedown-card side)
-             )])
+             (facedown-card side))])
         (:hand player)))))
 
-(defn build-hand-site-view
-  [player parties wrapper-class]
-  (let [side (get-in player [:identity :side])
-        size (count (:hand player))]
-    (sab/html
-      (map-indexed
-        (fn [i card]
-          [:div {:class (str
-                          (if (and (not= "select" (get-in player [:prompt 0 :prompt-type]))
-                                   (this-user? player)
-                                   (not (:selected card)) (playable? card))
-                            "playable" "")
-                          " "
-                          wrapper-class)
-                 :style {:left (* (/ 320 (dec size)) i)}}
-           (if (or (this-user? player)
-                   (and (:sitehand player) (:openhand player))
-                   (spectator-view-hidden?))
-             (om/build card-view (assoc card :parties parties) {:opts {:alternate true :flipped (location? card) :location (location? card)}})
-             (om/build card-view (assoc card :parties parties))
-             ;(facedown-card side)
-             )])
-        (:hand player)))))
-
-(defn hand-view [{:keys [player other parties popup popup-direction] :as cursor} owner]
+(defn hand-view [{:keys [player parties popup popup-direction] :as cursor} owner]
   (om/component
     (sab/html
       (let [side (get-in player [:identity :side])
@@ -1103,34 +1075,6 @@
              [:a {:on-click #(close-popup % owner "hand-popup" nil false false false false false)} "Close"]
              [:label (str size " card" (when (not= 1 size) "s") ".")]
              (build-hand-card-view player parties "card-popup-wrapper")
-             ]])]))))
-
-(defn site-view [{:keys [player other parties popup popup-direction] :as cursor} owner]
-  (om/component
-    (sab/html
-      (let [side (get-in player [:identity :side])
-            size (count (:hand player))
-            name (if (= side "Contestant") "HQ" "Grip")
-            status (if (= side "Contestant")
-                     (if (not (get-in @game-state [:contestant :drew])) "Pool" "Hand")
-                     (if (not (get-in @game-state [:challenger :drew])) "Pool" "Hand"))]
-        [:div.hand-container
-         [:div.hand-controls
-          [:div.panel.blue-shade.hand
-           (drop-area (:side @game-state) name {:class (when (> size 6) "squeeze")})
-           [:div
-            (build-hand-site-view player parties "card-wrapper")]
-           (om/build label (:hand player) {:opts {:name status}})]
-          (when popup
-            [:div.panel.blue-shade.hand-expand
-             {:on-click #(-> (om/get-node owner "hand-popup") js/$ .fadeToggle)}
-             "+"])]
-         (when popup
-           [:div.panel.blue-shade.popup {:ref "hand-popup" :class popup-direction}
-            [:div
-             [:a {:on-click #(close-popup % owner "hand-popup" nil false false false false false)} "Close"]
-             [:label (str size " card" (when (not= 1 size) "s") ".")]
-             (build-hand-site-view player parties "card-popup-wrapper")
              ]])]))))
 
 (defn show-deck [event owner ref]
@@ -2327,11 +2271,8 @@
 
              [:div.leftpane
               [:div.opponent
-               (if (and (= side :spectator) (spectator-view-hidden?))
-                 (om/build hand-view {:player opponent :parties (get-parties (:locales (if (= side :challenger) contestant challenger)))
-                                    :popup (= side :spectator) :popup-direction "opponent"})
-                 (om/build site-view {:player opponent :parties (get-parties (:locales (if (= side :challenger) contestant challenger)))
-                                    :popup (= side :spectator) :popup-direction "opponent"}))]
+               (om/build hand-view {:player opponent :parties (get-parties (:locales (if (= side :challenger) contestant challenger)))
+                                    :popup (= side :spectator) :popup-direction "opponent"})]
 
               [:div.inner-leftpane
                [:div.left-inner-leftpane
@@ -2361,12 +2302,8 @@
                ]
 
               [:div.me
-               (if (and (= side :spectator) (not (spectator-view-hidden?)))
-                 (om/build site-view {:player me :parties (get-parties (:locales (if (= side :challenger) challenger contestant)))
-                                      :popup true :popup-direction "me"})
-                 (om/build hand-view {:player me :parties (get-parties (:locales (if (= side :challenger) challenger contestant)))
-                                    :popup true :popup-direction "me"}))
-               ]]]
+               (om/build hand-view {:player me :parties (get-parties (:locales (if (= side :challenger) challenger contestant)))
+                                    :popup true :popup-direction "me"})]]]
 
             ))))))
 
