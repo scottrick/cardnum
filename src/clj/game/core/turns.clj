@@ -71,7 +71,6 @@
        :stats {:time {:started (t/now)}}
        :options {:spectatorhands spectatorhands :eot-auto-save eot-auto-save :use-dce use-dce}
        :contestant {:user (:user contestant) :identity contestant-identity
-                    :sitehand true :openhand true
                     :deck-dice contestant-dice-pick
                     :deck-mmsz contestant-dice-size
                     :options contestant-options
@@ -94,7 +93,6 @@
                     :click-per-turn 100 :agenda-point-req 7
                     :keep false :drew false :eot false}
        :challenger {:user (:user challenger) :identity challenger-identity
-                    :sitehand true :openhand true
                     :deck-dice challenger-dice-pick
                     :deck-mmsz challenger-dice-size
                     :options challenger-options
@@ -129,8 +127,6 @@
     (swap! state assoc :save-pref save-pref)
     (let [side :contestant]
       (swap! state assoc-in [side :hold-card] false)
-      (swap! state assoc-in [side :sitehand] true)
-      (swap! state assoc-in [side :openhand] true)
       (swap! state assoc-in [side :keep] true)
       (swap! state assoc-in [side :drew] true)
       (swap! state assoc :active-player side :per-turn nil :end-turn true)
@@ -138,8 +134,6 @@
         (gain state side :click offset)))
     (let [side :challenger]
       (swap! state assoc-in [side :hold-card] false)
-      (swap! state assoc-in [side :sitehand] true)
-      (swap! state assoc-in [side :openhand] true)
       (swap! state assoc-in [side :keep] true)
       (swap! state assoc-in [side :drew] true)
       (let [offset (* -1 (get-in @state [side :click]))]

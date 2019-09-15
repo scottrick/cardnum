@@ -31,7 +31,6 @@
    "close-location" core/close-location
    "close-sideboard" core/close-sideboard
    "hide-hand" core/hide-hand
-   "hide-site" core/hide-site
    "concede" core/concede
    "contestant-ability" core/play-contestant-ability
    "contestant-phase-43" core/contestant-phase-43
@@ -76,7 +75,6 @@
    "reset-site" core/reset-site
    "return-o-g" core/return-o-g
    "reveal-hand" core/reveal-hand
-   "reveal-site" core/reveal-site
    "reveal-o-g" core/reveal-o-g
    "reveal" #(core/reveal %1 %2 (:card %3) nil)
    "rotate" #(core/rotate %1 %2 (:card %3))
