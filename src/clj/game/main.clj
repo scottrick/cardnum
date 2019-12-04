@@ -77,6 +77,7 @@
    "reveal-hand" core/reveal-hand
    "reveal-o-g" core/reveal-o-g
    "reveal" #(core/reveal %1 %2 (:card %3) nil)
+   "roll" core/click-roll
    "rotate" #(core/rotate %1 %2 (:card %3))
    "run" core/click-run
    "score" #(core/score %1 %2 (game.core/get-card %1 (:card %3)))

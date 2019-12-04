@@ -76,6 +76,24 @@
               (str "sets unused MU to " (available-mu state)
                    " (" (if (pos? delta) (str "+" delta) delta) ")")))
 
+(defn click-roll
+  "Click to draw."
+  [state side args]
+  (let [player (side @state)
+        pick1 (get-in @state [side :deck-dice])
+        size1 (get-in @state [side :deck-mmsz])
+        pick2 (get-in player [:user :options :dice-pick])
+        size2 (get-in player [:user :options :dice-size])]
+    (if (and (not (or (= pick1 "empty") (= size1 "none")))
+             pick1 size1)
+      (system-msg state side (str "rolls " pick1"-"(inc (rand-int 6))"+"size1
+                                  " " pick1"-"(inc (rand-int 6))"+"size1))
+      (if (and pick2 size2)
+        (system-msg state side (str "rolls " pick2"-"(inc (rand-int 6))"+"size2
+                                    " " pick2"-"(inc (rand-int 6))"+"size2))
+        (system-msg state side (str "rolls " "roll-"(inc (rand-int 6))"+16mm"
+                                    " roll-"(inc (rand-int 6))"+16mm"))))))
+
 (defn change
   "Increase/decrease a player's property (clicks, credits, MU, etc.) by delta."
   [state side {:keys [key delta]}]

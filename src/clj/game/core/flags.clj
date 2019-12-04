@@ -252,6 +252,11 @@
   [card type]
   (card-is? card :type type))
 
+(defn is-subtype?
+  "Checks if the card is of the specified type, where the type is a string."
+  [card subtype]
+  (card-is? card :Secondary subtype))
+
 (defn has-subtype?
   "Checks if the specified subtype is present in the card."
   [card subtype]
@@ -266,6 +271,9 @@
 
 (defn character? [card]
   (is-type? card "Character"))
+
+(defn ally? [card]
+  (is-subtype? card "Ally"))
 
 (defn resource? [card]
   (is-type? card "Resource"))
