@@ -1941,7 +1941,7 @@
                           (zones->sorted-names (if (= side :contestant)
                                                  (runnable-locales contestant challenger)
                                                  (runnable-locales challenger contestant))))]]
-                   (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                   (cond-button "Roll" true #(send-command "roll"))
                    (cond-button "Done Facing" (not (:cannot-jack-out run))
                                 #(send-command "jack-out"))
                    ])
@@ -2001,7 +2001,12 @@
                   )
                 (if (<= 90 (:click me) 100) ;; set to 100, opponent at 50
                   [:div
-                   (cond-button "Untap All" (= (:click me) 100) #(send-command "untap-all")) ;;-5
+                   (cond
+                     (= (:click me) 100)
+                     (cond-button "Untap All" (= (:click me) 100) #(send-command "untap-all")) ;;-5
+                     :else
+                     (cond-button "Roll" (= (:click me) 95) #(send-command "roll")) ;;-5
+                     )
                    (cond-button "Organized" (= (:click me) 95) #(send-command "org-phase")) ;; -5
                    (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                    (cond-button "M/H Phase" (= (:click me) 90) #(send-command "m-h-phase")) ;; -5
@@ -2062,8 +2067,8 @@
 
                 (if (<= 90 (:click opponent) 100);; set to 50, by me
                   [:div
+                   (cond-button "Roll" true #(send-command "roll"))
                    (cond-button "Wait!!!" (zero? (:click me)) #(send-command "wait-alert"))
-                   (cond-button "Nothing" false nil)
                    (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
                    (cond-button "Waiting" false nil)]
                 (if (= (:click opponent) 85);; set to 45, by me
