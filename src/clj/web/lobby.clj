@@ -476,21 +476,22 @@
                                #(vec (remove rid-card %)))
 
                    (update-in d [:identity] #(@all-cards (str (:title %) " " (:trimCode %))))
-                   (assoc d :status (decks/calculate-deck-status d))
+                    (assoc d :status (decks/calculate-deck-status d))
                    )
 
         deck (as-> (mc/find-one-as-map db "decks" {:_id (object-id deck-id) :username username}) d
                    ;(process-sites d)
                    (assoc d :location
-                            (let [{:keys [status]} (get-in check [:status])]
+                            (let [{:keys [status option]} (get-in check [:status])]
                               (cond
-                                (= "standard" status)
+                                (and (= "standard" status) (= option false))
                                 (cond
                                   (= (get-in d [:identity :alignment]) "Hero") standard-wizard-sites
                                   (= (get-in d [:identity :alignment]) "Minion") standard-minion-sites
                                   (= (get-in d [:identity :alignment]) "Fallen-wizard") standard-fallen-sites
                                   (= (get-in d [:identity :alignment]) "Balrog") standard-balrog-sites)
-                                :else
+                                (and (= "standard" status) (= option true)) standard-fallen-sites
+                                (and (= "dreamcard" status) (= option false))
                                 (cond
                                   (= (get-in d [:identity :alignment]) "Hero") dreamcard-wizard-sites
                                   (= (get-in d [:identity :alignment]) "Minion") dreamcard-minion-sites
@@ -500,7 +501,10 @@
                                   (= (get-in d [:identity :alignment]) "Dwarf-lord") dreamcard-dwarf-sites
                                   (= (get-in d [:identity :alignment]) "Atani-lord") dreamcard-atani-sites
                                   (= (get-in d [:identity :alignment]) "Dragon-lord") dreamcard-dragon-sites
-                                  (= (get-in d [:identity :alignment]) "War-lord") dreamcard-warlord-sites))))
+                                  (= (get-in d [:identity :alignment]) "War-lord") dreamcard-warlord-sites)
+                                (and (= "dreamcard" status) (= option true)) dreamcard-fallen-sites
+                                )
+                              ))
 
                    (map-values d [:resources :hazards :sideboard
                                   :characters :pool :fwsb :location]
