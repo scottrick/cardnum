@@ -113,6 +113,12 @@
   [card]
   (:dreamcard card))
 
+(defn fallen-avatar?
+  "Returns true if the card is a Fallen-wizard Avatar."
+  [card]
+  (and (= (:Secondary card) "Avatar")
+       (= (:alignment card) "Fallen-wizard")))
+
 ;; Influence
 ;; Note: line is a map with a :card and a :qty
 (defn line-base-cost
@@ -310,6 +316,11 @@
        (if (nil? (some #(dreamcard? (:card %)) (:pool deck))) true false)
        (if (nil? (some #(dreamcard? (:card %)) (:fwsb deck))) true false)))
 
+(defn fallen-option?
+  "Returns true if one Fallen-avatar in Sideboard"
+  [deck]
+  (if (nil? (some #(fallen-avatar? (:card %)) (:sideboard deck))) false true))
+
 (defn deck-status
   [mwl-legal valid standard in-rotation]
   (cond
@@ -322,14 +333,17 @@
 (defn calculate-deck-status [deck]
   (let [valid (valid-deck? deck)
         mwl (mwl-legal? deck)
+        option (fallen-option? deck)
         standard (all-standard? deck)
         rotation (only-in-rotation? @cards/sets deck)
         onesies (onesies-legal @cards/sets deck)
         cache-refresh (cache-refresh-legal @cards/sets deck)
         modded (modded-legal @cards/sets deck)
-        status (deck-status mwl valid standard rotation)]
+        status (deck-status mwl valid standard rotation)
+        ]
     {:valid         valid
      :mwl           mwl
+     :option        option
      :standard      standard
      :rotation      rotation
      :status        status
