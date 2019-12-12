@@ -1781,6 +1781,15 @@
                                 (into standard-minion-haven
                                       (into standard-fallen-havens
                                             standard-balrog-extras))))))))
+(def standard-option-sites
+  (into standard-region
+        (into standard-wizard
+              (into standard-wizard-havens
+                    (into standard-minion
+                          (into standard-minion-balrog
+                                (into standard-minion-haven
+                                      (into standard-fallen-havens
+                                            standard-balrog-extras))))))))
 (def standard-balrog-sites
   (into standard-region
         (into standard-minion
@@ -1806,6 +1815,18 @@
   (into dreamcard-region
         (into dreamcard-wizard
               (into dreamcard-wizard-haven
+                    (into dreamcard-minion
+                          (into dreamcard-minion-balrog
+                                (into dreamcard-minion-haven
+                                      (into dreamcard-fallen-havens
+                                            (into dreamcard-lord-only
+                                                  (into dreamcard-lord-all
+                                                        (into dreamcard-dual-sites
+                                                              dreamcard-balrog-extras)))))))))))
+(def dreamcard-option-sites
+  (into dreamcard-region
+        (into dreamcard-wizard
+              (into dreamcard-wizard-havens
                     (into dreamcard-minion
                           (into dreamcard-minion-balrog
                                 (into dreamcard-minion-haven
