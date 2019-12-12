@@ -5,12 +5,13 @@
             [clojure.java.io :as io]
             [web.ws :as ws]
             [web.sites :refer [standard-wizard-sites standard-minion-sites
-                               standard-fallen-sites standard-balrog-sites
+                               standard-fallen-sites standard-option-sites
+                               standard-balrog-sites
                                dreamcard-wizard-sites dreamcard-minion-sites
-                               dreamcard-fallen-sites dreamcard-balrog-sites
-                               dreamcard-dwarf-sites dreamcard-elf-sites
-                               dreamcard-atani-sites dreamcard-dragon-sites
-                               dreamcard-warlord-sites]]
+                               dreamcard-fallen-sites dreamcard-option-sites
+                               dreamcard-balrog-sites dreamcard-dwarf-sites
+                               dreamcard-elf-sites dreamcard-atani-sites
+                               dreamcard-dragon-sites dreamcard-warlord-sites]]
             [web.stats :as stats]
             [game.core :as core]
             [crypto.password.bcrypt :as bcrypt]
@@ -490,7 +491,7 @@
                                   (= (get-in d [:identity :alignment]) "Minion") standard-minion-sites
                                   (= (get-in d [:identity :alignment]) "Fallen-wizard") standard-fallen-sites
                                   (= (get-in d [:identity :alignment]) "Balrog") standard-balrog-sites)
-                                (and (= "standard" status) (= option true)) standard-fallen-sites
+                                (and (= "standard" status) (= option true)) standard-option-sites
                                 (and (= "dreamcard" status) (= option false))
                                 (cond
                                   (= (get-in d [:identity :alignment]) "Hero") dreamcard-wizard-sites
@@ -502,7 +503,7 @@
                                   (= (get-in d [:identity :alignment]) "Atani-lord") dreamcard-atani-sites
                                   (= (get-in d [:identity :alignment]) "Dragon-lord") dreamcard-dragon-sites
                                   (= (get-in d [:identity :alignment]) "War-lord") dreamcard-warlord-sites)
-                                (and (= "dreamcard" status) (= option true)) dreamcard-fallen-sites
+                                (and (= "dreamcard" status) (= option true)) dreamcard-option-sites
                                 )
                               ))
 
