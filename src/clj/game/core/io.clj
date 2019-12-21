@@ -287,6 +287,17 @@
     (swap! state assoc-in [side :opt-key] true))
   )
 
+(defn f1-f12-key-down
+  [state side args]
+  (if-let [msg (:msg args)]
+    (system-msg state side msg))
+  (if (get-in @state [side :fn12-key])
+    (swap! state assoc-in [side :fn12-key] false)
+    (do
+      (discard-radicle state side args)
+      (swap! state assoc-in [side :fn12-key] true)))
+  )
+
 (defn talk-bool
   [state side args]
   (if (get-in @state [side :talk])
@@ -451,7 +462,7 @@
           "/counter"    #(command-counter %1 %2 args)
           "/credit"     #(swap! %1 assoc-in [%2 :credit] (max 0 value))
           "/deck"       #(toast %1 %2 "/deck number takes the format #n")
-          "/discard"        #(resolve-ability %1 %2
+          "/discard"    #(resolve-ability %1 %2
                                           {:prompt "Select a card to discard"
                                            :effect (req (let [c (deactivate %1 %2 target)]
                                                           (move %1 %2 c :discard)))

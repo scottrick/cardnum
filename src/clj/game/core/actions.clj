@@ -77,7 +77,7 @@
                    " (" (if (pos? delta) (str "+" delta) delta) ")")))
 
 (defn click-roll
-  "Click to draw."
+  "Click to roll."
   [state side args]
   (let [player (side @state)
         pick1 (get-in @state [side :deck-dice])
@@ -119,7 +119,6 @@
 ;;    (system-msg state side
   ;;              (str "sets " (.replace key "-" " ") " to " (get-in @state [side kw])
     ;;                 " (" (if (pos? delta) (str "+" delta) delta) ")"))))
-
 
 (defn move-card
   "Called when the user drags a card from one zone to another."
@@ -375,19 +374,13 @@
 (defn discard-radicle
   "Click to discard a radicle."
   [state side args]
-  (let [discard-cost (max 0 (- 2 (get-in @state [:contestant :discard-cost-bonus] 0)))]
-    (when-let [cost-str (pay state side nil :click 1 :credit discard-cost {:action :contestant-discard-radicle})]
-      (resolve-ability state side
-                       {:prompt  "Choose a radicle to discard"
-                        :choices {:req (fn [card]
-                                         (if (and (seq (filter (fn [c] (undiscardable-while-radicles? c)) (all-active-placed state :challenger)))
-                                                  (> (count (filter #(is-type? % "Radicle") (all-active-placed state :challenger))) 1))
-                                           (and (is-type? card "Radicle") (not (undiscardable-while-radicles? card)))
-                                           (is-type? card "Radicle")))}
-                        :cancel-effect (effect (gain :credit discard-cost :click 1))
-                        :effect  (effect (discard target)
-                                         (system-msg (str (build-spend-msg cost-str "discard")
-                                                          (:title target))))} nil nil))))
+  (let [discard-cost 0]
+    (resolve-ability state side
+                     {:prompt  "Choose a card to discard"
+                      :choices {:req (fn [card] (card-is? card :side side))}
+                      :cancel-effect (effect (gain :credit discard-cost :click 0))
+                      :effect  (effect (discard target)
+                                       (system-msg (str (:ImageName target) " was dicarded")))} nil nil)))
 
 (defn do-purge
   "Purge viruses."

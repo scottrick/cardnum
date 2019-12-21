@@ -37,6 +37,7 @@
    "continue" core/continue
    "credit" core/click-credit
    "discard-radicle" core/discard-radicle
+   "f1-f12-key-down" core/f1-f12-key-down
    "draw" core/click-draw
    "dynamic-ability" core/play-dynamic-ability
    "end-phase-12" core/end-phase-12

@@ -518,6 +518,10 @@
 (defn handle-key-down [e]
   (if (= (:keys-pick (:options @app-state)) "default")
     (cond
+      (= e.keyCode 112) ;// F1
+      (send-command "f1-f12-key-down")
+      (= e.keyCode 123) ;// F12
+      (send-command "f1-f12-key-down")
       (= e.keyCode 220) ;// slash
       (send-command "option-key-down")
       (= e.keyCode 219) ;// open-bracket
@@ -526,6 +530,10 @@
       (send-command "blind-send")
       )
     (cond
+      (= e.keyCode 112) ;// F1
+      (send-command "f1-f12-key-down")
+      (= e.keyCode 123) ;// F12
+      (send-command "f1-f12-key-down")
       (= e.keyCode 18) ;// option
       (send-command "option-key-down")
       (= e.keyCode 37) ;// left-arrow
@@ -1359,7 +1367,7 @@
                                                  (= (:alignment identity) "Balrog")
                                                  (= (:alignment identity) "War-lord")
                                                  (= (:alignment identity) "Dragon-lord"))
-                                           " (5 min.)" "")) (when me? (controls :free_gi))]
+                                           " (5 minion)" "")) (when me? (controls :free_gi))]
          [:div (str stage_pt " Stage Point" (if (not= stage_pt 1) "s" "")) (when me? (controls :stage_pt))]
          [:div (str total_mp " Total MP" (if (not= total_mp 1) "s" "")) (when me? (controls :total_mp))]
          [:div (str char_mp " Character MP" (if (not= char_mp 1) "s" "")) (when me? (controls :char_mp))]
@@ -1382,7 +1390,7 @@
                                                  (= (:alignment identity) "Balrog")
                                                  (= (:alignment identity) "War-lord")
                                                  (= (:alignment identity) "Dragon-lord"))
-                                           " (5 min.)" "")) (when me? (controls :free_gi))]         [:div (str stage_pt " Stage Point" (if (not= stage_pt 1) "s" "")) (when me? (controls :stage_pt))]
+                                           " (5 minion)" "")) (when me? (controls :free_gi))]         [:div (str stage_pt " Stage Point" (if (not= stage_pt 1) "s" "")) (when me? (controls :stage_pt))]
          [:div (str total_mp " Total MP" (if (not= total_mp 1) "s" "")) (when me? (controls :total_mp))]
          [:div (str char_mp " Character MP" (if (not= char_mp 1) "s" "")) (when me? (controls :char_mp))]
          [:div (str ally_mp " Ally MP" (if (not= ally_mp 1) "s" "")) (when me? (controls :ally_mp))]
@@ -2247,14 +2255,16 @@
                  (when (get-in @game-state [side :hold-card])
                    (send-command "blind-send" {:msg (:ImageName card)})))
                (when-let [card (om/get-state owner :zoom)]
+                 (when (get-in @game-state [side :fn12-key])
+                   (send-command "f1-f12-key-down")))
+               (when-let [card (om/get-state owner :zoom)]
                  (when (get-in @game-state [side :opt-key])
-                     (send-command "option-key-down" {:msg (str (:ImageName card)
-                                                                (cond
-                                                                  (:tapped card) " auto tapped"
-                                                                  (:wounded card) " auto wounded"
-                                                                  :else " auto no-tap")
-                                                                )})
-                     ))]
+                   (send-command "option-key-down" {:msg (str (:ImageName card)
+                                                              (cond
+                                                                (:tapped card) " auto tapped"
+                                                                (:wounded card) " auto wounded"
+                                                                :else " auto no-tap")
+                                                              )})))]
               ;; card implementation info
               (when-let [card (om/get-state owner :zoom)]
                 (let [implemented (:implementation card)]
