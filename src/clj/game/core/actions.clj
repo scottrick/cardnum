@@ -376,12 +376,13 @@
   [state side args]
   (let [discard-cost 0]
     (resolve-ability state side
-                     {:prompt  "Choose a card to discard"
+                     {:prompt  "Select a card to discard"
                       :choices {:req (fn [card] (card-is? card :side side))}
                       :cancel-effect (effect (gain :credit discard-cost :click 0))
-                      :effect  (effect (discard target)
-                                       (system-msg (str (:ImageName target) " was dicarded")))} nil nil)))
-
+                      :effect (req (let [c (deactivate state side target)]
+                                     (move state side c :discard)
+                                     (system-msg state side (str " discarded a card"))))
+                      } {:title "/discard command"} nil)))
 (defn do-purge
   "Purge viruses."
   [state side args]
