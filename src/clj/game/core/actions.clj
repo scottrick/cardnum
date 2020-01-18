@@ -4,7 +4,7 @@
 (declare available-mu card-str card-sb can-reveal? can-advance? contestant-place effect-as-handler enforce-msg gain-agenda-point get-party-names get-zones-challenger
          get-party-zones-challenger get-run-characters host can-host? jack-out move name-zone play-instant purge resolve-select run has-subtype? get-party-zones locale->zone
          challenger-place discard command-revtop update-breaker-strength demote-character-strength update-character-in-locale update-run-character win can-run?
-         can-run-locale? can-score? say play-sfx base-mod-size free-mu)
+         can-run-locale? can-score? faceup? say play-sfx base-mod-size free-mu)
 
 ;;; Neutral actions
 (defn play
@@ -379,9 +379,14 @@
                      {:prompt  "Select a card to discard"
                       :choices {:req (fn [card] (card-is? card :side side))}
                       :cancel-effect (effect (gain :credit discard-cost :click 0))
-                      :effect (req (let [c (deactivate state side target)]
+                      :effect (req (let [tell (faceup? target)
+                                         name (:ImageName target)
+                                         c (deactivate state side target)]
                                      (move state side c :discard)
-                                     (system-msg state side (str " discarded a card"))))
+                                     (if tell
+                                       (system-msg state side (str " discarded " name))
+                                       (system-msg state side (str " discarded a card")))
+                                     ))
                       } {:title "/discard command"} nil)))
 (defn do-purge
   "Purge viruses."
