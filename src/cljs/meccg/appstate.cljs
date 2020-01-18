@@ -21,5 +21,5 @@
          :stats (:stats (js->clj js/user :keywordize-keys true))
          :games [] :gameid nil :messages []
          :save-pref nil :resumed false
-         :channels {:general []}
+         :channels {:general [] :schedule []}
          }))

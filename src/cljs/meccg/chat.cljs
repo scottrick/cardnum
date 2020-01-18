@@ -235,7 +235,7 @@
          [:div.chat-app
           [:div.blue-shade.panel.channel-list
            [:h4 "Channels"]
-           (for [ch [:general]]
+           (for [ch [:general :schedule]]
              (om/build channel-view {:channel ch :active-channel (:channel state)}
                        {:init-state {:channel-ch (:channel-ch state)}}))]
           [:div.chat-container
