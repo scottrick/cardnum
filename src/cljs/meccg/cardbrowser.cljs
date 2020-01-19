@@ -325,6 +325,11 @@
     cards
     (filter #(boolean (re-find (re-pattern filter-value) (field %))) cards)))
 
+(defn filter-greater [filter-value field cards]
+  (if (= filter-value "All")
+    cards
+    (filter #(> (field %) filter-value) cards)))
+
 (defn filter-sites [strict cards]
   (case strict
     "All"
@@ -383,6 +388,16 @@
 (defn filter-released [should-filter cards]
   (if should-filter
     (filter-cards true :released cards)
+    cards))
+
+(defn filter-stage [should-filter cards]
+  (if should-filter
+    (filter-greater 0 :Stage cards)
+    cards))
+
+(defn filter-unique [should-filter cards]
+  (if should-filter
+    (filter-cards true :uniqueness cards)
     cards))
 
 (defn filter-title [query cards]
@@ -453,6 +468,8 @@
        :race-filter "All"
        :hide-dreamcards false
        :only-released true
+       :only-stage false
+       :only-unique false
        :page 1
        :filter-ch (chan)
        :selected-card nil})
@@ -593,6 +610,24 @@
                                                             (om/set-state! owner :set-filter "All"))
                                                           )}]
             "Only Released"]]
+          [:div.only-unique-div
+           [:label [:input.only-unique {:type "checkbox"
+                                          :value false
+                                          :checked (om/get-state owner :only-unique)
+                                          :on-change #(let [hide (.. % -target -checked)]
+                                                        (om/set-state! owner :only-unique hide)
+                                                        (om/set-state! owner :set-filter "All"))
+                                                        }]
+            "Only Unique"]]
+          [:div.only-stage-div
+           [:label [:input.only-stage {:type "checkbox"
+                                       :value false
+                                       :checked (om/get-state owner :only-stage)
+                                       :on-change #(let [hide (.. % -target -checked)]
+                                                     (om/set-state! owner :only-stage hide)
+                                                     (om/set-state! owner :set-filter "All"))
+                                       }]
+            "Only Stage"]]
           [:button {:on-click #(do
                                  ;(om/set-state! owner :set-filter "All")
                                  ;(om/set-state! owner :primary-filter "All")
@@ -614,6 +649,8 @@
                           (->> cards
                                (filter-dreamcards (:hide-dreamcards state))
                                (filter-released (:only-released state))
+                               (filter-stage (:only-stage state))
+                               (filter-unique (:only-unique state))
                                (filter-cards (:primary-filter state) :type)
                                (filter-cards (:alignment-filter state) :alignment)
                                (filter-second (if (= (:primary-filter state) "Site") true false) (:secondary-filter state))
