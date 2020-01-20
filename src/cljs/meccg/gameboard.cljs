@@ -1835,10 +1835,10 @@
 (defn runnable-locales
   "List of locales the challenger can run on."
   [contestant challenger]
-  (let [locales (keys (:locales contestant))
-        restricted-locales (keys {:hq true :rd true :archives true :sites true})]
+  (let [locales (:locales contestant)
+        restricted-locales [:hq :rd :archives :sites]]
     ;; remove restricted locales from all locales to just return allowed locales
-    (remove (set restricted-locales) locales)))
+    (apply dissoc locales restricted-locales)))
 
 (defn button-pane [{:keys [side active-player run end-turn challenger-phase-12 contestant-phase-12 contestant challenger me opponent] :as cursor} owner]
   (reify
