@@ -64,8 +64,6 @@
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
    "Enchanted Stream"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
-   "Eyes of the Shadow"
-   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
    "Fear of Kin"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
    "Fled into Darkness"

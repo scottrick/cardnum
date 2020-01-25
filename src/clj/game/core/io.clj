@@ -115,7 +115,7 @@
          [:discard] "Discard"
          [:deck] "Play Deck"
          [:sideboard] "Sideboard"
-         [:fw-dc-sb] "Sideboard"
+         [:fw-dc-sb] "fw-dc-sb"
          [:location] "Location Deck"
          [:rig _] "in play"
          [:locales :hq _] "the root of Hand"
