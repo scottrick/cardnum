@@ -29,6 +29,12 @@
              :content [:p "To use a command, type it in chatbox and press Enter. Some of the commands will bring up a prompt "
                        "requiring you to select something. List of available commands:"
                        [:ul
+                        [:li [:code "the left arrow key or opened square bracket [ "] " - will toggle the zoom"]
+                        [:li [:code "the right arrow key or closed square bracket ] "] " - puts a card link in the log"]
+                        [:li [:code "the option key or back slash \\ ] "] " - will quicken combat for auto-defeat(s)"]
+                        [:li [:code "the opened angle bracket < "] " - will send a -1 strike assignment for a character"]
+                        [:li [:code "the closed angle bracket > "] " - will decalare +1 support for combat/corruption"]
+                        [:li "••• Above are the hover over a character hot keys, below are type in commands. •••"]
                         [:li [:code "/card-info"] " - display debug info about a card (player's own cards only)"]
                         [:li [:code "/clear-win"] " - requests game to clear the current win state.  Requires both players to request it"]
                         [:li [:code "/close-prompt"] " - close an active prompt and show the next waiting prompt, or the core actions"]
