@@ -391,23 +391,22 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
    "Eyes of Mandos"
-   {:abilities [{:effect (req
-                           (move state side card :discard)
+   {:abilities [{:label "Reveal"
+                 :effect (req
                            (let [kount (count (get-in @state [side :deck]))]
-                             (loop [k (if (< kount 8) kount 8)]
-                               (when (> k 0)
-                                 (move state side (first (get-in @state [side :deck])) :current)
-                                 (recur (- k 1))))
-                             (resolve-ability state side
-                                              {:prompt "Select a card to put in your hand"
-                                               :choices {:req (fn [t] (card-is? t :side side))}
-                                               :effect (req (doseq [c (get-in @state [side :current])]
-                                                              (if (= c target)
-                                                                (move state side c :hand)
-                                                                (move state side c :deck)))
-                                                            (shuffle! state side :deck))
-                                               :msg (msg "picks a card from his top 8")
-                                               } nil nil)))}]}
+                             (when (> kount 0)
+                               (move state side (first (get-in @state [side :deck])) :play-area))))}
+                {:label "Select"
+                 :effect (req (resolve-ability state side
+                                               {:prompt "Select a card to put in your hand"
+                                                :choices {:req (fn [t] (card-is? t :side side))}
+                                                :effect (req (doseq [c (get-in @state [side :play-area])]
+                                                               (if (= c target)
+                                                                 (move state side c :hand)
+                                                                 (move state side c :deck)))
+                                                             (shuffle! state side :deck))
+                                                :msg (msg "picks a card and shuffles")
+                                                } nil nil))}]}
    "Fate of the Ithil-stone"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)

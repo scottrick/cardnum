@@ -408,6 +408,13 @@
                    (not= (.indexOf (:normalizedtitle %) lcquery) -1))
               cards))))
 
+(defn filter-texts [query cards]
+  (if (empty? query)
+    cards
+    (let [lcquery (.toLowerCase query)]
+      (filter #(not= (.indexOf (.toLowerCase (:text %)) lcquery) -1)
+              cards))))
+
 (defn sort-field [fieldname]
   (case fieldname
     "Set" #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:full_set %))
@@ -448,16 +455,22 @@
     (when (> (.scrollTop $cardlist) (- height 600))
       (om/update-state! owner :page inc))))
 
-(defn handle-search [e owner]
+(defn handle-title [e owner]
   (doseq [filter [:set-filter :secondary-filter :sort-filter :alignment-filter]]
     (om/set-state! owner filter "All"))
-  (om/set-state! owner :search-query (.. e -target -value)))
+  (om/set-state! owner :title-query (.. e -target -value)))
+
+(defn handle-texts [e owner]
+  (doseq [filter [:set-filter :secondary-filter :sort-filter :alignment-filter]]
+    (om/set-state! owner filter "All"))
+  (om/set-state! owner :texts-query (.. e -target -value)))
 
 (defn card-browser [{:keys [sets] :as cursor} owner]
   (reify
     om/IInitState
     (init-state [this]
-      {:search-query ""
+      {:title-query ""
+       :texts-query ""
        :sort-field "Name"
        :set-filter "All"
        :primary-filter "All"
@@ -494,14 +507,22 @@
       (sab/html
         [:div.cardbrowser
          [:div.blue-shade.panel.filters
-          (let [query (:search-query state)]
+          (let [query (:title-query state)]
             [:div.search-box
              [:span.e.search-icon {:dangerouslySetInnerHTML #js {:__html "&#xe822;"}}]
              (when-not (empty? query)
                [:span.e.search-clear {:dangerouslySetInnerHTML #js {:__html "&#xe819;"}
-                                      :on-click #(om/set-state! owner :search-query "")}])
-             [:input.search {:on-change #(handle-search % owner)
+                                      :on-click #(om/set-state! owner :title-query "")}])
+             [:input.search {:on-change #(handle-title % owner)
                              :type "text" :placeholder "Search cards" :value query}]])
+          (let [query (:texts-query state)]
+            [:div.search-alt-box
+             [:span.e.search-alt-icon {:dangerouslySetInnerHTML #js {:__html "&#xe822;"}}]
+             (when-not (empty? query)
+               [:span.e.search-alt-clear {:dangerouslySetInnerHTML #js {:__html "&#xe819;"}
+                                      :on-click #(om/set-state! owner :texts-query "")}])
+             [:input.search-alt {:on-change #(handle-texts % owner)
+                             :type "text" :placeholder "Search texts" :value query}]])
 
           [:div
            [:h4 "By"]
@@ -659,7 +680,8 @@
                                (filter-race (if (= (:primary-filter state) "Character") false true) (:race-filter state))
                                (filter-skill (if (= (:primary-filter state) "Character") false true) (:skill-filter state))
                                (filter-race (if (= (:secondary-filter state) "Faction") false true) (:race-filter state))
-                               (filter-title (:search-query state))
+                               (filter-texts (:texts-query state))
+                               (filter-title (:title-query state))
                                (sort-by (sort-field (:sort-field state)))
                                (take (* (:page state) 28))))
                         {:key-fn #(str (:set_code %) (:code %) (:art %))

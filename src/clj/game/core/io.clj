@@ -115,7 +115,7 @@
          [:discard] "Discard"
          [:deck] "Play Deck"
          [:sideboard] "Sideboard"
-         [:fw-dc-sb] "Sideboard"
+         [:fw-dc-sb] "fw-dc-sb"
          [:location] "Location Deck"
          [:rig _] "in play"
          [:locales :hq _] "the root of Hand"
@@ -276,6 +276,24 @@
   (if (get-in @state [side :hold-card])
     (swap! state assoc-in [side :hold-card] false)
     (swap! state assoc-in [side :hold-card] true))
+  )
+
+(defn bonus-key-down
+  [state side args]
+  (if-let [msg (:msg args)]
+    (system-msg state side msg))
+  (if (get-in @state [side :bonus-key])
+    (swap! state assoc-in [side :bonus-key] false)
+    (swap! state assoc-in [side :bonus-key] true))
+  )
+
+(defn minus-key-down
+  [state side args]
+  (if-let [msg (:msg args)]
+    (system-msg state side msg))
+  (if (get-in @state [side :minus-key])
+    (swap! state assoc-in [side :minus-key] false)
+    (swap! state assoc-in [side :minus-key] true))
   )
 
 (defn option-key-down
