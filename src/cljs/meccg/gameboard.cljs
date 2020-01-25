@@ -529,11 +529,15 @@
       (send-command "f1-f12-key-down")
       (= e.keyCode 123) ;// F12
       (send-command "f1-f12-key-down")
+      (= e.keyCode 188) ;// angle-left
+      (send-command "minus-key-down")
+      (= e.keyCode 190) ;// angle-rght
+      (send-command "bonus-key-down")
       (= e.keyCode 220) ;// slash
       (send-command "option-key-down")
-      (= e.keyCode 219) ;// open-bracket
+      (= e.keyCode 219) ;// square-left
       (send-command "blind-zoom")
-      (= e.keyCode 221) ;// close-bracket
+      (= e.keyCode 221) ;// square-rght
       (send-command "blind-send")
       )
     (cond
@@ -541,11 +545,15 @@
       (send-command "f1-f12-key-down")
       (= e.keyCode 123) ;// F12
       (send-command "f1-f12-key-down")
+      (= e.keyCode 188) ;// angle-left
+      (send-command "minus-key-down")
+      (= e.keyCode 190) ;// angle-rght
+      (send-command "bonus-key-down")
       (= e.keyCode 18) ;// option
       (send-command "option-key-down")
-      (= e.keyCode 37) ;// left-arrow
+      (= e.keyCode 37) ;// arrow-left
       (send-command "blind-zoom")
-      (= e.keyCode 39) ;// right-arrow
+      (= e.keyCode 39) ;// arrow-rght
       (send-command "blind-send")
       ))
   )
@@ -553,15 +561,23 @@
 (defn handle-key-up [e]
   (if (= (:keys-pick (:options @app-state)) "default")
     (cond
-      (= e.keyCode 219) ;// open-bracket
-      (send-command "blind-zoom")
-      (= e.keyCode 221) ;// close-bracket
       (send-command "blind-hold")
+      (= e.keyCode 188) ;// angle-left
+      (send-command "minus-key-down")
+      (= e.keyCode 190) ;// angle-rght
+      (send-command "bonus-key-down")
+      (= e.keyCode 219) ;// square-left
+      (send-command "blind-zoom")
+      (= e.keyCode 221) ;// square-rght
       )
     (cond
-      (= e.keyCode 37) ;// left-arrow
+      (= e.keyCode 188) ;// angle-left
+      (send-command "minus-key-down")
+      (= e.keyCode 190) ;// angle-rght
+      (send-command "bonus-key-down")
+      (= e.keyCode 37) ;// arrow-left
       (send-command "blind-zoom")
-      (= e.keyCode 39) ;// right-arrow
+      (= e.keyCode 39) ;// arrow-rght
       (send-command "blind-hold")
       )
     )
@@ -639,11 +655,15 @@
                [:form {:on-submit #(send-msg % owner)
                        :on-input #(send-typing % owner)
                        :on-key-up #(case (.-which %)
-                                     (219 220 221) (ws/ws-send! [:meccg/typing {:gameid-str (:gameid @game-state) :typing false}])
+                                     (188 190 219 220 221) (ws/ws-send! [:meccg/typing {:gameid-str (:gameid @game-state) :typing false}])
                                      nil)}
                 [:input.direct {:ref "msg-input" :placeholder "Say something" :accessKey "l"
                                 :on-key-up #(if (= (:keys-pick (:options @app-state)) "default")
                                               (case (.-which %)
+                                                188 (set! (.-value (om/get-node owner "msg-input"))
+                                                          (.replace (.-value (om/get-node owner "msg-input")) #"<" ""))
+                                                190 (set! (.-value (om/get-node owner "msg-input"))
+                                                          (.replace (.-value (om/get-node owner "msg-input")) #">" ""))
                                                 219 (set! (.-value (om/get-node owner "msg-input"))
                                                           (.replace (.-value (om/get-node owner "msg-input")) #"\[" ""))
                                                 220 (set! (.-value (om/get-node owner "msg-input"))
@@ -2265,13 +2285,16 @@
                  (when (get-in @game-state [side :fn12-key])
                    (send-command "f1-f12-key-down")))
                (when-let [card (om/get-state owner :zoom)]
-                 (when (get-in @game-state [side :opt-key])
-                   (send-command "option-key-down" {:msg (str (:ImageName card)
+                 (when (get-in @game-state [side :bonus-key])
+                   (send-command "bonus-key-down" {:msg (str (:ImageName card)
                                                               (cond
-                                                                (:tapped card) " auto tapped"
-                                                                (:wounded card) " auto wounded"
-                                                                :else " auto no-tap")
-                                                              )})))]
+                                                                (:tapped card) " tapped +1 support"
+                                                                :else " going to +1 support")
+                                                              )})))
+               (when-let [card (om/get-state owner :zoom)]
+                 (when (get-in @game-state [side :minus-key])
+                   (send-command "minus-key-down" {:msg (str (:ImageName card) " assigned a -1")})))
+               ]
               ;; card implementation info
               (when-let [card (om/get-state owner :zoom)]
                 (let [implemented (:implementation card)]

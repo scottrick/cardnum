@@ -278,6 +278,24 @@
     (swap! state assoc-in [side :hold-card] true))
   )
 
+(defn bonus-key-down
+  [state side args]
+  (if-let [msg (:msg args)]
+    (system-msg state side msg))
+  (if (get-in @state [side :bonus-key])
+    (swap! state assoc-in [side :bonus-key] false)
+    (swap! state assoc-in [side :bonus-key] true))
+  )
+
+(defn minus-key-down
+  [state side args]
+  (if-let [msg (:msg args)]
+    (system-msg state side msg))
+  (if (get-in @state [side :minus-key])
+    (swap! state assoc-in [side :minus-key] false)
+    (swap! state assoc-in [side :minus-key] true))
+  )
+
 (defn option-key-down
   [state side args]
   (if-let [msg (:msg args)]

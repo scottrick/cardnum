@@ -22,6 +22,8 @@
    "back-site" core/back-site
    "blind-send" core/blind-send
    "blind-zoom" core/blind-zoom
+   "bonus-key-down" core/bonus-key-down
+   "minus-key-down" core/minus-key-down
    "bluff-o-g" core/bluff-o-g
    "challenger-ability" core/play-challenger-ability
    "change" core/change
