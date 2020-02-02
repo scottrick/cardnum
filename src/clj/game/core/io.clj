@@ -542,13 +542,14 @@
           "/deck"       #(toast %1 %2 "/deck number takes the format #n")
           "/discard"    #(resolve-ability %1 %2
                                           {:prompt "Select a card to discard"
-                                           :effect (req (let [tell (or (faceup? target) (get-in @%1 [(other-side %2) :hpf]))
+                                           :effect (req (let [tell (faceup? target)
+                                                              hpf (get-in @%1 [(other-side %2) :hpf])
                                                               c (deactivate %1 %2 target)]
                                                           (move %1 %2 c :discard)
+                                                          (when hpf (command-revtop %1 %2 nil))
                                                           (if tell
-                                                            (do (command-revtop %1 %2 nil)
-                                                                (system-msg %1 %2 (str " discarded " name)))
-                                                            (system-msg %1 %2 (str " discarded a card")))
+                                                            (system-msg %1 %2 (str " discarded " name)))
+                                                            (system-msg %1 %2 (str " discarded a card"))
                                                           ))
                                            :choices {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/discard command"} nil)
