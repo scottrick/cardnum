@@ -213,9 +213,9 @@
   (resolve-ability state side
                    {:effect (req
                               (let [prior (last (get-in @state [side :discard]))]
-                                (update! state side (assoc prior :seen true))
-                                (when-not (:revealed prior)
-                                  (reveal state side prior {:ignore-cost :all-costs :force true}))))}
+                                (reveal state side prior {:ignore-cost :all-costs :force true})
+                                ;;(update! state side (assoc prior :seen true))
+                                ))}
                    {:title "/revtop command"} nil))
 
 (defn command-roll [state side value]
@@ -319,22 +319,28 @@
 (defn talk-bool
   [state side args]
   (if (get-in @state [side :talk])
-    (swap! state assoc-in [side :talk] false)
-    (swap! state assoc-in [side :talk] true))
+    (do (swap! state assoc-in [side :talk] false)
+        (system-msg state side "Talk some is off"))
+    (do (swap! state assoc-in [side :talk] true)
+        (system-msg state side "Talk some is on")))
   )
 
 (defn tall-bool
   [state side args]
   (if (get-in @state [side :tall])
-    (swap! state assoc-in [side :tall] false)
-    (swap! state assoc-in [side :tall] true))
+    (do (swap! state assoc-in [side :tall] false)
+        (system-msg state side "Tell all is off"))
+    (do (swap! state assoc-in [side :tall] true)
+        (system-msg state side "Tell all is on")))
   )
 
 (defn tell-bool
   [state side args]
   (if (get-in @state [side :tell])
-    (swap! state assoc-in [side :tell] false)
-    (swap! state assoc-in [side :tell] true))
+    (do (swap! state assoc-in [side :tell] false)
+        (system-msg state side "Tell more is off"))
+    (do (swap! state assoc-in [side :tell] true)
+        (system-msg state side "Tell more is on")))
   )
 
 (defn host-any-card
@@ -536,8 +542,14 @@
           "/deck"       #(toast %1 %2 "/deck number takes the format #n")
           "/discard"    #(resolve-ability %1 %2
                                           {:prompt "Select a card to discard"
-                                           :effect (req (let [c (deactivate %1 %2 target)]
-                                                          (move %1 %2 c :discard)))
+                                           :effect (req (let [tell (or (faceup? target) (get-in @%1 [(other-side %2) :hpf]))
+                                                              c (deactivate %1 %2 target)]
+                                                          (move %1 %2 c :discard)
+                                                          (if tell
+                                                            (do (command-revtop %1 %2 nil)
+                                                                (system-msg %1 %2 (str " discarded " name)))
+                                                            (system-msg %1 %2 (str " discarded a card")))
+                                                          ))
                                            :choices {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/discard command"} nil)
           "/discard-n"    #(toast %1 %2 "/discard number takes the format #n")
