@@ -379,13 +379,14 @@
                      {:prompt  "Select a card to discard"
                       :choices {:req (fn [card] (card-is? card :side side))}
                       :cancel-effect (effect (gain :credit discard-cost :click 0))
-                      :effect (req (let [tell (or (faceup? target) (get-in @state [(other-side side) :hpf]))
+                      :effect (req (let [tell (faceup? target)
+                                         hpf (get-in @state [(other-side side) :hpf])
                                          name (:ImageName target)
                                          c (deactivate state side target)]
                                      (move state side c :discard)
+                                     (when hpf (command-revtop state side nil))
                                      (if tell
-                                       (do (command-revtop state side nil)
-                                         (system-msg state side (str " discarded " name)))
+                                       (system-msg state side (str " discarded " name))
                                        (system-msg state side (str " discarded a card")))
                                      ))
                       } {:title "/discard command"} nil)))

@@ -1898,6 +1898,9 @@ align-radio
       margin-bottom: -125px
       z-index: 15
 
+      @media screen and (-webkit-min-device-pixel-ratio:0) and (min-resolution:.001dpcm)
+        margin-bottom: 0px
+
       .hosted
         &:nth-child(0)
           margin-top: 0
@@ -2109,6 +2112,20 @@ align-radio
           .challenger-abilities, .contestant-abilities
             bottom: 0
             transform-origin(0 100%)
+
+
+    .contestant-board
+      margin-bottom: 0px
+
+      @media screen and (-webkit-min-device-pixel-ratio:0) and (min-resolution:.001dpcm)
+        margin-bottom: -125px
+
+    .challenger-board
+      margin-top: 0px
+
+      @media screen and (-webkit-min-device-pixel-ratio:0) and (min-resolution:.001dpcm)
+        margin-top: -125px
+
 
     .contestant-board, .challenger-board
       flex(1)
