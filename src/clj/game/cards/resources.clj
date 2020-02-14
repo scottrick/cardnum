@@ -1934,6 +1934,31 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "The Lidless Eye"
+   {:abilities [{:label "Random 5"
+                 :effect (req
+                           (let [opp-side (if (= side :contestant)
+                                            :challenger
+                                            :contestant)
+                                 kount (count (get-in @state [opp-side :hand]))]
+                             (loop [k (if (< kount 5) kount 5)]
+                               (when (> k 0)
+                                 (move state opp-side (rand-nth (get-in @state [opp-side :hand])) :play-area)
+                                 (recur (- k 1))))
+                             (resolve-ability state side
+                                              {:delayed-completion true
+                                               :player  side
+                                               :prompt  "Click done when ready"
+                                               :choices ["Done"]
+                                               :effect  (req (case target
+                                                               "Done"
+                                                               (loop [k (count (get-in @state [opp-side :play-area]))]
+                                                                 (when (> k 0)
+                                                                   (move state opp-side (first (get-in @state [opp-side :play-area])) :hand)
+                                                                   (recur (- k 1)))))
+                                                             (effect-completed state side nil)
+                                                             (system-msg state side " discards a card to look at up to 5 random cards from your hand")
+                                                             )} nil nil)))}]}
    "The Morgul-lord"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
