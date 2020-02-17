@@ -2113,6 +2113,85 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Valleys Have Ears"
+   {:abilities [{:label "Yours"
+                 :effect (req (resolve-ability state side
+                                               {:delayed-completion true
+                                                :player  side
+                                                :prompt  "How Many Factions or Cancel"
+                                                :choices ["1 Faction" "2 Factions" "3 Factions" "4 Factions"
+                                                          "5 Factions" "6 Factions" "7 Factions" "Cancel"]
+                                                :effect  (req
+                                                           (let [factions (case target
+                                                                            "Cancel"
+                                                                            0
+                                                                            "1 Faction"
+                                                                            2
+                                                                            "2 Factions"
+                                                                            4
+                                                                            "3 Factions"
+                                                                            6
+                                                                            "4 Factions"
+                                                                            8
+                                                                            "5 Factions"
+                                                                            10
+                                                                            "6 Factions"
+                                                                            12
+                                                                            "7 Factions"
+                                                                            14)
+                                                                 kount (count (get-in @state [side :deck]))]
+                                                             (loop [k (if (< kount factions) kount factions)]
+                                                               (when (> k 0)
+                                                                 (move state side (first (get-in @state [side :deck])) :current)
+                                                                 (recur (- k 1))))
+                                                             (effect-completed state side nil)))} nil nil))
+                 :msg (msg " to look at the top of his deck")}
+                {:label "Theirs"
+                 :effect (req (resolve-ability state side
+                                               {:delayed-completion true
+                                                :player  side
+                                                :prompt  "How Many Factions or Cancel"
+                                                :choices ["1 Faction" "2 Factions" "3 Factions" "4 Factions"
+                                                          "5 Factions" "6 Factions" "7 Factions" "Cancel"]
+                                                :effect  (req
+                                                           (let [opp-side (if (= side :contestant)
+                                                                            :challenger
+                                                                            :contestant)
+                                                                 factions (case target
+                                                                            "Cancel"
+                                                                            0
+                                                                            "1 Faction"
+                                                                            2
+                                                                            "2 Factions"
+                                                                            4
+                                                                            "3 Factions"
+                                                                            6
+                                                                            "4 Factions"
+                                                                            8
+                                                                            "5 Factions"
+                                                                            10
+                                                                            "6 Factions"
+                                                                            12
+                                                                            "7 Factions"
+                                                                            14)
+                                                                 kount (count (get-in @state [opp-side :deck]))]
+                                                             (loop [k (if (< kount factions) kount factions)]
+                                                               (when (> k 0)
+                                                                 (move state side (assoc (first (get-in @state [opp-side :deck])) :swap true) :current)
+                                                                 (recur (- k 1))))
+                                                             (effect-completed state side nil)))} nil nil))
+                 :msg (msg " to look at the top of your deck")}
+                {:label "Shuffle"
+                 :effect (req (resolve-ability state side
+                                               {:effect (req
+                                                          (let [opp-side (if (= side :contestant)
+                                                                           :challenger
+                                                                           :contestant)]
+                                                            (loop [k (count (get-in @state [side :current]))]
+                                                                   (when (> k 0)
+                                                                     (move state opp-side (dissoc (rand-nth (get-in @state [side :current])) :swap) :deck {:front true})
+                                                                     (recur (- k 1))))))} nil nil))
+                 :msg (msg " shuffle back cards to the top cards of your deck")}]}
    "Value Food and Cheer"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
