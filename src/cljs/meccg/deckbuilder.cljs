@@ -1145,7 +1145,7 @@
                                              :type "button"} "-"]]))
                         (line-span sets deck line)])])]
                  [:div.cards
-                  (if (not-empty fwsb) [:h3 "DC-FW-SB"])
+                  (if (not-empty fwsb) [:h3 "FW-DC-SB"])
                   (for [group (sort-by first (group-by #(get-in % [:card :type]) fwsb))]
                     [:div.group
                      [:h4 (str (or (first group) "Unknown") " (" (decks/card-count (last group)) ")") ]

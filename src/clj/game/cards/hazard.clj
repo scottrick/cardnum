@@ -223,6 +223,8 @@
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
    "Spells of the Barrow-wights"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
+   "Taint of Glory"
+   {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
    "The Burden of Time"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
    "The Pale Sword"
