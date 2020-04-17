@@ -757,6 +757,7 @@
    {:qty 1 :card "Strayhold" :id "[H] (NE)"}
    {:qty 1 :card "Sturlurtsa" :id "[H] (CP)"}
    {:qty 1 :card "Sud Sicanna" :id "[H] (SL)"}
+   {:qty 1 :card "Sudu Cull" :id "[H] (SL)"}
    {:qty 1 :card "Tanith" :id "[H] (CA)"}
    {:qty 1 :card "Târik an-Aruwânâi" :id "[H] (BO)"}
    {:qty 1 :card "Târik an-Bawîba" :id "[H] (BO)"}
@@ -1103,6 +1104,7 @@
    {:qty 1 :card "Stone-circle" :id "[M] (LE)"}
    {:qty 1 :card "Strayhold" :id "[M] (NE)"}
    {:qty 1 :card "Sud Sicanna" :id "[M] (SL)"}
+   {:qty 1 :card "Sudu Cull" :id "[M] (SL)"}
    {:qty 1 :card "Tanith" :id "[M] (CA)"}
    {:qty 1 :card "Târik an-Bawîba" :id "[M] (BO)"}
    {:qty 1 :card "Tartaust" :id "[M] (SL)"}
@@ -1447,6 +1449,7 @@
    {:qty 1 :card "Strayhold" :id "[M] (NE)"}
    {:qty 1 :card "Sturlurtsa" :id "[M] (CP)"}
    {:qty 1 :card "Sud Sicanna" :id "[M] (SL)"}
+   {:qty 1 :card "Sudu Cull" :id "[M] (SL)"}
    {:qty 1 :card "Tanith" :id "[M] (CA)"}
    {:qty 1 :card "Târik an-Aruwânâi" :id "[M] (BO)"}
    {:qty 1 :card "Târik an-Bawîba" :id "[M] (BO)"}
