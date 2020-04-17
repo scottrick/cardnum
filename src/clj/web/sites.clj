@@ -646,7 +646,7 @@
    {:qty 1 :card "Kref Masar" :id "[H] (SL)"}
    {:qty 1 :card "Kylmätalo" :id "[H] (NW)"}
    {:qty 1 :card "Lake-town" :id "[H] (TW)"}
-   {:qty 1 :card "Lakes of Kann-Sharmunda" :id "[H] (CA)"}
+   {:qty 1 :card "Lakes of Kann-Sharmûnda" :id "[H] (CA)"}
    {:qty 1 :card "Lâorkí" :id "[H] (CP)"}
    {:qty 1 :card "Lar-Huz" :id "[H] (CP)"}
    {:qty 1 :card "Laurrë's Manor" :id "[H] (CA)"}
@@ -1175,7 +1175,7 @@
    {:qty 1 :card "Wellinghall" :id "[M] (AS)"}
    {:qty 1 :card "Woodmen-town" :id "[M] (LE)"}
    {:qty 1 :card "Wose Passage-hold" :id "[M] (LE)"}
-   {:qty 1 :card "Xyunai" :id "[M] (BO)"}
+   {:qty 1 :card "Xyunaï" :id "[M] (BO)"}
    {:qty 1 :card "Yatali Kîrgan" :id "[M] (BO)"}
    {:qty 1 :card "Yjuvït" :id "[M] (ML)"}
    {:qty 1 :card "Zarak Dûm" :id "[M] (LE)"}
@@ -1339,7 +1339,7 @@
    {:qty 1 :card "Kref Masar" :id "[M] (SL)"}
    {:qty 1 :card "Kylmätalo" :id "[M] (NW)"}
    {:qty 1 :card "Lake-town" :id "[M] (LE)"}
-   {:qty 1 :card "Lakes of KannSharmunda" :id "[M] (CA)"}
+   {:qty 1 :card "Lakes of Kann-Sharmûnda" :id "[M] (CA)"}
    {:qty 1 :card "Lâorkí" :id "[M] (CP)"}
    {:qty 1 :card "Lar-Huz" :id "[M] (CP)"}
    {:qty 1 :card "Laurrë's Manor" :id "[M] (CA)"}
