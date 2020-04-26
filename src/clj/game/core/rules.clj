@@ -532,6 +532,16 @@
   [state side]
   (swap! state update-in [side] dissoc :openhand))
 
+(defn clear-log
+  "Clears the current win condition.  Requires both sides to have issued the command"
+  [state side]
+  (swap! state assoc-in [side :clear-log] true)
+  (when (and (-> @state :challenger :clear-log) (-> @state :contestant :clear-log))
+    (system-msg state side "cleared the log window")
+    (swap! state dissoc :log)
+    (swap! state assoc-in [state :log] [])
+    ))
+
 (defn clear-win
   "Clears the current win condition.  Requires both sides to have issued the command"
   [state side]

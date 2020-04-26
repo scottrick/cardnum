@@ -376,13 +376,13 @@
   (resolve-ability state side
                    {:prompt "Select hosting card"
                     :choices {:req (fn [t] true)}
-                    :msg (msg "host " (:title target))
                     :effect (req (let [c (get-card state target)] (resolve-ability state side
                                                                                    {:prompt "Select card to host"
                                                                                     :choices {:req (fn [t] true)}
                                                                                     :effect (effect (host-reveal c (get-card state target)))
+                                                                                    :msg (msg "host " (:title (get-card state target)))
                                                                                     ; host target onto card
-                                                                                    } c nil )))} nil nil)
+                                                                                    } (if (revealed? c) c nil) nil )))} nil nil)
   (system-msg state side "host a card revealed"))
 
 (defn hero-pal-flag
@@ -534,6 +534,7 @@
                                                                             ": " (get-card state target))))
                                            :choices {:req (fn [t] (card-is? t :side %2))}}
                                           {:title "/card-info command"} nil)
+          "/clear-log"  clear-log
           "/clear-win"  clear-win
           "/click"      #(swap! %1 assoc-in [%2 :click] (max 0 value))
           "/close-prompt" command-close-prompt
