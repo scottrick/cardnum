@@ -406,9 +406,13 @@
                                                    (do (swap-character state side (first targets) (second targets))
                                                        (system-msg state side
                                                                    (str "swaps the position of "
-                                                                        (card-str state (first targets))
+                                                                        (if (revealed? (first targets))
+                                                                          (card-str state (first targets))
+                                                                          "hidden")
                                                                         " and "
-                                                                        (card-str state (second targets))))
+                                                                        (if (revealed? (second targets))
+                                                                          (card-str state (second targets))
+                                                                          "hidden")                                                                        ))
                                                        (continue-ability state side (msr) card nil))
                                                    (do (system-msg state side (str "has finished rearranging Characters"))
                                                        (effect-completed state side eid))))})]
