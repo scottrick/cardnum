@@ -190,13 +190,13 @@
   [set-map c]
   (let [s (set-map (:set_code c))]
     (-> c
-        (prune-null-fields [:Artist :Rarity :Precise :MPs
-                            :Mind :Direct :General :Prowess :Body
-                            :Corruption :RWMPs :Site :Path
-                            :Region :RPath :Playable :GoldRing
-                            :GreaterItem :MajorItem :MinorItem
-                            :Information :Palantiri :Scroll :Haven
-                            :Stage :Strikes :Specific])
+        (prune-null-fields [:Artist :MPs :Mind :Direct :General
+                            :Prowess :Body :Corruption :RWMPs
+                            :Site :Path :Region :RPath
+                            :Playable :GoldRing :GreaterItem
+                            :MajorItem :MinorItem :Information
+                            :Palantiri :Scroll :Haven :Stage
+                            :Strikes :Specific])
         (assoc :full_set (:name s)
                :normalizedtitle (string/lower-case (deaccent (:title c)))))))
 

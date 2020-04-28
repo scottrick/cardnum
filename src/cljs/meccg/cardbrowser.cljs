@@ -291,6 +291,12 @@
                    "Giant" "Troll" "Orc" "Balrog" "Demon" "Drake" "Dragon"
                    "Ent" "Animal" "Eagle" "Wolf" "Spider" "Special" "Other"])
 (def skill-options ["Diplomat" "Warrior" "Ranger" "Scout" "Sage"])
+(def rarity-choice ["Rare" "Uncommon" "Common" "Fixed" "Promo"])
+(def precise-types ["C" "C1" "C2" "C3" "C4" "C5" "CA1" "CA2"
+                    "CB" "CB, CS1" "CB, CS2" "CB1" "CB2"
+                    "F1" "F1, U" "F2" "F3" "F4" "F5" "F5, CB"
+                    "P" "R" "R1" "R2" "R3"
+                    "U" "U1" "U2" "U3" "U4"])
 
 (defn secondaries [primary]
   (case primary
@@ -476,6 +482,8 @@
        :primary-filter "All"
        :alignment-filter "All"
        :secondary-filter "All"
+       :precise-filter "All"
+       :rarity-filter "All"
        :haven-filter "All"
        :skill-filter "All"
        :race-filter "All"
@@ -566,6 +574,8 @@
                               ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
                               ["Align" :alignment-filter (alignments (:primary-filter state))]
                               ["Strict" :secondary-filter (secondaries (:primary-filter state))]
+                              ["Precise" :precise-filter precise-types]
+                              ["Rarity" :rarity-filter rarity-choice]
                               ["Haven" :haven-filter haven-options]]]
                   [:div
                    [:h4 (first filter)]
@@ -584,6 +594,8 @@
                                   ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
                                   ["Align" :alignment-filter (alignments (:primary-filter state))]
                                   ["Strict" :secondary-filter (secondaries (:primary-filter state))]
+                                  ["Precise" :precise-filter precise-types]
+                                  ["Rarity" :rarity-filter rarity-choice]
                                   ["Skill" :skill-filter skill-options]
                                   ["Race" :race-filter type-options]]]
                       [:div
@@ -595,6 +607,8 @@
                                   ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
                                   ["Align" :alignment-filter (alignments (:primary-filter state))]
                                   ["Strict" :secondary-filter (secondaries (:primary-filter state))]
+                                  ["Precise" :precise-filter precise-types]
+                                  ["Rarity" :rarity-filter rarity-choice]
                                   ["Race" :race-filter type-options]]]
                       [:div
                        [:h4 (first filter)]
@@ -604,7 +618,9 @@
                 (for [filter [["Set" :set-filter set-names]
                               ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
                               ["Align" :alignment-filter (alignments (:primary-filter state))]
-                              ["Strict" :secondary-filter (secondaries (:primary-filter state))]]]
+                              ["Rarity" :rarity-filter rarity-choice]
+                              ["Precise" :precise-filter precise-types]
+                              ]]
                   [:div
                    [:h4 (first filter)]
                    [:select {:value ((second filter) state)
@@ -654,6 +670,8 @@
                                  ;(om/set-state! owner :primary-filter "All")
                                  (om/set-state! owner :alignment-filter "All")
                                  (om/set-state! owner :secondary-filter "All")
+                                 (om/set-state! owner :precise-filter "All")
+                                 (om/set-state! owner :rarity-filter "All")
                                  (om/set-state! owner :haven-filter "All")
                                  (om/set-state! owner :skill-filter "All")
                                  (om/set-state! owner :race-filter "All"))} "Semi-refine"]
@@ -674,6 +692,8 @@
                                (filter-unique (:only-unique state))
                                (filter-cards (:primary-filter state) :type)
                                (filter-cards (:alignment-filter state) :alignment)
+                               (filter-cards (:rarity-filter state) :Rarity)
+                               (filter-cards (:precise-filter state) :Precise)
                                (filter-second (if (= (:primary-filter state) "Site") true false) (:secondary-filter state))
                                (filter-haven (if (= (:primary-filter state) "Site") false true) (:haven-filter state))
                                (filter-race (if (= (:primary-filter state) "Hazard") false true) (:race-filter state))
