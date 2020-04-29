@@ -274,7 +274,7 @@
 (def set-order ["The Wizards" "The Dragons" "Dark Minions" "The Lidless Eye" "Against the Shadow" "The White Hand" "The Balrog"
                 "Firstborn" "Durin's Folk" "The Necromancer" "Bay of Ormal" "Court of Ardor" "The Great Central Plains" "The Dominion of the Seven"
                 "The Great Wyrms" "Kingdom of the North" "Morgoth's Legacy" "Nine Rings for Mortal Men" "The Northern Waste" "Red Nightfall"
-                "Return of the Shadow" "The Sun Lands" "Treason of Isengard" "War of the Ring"])
+                "Return of the Shadow" "The Sunlands" "Treason of Isengard" "War of the Ring"])
 (def hazard-races ["Maia" "Dúnedain" "Hobbits" "Men" "Slayers" "Woses" "Umli"
                    "Dwarves" "Elves" "Giants" "Nazgûl" "Trolls" "Orcs"
                    "Balrogs" "Demons" "Drakes" "Dragons" "Spawn" "Undead"
@@ -284,13 +284,17 @@
                    "Dwarf" "Firebeard" "Ironfist" "Longbeard" "Stiffbeard"
                    "Elf" "Nando" "Noldo" "Silvan" "Sinda" "Kelno" "Tatya" "Nelya"
                    "Ringwraith" "Balrog" "Demon" "Dragon"
-                   "Troll" "Half-troll" "Olog-hai" "Forest-troll" "Mountain-troll" "Wild-troll"
+                   "Troll" "Half-troll" "Olog-hai" "Mountain-troll" "Wild-troll"
                    "Orc" "Half-orc" "Uruk-hai" "Scara-hai" "Ice-orc"])
 (def fact-options ["Dúnadan" "Hobbit" "Dwarf" "Elf" "Man" "Wose" "Umit"
                    "Mercenary" "Slayer" "Slave" "Undead"
                    "Giant" "Troll" "Orc" "Balrog" "Demon" "Drake" "Dragon"
                    "Ent" "Animal" "Eagle" "Wolf" "Spider" "Special" "Other"])
-(def skill-options ["Diplomat" "Warrior" "Ranger" "Scout" "Sage"])
+(def ally-options ["Animal" "Balrog" "Demon" "Eagle" "Elf" "Ent" "Giant" "Hobbit"
+                   "Horse" "Maia" "Orc" "Spawn" "Spider" "Troll" "Wolf" "Undead"])
+(def allys-options ["Diplomat" "Warrior" "Ranger" "Scout" "Sage" "Flying" "Winged"])
+(def skill-options ["Diplomat" "Warrior" "Ranger" "Scout" "Sage" "Spell"
+                    "Sorcery" "Spirit-magic" "Shadow-magic" "Dragon-magic"])
 (def rarity-choice ["Rare" "Uncommon" "Common" "Fixed" "Promo"])
 (def precise-types ["C" "C1" "C2" "C3" "C4" "C5" "CA1" "CA2"
                     "CB" "CB, CS1" "CB, CS2" "CB1" "CB2"
@@ -553,7 +557,8 @@
                 set-names (map :name
                                (sort-by (juxt :cycle_position :position)
                                         sets-list))]
-            (if (= (:primary-filter state) "Site")
+            (cond
+              (= (:primary-filter state) "Site")
               (let [haven-options (if hide-dreamcards
                                     (case (:alignment-filter state)
                                       "All" standard-havens
@@ -582,51 +587,86 @@
                    [:select {:value ((second filter) state)
                              :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
                     (options (last filter))]]))
-              (if (or (= (:primary-filter state) "Hazard")
-                      (= (:primary-filter state) "Character")
-                      (= (:secondary-filter state) "Faction"))
-                (let [type-options (cond
-                                     (= (:primary-filter state) "Hazard") hazard-races
-                                     (= (:primary-filter state) "Character") race-options
-                                     (= (:secondary-filter state) "Faction") fact-options)]
-                  (if (= (:primary-filter state) "Character")
-                    (for [filter [["Set" :set-filter set-names]
-                                  ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
-                                  ["Align" :alignment-filter (alignments (:primary-filter state))]
-                                  ["Strict" :secondary-filter (secondaries (:primary-filter state))]
-                                  ["Precise" :precise-filter precise-types]
-                                  ["Rarity" :rarity-filter rarity-choice]
-                                  ["Skill" :skill-filter skill-options]
-                                  ["Race" :race-filter type-options]]]
-                      [:div
-                       [:h4 (first filter)]
-                       [:select {:value ((second filter) state)
-                                 :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
-                        (options (last filter))]])
-                    (for [filter [["Set" :set-filter set-names]
-                                  ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
-                                  ["Align" :alignment-filter (alignments (:primary-filter state))]
-                                  ["Strict" :secondary-filter (secondaries (:primary-filter state))]
-                                  ["Precise" :precise-filter precise-types]
-                                  ["Rarity" :rarity-filter rarity-choice]
-                                  ["Race" :race-filter type-options]]]
-                      [:div
-                       [:h4 (first filter)]
-                       [:select {:value ((second filter) state)
-                                 :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
-                        (options (last filter))]])))
-                (for [filter [["Set" :set-filter set-names]
-                              ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
-                              ["Align" :alignment-filter (alignments (:primary-filter state))]
-                              ["Rarity" :rarity-filter rarity-choice]
-                              ["Precise" :precise-filter precise-types]
-                              ]]
-                  [:div
-                   [:h4 (first filter)]
-                   [:select {:value ((second filter) state)
-                             :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
-                    (options (last filter))]]))))
-
+              (and (= (:primary-filter state) "Resource") (= (:secondary-filter state) "Ally"))
+              (for [filter [["Set" :set-filter set-names]
+                            ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
+                            ["Align" :alignment-filter (alignments (:primary-filter state))]
+                            ["Strict" :secondary-filter (secondaries (:primary-filter state))]
+                            ["Precise" :precise-filter precise-types]
+                            ["Rarity" :rarity-filter rarity-choice]
+                            ["Skill" :skill-filter allys-options]
+                            ["Race" :race-filter ally-options]]]
+                [:div
+                 [:h4 (first filter)]
+                 [:select {:value ((second filter) state)
+                           :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
+                  (options (last filter))]])
+              (and (= (:primary-filter state) "Resource") (= (:secondary-filter state) "Faction"))
+              (for [filter [["Set" :set-filter set-names]
+                            ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
+                            ["Align" :alignment-filter (alignments (:primary-filter state))]
+                            ["Strict" :secondary-filter (secondaries (:primary-filter state))]
+                            ["Precise" :precise-filter precise-types]
+                            ["Rarity" :rarity-filter rarity-choice]
+                            ["Races" :race-filter fact-options]]]
+                [:div
+                 [:h4 (first filter)]
+                 [:select {:value ((second filter) state)
+                           :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
+                  (options (last filter))]])
+              (= (:primary-filter state) "Resource")
+              (for [filter [["Set" :set-filter set-names]
+                            ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
+                            ["Align" :alignment-filter (alignments (:primary-filter state))]
+                            ["Strict" :secondary-filter (secondaries (:primary-filter state))]
+                            ["Precise" :precise-filter precise-types]
+                            ["Rarity" :rarity-filter rarity-choice]
+                            ["Skill" :skill-filter skill-options]]]
+                [:div
+                 [:h4 (first filter)]
+                 [:select {:value ((second filter) state)
+                           :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
+                  (options (last filter))]])
+              (= (:primary-filter state) "Character")
+              (for [filter [["Set" :set-filter set-names]
+                            ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
+                            ["Align" :alignment-filter (alignments (:primary-filter state))]
+                            ["Strict" :secondary-filter (secondaries (:primary-filter state))]
+                            ["Precise" :precise-filter precise-types]
+                            ["Rarity" :rarity-filter rarity-choice]
+                            ["Skill" :skill-filter skill-options]
+                            ["Race" :race-filter race-options]]]
+                [:div
+                 [:h4 (first filter)]
+                 [:select {:value ((second filter) state)
+                           :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
+                  (options (last filter))]])
+              (= (:primary-filter state) "Hazard")
+              (for [filter [["Set" :set-filter set-names]
+                            ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
+                            ["Align" :alignment-filter (alignments (:primary-filter state))]
+                            ["Strict" :secondary-filter (secondaries (:primary-filter state))]
+                            ["Precise" :precise-filter precise-types]
+                            ["Rarity" :rarity-filter rarity-choice]
+                            ["Races" :race-filter hazard-races]]]
+                [:div
+                 [:h4 (first filter)]
+                 [:select {:value ((second filter) state)
+                           :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
+                  (options (last filter))]])
+              :else
+              (for [filter [["Set" :set-filter set-names]
+                            ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
+                            ["Align" :alignment-filter (alignments (:primary-filter state))]
+                            ["Strict" :secondary-filter (secondaries (:primary-filter state))]
+                            ["Precise" :precise-filter precise-types]
+                            ["Rarity" :rarity-filter rarity-choice]]]
+                [:div
+                 [:h4 (first filter)]
+                 [:select {:value ((second filter) state)
+                           :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
+                  (options (last filter))]])
+              ))
           [:div.hide-dreamcards-div
            [:label [:input.hide-dreamcards {:type "checkbox"
                                             :value true
@@ -698,8 +738,10 @@
                                (filter-haven (if (= (:primary-filter state) "Site") false true) (:haven-filter state))
                                (filter-race (if (= (:primary-filter state) "Hazard") false true) (:race-filter state))
                                (filter-race (if (= (:primary-filter state) "Character") false true) (:race-filter state))
-                               (filter-skill (if (= (:primary-filter state) "Character") false true) (:skill-filter state))
-                               (filter-race (if (= (:secondary-filter state) "Faction") false true) (:race-filter state))
+                               (filter-skill (if (or (= (:primary-filter state) "Resource")
+                                                     (= (:primary-filter state) "Character")) false true) (:skill-filter state))
+                               (filter-race (if (or (= (:secondary-filter state) "Faction")
+                                                    (= (:secondary-filter state) "Ally")) false true) (:race-filter state))
                                (filter-texts (:texts-query state))
                                (filter-title (:title-query state))
                                (sort-by (sort-field (:sort-field state)))
