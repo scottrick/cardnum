@@ -288,7 +288,7 @@
                    "Orc" "Half-orc" "Uruk-hai" "Scara-hai" "Ice-orc"])
 (def fact-options ["Dúnadan" "Hobbit" "Dwarf" "Elf" "Man" "Wose" "Umit"
                    "Mercenary" "Slayer" "Slave" "Undead"
-                   "Giant" "Troll" "Orc" "Balrog" "Demon" "Drake" "Dragon"
+                   "Giant" "Troll" "Orc" "Demon" "Drake" "Dragon"
                    "Ent" "Animal" "Eagle" "Wolf" "Spider" "Special" "Other"])
 (def ally-options ["Animal" "Balrog" "Demon" "Eagle" "Elf" "Ent" "Giant" "Hobbit"
                    "Horse" "Maia" "Orc" "Spawn" "Spider" "Troll" "Wolf" "Undead"])
