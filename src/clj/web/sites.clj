@@ -388,7 +388,7 @@
    {:qty 3 :card "Hollin" :id "(TW)"}
    {:qty 3 :card "Horse Plains" :id "(TW)"}
    {:qty 3 :card "Hûb Uichel" :id "(ML)"}
-   {:qty 3 :card "Hyarmenfalas" :id "(SL)"}
+   {:qty 3 :card "Hyarmenfalas" :id "(WR)"}
    {:qty 3 :card "Hyarn" :id "(DS)"}
    {:qty 3 :card "Hyarnustar Coast" :id "(DS)"}
    {:qty 3 :card "Imlad Morgul" :id "(TW)"}
@@ -502,7 +502,7 @@
    {:qty 1 :card "Amon Lind" :id "[H] (FB)"}
    {:qty 1 :card "Amrûn" :id "[H] (SL)"}
    {:qty 1 :card "An Karagmir" :id "[H] (SL)"}
-   {:qty 1 :card "Andoloki" :id "[H] (NW)"}
+   {:qty 1 :card "Andoloki" :id "[H] (KN)"}
    {:qty 1 :card "Ankruz" :id "[H] (SL)"}
    {:qty 1 :card "Annúminas" :id "[H] (KN)"}
    {:qty 1 :card "Arentaurr" :id "[H] (CP)"}
@@ -548,7 +548,7 @@
    {:qty 1 :card "Cave of the Urdharkonur" :id "[H] (GW)"}
    {:qty 1 :card "Caves of Ûlund" :id "[H] (TW)"}
    {:qty 1 :card "Ceber Fanuin" :id "[H] (FB)"}
-   {:qty 1 :card "Celeb-Ost" :id "[H] (NW)"}
+   {:qty 1 :card "Celeb-Ost" :id "[H] (GW)"}
    {:qty 1 :card "Celebannon" :id "[H] (FB)"}
    {:qty 1 :card "Cerin Amroth" :id "[H] (FB)"}
    {:qty 1 :card "Charnesra" :id "[H] (SL)"}
@@ -651,7 +651,7 @@
    {:qty 1 :card "Lar-Huz" :id "[H] (CP)"}
    {:qty 1 :card "Laurrë's Manor" :id "[H] (CA)"}
    {:qty 1 :card "Leiri" :id "[H] (NW)"}
-   {:qty 1 :card "Lighthouse at the Cape of Octopuses" :id "[H] (SL)"}
+   {:qty 1 :card "Lighthouse at the Kraken Cape" :id "[H] (SL)"}
    {:qty 1 :card "Ligr Wodaize Berne" :id "[H] (NW)"}
    {:qty 1 :card "Lind-or-Burum" :id "[H] (TI)"}
    {:qty 1 :card "Linhir" :id "[H] (WR)"}
@@ -826,7 +826,7 @@
    {:qty 1 :card "Ty-ar-Rana" :id "[H] (CA)"}
    {:qty 1 :card "Ulk Chey Sart" :id "[H] (CP)"}
    {:qty 1 :card "Ulk Jey Ama" :id "[H] (CP)"}
-   {:qty 1 :card "Umbar" :id "[H] (SL)"}
+   {:qty 1 :card "Umbar" :id "[H] (WR)"}
    {:qty 1 :card "Úrcheldor" :id "[H] (ML)"}
    {:qty 1 :card "Urdic Camp" :id "[H] (NW)"}
    {:qty 1 :card "Ûrêzâyan" :id "[H] (SL)"}
@@ -834,7 +834,7 @@
    {:qty 1 :card "Urud-an-Khibil" :id "[H] (SL)"}
    {:qty 1 :card "Vale of Erech" :id "[H] (TW)"}
    {:qty 1 :card "Valley of Tombs" :id "[H] (BO)"}
-   {:qty 1 :card "Vamag" :id "[H] (SL)"}
+   {:qty 1 :card "Vamag" :id "[H] (WR)"}
    {:qty 1 :card "Variag Camp" :id "[H] (TW)"}
    {:qty 1 :card "Vasaran Ahjo" :id "[H] (NW)"}
    {:qty 1 :card "Ventazvah Ôran-tal" :id "[H] (BO)"}
@@ -892,7 +892,7 @@
    {:qty 1 :card "Amon Lhaw" :id "[M] (TI)"}
    {:qty 1 :card "Amon Lind" :id "[M] (FB)"}
    {:qty 1 :card "An Karagmir" :id "[M] (SL)"}
-   {:qty 1 :card "Andoloki" :id "[M] (NW)"}
+   {:qty 1 :card "Andoloki" :id "[M] (KN)"}
    {:qty 1 :card "Ankruz" :id "[M] (SL)"}
    {:qty 1 :card "Annúminas" :id "[M] (KN)"}
    {:qty 1 :card "Arentaurr" :id "[M] (CP)"}
@@ -930,7 +930,7 @@
    {:qty 1 :card "Cave of the Urdharkonur" :id "[M] (GW)"}
    {:qty 1 :card "Caves of Ûlund" :id "[M] (LE)"}
    {:qty 1 :card "Ceber Fanuin" :id "[M] (FB)"}
-   {:qty 1 :card "Celeb-Ost" :id "[M] (NW)"}
+   {:qty 1 :card "Celeb-Ost" :id "[M] (GW)"}
    {:qty 1 :card "Celebannon" :id "[M] (FB)"}
    {:qty 1 :card "Cerin Amroth" :id "[M] (FB)"}
    {:qty 1 :card "Charnesra" :id "[M] (SL)"}
@@ -1016,7 +1016,7 @@
    {:qty 1 :card "Lar-Huz" :id "[M] (CP)"}
    {:qty 1 :card "Laurrë's Manor" :id "[M] (CA)"}
    {:qty 1 :card "Leiri" :id "[M] (NW)"}
-   {:qty 1 :card "Lighthouse at the Cape of Octopuses" :id "[M] (SL)"}
+   {:qty 1 :card "Lighthouse at the Kraken Cape" :id "[M] (SL)"}
    {:qty 1 :card "Ligr Wodaize Berne" :id "[M] (NW)"}
    {:qty 1 :card "Lind-or-Burum" :id "[M] (TI)"}
    {:qty 1 :card "Linhir" :id "[M] (WR)"}
@@ -1159,13 +1159,13 @@
    {:qty 1 :card "Tûl Póac" :id "[M] (SL)"}
    {:qty 1 :card "Turukulon's Lair" :id "[M] (TI)"}
    {:qty 1 :card "Ty-ar-Rana" :id "[M] (CA)"}
-   {:qty 1 :card "Umbar" :id "[M] (SL)"}
+   {:qty 1 :card "Umbar" :id "[M] (WR)"}
    {:qty 1 :card "Ûrêzâyan" :id "[M] (SL)"}
    {:qty 1 :card "Urud-an-Khibil" :id "[M] (SL)"}
    {:qty 1 :card "Valagalen" :id "[M] (DS)"}
    {:qty 1 :card "Vale of Erech" :id "[M] (LE)"}
    {:qty 1 :card "Valley of Tombs" :id "[M] (BO)"}
-   {:qty 1 :card "Vamag" :id "[M] (SL)"}
+   {:qty 1 :card "Vamag" :id "[M] (WR)"}
    {:qty 1 :card "Variag Camp" :id "[M] (LE)"}
    {:qty 1 :card "Vasaran Ahjo" :id "[M] (NW)"}
    {:qty 1 :card "Vog Mur" :id "[M] (CA)"}
@@ -1198,7 +1198,7 @@
    {:qty 1 :card "Amon Lind" :id "[M] (FB)"}
    {:qty 1 :card "Amrûn" :id "[M] (SL)"}
    {:qty 1 :card "An Karagmir" :id "[M] (SL)"}
-   {:qty 1 :card "Andoloki" :id "[M] (NW)"}
+   {:qty 1 :card "Andoloki" :id "[M] (KN)"}
    {:qty 1 :card "Ankruz" :id "[M] (SL)"}
    {:qty 1 :card "Annúminas" :id "[M] (KN)"}
    {:qty 1 :card "Arentaurr" :id "[M] (CP)"}
@@ -1241,7 +1241,7 @@
    {:qty 1 :card "Cave of the Urdharkonur" :id "[M] (GW)"}
    {:qty 1 :card "Caves of Ûlund" :id "[M] (LE)"}
    {:qty 1 :card "Ceber Fanuin" :id "[M] (FB)"}
-   {:qty 1 :card "Celeb-Ost" :id "[M] (NW)"}
+   {:qty 1 :card "Celeb-Ost" :id "[M] (GW)"}
    {:qty 1 :card "Celebannon" :id "[M] (FB)"}
    {:qty 1 :card "Cerin Amroth" :id "[M] (FB)"}
    {:qty 1 :card "Charnesra" :id "[M] (SL)"}
@@ -1344,7 +1344,7 @@
    {:qty 1 :card "Lar-Huz" :id "[M] (CP)"}
    {:qty 1 :card "Laurrë's Manor" :id "[M] (CA)"}
    {:qty 1 :card "Leiri" :id "[M] (NW)"}
-   {:qty 1 :card "Lighthouse at the Cape of Octopuses" :id "[M] (SL)"}
+   {:qty 1 :card "Lighthouse at the Kraken Cape" :id "[M] (SL)"}
    {:qty 1 :card "Ligr Wodaize Berne" :id "[M] (NW)"}
    {:qty 1 :card "Lind-or-Burum" :id "[M] (TI)"}
    {:qty 1 :card "Linhir" :id "[M] (WR)"}
@@ -1507,7 +1507,7 @@
    {:qty 1 :card "Ty-ar-Rana" :id "[M] (CA)"}
    {:qty 1 :card "Ulk Chey Sart" :id "[M] (CP)"}
    {:qty 1 :card "Ulk Jey Ama" :id "[M] (CP)"}
-   {:qty 1 :card "Umbar" :id "[M] (SL)"}
+   {:qty 1 :card "Umbar" :id "[M] (WR)"}
    {:qty 1 :card "Úrcheldor" :id "[M] (ML)"}
    {:qty 1 :card "Urdic Camp" :id "[M] (NW)"}
    {:qty 1 :card "Ûrêzâyan" :id "[M] (SL)"}
@@ -1516,7 +1516,7 @@
    {:qty 1 :card "Valagalen" :id "[M] (DS)"}
    {:qty 1 :card "Vale of Erech" :id "[M] (LE)"}
    {:qty 1 :card "Valley of Tombs" :id "[M] (BO)"}
-   {:qty 1 :card "Vamag" :id "[M] (SL)"}
+   {:qty 1 :card "Vamag" :id "[M] (WR)"}
    {:qty 1 :card "Variag Camp" :id "[M] (LE)"}
    {:qty 1 :card "Vasaran Ahjo" :id "[M] (NW)"}
    {:qty 1 :card "Ventazvah Ôran-tal" :id "[M] (BO)"}
