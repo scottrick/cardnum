@@ -2271,7 +2271,8 @@
              [:div.rightpane
               [:div.card-zoom
                (if-let [card (om/get-state owner :zoom)]
-                 (if (get-in @game-state [side :blind])
+                 (if (or (= side :spectator)
+                         (get-in @game-state [side :blind]))
                    (om/build card-blind card)
                    (om/build card-zoom card)))
                (when-let [card (om/get-state owner :zoom)]
