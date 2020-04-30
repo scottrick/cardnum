@@ -280,6 +280,20 @@
                    "Balrogs" "Demons" "Drakes" "Dragons" "Spawn" "Undead"
                    "Animals" "Apes" "Bears" "Boars" "Eagles"
                    "Plants" "Pûkel-creatures" "Spiders" "Vermin" "Wolves"])
+(def hazard-types ["Environment" "Corruption" "Dark Enchantment" "Disease" "Prisoner"])
+(def item-options ["Ore" "Food" "Jewel" "Staff" "Armor" "Helmet" "Shield"
+                   "Weapon" "Axe" "Bow" "Mace" "Whip" "Rune" "Ring"
+                   "Gold Ring" "Mind Ring" "Magic Ring" "Lesser Ring" "One Ring"
+                   "Spirit Ring" "Dwarven Ring" "Elven Ring" "Man Ring" "Hoard" "Trophy"
+                   "Treasure" "Technology" "Instrument" "Palantír" "Lore" "Stature"
+                   "Quest" "Lost Knowledge" "Stolen Knowledge" "Information" "Environment"
+                   "Command" "Mode" "Magic" "Wizardy" "Ritual" "Song" "Light Enchantment"
+                   "Cult" "Fána" "Flattery" "Offering" "Prisoner" "Riddling"])
+(def item-skillrc ["Two-handed" "Diplomat" "Warrior" "Ranger" "Scout" "Sage"
+                   "Leader" "Elf" "Dúnadan" "Dwarf" "Hobbit"
+                   "Man" "Orc" "Troll" "Umit" "Wose" "Warlord"
+                   "Hero" "White" "Wizard" "Grey" "Black" "Minion" "Ringwraith"
+                   "Sauron" "Balrog" "Dragon" "Cold Drgon" "Fire Dragon" "Court"])
 (def race-options ["Wizard" "Dúnadan" "Hobbit" "Man" "Slayer" "Wose" "Umit"
                    "Dwarf" "Firebeard" "Ironfist" "Longbeard" "Stiffbeard"
                    "Elf" "Nando" "Noldo" "Silvan" "Sinda" "Kelno" "Tatya" "Nelya"
@@ -288,7 +302,7 @@
                    "Orc" "Half-orc" "Uruk-hai" "Scara-hai" "Ice-orc"])
 (def fact-options ["Dúnadan" "Hobbit" "Dwarf" "Elf" "Man" "Wose" "Umit"
                    "Mercenary" "Slayer" "Slave" "Undead"
-                   "Giant" "Troll" "Orc" "Balrog" "Demon" "Drake" "Dragon"
+                   "Giant" "Troll" "Orc" "Demon" "Drake" "Dragon"
                    "Ent" "Animal" "Eagle" "Wolf" "Spider" "Special" "Other"])
 (def ally-options ["Animal" "Balrog" "Demon" "Eagle" "Elf" "Ent" "Giant" "Hobbit"
                    "Horse" "Maia" "Orc" "Spawn" "Spider" "Troll" "Wolf" "Undead"])
@@ -587,7 +601,7 @@
                    [:select {:value ((second filter) state)
                              :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
                     (options (last filter))]]))
-              (and (= (:primary-filter state) "Resource") (= (:secondary-filter state) "Ally"))
+              (= (:secondary-filter state) "Ally")
               (for [filter [["Set" :set-filter set-names]
                             ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
                             ["Align" :alignment-filter (alignments (:primary-filter state))]
@@ -601,7 +615,7 @@
                  [:select {:value ((second filter) state)
                            :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
                   (options (last filter))]])
-              (and (= (:primary-filter state) "Resource") (= (:secondary-filter state) "Faction"))
+              (= (:secondary-filter state) "Faction")
               (for [filter [["Set" :set-filter set-names]
                             ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
                             ["Align" :alignment-filter (alignments (:primary-filter state))]
@@ -614,6 +628,20 @@
                  [:select {:value ((second filter) state)
                            :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
                   (options (last filter))]])
+              (some (partial = (:secondary-filter state)) ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Special Item"])
+              (for [filter [["Set" :set-filter set-names]
+                            ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
+                            ["Align" :alignment-filter (alignments (:primary-filter state))]
+                            ["Strict" :secondary-filter (secondaries (:primary-filter state))]
+                            ["Precise" :precise-filter precise-types]
+                            ["Rarity" :rarity-filter rarity-choice]
+                            ["Skill" :skill-filter item-options]
+                            ["Type" :race-filter item-skillrc]]]
+                [:div
+                 [:h4 (first filter)]
+                 [:select {:value ((second filter) state)
+                           :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
+                  (options (last filter))]])
               (= (:primary-filter state) "Resource")
               (for [filter [["Set" :set-filter set-names]
                             ["Type" :primary-filter ["Character" "Resource" "Hazard" "Site" "Region"]]
@@ -621,7 +649,8 @@
                             ["Strict" :secondary-filter (secondaries (:primary-filter state))]
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
-                            ["Skill" :skill-filter skill-options]]]
+                            ["Skill" :skill-filter item-skillrc]
+                            ["Type" :race-filter item-options]]]
                 [:div
                  [:h4 (first filter)]
                  [:select {:value ((second filter) state)
@@ -648,7 +677,8 @@
                             ["Strict" :secondary-filter (secondaries (:primary-filter state))]
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
-                            ["Races" :race-filter hazard-races]]]
+                            ["Races" :race-filter hazard-races]
+                            ["Type" :skill-filter hazard-types]]]
                 [:div
                  [:h4 (first filter)]
                  [:select {:value ((second filter) state)
@@ -736,12 +766,21 @@
                                (filter-cards (:precise-filter state) :Precise)
                                (filter-second (if (= (:primary-filter state) "Site") true false) (:secondary-filter state))
                                (filter-haven (if (= (:primary-filter state) "Site") false true) (:haven-filter state))
-                               (filter-race (if (= (:primary-filter state) "Hazard") false true) (:race-filter state))
-                               (filter-race (if (= (:primary-filter state) "Character") false true) (:race-filter state))
+                               (filter-race (if (or (= (:primary-filter state) "Resource")
+                                                    (= (:primary-filter state) "Hazard")
+                                                    (= (:primary-filter state) "Character")
+                                                    (= (:secondary-filter state) "Faction")
+                                                    (= (:secondary-filter state) "Ally")
+                                                    (some (partial = (:secondary-filter state))
+                                                          ["Item" "Greater Item" "Major Item" "Minor Item"
+                                                           "Gold Ring Item" "Special Item"])) false true) (:race-filter state))
                                (filter-skill (if (or (= (:primary-filter state) "Resource")
-                                                     (= (:primary-filter state) "Character")) false true) (:skill-filter state))
-                               (filter-race (if (or (= (:secondary-filter state) "Faction")
-                                                    (= (:secondary-filter state) "Ally")) false true) (:race-filter state))
+                                                     (= (:primary-filter state) "Hazard")
+                                                     (= (:primary-filter state) "Character")
+                                                     (= (:secondary-filter state) "Ally")
+                                                     (some (partial = (:secondary-filter state))
+                                                           ["Item" "Greater Item" "Major Item" "Minor Item"
+                                                            "Gold Ring Item" "Special Item"])) false true) (:skill-filter state))
                                (filter-texts (:texts-query state))
                                (filter-title (:title-query state))
                                (sort-by (sort-field (:sort-field state)))
