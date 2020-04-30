@@ -287,13 +287,13 @@
                    "Spirit Ring" "Dwarven Ring" "Elven Ring" "Man Ring" "Hoard" "Trophy"
                    "Treasure" "Technology" "Instrument" "Palantír" "Lore" "Stature"
                    "Quest" "Lost Knowledge" "Stolen Knowledge" "Information" "Environment"
-                   "Command" "Mode" "Magic" "Wizardy" "Ritual" "Song" "Light Enchantment"
+                   "Command" "Mode" "Magic" "Wizardry" "Ritual" "Song" "Light Enchantment"
                    "Cult" "Fána" "Flattery" "Offering" "Prisoner" "Riddling"])
 (def item-skillrc ["Two-handed" "Diplomat" "Warrior" "Ranger" "Scout" "Sage"
                    "Leader" "Elf" "Dúnadan" "Dwarf" "Hobbit"
                    "Man" "Orc" "Troll" "Umit" "Wose" "Warlord"
                    "Hero" "White" "Wizard" "Grey" "Black" "Minion" "Ringwraith"
-                   "Sauron" "Balrog" "Dragon" "Cold Drgon" "Fire Dragon" "Court"])
+                   "Sauron" "Balrog" "Dragon" "Cold Dragon" "Fire Dragon" "Court"])
 (def race-options ["Wizard" "Dúnadan" "Hobbit" "Man" "Slayer" "Wose" "Umit"
                    "Dwarf" "Firebeard" "Ironfist" "Longbeard" "Stiffbeard"
                    "Elf" "Nando" "Noldo" "Silvan" "Sinda" "Kelno" "Tatya" "Nelya"
