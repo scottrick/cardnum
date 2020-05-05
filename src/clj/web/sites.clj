@@ -516,8 +516,6 @@
    {:qty 1 :card "Bandit Lair" :id "[H] (TW)"}
    {:qty 1 :card "Bar Falin" :id "[H] (SL)"}
    {:qty 1 :card "Bar-en-Ibûn" :id "[H] (DF)"}
-   {:qty 1 :card "Barad Angwi" :id "[H] (DS)"}
-   {:qty 1 :card "Barad Carannûn" :id "[H] (DS)"}
    {:qty 1 :card "Barad Lughilsarik" :id "[H] (NW)"}
    {:qty 1 :card "Barad Tathren" :id "[H] (TI)"}
    {:qty 1 :card "Barad-dûr" :id "[H] (TW)"}
@@ -651,7 +649,7 @@
    {:qty 1 :card "Lar-Huz" :id "[H] (CP)"}
    {:qty 1 :card "Laurrë's Manor" :id "[H] (CA)"}
    {:qty 1 :card "Leiri" :id "[H] (NW)"}
-   {:qty 1 :card "Lighthouse at the Kraken Cape" :id "[H] (SL)"}
+   {:qty 1 :card "Lighthouse at Kraken Cape" :id "[H] (SL)"}
    {:qty 1 :card "Ligr Wodaize Berne" :id "[H] (NW)"}
    {:qty 1 :card "Lind-or-Burum" :id "[H] (TI)"}
    {:qty 1 :card "Linhir" :id "[H] (WR)"}
@@ -699,6 +697,7 @@
    {:qty 1 :card "Narik-Zadan" :id "[H] (SL)"}
    {:qty 1 :card "Nennûrad" :id "[H] (CP)"}
    {:qty 1 :card "Nevazar's Tomb" :id "[H] (BO)"}
+   {:qty 1 :card "Nioca Manara" :id "[H] (DS)"}
    {:qty 1 :card "Nîlûlondê" :id "[H] (SL)"}
    {:qty 1 :card "Norjadar" :id "[H] (SL)"}
    {:qty 1 :card "Norr-dûm" :id "[H] (GW)"}
@@ -848,6 +847,7 @@
    {:qty 1 :card "Xyunaï" :id "[H] (BO)"}
    {:qty 1 :card "Yatali Kîrgan" :id "[H] (BO)"}
    {:qty 1 :card "Yjuvït" :id "[H] (ML)"}
+   {:qty 1 :card "Zadan an-Adûn" :id "[H] (DS)"}
    {:qty 1 :card "Zarak Dûm" :id "[H] (TD)"}
    {:qty 1 :card "Zayandaur" :id "[H] (ML)"}])
 
@@ -905,8 +905,6 @@
    {:qty 1 :card "Bandit Lair" :id "[M] (LE)"}
    {:qty 1 :card "Bar Falin" :id "[M] (SL)"}
    {:qty 1 :card "Bar-en-Ibûn" :id "[M] (DF)"}
-   {:qty 1 :card "Barad Angwi" :id "[M] (DS)"}
-   {:qty 1 :card "Barad Carannûn" :id "[M] (DS)"}
    {:qty 1 :card "Barad Tathren" :id "[M] (TI)"}
    {:qty 1 :card "Barak-shathûr" :id "[M] (DF)"}
    {:qty 1 :card "Barrow-downs" :id "[M] (LE)"}
@@ -1016,7 +1014,7 @@
    {:qty 1 :card "Lar-Huz" :id "[M] (CP)"}
    {:qty 1 :card "Laurrë's Manor" :id "[M] (CA)"}
    {:qty 1 :card "Leiri" :id "[M] (NW)"}
-   {:qty 1 :card "Lighthouse at the Kraken Cape" :id "[M] (SL)"}
+   {:qty 1 :card "Lighthouse at Kraken Cape" :id "[M] (SL)"}
    {:qty 1 :card "Ligr Wodaize Berne" :id "[M] (NW)"}
    {:qty 1 :card "Lind-or-Burum" :id "[M] (TI)"}
    {:qty 1 :card "Linhir" :id "[M] (WR)"}
@@ -1050,6 +1048,7 @@
    {:qty 1 :card "Narik-Zadan" :id "[M] (SL)"}
    {:qty 1 :card "Nennûrad" :id "[M] (CP)"}
    {:qty 1 :card "Nevazar's Tomb" :id "[M] (BO)"}
+   {:qty 1 :card "Nioca Manara" :id "[M] (DS)"}
    {:qty 1 :card "Nîlûlondê" :id "[M] (SL)"}
    {:qty 1 :card "Norjadar" :id "[M] (SL)"}
    {:qty 1 :card "Norr-dûm" :id "[M] (GW)"}
@@ -1178,6 +1177,7 @@
    {:qty 1 :card "Xyunaï" :id "[M] (BO)"}
    {:qty 1 :card "Yatali Kîrgan" :id "[M] (BO)"}
    {:qty 1 :card "Yjuvït" :id "[M] (ML)"}
+   {:qty 1 :card "Zadan an-Adûn" :id "[M] (DS)"}
    {:qty 1 :card "Zarak Dûm" :id "[M] (LE)"}
    {:qty 1 :card "Zayandaur" :id "[M] (ML)"}])
 
@@ -1212,8 +1212,6 @@
    {:qty 1 :card "Bandit Lair" :id "[M] (LE)"}
    {:qty 1 :card "Bar Falin" :id "[M] (SL)"}
    {:qty 1 :card "Bar-en-Ibûn" :id "[M] (DF)"}
-   {:qty 1 :card "Barad Angwi" :id "[M] (DS)"}
-   {:qty 1 :card "Barad Carannûn" :id "[M] (DS)"}
    {:qty 1 :card "Barad Lughilsarik" :id "[M] (NW)"}
    {:qty 1 :card "Barad Tathren" :id "[M] (TI)"}
    {:qty 1 :card "Barad-wath" :id "[M] (NE)"}
@@ -1344,7 +1342,7 @@
    {:qty 1 :card "Lar-Huz" :id "[M] (CP)"}
    {:qty 1 :card "Laurrë's Manor" :id "[M] (CA)"}
    {:qty 1 :card "Leiri" :id "[M] (NW)"}
-   {:qty 1 :card "Lighthouse at the Kraken Cape" :id "[M] (SL)"}
+   {:qty 1 :card "Lighthouse at Kraken Cape" :id "[M] (SL)"}
    {:qty 1 :card "Ligr Wodaize Berne" :id "[M] (NW)"}
    {:qty 1 :card "Lind-or-Burum" :id "[M] (TI)"}
    {:qty 1 :card "Linhir" :id "[M] (WR)"}
@@ -1390,6 +1388,7 @@
    {:qty 1 :card "Narik-Zadan" :id "[M] (SL)"}
    {:qty 1 :card "Nennûrad" :id "[M] (CP)"}
    {:qty 1 :card "Nevazar's Tomb" :id "[M] (BO)"}
+   {:qty 1 :card "Nioca Manara" :id "[M] (DS)"}
    {:qty 1 :card "Nîlûlondê" :id "[M] (SL)"}
    {:qty 1 :card "Norjadar" :id "[M] (SL)"}
    {:qty 1 :card "Norr-dûm" :id "[M] (GW)"}
@@ -1530,6 +1529,7 @@
    {:qty 1 :card "Xyunaï" :id "[M] (BO)"}
    {:qty 1 :card "Yatali Kîrgan" :id "[M] (BO)"}
    {:qty 1 :card "Yjuvït" :id "[M] (ML)"}
+   {:qty 1 :card "Zadan an-Adûn" :id "[M] (DS)"}
    {:qty 1 :card "Zarak Dûm" :id "[M] (LE)"}
    {:qty 1 :card "Zayandaur" :id "[M] (ML)"}])
 

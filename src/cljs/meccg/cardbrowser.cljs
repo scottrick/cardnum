@@ -287,13 +287,13 @@
                    "Spirit Ring" "Dwarven Ring" "Elven Ring" "Man Ring" "Hoard" "Trophy"
                    "Treasure" "Technology" "Instrument" "Palantír" "Lore" "Stature"
                    "Quest" "Lost Knowledge" "Stolen Knowledge" "Information" "Environment"
-                   "Command" "Mode" "Magic" "Wizardy" "Ritual" "Song" "Light Enchantment"
+                   "Command" "Mode" "Magic" "Wizardry" "Ritual" "Song" "Light Enchantment"
                    "Cult" "Fána" "Flattery" "Offering" "Prisoner" "Riddling"])
 (def item-skillrc ["Two-handed" "Diplomat" "Warrior" "Ranger" "Scout" "Sage"
                    "Leader" "Elf" "Dúnadan" "Dwarf" "Hobbit"
                    "Man" "Orc" "Troll" "Umit" "Wose" "Warlord"
                    "Hero" "White" "Wizard" "Grey" "Black" "Minion" "Ringwraith"
-                   "Sauron" "Balrog" "Dragon" "Cold Drgon" "Fire Dragon" "Court"])
+                   "Sauron" "Balrog" "Dragon" "Cold Dragon" "Fire Dragon" "Court"])
 (def race-options ["Wizard" "Dúnadan" "Hobbit" "Man" "Slayer" "Wose" "Umit"
                    "Dwarf" "Firebeard" "Ironfist" "Longbeard" "Stiffbeard"
                    "Elf" "Nando" "Noldo" "Silvan" "Sinda" "Kelno" "Tatya" "Nelya"
@@ -509,6 +509,7 @@
        :only-released true
        :only-stage false
        :only-unique false
+       :show-search true
        :page 1
        :filter-ch (chan)
        :selected-card nil})
@@ -549,14 +550,13 @@
                                       :on-click #(om/set-state! owner :texts-query "")}])
              [:input.search-alt {:on-change #(handle-texts % owner)
                              :type "text" :placeholder "Search texts" :value query}]])
-
+          (if (= (:show-search state) false)
           [:div
            [:h4 "By"]
            [:select {:value (:sort-filter state)
                      :on-change #(om/set-state! owner :sort-field (.trim (.. % -target -value)))}
             (for [field ["Name" "Set" "Type" "Align"]]
               [:option {:value field} field])]]
-
           (let [format-pack-name (fn [name] (str "&nbsp;&nbsp;&nbsp;&nbsp;" name))
                 hide-dreamcards (:hide-dreamcards state)
                 released-only (:only-released state)
@@ -696,7 +696,7 @@
                  [:select {:value ((second filter) state)
                            :on-change #(om/set-state! owner (second filter) (.. % -target -value))}
                   (options (last filter))]])
-              ))
+              )))
           [:div.hide-dreamcards-div
            [:label [:input.hide-dreamcards {:type "checkbox"
                                             :value true
@@ -735,6 +735,14 @@
                                                      (om/set-state! owner :set-filter "All"))
                                        }]
             "Only Stage"]]
+          [:div.only-stage-div
+           [:label [:input.only-stage {:type "checkbox"
+                                       :value false
+                                       :checked (om/get-state owner :show-search)
+                                       :on-change #(let [hide (.. % -target -checked)]
+                                                     (om/set-state! owner :show-search hide))
+                                       }]
+            "Show Terms"]]
           [:button {:on-click #(do
                                  ;(om/set-state! owner :set-filter "All")
                                  ;(om/set-state! owner :primary-filter "All")
