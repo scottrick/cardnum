@@ -739,7 +739,7 @@
                             ["Strict" :secondary-filter (secondaries (:primary-filter state))]
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
-                            ["Skill" :skill-filter hazard-types]
+                            ["Types" :skill-filter hazard-types]
                             ["Race" :race-filter hazard-races]]]
                 [:div
                  [:h4 (first filter)]
@@ -838,21 +838,8 @@
                                (filter-cards (:precise-filter state) :Precise)
                                (filter-second (if (= (:primary-filter state) "Site") true false) (:secondary-filter state))
                                (filter-haven (if (= (:primary-filter state) "Site") false true) (:haven-filter state))
-                               (filter-race (if (or (= (:primary-filter state) "Resource")
-                                                    (= (:primary-filter state) "Hazard")
-                                                    (= (:primary-filter state) "Character")
-                                                    (= (:secondary-filter state) "Faction")
-                                                    (= (:secondary-filter state) "Ally")
-                                                    (some (partial = (:secondary-filter state))
-                                                          ["Item" "Greater Item" "Major Item" "Minor Item"
-                                                           "Gold Ring Item" "Special Item"])) false true) (:race-filter state))
-                               (filter-skill (if (or (= (:primary-filter state) "Resource")
-                                                     (= (:primary-filter state) "Hazard")
-                                                     (= (:primary-filter state) "Character")
-                                                     (= (:secondary-filter state) "Ally")
-                                                     (some (partial = (:secondary-filter state))
-                                                           ["Item" "Greater Item" "Major Item" "Minor Item"
-                                                            "Gold Ring Item" "Special Item"])) false true) (:skill-filter state))
+                               (filter-parts (:race-filter state) :Race)
+                               (filter-parts (:skill-filter state) :subtype)
                                (filter-texts (:texts-query state))
                                (filter-title (:title-query state))
                                (sort-by (sort-field (:sort-field state)))
