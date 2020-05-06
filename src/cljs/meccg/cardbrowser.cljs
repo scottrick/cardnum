@@ -286,7 +286,7 @@
 (def all-types ["Animal" "Ape" "Armor" "Awakened Plant" "Axe" "Balrog" "Bear"
                 "Boar" "Bow" "Cold-dragon" "Command" "Corruption" "Cult"
                 "Dark Enchantment" "Demon" "Disease" "Dragon" "Dragon-lord"
-                "Drake" "Drêl" "Dunadan" "Dúnadan-lord" "Dwarf" "Dwarf-lord"
+                "Drake" "Drêl" "Dúnadan" "Dúnadan-lord" "Dwarf" "Dwarf-lord"
                 "Dwarven Ring" "Eagle" "Elf" "Elf-lord" "Elven Ring"
                 "Enchantment" "Ent" "Environment" "Fána" "Female" "Fire-dragon"
                 "Firebeard" "Flattery" "Food" "Giant" "Gold Ring" "Half"
@@ -306,7 +306,7 @@
                 "Treasure" "Troll" "Trophy" "Umit" "Undead" "Uruk-hai" "Vermin"
                 "Warlord" "Weapon" "Werewolf" "Whale" "Whip" "Wild-troll"
                 "Wizard" "Wizardry" "Wolf" "Wose"])
-(def char-races ["Drêl" "Dunadan" "Dwarf" "Firebeard" "Ironfist" "Longbeard"
+(def char-races ["Drêl" "Dúnadan" "Dwarf" "Firebeard" "Ironfist" "Longbeard"
                  "Stiffbeard" "Elf" "Half-elf" "Kelno" "Nando" "Nelya" "Noldo"
                  "Silvan" "Sinda" "Tatya" "Hathorian" "Hobbit" "Man" "Orc"
                  "Half-orc" "Ice-orc" "Scara-hai" "Uruk-hai" "Troll"
