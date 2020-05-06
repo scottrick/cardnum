@@ -256,9 +256,8 @@
 (def site-secondaries ["Greater Item" "Major Item" "Minor Item" "Gold Ring Item" "Information" "Hoard" "Scroll" "Palantír" "Battle-gear" "Non-battle-gear"])
 (def shared-secondaries ["Permanent-event" "Short-event" "Long-event" "Permanent-event/Short-event" "Permanent-event/Long-event" "Short-event/Long-event"])
 (def hazard-secondaries ["Creature" "Creature/Permanent-event" "Creature/Short-event" "Creature/Long-event"])
-(def general-alignments ["Hero" "Minion" "Balrog" "Fallen-wizard" "Fallen/Lord" "Lord"
-                         "Elf-lord" "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord"
-                         "Grey" "Dual"])
+(def general-alignments ["Hero" "Minion" "Dual" "Balrog" "Fallen-wizard" "Fallen/Lord" "Lord"
+                         "Elf-lord" "Dwarf-lord" "Atani-lord" "War-lord" "Dragon-lord" "Grey"])
 (def standard-havens ["Carn Dûm" "Dol Guldur" "Edhellond" "Geann a-Lisch"
                       "Grey Havens" "Lórien" "Minas Morgul" "Rivendell"])
 (def standard-hero-havens ["Edhellond" "Grey Havens" "Lórien" "Rivendell"])
@@ -275,40 +274,102 @@
                 "Firstborn" "Durin's Folk" "The Necromancer" "Bay of Ormal" "Court of Ardor" "The Great Central Plains" "The Dominion of the Seven"
                 "The Great Wyrms" "Kingdom of the North" "Morgoth's Legacy" "Nine Rings for Mortal Men" "The Northern Waste" "Red Nightfall"
                 "Return of the Shadow" "The Sunlands" "Treason of Isengard" "War of the Ring"])
-(def hazard-races ["Maia" "Dúnedain" "Hobbits" "Men" "Slayers" "Woses" "Umli"
-                   "Dwarves" "Elves" "Giants" "Nazgûl" "Trolls" "Orcs"
-                   "Balrogs" "Demons" "Drakes" "Dragons" "Spawn" "Undead"
-                   "Animals" "Apes" "Bears" "Boars" "Eagles"
-                   "Plants" "Pûkel-creatures" "Spiders" "Vermin" "Wolves"])
-(def hazard-types ["Environment" "Corruption" "Dark Enchantment" "Disease" "Prisoner"])
-(def item-options ["Ore" "Food" "Jewel" "Staff" "Armor" "Helmet" "Shield"
-                   "Weapon" "Axe" "Bow" "Mace" "Whip" "Rune" "Ring"
-                   "Gold Ring" "Mind Ring" "Magic Ring" "Lesser Ring" "One Ring"
-                   "Spirit Ring" "Dwarven Ring" "Elven Ring" "Man Ring" "Hoard" "Trophy"
-                   "Treasure" "Technology" "Instrument" "Palantír" "Lore" "Stature"
-                   "Quest" "Lost Knowledge" "Stolen Knowledge" "Information" "Environment"
-                   "Command" "Mode" "Magic" "Wizardry" "Ritual" "Song" "Light Enchantment"
-                   "Cult" "Fána" "Flattery" "Offering" "Prisoner" "Riddling"])
-(def item-skillrc ["Two-handed" "Diplomat" "Warrior" "Ranger" "Scout" "Sage"
-                   "Leader" "Elf" "Dúnadan" "Dwarf" "Hobbit"
-                   "Man" "Orc" "Troll" "Umit" "Wose" "Warlord"
-                   "Hero" "White" "Wizard" "Grey" "Black" "Minion" "Ringwraith"
-                   "Sauron" "Balrog" "Dragon" "Cold Dragon" "Fire Dragon" "Court"])
-(def race-options ["Wizard" "Dúnadan" "Hobbit" "Man" "Slayer" "Wose" "Umit"
-                   "Dwarf" "Firebeard" "Ironfist" "Longbeard" "Stiffbeard"
-                   "Elf" "Nando" "Noldo" "Silvan" "Sinda" "Kelno" "Tatya" "Nelya"
-                   "Ringwraith" "Balrog" "Demon" "Dragon"
-                   "Troll" "Half-troll" "Olog-hai" "Mountain-troll" "Wild-troll"
-                   "Orc" "Half-orc" "Uruk-hai" "Scara-hai" "Ice-orc"])
-(def fact-options ["Dúnadan" "Hobbit" "Dwarf" "Elf" "Man" "Wose" "Umit"
-                   "Mercenary" "Slayer" "Slave" "Undead"
-                   "Giant" "Troll" "Orc" "Demon" "Drake" "Dragon"
-                   "Ent" "Animal" "Eagle" "Wolf" "Spider" "Special" "Other"])
-(def ally-options ["Animal" "Balrog" "Demon" "Eagle" "Elf" "Ent" "Giant" "Hobbit"
-                   "Horse" "Maia" "Orc" "Spawn" "Spider" "Troll" "Wolf" "Undead"])
-(def allys-options ["Diplomat" "Warrior" "Ranger" "Scout" "Sage" "Flying" "Winged"])
-(def skill-options ["Diplomat" "Warrior" "Ranger" "Scout" "Sage" "Spell"
-                    "Sorcery" "Spirit-magic" "Shadow-magic" "Dragon-magic"])
+(def all-skill ["Air" "Balrog" "Black" "Calvary" "Cold-dragon" "Court"
+                "Diplomat" "Dragon" "Dragon-magic" "Dúnadan" "Dwarf" "Elf"
+                "Fire-dragon" "Flying" "Grey" "Heavy" "Heavy Air"
+                "Heavy Calvary" "Heavy Infantry" "Hero" "Hobbit" "Infantry"
+                "Leader" "Light" "Light Air" "Light Calvary" "Light Infantry"
+                "Man" "Minion" "Nazgûl" "One-handed" "Orc" "Ranger" "Ringwraith"
+                "Sage" "Sauron" "Scout" "Shadow-magic" "Sorcery" "Spell"
+                "Spirit-magic" "Troll" "Two-handed" "Umit" "War" "Warlord"
+                "Warrior" "White" "Winged" "Wizard" "Wose"])
+(def all-types ["Animal" "Ape" "Armor" "Awakened Plant" "Axe" "Balrog" "Bear"
+                "Boar" "Bow" "Cold-dragon" "Command" "Corruption" "Cult"
+                "Dark Enchantment" "Demon" "Disease" "Dragon" "Dragon-lord"
+                "Drake" "Drêl" "Dúnadan" "Dúnadan-lord" "Dwarf" "Dwarf-lord"
+                "Dwarven Ring" "Eagle" "Elf" "Elf-lord" "Elven Ring"
+                "Enchantment" "Ent" "Environment" "Fána" "Female" "Fire-dragon"
+                "Firebeard" "Flattery" "Food" "Giant" "Gold Ring" "Half"
+                "Half-elf" "Half-orc" "Half-troll" "Hathorian" "Helmet"
+                "Hill-troll" "Hoard" "Hobbit" "Horse" "Ice-dragon" "Ice-orc"
+                "Information" "Instrument" "Ironfist" "Jewel" "Kelno" "Kirani"
+                "Knowledge" "Lesser Ring" "Light Enchantment" "Longbeard"
+                "Lord" "Lore" "Lost Knowledge" "Mace" "Magic" "Magic Ring"
+                "Maia" "Man" "Man Ring" "Man-lord" "Marsh-drake" "Mercenary"
+                "Mind Ring" "Mode" "Nando" "Nazgûl" "Nelya" "Noldo" "Offering"
+                "Olog-hai" "One Ring" "Orc" "Ore" "Palantír" "Prisoner"
+                "Pûkel-creature" "Quest" "Riddling" "Ring" "Ringwraith" "Ritual"
+                "Rune" "Sand-drake" "Scara-hai" "Sea Serpent" "Shield" "Silvan"
+                "Sinda" "Slave" "Slayer" "Song" "Spawn" "Special" "Spider"
+                "Spirit" "Spirit Ring" "Staff" "Stature" "Stiffbeard"
+                "Stolen Knowledge" "Tatya" "Technology" "Transport" "Trap"
+                "Treasure" "Troll" "Trophy" "Umit" "Undead" "Uruk-hai" "Vermin"
+                "Warlord" "Weapon" "Werewolf" "Whale" "Whip" "Wild-troll"
+                "Wizard" "Wizardry" "Wolf" "Wose"])
+(def char-races ["Drêl" "Dúnadan" "Dwarf" "Firebeard" "Ironfist" "Longbeard"
+                 "Stiffbeard" "Elf" "Half-elf" "Kelno" "Nando" "Nelya" "Noldo"
+                 "Silvan" "Sinda" "Tatya" "Hathorian" "Hobbit" "Man" "Orc"
+                 "Half-orc" "Ice-orc" "Scara-hai" "Uruk-hai" "Troll"
+                 "Half-troll" "Hill-troll" "Olog-hai" "Wild-troll" "Slayer"
+                 "Kirani" "Umit" "Wose" "Dragon-lord" "Dúnadan-lord"
+                 "Dwarf-lord" "Elf-lord" "Man-lord" "Lord" "Ringwraith"
+                 "Warlord" "Wizard" "Balrog" "Bear" "Demon" "Dragon"
+                 "Werewolf" "Half"])
+(def char-skill ["Diplomat" "Ranger" "Sage" "Scout" "Warrior"
+                 "Dragon-magic" "Shadow-magic" "Sorcery" "Spell" "Spirit-magic"])
+(def hazard-races ["Animal" "Ape" "Awakened Plant" "Balrog" "Bear" "Boar"
+                   "Cold-dragon" "Corruption" "Dark Enchantment" "Demon"
+                   "Disease" "Dragon" "Drake" "Dúnadan" "Dwarf" "Eagle"
+                   "Elf" "Enchantment" "Environment" "Female" "Fire-dragon"
+                   "Giant" "Hobbit" "Ice-dragon" "Light Enchantment" "Maia"
+                   "Man" "Marsh-drake" "Nazgûl" "Orc" "Prisoner" "Pûkel-creature"
+                   "Sand-drake" "Sea Serpent" "Slayer" "Spawn" "Spider" "Spirit"
+                   "Trap" "Treasure" "Troll" "Trophy" "Undead" "Vermin" "Whale"
+                   "Wolf" "Wose"])
+(def hazard-types ["Flying" "Nazgûl" "Winged"])
+(def resource-skill ["Air" "Balrog" "Black" "Calvary" "Cold-dragon" "Court"
+                     "Diplomat" "Dragon" "Dragon-magic" "Dúnadan" "Dwarf" "Elf"
+                     "Fire-dragon" "Flying" "Grey" "Heavy" "Heavy Air"
+                     "Heavy Calvary" "Heavy Infantry" "Hero" "Hobbit" "Infantry"
+                     "Leader" "Light" "Light Air" "Light Calvary" "Light Infantry"
+                     "Man" "Minion" "One-handed" "Orc" "Ranger" "Ringwraith"
+                     "Sage" "Sauron" "Scout" "Shadow-magic" "Sorcery" "Spell"
+                     "Spirit-magic" "Troll" "Two-handed" "Umit" "War" "Warlord"
+                     "Warrior" "White" "Winged" "Wizard" "Wose"])
+(def resource-types ["Animal" "Armor" "Axe" "Balrog" "Bow" "Command" "Cult" "Demon"
+                     "Dragon" "Drake" "Dúnadan" "Dwarf" "Dwarven Ring" "Eagle"
+                     "Elf" "Elven Ring" "Ent" "Environment" "Fána" "Flattery"
+                     "Food" "Giant" "Gold Ring" "Helmet" "Hoard" "Hobbit" "Horse"
+                     "Information" "Instrument" "Jewel" "Knowledge" "Lesser Ring"
+                     "Light Enchantment" "Lore" "Lost Knowledge" "Mace" "Magic"
+                     "Magic Ring" "Maia" "Man" "Man Ring" "Mercenary" "Mind Ring"
+                     "Mode" "Offering" "One Ring" "Orc" "Ore" "Palantír" "Prisoner"
+                     "Quest" "Riddling" "Ring" "Ritual" "Rune" "Shield" "Slave"
+                     "Slayer" "Song" "Spawn" "Special" "Spider" "Spirit Ring"
+                     "Staff" "Stature" "Stolen Knowledge" "Technology" "Transport"
+                     "Treasure" "Troll" "Trophy" "Umit" "Undead" "Vermin" "Weapon"
+                     "Whip" "Wizardry" "Wolf" "Wose"])
+(def ally-races ["Animal" "Balrog" "Demon" "Eagle" "Elf" "Ent" "Giant" "Hobbit"
+                 "Horse" "Maia" "Orc" "Spawn" "Spider" "Troll" "Undead" "Wolf"])
+(def ally-skill ["Diplomat" "Ranger" "Sage" "Scout" "Warrior"
+                 "Shadow-magic" "Sorcery" "Spirit-magic" "Flying" "Winged"])
+(def fact-races ["Animal" "Demon" "Dragon" "Drake" "Dúnadan" "Dwarf" "Eagle"
+                 "Elf" "Ent" "Giant" "Hobbit" "Man" "Mercenary" "Orc" "Slave"
+                 "Slayer" "Special" "Spider" "Troll" "Umit" "Undead" "Vermin"
+                 "Wolf" "Wose"])
+(def fact-skill ["Flying" "Air" "Calvary" "Infantry"
+                 "Heavy" "Heavy Air" "Heavy Calvary" "Heavy Infantry"
+                 "Light" "Light Air" "Light Calvary" "Light Infantry"])
+(def item-types ["Armor" "Axe" "Bow" "Dwarven Ring" "Elven Ring" "Food"
+                 "Gold Ring" "Helmet" "Hoard" "Instrument" "Jewel" "Knowledge"
+                 "Lesser Ring" "Lost Knowledge" "Mace" "Magic Ring" "Man Ring"
+                 "Mind Ring" "One Ring" "Ore" "Palantír" "Ring" "Rune" "Shield"
+                 "Spirit Ring" "Staff" "Stolen Knowledge" "Technology"
+                 "Treasure" "Weapon" "Whip"])
+(def item-skill ["Balrog" "Court" "Diplomat" "Dragon" "Dúnadan" "Dwarf" "Elf"
+                 "Hobbit" "Leader" "Man" "Minion" "One-handed" "Orc" "Ranger"
+                 "Ringwraith" "Sage" "Scout" "Troll" "Two-handed" "Umit"
+                 "Warrior" "White" "Wizard" "Wose"])
 (def rarity-choice ["Rare" "Uncommon" "Common" "Fixed" "Promo"])
 (def precise-types ["C" "C1" "C2" "C3" "C4" "C5" "CA1" "CA2"
                     "CB" "CB, CS1" "CB, CS2" "CB1" "CB2"
@@ -608,8 +669,8 @@
                             ["Strict" :secondary-filter (secondaries (:primary-filter state))]
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
-                            ["Skill" :skill-filter allys-options]
-                            ["Race" :race-filter ally-options]]]
+                            ["Skill" :skill-filter ally-skill]
+                            ["Race" :race-filter ally-races]]]
                 [:div
                  [:h4 (first filter)]
                  [:select {:value ((second filter) state)
@@ -622,7 +683,8 @@
                             ["Strict" :secondary-filter (secondaries (:primary-filter state))]
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
-                            ["Races" :race-filter fact-options]]]
+                            ["Skill" :skill-filter fact-skill]
+                            ["Race" :race-filter fact-races]]]
                 [:div
                  [:h4 (first filter)]
                  [:select {:value ((second filter) state)
@@ -635,8 +697,8 @@
                             ["Strict" :secondary-filter (secondaries (:primary-filter state))]
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
-                            ["Skill" :skill-filter item-options]
-                            ["Type" :race-filter item-skillrc]]]
+                            ["Skill" :skill-filter item-skill]
+                            ["Type" :race-filter item-types]]]
                 [:div
                  [:h4 (first filter)]
                  [:select {:value ((second filter) state)
@@ -649,8 +711,8 @@
                             ["Strict" :secondary-filter (secondaries (:primary-filter state))]
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
-                            ["Skill" :skill-filter item-skillrc]
-                            ["Type" :race-filter item-options]]]
+                            ["Types" :skill-filter resource-skill]
+                            ["Race" :race-filter resource-types]]]
                 [:div
                  [:h4 (first filter)]
                  [:select {:value ((second filter) state)
@@ -663,8 +725,8 @@
                             ["Strict" :secondary-filter (secondaries (:primary-filter state))]
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
-                            ["Skill" :skill-filter skill-options]
-                            ["Race" :race-filter race-options]]]
+                            ["Skill" :skill-filter char-skill]
+                            ["Race" :race-filter char-races]]]
                 [:div
                  [:h4 (first filter)]
                  [:select {:value ((second filter) state)
@@ -677,8 +739,8 @@
                             ["Strict" :secondary-filter (secondaries (:primary-filter state))]
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
-                            ["Races" :race-filter hazard-races]
-                            ["Type" :skill-filter hazard-types]]]
+                            ["Types" :skill-filter hazard-types]
+                            ["Race" :race-filter hazard-races]]]
                 [:div
                  [:h4 (first filter)]
                  [:select {:value ((second filter) state)
@@ -690,7 +752,9 @@
                             ["Align" :alignment-filter (alignments (:primary-filter state))]
                             ["Strict" :secondary-filter (secondaries (:primary-filter state))]
                             ["Precise" :precise-filter precise-types]
-                            ["Rarity" :rarity-filter rarity-choice]]]
+                            ["Rarity" :rarity-filter rarity-choice]
+                            ["Types" :skill-filter all-skill]
+                            ["Race" :race-filter all-types]]]
                 [:div
                  [:h4 (first filter)]
                  [:select {:value ((second filter) state)
@@ -774,21 +838,8 @@
                                (filter-cards (:precise-filter state) :Precise)
                                (filter-second (if (= (:primary-filter state) "Site") true false) (:secondary-filter state))
                                (filter-haven (if (= (:primary-filter state) "Site") false true) (:haven-filter state))
-                               (filter-race (if (or (= (:primary-filter state) "Resource")
-                                                    (= (:primary-filter state) "Hazard")
-                                                    (= (:primary-filter state) "Character")
-                                                    (= (:secondary-filter state) "Faction")
-                                                    (= (:secondary-filter state) "Ally")
-                                                    (some (partial = (:secondary-filter state))
-                                                          ["Item" "Greater Item" "Major Item" "Minor Item"
-                                                           "Gold Ring Item" "Special Item"])) false true) (:race-filter state))
-                               (filter-skill (if (or (= (:primary-filter state) "Resource")
-                                                     (= (:primary-filter state) "Hazard")
-                                                     (= (:primary-filter state) "Character")
-                                                     (= (:secondary-filter state) "Ally")
-                                                     (some (partial = (:secondary-filter state))
-                                                           ["Item" "Greater Item" "Major Item" "Minor Item"
-                                                            "Gold Ring Item" "Special Item"])) false true) (:skill-filter state))
+                               (filter-parts (:race-filter state) :Race)
+                               (filter-parts (:skill-filter state) :subtype)
                                (filter-texts (:texts-query state))
                                (filter-title (:title-query state))
                                (sort-by (sort-field (:sort-field state)))
