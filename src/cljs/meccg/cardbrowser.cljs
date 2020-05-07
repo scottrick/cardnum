@@ -282,7 +282,7 @@
                 "Man" "Minion" "Nazgûl" "One-handed" "Orc" "Ranger" "Ringwraith"
                 "Sage" "Sauron" "Scout" "Shadow-magic" "Sorcery" "Spell"
                 "Spirit-magic" "Troll" "Two-handed" "Umit" "War" "Warlord"
-                "Warrior" "White" "Winged" "Wizard" "Wose"])
+                "Warrior" "White" "Winged" "Wyrm" "Wizard" "Wose"])
 (def all-types ["Animal" "Ape" "Armor" "Awakened Plant" "Axe" "Balrog" "Bear"
                 "Boar" "Bow" "Cold-dragon" "Command" "Corruption" "Cult"
                 "Dark Enchantment" "Demon" "Disease" "Dragon" "Dragon-lord"
@@ -315,7 +315,7 @@
                  "Dwarf-lord" "Elf-lord" "Man-lord" "Lord" "Ringwraith"
                  "Warlord" "Wizard" "Balrog" "Bear" "Demon" "Dragon"
                  "Werewolf" "Half"])
-(def char-skill ["Diplomat" "Ranger" "Sage" "Scout" "Warrior"
+(def char-skill ["Diplomat" "Ranger" "Sage" "Scout" "Warrior" "Winged" "Wyrm"
                  "Dragon-magic" "Shadow-magic" "Sorcery" "Spell" "Spirit-magic"])
 (def hazard-races ["Animal" "Ape" "Awakened Plant" "Balrog" "Bear" "Boar"
                    "Cold-dragon" "Corruption" "Dark Enchantment" "Demon"
@@ -326,7 +326,7 @@
                    "Sand-drake" "Sea Serpent" "Slayer" "Spawn" "Spider" "Spirit"
                    "Trap" "Treasure" "Troll" "Trophy" "Undead" "Vermin" "Whale"
                    "Wolf" "Wose"])
-(def hazard-types ["Flying" "Nazgûl" "Winged"])
+(def hazard-types ["Flying" "Nazgûl" "Winged" "Wyrm"])
 (def resource-skill ["Air" "Balrog" "Black" "Calvary" "Cold-dragon" "Court"
                      "Diplomat" "Dragon" "Dragon-magic" "Dúnadan" "Dwarf" "Elf"
                      "Fire-dragon" "Flying" "Grey" "Heavy" "Heavy Air"
@@ -335,7 +335,7 @@
                      "Man" "Minion" "One-handed" "Orc" "Ranger" "Ringwraith"
                      "Sage" "Sauron" "Scout" "Shadow-magic" "Sorcery" "Spell"
                      "Spirit-magic" "Troll" "Two-handed" "Umit" "War" "Warlord"
-                     "Warrior" "White" "Winged" "Wizard" "Wose"])
+                     "Warrior" "White" "Winged" "Wizard" "Wose" "Wyrm"])
 (def resource-types ["Animal" "Armor" "Axe" "Balrog" "Bow" "Command" "Cult" "Demon"
                      "Dragon" "Drake" "Dúnadan" "Dwarf" "Dwarven Ring" "Eagle"
                      "Elf" "Elven Ring" "Ent" "Environment" "Fána" "Flattery"
