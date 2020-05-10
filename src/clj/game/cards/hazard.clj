@@ -204,7 +204,8 @@
    {:abilities [{:label "Revealed"
                  :effect (req (resolve-ability state side
                                                {:msg (msg "reveal hand")
-                                                :effect (effect (set-hand-aside :hand))
+                                                :effect (req (doseq [c (get-in @state [side :hand])]
+                                                               (move state side c :play-area)))
                                                 } nil nil))}
                 {:label "Hide"
                  :effect (req (resolve-ability state side

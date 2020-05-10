@@ -188,6 +188,11 @@
   (-> []
       (#(if (and (#{"Character" "Site" "Region"} type)
                  (#{"locales" "onhost"} (first zone))
+                 (not revealed)
+                 (#{"Agent"} Secondary))
+          (cons "tap" %) %))
+      (#(if (and (#{"Character" "Site" "Region"} type)
+                 (#{"locales" "onhost"} (first zone))
                  (not revealed))
           (cons "reveal" %) %))
       (#(if (and (#{"Character"} type)
@@ -1838,6 +1843,18 @@
         (toast (str "Hazard player needs to get to " opp-max-size " card" (when (not= 1 opp-max-size) "s")) "warning" nil)
         (send-command resolve)))))
 
+(defn handle-next-m-h [resolve]
+  (let [me ((:side @game-state) @game-state)
+        opp (if (= (:side @game-state) :contestant) (:challenger @game-state) (:contestant @game-state))
+        max-size (max (+ (:hand-size-base me) (:hand-size-modification me)) 0)
+        opp-max-size (max (+ (:hand-size-base opp) (:hand-size-modification opp)) 0)]
+    (if (not= (count (:hand me)) max-size)
+      (toast (str "Resolve hand to " max-size " card" (when (not= 1 max-size) "s")) "warning" nil)
+      (if (and (not= (count (:hand opp)) opp-max-size)
+               (not (empty? (get-in @game-state [:challenger :identity :title]))))
+        (toast (str "Resource player needs to get to " opp-max-size " card" (when (not= 1 opp-max-size) "s")) "warning" nil)
+        (send-command resolve)))))
+
 (defn handle-end-turn []
   (let [me ((:side @game-state) @game-state)
         opp (if (= (:side @game-state) :contestant) (:challenger @game-state) (:contestant @game-state))
@@ -2108,7 +2125,7 @@
                    (cond-button "No Hazards" (or (= (:click me) 40) (= (:click me) 45)) #(send-command "no-hazards"))
                    ;; set to 35
                    (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
-                   (cond-button "Next M/H" (= (:click me) 35) #(send-command "reset-m-h"))
+                   (cond-button "Next M/H" (= (:click me) 35) #(handle-next-m-h "reset-m-h"))
                    ;; set to 45, by me
                    ]
                 (if (= (:click opponent) 80) ;; set to 25, by me
