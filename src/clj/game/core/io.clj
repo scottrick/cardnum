@@ -405,14 +405,7 @@
                                     :effect (req (if (= (count targets) 2)
                                                    (do (swap-character state side (first targets) (second targets))
                                                        (system-msg state side
-                                                                   (str "swaps the position of "
-                                                                        (if (revealed? (first targets))
-                                                                          (card-str state (first targets))
-                                                                          "hidden")
-                                                                        " and "
-                                                                        (if (revealed? (second targets))
-                                                                          (card-str state (second targets))
-                                                                          "hidden")                                                                        ))
+                                                                   (str "swaps the position of two characters "))
                                                        (continue-ability state side (msr) card nil))
                                                    (do (system-msg state side (str "has finished rearranging Characters"))
                                                        (effect-completed state side eid))))})]
