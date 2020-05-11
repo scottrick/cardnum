@@ -400,6 +400,48 @@
       (system-msg state side message))
     (play-sfx state side "virus-purge")))
 
+(defn declare-agent
+  "Reveal a contestant card."
+  ([state side card] (declare-agent state side (make-eid state) card nil))
+  ([state side card args]
+   (declare-agent state side (make-eid state) card args))
+  ([state side eid {:keys [disabled] :as card} {:keys [ignore-cost no-warning force no-get-card paid-alt cached-bonus] :as args}]
+   (let [card (if no-get-card
+                card
+                (get-card state card))]
+     (when cached-bonus (reveal-cost-bonus state side cached-bonus))
+     (if (or force (can-reveal? state side card))
+       (do
+         (trigger-event state side :pre-reveal card)
+         (if (or (#{"Site" "Character" "Region" "Resource" "Hazard"} (:type card))
+                 (:place-revealed (card-def card)))
+           (do (trigger-event state side :pre-reveal-cost card)
+               (let [cdef (card-def card)
+                     cost (reveal-cost state side card)
+                     costs (concat (when-not ignore-cost [:credit cost])
+                                   (when (and (not= ignore-cost :all-costs)
+                                              (not (:disabled card)))
+                                     (:additional-cost cdef)))]
+                 (when-let [cost-str (apply pay state side card costs)]
+                   ;; Deregister the hidden-events before revealing card
+                   (when (:hidden-events cdef)
+                     (unregister-events state side card))
+                   (if (not disabled)
+                     (card-init state side (assoc card :revealed true :facedown true :agent true))
+                     (update! state side (assoc card :revealed true :facedown true :agent true)))
+                   (doseq [h (:hosted card)]
+                     (update! state side (-> h
+                                             (update-in [:zone] #(map to-keyword %))
+                                             (update-in [:host :zone] #(map to-keyword %)))))
+                   (system-msg state side (str (build-spend-msg cost-str "reveal" "declares an agent")))
+                   (if (character? card)
+                     (play-sfx state side "reveal-character")
+                     (play-sfx state side "reveal-other"))
+                   (trigger-event-sync state side eid :reveal card))))
+           (effect-completed state side eid))
+         (swap! state update-in [:bonus] dissoc :cost))
+       (effect-completed state side eid)))))
+
 (defn reveal
   "Reveal a contestant card."
   ([state side card] (reveal state side (make-eid state) card nil))
@@ -501,18 +543,18 @@
     (update! state side (-> tcard
                             (assoc :tapped true)
                             (dissoc :wounded :inverted :rotated)))
-    (if (:revealed card)
-      (system-msg state side (str "taps " (:title tcard)))
-      (system-msg state side (str "taps agent")))))
+    (if (:facedown card)
+      (system-msg state side (str "taps agent"))
+      (system-msg state side (str "taps " (:title tcard))))))
 
 (defn untap
   "Untap a card."
   [state side card]
   (let [ucard (get-card state card)]
     (update! state side (dissoc ucard :tapped :wounded :inverted :rotated))
-    (if (:revealed ucard)
-      (system-msg state side (str "untaps " (:title ucard)))
-      (system-msg state side "untaps a card"))))
+    (if (:facedown ucard)
+      (system-msg state side "untaps a card")
+      (system-msg state side (str "untaps " (:title ucard))))))
 
 (defn wound
   "Wounds character."
@@ -521,7 +563,9 @@
     (update! state side (-> wcard
                             (assoc :wounded true)
                             (dissoc :tapped :inverted :rotated)))
-    (system-msg state side (str "wounds " (:title wcard)))))
+    (if (:facedown wcard)
+      (system-msg state side "wounds a card")
+      (system-msg state side (str "wounds " (:title wcard))))))
 
 (defn invert
   "Inverts a resource."
