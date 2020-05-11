@@ -425,19 +425,19 @@
 
 (defn card-is-public? [state side {:keys [zone] :as card}]
   (if (= side :challenger)
-    ;; public challenger cards: in hand and :openhand is true;
+    ;; public challenger cards: in hand and :opensite is true;
     ;; or placed/hosted and not facedown;
     ;; or scored or current or in heap
     (or (card-is? card :side :contestant)
-        (and (:openhand (:challenger @state)) (in-hand? card))
+        (and (:opensite (:challenger @state)) (in-hand? card))
         (and (or (placed? card) (:host card)) (not (facedown? card)))
         (#{:scored :discard :current} (last zone)))
-    ;; public contestant cards: in hand and :openhand;
+    ;; public contestant cards: in hand and :opensite;
     ;; or placed and revealed;
     ;; or in :discard and :seen
     ;; or scored or current
     (or (card-is? card :side :challenger)
-        (and (:openhand (:contestant @state)) (in-hand? card))
+        (and (:opensite (:contestant @state)) (in-hand? card))
         (and (or (placed? card) (:host card))
              (or (is-type? card "Operation") (revealed? card)))
         (and (in-discard? card) (:seen card))

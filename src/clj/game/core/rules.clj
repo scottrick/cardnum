@@ -530,7 +530,7 @@
 (defn hide-hand
   "Hides a side's revealed hand from opponent and spectators."
   [state side]
-  (swap! state update-in [side] dissoc :openhand))
+  (swap! state assoc-in [side :openhand] false))
 
 (defn clear-log
   "Clears the current win condition.  Requires both sides to have issued the command"
