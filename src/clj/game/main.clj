@@ -17,6 +17,7 @@
    "ability" core/play-ability
    "access" core/successful-run
    "advance" core/advance
+   "agent" #(core/declare-agent %1 %2 (:card %3) nil)
    "back-m-h" core/back-m-h
    "back-org" core/back-org
    "back-site" core/back-site
