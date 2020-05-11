@@ -501,7 +501,9 @@
     (update! state side (-> tcard
                             (assoc :tapped true)
                             (dissoc :wounded :inverted :rotated)))
-    (system-msg state side (str "taps " (:title tcard)))))
+    (if (:revealed card)
+      (system-msg state side (str "taps " (:title tcard)))
+      (system-msg state side (str "taps agent")))))
 
 (defn untap
   "Untap a card."

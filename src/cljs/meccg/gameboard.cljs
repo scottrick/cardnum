@@ -29,6 +29,10 @@
       (str "/img/cards/" (:set_code card) "/" (:ImageName card))
       )))
 
+(defn site?
+  [{:keys [type] :as card}]
+  (or (= type "Site") (= type "Region")))
+
 (defn get-side [state]
   (let [user-id (:_id (:user @app-state))]
     (cond
@@ -186,6 +190,11 @@
 
 (defn action-list [{:keys [type Secondary Home set_code zone revealed tapped wounded rotated inverted] :as card}]
   (-> []
+      (#(if (and (#{"Character" "Site" "Region"} type)
+                 (#{"locales" "onhost"} (first zone))
+                 (not revealed)
+                 (#{"Agent"} Secondary))
+          (cons "tap" %) %))
       (#(if (and (#{"Character" "Site" "Region"} type)
                  (#{"locales" "onhost"} (first zone))
                  (not revealed))
@@ -893,8 +902,9 @@
             (let [facedown-but-known (or (not (or (not code) flipped facedown))
                                          (spectator-view-hidden?)
                                          (= (:side @game-state) (keyword (.toLowerCase side))))
-                  alt-str (if facedown-but-known (str "Facedown " title) nil)]
-              (if location
+                  alt-str (if facedown-but-known (str "Facedown " title) nil)
+                  locate (site? cursor)]
+              (if locate
                 (facedown-card "Locations")
                 (facedown-card side ["bg"] alt-str)))
             [:div
@@ -1074,10 +1084,10 @@
                           wrapper-class)
                  :style {:left (* (/ 320 (dec size)) i)}}
            (if (or (this-user? player)
-                   (:openhand player)
-                   (spectator-view-hidden?))
-             (om/build card-view (assoc card :parties parties))
-             (facedown-card side))])
+                   (spectator-view-hidden?)) ;(not this show spectator)
+             (om/build card-view (assoc card :parties parties) {:opts {:flipped false}})
+             (om/build card-view (assoc card :parties parties) {:opts {:flipped true}})
+             )])
         (:hand player)))))
 
 (defn hand-view [{:keys [player parties popup popup-direction] :as cursor} owner]
@@ -1106,6 +1116,57 @@
              [:a {:on-click #(close-popup % owner "hand-popup" nil false false false false false)} "Close"]
              [:label (str size " card" (when (not= 1 size) "s") ".")]
              (build-hand-card-view player parties "card-popup-wrapper")
+             ]])]))))
+
+(defn build-hand-site-view
+  [player parties wrapper-class]
+  (let [side (get-in player [:identity :side])
+        size (count (:hand player))]
+    (sab/html
+      (map-indexed
+        (fn [i card]
+          [:div {:class (str
+                          (if (and (not= "select" (get-in player [:prompt 0 :prompt-type]))
+                                   (this-user? player)
+                                   (not (:selected card)) (playable? card))
+                            "playable" "")
+                          " "
+                          wrapper-class)
+                 :style {:left (* (/ 320 (dec size)) i)}}
+           (if (or (this-user? player)
+                   (and (not (:openhand player)) (:opensite player)) ;(not opensite and shows hand)
+                   (spectator-view-hidden?))
+             (om/build card-view (assoc card :parties parties) {:opts {:flipped true}})
+             (om/build card-view card {:opts {:flipped false}})
+             )])
+        (:hand player)))))
+
+(defn site-view [{:keys [player parties popup popup-direction] :as cursor} owner]
+  (om/component
+    (sab/html
+      (let [side (get-in player [:identity :side])
+            size (count (:hand player))
+            name (if (= side "Contestant") "HQ" "Grip")
+            status (if (= side "Contestant")
+                     (if (not (get-in @game-state [:contestant :drew])) "Pool" "Hand")
+                     (if (not (get-in @game-state [:challenger :drew])) "Pool" "Hand"))]
+        [:div.hand-container
+         [:div.hand-controls
+          [:div.panel.blue-shade.hand
+           (drop-area (:side @game-state) name {:class (when (> size 6) "squeeze")})
+           [:div
+            (build-hand-site-view player parties "card-wrapper")]
+           (om/build label (:hand player) {:opts {:name status}})]
+          (when popup
+            [:div.panel.blue-shade.hand-expand
+             {:on-click #(-> (om/get-node owner "hand-popup") js/$ .fadeToggle)}
+             "+"])]
+         (when popup
+           [:div.panel.blue-shade.popup {:ref "hand-popup" :class popup-direction}
+            [:div
+             [:a {:on-click #(close-popup % owner "hand-popup" nil false false false false false)} "Close"]
+             [:label (str size " card" (when (not= 1 size) "s") ".")]
+             (build-hand-site-view player parties "card-popup-wrapper")
              ]])]))))
 
 (defn show-deck [event owner ref]
@@ -1838,6 +1899,18 @@
         (toast (str "Hazard player needs to get to " opp-max-size " card" (when (not= 1 opp-max-size) "s")) "warning" nil)
         (send-command resolve)))))
 
+(defn handle-next-m-h [resolve]
+  (let [me ((:side @game-state) @game-state)
+        opp (if (= (:side @game-state) :contestant) (:challenger @game-state) (:contestant @game-state))
+        max-size (max (+ (:hand-size-base me) (:hand-size-modification me)) 0)
+        opp-max-size (max (+ (:hand-size-base opp) (:hand-size-modification opp)) 0)]
+    (if (not= (count (:hand me)) max-size)
+      (toast (str "Resolve hand to " max-size " card" (when (not= 1 max-size) "s")) "warning" nil)
+      (if (and (not= (count (:hand opp)) opp-max-size)
+               (not (empty? (get-in @game-state [:challenger :identity :title]))))
+        (toast (str "Resource player needs to get to " opp-max-size " card" (when (not= 1 opp-max-size) "s")) "warning" nil)
+        (send-command resolve)))))
+
 (defn handle-end-turn []
   (let [me ((:side @game-state) @game-state)
         opp (if (= (:side @game-state) :contestant) (:challenger @game-state) (:contestant @game-state))
@@ -2108,7 +2181,7 @@
                    (cond-button "No Hazards" (or (= (:click me) 40) (= (:click me) 45)) #(send-command "no-hazards"))
                    ;; set to 35
                    (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
-                   (cond-button "Next M/H" (= (:click me) 35) #(send-command "reset-m-h"))
+                   (cond-button "Next M/H" (= (:click me) 35) #(handle-next-m-h "reset-m-h"))
                    ;; set to 45, by me
                    ]
                 (if (= (:click opponent) 80) ;; set to 25, by me
@@ -2321,8 +2394,12 @@
 
              [:div.leftpane
               [:div.opponent
-               (om/build hand-view {:player opponent :parties (get-parties (:locales (if (= side :challenger) contestant challenger)))
-                                    :popup (= side :spectator) :popup-direction "opponent"})]
+               (if (= side :spectator)
+                 (om/build hand-view {:player opponent :parties (get-parties (:locales (if (= side :challenger) contestant challenger)))
+                                      :popup (= side :spectator) :popup-direction "opponent"})
+                 (om/build site-view {:player opponent :parties (get-parties (:locales (if (= side :challenger) contestant challenger)))
+                                      :popup (= side :spectator) :popup-direction "opponent"}))]
+
 
               [:div.inner-leftpane
                [:div.left-inner-leftpane

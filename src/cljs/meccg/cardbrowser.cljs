@@ -282,7 +282,7 @@
                 "Man" "Minion" "Nazgûl" "One-handed" "Orc" "Ranger" "Ringwraith"
                 "Sage" "Sauron" "Scout" "Shadow-magic" "Sorcery" "Spell"
                 "Spirit-magic" "Troll" "Two-handed" "Umit" "War" "Warlord"
-                "Warrior" "White" "Winged" "Wyrm" "Wizard" "Wose"])
+                "Warrior" "White" "Winged" "Wizard" "Wose" "Wyrm"])
 (def all-types ["Animal" "Ape" "Armor" "Awakened Plant" "Axe" "Balrog" "Bear"
                 "Boar" "Bow" "Cold-dragon" "Command" "Corruption" "Cult"
                 "Dark Enchantment" "Demon" "Disease" "Dragon" "Dragon-lord"

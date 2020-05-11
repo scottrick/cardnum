@@ -20,7 +20,7 @@
   (response 200 (reverse (q/with-collection db msg-collection
                                             (q/find {:channel channel})
                                             (q/sort (array-map :date -1))
-                                            (q/limit 200)))))
+                                            (q/limit 100)))))
 
 (defn- within-rate-limit
   [username]
