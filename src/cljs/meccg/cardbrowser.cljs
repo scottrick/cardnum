@@ -32,12 +32,33 @@
 (defn image-dc
   ([card] (image-dc card true))
   ([card allow-all-users]
-   (str "/img/cards/" (:set_code card) "/dc-" (:ImageName card))))
+   (str "/img/cards/" (:set_code card) "/dce-" (:ImageName card))))
+
+(defn image-ice
+  ([card] (image-ice card true))
+  ([card allow-all-users]
+   (str "/img/cards/" (:set_code card) "/ice-" (:ImageName card))))
 
 (defn image-url
   ([card] (image-url card false))
   ([card allow-all-users]
-   (str "/img/cards/" (:set_code card) "/" (:ImageName card))))
+   (if (:dreamcard card)
+     (str "/img/cards/" (:set_code card) "/" (:ImageName card))
+     (let [language (get-in @app-state [:options :language])]
+       (case language
+         "English"
+         (str "/img/cards/" (:set_code card) "/" (:ImageName card))
+         "Español"
+         (str "/img/cards/" (:set_code card) "_ES/" (:ImageName card))
+         "French"
+         (str "/img/cards/" (:set_code card) "/" (:ImageName card))
+         "German"
+         (str "/img/cards/" (:set_code card) "/" (:ImageName card))
+         "Japanese"
+         (str "/img/cards/" (:set_code card) "/" (:ImageName card))
+         :default
+         (str "/img/cards/" (:set_code card) "/" (:ImageName card)))
+       ))))
 
 (defn add-symbols [card-text]
   (-> (if (nil? card-text) "" card-text)
@@ -176,9 +197,12 @@
            (if (:showText state)
              (card-text card cursor)
              (when-let [url (if (and (:erratum card)
-                                  (= "always" (get-in @app-state [:options :dc-erratum])))
+                                     (= "always" (get-in @app-state [:options :dc-erratum])))
                               (image-dc card true)
-                              (image-url card true))]
+                              (if (and (:errata card)
+                                       (= "always" (get-in @app-state [:options :ice-errata])))
+                                (image-ice card true)
+                                (image-url card true)))]
                [:img {:src url
                       :alt (:title card)
                       :onClick #(do (.preventDefault %)
@@ -226,9 +250,12 @@
            (if (:showText state)
              (card-text card cursor)
              (when-let [url (if (and (:erratum card)
-                                  (= "always" (get-in @app-state [:options :dc-erratum])))
+                                     (= "always" (get-in @app-state [:options :dc-erratum])))
                               (image-dc card true)
-                              (image-url card true))]
+                              (if (and (:errata card)
+                                       (= "always" (get-in @app-state [:options :ice-errata])))
+                                (image-ice card true)
+                                (image-url card true)))]
                [:img {:src url
                       :alt (:title card)
                       :onClick #(do (.preventDefault %)

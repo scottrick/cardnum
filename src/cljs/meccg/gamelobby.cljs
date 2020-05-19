@@ -136,6 +136,7 @@
      (om/set-state! owner :protected false)
      (om/set-state! owner :password "")
      (om/set-state! owner :use-dce (if (= "always" (get-in @app-state [:options :dc-erratum])) true false))
+     (om/set-state! owner :use-ice (if (= "always" (get-in @app-state [:options :ice-errata])) true false))
      (om/set-state! owner :eot-auto-save true)
      (om/set-state! owner :allowspectator true)
      (om/set-state! owner :spectatorhands false)
@@ -155,6 +156,7 @@
                           {:title          (om/get-state owner :title)
                            :password       (om/get-state owner :password)
                            :use-dce        (om/get-state owner :use-dce)
+                           :use-ice        (om/get-state owner :use-ice)
                            :eot-auto-save  (om/get-state owner :eot-auto-save)
                            :allowspectator (om/get-state owner :allowspectator)
                            :spectatorhands (om/get-state owner :spectatorhands)
@@ -593,6 +595,11 @@
                  [:input {:type "checkbox" :checked (om/get-state owner :use-dce)
                           :on-change #(om/set-state! owner :use-dce (.. % -target -checked))}]
                  "Use DC erratum"]]
+               [:p
+                [:label
+                 [:input {:type "checkbox" :checked (om/get-state owner :use-ice)
+                          :on-change #(om/set-state! owner :use-ice (.. % -target -checked))}]
+                 "Use ICE errata"]]
                [:p
                 [:label
                  [:input {:type "checkbox" :checked (om/get-state owner :eot-auto-save)

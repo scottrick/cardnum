@@ -21,13 +21,29 @@
 (defonce last-state (atom {}))
 (defonce lock (atom false))
 
-(defn image-url [{:keys [set_code ImageName flip erratum] :as card}]
+(defn image-url [{:keys [set_code ImageName dreamcard flip erratum errata] :as card}]
   (if flip
     (str "/img/cards/" (:set_code card) "/flip-" (:ImageName card))
-    (if (and erratum (get-in @game-state [:options :use-dce]))
-      (str "/img/cards/" (:set_code card) "/dc-" (:ImageName card))
+    (if dreamcard
       (str "/img/cards/" (:set_code card) "/" (:ImageName card))
-      )))
+      (if (and erratum (get-in @game-state [:options :use-dce]))
+        (str "/img/cards/" (:set_code card) "/dce-" (:ImageName card))
+        (if (and errata (get-in @game-state [:options :use-ice]))
+          (str "/img/cards/" (:set_code card) "/ice-" (:ImageName card))
+          (let [language (get-in @app-state [:options :language])]
+            (case language
+              "English"
+              (str "/img/cards/" (:set_code card) "/" (:ImageName card))
+              "Español"
+              (str "/img/cards/" (:set_code card) "_ES/" (:ImageName card))
+              "French"
+              (str "/img/cards/" (:set_code card) "/" (:ImageName card))
+              "German"
+              (str "/img/cards/" (:set_code card) "/" (:ImageName card))
+              "Japanese"
+              (str "/img/cards/" (:set_code card) "/" (:ImageName card))
+              :default
+              (str "/img/cards/" (:set_code card) "/" (:ImageName card)))))))))
 
 (defn site?
   [{:keys [type] :as card}]
@@ -484,8 +500,7 @@
        (sort-by #(count (:title %1)))
        (reverse)))
 
-(def prepared-cards (memoize prepare-cards))
-)
+(def prepared-cards (memoize prepare-cards)))
 
 (defn prepare-image []
   (->> @all-cards
@@ -507,10 +522,38 @@
 (def card-image-token (memoize card-image-token-impl))
 
 (defn card-image-reducer [text card]
-  (.replace text (js/RegExp. (find-card-regex (:ImageName card)) "g") (card-image-token (:title card) (:ImageName card))))
+  (let [language (get-in @app-state [:options :language])]
+    (case language
+      "English"
+      (.replace text (js/RegExp. (find-card-regex (:ImageName card)) "g") (card-image-token (:title card) (:ImageName card)))
+      "Español"
+      (.replace text (js/RegExp. (find-card-regex (:ImageName card)) "g") (card-image-token (:title-es card) (:ImageName card)))
+      "French"
+      (.replace text (js/RegExp. (find-card-regex (:ImageName card)) "g") (card-image-token (:title-fr card) (:ImageName card)))
+      "German"
+      (.replace text (js/RegExp. (find-card-regex (:ImageName card)) "g") (card-image-token (:title-gr card) (:ImageName card)))
+      "Japanese"
+      (.replace text (js/RegExp. (find-card-regex (:ImageName card)) "g") (card-image-token (:title-jp card) (:ImageName card)))
+      :default
+      (.replace text (js/RegExp. (find-card-regex (:ImageName card)) "g") (card-image-token (:title card) (:ImageName card))))
+    ))
 
 (defn card-title-reducer [text card]
-  (.replace text (js/RegExp. (find-card-regex (:title card)) "g") (card-image-token (:title card) (:ImageName card))))
+  (let [language (get-in @app-state [:options :language])]
+    (case language
+      "English"
+      (.replace text (js/RegExp. (find-card-regex (:title card)) "g") (card-image-token (:title card) (:ImageName card)))
+      "Español"
+      (.replace text (js/RegExp. (find-card-regex (:title-es card)) "g") (card-image-token (:title-es card) (:ImageName card)))
+      "French"
+      (.replace text (js/RegExp. (find-card-regex (:title-fr card)) "g") (card-image-token (:title-fr card) (:ImageName card)))
+      "German"
+      (.replace text (js/RegExp. (find-card-regex (:title-gr card)) "g") (card-image-token (:title-gr card) (:ImageName card)))
+      "Japanese"
+      (.replace text (js/RegExp. (find-card-regex (:title-jp card)) "g") (card-image-token (:title-jp card) (:ImageName card)))
+      :default
+      (.replace text (js/RegExp. (find-card-regex (:title card)) "g") (card-image-token (:title card) (:ImageName card))))
+    ))
 
 (comment
   (defn add-image-codes-impl [text]

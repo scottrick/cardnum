@@ -52,6 +52,10 @@
    :Rarity identity
    :Precise identity
    :NameEN (rename :title)
+   :NameSP (rename :title-es)
+   :NameFR (rename :title-fr)
+   :NameGR (rename :title-gr)
+   :NameJP (rename :title-jp)
    :ImageName identity
    :Text (rename :text)
    :Skill (rename :subtype)
@@ -94,6 +98,7 @@
    :dreamcard identity
    :released identity
    :erratum identity
+   :ice-errata (rename :errata)
    })
 
 (def tables
@@ -243,7 +248,8 @@
   (doseq [set ["METW" "METD" "MEDM" "MELE" "MEAS" "MEWH"
                "MEBA" "MEFB" "MEDF" "MENE" "MEBO" "MECA"
                "MECP" "MEDS" "MEGW" "MEKN" "MEML" "MEMM"
-               "MENW" "MERN" "MERS" "MESL" "METI" "MEWR"]]
+               "MENW" "MERN" "MERS" "MESL" "METI" "MEWR"
+               "MEBU" "MEXX"]]
     (let [img-dir (io/file "resources" "public" "img" "cards" set)]
       (when-not (.isDirectory img-dir)
         (println "Creating card images directory [" (.getPath img-dir) "]")
