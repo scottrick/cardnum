@@ -387,7 +387,7 @@
    {:qty 3 :card "High Pass" :id "(TW)"}
    {:qty 3 :card "Hollin" :id "(TW)"}
    {:qty 3 :card "Horse Plains" :id "(TW)"}
-   {:qty 3 :card "Hûb Uichel" :id "(ML)"}
+   {:qty 3 :card "Hûb Uichel" :id "(NW)"}
    {:qty 3 :card "Hyarmenfalas" :id "(WR)"}
    {:qty 3 :card "Hyarn" :id "(DS)"}
    {:qty 3 :card "Hyarnustar Coast" :id "(DS)"}
