@@ -32,13 +32,19 @@
           (str "/img/cards/" (:set_code card) "/ice-" (:ImageName card))
           (let [language (get-in @app-state [:options :language])]
             (case language
+              "Deutch"
+              (str "/img/cards/" (:set_code card) "/" (:ImageName card))
               "English"
               (str "/img/cards/" (:set_code card) "/" (:ImageName card))
               "Español"
               (str "/img/cards/" (:set_code card) "_ES/" (:ImageName card))
+              "Finnish"
+              (str "/img/cards/" (:set_code card) "/" (:ImageName card))
               "French"
               (str "/img/cards/" (:set_code card) "/" (:ImageName card))
               "German"
+              (str "/img/cards/" (:set_code card) "/" (:ImageName card))
+              "Italian"
               (str "/img/cards/" (:set_code card) "/" (:ImageName card))
               "Japanese"
               (str "/img/cards/" (:set_code card) "/" (:ImageName card))
@@ -524,14 +530,20 @@
 (defn card-image-reducer [text card]
   (let [language (get-in @app-state [:options :language])]
     (case language
+      "Deutch"
+      (.replace text (js/RegExp. (find-card-regex (:ImageName card)) "g") (card-image-token (:title-du card) (:ImageName card)))
       "English"
       (.replace text (js/RegExp. (find-card-regex (:ImageName card)) "g") (card-image-token (:title card) (:ImageName card)))
       "Español"
       (.replace text (js/RegExp. (find-card-regex (:ImageName card)) "g") (card-image-token (:title-es card) (:ImageName card)))
+      "Finnish"
+      (.replace text (js/RegExp. (find-card-regex (:ImageName card)) "g") (card-image-token (:title-fn card) (:ImageName card)))
       "French"
       (.replace text (js/RegExp. (find-card-regex (:ImageName card)) "g") (card-image-token (:title-fr card) (:ImageName card)))
       "German"
       (.replace text (js/RegExp. (find-card-regex (:ImageName card)) "g") (card-image-token (:title-gr card) (:ImageName card)))
+      "Italian"
+      (.replace text (js/RegExp. (find-card-regex (:ImageName card)) "g") (card-image-token (:title-it card) (:ImageName card)))
       "Japanese"
       (.replace text (js/RegExp. (find-card-regex (:ImageName card)) "g") (card-image-token (:title-jp card) (:ImageName card)))
       :default
@@ -541,14 +553,20 @@
 (defn card-title-reducer [text card]
   (let [language (get-in @app-state [:options :language])]
     (case language
+      "Deutch"
+      (.replace text (js/RegExp. (find-card-regex (:title-du card)) "g") (card-image-token (:title-du card) (:ImageName card)))
       "English"
       (.replace text (js/RegExp. (find-card-regex (:title card)) "g") (card-image-token (:title card) (:ImageName card)))
       "Español"
       (.replace text (js/RegExp. (find-card-regex (:title-es card)) "g") (card-image-token (:title-es card) (:ImageName card)))
+      "Finnish"
+      (.replace text (js/RegExp. (find-card-regex (:title-fn card)) "g") (card-image-token (:title-fn card) (:ImageName card)))
       "French"
       (.replace text (js/RegExp. (find-card-regex (:title-fr card)) "g") (card-image-token (:title-fr card) (:ImageName card)))
       "German"
       (.replace text (js/RegExp. (find-card-regex (:title-gr card)) "g") (card-image-token (:title-gr card) (:ImageName card)))
+      "Italian"
+      (.replace text (js/RegExp. (find-card-regex (:title-it card)) "g") (card-image-token (:title-it card) (:ImageName card)))
       "Japanese"
       (.replace text (js/RegExp. (find-card-regex (:title-jp card)) "g") (card-image-token (:title-jp card) (:ImageName card)))
       :default

@@ -46,13 +46,19 @@
      (str "/img/cards/" (:set_code card) "/" (:ImageName card))
      (let [language (get-in @app-state [:options :language])]
        (case language
+         "Deutch"
+         (str "/img/cards/" (:set_code card) "/" (:ImageName card))
          "English"
          (str "/img/cards/" (:set_code card) "/" (:ImageName card))
          "Español"
          (str "/img/cards/" (:set_code card) "_ES/" (:ImageName card))
+         "Finnish"
+         (str "/img/cards/" (:set_code card) "/" (:ImageName card))
          "French"
          (str "/img/cards/" (:set_code card) "/" (:ImageName card))
          "German"
+         (str "/img/cards/" (:set_code card) "/" (:ImageName card))
+         "Italian"
          (str "/img/cards/" (:set_code card) "/" (:ImageName card))
          "Japanese"
          (str "/img/cards/" (:set_code card) "/" (:ImageName card))

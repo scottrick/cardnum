@@ -637,12 +637,18 @@
                      (case language
                        "English"
                        name
+                       "Deutch"
+                       (:title-du card)
                        "Español"
                        (:title-es card)
+                       "Finnish"
+                       (:title-fn card)
                        "French"
                        (:title-fr card)
                        "German"
                        (:title-gr card)
+                       "Italian"
+                       (:title-it card)
                        "Japanese"
                        (:title-jp card)
                        :default

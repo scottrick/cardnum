@@ -52,9 +52,12 @@
    :Rarity identity
    :Precise identity
    :NameEN (rename :title)
+   :NameDU (rename :title-du)
    :NameSP (rename :title-es)
+   :NameFN (rename :title-fn)
    :NameFR (rename :title-fr)
    :NameGR (rename :title-gr)
+   :NameIT (rename :title-it)
    :NameJP (rename :title-jp)
    :ImageName identity
    :Text (rename :text)
