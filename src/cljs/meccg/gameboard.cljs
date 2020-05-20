@@ -32,7 +32,7 @@
           (str "/img/cards/" (:set_code card) "/ice-" (:ImageName card))
           (let [language (get-in @app-state [:options :language])]
             (case language
-              "Deutch"
+              "Dutch"
               (str "/img/cards/" (:set_code card) "/" (:ImageName card))
               "English"
               (str "/img/cards/" (:set_code card) "/" (:ImageName card))
@@ -530,7 +530,7 @@
 (defn card-image-reducer [text card]
   (let [language (get-in @app-state [:options :language])]
     (case language
-      "Deutch"
+      "Dutch"
       (.replace text (js/RegExp. (find-card-regex (:ImageName card)) "g") (card-image-token (:title-du card) (:ImageName card)))
       "English"
       (.replace text (js/RegExp. (find-card-regex (:ImageName card)) "g") (card-image-token (:title card) (:ImageName card)))
@@ -553,7 +553,7 @@
 (defn card-title-reducer [text card]
   (let [language (get-in @app-state [:options :language])]
     (case language
-      "Deutch"
+      "Dutch"
       (.replace text (js/RegExp. (find-card-regex (:title-du card)) "g") (card-image-token (:title-du card) (:ImageName card)))
       "English"
       (.replace text (js/RegExp. (find-card-regex (:title card)) "g") (card-image-token (:title card) (:ImageName card)))

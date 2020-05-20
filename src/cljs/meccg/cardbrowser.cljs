@@ -46,7 +46,7 @@
      (str "/img/cards/" (:set_code card) "/" (:ImageName card))
      (let [language (get-in @app-state [:options :language])]
        (case language
-         "Deutch"
+         "Dutch"
          (str "/img/cards/" (:set_code card) "/" (:ImageName card))
          "English"
          (str "/img/cards/" (:set_code card) "/" (:ImageName card))

@@ -208,7 +208,7 @@
             [:h3 " Language Preference"]
             [:select.language {:value (om/get-state owner :language)
                                :on-change #(om/set-state! owner :language (.. % -target -value))}
-             (let [option [{:name "Deutch"                    :ref "Deutch"}
+             (let [option [{:name "Dutch"                    :ref "Dutch"}
                            {:name "English"                   :ref "English"}
                            {:name "Español"                   :ref "Español"}
                            {:name "Finnish"                   :ref "Finnish"}

@@ -637,7 +637,7 @@
                      (case language
                        "English"
                        name
-                       "Deutch"
+                       "Dutch"
                        (:title-du card)
                        "Español"
                        (:title-es card)
