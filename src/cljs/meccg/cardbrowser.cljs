@@ -303,10 +303,11 @@
                            "Inyalonî" "Lórien" "Rhûbar" "Rivendell" "Taurondë" "Valagalen"])
 (def dreamcard-minion-havens ["Amaru" "Bozisha-Dar" "Carn Dûm" "Chey Goumal" "Dol Guldur"
                               "Geann a-Lisch" "Minas Morgul" "Mornost" "Shapôl Udûn" "Tower of Hargrog"])
-(def set-order ["The Wizards" "The Dragons" "Dark Minions" "The Lidless Eye" "Against the Shadow" "The White Hand" "The Balrog"
-                "Firstborn" "Durin's Folk" "The Necromancer" "Bay of Ormal" "Court of Ardor" "The Great Central Plains" "The Dominion of the Seven"
-                "The Great Wyrms" "Kingdom of the North" "Morgoth's Legacy" "Nine Rings for Mortal Men" "The Northern Waste" "Red Nightfall"
-                "Return of the Shadow" "The Sunlands" "Treason of Isengard" "War of the Ring"])
+(def set-order ["The Wizards" "The Dragons" "Dark Minions" "The Lidless Eye" "Against the Shadow" "The White Hand"
+                "The Balrog" "Firstborn" "Durin's Folk" "The Necromancer" "The Northern Waste" "Morgoth's Legacy"
+                "Return of the Shadow" "Treason of Isengard" "War of the Ring" "The Great Wyrms" "Bay of Ormal"
+                "Court of Ardor" "The Great Central Plains" "The Dominion of the Seven" "Kingdom of the North"
+                "Nine Rings for Mortal Men" "Red Nightfall" "The Sunlands" "Bay of Utum"])
 (def all-skill ["Air" "Balrog" "Black" "Calvary" "Cold-dragon" "Court"
                 "Diplomat" "Dragon" "Dragon-magic" "Dúnadan" "Dwarf" "Elf"
                 "Fire-dragon" "Flying" "Grey" "Heavy" "Heavy Air"
