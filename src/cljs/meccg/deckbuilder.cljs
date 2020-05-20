@@ -631,7 +631,30 @@
   [sets {:keys [identity cards] :as deck} {:keys [qty card] :as line}]
   [:span qty "  "
    (if-let [name (:title card)]
-     (let [infaction (noinfcost? identity card)
+     (let [language (get-in @app-state [:options :language])
+           display (if (:dreamcard card)
+                     name
+                     (case language
+                       "English"
+                       name
+                       "Dutch"
+                       (:title-du card)
+                       "Español"
+                       (:title-es card)
+                       "Finnish"
+                       (:title-fn card)
+                       "French"
+                       (:title-fr card)
+                       "German"
+                       (:title-gr card)
+                       "Italian"
+                       (:title-it card)
+                       "Japanese"
+                       (:title-jp card)
+                       :default
+                       name
+                       ))
+           infaction (noinfcost? identity card)
            banned (decks/banned? card)
            allied (decks/alliance-is-free? cards line)
            valid (and (decks/allowed? card identity)
@@ -644,7 +667,7 @@
                          valid "casual"
                          :else "invalid")
                 :on-mouse-enter #(put! zoom-channel line)
-                :on-mouse-leave #(put! zoom-channel false)} name]
+                :on-mouse-leave #(put! zoom-channel false)} display]
         (card-influence-html card modqty infaction allied)])
      card)])
 

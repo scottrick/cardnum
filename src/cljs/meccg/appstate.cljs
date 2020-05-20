@@ -7,7 +7,9 @@
          :options (merge {:background "lobby-bg"
                           :deckstats "always"
                           :gamestats "always"
+                          :language "English"
                           :dc-erratum "never"
+                          :ice-errata "never"
                           :sounds (let [sounds (js->clj (.getItem js/localStorage "sounds"))]
                                     (if (nil? sounds) true (= sounds "true")))
                           :sounds-volume (let [volume (js->clj (.getItem js/localStorage "sounds_volume"))]

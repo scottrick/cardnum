@@ -319,8 +319,8 @@
    {:qty 3 :card "Anórien" :id "(TW)"}
    {:qty 3 :card "Arthedain" :id "(TW)"}
    {:qty 3 :card "Arysis" :id "(SL)"}
-   {:qty 3 :card "Azjan" :id "(ML)"}
-   {:qty 3 :card "Barl Syrnac" :id "(ML)"}
+   {:qty 3 :card "Azjan" :id "(BU)"}
+   {:qty 3 :card "Barl Syrnac" :id "(BU)"}
    {:qty 3 :card "Bay of Belfalas" :id "(TW)"}
    {:qty 3 :card "Bay of Drêl" :id "(DS)"}
    {:qty 3 :card "Bay of Felaya" :id "(SL)"}
@@ -349,7 +349,7 @@
    {:qty 3 :card "Dune Sea" :id "(SL)"}
    {:qty 3 :card "Dunland" :id "(TW)"}
    {:qty 3 :card "Dûshera" :id "(CA)"}
-   {:qty 3 :card "Dyr" :id "(ML)"}
+   {:qty 3 :card "Dyr" :id "(BU)"}
    {:qty 3 :card "East Bay of Forochel" :id "(NW)"}
    {:qty 3 :card "East Bay of Ormal" :id "(BO)"}
    {:qty 3 :card "Ekkaia" :id "(NW)"}
@@ -383,11 +383,11 @@
    {:qty 3 :card "Hathor" :id "(CA)"}
    {:qty 3 :card "Heart of Mirkwood" :id "(TW)"}
    {:qty 3 :card "Heb Aaraan" :id "(CP)"}
-   {:qty 3 :card "Helkëar" :id "(ML)"}
+   {:qty 3 :card "Helkëar" :id "(BU)"}
    {:qty 3 :card "High Pass" :id "(TW)"}
    {:qty 3 :card "Hollin" :id "(TW)"}
    {:qty 3 :card "Horse Plains" :id "(TW)"}
-   {:qty 3 :card "Hûb Uichel" :id "(ML)"}
+   {:qty 3 :card "Hûb Uichel" :id "(NW)"}
    {:qty 3 :card "Hyarmenfalas" :id "(WR)"}
    {:qty 3 :card "Hyarn" :id "(DS)"}
    {:qty 3 :card "Hyarnustar Coast" :id "(DS)"}
@@ -406,10 +406,10 @@
    {:qty 3 :card "Kythor" :id "(BO)"}
    {:qty 3 :card "Lamedon" :id "(TW)"}
    {:qty 3 :card "Lebennin" :id "(TW)"}
-   {:qty 3 :card "Lhûgdalf" :id "(ML)"}
+   {:qty 3 :card "Lhûgdalf" :id "(BU)"}
    {:qty 3 :card "Lindalf" :id "(NW)"}
    {:qty 3 :card "Lindon" :id "(TW)"}
-   {:qty 3 :card "Lotan" :id "(ML)"}
+   {:qty 3 :card "Lotan" :id "(BU)"}
    {:qty 3 :card "Lurmsakûn" :id "(SL)"}
    {:qty 3 :card "Lyneria" :id "(BO)"}
    {:qty 3 :card "Mag" :id "(DS)"}
@@ -425,7 +425,7 @@
    {:qty 3 :card "Mûlambur" :id "(CA)"}
    {:qty 3 :card "Mûmakan" :id "(CA)"}
    {:qty 3 :card "Mûmakan Coasts" :id "(CA)"}
-   {:qty 3 :card "Mur Fostisyr" :id "(ML)"}
+   {:qty 3 :card "Mur Fostisyr" :id "(BU)"}
    {:qty 3 :card "Narthalf" :id "(NW)"}
    {:qty 3 :card "Né Tava" :id "(SL)"}
    {:qty 3 :card "Northern Rhovanion" :id "(TW)"}
@@ -469,7 +469,7 @@
    {:qty 3 :card "Tulwang" :id "(SL)"}
    {:qty 3 :card "Tumag" :id "(CA)"}
    {:qty 3 :card "Udûn" :id "(TW)"}
-   {:qty 3 :card "Ukal Sêj" :id "(ML)"}
+   {:qty 3 :card "Ukal Sêj" :id "(BU)"}
    {:qty 3 :card "Ûsakan" :id "(CA)"}
    {:qty 3 :card "Ûsakan Bay" :id "(CA)"}
    {:qty 3 :card "West Bay of Forochel" :id "(NW)"}
@@ -585,7 +585,7 @@
    {:qty 1 :card "Eldanar" :id "[H] (KN)"}
    {:qty 1 :card "Elgaer" :id "[H] (CP)"}
    {:qty 1 :card "Elornan Swamp" :id "[H] (DS)"}
-   {:qty 1 :card "Elyamû" :id "[H] (ML)"}
+   {:qty 1 :card "Elyamû" :id "[H] (BU)"}
    {:qty 1 :card "Emyn Din" :id "[H] (DS)"}
    {:qty 1 :card "Ephydis" :id "[H] (BO)"}
    {:qty 1 :card "Eregost" :id "[H] (DS)"}
@@ -617,7 +617,7 @@
    {:qty 1 :card "Henneth Annûn" :id "[H] (TW)"}
    {:qty 1 :card "Hermit's Hill" :id "[H] (DM)"}
    {:qty 1 :card "Himring" :id "[H] (TW)"}
-   {:qty 1 :card "Hollow Spire" :id "[H] (ML)"}
+   {:qty 1 :card "Hollow Spire" :id "[H] (BU)"}
    {:qty 1 :card "Hostel of the Sisters of Nienna" :id "[H] (KN)"}
    {:qty 1 :card "Hyvät Kalat" :id "[H] (NW)"}
    {:qty 1 :card "Iorag Camp" :id "[H] (CP)"}
@@ -664,9 +664,9 @@
    {:qty 1 :card "Lossadan Cairn" :id "[H] (TW)"}
    {:qty 1 :card "Lossadan Camp" :id "[H] (TW)"}
    {:qty 1 :card "Lossarnach" :id "[H] (WR)"}
-   {:qty 1 :card "Lothragh Camp" :id "[H] (ML)"}
+   {:qty 1 :card "Lothragh Camp" :id "[H] (BU)"}
    {:qty 1 :card "Lugarlûr" :id "[H] (NE)"}
-   {:qty 1 :card "Lugdruong" :id "[H] (ML)"}
+   {:qty 1 :card "Lugdruong" :id "[H] (BU)"}
    {:qty 1 :card "Mablad-dûm" :id "[H] (SL)"}
    {:qty 1 :card "Maglgolodh's Cave" :id "[H] (NW)"}
    {:qty 1 :card "Maresh" :id "[H] (SL)"}
@@ -676,7 +676,7 @@
    {:qty 1 :card "Minas Durlith" :id "[H] (NE)"}
    {:qty 1 :card "Minas Morgul" :id "[H] (TW)"}
    {:qty 1 :card "Minas Tirith" :id "[H] (TW)"}
-   {:qty 1 :card "Mirror Halls" :id "[H] (ML)"}
+   {:qty 1 :card "Mirror Halls" :id "[H] (BU)"}
    {:qty 1 :card "Míspir" :id "[H] (DS)"}
    {:qty 1 :card "Mistrand" :id "[H] (NE)"}
    {:qty 1 :card "Monastery of the True Faith" :id "[H] (SL)"}
@@ -702,13 +702,13 @@
    {:qty 1 :card "Norjadar" :id "[H] (SL)"}
    {:qty 1 :card "Norr-dûm" :id "[H] (GW)"}
    {:qty 1 :card "Nûlakad" :id "[H] (CA)"}
-   {:qty 1 :card "Númenórean Tomb" :id "[H] (ML)"}
+   {:qty 1 :card "Númenórean Tomb" :id "[H] (BU)"}
    {:qty 1 :card "Nûrniag Camp" :id "[H] (AS)"}
    {:qty 1 :card "Nurunkhizdín" :id "[H] (DF)"}
    {:qty 1 :card "Ny Chennacatt" :id "[H] (SL)"}
    {:qty 1 :card "Oasis of Fult" :id "[H] (SL)"}
    ;{:qty 1 :card "Old Forest" :id "[H] (TW)"}
-   {:qty 1 :card "Olyavud" :id "[H] (ML)"}
+   {:qty 1 :card "Olyavud" :id "[H] (BU)"}
    {:qty 1 :card "Oraishapek's Mound" :id "[H] (NE)"}
    {:qty 1 :card "Orod Certhas" :id "[H] (NW)"}
    {:qty 1 :card "Osgiliath" :id "[H] (WR)"}
@@ -745,9 +745,9 @@
    {:qty 1 :card "Seregul's Keep" :id "[H] (DS)"}
    {:qty 1 :card "Setmaenen" :id "[H] (WR)"}
    {:qty 1 :card "Shab Arch" :id "[H] (GW)"}
-   {:qty 1 :card "Shapôl Udûn" :id "[H] (ML)"}
+   {:qty 1 :card "Shapôl Udûn" :id "[H] (BU)"}
    {:qty 1 :card "Shelob's Lair" :id "[H] (TW)"}
-   {:qty 1 :card "Shoreless Isles" :id "[H] (ML)"}
+   {:qty 1 :card "Shoreless Isles" :id "[H] (NW)"}
    {:qty 1 :card "Shrel-Kain" :id "[H] (TW)"}
    {:qty 1 :card "Sonondor's Mound" :id "[H] (GW)"}
    {:qty 1 :card "Southron Oasis" :id "[H] (TW)"}
@@ -784,13 +784,13 @@
    {:qty 1 :card "The Tower of Birds" :id "[H] (SL)"}
    {:qty 1 :card "The Under-caves" :id "[H] (KN)"}
    {:qty 1 :card "The Under-courts" :id "[H] (DM)"}
-   {:qty 1 :card "The Under-forges" :id "[H] (NW)"}
+   {:qty 1 :card "The Under-forges" :id "[H] (ML)"}
    {:qty 1 :card "The Under-galleries" :id "[H] (DM)"}
    {:qty 1 :card "The Under-gates" :id "[H] (DM)"}
    {:qty 1 :card "The Under-grottos" :id "[H] (DM)"}
    {:qty 1 :card "The Under-leas" :id "[H] (DM)"}
    {:qty 1 :card "The Under-vaults" :id "[H] (DM)"}
-   {:qty 1 :card "The Vaults of Utûmno" :id "[H] (ML)"}
+   {:qty 1 :card "The Vaults of Utûmno" :id "[H] (BU)"}
    {:qty 1 :card "The White Towers" :id "[H] (TW)"}
    {:qty 1 :card "The Willow Dingle" :id "[H] (RS)"}
    {:qty 1 :card "The Wind Throne" :id "[H] (TW)"}
@@ -806,7 +806,7 @@
    {:qty 1 :card "Tol Glingal" :id "[H] (SL)"}
    {:qty 1 :card "Tol Lamfirith" :id "[H] (KN)"}
    {:qty 1 :card "Tol Morwen" :id "[H] (NW)"}
-   {:qty 1 :card "Tol Ringurthur" :id "[H] (ML)"}
+   {:qty 1 :card "Tol Ringurthur" :id "[H] (BU)"}
    {:qty 1 :card "Tol Turgul" :id "[H] (DS)"}
    {:qty 1 :card "Tol Uialgaer" :id "[H] (SL)"}
    {:qty 1 :card "Tolfalas" :id "[H] (TW)"}
@@ -826,7 +826,7 @@
    {:qty 1 :card "Ulk Chey Sart" :id "[H] (CP)"}
    {:qty 1 :card "Ulk Jey Ama" :id "[H] (CP)"}
    {:qty 1 :card "Umbar" :id "[H] (WR)"}
-   {:qty 1 :card "Úrcheldor" :id "[H] (ML)"}
+   {:qty 1 :card "Úrcheldor" :id "[H] (BU)"}
    {:qty 1 :card "Urdic Camp" :id "[H] (NW)"}
    {:qty 1 :card "Ûrêzâyan" :id "[H] (SL)"}
    {:qty 1 :card "Urlurtsu Nurn" :id "[H] (DM)"}
@@ -846,10 +846,10 @@
    {:qty 1 :card "Wose Passage-hold" :id "[H] (TW)"}
    {:qty 1 :card "Xyunaï" :id "[H] (BO)"}
    {:qty 1 :card "Yatali Kîrgan" :id "[H] (BO)"}
-   {:qty 1 :card "Yjuvït" :id "[H] (ML)"}
+   {:qty 1 :card "Yjuvït" :id "[H] (BU)"}
    {:qty 1 :card "Zadan an-Adûn" :id "[H] (DS)"}
    {:qty 1 :card "Zarak Dûm" :id "[H] (TD)"}
-   {:qty 1 :card "Zayandaur" :id "[H] (ML)"}])
+   {:qty 1 :card "Zayandaur" :id "[H] (BU)"}])
 
 (def dreamcard-wizard-havens
   [{:qty 4 :card "Edhellond" :id "[H] (TW)"}
@@ -959,7 +959,7 @@
    {:qty 1 :card "Eldanar" :id "[M] (KN)"}
    {:qty 1 :card "Elgaer" :id "[M] (CP)"}
    {:qty 1 :card "Elornan Swamp" :id "[M] (DS)"}
-   {:qty 1 :card "Elyamû" :id "[M] (ML)"}
+   {:qty 1 :card "Elyamû" :id "[M] (BU)"}
    {:qty 1 :card "Emyn Din" :id "[M] (DS)"}
    {:qty 1 :card "Ephydis" :id "[M] (BO)"}
    {:qty 1 :card "Ettenmoors" :id "[M] (LE)"}
@@ -985,7 +985,7 @@
    {:qty 1 :card "Henneth Annûn" :id "[M] (LE)"}
    {:qty 1 :card "Hermit's Hill" :id "[M] (LE)"}
    {:qty 1 :card "Himring" :id "[M] (AS)"}
-   {:qty 1 :card "Hollow Spire" :id "[M] (ML)"}
+   {:qty 1 :card "Hollow Spire" :id "[M] (BU)"}
    {:qty 1 :card "Hostel of the Sisters of Nienna" :id "[M] (KN)"}
    {:qty 1 :card "Hyvät Kalat" :id "[M] (NW)"}
    {:qty 1 :card "Inyalonî" :id "[M] (BO)"}
@@ -1029,7 +1029,7 @@
    {:qty 1 :card "Lossadan Cairn" :id "[M] (LE)"}
    {:qty 1 :card "Lossadan Camp" :id "[M] (LE)"}
    {:qty 1 :card "Lossarnach" :id "[M] (WR)"}
-   {:qty 1 :card "Lothragh Camp" :id "[M] (ML)"}
+   {:qty 1 :card "Lothragh Camp" :id "[M] (BU)"}
    {:qty 1 :card "Mablad-dûm" :id "[M] (SL)"}
    {:qty 1 :card "Maglgolodh's Cave" :id "[M] (NW)"}
    {:qty 1 :card "Maresh" :id "[M] (SL)"}
@@ -1037,7 +1037,7 @@
    {:qty 1 :card "Medlóshad" :id "[M] (CP)"}
    {:qty 1 :card "Michel Delving" :id "[M] (RS)"}
    {:qty 1 :card "Minas Tirith" :id "[M] (LE)"}
-   {:qty 1 :card "Mirror Halls" :id "[M] (ML)"}
+   {:qty 1 :card "Mirror Halls" :id "[M] (BU)"}
    {:qty 1 :card "Míspir" :id "[M] (DS)"}
    {:qty 1 :card "Monastery of the True Faith" :id "[M] (SL)"}
    {:qty 1 :card "Mountains of Mirkwood" :id "[M] (NE)"}
@@ -1053,11 +1053,11 @@
    {:qty 1 :card "Norjadar" :id "[M] (SL)"}
    {:qty 1 :card "Norr-dûm" :id "[M] (GW)"}
    {:qty 1 :card "Nûlakad" :id "[M] (CA)"}
-   {:qty 1 :card "Númenórean Tomb" :id "[M] (ML)"}
+   {:qty 1 :card "Númenórean Tomb" :id "[M] (BU)"}
    {:qty 1 :card "Nurunkhizdín" :id "[M] (DF)"}
    {:qty 1 :card "Oasis of Fult" :id "[M] (SL)"}
    ;{:qty 1 :card "Old Forest" :id "[M] (AS)"}
-   {:qty 1 :card "Olyavud" :id "[M] (ML)"}
+   {:qty 1 :card "Olyavud" :id "[M] (BU)"}
    {:qty 1 :card "Oraishapek's Mound" :id "[M] (NE)"}
    {:qty 1 :card "Orod Certhas" :id "[M] (NW)"}
    {:qty 1 :card "Osgiliath" :id "[M] (WR)"}
@@ -1095,7 +1095,7 @@
    {:qty 1 :card "Seregul's Keep" :id "[M] (DS)"}
    {:qty 1 :card "Setmaenen" :id "[M] (WR)"}
    {:qty 1 :card "Shab Arch" :id "[M] (GW)"}
-   {:qty 1 :card "Shoreless Isles" :id "[M] (ML)"}
+   {:qty 1 :card "Shoreless Isles" :id "[M] (NW)"}
    {:qty 1 :card "Shrel-Kain" :id "[M] (LE)"}
    {:qty 1 :card "Sonondor's Mound" :id "[M] (GW)"}
    {:qty 1 :card "Southron Oasis" :id "[M] (LE)"}
@@ -1142,7 +1142,7 @@
    {:qty 1 :card "Tol Glingal" :id "[M] (SL)"}
    {:qty 1 :card "Tol Lamfirith" :id "[M] (KN)"}
    {:qty 1 :card "Tol Morwen" :id "[M] (NW)"}
-   {:qty 1 :card "Tol Ringurthur" :id "[M] (ML)"}
+   {:qty 1 :card "Tol Ringurthur" :id "[M] (BU)"}
    {:qty 1 :card "Tol Turgul" :id "[M] (DS)"}
    {:qty 1 :card "Tol Uialgaer" :id "[M] (SL)"}
    {:qty 1 :card "Tolfalas" :id "[M] (AS)"}
@@ -1176,10 +1176,10 @@
    {:qty 1 :card "Wose Passage-hold" :id "[M] (LE)"}
    {:qty 1 :card "Xyunaï" :id "[M] (BO)"}
    {:qty 1 :card "Yatali Kîrgan" :id "[M] (BO)"}
-   {:qty 1 :card "Yjuvït" :id "[M] (ML)"}
+   {:qty 1 :card "Yjuvït" :id "[M] (BU)"}
    {:qty 1 :card "Zadan an-Adûn" :id "[M] (DS)"}
    {:qty 1 :card "Zarak Dûm" :id "[M] (LE)"}
-   {:qty 1 :card "Zayandaur" :id "[M] (ML)"}])
+   {:qty 1 :card "Zayandaur" :id "[M] (BU)"}])
 
 (def dreamcard-minion
   [{:qty 1 :card "Abandoned Caravansary" :id "[M] (SL)"}
@@ -1275,7 +1275,7 @@
    {:qty 1 :card "Eldanar" :id "[M] (KN)"}
    {:qty 1 :card "Elgaer" :id "[M] (CP)"}
    {:qty 1 :card "Elornan Swamp" :id "[M] (DS)"}
-   {:qty 1 :card "Elyamû" :id "[M] (ML)"}
+   {:qty 1 :card "Elyamû" :id "[M] (BU)"}
    {:qty 1 :card "Emyn Din" :id "[M] (DS)"}
    {:qty 1 :card "Ephydis" :id "[M] (BO)"}
    {:qty 1 :card "Eregost" :id "[M] (DS)"}
@@ -1309,7 +1309,7 @@
    {:qty 1 :card "Henneth Annûn" :id "[M] (LE)"}
    {:qty 1 :card "Hermit's Hill" :id "[M] (LE)"}
    {:qty 1 :card "Himring" :id "[M] (AS)"}
-   {:qty 1 :card "Hollow Spire" :id "[M] (ML)"}
+   {:qty 1 :card "Hollow Spire" :id "[M] (BU)"}
    {:qty 1 :card "Hostel of the Sisters of Nienna" :id "[M] (KN)"}
    {:qty 1 :card "Hyvät Kalat" :id "[M] (NW)"}
    {:qty 1 :card "Iorag Camp" :id "[M] (CP)"}
@@ -1358,9 +1358,9 @@
    {:qty 1 :card "Lossadan Cairn" :id "[M] (LE)"}
    {:qty 1 :card "Lossadan Camp" :id "[M] (LE)"}
    {:qty 1 :card "Lossarnach" :id "[M] (WR)"}
-   {:qty 1 :card "Lothragh Camp" :id "[M] (ML)"}
+   {:qty 1 :card "Lothragh Camp" :id "[M] (BU)"}
    {:qty 1 :card "Lugarlûr" :id "[M] (NE)"}
-   {:qty 1 :card "Lugdruong" :id "[M] (ML)"}
+   {:qty 1 :card "Lugdruong" :id "[M] (BU)"}
    {:qty 1 :card "Mablad-dûm" :id "[M] (SL)"}
    {:qty 1 :card "Maglgolodh's Cave" :id "[M] (NW)"}
    {:qty 1 :card "Maresh" :id "[M] (SL)"}
@@ -1369,7 +1369,7 @@
    {:qty 1 :card "Michel Delving" :id "[M] (RS)"}
    {:qty 1 :card "Minas Durlith" :id "[M] (NE)"}
    {:qty 1 :card "Minas Tirith" :id "[M] (LE)"}
-   {:qty 1 :card "Mirror Halls" :id "[M] (ML)"}
+   {:qty 1 :card "Mirror Halls" :id "[M] (BU)"}
    {:qty 1 :card "Míspir" :id "[M] (DS)"}
    {:qty 1 :card "Mistrand" :id "[M] (NE)"}
    {:qty 1 :card "Monastery of the True Faith" :id "[M] (SL)"}
@@ -1393,13 +1393,13 @@
    {:qty 1 :card "Norjadar" :id "[M] (SL)"}
    {:qty 1 :card "Norr-dûm" :id "[M] (GW)"}
    {:qty 1 :card "Nûlakad" :id "[M] (CA)"}
-   {:qty 1 :card "Númenórean Tomb" :id "[M] (ML)"}
+   {:qty 1 :card "Númenórean Tomb" :id "[M] (BU)"}
    {:qty 1 :card "Nûrniag Camp" :id "[M] (LE)"}
    {:qty 1 :card "Nurunkhizdín" :id "[M] (DF)"}
    {:qty 1 :card "Ny Chennacatt" :id "[M] (SL)"}
    {:qty 1 :card "Oasis of Fult" :id "[M] (SL)"}
    ;{:qty 1 :card "Old Forest" :id "[M] (AS)"}
-   {:qty 1 :card "Olyavud" :id "[M] (ML)"}
+   {:qty 1 :card "Olyavud" :id "[M] (BU)"}
    {:qty 1 :card "Oraishapek's Mound" :id "[M] (NE)"}
    {:qty 1 :card "Orod Certhas" :id "[M] (NW)"}
    {:qty 1 :card "Osgiliath" :id "[M] (WR)"}
@@ -1439,7 +1439,7 @@
    {:qty 1 :card "Setmaenen" :id "[M] (WR)"}
    {:qty 1 :card "Shab Arch" :id "[M] (GW)"}
    {:qty 1 :card "Shelob's Lair" :id "[M] (LE)"}
-   {:qty 1 :card "Shoreless Isles" :id "[M] (ML)"}
+   {:qty 1 :card "Shoreless Isles" :id "[M] (NW)"}
    {:qty 1 :card "Shrel-Kain" :id "[M] (LE)"}
    {:qty 1 :card "Sonondor's Mound" :id "[M] (GW)"}
    {:qty 1 :card "Southron Oasis" :id "[M] (LE)"}
@@ -1472,7 +1472,7 @@
    {:qty 1 :card "The Stones" :id "[M] (LE)"}
    {:qty 1 :card "The Tower of Birds" :id "[M] (SL)"}
    {:qty 1 :card "The Under-caves" :id "[M] (KN)"}
-   {:qty 1 :card "The Vaults of Utûmno" :id "[M] (ML)"}
+   {:qty 1 :card "The Vaults of Utûmno" :id "[M] (BU)"}
    {:qty 1 :card "The White Towers" :id "[M] (LE)"}
    {:qty 1 :card "The Willow Dingle" :id "[M] (RS)"}
    {:qty 1 :card "The Wind Throne" :id "[M] (LE)"}
@@ -1488,7 +1488,7 @@
    {:qty 1 :card "Tol Glingal" :id "[M] (SL)"}
    {:qty 1 :card "Tol Lamfirith" :id "[M] (KN)"}
    {:qty 1 :card "Tol Morwen" :id "[M] (NW)"}
-   {:qty 1 :card "Tol Ringurthur" :id "[M] (ML)"}
+   {:qty 1 :card "Tol Ringurthur" :id "[M] (BU)"}
    {:qty 1 :card "Tol Turgul" :id "[M] (DS)"}
    {:qty 1 :card "Tol Uialgaer" :id "[M] (SL)"}
    {:qty 1 :card "Tolfalas" :id "[M] (AS)"}
@@ -1507,7 +1507,7 @@
    {:qty 1 :card "Ulk Chey Sart" :id "[M] (CP)"}
    {:qty 1 :card "Ulk Jey Ama" :id "[M] (CP)"}
    {:qty 1 :card "Umbar" :id "[M] (WR)"}
-   {:qty 1 :card "Úrcheldor" :id "[M] (ML)"}
+   {:qty 1 :card "Úrcheldor" :id "[M] (BU)"}
    {:qty 1 :card "Urdic Camp" :id "[M] (NW)"}
    {:qty 1 :card "Ûrêzâyan" :id "[M] (SL)"}
    {:qty 1 :card "Urlurtsu Nurn" :id "[M] (LE)"}
@@ -1528,10 +1528,10 @@
    {:qty 1 :card "Wose Passage-hold" :id "[M] (LE)"}
    {:qty 1 :card "Xyunaï" :id "[M] (BO)"}
    {:qty 1 :card "Yatali Kîrgan" :id "[M] (BO)"}
-   {:qty 1 :card "Yjuvït" :id "[M] (ML)"}
+   {:qty 1 :card "Yjuvït" :id "[M] (BU)"}
    {:qty 1 :card "Zadan an-Adûn" :id "[M] (DS)"}
    {:qty 1 :card "Zarak Dûm" :id "[M] (LE)"}
-   {:qty 1 :card "Zayandaur" :id "[M] (ML)"}])
+   {:qty 1 :card "Zayandaur" :id "[M] (BU)"}])
 
 (def dreamcard-minion-havens
   [{:qty 4 :card "Amaru" :id "[M] (CA)"}
@@ -1542,7 +1542,7 @@
    {:qty 4 :card "Geann a-Lisch" :id "[M] (LE)"}
    {:qty 4 :card "Minas Morgul" :id "[M] (LE)"}
    {:qty 4 :card "Mornost" :id "[M] (NW)"}
-   {:qty 4 :card "Shapôl Udûn" :id "[M] (ML)"}
+   {:qty 4 :card "Shapôl Udûn" :id "[M] (BU)"}
    {:qty 4 :card "Tower of Hargrog" :id "[M] (DS)"}])
 
 (def dreamcard-minion-haven
@@ -1554,7 +1554,7 @@
    {:qty 1 :card "Geann a-Lisch" :id "[M] (LE)"}
    {:qty 1 :card "Minas Morgul" :id "[M] (LE)"}
    {:qty 1 :card "Mornost" :id "[M] (NW)"}
-   {:qty 1 :card "Shapôl Udûn" :id "[M] (ML)"}
+   {:qty 1 :card "Shapôl Udûn" :id "[M] (BU)"}
    {:qty 1 :card "Tower of Hargrog" :id "[M] (DS)"}])
 
 (def dreamcard-minion-balrog
@@ -1568,7 +1568,7 @@
    {:qty 1 :card "The Pûkel-deeps" :id "[M] (AS)"}
    {:qty 1 :card "The Sulfur-deeps" :id "[M] (AS)"}
    {:qty 1 :card "The Under-courts" :id "[M] (AS)"}
-   {:qty 1 :card "The Under-forges" :id "[M] (NW)"}
+   {:qty 1 :card "The Under-forges" :id "[M] (ML)"}
    {:qty 1 :card "The Under-galleries" :id "[M] (AS)"}
    {:qty 1 :card "The Under-gates" :id "[M] (AS)"}
    {:qty 1 :card "The Under-grottos" :id "[M] (AS)"}
@@ -1603,7 +1603,7 @@
    {:qty 1 :card "Lâorkí" :id "[H] (CP)"}
    {:qty 1 :card "Litash" :id "[H] (NW)"}
    {:qty 1 :card "Lugarlûr" :id "[H] (NE)"}
-   {:qty 1 :card "Lugdruong" :id "[H] (ML)"}
+   {:qty 1 :card "Lugdruong" :id "[H] (BU)"}
    {:qty 1 :card "Minas Durlith" :id "[H] (NE)"}
    {:qty 1 :card "Mistrand" :id "[H] (NE)"}
    {:qty 1 :card "Moria" :id "[H] (TW)"}
@@ -1623,14 +1623,14 @@
    {:qty 1 :card "Târik an-Aruwânâi" :id "[H] (BO)"}
    {:qty 1 :card "The Pits of Angband" :id "[H] (ML)"}
    {:qty 1 :card "The Under-caves" :id "[H] (KN)"}
-   {:qty 1 :card "The Under-forges" :id "[H] (NW)"}
+   {:qty 1 :card "The Under-forges" :id "[H] (ML)"}
    {:qty 1 :card "The Under-gates" :id "[H] (DM)"}
-   {:qty 1 :card "The Vaults of Utûmno" :id "[H] (ML)"}
+   {:qty 1 :card "The Vaults of Utûmno" :id "[H] (BU)"}
    {:qty 1 :card "Thuringwathost" :id "[H] (NE)"}
    {:qty 1 :card "Tower of Hargrog" :id "[H] (DS)"}
    {:qty 1 :card "Ulk Chey Sart" :id "[H] (CP)"}
    {:qty 1 :card "Ulk Jey Ama" :id "[H] (CP)"}
-   {:qty 1 :card "Úrcheldor" :id "[H] (ML)"}
+   {:qty 1 :card "Úrcheldor" :id "[H] (BU)"}
    {:qty 1 :card "Urdic Camp" :id "[H] (NW)"}
    {:qty 1 :card "Urlurtsu Nurn" :id "[H] (DM)"}
    {:qty 1 :card "Ventazvah Ôran-tal" :id "[H] (BO)"}])
@@ -1643,12 +1643,12 @@
    {:qty 1 :card "Cirith Gorgor" :id "[B] (BA)"}
    {:qty 1 :card "Cirith Ungol" :id "[B] (BA)"}
    {:qty 1 :card "Dol Guldur" :id "[B] (BA)"}
-   {:qty 4 :card "Eithel Morgoth" :id "[B] (NW)"}
+   {:qty 4 :card "Eithel Morgoth" :id "[B] (ML)"}
    {:qty 1 :card "Minas Morgul" :id "[B] (BA)"}
    {:qty 4 :card "Moria" :id "[B] (BA)"}
-   {:qty 1 :card "Mornost" :id "[B] (NW)"}
+   {:qty 1 :card "Mornost" :id "[B] (ML)"}
    {:qty 1 :card "Remains of Thangorodrim" :id "[B] (BA)"}
-   {:qty 1 :card "Shapôl Udûn" :id "[B] (ML)"}
+   {:qty 1 :card "Shapôl Udûn" :id "[B] (BU)"}
    {:qty 1 :card "The Drowning-deeps" :id "[B] (BA)"}
    {:qty 1 :card "The Gem-deeps" :id "[B] (BA)"}
    {:qty 1 :card "The Iron-deeps" :id "[B] (BA)"}
@@ -1656,7 +1656,7 @@
    {:qty 1 :card "The Rusted-deeps" :id "[B] (BA)"}
    {:qty 1 :card "The Sulfur-deeps" :id "[B] (BA)"}
    {:qty 1 :card "The Under-courts" :id "[B] (BA)"}
-   {:qty 4 :card "The Under-forges" :id "[B] (NW)"}
+   {:qty 4 :card "The Under-forges" :id "[B] (ML)"}
    {:qty 1 :card "The Under-galleries" :id "[B] (BA)"}
    {:qty 4 :card "The Under-gates" :id "[B] (BA)"}
    {:qty 1 :card "The Under-grottos" :id "[B] (BA)"}
@@ -1712,14 +1712,14 @@
    {:qty 1 :card "Deeps of Fuinur" :id "(SL)"}
    {:qty 1 :card "Durin's Tower" :id "(DF)"}
    {:qty 1 :card "Evefalin Cavern-Systems" :id "(SL)"}
-   {:qty 1 :card "Grop-Kûlkodar" :id "(ML)"}
+   {:qty 1 :card "Grop-Kûlkodar" :id "(BU)"}
    {:qty 1 :card "Ilpar-Karam" :id "(CP)"}
    {:qty 1 :card "Mines of Angûrath" :id "(DF)"}
    {:qty 1 :card "Mines of Falek-Dim" :id "(DF)"}
    {:qty 1 :card "Osteledan" :id "(FB)"}
    {:qty 1 :card "Quartz-Halls" :id "(DS)"}
    {:qty 1 :card "Ruins of Belegost" :id "(DF)"}
-   {:qty 1 :card "Ruins of Kheledkhizdín" :id "(ML)"}
+   {:qty 1 :card "Ruins of Kheledkhizdín" :id "(BU)"}
    {:qty 1 :card "Ruins of Nogrod" :id "(DF)"}
    {:qty 1 :card "The Amber-deeps" :id "(SL)"}
    {:qty 1 :card "The Brass-deeps" :id "(BO)"}
@@ -1744,7 +1744,7 @@
    {:qty 1 :card "Moria" :id "[M] (LE)"}
    {:qty 1 :card "Mornost" :id "[B] (NW)"}
    {:qty 1 :card "Remains of Thangorodrim" :id "[B] (BA)"}
-   {:qty 1 :card "Shapôl Udûn" :id "[B] (ML)"}
+   {:qty 1 :card "Shapôl Udûn" :id "[B] (BU)"}
    {:qty 1 :card "Tower of Hargrog" :id "[M] (DS)"}
    {:qty 1 :card "The Drowning-deeps" :id "[B] (BA)"}
    {:qty 1 :card "The Gem-deeps" :id "[B] (BA)"}

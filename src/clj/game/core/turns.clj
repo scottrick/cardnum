@@ -37,7 +37,7 @@
 
 (defn- init-game-state
   "Initializes the game state"
-  [{:keys [players gameid use-dce eot-auto-save spectatorhands room] :as game}]
+  [{:keys [players gameid use-dce use-ice eot-auto-save spectatorhands room] :as game}]
   (let [contestant (some #(when (= (:side %) "Contestant") %) players)
         challenger (some #(when (= (:side %) "Challenger") %) players)
         contestant-pool (create-pool "Contestant" (:deck contestant) (:user contestant))
@@ -70,7 +70,8 @@
        :sfx [] :sfx-current-id 0
        :stats {:time {:started (t/now)}}
        :options {:spectatorhands spectatorhands
-                 :eot-auto-save eot-auto-save :use-dce use-dce}
+                 :eot-auto-save eot-auto-save
+                 :use-dce use-dce :use-ice use-ice}
        :contestant {:user (:user contestant) :identity contestant-identity
                     :opensite true
                     :deck-dice contestant-dice-pick

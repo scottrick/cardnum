@@ -39,7 +39,9 @@
   (swap! app-state assoc-in [:options :blocked-users] (om/get-state owner :blocked-users))
   (swap! app-state assoc-in [:options :gamestats] (om/get-state owner :gamestats))
   (swap! app-state assoc-in [:options :deckstats] (om/get-state owner :deckstats))
+  (swap! app-state assoc-in [:options :language] (om/get-state owner :language))
   (swap! app-state assoc-in [:options :dc-erratum] (om/get-state owner :dc-erratum))
+  (swap! app-state assoc-in [:options :ice-errata] (om/get-state owner :ice-errata))
   (.setItem js/localStorage "sounds" (om/get-state owner :sounds))
   (.setItem js/localStorage "sounds_volume" (om/get-state owner :volume))
   (post-options url (partial post-response owner)))
@@ -80,7 +82,9 @@
       (om/set-state! owner :volume (get-in @app-state [:options :sounds-volume]))
       (om/set-state! owner :gamestats (get-in @app-state [:options :gamestats]))
       (om/set-state! owner :deckstats (get-in @app-state [:options :deckstats]))
+      (om/set-state! owner :language (get-in @app-state [:options :language]))
       (om/set-state! owner :dc-erratum (get-in @app-state [:options :dc-erratum]))
+      (om/set-state! owner :ice-errata (get-in @app-state [:options :ice-errata]))
       (om/set-state! owner :blocked-users (sort (get-in @app-state [:options :blocked-users] []))))
 
     om/IRenderState
@@ -201,7 +205,26 @@
                 (:name option)]])]
 
            [:section
-            [:h3 " Use DC Erratum"]
+            [:h3 " Language Preference"]
+            [:select.language {:value (om/get-state owner :language)
+                               :on-change #(om/set-state! owner :language (.. % -target -value))}
+             (let [option [{:name "Dutch"                    :ref "Dutch"}
+                           {:name "English"                   :ref "English"}
+                           {:name "Español"                   :ref "Español"}
+                           {:name "Finnish"                   :ref "Finnish"}
+                           {:name "French"                    :ref "French"}
+                           {:name "German"                    :ref "German"}
+                           {:name "Italian"                   :ref "Italian"}
+                           {:name "Japanese"                  :ref "Japanese"}]]
+               (for [choice (sort-by :name option)]
+                 [:option
+                  {:value (:ref choice)}
+                  (:name choice)])
+               )
+             ]]
+
+           [:section
+            [:h3 " Use DC Erratum (highest priority)"]
             (for [option [{:name "Always"                   :ref "always"}
                           {:name "Never"                    :ref "never"}]]
               [:div
@@ -210,6 +233,18 @@
                                 :value (:ref option)
                                 :on-change #(om/set-state! owner :dc-erratum (.. % -target -value))
                                 :checked (= (om/get-state owner :dc-erratum) (:ref option))}]
+                (:name option)]])]
+
+           [:section
+            [:h3 " Use ICE Errata (updated versions)"]
+            (for [option [{:name "Always"                   :ref "always"}
+                          {:name "Never"                    :ref "never"}]]
+              [:div
+               [:label [:input {:type "radio"
+                                :name "ice-errata"
+                                :value (:ref option)
+                                :on-change #(om/set-state! owner :ice-errata (.. % -target -value))
+                                :checked (= (om/get-state owner :ice-errata) (:ref option))}]
                 (:name option)]])]
 
            [:section
