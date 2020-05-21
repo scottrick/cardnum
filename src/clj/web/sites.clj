@@ -359,6 +359,7 @@
    {:qty 3 :card "Eorstan" :id "(DF)"}
    {:qty 3 :card "Ered Harmal [N]" :id "(CP)"}
    {:qty 3 :card "Ered Lithui" :id "(NE)"}
+   {:qty 3 :card "Ered Muil" :id "(NW)"}
    {:qty 3 :card "Ered Ormal" :id "(BO)"}
    {:qty 3 :card "Eriadoran Coast" :id "(TW)"}
    {:qty 3 :card "Erim Póa" :id "(SL)"}
