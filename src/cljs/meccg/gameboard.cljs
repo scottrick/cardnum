@@ -1497,7 +1497,7 @@
                            [:div.host-group
                             (host-view (:hosted card))])]])
                       scored)
-         (om/build score scored {:opts {:name "Marshalling Point Pile"}})]))))
+         (om/build score scored {:opts {:name "Marshalling Point Pile (Out-of-play)"}})]))))
 
 (defn controls [key]
   (sab/html
