@@ -974,7 +974,7 @@
                                          (= (:side @game-state) (keyword (.toLowerCase side))))
                   alt-str (if facedown-but-known (str "Facedown " title) nil)
                   locate (site? cursor)]
-              (if locate
+              (if (or locate location)
                 (facedown-card "Locations")
                 (facedown-card side ["bg"] alt-str)))
             [:div
