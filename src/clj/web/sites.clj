@@ -669,7 +669,7 @@
    {:qty 1 :card "Lugarlûr" :id "[H] (NE)"}
    {:qty 1 :card "Lugdruong" :id "[H] (BU)"}
    {:qty 1 :card "Mablad-dûm" :id "[H] (SL)"}
-   {:qty 1 :card "Maglgolodh's Cave" :id "[H] (NW)"}
+   {:qty 1 :card "Malgolodh's Cave" :id "[H] (NW)"}
    {:qty 1 :card "Maresh" :id "[H] (SL)"}
    {:qty 1 :card "Mathlaburg" :id "[H] (NE)"}
    {:qty 1 :card "Medlóshad" :id "[H] (CP)"}
@@ -1032,7 +1032,7 @@
    {:qty 1 :card "Lossarnach" :id "[M] (WR)"}
    {:qty 1 :card "Lothragh Camp" :id "[M] (BU)"}
    {:qty 1 :card "Mablad-dûm" :id "[M] (SL)"}
-   {:qty 1 :card "Maglgolodh's Cave" :id "[M] (NW)"}
+   {:qty 1 :card "Malgolodh's Cave" :id "[M] (NW)"}
    {:qty 1 :card "Maresh" :id "[M] (SL)"}
    {:qty 1 :card "Mathlaburg" :id "[M] (NE)"}
    {:qty 1 :card "Medlóshad" :id "[M] (CP)"}
@@ -1363,7 +1363,7 @@
    {:qty 1 :card "Lugarlûr" :id "[M] (NE)"}
    {:qty 1 :card "Lugdruong" :id "[M] (BU)"}
    {:qty 1 :card "Mablad-dûm" :id "[M] (SL)"}
-   {:qty 1 :card "Maglgolodh's Cave" :id "[M] (NW)"}
+   {:qty 1 :card "Malgolodh's Cave" :id "[M] (NW)"}
    {:qty 1 :card "Maresh" :id "[M] (SL)"}
    {:qty 1 :card "Mathlaburg" :id "[M] (NE)"}
    {:qty 1 :card "Medlóshad" :id "[M] (CP)"}

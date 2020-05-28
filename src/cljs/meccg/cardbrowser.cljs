@@ -523,7 +523,7 @@
   (if (empty? query)
     cards
     (let [lcquery (.toLowerCase query)]
-      (filter #(or (not= (.indexOf (.toLowerCase (:title %)) lcquery) -1)
+      (filter #(or (not= (.indexOf (.toLowerCase (:flip-title %)) lcquery) -1)
                    (not= (.indexOf (:normalizedtitle %) lcquery) -1))
               cards))))
 
@@ -537,7 +537,7 @@
 (defn sort-field [fieldname]
   (case fieldname
     "Set" #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:full_set %))
-    "Name" (juxt :normalizedtitle #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:full_set %)))
+    "Name" (juxt :flip-title #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:full_set %)))
     "Type" (juxt #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:full_set %))
                     #((into {} (map-indexed (fn [i e] [e i]) primary-order)) (:type %)))
     "Align" (juxt #((into {} (map-indexed (fn [i e] [e i]) set-order)) (:full_set %))
@@ -787,7 +787,7 @@
                             ["Strict" :secondary-filter (secondaries (:primary-filter state))]
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
-                            ["Types" :skill-filter all-skill]
+                            ["Keys" :skill-filter all-skill]
                             ["Race" :race-filter all-types]]]
                 [:div
                  [:h4 (first filter)]

@@ -382,7 +382,7 @@
                                                                                     :effect (effect (host-reveal c (get-card state target)))
                                                                                     :msg (msg "host " (:title (get-card state target)))
                                                                                     ; host target onto card
-                                                                                    } (if (revealed? c) c nil) nil )))} nil nil)
+                                                                                    } (if (revealed? target) target nil) nil )))} nil nil)
   (system-msg state side "host a card revealed"))
 
 (defn hero-pal-flag

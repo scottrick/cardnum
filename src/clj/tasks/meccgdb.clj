@@ -97,11 +97,12 @@
    :fullCode (rename :code)
    :gccgAlign (fn [[k v]] [:gccgAlign (.replace (.replace v "[" "") "]" "")])
    :gccgSet (fn [[k v]] [:gccgSet (.replace (.replace v "(" "") ")" "")])
+   :normalizedtitle (rename :flip-title)
    :DCpath identity
    :dreamcard identity
    :released identity
    :erratum identity
-   :ice-errata (rename :errata)
+   :ice_errata (rename :errata)
    })
 
 (def tables
