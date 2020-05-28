@@ -148,7 +148,7 @@
 (defn host-reveal
   "Host the target onto the card revealed."
   ([state side card target] (host-reveal state side card target nil))
-  ([state side card {:keys [zone cid host placed] :as target} {:keys [facedown] :as options}]
+  ([state side card {:keys [zone cid host hosted placed] :as target} {:keys [facedown] :as options}]
    (when (not= cid (:cid card))
      (when placed
        (unregister-events state side target))
