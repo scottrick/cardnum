@@ -787,7 +787,7 @@
                             ["Strict" :secondary-filter (secondaries (:primary-filter state))]
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
-                            ["Types" :skill-filter all-skill]
+                            ["Keys" :skill-filter all-skill]
                             ["Race" :race-filter all-types]]]
                 [:div
                  [:h4 (first filter)]
