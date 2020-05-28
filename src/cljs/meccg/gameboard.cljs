@@ -2112,7 +2112,7 @@
                           (zones->sorted-names (if (= side :contestant)
                                                  (runnable-locales contestant challenger)
                                                  (runnable-locales challenger contestant))))]]
-                   (cond-button "Roll" true #(send-command "roll"))
+                   (cond-button "Roll Dice" true #(send-command "roll"))
                    (cond-button "Done Facing" (not (:cannot-jack-out run))
                                 #(send-command "jack-out"))
                    ])
@@ -2122,7 +2122,7 @@
                    (cond-button "On-guard" (= (:click me) 45) #(send-command "on-guard")) ;; -5
                    (cond-button "No Hazards" (or (= (:click me) 40) (= (:click me) 45)) #(send-command "no-hazards"))
                    ;; set to 35
-                   (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                   (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
                    (cond-button "Next M/H" (= (:click me) 35) #(handle-next-m-h "reset-m-h"))
                    ;; set to 45, by me
                    ]
@@ -2138,7 +2138,7 @@
                      (cond-button "Possible Effect" (= (:click me) 25) #(send-command "pre-bluff")) ;;-3
                      )
 
-                   (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                   (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
                    (cond-button "Next Site" (or (= (:click me) 20) (= (:click me) 25)) #(send-command "reset-site"))
                    ;; set to 25, by me
                    ]))
@@ -2151,10 +2151,15 @@
                     [:div
                      (cond-button "Keep Hand" (not (get-in @game-state [:contestant :keep])) #(send-command "keep"))
                      (cond-button "Draw Hand" (not (get-in @game-state [:contestant :keep])) #(send-command "mulligan"))
-
-                     (cond-button "Pass Turn" (and (get-in @game-state [:contestant :keep])
-                                                       (get-in @game-state [:challenger :keep]))
-                                  #(send-command "not-first"))
+                     (cond
+                       (and (get-in @game-state [:contestant :keep])
+                            (get-in @game-state [:challenger :keep]))
+                       (cond-button "Pass Turn" (and (get-in @game-state [:contestant :keep])
+                                                     (get-in @game-state [:challenger :keep]))
+                                    #(send-command "not-first"))
+                       :else
+                       (cond-button "Roll Dice" true #(send-command "roll"))
+                       )
                      (cond-button "Start Turn" (and (get-in @game-state [:contestant :keep])
                                                     (or (get-in @game-state [:challenger :keep])
                                                         (empty? (get-in @game-state [:challenger :identity :title]))))
@@ -2165,7 +2170,14 @@
                     [:div
                      (cond-button "Keep Hand" (not (get-in @game-state [:challenger :keep])) #(send-command "keep"))
                      (cond-button "Draw Hand" (not (get-in @game-state [:challenger :keep])) #(send-command "mulligan"))
-                     (cond-button "Pass Turn" nil nil)
+                     (cond
+                       (= (:click me) 100)
+                       (cond-button "Pass Turn" (and (get-in @game-state [:contestant :keep])
+                                                     (get-in @game-state [:challenger :keep]))
+                                    #(send-command "not-first"))
+                       :else
+                       (cond-button "Roll Dice" true #(send-command "roll"))
+                       )
                      (cond-button "Start Turn" nil nil)
                      ]
                     )
@@ -2176,10 +2188,10 @@
                      (= (:click me) 100)
                      (cond-button "Untap All" (= (:click me) 100) #(send-command "untap-all")) ;;-5
                      :else
-                     (cond-button "Roll" (= (:click me) 95) #(send-command "roll")) ;;-5
+                     (cond-button "Roll Dice" (= (:click me) 95) #(send-command "roll")) ;;-5
                      )
                    (cond-button "Organized" (= (:click me) 95) #(send-command "org-phase")) ;; -5
-                   (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                   (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
                    (cond-button "M/H Phase" (= (:click me) 90) #(send-command "m-h-phase")) ;; -5
                    ]
                 (if (= (:click me) 85)
@@ -2198,7 +2210,7 @@
                           (zones->sorted-names (if (= side :contestant)
                                                  (runnable-locales contestant challenger)
                                                  (runnable-locales challenger contestant))))]]
-                   (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                   (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
                    [:button {:on-click #(handle-end-of-phase "site-phase")} "Site Phase"] ;; -5
                    ]
                 (if (= (:click me) 80)
@@ -2217,7 +2229,7 @@
                           (zones->sorted-names (if (= side :contestant)
                                                  (runnable-locales contestant challenger)
                                                  (runnable-locales challenger contestant))))]]
-                   (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                   (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
                    [:button {:on-click #(send-command "eot-phase")} "EOT Phase"]; -5
                    ]
                 (if (< 65 (:click me) 80)
@@ -2225,7 +2237,7 @@
                    [:button {:on-click #(send-command "back-site")} "Back to Site"]
                    ;; set to 80, and opponent to 25
                    (cond-button "EOT Discard" (= (:click me) 75) #(handle-end-of-phase "eot-discard"));; -5
-                   (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                   (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
                    (cond-button "EOT (1/2 HL?)" (and (= (:click me) 70)
                                                      (and (get-in @game-state [:contestant :eot])
                                                           (get-in @game-state [:challenger :eot]))
@@ -2238,16 +2250,16 @@
 
                 (if (<= 90 (:click opponent) 100);; set to 50, by me
                   [:div
-                   (cond-button "Roll" true #(send-command "roll"))
+                   (cond-button "Roll Dice" true #(send-command "roll"))
                    (cond-button "Wait!!!" (zero? (:click me)) #(send-command "wait-alert"))
-                   (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                   (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
                    (cond-button "Waiting" false nil)]
                 (if (= (:click opponent) 85);; set to 45, by me
                   [:div
                    (cond-button "On-guard" (= (:click me) 45) #(send-command "on-guard")) ;; -5
                    (cond-button "No Hazards" (or (= (:click me) 40) (= (:click me) 45)) #(send-command "no-hazards"))
                    ;; set to 35
-                   (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                   (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
                    (cond-button "Next M/H" (= (:click me) 35) #(handle-next-m-h "reset-m-h"))
                    ;; set to 45, by me
                    ]
@@ -2263,7 +2275,7 @@
                      (cond-button "Possible Effect" (= (:click me) 25) #(send-command "pre-bluff")) ;;-3
                      )
 
-                   (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                   (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
                    (cond-button "Next Site" (or (= (:click me) 20) (= (:click me) 25)) #(send-command "reset-site"))
                    ;; set to 25, by me
                    ]
@@ -2272,7 +2284,7 @@
                    ;;(when (> (:click me) 0) (send-command "reset-done"))
                    (cond-button "EOT Phase" false nil)
                    [:button {:on-click #(send-command "return-o-g")} "Return On-guard"]
-                   (cond-button "Draw" (not-empty (:deck me)) #(send-command "draw"))
+                   (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
                    (cond-button "Done" (zero? (:click me)) #(send-command "haz-play-done"))])))) ;;-5
                 ])))]))))
 
