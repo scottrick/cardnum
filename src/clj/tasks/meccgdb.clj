@@ -101,7 +101,7 @@
    :dreamcard identity
    :released identity
    :erratum identity
-   :ice-errata (rename :errata)
+   :ice_errata (rename :errata)
    })
 
 (def tables
