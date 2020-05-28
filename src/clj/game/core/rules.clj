@@ -540,6 +540,8 @@
     (system-msg state side "cleared the log window")
     (swap! state dissoc :log)
     (swap! state assoc-in [state :log] [])
+    (swap! state assoc-in [:contestant :clear-log] false)
+    (swap! state assoc-in [:challenger :clear-log] false)
     ))
 
 (defn clear-win
