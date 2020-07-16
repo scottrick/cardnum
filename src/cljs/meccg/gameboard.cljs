@@ -8,7 +8,7 @@
             [meccg.appstate :refer [app-state]]
             [meccg.auth :refer [avatar] :as auth]
             [meccg.cardbrowser :refer [add-symbols] :as cb]
-            [meccg.dice :refer [add-faces create-face]]
+            [meccg.dice :refer [add-faces-16mm add-faces-18mm create-face]]
             [meccg.dreamcard :refer [dreamcard-map-north dreamcard-map-west dreamcard-map-central dreamcard-map-south]]
             [meccg.standard :refer [standard-map]]
             [meccg.utils :refer [toastr-options influence-dot map-longest]]
@@ -485,16 +485,17 @@
       [:div.smallwarning "!"]
       (if-let [[title image] (extract-card-info item)]
         [:span {:class "fake-link" :id image} title]
-        (if (or (boolean (re-find #"16mm" item))
-                (boolean (re-find #"18mm" item)))
-          [:span {:dangerouslySetInnerHTML #js {:__html (add-faces (add-faces item))}}]
-          ;[:span {:dangerouslySetInnerHTML #js {:__html (add-regions item)}}]
-          [:span {:dangerouslySetInnerHTML #js {:__html
-                                               (loop [new-text item]
-                                                 (if (= new-text (add-regions new-text))
-                                                   new-text
-                                                   (recur (add-regions new-text))))}}]
-          )))))
+        (if (boolean (re-find #"16mm" item))
+          [:span {:dangerouslySetInnerHTML #js {:__html (add-faces-16mm (add-faces-16mm item))}}]
+          (if (boolean (re-find #"18mm" item))
+            [:span {:dangerouslySetInnerHTML #js {:__html (add-faces-18mm (add-faces-18mm item))}}]
+            ;[:span {:dangerouslySetInnerHTML #js {:__html (add-regions item)}}]
+            [:span {:dangerouslySetInnerHTML #js {:__html
+                                                  (loop [new-text item]
+                                                    (if (= new-text (add-regions new-text))
+                                                      new-text
+                                                      (recur (add-regions new-text))))}}]
+            ))))))
 
 (defn get-non-alt-art [[title cards]]
   {:title title :ImageName (:ImageName (last cards))})
