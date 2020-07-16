@@ -157,7 +157,13 @@
                           {:name "Orange Flat Black Pips 16mm"    :ref "orgblack-16"}
                           {:name "Red Swirl Black Pips 16mm"      :ref "rsblack-16"}
                           {:name "Red Swirl Black Pips 18mm"      :ref "rsblack-18"}
-                          {:name "Red Swirl White Pips 16mm"      :ref "rswhite-16"}]]
+                          {:name "Red Swirl White Pips 16mm"      :ref "rswhite-16"}
+                          {:name "Saruman Rune 18mm"              :ref "rune-s-18"}
+                          {:name "Gandalf Rune 18mm"              :ref "rune-g-18"}
+                          {:name "Radagast Rune 18mm"             :ref "rune-r-18"}
+                          {:name "Alatar Rune 18mm"               :ref "rune-a-18"}
+                          {:name "Pallando Rune 18mm"             :ref "rune-p-18"}
+                          {:name "Ringwraith Rune 18mm"           :ref "rune-w-18"}]]
               [:div.radio
                [:label [:input {:type "radio"
                                 :name "dice-pick"
