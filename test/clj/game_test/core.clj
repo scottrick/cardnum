@@ -204,13 +204,6 @@
      (core/score state :contestant {:card (core/get-card state card)})
      (is (find-card title (get-scored state :contestant))))))
 
-(defn advance
-  "Advance the given card."
-  ([state card] (advance state card 1))
-  ([state card n]
-   (dotimes [_ n]
-     (core/advance state :contestant {:card (core/get-card state card)}))))
-
 (defn last-log-contains?
   [state content]
   (some? (re-find (re-pattern content)

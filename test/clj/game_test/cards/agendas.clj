@@ -41,46 +41,6 @@
     (prompt-choice :challenger "Suffer 5 meat damage")
     (is (zero? (count (:hand (get-challenger)))) "Challenger has 0 cards after Armed Intimidation meat damage")))
 
-(deftest astroscript-pilot-resource
-  ;; AstroScript token placement
-  (do-game
-    (new-game (default-contestant [(qty "AstroScript Pilot Resource" 3) (qty "Character Wall" 2)])
-              (default-challenger))
-    (core/gain state :contestant :click 3)
-    (letfn [(try-place [from to]
-              (card-ability state :contestant (refresh from) 0)
-              (prompt-select :contestant (refresh to)))
-            (should-not-place [from to msg]
-              (try-place from to)
-              (prompt-choice :contestant "Done")
-              (is (= 1 (get-counters (refresh from) :agenda))
-                  (str (:title from)" token was not used on " (:title to) msg))
-              (is (zero? (get-counters (refresh to) :advancement))
-                  (str "Advancement token not placed on " (:title to) msg)))
-            (should-place [from to msg]
-              (try-place from to)
-              (is (zero? (get-counters (refresh from) :agenda))
-                  (str (:title from) " token was used on " (:title to) msg))
-              (is (= 1 (get-counters (refresh to) :advancement))
-                  (str "Advancement token placed on " (:title to) msg)))]
-      (play-and-score state "AstroScript Pilot Resource")
-      (play-from-hand state :contestant "AstroScript Pilot Resource" "New party")
-      (let [scored-astro (get-scored state :contestant 0)
-            placed-astro (get-content state :party2 0)
-            hand-astro (find-card "AstroScript Pilot Resource" (:hand get-contestant))]
-        (should-not-place scored-astro hand-astro " in hand")
-        (should-place scored-astro placed-astro " that is placed")
-        (advance state placed-astro 2)
-        (core/score state :contestant {:card (refresh placed-astro)}))
-      (play-from-hand state :contestant "Character Wall" "HQ")
-      (let [no-token-astro (get-scored state :contestant 0)
-            token-astro (get-scored state :contestant 1)
-            hand-character-wall (find-card "Character Wall" (:hand get-contestant))
-            placed-character-wall (get-character state :hq 0)]
-        (should-not-place token-astro no-token-astro " that is scored")
-        (should-not-place token-astro hand-character-wall " in hand")
-        (should-place token-astro placed-character-wall " that is placed")))))
-
 (deftest bacterial-resourceming
   ;; Bacterial Resourceming
   (testing "Scoring should not cause a run to exist for challenger."
@@ -441,28 +401,6 @@
                  [2 1]
                  [3 0]]))))
 
-(deftest hollywood-renovation
-  ;; Hollywood Renovation
-  (do-game
-    (new-game (default-contestant ["Hollywood Renovation" "Character Wall"])
-              (default-challenger))
-    (core/gain state :contestant :click 10 :credit 10)
-    (play-from-hand state :contestant "Character Wall" "HQ")
-    (play-from-hand state :contestant "Hollywood Renovation" "New party")
-    (let [hr (get-content state :party1 0)
-          iw (get-character state :hq 0)]
-      (is (zero? (get-counters (refresh hr) :advancement)) "Hollywood Renovation should start with 0 advancement tokens")
-      (is (zero? (get-counters (refresh iw) :advancement)) "Character Wall should start with 0 advancement tokens")
-      (dotimes [n 5]
-        (advance state (refresh hr))
-        (prompt-select :contestant (refresh iw)))
-      (is (= 5 (get-counters (refresh hr) :advancement)) "Hollywood Renovation should gain 5 advancement tokens")
-      (is (= 5 (get-counters (refresh iw) :advancement)) "Character Wall should gain 5 advancement tokens")
-      (advance state (refresh hr))
-      (prompt-select :contestant (refresh iw))
-      (is (= 6 (get-counters (refresh hr) :advancement)) "Hollywood Renovation should gain 1 from 5 to 6 advancement tokens")
-      (is (= 7 (get-counters (refresh iw) :advancement)) "Character Wall should gain 2 from 5 to 7 advancement tokens"))))
-
 (deftest hostile-takeover
   ;; Hostile Takeover
   (do-game
@@ -600,30 +538,6 @@
     (prompt-choice :challenger 2)
     (is (= 7 (:credit (get-contestant))) "Contestant gained a credit from NQ")))
 
-(deftest new-construction
-  ;; New Construction
-  (do-game
-    (new-game (default-contestant ["New Construction" (qty "Commercial Bankers Group" 10)])
-              (default-challenger))
-    (starting-hand state :contestant (vec (cons "New Construction" (repeat 10 "Commercial Bankers Group"))))
-    (core/gain state :contestant :click 10 :credit 10)
-    (play-from-hand state :contestant "New Construction" "New party")
-    (let [nc (get-content state :party1 0)]
-      (is (zero? (get-counters (refresh nc) :advancement)))
-      (dotimes [n 4]
-        (advance state (refresh nc))
-        (prompt-choice :contestant "Yes")
-        (prompt-select :contestant (find-card "Commercial Bankers Group" (:hand (get-contestant)))))
-      (is (= 4 (get-counters (refresh nc) :advancement)))
-      (is (not= :this-turn (:revealed (get-content state :party5 0))))
-      (let [credits (:credit (get-contestant))]
-        (advance state (refresh nc))
-        (prompt-choice :contestant "Yes")
-        (prompt-select :contestant (find-card "Commercial Bankers Group" (:hand (get-contestant))))
-        (is (= 5 (get-counters (refresh nc) :advancement)))
-        (is (= :this-turn (:revealed (get-content state :party6 0))))
-        (is (= (dec credits) (:credit (get-contestant))))))))
-
 (deftest next-wave-2
   ;; NEXT Wave 2
   (do-game
@@ -639,29 +553,6 @@
     (play-and-score state "NEXT Wave 2")
     (prompt-choice :contestant "Yes")
     (is (= 1 (:brain-damage (get-challenger))) "Challenger should gain 1 brain damage")))
-
-(deftest oaktown-renovation
-  ;; Oaktown Renovation
-  (do-game
-    (new-game (default-contestant ["Oaktown Renovation" "Shipment from SanSan"])
-              (default-challenger))
-    (core/gain state :contestant :click 3)
-    (play-from-hand state :contestant "Oaktown Renovation" "New party")
-    (let [oak (get-content state :party1 0)]
-      (is (:revealed (refresh oak)) "Oaktown placed face up")
-      (advance state oak)
-      (is (= 6 (:credit (get-contestant))) "Spent 1 credit to advance, gained 2 credits from Oaktown")
-      (play-from-hand state :contestant "Shipment from SanSan")
-      (prompt-choice :contestant "2")
-      (prompt-select :contestant oak)
-      (is (= 3 (get-counters (refresh oak) :advancement)))
-      (is (= 6 (:credit (get-contestant))) "No credits gained due to advancements being placed")
-      (advance state oak)
-      (is (= 7 (:credit (get-contestant))) "Spent 1 credit to advance, gained 2 credits from Oaktown")
-      (advance state oak)
-      (is (= 5 (get-counters (refresh oak) :advancement)))
-      (is (= 9 (:credit (get-contestant)))
-          "Spent 1 credit to advance, gained 3 credits from Oaktown"))))
 
 (deftest posted-bounty
   ;; Posted Bounty
@@ -705,128 +596,6 @@
     (is (= 1 (:agenda-point (get-contestant))))
     (is (= 3 (:bad-publicity (get-contestant))) "Took 3 bad publicity")
     (is (= 20 (:credit (get-contestant))) "Gained 15 credits")))
-
-(deftest project-atlas
-  ;; Project Atlas
-  (testing "basic test"
-    (do-game
-      (new-game (default-challenger ["Project Atlas"
-                                 "Beanstalk Royalties"])
-                (default-challenger))
-      ;; Set up
-      (starting-hand state :contestant ["Project Atlas"])
-      (is (= 1 (count (:hand (get-contestant)))) "Contestant should have 1 cards in hand")
-      (core/gain state :contestant :click 10 :credit 10)
-      ;; Should gain 1 counter
-      (play-from-hand state :contestant "Project Atlas" "New party")
-      (let [atlas (get-content state :party1 0)]
-        (advance state atlas 4)
-        (is (= 4 (get-counters (refresh atlas) :advancement)) "Atlas should have 4 advancement tokens")
-        (core/score state :contestant {:card (refresh atlas)}))
-      (let [atlas-scored (get-scored state :contestant 0)]
-        (is (= 1 (get-counters (refresh atlas-scored) :agenda)) "Atlas should have 1 agenda counter")
-        (card-ability state :contestant atlas-scored 0)
-        (prompt-card :contestant (find-card "Beanstalk Royalties" (:deck (get-contestant))))
-        (is (zero? (get-counters (refresh atlas-scored) :agenda)) "Atlas should have 0 agenda counters")
-        (is (= 1 (count (:hand (get-contestant)))) "Contestant should have 1 cards in hand"))))
-  (testing "test with Titan"
-    (do-game
-      (new-game (make-deck "Titan Transnational: Investing In Your Future"
-                           [(qty "Project Atlas" 2) "Beanstalk Royalties" "Hedge Fund"])
-                (default-challenger))
-      ;; Set up
-      (starting-hand state :contestant ["Project Atlas" "Project Atlas"])
-      (is (= 2 (count (:hand (get-contestant)))) "Contestant should have 2 cards in hand")
-      (core/gain state :contestant :click 10 :credit 10)
-      ;; Should gain 1 counter
-      (play-from-hand state :contestant "Project Atlas" "New party")
-      (let [atlas (get-content state :party1 0)]
-        (advance state atlas 3)
-        (is (= 3 (get-counters (refresh atlas) :advancement)) "Atlas should have 3 advancement tokens")
-        (core/score state :contestant {:card (refresh atlas)}))
-      (let [atlas-scored (get-scored state :contestant 0)]
-        (is (= 1 (get-counters (refresh atlas-scored) :agenda)) "Atlas should have 1 agenda counter")
-        (card-ability state :contestant atlas-scored 0)
-        (prompt-card :contestant (find-card "Beanstalk Royalties" (:deck (get-contestant))))
-        (is (zero? (get-counters (refresh atlas-scored) :agenda)) "Atlas should have 0 agenda counters")
-        (is (= 2 (count (:hand (get-contestant)))) "Contestant should have 2 card in hand"))
-      ;; Should gain 2 counters
-      (play-from-hand state :contestant "Project Atlas" "New party")
-      (let [atlas (get-content state :party2 0)]
-        (advance state atlas 4)
-        (is (= 4 (get-counters (refresh atlas) :advancement)) "Atlas should have 4 advancement tokens")
-        (core/score state :contestant {:card (refresh atlas)}))
-      (let [atlas-scored (get-scored state :contestant 1)]
-        (is (= 2 (get-counters (refresh atlas-scored) :agenda)) "Atlas should have 2 agenda counter")
-        (card-ability state :contestant atlas-scored 0)
-        (prompt-card :contestant (find-card "Hedge Fund" (:deck (get-contestant))))
-        (is (= 1 (get-counters (refresh atlas-scored) :agenda)) "Atlas should have 1 agenda counters")
-        (is (= 2 (count (:hand (get-contestant)))) "Contestant should have 2 cards in hand")))))
-
-(deftest project-beale
-  ;; Project Beale
-  (do-game
-    (new-game (default-contestant [(qty "Project Beale" 2)])
-              (default-challenger))
-    (core/gain state :contestant :click 8 :credit 8)
-    (play-from-hand state :contestant "Project Beale" "New party")
-    (let [pb1 (get-content state :party1 0)]
-      (advance state pb1 4)
-      (core/score state :contestant {:card (refresh pb1)})
-      (is (= 2 (:agenda-point (get-contestant))) "Only 4 advancements: scored for standard 2 points")
-      (play-from-hand state :contestant "Project Beale" "New party"))
-    (let [pb2 (get-content state :party2 0)]
-      (advance state pb2 5)
-      (core/score state :contestant {:card (refresh pb2)})
-      (is (= 5 (:agenda-point (get-contestant))) "5 advancements: scored for 3 points"))))
-
-(deftest project-kusanagi
-  ;; Project Kusanagi
-  (do-game
-    (new-game (default-contestant [(qty "Project Kusanagi" 2) "Character Wall"])
-              (default-challenger))
-    (play-from-hand state :contestant "Character Wall" "HQ")
-    (core/gain state :contestant :click 10 :credit 10)
-    (testing "Should gain 0 counters"
-      (play-and-score state "Project Kusanagi")
-      (let [pk-scored (get-scored state :contestant 0)]
-        (is (zero? (get-counters (refresh pk-scored) :agenda)) "Kusanagi should start with 0 agenda counters")))
-    (testing "Should gain 1 counter"
-      (play-from-hand state :contestant "Project Kusanagi" "New party")
-      (let [pk (get-content state :party2 0)]
-        (advance state pk 3)
-        (is (= 3 (get-counters (refresh pk) :advancement)) "Kusanagi should have 3 advancement tokens")
-        (core/score state :contestant {:card (refresh pk)}))
-      (let [pk-scored (get-scored state :contestant 1)]
-        (is (= 1 (get-counters (refresh pk-scored) :agenda)) "Kusanagi should have 1 agenda counter")
-        (run-empty-locale state :hq)
-        (card-ability state :contestant pk-scored 0)
-        (is (last-log-contains? state "Do 1 net damage"))
-        (is (zero? (get-counters (refresh pk-scored) :agenda)) "Kusanagi should have 0 agenda counters")))))
-
-(deftest project-vitruvius
-  ;; Project Vitruvius
-  (do-game
-    (new-game (default-contestant ["Project Vitruvius"
-                             "Hedge Fund"])
-              (default-challenger))
-    ;; Set up
-    (core/move state :contestant (find-card "Hedge Fund" (:hand (get-contestant))) :discard)
-    (is (= 1 (count (:discard (get-contestant)))) "Contestant should have 1 cards in hand")
-    (is (= 1 (count (:hand (get-contestant)))) "Contestant should have 1 cards in hand")
-    (core/gain state :contestant :click 10 :credit 10)
-    ;; Should gain 1 counter
-    (play-from-hand state :contestant "Project Vitruvius" "New party")
-    (let [vit (get-content state :party1 0)]
-      (advance state vit 4)
-      (is (= 4 (get-counters (refresh vit) :advancement)) "Vitruvius should have 4 advancement tokens")
-      (core/score state :contestant {:card (refresh vit)}))
-    (let [vit-scored (get-scored state :contestant 0)]
-      (is (= 1 (get-counters (refresh vit-scored) :agenda)) "Vitruvius should have 1 agenda counter")
-      (card-ability state :contestant vit-scored 0)
-      (prompt-select :contestant (find-card "Hedge Fund" (:discard (get-contestant))))
-      (is (zero? (get-counters (refresh vit-scored) :agenda)) "Vitruvius should have 0 agenda counters")
-      (is (= 1 (count (:hand (get-contestant)))) "Contestant should have 1 cards in hand"))))
 
 (deftest rebranding-team
   ;; Rebranding Team
@@ -1045,33 +814,6 @@
       (is (empty? (:prompt (get-contestant))) "Ability shouldn't fire if deck is empty")
       (is (zero? (count (:hand (get-contestant)))))
       (is (zero? (count (:deck (get-contestant))))))))
-
-(deftest underway-renovation
-  ;; Underway Renovation
-  (do-game
-    (new-game (default-contestant ["Underway Renovation" "Shipment from SanSan"])
-              (default-challenger))
-    (core/gain state :contestant :click 2)
-    (starting-hand state :challenger [])
-    (play-from-hand state :contestant "Underway Renovation" "New party")
-    (let [ur (get-content state :party1 0)]
-      (advance state ur)
-      (is (last-log-contains? state "Sure Gamble")
-          "Underway Renovation discarded card name is in log")
-      ; check for #2370
-      (is (not (last-log-contains? state "Sure Gamble, Sure Gamble"))
-          "Underway Renovation discarded card name is in log")
-      (is (= 1 (count (:discard (get-challenger)))) "1 card milled from Challenger Stack")
-      (play-from-hand state :contestant "Shipment from SanSan")
-      (prompt-choice :contestant "2")
-      (prompt-select :contestant ur)
-      (is (= 3 (get-counters (refresh ur) :advancement)))
-      (is (= 1 (count (:discard (get-challenger)))) "No Challenger mills; advancements were placed")
-      (advance state ur)
-      (is (= 4 (get-counters (refresh ur) :advancement)))
-      (is (last-log-contains? state "Sure Gamble, Sure Gamble")
-          "Underway Renovation discarded card name is in log")
-      (is (= 3 (count (:discard (get-challenger)))) "2 cards milled from Challenger Stack; 4+ advancements"))))
 
 (deftest unorthodox-predictions
   ;; Unorthodox Predictions

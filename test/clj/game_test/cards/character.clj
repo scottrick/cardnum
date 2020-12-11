@@ -175,24 +175,6 @@
       (core/reveal state :contestant (get-character state :hq 0))
       (is (zero? (:credit (get-contestant))) "Contestant spends 9 credits to reveal"))))
 
-(deftest searchlight
-  ;; Searchlight - Trace bace equal to advancement counters
-  (do-game
-    (new-game (default-contestant ["Searchlight"])
-              (default-challenger))
-    (play-from-hand state :contestant "Searchlight" "HQ")
-    (let [searchlight (get-character state :hq 0)]
-      (core/reveal state :contestant searchlight)
-      (card-subroutine state :contestant (refresh searchlight) 0)
-      (prompt-choice :contestant 0)
-      (prompt-choice :challenger 0)
-      (is (zero? (:tag (get-challenger))) "Trace failed with 0 advancements")
-      (advance state searchlight 1)
-      (card-subroutine state :contestant (refresh searchlight) 0)
-      (prompt-choice :contestant 0)
-      (prompt-choice :challenger 0)
-      (is (= 1 (:tag (get-challenger))) "Trace succeeds with 1 advancement"))))
-
 (deftest seidr-adaptive-barrier
   ;; Seidr Adaptive Barrier - +1 strength for every character protecting its locale
   (do-game

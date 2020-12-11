@@ -210,27 +210,6 @@
         (core/move state :contestant (find-card card (:hand (get-contestant))) :deck)
         (is (< number-of-shuffles (count (core/turn-events state :contestant :contestant-shuffle-deck))) "Should be shuffled")))))
 
-(deftest expose
-  ;; Exposé
-  (do-game
-    (new-game (default-contestant ["Exposé"])
-              (default-challenger))
-    (core/gain state :contestant :click 100 :credit 100)
-    (dotimes [i 5]
-      (play-from-hand state :contestant "Exposé" "New party")
-      (let [expose (get-content state (keyword (str "party" (inc i))) 0)]
-        (core/reveal state :contestant (refresh expose))
-        (is (zero? (:bad-publicity (get-contestant))) "Contestant should have 0 bad publicity to start with")
-        (when (pos? i)
-          (core/gain-bad-publicity state :contestant i)
-          (is (= i (:bad-publicity (get-contestant))) (str "Contestant should gain " i " bad publicity"))
-          (advance state (refresh expose) i))
-        (card-ability state :contestant (refresh expose) 0)
-        (is (zero? (:bad-publicity (get-contestant))) "Contestant should have 0 bad publicity after using Exposé's ability")
-        (is (= 1 (-> (get-contestant) :discard count)) "Archives should have 1 card in it")
-        (is (= "Exposé" (-> (get-contestant) :discard first :title)) "Only card in Archives should be Exposé")
-        (core/move state :contestant (find-card "Exposé" (:discard (get-contestant))) :hand)))))
-
 (deftest fumiko-yamamori
   ;; Fumiko Yamamori
   (do-game
@@ -247,44 +226,6 @@
       (prompt-choice :contestant "2 [Credits]")
       (prompt-choice :challenger "0 [Credits]")
       (is (= 1 (-> (get-challenger) :discard count)) "Challenger should discard a card to meat damage"))))
-
-(deftest grndl-refinery
-  ;; GRNDL Refinery
-  (do-game
-    (new-game (default-contestant ["GRNDL Refinery"])
-              (default-challenger))
-    (core/gain state :contestant :click 100 :credit 100)
-    (dotimes [i 5]
-      (play-from-hand state :contestant "GRNDL Refinery" "New party")
-      (let [grndl (get-content state (keyword (str "party" (inc i))) 0)
-            credits (- (:credit (get-contestant)) i)]
-        (when (pos? i)
-          (advance state (refresh grndl) i)
-          (is (= i (get-counters (refresh grndl) :advancement)) (str "GRNDL Refinery should have " i " advancement counters on it")))
-        (card-ability state :contestant (refresh grndl) 0)
-        (is (= (+ credits (* i 4)) (:credit (get-contestant))) (str "Contestant should gain " (* i 4) " credits"))
-        (is (= 1 (-> (get-contestant) :discard count)) "Archives should have 1 card in it")
-        (is (= "GRNDL Refinery" (-> (get-contestant) :discard first :title)) "Only card in Archives should be GRNDL Refinery")
-        (core/move state :contestant (find-card "GRNDL Refinery" (:discard (get-contestant))) :hand)))))
-
-(deftest haas-arcology-ai
-  ;; Haas Arcology AI - Click and advancement to gain 2 clicks, once per turn
-  (do-game
-    (new-game (default-contestant ["Haas Arcology AI"])
-              (default-challenger))
-    (core/gain state :contestant :click 1)
-    (play-from-hand state :contestant "Haas Arcology AI" "New party")
-    (let [haa (get-content state :party1 0)]
-      (advance state haa 2)
-      (core/reveal state :contestant (refresh haa))
-      (is (= 1 (:click (get-contestant))))
-      (is (= 2 (get-counters (refresh haa) :advancement)))
-      (card-ability state :contestant (refresh haa) 0)
-      (is (= 1 (get-counters (refresh haa) :advancement)) "Spent 1 advancement")
-      (is (= 2 (:click (get-contestant))) "Spent last click to gain 2 clicks")
-      (card-ability state :contestant (refresh haa) 0)
-      (is (= 1 (get-counters (refresh haa) :advancement)) "Can't use twcharacter in a turn")
-      (is (= 2 (:click (get-contestant))) "Didn't spend a click"))))
 
 (deftest indian-union-stock-exchange
   ;; Indian Union Stock Exchange
@@ -387,33 +328,6 @@
       (prompt-choice :contestant "Cancel")
       (is (last-log-contains? state "did not find") "Lily Lockwell's ability didn't find an operation")
       (is (zero? (:tag (get-challenger))) "Challenger should have 0 tags from Lily Lockwell ability even when no operation found"))))
-
-(deftest mark-yale
-  ;; Mark Yale
-  (do-game
-    (new-game
-      (default-contestant ["Mark Yale" "Project Atlas" (qty "Character Wall" 10)])
-      (default-challenger))
-    (starting-hand state :contestant ["Mark Yale" "Project Atlas"])
-    (core/gain state :contestant :credit 100 :click 100)
-    (play-from-hand state :contestant "Mark Yale" "New party")
-    (play-from-hand state :contestant "Project Atlas" "New party")
-    (let [mark (get-content state :party1 0)
-          atlas (get-content state :party2 0)]
-      (core/reveal state :contestant mark)
-      (advance state atlas 5)
-      (core/score state :contestant {:card (refresh atlas)}))
-    (let [mark (get-content state :party1 0)
-          scored-atlas (get-scored state :contestant 0)
-          credits (:credit (get-contestant))]
-      (card-ability state :contestant mark 1)
-      (prompt-select :contestant scored-atlas)
-      (is (= (+ credits 3) (:credit (get-contestant))) "Mark Yale spending an agenda counter should gain 3 credits")
-      (card-ability state :contestant scored-atlas 0)
-      (prompt-card :contestant (find-card "Character Wall" (:deck (get-contestant))))
-      (is (= (+ credits 4) (:credit (get-contestant))) "Spending an agenda counter for another reason should gain 1 credit")
-      (card-ability state :contestant mark 0)
-      (is (= (+ credits 6) (:credit (get-contestant))) "Mark Yale discarding itself should gain 2 credits"))))
 
 (deftest mr.-stone
   ;; Mr Stone
@@ -768,54 +682,6 @@
     (is (zero? (:click (get-contestant))) "Spent 1 click")
     (is (= "Aimor" (:title (get-character state :rd 0))) "Aimor swapped to R&D")
     (is (= "Lockdown" (:title (get-character state :hq 1))) "Lockdown swapped to HQ outer position")))
-
-(deftest test-ground
-  ;; Test Ground
-  (do-game
-    (new-game (default-contestant ["Test Ground" "Character Wall" "News Team"])
-              (default-challenger))
-    (core/gain state :contestant :credit 100 :click 100)
-    (play-from-hand state :contestant "Test Ground" "New party")
-    (play-from-hand state :contestant "Character Wall" "New party")
-    (play-from-hand state :contestant "News Team" "New party")
-    (let [ground (get-content state :party1 0)
-          iw (get-character state :party2 0)
-          news (get-content state :party3 0)]
-      (core/reveal state :contestant ground)
-      (core/reveal state :contestant iw)
-      (core/reveal state :contestant news)
-      (advance state ground 2)
-      (is (:revealed (refresh iw)) "Character Wall should be revealed")
-      (is (:revealed (refresh news)) "News Team should be revealed")
-      (is (zero? (-> (get-contestant) :discard count)) "Contestant should start with 0 cards in Archives")
-      (card-ability state :contestant ground 0)
-      (prompt-select :contestant iw)
-      (prompt-select :contestant news)
-      (is (not (:revealed (refresh iw))) "Character Wall should be revealed")
-      (is (not (:revealed (refresh news))) "News Team should be revealed")
-      (is (= 1 (-> (get-contestant) :discard count)) "Contestant should now have 1 card in discard"))))
-
-(deftest thomas-haas
-  ;; Thomas Haas
-  (letfn [(haas-test [number]
-            (do-game
-              (new-game (default-contestant ["Thomas Haas"])
-                        (default-challenger))
-              (core/gain state :contestant :credit 10 :click 10)
-              (play-from-hand state :contestant "Thomas Haas" "New party")
-              (let [haas (get-content state :party1 0)]
-                (core/reveal state :contestant haas)
-                (advance state (refresh haas) number)
-                (core/lose state :contestant :credit (:credit (get-contestant)))
-                (is (zero? (-> (get-contestant) :discard count)) "Contestant should start with 0 cards in Archives")
-                (is (zero? (:credit (get-contestant))) "Contestant should fire ability with 0 credits")
-                (is (= number (get-counters (refresh haas) :advancement))
-                    (str "Thomas Haas should have " number " advancement tokens"))
-                (card-ability state :contestant (refresh haas) 0)
-                (is (= (* 2 number) (:credit (get-contestant)))
-                    (str "Contestant should gain " (* 2 number) " credits from Thomas Haas' ability"))
-                (is (= 1 (-> (get-contestant) :discard count)) "Thomas Haas should be in Archives after ability"))))]
-    (doall (map haas-test [1 2 3 4 5]))))
 
 (deftest turtlebacks
   ;; Turtlebacks - Gain 1 credit for every new locale created
