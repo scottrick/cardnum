@@ -14,10 +14,6 @@
 (defn get-party-zones-challenger [state]
   (filter is-party? (get-zones-challenger state)))
 
-(defn get-runnable-zones [state]
-  (let [restricted-zones (keys (get-in @state [:challenger :register :cannot-run-on-locale]))]
-    (remove (set restricted-zones) (get-zones state))))
-
 (defn get-parties [state]
   (select-keys (get-in @state [:contestant :locales]) (get-party-zones state)))
 
@@ -131,11 +127,6 @@ but not including 'inactive hosting' like Personal Workshop."
   "Returns a list of all placed cards"
   [state]
   (concat (all-placed state :contestant) (all-placed state :challenger)))
-
-(defn number-of-virus-counters
-  "Returns number of actual virus counters (excluding virtual counters from Hivemind)"
-  [state]
-  (reduce + (map #(get-counters % :virus) (all-placed state :challenger))))
 
 (defn all-active
   "Returns a vector of all active cards for the given side. Active cards are either placed, the identity,
