@@ -2375,7 +2375,6 @@
                            (audio-sfx "agenda-steal")
                            (audio-sfx "click-advance")
                            (audio-sfx "click-card")
-                           (audio-sfx "click-credit")
                            (audio-sfx "click-run")
                            (audio-sfx "click-remove-tag")
                            (audio-sfx "game-end")

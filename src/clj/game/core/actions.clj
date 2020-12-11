@@ -44,16 +44,6 @@
     (swap! state update-in [:stats side :click :draw] (fnil inc 0))
     (play-sfx state side "click-card")))
 
-(defn click-credit
-  "Click to gain 1 credit."
-  [state side args]
-  (when (pay state side nil :click 1 {:action :contestant-click-credit})
-    (system-msg state side "spends [Click] to gain 1 [Credits]")
-    (gain-credits state side 1 (keyword (str (name side) "-click-credit")))
-    (swap! state update-in [:stats side :click :credit] (fnil inc 0))
-    (trigger-event state side (if (= side :contestant) :contestant-click-credit :challenger-click-credit))
-    (play-sfx state side "click-credit")))
-
 (defn- change-msg
   "Send a system message indicating the property change"
   [state side kw new-val delta]

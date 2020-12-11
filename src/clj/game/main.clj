@@ -38,7 +38,6 @@
    "contestant-ability" core/play-contestant-ability
    "contestant-phase-43" core/contestant-phase-43
    "continue" core/continue
-   "credit" core/click-credit
    "discard-radicle" core/discard-radicle
    "f1-f12-key-down" core/f1-f12-key-down
    "draw" core/click-draw
