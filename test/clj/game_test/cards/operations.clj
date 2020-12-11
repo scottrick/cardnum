@@ -678,68 +678,6 @@
       (is (core/has-subtype? (refresh qu) "Barrier") "Quandary Character Barrier")
       (is (= 2 (count (:subroutines (refresh qu)))) "Quandry gains a subroutine"))))
 
-(deftest success
-  ;; Success
-  (testing "Works with bad publicity"
-    (do-game
-      (new-game (default-contestant ["NAPD Contract" "Project Beale" "Success"])
-                (default-challenger))
-      (play-from-hand state :contestant "NAPD Contract" "New party")
-      (play-from-hand state :contestant "Project Beale" "New party")
-      (core/gain state :contestant :bad-publicity 9)
-      (core/gain state :contestant :credit 8)
-      (core/gain state :contestant :click 15)
-      (let [napd (get-content state :party1 0)
-            beale (get-content state :party2 0)]
-        (dotimes [_ 13] (core/advance state :contestant {:card (refresh napd)}))
-        (is (= 13 (get-counters (refresh napd) :advancement)))
-        (core/score state :contestant {:card (refresh napd)})
-        (is (= 2 (:agenda-point (get-contestant))))
-        (play-from-hand state :contestant "Success")
-        (prompt-select :contestant (get-scored state :contestant 0))
-        (is (= "NAPD Contract" (:title (first (:rfg (get-contestant))))))
-        (prompt-select :contestant (refresh beale))
-        (is (= 13 (get-counters (refresh beale) :advancement)))
-        (core/score state :contestant {:card (refresh beale)})
-        (is (= 7 (:agenda-point (get-contestant)))))))
-  (testing "Works with public agendas"
-    (do-game
-      (new-game (default-contestant ["Oaktown Renovation" "Vanity Project" "Success"])
-                (default-challenger))
-      (core/gain state :contestant :click 1)
-      (score-agenda state :contestant (find-card "Vanity Project" (:hand (get-contestant))))
-      (is (= 4 (:agenda-point (get-contestant))))
-      (play-from-hand state :contestant "Oaktown Renovation" "New party")
-      (is (= 5 (:credit (get-contestant))))
-      (play-from-hand state :contestant "Success")
-      (prompt-select :contestant (get-scored state :contestant 0))
-      (is (= "Vanity Project" (:title (first (:rfg (get-contestant))))))
-      (let [oaktown (get-content state :party1 0)]
-        (prompt-select :contestant (refresh oaktown))
-        (is (= 6 (get-counters (refresh oaktown) :advancement)))
-        (is (= 19 (:credit (get-contestant))) "Gain 2 + 2 + 2 + 2 + 3 + 3 = 14 credits for advancing Oaktown")
-        (core/score state :contestant {:card (refresh oaktown)})
-        (is (= 2 (:agenda-point (get-contestant)))))))
-  (testing "interaction with Jemison, regression test for issue #2704"
-    (do-game
-      (new-game (make-deck "Jemison Astronautics: Sacrifcharacter. Audacity. Success."
-                           ["Success"
-                            "High-Risk Investment"
-                            "Government Takeover"])
-                (default-challenger))
-      (core/gain state :contestant :click 1)
-      (score-agenda state :contestant (find-card "High-Risk Investment" (:hand (get-contestant))))
-      (play-from-hand state :contestant "Government Takeover" "New party")
-      (play-from-hand state :contestant "Success")
-      (prompt-select :contestant (get-in (get-contestant) [:scored 0]))
-      (let [gto (get-content state :party1 0)]
-        ;; Prompt for Jemison
-        (prompt-select :contestant (refresh gto))
-        (is (= 4 (get-counters (refresh gto) :advancement)) "Added 4 counters from Jemison trigger")
-        ;; Prompt for Success
-        (prompt-select :contestant (refresh gto))
-        (is (= (+ 4 5) (get-counters (refresh gto) :advancement)) "Advance 5 times from Success")))))
-
 (deftest threat-level-alpha
   ;; Threat Level Alpha - Win trace to give tags = Challenger tags; or 1 tag if 0
   (do-game
@@ -757,39 +695,3 @@
     (prompt-choice :contestant 0)
     (prompt-choice :challenger 0)
     (is (= 6 (:tag (get-challenger))) "Challenger took 3 tag because they had 3")))
-
-(deftest transparency-initiative
-  ;; Transparency Initiative - Full test
-  (do-game
-    (new-game (default-contestant ["Transparency Initiative" "Oaktown Renovation"
-                             "Project Atlas" "Hostile Takeover" "Casting Call"])
-              (default-challenger))
-    (core/gain state :contestant :click 5)
-    (play-from-hand state :contestant "Oaktown Renovation" "New party")
-    (play-from-hand state :contestant "Casting Call")
-    (prompt-select :contestant (find-card "Project Atlas" (:hand (get-contestant))))
-    (prompt-choice :contestant "New party")
-    (play-from-hand state :contestant "Hostile Takeover" "New party")
-    (let [oaktown (get-content state :party1 0)
-          atlas (get-content state :party2 0)
-          hostile (get-content state :party3 0)]
-      (play-from-hand state :contestant "Transparency Initiative")
-      (prompt-select :contestant (refresh oaktown))
-      ;; doesn't work on face-up agendas
-      (is (zero? (count (:hosted (refresh oaktown)))))
-      (prompt-select :contestant (refresh atlas))
-      (is (= 1 (count (:hosted (refresh atlas)))) "Casting Call")
-      ;; works on facedown agenda
-      (prompt-select :contestant (refresh hostile))
-      (is (= 1 (count (:hosted (refresh hostile)))))
-      ;; gains Public subtype
-      (is (core/has-subtype? (refresh hostile) "Public"))
-      ;; gain 1 credit when advancing
-      (is (= 5 (:credit (get-contestant))))
-      (core/advance state :contestant {:card (refresh hostile)})
-      (is (= 5 (:credit (get-contestant))))
-      ;; make sure advancing other agendas doesn't gain 1
-      (core/advance state :contestant {:card (refresh oaktown)})
-      (is (= 6 (:credit (get-contestant))) "Transparency initiative didn't fire")
-      (core/advance state :contestant {:card (refresh atlas)})
-      (is (= 5 (:credit (get-contestant))) "Transparency initiative didn't fire"))))

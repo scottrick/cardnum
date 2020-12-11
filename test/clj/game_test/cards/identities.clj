@@ -191,50 +191,6 @@
       (is (= 2 (:bad-publicity (get-contestant))) "Take 1 bad publicity")
       (is (= 18 (:credit (get-contestant))) "Gain 7 from Hostile Takeover + 3 from The Outfit"))))
 
-(deftest titan-transnational:-investing-in-your-future
-  ;; Titan Transnational
-  (testing "Add a counter to a scored agenda"
-    (do-game
-      (new-game
-        (make-deck "Titan Transnational: Investing In Your Future" ["Project Atlas"])
-        (default-challenger))
-      (play-from-hand state :contestant "Project Atlas" "New party")
-      (let [atl (get-content state :party1 0)]
-        (core/gain state :contestant :click 1)
-        (core/advance state :contestant {:card (refresh atl)})
-        (core/advance state :contestant {:card (refresh atl)})
-        (core/advance state :contestant {:card (refresh atl)})
-        (core/score state :contestant {:card (refresh atl)})
-        (let [scored (get-scored state :contestant 0)]
-          (is (= 1 (get-counters scored :agenda)) "1 counter added by Titan")))))
-  (testing "only use one counter of Contestantorate Sales Team"
-    (do-game
-      (new-game
-        (make-deck "Titan Transnational: Investing In Your Future" ["Contestantorate Sales Team" "Mark Yale"])
-        (default-challenger))
-      (play-from-hand state :contestant "Contestantorate Sales Team" "New party")
-      (play-from-hand state :contestant "Mark Yale" "New party")
-      (let [cst (get-content state :party1 0)
-            my (get-content state :party2 0)]
-        (core/gain state :contestant :click 3)
-        (core/advance state :contestant {:card (refresh cst)})
-        (core/advance state :contestant {:card (refresh cst)})
-        (core/advance state :contestant {:card (refresh cst)})
-        (core/advance state :contestant {:card (refresh cst)})
-        (core/score state :contestant {:card (refresh cst)})
-        (let [scored (get-scored state :contestant 0)]
-          (is (= 1 (get-counters (refresh scored) :agenda)) "1 counter added by Titan")
-          (is (= 10 (get-counters (refresh scored) :credit)) "10 credits from Titan")
-          (core/reveal state :contestant my)
-          (card-ability state :contestant my 1)
-          (prompt-select :contestant (refresh scored))
-          (is (zero? (get-counters (refresh scored) :agenda)) "Agenda counter used by Mark Yale")
-          (is (= 10 (get-counters (refresh scored) :credit)) "Credits not used by Mark Yale")
-          (card-ability state :contestant my 1)
-          (prompt-select :contestant (refresh scored))
-          (is (zero? (get-counters (refresh scored) :agenda)) "No agenda counter used by Mark Yale")
-          (is (= 10 (get-counters (refresh scored) :credit)) "Credits not used by Mark Yale"))))))
-
 (deftest weyland-consortium:-builder-of-nations
   ;; Builder of Nations
   (testing "1 meat damage per turn at most"

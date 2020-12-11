@@ -25,21 +25,6 @@
         (is (= (get-in @state [:contestant :discard 0 :title]) "Architect"))
         (is (= (get-in @state [:contestant :discard 1 :title]) "Architect"))))))
 
-(deftest asteroid-belt
-  ;; Asteroid Belt - Space Character reveal cost reduced by 3 credits per advancement
-  (do-game
-    (new-game (default-contestant ["Asteroid Belt"])
-              (default-challenger))
-    (core/gain state :contestant :credit 5)
-    (play-from-hand state :contestant "Asteroid Belt" "HQ")
-    (let [ab (get-character state :hq 0)]
-      (core/advance state :contestant {:card (refresh ab)})
-      (core/advance state :contestant {:card (refresh ab)})
-      (is (= 8 (:credit (get-contestant))))
-      (is (= 2 (get-counters (refresh ab) :advancement)))
-      (core/reveal state :contestant (refresh ab))
-      (is (= 5 (:credit (get-contestant))) "Paid 3 credits to reveal; 2 advancments on Asteroid Belt"))))
-
 (deftest curtain-wall
   ;; Curtain Wall - Strength boost when outermost Character
   (do-game
@@ -275,29 +260,4 @@
       (is (empty? (filter #(= "Ubax" (:title %)) (:discard (get-challenger)))) "Ubax not discarded")
       (is (empty? (filter #(= "Caldera" (:title %)) (:discard (get-challenger)))) "Caldera not discarded")
       (is (= 2 (count (:discard (get-challenger)))) "2 cards discarded"))))
-
-(deftest wendigo
-  ;; Montestanth character gain and lose subtypes from normal advancements and placed advancements
-  (do-game
-    (new-game (default-contestant ["Wendigo" "Shipment from SanSan"
-                             "Superior Cyberwalls"])
-              (default-challenger))
-    (core/gain state :contestant :click 2)
-    (play-from-hand state :contestant "Superior Cyberwalls" "New party")
-    (let [sc (get-content state :party1 0)]
-      (score-agenda state :contestant sc)
-      (play-from-hand state :contestant "Wendigo" "HQ")
-      (let [wend (get-character state :hq 0)]
-        (core/reveal state :contestant wend)
-        (is (= 4 (:current-strength (refresh wend))) "Wendigo at normal 4 strength")
-        (core/advance state :contestant {:card (refresh wend)})
-        (is (= true (has? (refresh wend) :subtype "Barrier")) "Wendigo gained Barrier")
-        (is (= false (has? (refresh wend) :subtype "Code Gate")) "Wendigo lost Code Gate")
-        (is (= 5 (:current-strength (refresh wend))) "Wendigo boosted to 5 strength by scored Superior Cyberwalls")
-        (play-from-hand state :contestant "Shipment from SanSan")
-        (prompt-choice :contestant "1")
-        (prompt-select :contestant wend)
-        (is (= false (has? (refresh wend) :subtype "Barrier")) "Wendigo lost Barrier")
-        (is (= true (has? (refresh wend) :subtype "Code Gate")) "Wendigo gained Code Gate")
-        (is (= 4 (:current-strength (refresh wend))) "Wendigo returned to normal 4 strength")))))
 

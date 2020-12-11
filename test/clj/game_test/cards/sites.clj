@@ -43,18 +43,6 @@
       (is (= 3 (count (:deck (get-contestant)))))
       (is (zero? (:credit (get-challenger)))))))
 
-(deftest allele-repression
-  ;; Allele Repression
-  (do-game
-    (new-game (default-contestant ["Allele Repression"])
-              (default-challenger))
-    (play-from-hand state :contestant "Allele Repression" "New party")
-    (let [ar (get-content state :party1 0)]
-      (core/advance state :contestant (refresh ar))
-      (core/advance state :contestant (refresh ar))
-      (card-ability state :contestant ar 0)
-      (is (= 1 (count (:discard (get-contestant)))) "Allele Repression is discarded"))))
-
 (deftest bioroid-work-crew
   ;; Bioroid Work Crew
   (letfn [(bwc-test [card]
@@ -372,39 +360,6 @@
       (prompt-card :contestant (find-card "Salem's Hospitality" (:deck (get-contestant))))
       (prompt-choice :contestant "Sure Gamble")
       (is (= 3 (-> (get-challenger) :discard count)) "Challenger should have discarded all cards from Salem's Hospitality"))))
-
-(deftest ngo-front
-  ;; NGO Front - full test
-  (do-game
-    (new-game (default-contestant [(qty "NGO Front" 3)])
-              (default-challenger))
-    (core/gain state :contestant :click 3)
-    (play-from-hand state :contestant "NGO Front" "New party")
-    (play-from-hand state :contestant "NGO Front" "New party")
-    (play-from-hand state :contestant "NGO Front" "New party")
-    (let [ngo1 (get-content state :party1 0)
-          ngo2 (get-content state :party2 0)
-          ngo3 (get-content state :party3 0)]
-      (core/advance state :contestant {:card ngo2})
-      (core/advance state :contestant {:card (refresh ngo3)})
-      (core/advance state :contestant {:card (refresh ngo3)})
-      (core/reveal state :contestant (refresh ngo1))
-      (core/reveal state :contestant (refresh ngo2))
-      (core/reveal state :contestant (refresh ngo3))
-      (is (= 2 (:credit (get-contestant))) "Contestant at 2 credits")
-      (card-ability state :contestant ngo1 1)
-      (card-ability state :contestant ngo1 0)
-      (is (= 2 (:credit (get-contestant))) "Contestant still 2 credits")
-      (is (zero? (count (:discard (get-contestant)))) "Nothing discarded")
-      (card-ability state :contestant ngo2 1)
-      (is (= 2 (:credit (get-contestant))) "Contestant still 2 credits")
-      (is (zero? (count (:discard (get-contestant)))) "Nothing discarded")
-      (card-ability state :contestant ngo2 0)
-      (is (= 7 (:credit (get-contestant))) "Contestant gained 5 credits")
-      (is (= 1 (count (:discard (get-contestant)))) "1 NGO Front Discarded")
-      (card-ability state :contestant ngo3 1)
-      (is (= 15 (:credit (get-contestant))) "Contestant gained 8 credits")
-      (is (= 2 (count (:discard (get-contestant)))) "2 NGO Front Discarded"))))
 
 (deftest primary-transmission-dish
   ;; Primary Transmission Dish

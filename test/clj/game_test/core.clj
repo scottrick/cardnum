@@ -198,8 +198,6 @@
    (let [title (:title card)
          advancementcost (:advancementcost card)]
      (core/gain state :contestant :click advancementcost :credit advancementcost)
-     (dotimes [n advancementcost]
-       (core/advance state :contestant {:card (core/get-card state card)}))
      (is (= advancementcost (get-counters (core/get-card state card) :advancement)))
      (core/score state :contestant {:card (core/get-card state card)})
      (is (find-card title (get-scored state :contestant))))))

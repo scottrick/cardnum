@@ -92,20 +92,6 @@
       (is (= (core/card-str state (first (:hosted (refresh hqiwall0))))
              "Parasite hosted on Character Wall protecting HQ at position 0")))))
 
-(deftest invalid-score-attempt
-  ;; Test scoring with an incorrect number of advancement tokens
-  (do-game
-    (new-game (default-contestant ["Ancestral Imager"])
-              (default-challenger))
-    (play-from-hand state :contestant "Ancestral Imager" "New party")
-    (let [ai (get-content state :party1 0)]
-      ;; Trying to score without any tokens does not do anything
-      (is (not (find-card "Ancestral Imager" (:scored (get-contestant)))) "AI not scored")
-      (is (not (nil? (get-content state :party1 0))))
-      (core/advance state :contestant {:card (refresh ai)})
-      (core/score state :contestant {:card (refresh ai)})
-      (is (not (nil? (get-content state :party1 0)))))))
-
 (deftest counter-manipulation-commands-smart
   ;; Test interactions of smart counter advancement command
   (do-game
