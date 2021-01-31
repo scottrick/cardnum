@@ -224,6 +224,17 @@
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
    "Spells of the Barrow-wights"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
+   "Summons from Long Sleep"
+   {:abilities [{:label "With"
+                 :effect (req (let [r (get-card state card)
+                                    hosted (count (:host r))]
+                                (resolve-ability state side
+                                                 {:prompt (if (= hosted 1)
+                                                            (msg "There is already a creature hosted")
+                                                            (msg "Click a applicable creature from hand"))
+                                                  :choices {:req (fn [t] (card-is? t :side side))}
+                                                  :msg (msg "place " (card-str state target) " off to the side")
+                                                  :effect (effect (host card target))} card nil)))}]}
    "Taint of Glory"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
    "The Burden of Time"
