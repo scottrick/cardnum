@@ -5,21 +5,7 @@
             [game-test.utils :refer [load-cards]]
             [clojure.test :refer :all]))
 
-
 ;;; Click action functions
-(defn take-credits
-  "Take credits for n clicks, or if no n given, for all remaining clicks of a side.
-  If all clicks are used up, end turn and start the opponent's turn."
-  ([state side] (take-credits state side nil))
-  ([state side n]
-    (let  [remaining-clicks (get-in @state [side :click])
-           n (or n remaining-clicks)
-           other (if (= side :contestant) :challenger :contestant)]
-      (dotimes [i n] (core/click-credit state side nil))
-      (if (= (get-in @state [side :click]) 0)
-        (do (core/end-turn state side nil)
-            (core/start-turn state other nil))))))
-
 (defn new-game
   "Init a new game using given contestant and challenger. Keep starting hands (no mulligan) and start Contestant's turn."
   ([contestant challenger] (new-game contestant challenger nil))
@@ -39,8 +25,7 @@
         (if (#{:both :challenger} mulligan)
           (core/resolve-prompt state :challenger {:choice "Mulligan"})
           (core/resolve-prompt state :challenger {:choice "Keep"}))
-        (when-not dont-start-turn (core/start-turn state :contestant nil))
-        (when (= start-as :challenger) (take-credits state :contestant)))
+        (when-not dont-start-turn (core/start-turn state :contestant nil)))
       state)))
 
 (defn load-all-cards [tests]
@@ -53,7 +38,6 @@
 (defn reset-card-defs [card-type tests]
   (core/reset-card-defs card-type)
   (tests))
-
 
 ;;; Card related functions
 (defn find-card
@@ -214,18 +198,9 @@
    (let [title (:title card)
          advancementcost (:advancementcost card)]
      (core/gain state :contestant :click advancementcost :credit advancementcost)
-     (dotimes [n advancementcost]
-       (core/advance state :contestant {:card (core/get-card state card)}))
      (is (= advancementcost (get-counters (core/get-card state card) :advancement)))
      (core/score state :contestant {:card (core/get-card state card)})
      (is (find-card title (get-scored state :contestant))))))
-
-(defn advance
-  "Advance the given card."
-  ([state card] (advance state card 1))
-  ([state card n]
-   (dotimes [_ n]
-     (core/advance state :contestant {:card (core/get-card state card)}))))
 
 (defn last-log-contains?
   [state content]

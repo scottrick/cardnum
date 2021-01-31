@@ -180,6 +180,8 @@
   [:div
    [:h4 (:full_set card) ": " (:title card)]
    [:div.text
+    (if (= false (:dreamcard card))
+      [:p [:span.type "Rarity: "] (str (:Rarity card)) [:span.type ", Precise: "] (str (:Precise card))])
     [:p [:span.type (str (:type card))] (if (= (.toLowerCase (:type card)) (:Secondary card))
                                           ""
                                           (str ": " (:Secondary card)))]

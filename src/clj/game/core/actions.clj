@@ -44,16 +44,6 @@
     (swap! state update-in [:stats side :click :draw] (fnil inc 0))
     (play-sfx state side "click-card")))
 
-(defn click-credit
-  "Click to gain 1 credit."
-  [state side args]
-  (when (pay state side nil :click 1 {:action :contestant-click-credit})
-    (system-msg state side "spends [Click] to gain 1 [Credits]")
-    (gain-credits state side 1 (keyword (str (name side) "-click-credit")))
-    (swap! state update-in [:stats side :click :credit] (fnil inc 0))
-    (trigger-event state side (if (= side :contestant) :contestant-click-credit :challenger-click-credit))
-    (play-sfx state side "click-credit")))
-
 (defn- change-msg
   "Send a system message indicating the property change"
   [state side kw new-val delta]
@@ -588,23 +578,6 @@
 (defn regionize
   [state side card]
   (system-msg state side (str (:RPath card) " " (:title card))))
-
-(defn advance
-  "Advance a contestant card that can be advanced.
-   If you pass in a truthy value as the 4th parameter, it will advance at no cost (for the card Success)."
-  ([state side {:keys [card]}] (advance state side card nil))
-  ([state side card no-cost]
-   (let [card (get-card state card)]
-     (when (can-advance? state side card)
-       (when-let [cost (pay state side card :click (if-not no-cost 1 0)
-                            :credit (if-not no-cost 1 0) {:action :contestant-advance})]
-         (let [spent   (build-spend-msg cost "advance")
-               card    (card-str state card)
-               message (str spent card)]
-           (system-msg state side message))
-         (update-advancement-cost state side card)
-         (add-prop state side (get-card state card) :advance-counter 1)
-         (play-sfx state side "click-advance"))))))
 
 (defn score
   "Score an agenda. It trusts the card data passed to it."

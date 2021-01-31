@@ -127,7 +127,7 @@
 ;;; In-game chat commands
 (defn set-adv-counter [state side target value]
   (set-prop state side target :advance-counter value)
-  (system-msg state side (str "sets advancement counters to " value " on "
+  (system-msg state side (str "sets light blue counters to " value " on "
                               (card-str state target)))
   (trigger-event state side :advancement-placed target))
 
@@ -146,6 +146,11 @@
                                      (can-be-advanced? target) :advance-counter
                                      (and (is-type? target "Agenda") (is-scored? state side target)) :agenda
                                      (and (card-is? target :side :challenger) (has-subtype? target "Virus")) :virus)
+                        counter-name (cond (= :virus counter-type) "red"
+                                           (= :power counter-type) "purple"
+                                           (= :credit counter-type) "black"
+                                           (= :agenda counter-type) "dark blue"
+                                           :else "light blue")
                         advance (= :advance-counter counter-type)]
                     (cond
                       advance
@@ -154,12 +159,12 @@
                       (not counter-type)
                       (toast state side
                              (str "Could not infer what counter type you mean. Please specify one manually, by typing "
-                                  "'/counter TYPE " value "', where TYPE is advance, agenda, credit, power, or virus.")
+                                  "'/counter TYPE " value "', where TYPE is light [l]/dark [d] blue, black [b], purple [p], or red [r].")
                              "error" {:time-out 0 :close-button true})
 
                       :else
                       (do (set-prop state side target :counter (merge (:counter target) {counter-type value}))
-                          (system-msg state side (str "sets " (name counter-type) " counters to " value " on "
+                          (system-msg state side (str "sets " counter-name " counters to " value " on "
                                                       (card-str state target)))))))
      :choices {:req (fn [t] (card-is? t :side side))}}
     {:title "/counter command"} nil))
@@ -184,17 +189,22 @@
           value (if-let [n (string->num (second args))] n 1)
           one-letter (if (<= 1 (.length typestr)) (.substring typestr 0 1) "")
           two-letter (if (<= 2 (.length typestr)) (.substring typestr 0 2) one-letter)
-          counter-type (cond (= "v" one-letter) :virus
+          counter-type (cond (= "r" one-letter) :virus
                              (= "p" one-letter) :power
-                             (= "c" one-letter) :credit
-                             (= "ag" two-letter) :agenda
+                             (= "b" one-letter) :credit
+                             (= "d" one-letter) :agenda
                              :else :advance-counter)
+          counter-name (cond (= "r" one-letter) "red"
+                             (= "p" one-letter) "purple"
+                             (= "b" one-letter) "black"
+                             (= "d" one-letter) "dark blue"
+                             :else "light blue")
           advance (= :advance-counter counter-type)]
       (if advance
         (command-adv-counter state side value)
         (resolve-ability state side
                        {:effect (effect (set-prop target :counter (merge (:counter target) {counter-type value}))
-                                        (system-msg (str "sets " (name counter-type) " counters to " value " on "
+                                        (system-msg (str "sets " counter-name " counters to " value " on "
                                                          (card-str state target))))
                         :choices {:req (fn [t] (card-is? t :side side))}}
                        {:title "/counter command"} nil)))))
@@ -266,8 +276,7 @@
   [state side args]
   (if (get-in @state [side :blind])
     (swap! state assoc-in [side :blind] false)
-    (swap! state assoc-in [side :blind] true))
-  )
+    (swap! state assoc-in [side :blind] true)))
 
 (defn blind-send
   [state side args]
@@ -275,8 +284,7 @@
     (system-msg state side msg))
   (if (get-in @state [side :hold-card])
     (swap! state assoc-in [side :hold-card] false)
-    (swap! state assoc-in [side :hold-card] true))
-  )
+    (swap! state assoc-in [side :hold-card] true)))
 
 (defn bonus-key-down
   [state side args]
@@ -284,8 +292,7 @@
     (system-msg state side msg))
   (if (get-in @state [side :bonus-key])
     (swap! state assoc-in [side :bonus-key] false)
-    (swap! state assoc-in [side :bonus-key] true))
-  )
+    (swap! state assoc-in [side :bonus-key] true)))
 
 (defn minus-key-down
   [state side args]
@@ -293,8 +300,7 @@
     (system-msg state side msg))
   (if (get-in @state [side :minus-key])
     (swap! state assoc-in [side :minus-key] false)
-    (swap! state assoc-in [side :minus-key] true))
-  )
+    (swap! state assoc-in [side :minus-key] true)))
 
 (defn option-key-down
   [state side args]
@@ -302,8 +308,7 @@
     (system-msg state side msg))
   (if (get-in @state [side :opt-key])
     (swap! state assoc-in [side :opt-key] false)
-    (swap! state assoc-in [side :opt-key] true))
-  )
+    (swap! state assoc-in [side :opt-key] true)))
 
 (defn f1-f12-key-down
   [state side args]
@@ -313,8 +318,7 @@
     (swap! state assoc-in [side :fn12-key] false)
     (do
       (discard-radicle state side args)
-      (swap! state assoc-in [side :fn12-key] true)))
-  )
+      (swap! state assoc-in [side :fn12-key] true))))
 
 (defn talk-bool
   [state side args]
@@ -322,8 +326,7 @@
     (do (swap! state assoc-in [side :talk] false)
         (system-msg state side "Talk some is off"))
     (do (swap! state assoc-in [side :talk] true)
-        (system-msg state side "Talk some is on")))
-  )
+        (system-msg state side "Talk some is on"))))
 
 (defn tall-bool
   [state side args]
@@ -331,8 +334,7 @@
     (do (swap! state assoc-in [side :tall] false)
         (system-msg state side "Tell all is off"))
     (do (swap! state assoc-in [side :tall] true)
-        (system-msg state side "Tell all is on")))
-  )
+        (system-msg state side "Tell all is on"))))
 
 (defn tell-bool
   [state side args]
@@ -340,8 +342,7 @@
     (do (swap! state assoc-in [side :tell] false)
         (system-msg state side "Tell more is off"))
     (do (swap! state assoc-in [side :tell] true)
-        (system-msg state side "Tell more is on")))
-  )
+        (system-msg state side "Tell more is on"))))
 
 (defn host-any-card
   [state side args]
@@ -536,6 +537,7 @@
           "/click"      #(swap! %1 assoc-in [%2 :click] (max 0 value))
           "/close-prompt" command-close-prompt
           "/counter"    #(command-counter %1 %2 args)
+          "/counters"   #(command-counter %1 %2 args)
           "/credit"     #(swap! %1 assoc-in [%2 :credit] (max 0 value))
           "/deck"       #(toast %1 %2 "/deck number takes the format #n")
           "/discard"    #(resolve-ability %1 %2
@@ -653,8 +655,14 @@
                                                           (move %1 %2 c :scored)))
                                            :choices {:req (fn [t] true)}}
                                           {:title "/score command"} nil)
-          "/roll"       #(command-roll %1 %2 value)
+          "/store"      #(resolve-ability %1 %2
+                                          {:prompt "Select a card to store"
+                                           :effect (req (let [c  target]
+                                                          (move %1 %2 c :scored)))
+                                           :choices {:req (fn [t] true)}}
+                                          {:title "/store command"} nil)
           "/r"          #(basic-roll %1 %2)
+          "/roll"       #(command-roll %1 %2 value)
 ;          "/swap"       #(escher-char %1 %2 args)
           "/swapc"      #(escher-char %1 %2 args)
           "/swaph"      #(escher-hazard %1 %2 args)
@@ -704,4 +712,3 @@
                 "to our GitHub issues page.<br/><br/>Use /error to see this message again.")
            "exception"
            {:time-out 0 :close-button true})))
-

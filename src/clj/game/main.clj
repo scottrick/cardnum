@@ -16,7 +16,6 @@
   {
    "ability" core/play-ability
    "access" core/successful-run
-   "advance" core/advance
    "agent" #(core/declare-agent %1 %2 (:card %3) nil)
    "back-m-h" core/back-m-h
    "back-org" core/back-org
@@ -38,7 +37,6 @@
    "contestant-ability" core/play-contestant-ability
    "contestant-phase-43" core/contestant-phase-43
    "continue" core/continue
-   "credit" core/click-credit
    "discard-radicle" core/discard-radicle
    "f1-f12-key-down" core/f1-f12-key-down
    "draw" core/click-draw

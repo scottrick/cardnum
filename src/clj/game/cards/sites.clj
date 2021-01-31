@@ -42,8 +42,7 @@
                  :once :per-turn
                  :req (req (:contestant-phase-12 @state))
                  :label (str "Gain " per-turn " [Credits] (start of turn)")
-                 :effect (req (take-credits state :contestant per-turn)
-                              (when (zero? (get-counters card :credit))
+                 :effect (req (when (zero? (get-counters card :credit))
                                 (discard state :contestant card)))}]
     {:effect (effect (add-counter card :credit counters))
      :hidden-events {:challenger-turn-ends contestant-reveal-toast}

@@ -419,13 +419,6 @@
                        (when no-cost ""))))))
                        ;(when no-cost " at no cost"))))))
 
-(defn- handle-virus-counter-flag
-  "Deal with setting the added-virus-counter flag"
-  [state side placed-card]
-  (if (and (has-subtype? placed-card "Virus")
-           (pos? (get-counters placed-card :virus)))
-    (update! state side (assoc placed-card :added-virus-counter true))))
-
 (defn challenger-place
   "Places specified challenger card if able
   Params include extra-cost, no-cost, host-card, facedown and custom-message."

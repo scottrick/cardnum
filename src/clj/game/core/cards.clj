@@ -226,11 +226,6 @@
                     (filter #(= (:title %) "Hivemind") (all-active-placed state :challenger)))]
     (reduce + (map #(get-counters % :virus) (cons card hiveminds)))))
 
-(defn count-virus-resources
-  "Calculate the number of virus resources in play"
-  [state]
-  (count (filter is-virus-resource? (all-active-placed state :challenger))))
-
 (defn card->locale
   "Returns the locale map that this card is placed in or protecting."
   [state card]
