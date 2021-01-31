@@ -653,8 +653,14 @@
                                                           (move %1 %2 c :scored)))
                                            :choices {:req (fn [t] true)}}
                                           {:title "/score command"} nil)
-          "/roll"       #(command-roll %1 %2 value)
+          "/store"      #(resolve-ability %1 %2
+                                          {:prompt "Select a card to store"
+                                           :effect (req (let [c  target]
+                                                          (move %1 %2 c :scored)))
+                                           :choices {:req (fn [t] true)}}
+                                          {:title "/store command"} nil)
           "/r"          #(basic-roll %1 %2)
+          "/roll"       #(command-roll %1 %2 value)
 ;          "/swap"       #(escher-char %1 %2 args)
           "/swapc"      #(escher-char %1 %2 args)
           "/swaph"      #(escher-hazard %1 %2 args)

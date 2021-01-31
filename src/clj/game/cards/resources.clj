@@ -1783,6 +1783,7 @@
                                             :challenger
                                             :contestant)
                                  kount (count (get-in @state [opp-side :deck]))]
+                             (move state side card :discard)
                              (loop [k (if (< kount 5) kount 5)]
                                (when (> k 0)
                                  (move state side (rand-nth (get-in @state [opp-side :hand])) :play-area)

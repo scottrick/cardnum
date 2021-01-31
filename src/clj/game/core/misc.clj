@@ -128,6 +128,10 @@ but not including 'inactive hosting' like Personal Workshop."
   [state]
   (concat (all-placed state :contestant) (all-placed state :challenger)))
 
+(defn get-runnable-zones [state]
+  (let [restricted-zones (keys (get-in @state [:challenger :register :cannot-run-on-locale]))]
+    (remove (set restricted-zones) (get-zones state))))
+
 (defn all-active
   "Returns a vector of all active cards for the given side. Active cards are either placed, the identity,
   currents, or the contestant's scored area."
