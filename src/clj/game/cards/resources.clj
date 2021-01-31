@@ -295,6 +295,17 @@
                                                                          (can-host? %)))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host target card))} card nil)))}]}
+   "Crept Along Carefully"
+   {:abilities [{:label "Place"
+                 :effect (req (let [r (get-card state card)
+                                    hosted? (character? (:host r))]
+                                (resolve-ability state side
+                                                 {:prompt (msg "Place on a character that represents company")
+                                                  :choices {:req #(if (or hosted? (not hosted?))
+                                                                    (and (character? %)
+                                                                         (can-host? %)))}
+                                                  :msg (msg "host it on " (card-str state target))
+                                                  :effect (effect (host target card))} card nil)))}]}
    "Crimson Hood"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
