@@ -1890,6 +1890,11 @@ align-radio
     min-width: 90px
     overflow: auto
 
+    .card
+      
+      &:hover
+        box-shadow: 0px 0px 5px 0px orange
+
     .contestant-rig, .challenger-rig, contestant-rig.opponent, .challenger-rig.opponent
       flex(1)
       display-flex()
@@ -2613,15 +2618,19 @@ align-radio
       z-index: 250
 
       .card-preview.blind
-        width: 200%
-        height: 200%
-        transform(translate(-160%, 0%))
-        transition(all 0.2s ease-in-out)
+        top: 0
+        left: 0
+        position: fixed
+        max-height: 590px
+        max-width: 400px
 
         &.region
           width: 200%
           height: 200%
           transform(translate(-122%, 0%) rotate(-90deg))
+
+        > img
+          position: relative
 
       .card-preview
         width: 100%
