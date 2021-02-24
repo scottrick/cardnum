@@ -347,11 +347,11 @@
 (defn host-any-card
   [state side args]
   (resolve-ability state side
-                   {:prompt "Select hosting card"
+                   {:prompt "Select host character/card"
                     :choices {:req (fn [t] true)}
                     :msg (msg "host " (:title target))
                     :effect (req (let [c (get-card state target)] (resolve-ability state side
-                                                                                   {:prompt "Select card to host"
+                                                                                   {:prompt "Select card to transfer to host"
                                                                                     :choices {:req (fn [t] true)}
                                                                                     :effect (effect (host c (get-card state target)))
                                                                                     ; host target onto card
@@ -361,11 +361,11 @@
 (defn host-any-card-hidden
   [state side args]
   (resolve-ability state side
-                   {:prompt "Select hosting card"
+                   {:prompt "Select host character/card"
                     :choices {:req (fn [t] true)}
                     :msg (msg "host " (:title target))
                     :effect (req (let [c (get-card state target)] (resolve-ability state side
-                                                                                   {:prompt "Select card to host"
+                                                                                   {:prompt "Select card to transfer to host"
                                                                                     :choices {:req (fn [t] true)}
                                                                                     :effect (effect (host-hidden c (get-card state target)))
                                                                                     ; host target onto card
@@ -375,10 +375,10 @@
 (defn host-any-card-reveal
   [state side args]
   (resolve-ability state side
-                   {:prompt "Select hosting card"
+                   {:prompt "Select host character/card"
                     :choices {:req (fn [t] true)}
                     :effect (req (let [c (get-card state target)] (resolve-ability state side
-                                                                                   {:prompt "Select card to host"
+                                                                                   {:prompt "Select card to transfer to host"
                                                                                     :choices {:req (fn [t] true)}
                                                                                     :effect (effect (host-reveal c (get-card state target)))
                                                                                     :msg (msg "host " (:title (get-card state target)))
