@@ -367,7 +367,7 @@
    {:qty 3 :card "Fangorn" :id "(TW)"}
    {:qty 3 :card "Felaya" :id "(SL)"}
    {:qty 3 :card "Forochel" :id "(TW)"}
-   {:qty 3 :card "Foroviakain" :id "(NW)"}
+   {:qty 3 :card "Forovirkain" :id "(ML)"}
    {:qty 3 :card "Forrhûn" :id "(NE)"}
    {:qty 3 :card "Gan" :id "(CA)"}
    {:qty 3 :card "Gap of Isen" :id "(TW)"}
@@ -464,7 +464,7 @@
    {:qty 3 :card "Tantûrak" :id "(CA)"}
    {:qty 3 :card "Taur Rómen" :id "(FB)"}
    {:qty 3 :card "The Shire" :id "(TW)"}
-   {:qty 3 :card "The Sundering Seas" :id "(NW)"}
+   {:qty 3 :card "The Sundering Seas" :id "(ML)"}
    {:qty 3 :card "Thorenaer" :id "(NW)"}
    {:qty 3 :card "Tuktan" :id "(CA)"}
    {:qty 3 :card "Tulwang" :id "(SL)"}
@@ -489,7 +489,7 @@
   [{:qty 1 :card "Abandoned Caravansary" :id "[H] (SL)"}
    {:qty 1 :card "Achrond" :id "[H] (NW)"}
    {:qty 1 :card "Adan Tomb" :id "[H] (CP)"}
-   {:qty 1 :card "Aden Scarlet's Medical Library" :id "[H] (RS)"}
+   {:qty 1 :card "Aden Scarlet's Medical Library" :id "[H] (KN)"}
    {:qty 1 :card "Adûn-Tarîk" :id "[H] (SL)"}
    {:qty 1 :card "Aelinost" :id "[H] (BO)"}
    {:qty 1 :card "Aeluin" :id "[H] (DS)"}
@@ -606,7 +606,7 @@
    {:qty 1 :card "Goblin-gate" :id "[H] (TW)"}
    {:qty 1 :card "Gold Hill" :id "[H] (TD)"}
    {:qty 1 :card "Gondmaeglom" :id "[H] (TD)"}
-   {:qty 1 :card "Gondrings Lair" :id "[H] (NW)"}
+   {:qty 1 :card "Gondring's Lair" :id "[H] (NW)"}
    {:qty 1 :card "Gyogorasag Sanctuary" :id "[H] (GW)"}
    {:qty 1 :card "Hall of Alûva" :id "[H] (DS)"}
    {:qty 1 :card "Hall of Malkôra" :id "[H] (DS)"}
@@ -632,7 +632,7 @@
    {:qty 1 :card "Jääkylät" :id "[H] (NW)"}
    {:qty 1 :card "Joghul's Shrine" :id "[H] (CP)"}
    {:qty 1 :card "Kadar an-Khâradun" :id "[H] (DS)"}
-   {:qty 1 :card "Kala Dulakurth" :id "[H] (NW)"}
+   {:qty 1 :card "Kala Dulakurth" :id "[H] (ML)"}
    {:qty 1 :card "Kala-Ogurk" :id "[H] (BO)"}
    {:qty 1 :card "Khibil Ephalak" :id "[H] (SL)"}
    {:qty 1 :card "Khorsâj" :id "[H] (SL)"}
@@ -804,9 +804,10 @@
    {:qty 1 :card "Thunder Cleft" :id "[H] (GW)"}
    {:qty 1 :card "Thuringwathost" :id "[H] (NE)"}
    {:qty 1 :card "Tol Buruth" :id "[H] (CP)"}
+   {:qty 1 :card "Tol Fuin" :id "[H] (ML)"}
    {:qty 1 :card "Tol Glingal" :id "[H] (SL)"}
    {:qty 1 :card "Tol Lamfirith" :id "[H] (KN)"}
-   {:qty 1 :card "Tol Morwen" :id "[H] (NW)"}
+   {:qty 1 :card "Tol Morwen" :id "[H] (ML)"}
    {:qty 1 :card "Tol Ringurthur" :id "[H] (BU)"}
    {:qty 1 :card "Tol Turgul" :id "[H] (DS)"}
    {:qty 1 :card "Tol Uialgaer" :id "[H] (SL)"}
@@ -882,7 +883,7 @@
   [{:qty 1 :card "Abandoned Caravansary" :id "[M] (SL)"}
    {:qty 1 :card "Achrond" :id "[M] (NW)"}
    {:qty 1 :card "Adan Tomb" :id "[M] (CP)"}
-   {:qty 1 :card "Aden Scarlet's Medical Library" :id "[M] (RS)"}
+   {:qty 1 :card "Aden Scarlet's Medical Library" :id "[M] (KN)"}
    {:qty 1 :card "Aelinost" :id "[M] (BO)"}
    {:qty 1 :card "Aeluin" :id "[M] (DS)"}
    {:qty 1 :card "Alkarrânda" :id "[M] (BO)"}
@@ -974,7 +975,7 @@
    {:qty 1 :card "Gobel Mírlond" :id "[M] (LE)"}
    {:qty 1 :card "Gold Hill" :id "[M] (AS)"}
    {:qty 1 :card "Gondmaeglom" :id "[M] (LE)"}
-   {:qty 1 :card "Gondrings Lair" :id "[M] (NW)"}
+   {:qty 1 :card "Gondring's Lair" :id "[M] (NW)"}
    {:qty 1 :card "Grey Havens" :id "[M] (AS)"}
    {:qty 1 :card "Gyogorasag Sanctuary" :id "[M] (GW)"}
    {:qty 1 :card "Hall of Alûva" :id "[M] (DS)"}
@@ -1140,9 +1141,10 @@
    {:qty 1 :card "Three Sisters" :id "[M] (DS)"}
    {:qty 1 :card "Thunder Cleft" :id "[M] (GW)"}
    {:qty 1 :card "Tol Buruth" :id "[M] (CP)"}
+   {:qty 1 :card "Tol Fuin" :id "[M] (ML)"}
    {:qty 1 :card "Tol Glingal" :id "[M] (SL)"}
    {:qty 1 :card "Tol Lamfirith" :id "[M] (KN)"}
-   {:qty 1 :card "Tol Morwen" :id "[M] (NW)"}
+   {:qty 1 :card "Tol Morwen" :id "[M] (ML)"}
    {:qty 1 :card "Tol Ringurthur" :id "[M] (BU)"}
    {:qty 1 :card "Tol Turgul" :id "[M] (DS)"}
    {:qty 1 :card "Tol Uialgaer" :id "[M] (SL)"}
@@ -1186,7 +1188,7 @@
   [{:qty 1 :card "Abandoned Caravansary" :id "[M] (SL)"}
    {:qty 1 :card "Achrond" :id "[M] (NW)"}
    {:qty 1 :card "Adan Tomb" :id "[M] (CP)"}
-   {:qty 1 :card "Aden Scarlet's Medical Library" :id "[M] (RS)"}
+   {:qty 1 :card "Aden Scarlet's Medical Library" :id "[M] (KN)"}
    {:qty 1 :card "Adûn-Tarîk" :id "[M] (SL)"}
    {:qty 1 :card "Aelinost" :id "[M] (BO)"}
    {:qty 1 :card "Aeluin" :id "[M] (DS)"}
@@ -1296,7 +1298,7 @@
    {:qty 1 :card "Goblin-gate" :id "[M] (LE)"}
    {:qty 1 :card "Gold Hill" :id "[M] (AS)"}
    {:qty 1 :card "Gondmaeglom" :id "[M] (LE)"}
-   {:qty 1 :card "Gondrings Lair" :id "[M] (NW)"}
+   {:qty 1 :card "Gondring's Lair" :id "[M] (NW)"}
    {:qty 1 :card "Grey Havens" :id "[M] (AS)"}
    {:qty 1 :card "Gyogorasag Sanctuary" :id "[M] (GW)"}
    {:qty 1 :card "Hall of Alûva" :id "[M] (DS)"}
@@ -1325,7 +1327,7 @@
    {:qty 1 :card "Jääkylät" :id "[M] (NW)"}
    {:qty 1 :card "Joghul's Shrine" :id "[M] (CP)"}
    {:qty 1 :card "Kadar an-Khâradun" :id "[M] (DS)"}
-   {:qty 1 :card "Kala Dulakurth" :id "[M] (NW)"}
+   {:qty 1 :card "Kala Dulakurth" :id "[M] (ML)"}
    {:qty 1 :card "Kala-Ogurk" :id "[M] (BO)"}
    {:qty 1 :card "Khibil Ephalak" :id "[M] (SL)"}
    {:qty 1 :card "Khorsâj" :id "[M] (SL)"}
@@ -1486,9 +1488,10 @@
    {:qty 1 :card "Thunder Cleft" :id "[M] (GW)"}
    {:qty 1 :card "Thuringwathost" :id "[M] (NE)"}
    {:qty 1 :card "Tol Buruth" :id "[M] (CP)"}
+   {:qty 1 :card "Tol Fuin" :id "[M] (ML)"}
    {:qty 1 :card "Tol Glingal" :id "[M] (SL)"}
    {:qty 1 :card "Tol Lamfirith" :id "[M] (KN)"}
-   {:qty 1 :card "Tol Morwen" :id "[M] (NW)"}
+   {:qty 1 :card "Tol Morwen" :id "[M] (ML)"}
    {:qty 1 :card "Tol Ringurthur" :id "[M] (BU)"}
    {:qty 1 :card "Tol Turgul" :id "[M] (DS)"}
    {:qty 1 :card "Tol Uialgaer" :id "[M] (SL)"}
@@ -1598,7 +1601,7 @@
    {:qty 1 :card "Gaurblog Lug" :id "[H] (DF)"}
    {:qty 1 :card "Goblin-gate" :id "[H] (TW)"}
    {:qty 1 :card "Hall of Malkôra" :id "[H] (DS)"}
-   {:qty 1 :card "Kala Dulakurth" :id "[H] (NW)"}
+   {:qty 1 :card "Kala Dulakurth" :id "[H] (ML)"}
    {:qty 1 :card "Kala-Ogurk" :id "[H] (BO)"}
    {:qty 1 :card "Kondu Manara" :id "[H] (DS)"}
    {:qty 1 :card "Lâorkí" :id "[H] (CP)"}
@@ -1724,7 +1727,7 @@
    {:qty 1 :card "Ruins of Nogrod" :id "(DF)"}
    {:qty 1 :card "The Amber-deeps" :id "(SL)"}
    {:qty 1 :card "The Brass-deeps" :id "(BO)"}
-   {:qty 1 :card "The Cobalt-deeps" :id "(NW)"}
+   {:qty 1 :card "The Cobalt-deeps" :id "(ML)"}
    {:qty 1 :card "The Ghost-caves" :id "(KN)"}
    {:qty 1 :card "The Lava-deeps" :id "(CP)"}
    {:qty 1 :card "The Limestone-caverns" :id "(BO)"}])
