@@ -1326,7 +1326,7 @@
             [:div {:on-click #(show-sideboard % owner side-ref)} "Sideboard"]
             [:div {:on-click #(show-fw-dc-sb % owner fwdc-ref)} "FW-DC-SB"]])
          (when (= (:side @game-state) side)
-           [:div.panel.blue-shade.popup {:ref deck-content-ref :style {:left -63}}
+           [:div.panel.blue-shade.popup {:ref deck-content-ref :style {:left 140}}
             [:div
              [:a {:on-click #(close-popup % owner deck-content-ref "stops looking at their deck" false false false false true)}
               "Close"]
@@ -1334,7 +1334,7 @@
               "Close & Shuffle"]]
             (om/build-all card-view deck {:key :cid})])
          (when (= (:side @game-state) side)
-           [:div.panel.blue-shade.popup {:ref side-content-ref :style {:left -63}}
+           [:div.panel.blue-shade.popup {:ref side-content-ref :style {:left 140}}
             [:div
              [:a {:on-click #(close-popup % owner side-content-ref "stops looking at their sideboard" false false true false false)}
               "Close"]
@@ -1343,7 +1343,7 @@
             (om/build-all card-view sideboard {:key :cid})]
            )
          (when (= (:side @game-state) side)
-           [:div.panel.blue-shade.popup {:ref fwdc-content-ref :style {:left -63}}
+           [:div.panel.blue-shade.popup {:ref fwdc-content-ref :style {:left 140}}
             [:div
              [:a {:on-click #(close-popup % owner fwdc-content-ref "stops looking at their sideboard" false false false true false)}
               "Close"]
