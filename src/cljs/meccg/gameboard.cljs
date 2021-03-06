@@ -2124,7 +2124,7 @@
                    (cond-button "No Hazards" (or (= (:click me) 40) (= (:click me) 45)) #(send-command "no-hazards"))
                    ;; set to 35
                    (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
-                   (cond-button "Next M/H" (= (:click me) 35) #(handle-next-m-h "reset-m-h"))
+                   (cond-button "Next Company Movement" (= (:click me) 35) #(handle-next-m-h "reset-m-h"))
                    ;; set to 45, by me
                    ]
                 (if (= (:click opponent) 80) ;; set to 25, by me
@@ -2183,7 +2183,7 @@
                      ]
                     )
                   )
-                (if (<= 90 (:click me) 100) ;; set to 100, opponent at 50
+                (if (<= 90 (:click me) 100) ;; set to 100, opponent at 50 ;; ORGA-PHASE
                   [:div
                    (cond
                      (= (:click me) 100)
@@ -2191,13 +2191,13 @@
                      :else
                      (cond-button "Roll Dice" (= (:click me) 95) #(send-command "roll")) ;;-5
                      )
-                   (cond-button "Organized" (= (:click me) 95) #(send-command "org-phase")) ;; -5
+                   (cond-button "Long-event Phase" (= (:click me) 95) #(send-command "org-phase")) ;; -5
                    (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
-                   (cond-button "M/H Phase" (= (:click me) 90) #(send-command "m-h-phase")) ;; -5
+                   (cond-button "Movement/Hazard Phase" (= (:click me) 90) #(send-command "m-h-phase")) ;; -5
                    ]
                 (if (= (:click me) 85)
                   [:div
-                   [:button {:on-click #(send-command "back-org")} "Back to Organize"]
+                   [:button {:on-click #(send-command "back-org")} "Back to Organization Phase"]
                    ;; set to 100, and opponent to 50
                    [:div.run-button
                     (cond-button "Face Attack(s)" (and (pos? (:click me))
@@ -2216,7 +2216,7 @@
                    ]
                 (if (= (:click me) 80)
                   [:div
-                   [:button {:on-click #(send-command "back-m-h")} "Back to M/H"]
+                   [:button {:on-click #(send-command "back-m-h")} "Back to Movement/Hazard Phase"]
                    ;; set to 85, and opponent to 45
                    [:div.run-button
                     (cond-button "Face Attack(s)" (and (pos? (:click me))
@@ -2235,7 +2235,7 @@
                    ]
                 (if (< 65 (:click me) 80)
                   [:div
-                   [:button {:on-click #(send-command "back-site")} "Back to Site"]
+                   [:button {:on-click #(send-command "back-site")} "Back to Site Phase"]
                    ;; set to 80, and opponent to 25
                    (cond-button "EOT Discard" (= (:click me) 75) #(handle-end-of-phase "eot-discard"));; -5
                    (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
@@ -2261,7 +2261,7 @@
                    (cond-button "No Hazards" (or (= (:click me) 40) (= (:click me) 45)) #(send-command "no-hazards"))
                    ;; set to 35
                    (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
-                   (cond-button "Next M/H" (= (:click me) 35) #(handle-next-m-h "reset-m-h"))
+                   (cond-button "Next Company Movement" (= (:click me) 35) #(handle-next-m-h "reset-m-h"))
                    ;; set to 45, by me
                    ]
                 (if (= (:click opponent) 80) ;; set to 25, by me
