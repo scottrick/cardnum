@@ -2120,8 +2120,8 @@
 
                 (if (= (:click opponent) 85);; set to 45, by me
                   [:div
-                   (cond-button "On-guard" (= (:click me) 45) #(send-command "on-guard")) ;; -5
-                   (cond-button "No Hazards" (or (= (:click me) 40) (= (:click me) 45)) #(send-command "no-hazards"))
+                   (cond-button "Play On-guard Card" (= (:click me) 45) #(send-command "on-guard")) ;; -5
+                   (cond-button "Allow Company to Arrive" (or (= (:click me) 40) (= (:click me) 45)) #(send-command "no-hazards"))
                    ;; set to 35
                    (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
                    (cond-button "Next Company M/H" (= (:click me) 35) #(handle-next-m-h "reset-m-h"))
@@ -2231,15 +2231,15 @@
                                                  (runnable-locales contestant challenger)
                                                  (runnable-locales challenger contestant))))]]
                    (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
-                   [:button {:on-click #(send-command "eot-phase")} "EOT Phase"]; -5
+                   [:button {:on-click #(send-command "eot-phase")} "End-of-Turn Phase"]; -5
                    ]
                 (if (< 65 (:click me) 80)
                   [:div
                    [:button {:on-click #(send-command "back-site")} "Back to Site Phase"]
                    ;; set to 80, and opponent to 25
-                   (cond-button "EOT Discard" (= (:click me) 75) #(handle-end-of-phase "eot-discard"));; -5
+                   (cond-button "Ask Opponent to Discard" (= (:click me) 75) #(handle-end-of-phase "eot-discard"));; -5
                    (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
-                   (cond-button "EOT (1/2 HL?)" (and (= (:click me) 70)
+                   (cond-button "End My Turn" (and (= (:click me) 70)
                                                      (and (get-in @game-state [:contestant :eot])
                                                           (get-in @game-state [:challenger :eot]))
                                                      (= (keyword active-player) side) (not end-turn)
@@ -2257,8 +2257,8 @@
                    (cond-button "Waiting" false nil)]
                 (if (= (:click opponent) 85);; set to 45, by me
                   [:div
-                   (cond-button "On-guard" (= (:click me) 45) #(send-command "on-guard")) ;; -5
-                   (cond-button "No Hazards" (or (= (:click me) 40) (= (:click me) 45)) #(send-command "no-hazards"))
+                   (cond-button "Play On-guard Card" (= (:click me) 45) #(send-command "on-guard")) ;; -5
+                   (cond-button "Allow Company to Arrive" (or (= (:click me) 40) (= (:click me) 45)) #(send-command "no-hazards"))
                    ;; set to 35
                    (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
                    (cond-button "Next Company M/H" (= (:click me) 35) #(handle-next-m-h "reset-m-h"))
@@ -2283,7 +2283,7 @@
                 (if (< 65 (:click opponent) 80) ;; set to 0, by me
                   [:div
                    ;;(when (> (:click me) 0) (send-command "reset-done"))
-                   (cond-button "EOT Phase" false nil)
+                   (cond-button "End-of-Turn Phase" false nil)
                    [:button {:on-click #(send-command "return-o-g")} "Return On-guard"]
                    (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
                    (cond-button "Done" (zero? (:click me)) #(send-command "haz-play-done"))])))) ;;-5
