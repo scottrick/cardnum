@@ -486,7 +486,7 @@
   )
 (defn next-m-h
   [state side args]
-  (system-msg state side "goes to the next companies' M/H Phase")
+  (system-msg state side "goes to the next companies' Movement Phase")
   )
 (defn site-phase
   [state side args]
@@ -497,7 +497,7 @@
 ; Site Phase
 (defn back-m-h
   [state side args]
-  (system-msg state side "goes back the M/H Phase")
+  (system-msg state side "goes back the Movement/Hazard Phase")
   (let [offset (- 85 (get-in @state [side :click]))]
     (gain state side :click offset))
   (reset-m-h state (opp-side side) nil)
@@ -523,7 +523,7 @@
 (defn eot-discard
   [state side args]
   (swap! state assoc-in [side :eot] true)
-  (system-msg state side "acknowledges EOT discard")
+  (system-msg state side "ends their End-of-Turn discard.")
   (gain state side :click -5)
   )
 

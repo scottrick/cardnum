@@ -1315,18 +1315,18 @@
                     {:on-click #(-> (om/get-node owner menu-ref) js/$ .toggle)})
          (when (pos? (count deck))
            (facedown-card (:side identity) ["bg"] nil))
-         (om/build label deck {:opts {:name "Play"}})
+         (om/build label deck {:opts {:name "Deck"}})
          (when (= (:side @game-state) side)
            [:div.panel.blue-shade.menu {:ref menu-ref}
             [:div {:on-click #(do (send-command "shuffle")
-                                  (-> (om/get-node owner menu-ref) js/$ .fadeOut))} "Shuffle"]
-            [:div {:on-click #(show-deck % owner deck-ref)} "Show Deck"]
+                                  (-> (om/get-node owner menu-ref) js/$ .fadeOut))} "Shuffle Deck"]
+            [:div {:on-click #(show-deck % owner deck-ref)} "View Deck"]
+            [:div {:on-click #(show-sideboard % owner side-ref)} "View Sideboard"]
             [:div {:on-click #(do (send-command "move-to-sb")
-                                  (-> (om/get-node owner side-ref) js/$ .fadeOut))} "Move to SB"]
-            [:div {:on-click #(show-sideboard % owner side-ref)} "Sideboard"]
+                                  (-> (om/get-node owner side-ref) js/$ .fadeOut))} "Move Card to SB"]
             [:div {:on-click #(show-fw-dc-sb % owner fwdc-ref)} "FW-DC-SB"]])
          (when (= (:side @game-state) side)
-           [:div.panel.blue-shade.popup {:ref deck-content-ref :style {:left -63}}
+           [:div.panel.blue-shade.popup {:ref deck-content-ref :style {:left 140 :bottom 50}}
             [:div
              [:a {:on-click #(close-popup % owner deck-content-ref "stops looking at their deck" false false false false true)}
               "Close"]
@@ -1334,7 +1334,7 @@
               "Close & Shuffle"]]
             (om/build-all card-view deck {:key :cid})])
          (when (= (:side @game-state) side)
-           [:div.panel.blue-shade.popup {:ref side-content-ref :style {:left -63}}
+           [:div.panel.blue-shade.popup {:ref side-content-ref :style {:left 140}}
             [:div
              [:a {:on-click #(close-popup % owner side-content-ref "stops looking at their sideboard" false false true false false)}
               "Close"]
@@ -1343,7 +1343,7 @@
             (om/build-all card-view sideboard {:key :cid})]
            )
          (when (= (:side @game-state) side)
-           [:div.panel.blue-shade.popup {:ref fwdc-content-ref :style {:left -63}}
+           [:div.panel.blue-shade.popup {:ref fwdc-content-ref :style {:left 140}}
             [:div
              [:a {:on-click #(close-popup % owner fwdc-content-ref "stops looking at their sideboard" false false false true false)}
               "Close"]
@@ -2124,7 +2124,7 @@
                    (cond-button "No Hazards" (or (= (:click me) 40) (= (:click me) 45)) #(send-command "no-hazards"))
                    ;; set to 35
                    (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
-                   (cond-button "Next M/H" (= (:click me) 35) #(handle-next-m-h "reset-m-h"))
+                   (cond-button "Next Company M/H" (= (:click me) 35) #(handle-next-m-h "reset-m-h"))
                    ;; set to 45, by me
                    ]
                 (if (= (:click opponent) 80) ;; set to 25, by me
@@ -2183,7 +2183,7 @@
                      ]
                     )
                   )
-                (if (<= 90 (:click me) 100) ;; set to 100, opponent at 50
+                (if (<= 90 (:click me) 100) ;; set to 100, opponent at 50 ;; ORG-PHASE
                   [:div
                    (cond
                      (= (:click me) 100)
@@ -2191,13 +2191,13 @@
                      :else
                      (cond-button "Roll Dice" (= (:click me) 95) #(send-command "roll")) ;;-5
                      )
-                   (cond-button "Organized" (= (:click me) 95) #(send-command "org-phase")) ;; -5
+                   (cond-button "Long-event Phase" (= (:click me) 95) #(send-command "org-phase")) ;; -5
                    (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
-                   (cond-button "M/H Phase" (= (:click me) 90) #(send-command "m-h-phase")) ;; -5
+                   (cond-button "Movement / Hazard" (= (:click me) 90) #(send-command "m-h-phase")) ;; -5
                    ]
                 (if (= (:click me) 85)
                   [:div
-                   [:button {:on-click #(send-command "back-org")} "Back to Organize"]
+                   [:button {:on-click #(send-command "back-org")} "Organization (redo)"]
                    ;; set to 100, and opponent to 50
                    [:div.run-button
                     (cond-button "Face Attack(s)" (and (pos? (:click me))
@@ -2216,7 +2216,7 @@
                    ]
                 (if (= (:click me) 80)
                   [:div
-                   [:button {:on-click #(send-command "back-m-h")} "Back to M/H"]
+                   [:button {:on-click #(send-command "back-m-h")} "Back to M / H Phase"]
                    ;; set to 85, and opponent to 45
                    [:div.run-button
                     (cond-button "Face Attack(s)" (and (pos? (:click me))
@@ -2235,7 +2235,7 @@
                    ]
                 (if (< 65 (:click me) 80)
                   [:div
-                   [:button {:on-click #(send-command "back-site")} "Back to Site"]
+                   [:button {:on-click #(send-command "back-site")} "Back to Site Phase"]
                    ;; set to 80, and opponent to 25
                    (cond-button "EOT Discard" (= (:click me) 75) #(handle-end-of-phase "eot-discard"));; -5
                    (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
@@ -2261,7 +2261,7 @@
                    (cond-button "No Hazards" (or (= (:click me) 40) (= (:click me) 45)) #(send-command "no-hazards"))
                    ;; set to 35
                    (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
-                   (cond-button "Next M/H" (= (:click me) 35) #(handle-next-m-h "reset-m-h"))
+                   (cond-button "Next Company M/H" (= (:click me) 35) #(handle-next-m-h "reset-m-h"))
                    ;; set to 45, by me
                    ]
                 (if (= (:click opponent) 80) ;; set to 25, by me
@@ -2277,7 +2277,7 @@
                      )
 
                    (cond-button "Draw Card" (not-empty (:deck me)) #(send-command "draw"))
-                   (cond-button "Next Site" (or (= (:click me) 20) (= (:click me) 25)) #(send-command "reset-site"))
+                   (cond-button "Next Site Phase" (or (= (:click me) 20) (= (:click me) 25)) #(send-command "reset-site"))
                    ;; set to 25, by me
                    ]
                 (if (< 65 (:click opponent) 80) ;; set to 0, by me
