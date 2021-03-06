@@ -1315,15 +1315,15 @@
                     {:on-click #(-> (om/get-node owner menu-ref) js/$ .toggle)})
          (when (pos? (count deck))
            (facedown-card (:side identity) ["bg"] nil))
-         (om/build label deck {:opts {:name "Play"}})
+         (om/build label deck {:opts {:name "Deck"}})
          (when (= (:side @game-state) side)
            [:div.panel.blue-shade.menu {:ref menu-ref}
             [:div {:on-click #(do (send-command "shuffle")
-                                  (-> (om/get-node owner menu-ref) js/$ .fadeOut))} "Shuffle"]
-            [:div {:on-click #(show-deck % owner deck-ref)} "Show Deck"]
+                                  (-> (om/get-node owner menu-ref) js/$ .fadeOut))} "Shuffle Deck"]
+            [:div {:on-click #(show-deck % owner deck-ref)} "View Deck"]
+            [:div {:on-click #(show-sideboard % owner side-ref)} "View Sideboard"]
             [:div {:on-click #(do (send-command "move-to-sb")
-                                  (-> (om/get-node owner side-ref) js/$ .fadeOut))} "Move to SB"]
-            [:div {:on-click #(show-sideboard % owner side-ref)} "Sideboard"]
+                                  (-> (om/get-node owner side-ref) js/$ .fadeOut))} "Move Card to SB"]
             [:div {:on-click #(show-fw-dc-sb % owner fwdc-ref)} "FW-DC-SB"]])
          (when (= (:side @game-state) side)
            [:div.panel.blue-shade.popup {:ref deck-content-ref :style {:left 140 :bottom 50}}
