@@ -85,7 +85,7 @@
    "name": "The Northern Waste",
    "position": 11,
    "dreamcards": true,
-   "released": false
+   "released": true
  },
  {
    "code": "MEML",
@@ -93,7 +93,7 @@
    "name": "Morgoth's Legacy",
    "position": 12,
    "dreamcards": true,
-   "released": false
+   "released": true
  },
  {
    "code": "MERS",
