@@ -312,7 +312,7 @@
                 "Nine Rings for Mortal Men" "Red Nightfall" "The Sunlands" "Bay of Utum"])
 (def all-skill ["Air" "Balrog" "Black" "Calvary" "Cold-dragon" "Court"
                 "Diplomat" "Dragon" "Dragon-magic" "Dúnadan" "Dwarf" "Elf"
-                "Fire-dragon" "Flying" "Grey" "Heavy" "Heavy Air"
+                "Fána" "Fire-dragon" "Flying" "Grey" "Heavy" "Heavy Air"
                 "Heavy Calvary" "Heavy Infantry" "Hero" "Hobbit" "Infantry"
                 "Leader" "Light" "Light Air" "Light Calvary" "Light Infantry"
                 "Man" "Minion" "Nazgûl" "One-handed" "Orc" "Ranger" "Ringwraith"
@@ -337,15 +337,15 @@
                 "Pûkel-creature" "Quest" "Quest-Side-A" "Quest-Side-B" "Riddling"
                 "Ring" "Ringwraith" "Ritual" "Rune" "Sand-drake" "Scara-hai"
                 "Sea Serpent" "Shield" "Silvan" "Sinda" "Slave" "Slayer"
-                "Song" "Spawn" "Special" "Spider" "Spirit" "Spirit Ring"
-                "Staff" "Stature" "Stiffbeard" "Stolen Knowledge" "Tatya"
-                "Technology" "Transport" "Trap" "Treasure" "Troll" "Trophy"
+                "Song" "Spawn" "Special" "Spider" "Spirit" "Spirit-namer"
+                "Spirit Ring" "Staff" "Stature" "Stiffbeard" "Stolen Knowledge"
+                "Tatya" "Technology" "Transport" "Trap" "Treasure" "Troll" "Trophy"
                 "Umit" "Undead" "Uruk-hai" "Vermin" "Warlord" "Weapon" "Werewolf"
                 "Whale" "Whip" "Wild-troll" "Wizard" "Wizardry" "Wolf" "Wose"])
 (def char-races ["Drêl" "Dúnadan" "Dwarf" "Firebeard" "Ironfist" "Longbeard"
                  "Stiffbeard" "Elf" "Half-elf" "Kelno" "Nando" "Nelya" "Noldo"
-                 "Silvan" "Sinda" "Tatya" "Hathorian" "Hobbit" "Man" "Orc"
-                 "Half-orc" "Ice-orc" "Scara-hai" "Uruk-hai" "Troll"
+                 "Silvan" "Sinda" "Spirit-namer" "Tatya" "Hathorian" "Hobbit"
+                 "Man" "Orc" "Half-orc" "Ice-orc" "Scara-hai" "Uruk-hai" "Troll"
                  "Half-troll" "Hill-troll" "Olog-hai" "Wild-troll" "Slayer"
                  "Kirani" "Umit" "Wose" "Dragon-lord" "Dúnadan-lord"
                  "Dwarf-lord" "Elf-lord" "Man-lord" "Lord" "Ringwraith"
@@ -365,13 +365,14 @@
 (def hazard-types ["Flying" "Nazgûl" "Winged" "Wyrm"])
 (def resource-skill ["Air" "Balrog" "Black" "Calvary" "Cold-dragon" "Court"
                      "Diplomat" "Dragon" "Dragon-magic" "Dúnadan" "Dwarf" "Elf"
-                     "Fire-dragon" "Flying" "Grey" "Heavy" "Heavy Air"
+                     "Fána" "Fire-dragon" "Flying" "Grey" "Heavy" "Heavy Air"
                      "Heavy Calvary" "Heavy Infantry" "Hero" "Hobbit" "Infantry"
                      "Leader" "Light" "Light Air" "Light Calvary" "Light Infantry"
-                     "Man" "Minion" "One-handed" "Orc" "Ranger" "Ringwraith"
-                     "Sage" "Sauron" "Scout" "Shadow-magic" "Sorcery" "Spell"
-                     "Spirit-magic" "Troll" "Two-handed" "Umit" "War" "Warlord"
-                     "Warrior" "White" "Winged" "Wizard" "Wose" "Wyrm"])
+                     "Lost Knowledge" "Man" "Minion" "One-handed" "Orc" "Ranger"
+                     "Ringwraith" "Sage" "Sauron" "Scout" "Shadow-magic" "Sorcery"
+                     "Spell" "Spirit-magic" "Stolen Knowledge" "Troll" "Two-handed"
+                     "Umit" "War" "Warlord" "Warrior" "White" "Winged" "Wizard"
+                     "Wose" "Wyrm"])
 (def resource-types ["Animal" "Armor" "Axe" "Balrog" "Bow" "Command" "Cult" "Demon"
                      "Dragon" "Drake" "Dúnadan" "Dwarf" "Dwarven Ring" "Eagle"
                      "Elf" "Elven Ring" "Ent" "Environment" "Fána" "Flattery"
@@ -403,9 +404,10 @@
                  "Spirit Ring" "Staff" "Stolen Knowledge" "Technology"
                  "Treasure" "Weapon" "Whip"])
 (def item-skill ["Balrog" "Court" "Diplomat" "Dragon" "Dúnadan" "Dwarf" "Elf"
-                 "Hobbit" "Leader" "Man" "Minion" "One-handed" "Orc" "Ranger"
-                 "Ringwraith" "Sage" "Scout" "Troll" "Two-handed" "Umit"
-                 "Warrior" "White" "Wizard" "Wose"])
+                 "Hobbit" "Leader" "Lost Knowledge"  "Man" "Minion" "One-handed"
+                 "Orc" "Ranger" "Ringwraith" "Sage" "Scout" "Spirit-namer"
+                 "Stolen Knowledge" "Troll" "Two-handed" "Umit" "Warrior"
+                 "White" "Wizard" "Wose"])
 (def rarity-choice ["Rare" "Uncommon" "Common" "Fixed" "Promo"])
 (def precise-types ["C" "C1" "C2" "C3" "C4" "C5" "CA1" "CA2"
                     "CB" "CB, CS1" "CB, CS2" "CB1" "CB2"

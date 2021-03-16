@@ -308,8 +308,8 @@
                  (#{"rig" "onhost"} (first zone))
                  (or tapped inverted rotated))
           (cons "untap" %) %))
-      (#(if (and (some (partial = set_code) ["MENE" "MEWR" "MENW" "MEML"
-                                             "MERS" "MESL" "MEGW"])
+      (#(if (and (some (partial = set_code) ["MENE" "MEWR" "MENW" "MEML" "MEMM"
+                                             "MERS" "MESL" "MEGW" "MEKN" ])
                  (some (partial = Secondary) ["Permanent-event"])
                  (boolean (re-find #"flip" Home))
                  (#{"rig" "onhost"} (first zone)))
@@ -2429,7 +2429,11 @@
                    (om/build card-zoom card)))
                (when-let [card (om/get-state owner :zoom)]
                  (when (get-in @game-state [side :hold-card])
-                   (send-command "blind-send" {:msg (:ImageName card)})))
+                   (if (and (boolean (re-find #"flip" (:Home card)))
+                            (:flip card))
+                     (send-command "blind-send" {:msg (str "flip-" (:ImageName card))})
+                     (send-command "blind-send" {:msg (:ImageName card)}))
+                   ))
                (when-let [card (om/get-state owner :zoom)]
                  (when (get-in @game-state [side :fn12-key])
                    (send-command "f1-f12-key-down")))

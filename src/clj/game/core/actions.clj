@@ -570,7 +570,9 @@
   "Flips a quest."
   [state side card]
   (let [card (get-card state card)]
-    (system-msg state side (str "flips " (:title card)))
+    (if (:flip card)
+      (system-msg state side (str "flips " (str "flip-" (:ImageName card))))
+      (system-msg state side (str "flips " (:ImageName card))))
     (if (:flip card)
       (update! state side (dissoc card :flip))
       (update! state side (assoc card :flip true)))))

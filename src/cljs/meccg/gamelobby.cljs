@@ -655,7 +655,7 @@
                    [:h2 (:title game)]
                    (when-not (or (every? decks-ready players)
                                  (:resumed game))
-                     [:div.flash-message "Waiting players deck selection"])
+                     [:div.flash-message "Wait for all players before loading deck..."])
                    [:h3 "Players"]
                    [:div.players
                     (for [player (:players game)]
