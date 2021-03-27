@@ -103,6 +103,7 @@
    :released identity
    :erratum identity
    :ice_errata (rename :errata)
+   :extras identity
    })
 
 (def tables
@@ -249,11 +250,11 @@
 (defn download-card-images
   "Download card images (if necessary) from NRDB"
   [card-map]
-  (doseq [set ["METW" "METD" "MEDM" "MELE" "MEAS" "MEWH"
-               "MEBA" "MEFB" "MEDF" "MENE" "MEBO" "MECA"
-               "MECP" "MEDS" "MEGW" "MEKN" "MEML" "MEMM"
-               "MENW" "MERN" "MERS" "MESL" "METI" "MEWR"
-               "MEBU" "MEXX"]]
+  (doseq [set ["METW" "MEUL" "METD" "MEDM" "MELE" "MEAS"
+               "MEWH" "MEBA" "MEFB" "MEDF" "MENE" "MEBO"
+               "MECA" "MECP" "MEDS" "MEGW" "MEKN" "MEML"
+               "MEMM" "MENW" "MERN" "MERS" "MESL" "METI"
+               "MEWR" "MEBU" "MEXX"]]
     (let [img-dir (io/file "resources" "public" "img" "cards" set)]
       (when-not (.isDirectory img-dir)
         (println "Creating card images directory [" (.getPath img-dir) "]")

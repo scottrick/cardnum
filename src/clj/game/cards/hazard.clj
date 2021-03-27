@@ -14,6 +14,7 @@
    "Aware of Their Ways"
    {:abilities [{:label "Four"
                  :effect (req
+                           (move state side card :discard)
                            (let [opp-side (if (= side :contestant)
                                             :challenger
                                             :contestant)
@@ -32,6 +33,7 @@
                                                                 )))} nil nil)))}
                 {:label "Six"
                  :effect (req
+                           (move state side card :discard)
                            (let [opp-side (if (= side :contestant)
                                             :challenger
                                             :contestant)
