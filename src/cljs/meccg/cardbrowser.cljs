@@ -7,6 +7,7 @@
             [meccg.appstate :refer [app-state]]
             [meccg.ajax :refer [GET]]
             [meccg.utils :refer [toastr-options banned-span restricted-span rotated-span influence-dots]]
+            [meccg.artists :refer [artists]]
             [cardnum.cards :refer [all-cards] :as cards]
             [cardnum.decks :as decks]))
 
@@ -212,6 +213,7 @@
                                 (image-ice card true)
                                 (image-url card true)))]
                [:img {:src url
+                      :decoding "async"
                       :alt (:title card)
                       :onClick #(do (.preventDefault %)
                                     (put! (:pub-chan (om/get-shared owner))
@@ -513,6 +515,11 @@
     (filter-cards true :released cards)
     cards))
 
+(defn filter-extras [should-filter cards]
+  (if should-filter
+    (filter-cards false :extras cards)
+    cards))
+
 (defn filter-stage [should-filter cards]
   (if should-filter
     (filter-greater 0 :Stage cards)
@@ -572,6 +579,16 @@
            (first)
            (:released)))))
 
+(defn selected-set-extras? [{:keys [sets]} state]
+  (let [s (selected-set-name state)
+        combined sets]
+    (if (= s "All")
+      false
+      (->> combined
+           (filter #(= s (:name %)))
+           (first)
+           (:extras)))))
+
 (defn handle-scroll [e owner {:keys [page]}]
   (let [$cardlist (js/$ ".card-list")
         height (- (.prop $cardlist "scrollHeight") (.innerHeight $cardlist))]
@@ -604,7 +621,9 @@
        :haven-filter "All"
        :skill-filter "All"
        :race-filter "All"
+       :art-filter "All"
        :hide-dreamcards false
+       :ul-extras false
        :only-released true
        :only-stage false
        :only-unique false
@@ -658,9 +677,11 @@
               [:option {:value field} field])]]
           (let [format-pack-name (fn [name] (str "&nbsp;&nbsp;&nbsp;&nbsp;" name))
                 hide-dreamcards (:hide-dreamcards state)
+                hide-extras (:ul-extras state)
                 released-only (:only-released state)
                 dc-filtered (filter-dreamcards hide-dreamcards sets)
-                sets-filtered (filter-released released-only dc-filtered)
+                ul-filtered (filter-extras hide-extras dc-filtered)
+                sets-filtered (filter-released released-only ul-filtered)
                 ;; Draft is specified as a cycle, but contains no set, nor is it marked as a bigbox
                 ;; so we handled it specifically here for formatting purposes
                 sets-list (map #(if (not (or (:bigbox %) (= (:name %) "Draft")))
@@ -694,7 +715,8 @@
                               ["Strict" :secondary-filter (secondaries (:primary-filter state))]
                               ["Precise" :precise-filter precise-types]
                               ["Rarity" :rarity-filter rarity-choice]
-                              ["Haven" :haven-filter haven-options]]]
+                              ["Haven" :haven-filter haven-options]
+                              ["Art" :art-filter artists]]]
                   [:div
                    [:h4 (first filter)]
                    [:select {:value ((second filter) state)
@@ -708,7 +730,8 @@
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
                             ["Skill" :skill-filter ally-skill]
-                            ["Race" :race-filter ally-races]]]
+                            ["Race" :race-filter ally-races]
+                            ["Art" :art-filter artists]]]
                 [:div
                  [:h4 (first filter)]
                  [:select {:value ((second filter) state)
@@ -722,7 +745,8 @@
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
                             ["Skill" :skill-filter fact-skill]
-                            ["Race" :race-filter fact-races]]]
+                            ["Race" :race-filter fact-races]
+                            ["Art" :art-filter artists]]]
                 [:div
                  [:h4 (first filter)]
                  [:select {:value ((second filter) state)
@@ -736,7 +760,8 @@
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
                             ["Skill" :skill-filter item-skill]
-                            ["Type" :race-filter item-types]]]
+                            ["Type" :race-filter item-types]
+                            ["Art" :art-filter artists]]]
                 [:div
                  [:h4 (first filter)]
                  [:select {:value ((second filter) state)
@@ -750,7 +775,8 @@
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
                             ["Types" :skill-filter resource-skill]
-                            ["Race" :race-filter resource-types]]]
+                            ["Race" :race-filter resource-types]
+                            ["Art" :art-filter artists]]]
                 [:div
                  [:h4 (first filter)]
                  [:select {:value ((second filter) state)
@@ -764,7 +790,8 @@
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
                             ["Skill" :skill-filter char-skill]
-                            ["Race" :race-filter char-races]]]
+                            ["Race" :race-filter char-races]
+                            ["Art" :art-filter artists]]]
                 [:div
                  [:h4 (first filter)]
                  [:select {:value ((second filter) state)
@@ -778,7 +805,8 @@
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
                             ["Types" :skill-filter hazard-types]
-                            ["Race" :race-filter hazard-races]]]
+                            ["Race" :race-filter hazard-races]
+                            ["Art" :art-filter artists]]]
                 [:div
                  [:h4 (first filter)]
                  [:select {:value ((second filter) state)
@@ -792,7 +820,8 @@
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
                             ["Keys" :skill-filter all-skill]
-                            ["Race" :race-filter all-types]]]
+                            ["Race" :race-filter all-types]
+                            ["Art" :art-filter artists]]]
                 [:div
                  [:h4 (first filter)]
                  [:select {:value ((second filter) state)
@@ -808,18 +837,36 @@
                                                           (when (and hide (selected-set-dreamcards? cursor state))
                                                             (om/set-state! owner :set-filter "All"))
                                                           )}]
-            "Hide Dreamcards"]]
-          [:div.only-released-div
-           [:label [:input.only-released {:type "checkbox"
+            "Hide Dreamcards"]
+           [:label "   "]
+           [:label [:input.hide-dreamcards {:type "checkbox"
                                             :value true
-                                            :checked (om/get-state owner :only-released)
+                                            :checked (om/get-state owner :ul-extras)
                                             :on-change #(let [hide (.. % -target -checked)]
-                                                          (om/set-state! owner :only-released hide)
-                                                          (when (and hide (selected-set-released? cursor state))
+                                                          (om/set-state! owner :ul-extras hide)
+                                                          (when (and hide (selected-set-extras? cursor state))
                                                             (om/set-state! owner :set-filter "All"))
                                                           )}]
-            "Only Released"]]
+            "Hide Extras"]
+           [:label "   "]
+           [:label [:input.only-stage {:type "checkbox"
+                                       :value false
+                                       :checked (om/get-state owner :show-search)
+                                       :on-change #(let [hide (.. % -target -checked)]
+                                                     (om/set-state! owner :show-search hide))
+                                       }]
+            "Show Terms"]]
           [:div.only-unique-div
+           [:label [:input.only-released {:type "checkbox"
+                                          :value true
+                                          :checked (om/get-state owner :only-released)
+                                          :on-change #(let [hide (.. % -target -checked)]
+                                                        (om/set-state! owner :only-released hide)
+                                                        (when (and hide (selected-set-released? cursor state))
+                                                          (om/set-state! owner :set-filter "All"))
+                                                        )}]
+            "Only Released"]
+           [:label "   "]
            [:label [:input.only-unique {:type "checkbox"
                                           :value false
                                           :checked (om/get-state owner :only-unique)
@@ -827,8 +874,8 @@
                                                         (om/set-state! owner :only-unique hide)
                                                         (om/set-state! owner :set-filter "All"))
                                                         }]
-            "Only Unique"]]
-          [:div.only-stage-div
+            "Only Unique"]
+           [:label "   "]
            [:label [:input.only-stage {:type "checkbox"
                                        :value false
                                        :checked (om/get-state owner :only-stage)
@@ -837,14 +884,6 @@
                                                      (om/set-state! owner :set-filter "All"))
                                        }]
             "Only Stage"]]
-          [:div.only-stage-div
-           [:label [:input.only-stage {:type "checkbox"
-                                       :value false
-                                       :checked (om/get-state owner :show-search)
-                                       :on-change #(let [hide (.. % -target -checked)]
-                                                     (om/set-state! owner :show-search hide))
-                                       }]
-            "Show Terms"]]
           [:button {:on-click #(do
                                  ;(om/set-state! owner :set-filter "All")
                                  ;(om/set-state! owner :primary-filter "All")
@@ -854,7 +893,9 @@
                                  (om/set-state! owner :rarity-filter "All")
                                  (om/set-state! owner :haven-filter "All")
                                  (om/set-state! owner :skill-filter "All")
-                                 (om/set-state! owner :race-filter "All"))} "Semi-refine"]
+                                 (om/set-state! owner :race-filter "All")
+                                 (om/set-state! owner :art-filter "All")
+                                 )} "Semi-refine"]
 
           (om/build card-info-view cursor {:state {:selected-card (:selected-card state)}})]
 
@@ -868,6 +909,7 @@
                           (->> cards
                                (filter-dreamcards (:hide-dreamcards state))
                                (filter-released (:only-released state))
+                               (filter-extras (:ul-extras state))
                                (filter-stage (:only-stage state))
                                (filter-unique (:only-unique state))
                                (filter-cards (:primary-filter state) :type)
@@ -876,6 +918,7 @@
                                (filter-cards (:precise-filter state) :Precise)
                                (filter-second (if (= (:primary-filter state) "Site") true false) (:secondary-filter state))
                                (filter-haven (if (= (:primary-filter state) "Site") false true) (:haven-filter state))
+                               (filter-cards (:art-filter state) :Artist)
                                (filter-parts (:race-filter state) :Race)
                                (filter-parts (:skill-filter state) :subtype)
                                (filter-texts (:texts-query state))
