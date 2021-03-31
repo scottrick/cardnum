@@ -86,7 +86,7 @@
                                        (swap! state update-in [:challenger :register :stole-agenda]
                                               #(+ (or % 0) (:agendapoints c 0)))
                                        (gain-agenda-point state :challenger points)
-                                       (play-sfx state side "agenda-steal")
+                                       ;(play-sfx state side "agenda-steal")
                                        (when (:run @state)
                                          (swap! state assoc-in [:run :did-steal] true))
                                        (when (card-flag? c :has-events-when-stolen true)
@@ -859,12 +859,12 @@
     ;; Successful
     (:successful run)
     (do
-      (play-sfx state side "run-successful")
+      ;(play-sfx state side "run-successful")
       (trigger-event-simult state side eid :successful-run-ends nil run))
     ;; Unsuccessful
     (:unsuccessful run)
     (do
-      (play-sfx state side "run-unsuccessful")
+      ;(play-sfx state side "run-unsuccessful")
       (trigger-event-sync state side eid :unsuccessful-run-ends run))
     ;; Neither
     :else

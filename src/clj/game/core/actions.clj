@@ -42,7 +42,8 @@
     (trigger-event state side (if (= side :contestant) :contestant-click-draw :challenger-click-draw) (->> @state side :deck (take 1)))
     (draw state side)
     (swap! state update-in [:stats side :click :draw] (fnil inc 0))
-    (play-sfx state side "click-card")))
+    ;(play-sfx state side "click-card")
+    ))
 
 (defn- change-msg
   "Send a system message indicating the property change"
@@ -388,7 +389,8 @@
     (let [spent (build-spend-msg cost "purge")
           message (str spent "all virus counters")]
       (system-msg state side message))
-    (play-sfx state side "virus-purge")))
+    ;(play-sfx state side "virus-purge")
+    ))
 
 (defn declare-agent
   "Reveal a contestant card."
@@ -425,7 +427,7 @@
                                              (update-in [:host :zone] #(map to-keyword %)))))
                    (system-msg state side (str (build-spend-msg cost-str "reveal" "declares an agent")))
                    (if (character? card)
-                     (play-sfx state side "reveal-character")
+                     (play-sfx state side (:ImageName card))
                      (play-sfx state side "reveal-other"))
                    (trigger-event-sync state side eid :reveal card))))
            (effect-completed state side eid))
@@ -453,7 +455,8 @@
                        costs (concat (when-not ignore-cost [:credit cost])
                                      (when (and (not= ignore-cost :all-costs)
                                                 (not (:disabled card)))
-                                       (:additional-cost cdef)))]
+                                       (:additional-cost cdef)))
+                       already? (:revealed card)]
                    (when-let [cost-str (apply pay state side card costs)]
                      ;; Deregister the hidden-events before revealing card
                      (when (:hidden-events cdef)
@@ -467,8 +470,11 @@
                                                (update-in [:host :zone] #(map to-keyword %)))))
                      (system-msg state side (str (build-spend-msg cost-str "reveal" "reveals")
                                                  (:ImageName card)))
-                     (if (character? card)
-                       (play-sfx state side "reveal-character")
+                     (if (and (not already?)
+                           (or (resource? card)
+                                  (hazard? card)
+                                  (character? card)))
+                       (play-sfx state side (:ImageName card))
                        (play-sfx state side "reveal-other"))
                      (trigger-event-sync state side eid :reveal card))))
            (effect-completed state side eid))
@@ -611,7 +617,8 @@
                                                 (swap! state update-in [:contestant :register :scored-agenda] #(+ (or % 0) points))
                                                 (swap! state dissoc-in [:contestant :disable-id])
                                                 (gain-agenda-point state :contestant points)
-                                                (play-sfx state side "agenda-score")))}}
+                                                ;(play-sfx state side "agenda-score")
+                                                ))}}
           c)))))
 
 (defn no-action
@@ -642,7 +649,8 @@
     (when-let [cost-str (pay state side nil :click 1 :credit remove-cost)]
       (lose state side :tag 1)
       (system-msg state side (build-spend-msg cost-str "remove 1 tag"))
-      (play-sfx state side "click-remove-tag"))))
+      ;(play-sfx state side "click-remove-tag")
+      )))
 
 (defn continue
   "The challenger decides to approach the next character, or the locale itself."

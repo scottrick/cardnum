@@ -18,7 +18,7 @@
                                   (build-spend-msg cost-str "play"))
                                 title
                                 (when ignore-cost " at no cost")))
-    (play-sfx state side "play-instant")
+    ;(play-sfx state side "play-instant")
     (if (has-subtype? c "Current")
       (do (doseq [s [:contestant :challenger]]
             (remove-old-current state side s))
@@ -561,7 +561,7 @@
     (let [started (get-in @state [:stats :time :started])
           now (t/now)]
       (system-msg state side "wins the game")
-      (play-sfx state side "game-end")
+      ;(play-sfx state side "game-end")
       (swap! state assoc
              :winner side
              :loser (other-side side)

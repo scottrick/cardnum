@@ -10,6 +10,7 @@
             [meccg.cardbrowser :refer [add-symbols] :as cb]
             [meccg.dice :refer [add-faces-16mm add-faces-18mm create-face]]
             [meccg.dreamcard :refer [dreamcard-map-north dreamcard-map-west dreamcard-map-central dreamcard-map-south]]
+            [meccg.noises :refer [noises]]
             [meccg.standard :refer [standard-map]]
             [meccg.utils :refer [toastr-options influence-dot map-longest]]
             [meccg.ws :as ws]
@@ -206,7 +207,7 @@
   [sfx soundbank]
   (when-not (empty? sfx)
     (when-let [sfx-key (keyword (first sfx))]
-      (.volume (sfx-key soundbank) (/ (str->int (get-in @app-state [:options :sounds-volume])) 100))
+      (.volume (sfx-key soundbank) (/ (str->int (get-in @app-state [:options :sounds-volume])) 75))
       (.play (sfx-key soundbank)))
     (play-sfx (rest sfx) soundbank)))
 
@@ -2366,26 +2367,7 @@
   (reify
     om/IInitState
     (init-state [this]
-      (let [audio-sfx (fn [name] (list (keyword name)
-                                       (new js/Howl (clj->js {:src [(str "/sound/" name ".ogg")
-                                                                    (str "/sound/" name ".mp3")]}))))]
-        {:soundbank
-         (apply hash-map (concat
-                           (audio-sfx "agenda-score")
-                           (audio-sfx "agenda-steal")
-                           (audio-sfx "click-advance")
-                           (audio-sfx "click-card")
-                           (audio-sfx "click-run")
-                           (audio-sfx "click-remove-tag")
-                           (audio-sfx "game-end")
-                           (audio-sfx "place-contestant")
-                           (audio-sfx "place-challenger")
-                           (audio-sfx "play-instant")
-                           (audio-sfx "reveal-character")
-                           (audio-sfx "reveal-other")
-                           (audio-sfx "run-successful")
-                           (audio-sfx "run-unsuccessful")
-                           (audio-sfx "virus-purge")))}))
+        {:soundbank noises})
 
     om/IWillMount
     (will-mount [this]
@@ -2407,7 +2389,8 @@
         (-> "#card-title" js/$ .focus))
       (doseq [{:keys [msg type options]} (get-in cursor [side :toast])]
         (toast msg type options))
-      (update-audio cursor owner))
+      (update-audio cursor owner)
+      )
 
     om/IRenderState
     (render-state [this state]

@@ -307,7 +307,7 @@
                            "Inyalonî" "Lórien" "Rhûbar" "Rivendell" "Taurondë" "Valagalen"])
 (def dreamcard-minion-havens ["Amaru" "Bozisha-Dar" "Carn Dûm" "Chey Goumal" "Dol Guldur"
                               "Geann a-Lisch" "Minas Morgul" "Mornost" "Shapôl Udûn" "Tower of Hargrog"])
-(def set-order ["The Wizards" "The Dragons" "Dark Minions" "The Lidless Eye" "Against the Shadow" "The White Hand"
+(def set-order ["The Wizards" "The Wizards (Unlimited)" "The Dragons" "Dark Minions" "The Lidless Eye" "Against the Shadow" "The White Hand"
                 "The Balrog" "Firstborn" "Durin's Folk" "The Necromancer" "The Northern Waste" "Morgoth's Legacy"
                 "Return of the Shadow" "Treason of Isengard" "War of the Ring" "The Great Wyrms" "Bay of Ormal"
                 "Court of Ardor" "The Great Central Plains" "The Dominion of the Seven" "Kingdom of the North"
@@ -677,11 +677,9 @@
               [:option {:value field} field])]]
           (let [format-pack-name (fn [name] (str "&nbsp;&nbsp;&nbsp;&nbsp;" name))
                 hide-dreamcards (:hide-dreamcards state)
-                hide-extras (:ul-extras state)
                 released-only (:only-released state)
                 dc-filtered (filter-dreamcards hide-dreamcards sets)
-                ul-filtered (filter-extras hide-extras dc-filtered)
-                sets-filtered (filter-released released-only ul-filtered)
+                sets-filtered (filter-released released-only dc-filtered)
                 ;; Draft is specified as a cycle, but contains no set, nor is it marked as a bigbox
                 ;; so we handled it specifically here for formatting purposes
                 sets-list (map #(if (not (or (:bigbox %) (= (:name %) "Draft")))
@@ -855,7 +853,7 @@
                                        :on-change #(let [hide (.. % -target -checked)]
                                                      (om/set-state! owner :show-search hide))
                                        }]
-            "Show Terms"]]
+            "Show Choices"]]
           [:div.only-unique-div
            [:label [:input.only-released {:type "checkbox"
                                           :value true
