@@ -79,7 +79,7 @@
   [state side sfx]
   (when-let [current-id (get-in @state [:sfx-current-id])]
     (do
-      (swap! state update-in [:sfx] #(take 3 (conj % {:id (inc current-id) :name sfx})))
+      (swap! state update-in [:sfx] #(take 1 (conj % {:id (inc current-id) :name sfx})))
       (swap! state update-in [:sfx-current-id] inc))))
 
 ;;; "ToString"-like methods

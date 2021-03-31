@@ -67,7 +67,6 @@
 (defn index-page [req]
   (layout
     req
-
      [:nav.topnav.blue-shade
       [:div#left-menu]
       [:div#right-menu]

@@ -222,7 +222,7 @@
     (clear-place-cost-bonus state side)
     (when-not host-card
       (contestant-place-message state side c locale place-state cost-str))
-    (play-sfx state side "place-contestant")
+    ;(play-sfx state side "place-contestant")
 
     (let [moved-card (if host-card
                        (host state side host-card (assoc c :placed true))
@@ -447,7 +447,9 @@
                                      (card-init state side c {:resolve-effect false
                                                               :init-data true}))]
                    (challenger-place-message state side (:ImageName card) nil params)
-                   (play-sfx state side "place-challenger")
+                   (if (not (:tapped card))
+                     (play-sfx state side (:ImageName card))
+                     (play-sfx state side "reveal-other"))
                    (when (is-type? card "Radicle")
                      (swap! state assoc-in [:challenger :register :placed-radicle] true))
                    (when (has-subtype? c "Icebreaker")

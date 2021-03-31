@@ -20,6 +20,7 @@ pom.xml
 /resources/public/lib/
 /resources/public/css/
 /resources/public/img/cards
+/resources/public/noise
 /data/andb-*.json
 /data/cards.json
 /data/img
