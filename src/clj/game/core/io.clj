@@ -492,6 +492,132 @@
                       :msg "rearrange any number of Sites"
                       :effect (effect (continue-ability (msr) card nil))})nil nil))
 
+(defn reveal-hand-step
+  [state side args]
+  (resolve-ability state side
+                   (letfn [(msr [] {:prompt "Reveal card from hand"
+                                    :choices {:req (fn [t] (card-is? t :side side))}
+                                    :delayed-completion true
+                                    :effect (req (do (move state side target :play-area)
+                                                       (system-msg state side
+                                                                   (str "reveals from his hand "
+                                                                        (:ImageName target)))
+                                                       (continue-ability state side (msr) card nil))
+                                              )})]
+                     {:delayed-completion true
+                      :msg "show any number of cards"
+                      :effect (effect (continue-ability (msr) card nil))})nil nil))
+
+(defn reveal-hand-random
+  [state side args]
+  (resolve-ability state side
+                   {:effect (req
+                              (let [value (if-let [n (string->num (first args))] n 0)
+                                    kount (count (get-in @state [side :hand]))]
+                                (loop [k (if (<= kount value) kount value)]
+                                  (when (> k 0)
+                                    (move state side (rand-nth (get-in @state [side :hand])) :play-area)
+                                    (recur (- k 1))))
+                                (resolve-ability state side
+                                                 {:delayed-completion true
+                                                  :player  side
+                                                  :prompt  "Return to hand"
+                                                  :choices ["Done"]
+                                                  :effect  (req (case target
+                                                                  "Done"
+                                                                  (loop [k (count (get-in @state [side :play-area]))]
+                                                                    (when (> k 0)
+                                                                      (move state side (first (get-in @state [side :play-area])) :hand {:front true})
+                                                                      (recur (- k 1)))))
+                                                                (effect-completed state side nil)
+                                                                (system-msg state side (str "revealed " value " card(s) from his hand"))
+                                                                )} nil nil)))}
+                   {:title "/reveal-hand-random command"} nil))
+
+(defn reveal-deck-hidden
+  [state side args]
+  (resolve-ability state side
+                   {:effect (req
+                              (let [value (if-let [n (string->num (first args))] n 0)
+                                    opp-side (if (= side :contestant)
+                                               :challenger
+                                               :contestant)
+                                    kount (count (get-in @state [opp-side :deck]))]
+                                (loop [k (if (< kount value) kount value)]
+                                  (when (> k 0)
+                                    (move state opp-side (assoc (first (get-in @state [side :deck])) :swap true) :current)
+                                    (recur (- k 1))))
+                                (resolve-ability state side
+                                                 {:delayed-completion true
+                                                  :player  opp-side
+                                                  :prompt  "Click done when ready"
+                                                  :choices ["Done"]
+                                                  :effect  (req (case target
+                                                                  "Done"
+                                                                  (let [new-opp-side (if (= side :contestant)
+                                                                                       :challenger
+                                                                                       :contestant)]
+                                                                    (loop [k (count (get-in @state [side :current]))]
+                                                                    (when (> k 0)
+                                                                      (move state new-opp-side (dissoc (rand-nth (get-in @state [side :current])) :swap) :deck {:front true})
+                                                                      (recur (- k 1))))))
+                                                                (effect-completed state side nil)
+                                                                (system-msg state side (str "looked at " value " card(s) from opponents deck"))
+                                                                )} nil nil)))}
+                   {:title "/reveal-deck-hidden command"} nil))
+
+(defn reveal-deck-show
+  [state side args]
+  (resolve-ability state side
+                   {:effect (req
+                              (let [value (if-let [n (string->num (first args))] n 0)
+                                    kount (count (get-in @state [side :deck]))]
+                                (loop [k (if (<= kount value) kount value)]
+                                  (when (> k 0)
+                                    (move state side (first (get-in @state [side :deck])) :play-area)
+                                    (recur (- k 1))))
+                                (resolve-ability state side
+                                                 {:delayed-completion true
+                                                  :player  side
+                                                  :prompt  "Shuffle back on top"
+                                                  :choices ["Done"]
+                                                  :effect  (req (case target
+                                                                  "Done"
+                                                                  (loop [k (count (get-in @state [side :play-area]))]
+                                                                    (when (> k 0)
+                                                                      (move state side (rand-nth (get-in @state [side :play-area])) :deck {:front true})
+                                                                      (recur (- k 1)))))
+                                                                (effect-completed state side nil)
+                                                                (system-msg state side (str "revealed " value " card(s) from the top of his deck"))
+                                                                )} nil nil)))}
+                   {:title "/reveal-deck-show command"} nil))
+
+(defn reveal-deck-self
+  [state side args]
+  (resolve-ability state side
+                   {:effect (req
+                              (let [value (if-let [n (string->num (first args))] n 0)
+                                    kount (count (get-in @state [side :deck]))]
+                                (loop [k (if (<= kount value) kount value)]
+                                  (when (> k 0)
+                                    (move state side (first (get-in @state [side :deck])) :current)
+                                    (recur (- k 1))))
+                                (resolve-ability state side
+                                                 {:delayed-completion true
+                                                  :player  side
+                                                  :prompt  "Shuffle back on top"
+                                                  :choices ["Done"]
+                                                  :effect  (req (case target
+                                                                  "Done"
+                                                                  (loop [k (count (get-in @state [side :current]))]
+                                                                    (when (> k 0)
+                                                                      (move state side (rand-nth (get-in @state [side :current])) :deck {:front true})
+                                                                      (recur (- k 1)))))
+                                                                (effect-completed state side nil)
+                                                                (system-msg state side (str "looked at " value " card(s) from the top of his deck"))
+                                                                )} nil nil)))}
+                   {:title "/reveal-deck-self command"} nil))
+
 (defn starter-path [state side st-path]
   (let [
         b-path1 (.replace st-path " b " " Border-land ")
@@ -632,6 +758,11 @@
                                                        :not-equal {:msg "resolve unequal bets effect"}}))
           "/re-order"      #(re-order %1 %2 value)
           "/reveal-hand"   #(reveal-hand %1 %2)
+          "/reveal-hand-step"   #(reveal-hand-step %1 %2 args)
+          "/reveal-hand-random"   #(reveal-hand-random %1 %2 args)
+          "/reveal-deck-hidden"   #(reveal-deck-hidden %1 %2 args)
+          "/reveal-deck-show"   #(reveal-deck-show %1 %2 args)
+          "/reveal-deck-self"   #(reveal-deck-self %1 %2 args)
           "/reveal"        #(resolve-ability %1 %2
                                             {:effect (effect (reveal target {:ignore-cost :all-costs :force true}))
                                              :choices {:req (fn [t] (card-is? t :side %2))}}

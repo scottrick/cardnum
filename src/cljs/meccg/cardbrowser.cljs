@@ -728,7 +728,7 @@
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
                             ["Skill" :skill-filter ally-skill]
-                            ["Race" :race-filter ally-races]
+                            ["Keys" :race-filter ally-races]
                             ["Art" :art-filter artists]]]
                 [:div
                  [:h4 (first filter)]
@@ -743,7 +743,7 @@
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
                             ["Skill" :skill-filter fact-skill]
-                            ["Race" :race-filter fact-races]
+                            ["Keys" :race-filter fact-races]
                             ["Art" :art-filter artists]]]
                 [:div
                  [:h4 (first filter)]
@@ -773,7 +773,7 @@
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
                             ["Types" :skill-filter resource-skill]
-                            ["Race" :race-filter resource-types]
+                            ["Keys" :race-filter resource-types]
                             ["Art" :art-filter artists]]]
                 [:div
                  [:h4 (first filter)]
@@ -788,7 +788,7 @@
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
                             ["Skill" :skill-filter char-skill]
-                            ["Race" :race-filter char-races]
+                            ["Keys" :race-filter char-races]
                             ["Art" :art-filter artists]]]
                 [:div
                  [:h4 (first filter)]
@@ -803,7 +803,7 @@
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
                             ["Types" :skill-filter hazard-types]
-                            ["Race" :race-filter hazard-races]
+                            ["Keys" :race-filter hazard-races]
                             ["Art" :art-filter artists]]]
                 [:div
                  [:h4 (first filter)]
@@ -817,8 +817,8 @@
                             ["Strict" :secondary-filter (secondaries (:primary-filter state))]
                             ["Precise" :precise-filter precise-types]
                             ["Rarity" :rarity-filter rarity-choice]
-                            ["Keys" :skill-filter all-skill]
-                            ["Race" :race-filter all-types]
+                            ["Terms" :skill-filter all-skill]
+                            ["Keys" :race-filter all-types]
                             ["Art" :art-filter artists]]]
                 [:div
                  [:h4 (first filter)]
