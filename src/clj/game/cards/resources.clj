@@ -2027,6 +2027,29 @@
                                                   :choices {:req #(if (site? %) (can-host? %))}
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host-reveal target card))} card nil)))}]}
+   "The Great Hunt"
+   {:abilities [{:label "Hunt"
+                 :effect (req (let [opp-side (if (= side :contestant)
+                                               :challenger
+                                               :contestant)]
+                                    (while (and (not (some (partial = (:Secondary (first (get-in @state [opp-side :deck]))))
+                                                     ["Creature" "Creature/Short-event"
+                                                      "Creature/Long-event" "Creature/Long-event"]))
+                                          (not-empty (take 1 (get-in @state [opp-side :deck]))))
+                                (move state opp-side (first (get-in @state [opp-side :deck])) :play-area))
+                              (when (not-empty (take 1 (get-in @state [opp-side :deck])))
+                                (move state opp-side (first (get-in @state [opp-side :deck])) :play-area))
+                              ))}
+                {:label "Shuffle"
+                 :effect (req (let [opp-side (if (= side :contestant)
+                                               :challenger
+                                               :contestant)]
+                                (doseq [c (get-in @state [opp-side :play-area])]
+                                (move state opp-side c :deck))
+                              (shuffle! state opp-side :deck)
+                              (move state side card :discard)
+                              (system-msg state side "uses mewh_thegreathunt.jpg to return cards and shuffle")
+                              ))}]}
    "The Grey Hat"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
