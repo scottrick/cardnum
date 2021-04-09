@@ -388,8 +388,11 @@
 
 (defn hero-pal-flag
   [state side args]
-  (swap! state assoc-in [side :hpf] false)
-  (system-msg state side "New discards hidden"))
+  (if (get-in @state [side :hpf])
+    (do (swap! state assoc-in [side :hpf] false)
+        (system-msg state side "New discards hidden"))
+    (do (swap! state assoc-in [side :hpf] true)
+        (system-msg state side "Discards revealed"))))
 
 (defn escher-char
   [state side args]
