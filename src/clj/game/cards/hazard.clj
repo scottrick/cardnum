@@ -58,6 +58,108 @@
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
    "Cruel Claw Perceived"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
+   "Desire All for Thy Belly"
+   {:abilities [{:label "Spawn"
+                 :effect (req (resolve-ability state side
+                                               {;:delayed-completion true
+                                                :player  side
+                                                :prompt  "How Many Spawn or Cancel"
+                                                :choices ["1 Spawn" "2 Spawn" "3 Spawn" "4 Spawn"
+                                                          "5 Spawn" "6 Spawn" "7 Spawn" "Cancel"]
+                                                :effect  (req
+                                                           (let [opp-side (if (= side :contestant)
+                                                                            :challenger
+                                                                            :contestant)
+                                                                 spawn (case target
+                                                                            "Cancel"
+                                                                            0
+                                                                            "1 Spawn"
+                                                                            1
+                                                                            "2 Spawn"
+                                                                            2
+                                                                            "3 Spawn"
+                                                                            3
+                                                                            "4 Spawn"
+                                                                            4
+                                                                            "5 Spawn"
+                                                                            5
+                                                                            "6 Spawn"
+                                                                            6
+                                                                            "7 Spawn"
+                                                                            7)
+                                                                 kount (count (get-in @state [opp-side :deck]))]
+                                                             (loop [k (if (<= kount spawn) kount spawn)]
+                                                               (when (> k 0)
+                                                                 (move state side (assoc (first (get-in @state [opp-side :deck])) :swap true) :current)
+                                                                 (recur (- k 1))))
+                                                             ;(effect-completed state side nil)
+                                                             ))} nil nil))
+                 :msg (msg " to look at cards from the top of your deck")}
+                {:label "Propose" ;; reveal to opponent
+                 :effect (req (resolve-ability state side
+                                               {;:delayed-completion true
+                                                :player  side
+                                                :prompt  "How Many Spawn or Cancel"
+                                                :choices ["Card 1" "Card 2" "Card 3" "Card 4"
+                                                          "Card 5" "Card 6" "Card 7" "Cancel"]
+                                                :effect  (req
+                                                           (let [opp-side (if (= side :contestant)
+                                                                            :challenger
+                                                                            :contestant)
+                                                                 the-side (if (= 0 (count (get-in @state [side :current])))
+                                                                            opp-side
+                                                                            side)
+                                                                 spawn (case target
+                                                                         "Cancel"
+                                                                         7
+                                                                         "Card 1"
+                                                                         0
+                                                                         "Card 2"
+                                                                         1
+                                                                         "Card 3"
+                                                                         2
+                                                                         "Card 4"
+                                                                         3
+                                                                         "Card 5"
+                                                                         4
+                                                                         "Card 6"
+                                                                         5
+                                                                         "Card 7"
+                                                                         6)
+                                                                 ;kount (count (get-in @state [opp-side :deck]))
+                                                                 ]
+                                                             (when (< spawn 7)
+                                                               (move state opp-side (dissoc (nth (get-in @state [the-side :current]) spawn nil) :swap) :play-area {:front true}))
+                                                             ;(effect-completed state side nil)
+                                                             ))} nil nil))
+                 :msg (msg " to propose a card")}
+                {:label "Shuffle"
+                 :effect (req
+                           (move state side card :rfg)
+                           (resolve-ability state side
+                                               {:effect (req
+                                                          (let [opp-side (if (= side :contestant)
+                                                                           :challenger
+                                                                           :contestant)
+                                                                the-side (if (= 0 (count (get-in @state [side :play-area])))
+                                                                           opp-side
+                                                                           side)
+                                                                kount (count (get-in @state [the-side :play-area]))]
+                                                            (loop [k kount]
+                                                              (when (> k 0)
+                                                                (move state side (assoc (first (get-in @state [the-side :play-area])) :swap true) :current)
+                                                                (recur (- k 1))))
+                                                            )
+                                                          (let [opp-side (if (= side :contestant)
+                                                                           :challenger
+                                                                           :contestant)]
+                                                            (loop [k (count (get-in @state [side :current]))]
+                                                              (when (> k 0)
+                                                                (move state opp-side (dissoc (rand-nth (get-in @state [side :current])) :swap) :deck {:front true})
+                                                                (recur (- k 1)))))
+                                                          )} nil nil))
+                 :msg (msg " to shuffle cards back to the top of your deck")}
+                ]}
    "Despair of the Heart"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
    "Diminish and Depart"
@@ -81,24 +183,7 @@
    "Grasping and Ungracious"
    {:hosting {:req #(and (is-type? % "Character") (revealed? %))}}
    "Great Secrets Buried There"
-   {:abilities [{:label "as Resource"
-                 :effect (req
-                           (let [kount (count (get-in @state [side :deck]))
-                                 secrets (get-card state card)]
-                             (loop [k (if (< kount 10) 0 10)]
-                               (when (> k 0)
-                                 (move state side (first (get-in @state [side :deck])) :current)
-                                 (recur (- k 1))))
-                             (resolve-ability state side
-                                              {:prompt "Select an item for Great Secrets..."
-                                               :choices {:req (fn [t] (card-is? t :side side))}
-                                               :effect (req (doseq [c (get-in @state [side :current])]
-                                                              (if (= c target)
-                                                                (host state side secrets c)
-                                                                (move state side c :deck)))
-                                                              (shuffle! state side :deck))
-                                               } nil nil)))}
-                {:label "as Hazard"
+   {:abilities [{:label "Not My Deck"
                  :effect (req
                            (let [opp-side (if (= side :contestant)
                                             :challenger
