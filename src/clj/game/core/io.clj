@@ -562,9 +562,47 @@
                                                                       (move state new-opp-side (dissoc (rand-nth (get-in @state [side :current])) :swap) :deck {:front true})
                                                                       (recur (- k 1))))))
                                                                 (effect-completed state side nil)
-                                                                (system-msg state side (str "looked at " value " card(s) from opponents deck"))
+                                                                (system-msg state side (str " looked at " value " card(s) from opponents deck"))
                                                                 )} nil nil)))}
                    {:title "/reveal-deck-hidden command"} nil))
+
+(defn show-deciding
+  [state side args]
+  (resolve-ability state side
+                   {:effect (req (resolve-ability state side
+                                                  {:effect (req
+                                                             (let [value (if-let [n (string->num (first args))] n 0)
+                                                                   opp-side (if (= side :contestant)
+                                                                              :challenger
+                                                                              :contestant)
+                                                                   the-side (if (= 0 (count (get-in @state [side :current])))
+                                                                              opp-side
+                                                                              side)
+                                                                   kount (count (get-in @state [the-side :current]))]
+                                                               (if (and (> value 0) (<= value kount))
+                                                                 (move state the-side (nth (get-in @state [the-side :current]) (- value 1)) :play-area))
+                                                               ))} nil nil))}
+                   {:title "/show-deciding command"} nil))
+
+(defn hide-temp-zone
+  [state side]
+  (resolve-ability state side
+                   {:effect (req (resolve-ability state side
+                                                  {;:delayed-completion true
+                                                   :effect  (req
+                                                              (let [opp-side (if (= side :contestant)
+                                                                               :challenger
+                                                                               :contestant)
+                                                                    the-side (if (= 0 (count (get-in @state [side :play-area])))
+                                                                               opp-side
+                                                                               side)
+                                                                    kount (count (get-in @state [the-side :play-area]))]
+                                                                (loop [k kount]
+                                                                  (when (> k 0)
+                                                                    (move state the-side (first (get-in @state [the-side :play-area])) :current)
+                                                                    (recur (- k 1)))))
+                                                              )} nil nil))}
+                   {:title "/hide-temp-zone command"} nil))
 
 (defn reveal-deck-show
   [state side args]
@@ -761,6 +799,8 @@
           "/reveal-hand-step"   #(reveal-hand-step %1 %2 args)
           "/reveal-hand-random"   #(reveal-hand-random %1 %2 args)
           "/reveal-deck-hidden"   #(reveal-deck-hidden %1 %2 args)
+          "/show-deciding"   #(show-deciding %1 %2 args)
+          "/hide-temp-zone"   #(hide-temp-zone %1 %2)
           "/reveal-deck-show"   #(reveal-deck-show %1 %2 args)
           "/reveal-deck-self"   #(reveal-deck-self %1 %2 args)
           "/reveal"        #(resolve-ability %1 %2
