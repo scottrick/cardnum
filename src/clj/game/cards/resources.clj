@@ -2028,28 +2028,48 @@
                                                   :msg (msg "host it on " (card-str state target))
                                                   :effect (effect (host-reveal target card))} card nil)))}]}
    "The Great Hunt"
-   {:abilities [{:label "Hunt"
+   {:abilities [{:label "Hunt Deck"
                  :effect (req (let [opp-side (if (= side :contestant)
                                                :challenger
                                                :contestant)]
-                                    (while (and (not (some (partial = (:Secondary (first (get-in @state [opp-side :deck]))))
-                                                     ["Creature" "Creature/Short-event"
-                                                      "Creature/Long-event" "Creature/Long-event"]))
-                                          (not-empty (take 1 (get-in @state [opp-side :deck]))))
-                                (move state opp-side (first (get-in @state [opp-side :deck])) :play-area))
-                              (when (not-empty (take 1 (get-in @state [opp-side :deck])))
-                                (move state opp-side (first (get-in @state [opp-side :deck])) :play-area))
-                              ))}
-                {:label "Shuffle"
+                                (while (and (not (some (partial = (:Secondary (first (get-in @state [opp-side :deck]))))
+                                                       ["Creature" "Creature/Short-event"
+                                                        "Creature/Permanent-event" "Creature/Long-event"]))
+                                            (not-empty (take 1 (get-in @state [opp-side :deck]))))
+                                  (move state opp-side (first (get-in @state [opp-side :deck])) :play-area))
+                                (when (not-empty (take 1 (get-in @state [opp-side :deck])))
+                                  (move state opp-side (first (get-in @state [opp-side :deck])) :play-area))
+                                ))}
+                {:label "Hunt Discard"
+                 :effect (req (let [opp-side (if (= side :contestant)
+                                               :challenger
+                                               :contestant)]
+                                (while (and (not (some (partial = (:Secondary (first (get-in @state [opp-side :discard]))))
+                                                       ["Creature" "Creature/Short-event"
+                                                        "Creature/Permanent-event" "Creature/Long-event"]))
+                                            (not-empty (take 1 (get-in @state [opp-side :discard]))))
+                                  (move state opp-side (first (get-in @state [opp-side :discard])) :play-area))
+                                (when (not-empty (take 1 (get-in @state [opp-side :discard])))
+                                  (move state opp-side (first (get-in @state [opp-side :discard])) :play-area))
+                                ))}
+                {:label "Shuffle Deck"
                  :effect (req (let [opp-side (if (= side :contestant)
                                                :challenger
                                                :contestant)]
                                 (doseq [c (get-in @state [opp-side :play-area])]
-                                (move state opp-side c :deck))
-                              (shuffle! state opp-side :deck)
-                              (move state side card :discard)
-                              (system-msg state side "uses mewh_thegreathunt.jpg to return cards and shuffle")
-                              ))}]}
+                                  (move state opp-side c :deck))
+                                (shuffle! state opp-side :deck)
+                                (system-msg state side "uses mewh_thegreathunt.jpg to return cards and shuffle")
+                                ))}
+                {:label "Put to Discard"
+                 :effect (req (let [opp-side (if (= side :contestant)
+                                               :challenger
+                                               :contestant)]
+                                (doseq [c (get-in @state [opp-side :play-area])]
+                                  (move state opp-side c :discard))
+                                (system-msg state side "uses mewh_thegreathunt.jpg to return cards")
+                                ))}
+                ]}
    "The Grey Hat"
    {:abilities [{:label "Place"
                  :effect (req (let [r (get-card state card)
