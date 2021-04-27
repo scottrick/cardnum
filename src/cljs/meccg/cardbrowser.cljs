@@ -213,7 +213,7 @@
                                 (image-ice card true)
                                 (image-url card true)))]
                [:img {:src url
-                      :decoding "async"
+                      ;:decoding "async"
                       :alt (:title card)
                       :onClick #(do (.preventDefault %)
                                     (put! (:pub-chan (om/get-shared owner))
@@ -623,7 +623,7 @@
        :race-filter "All"
        :art-filter "All"
        :hide-dreamcards false
-       :ul-extras false
+       :ul-extras true
        :only-released true
        :only-stage false
        :only-unique false

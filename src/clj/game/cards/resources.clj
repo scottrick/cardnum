@@ -2044,13 +2044,13 @@
                  :effect (req (let [opp-side (if (= side :contestant)
                                                :challenger
                                                :contestant)]
-                                (while (and (not (some (partial = (:Secondary (first (get-in @state [opp-side :discard]))))
+                                (while (and (not (some (partial = (:Secondary (last (get-in @state [opp-side :discard]))))
                                                        ["Creature" "Creature/Short-event"
                                                         "Creature/Permanent-event" "Creature/Long-event"]))
                                             (not-empty (take 1 (get-in @state [opp-side :discard]))))
-                                  (move state opp-side (first (get-in @state [opp-side :discard])) :play-area))
+                                  (move state opp-side (last (get-in @state [opp-side :discard])) :play-area))
                                 (when (not-empty (take 1 (get-in @state [opp-side :discard])))
-                                  (move state opp-side (first (get-in @state [opp-side :discard])) :play-area))
+                                  (move state opp-side (last (get-in @state [opp-side :discard])) :play-area))
                                 ))}
                 {:label "Shuffle Deck"
                  :effect (req (let [opp-side (if (= side :contestant)
@@ -2065,8 +2065,11 @@
                  :effect (req (let [opp-side (if (= side :contestant)
                                                :challenger
                                                :contestant)]
-                                (doseq [c (get-in @state [opp-side :play-area])]
-                                  (move state opp-side c :discard))
+                                (if (< 0 (count (get-in @state [opp-side :play-area])))
+                                  (loop [k (count (get-in @state [opp-side :play-area]))]
+                                    (when (> k 0)
+                                      (move state opp-side (last (get-in @state [opp-side :play-area])) :discard)
+                                      (recur (- k 1)))))
                                 (system-msg state side "uses mewh_thegreathunt.jpg to return cards")
                                 ))}
                 ]}
