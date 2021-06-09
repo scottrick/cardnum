@@ -582,7 +582,7 @@
    {:qty 1 :card "Easterling Camp" :id "[H] (TW)"}
    {:qty 1 :card "Edoras" :id "[H] (TW)"}
    {:qty 1 :card "Ei Missä" :id "[H] (NW)"}
-   {:qty 1 :card "Eithel Morgoth" :id "[H] (NW)"}
+   {:qty 1 :card "Eithel Morgoth" :id "[H] (ML)"}
    {:qty 1 :card "Eldanar" :id "[H] (KN)"}
    {:qty 1 :card "Elgaer" :id "[H] (CP)"}
    {:qty 1 :card "Elornan Swamp" :id "[H] (DS)"}
@@ -1565,7 +1565,7 @@
   [{:qty 1 :card "Barad-dûr" :id "[M] (LE)"}
    {:qty 1 :card "Cirith Gorgor" :id "[M] (LE)"}
    {:qty 1 :card "Cirith Ungol" :id "[M] (LE)"}
-   {:qty 1 :card "Eithel Morgoth" :id "[M] (NW)"}
+   {:qty 1 :card "Eithel Morgoth" :id "[M] (ML)"}
    {:qty 1 :card "Moria" :id "[M] (LE)"}
    {:qty 1 :card "The Gem-deeps" :id "[M] (AS)"}
    {:qty 1 :card "The Iron-deeps" :id "[M] (AS)"}
@@ -1594,7 +1594,7 @@
    {:qty 1 :card "Deep Cleft" :id "[H] (GW)"}
    {:qty 1 :card "Durthang" :id "[H] (NE)"}
    {:qty 1 :card "Dûsalan" :id "[H] (SL)"}
-   {:qty 1 :card "Eithel Morgoth" :id "[H] (NW)"}
+   {:qty 1 :card "Eithel Morgoth" :id "[H] (ML)"}
    {:qty 1 :card "Eregost" :id "[H] (DS)"}
    {:qty 1 :card "Fhûl" :id "[H] (SL)"}
    {:qty 1 :card "Fuinur's Well" :id "[H] (SL)"}
@@ -1742,7 +1742,7 @@
    {:qty 1 :card "Cirith Gorgor" :id "[B] (BA)"}
    {:qty 1 :card "Cirith Ungol" :id "[B] (BA)"}
    {:qty 1 :card "Dol Guldur" :id "[B] (BA)"}
-   {:qty 1 :card "Eithel Morgoth" :id "[M] (NW)"}
+   {:qty 1 :card "Eithel Morgoth" :id "[M] (ML)"}
    {:qty 1 :card "Geann a-Lisch" :id "[M] (LE)"}
    {:qty 1 :card "Minas Morgul" :id "[B] (BA)"}
    {:qty 1 :card "Moria" :id "[M] (LE)"}
@@ -1778,7 +1778,7 @@
         (into standard-minion
               (into standard-minion-balrog
                     (into standard-minion-havens
-                          standard-balrog-extras)))))
+                          standard-balrog)))))
 (def standard-fallen-sites
   (into standard-region
         (into standard-wizard
@@ -1817,7 +1817,7 @@
                     (into dreamcard-minion-havens
                           (into dreamcard-lord-all
                                 (into dreamcard-dual-sites
-                                      dreamcard-balrog-extras)))))))
+                                      dreamcard-balrog)))))))
 (def dreamcard-fallen-sites
   (into dreamcard-region
         (into dreamcard-wizard
