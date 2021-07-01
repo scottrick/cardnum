@@ -138,6 +138,7 @@
      (om/set-state! owner :use-dce (if (= "always" (get-in @app-state [:options :dc-erratum])) true false))
      (om/set-state! owner :use-ice (if (= "always" (get-in @app-state [:options :ice-errata])) true false))
      (om/set-state! owner :eot-auto-save true)
+     (om/set-state! owner :metw-site-only false)
      (om/set-state! owner :allowspectator true)
      (om/set-state! owner :spectatorhands false)
      (-> ".game-title" js/$ .select))))
@@ -158,6 +159,7 @@
                            :use-dce        (om/get-state owner :use-dce)
                            :use-ice        (om/get-state owner :use-ice)
                            :eot-auto-save  (om/get-state owner :eot-auto-save)
+                           :metw-site-only (om/get-state owner :metw-site-only)
                            :allowspectator (om/get-state owner :allowspectator)
                            :spectatorhands (om/get-state owner :spectatorhands)
                            :side           (om/get-state owner :side)
@@ -292,6 +294,7 @@
            alignment (:alignment player)
            faction (:faction (:identity (:deck player)))
            identity (:title (:identity (:deck player)))
+           metws (:metw-site-only game)
            specs (:allowspectator game)]
        (cond
          (:resumed game) [:span.alignment (str " (Aligned)")]
@@ -605,6 +608,11 @@
                  [:input {:type "checkbox" :checked (om/get-state owner :eot-auto-save)
                           :on-change #(om/set-state! owner :eot-auto-save (.. % -target -checked))}]
                  "EOT auto save game"]]
+               [:p
+                [:label
+                 [:input {:type "checkbox" :checked (om/get-state owner :metw-site-only)
+                          :on-change #(om/set-state! owner :metw-site-only (.. % -target -checked))}]
+                 "METW sites only (July Tourney)"]]
                [:p
                 [:label
                  [:input {:type "checkbox" :checked (om/get-state owner :allowspectator)
