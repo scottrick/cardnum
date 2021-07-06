@@ -7,6 +7,7 @@
             [web.sites :refer [standard-wizard-sites standard-minion-sites
                                standard-fallen-sites standard-option-sites
                                standard-balrog-sites
+                               standard-metw-sites-only
                                dreamcard-wizard-sites dreamcard-minion-sites
                                dreamcard-fallen-sites dreamcard-option-sites
                                dreamcard-balrog-sites dreamcard-dwarf-sites
@@ -222,8 +223,8 @@
 (defn handle-lobby-create
   [{{{:keys [username emailhash] :as user} :user} :ring-req
     client-id                                     :client-id
-    {:keys [title use-dce use-ice eot-auto-save allowspectator spectatorhands password
-            room side alignment hero standard dreamcard options]} :?data :as event}]
+    {:keys [title use-dce use-ice eot-auto-save allowspectator metw-site-only spectatorhands
+            password room side alignment hero standard dreamcard options]} :?data :as event}]
   (let [gameid (java.util.UUID/randomUUID)
         game {:date            (java.util.Date.)
               :gameid          gameid
@@ -231,6 +232,7 @@
               :use-dce         use-dce
               :use-ice         use-ice
               :eot-auto-save   eot-auto-save
+              :metw-site-only  metw-site-only
               :allowspectator  allowspectator
               :spectatorhands  spectatorhands
               :mute-spectators false
@@ -277,6 +279,7 @@
               :use-dce         (:use-dce load)
               :use-ice         (:use-ice load)
               :eot-auto-save   (:eot-auto-save load)
+              :metw-site-only  (:metw-site-only load)
               :allowspectator  (:allowspectator load)
               :spectatorhands  (:spectatorhands load)
               :mute-spectators false
@@ -432,6 +435,7 @@
     client-id                           :client-id
     {:keys [deck-id match-code]}       :?data}]
   (let [game (game-for-client client-id)
+        metws (:metw-site-only game)
         fplayer (first (:players game))
         opp-align (if (> (count (:players game)) 1)
                     (:alignment (if (= client-id (:ws-id fplayer))
@@ -487,6 +491,8 @@
                    (assoc d :location
                             (let [{:keys [status option]} (get-in check [:status])]
                               (cond
+                                (= metws true)
+                                standard-metw-sites-only
                                 (and (= "standard" status) (= option false))
                                 (cond
                                   (= (get-in d [:identity :alignment]) "Hero") standard-wizard-sites
