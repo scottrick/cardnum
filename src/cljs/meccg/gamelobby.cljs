@@ -612,7 +612,7 @@
                 [:label
                  [:input {:type "checkbox" :checked (om/get-state owner :metw-site-only)
                           :on-change #(om/set-state! owner :metw-site-only (.. % -target -checked))}]
-                 "METW sites only (July Tourney)"]]
+                 "METW-TD sites (October Tourney)"]]
                [:p
                 [:label
                  [:input {:type "checkbox" :checked (om/get-state owner :allowspectator)

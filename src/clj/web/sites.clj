@@ -64,10 +64,12 @@
    {:qty 1 :card "Beorn's House" :id "[H] (TW)"}
    {:qty 1 :card "Blue Mountain Dwarf-hold" :id "[H] (TW)"}
    {:qty 1 :card "Bree" :id "[H] (TW)"}
+   {:qty 1 :card "Buhr Widu" :id "[H] (TD)"}
    {:qty 1 :card "Cameth Brin" :id "[H] (TW)"}
    {:qty 1 :card "Carn Dûm" :id "[H] (TW)"}
    {:qty 1 :card "Caves of Ûlund" :id "[H] (TW)"}
    {:qty 1 :card "Cirith Ungol" :id "[H] (TW)"}
+   {:qty 1 :card "Dale" :id "[H] (TD)"}
    {:qty 1 :card "Dancing Spire" :id "[H] (TW)"}
    {:qty 1 :card "Dead Marshes" :id "[H] (TW)"}
    {:qty 1 :card "Dimrill Dale" :id "[H] (TW)"}
@@ -80,15 +82,19 @@
    {:qty 1 :card "Easterling Camp" :id "[H] (TW)"}
    {:qty 1 :card "Edoras" :id "[H] (TW)"}
    {:qty 1 :card "Ettenmoors" :id "[H] (TW)"}
+   {:qty 1 :card "Framsburg" :id "[H] (TD)"}
    {:qty 1 :card "Gladden Fields" :id "[H] (TW)"}
    {:qty 1 :card "Glittering Caves" :id "[H] (TW)"}
    {:qty 1 :card "Goblin-gate" :id "[H] (TW)"}
+   {:qty 1 :card "Gold Hill" :id "[H] (TD)"}
+   {:qty 1 :card "Gondmaeglom" :id "[H] (TD)"}
    {:qty 1 :card "Henneth Annûn" :id "[H] (TW)"}
    {:qty 1 :card "Himring" :id "[H] (TW)"}
    {:qty 1 :card "Irerock" :id "[H] (TW)"}
    {:qty 1 :card "Iron Hill Dwarf-hold" :id "[H] (TW)"}
    {:qty 1 :card "Isengard" :id "[H] (TW)"}
    {:qty 1 :card "Isles of the Dead that Live" :id "[H] (TW)"}
+   {:qty 1 :card "Isle of the Ulond" :id "[H] (TD)"}
    {:qty 1 :card "Lake-town" :id "[H] (TW)"}
    {:qty 1 :card "Lond Galen" :id "[H] (TW)"}
    {:qty 1 :card "Lossadan Cairn" :id "[H] (TW)"}
@@ -101,6 +107,7 @@
    {:qty 1 :card "Mount Gundabad" :id "[H] (TW)"}
    {:qty 1 :card "Old Forest" :id "[H] (TW)"}
    {:qty 1 :card "Ost-in-Edhil" :id "[H] (TW)"}
+   {:qty 1 :card "Ovir Hollow" :id "[H] (TD)"}
    {:qty 1 :card "Pelargir" :id "[H] (TW)"}
    {:qty 1 :card "Rhosgobel" :id "[H] (TW)"}
    {:qty 1 :card "Ruined Signal Tower" :id "[H] (TW)"}
@@ -109,6 +116,7 @@
    {:qty 1 :card "Shrel-Kain" :id "[H] (TW)"}
    {:qty 1 :card "Southron Oasis" :id "[H] (TW)"}
    {:qty 1 :card "Stone-circle" :id "[H] (TW)"}
+   {:qty 1 :card "Tharbad" :id "[H] (TD)"}
    {:qty 1 :card "The Lonely Mountain" :id "[H] (TW)"}
    {:qty 1 :card "The Stones" :id "[H] (TW)"}
    {:qty 1 :card "The White Towers" :id "[H] (TW)"}
@@ -120,7 +128,8 @@
    {:qty 1 :card "Weathertop" :id "[H] (TW)"}
    {:qty 1 :card "Wellinghall" :id "[H] (TW)"}
    {:qty 1 :card "Woodmen-town" :id "[H] (TW)"}
-   {:qty 1 :card "Wose Passage-hold" :id "[H] (TW)"}])
+   {:qty 1 :card "Wose Passage-hold" :id "[H] (TW)"}
+   {:qty 1 :card "Zarak Dûm" :id "[H] (TD)"}])
 
 (def standard-wizard
   [{:qty 1 :card "Amon Hen" :id "[H] (TW)"}
