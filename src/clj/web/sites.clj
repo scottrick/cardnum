@@ -605,6 +605,7 @@
    {:qty 1 :card "Beorn's House" :id "[H] (TW)"}
    {:qty 1 :card "Bernastath" :id "[H] (NW)"}
    {:qty 1 :card "Blue Mountain Dwarf-hold" :id "[H] (TW)"}
+   {:qty 1 :card "Bog Hills" :id "[H] (NW)"}
    {:qty 1 :card "Bozisha-Dar" :id "[H] (SL)"}
    {:qty 1 :card "Brandy Hall" :id "[H] (RS)"}
    {:qty 1 :card "Bree" :id "[H] (TW)"}
@@ -797,7 +798,7 @@
    {:qty 1 :card "Pelargir" :id "[H] (TW)"}
    {:qty 1 :card "Pelepelplû" :id "[H] (BO)"}
    {:qty 1 :card "Pelican Islands" :id "[H] (SL)"}
-   {:qty 1 :card "Pendrath na-Udûn" :id "[H] (NW)"}
+   {:qty 1 :card "Pendrath na-Udûn" :id "[H] (ML)"}
    {:qty 1 :card "Pharabâs" :id "[H] (CA)"}
    {:qty 1 :card "Pieni Satama" :id "[H] (NW)"}
    {:qty 1 :card "Poison Rock" :id "[H] (BO)"}
@@ -991,6 +992,7 @@
    {:qty 1 :card "Beorn's House" :id "[M] (LE)"}
    {:qty 1 :card "Bernastath" :id "[M] (NW)"}
    {:qty 1 :card "Blue Mountain Dwarf-hold" :id "[M] (LE)"}
+   {:qty 1 :card "Bog Hills" :id "[M] (NW)"}
    {:qty 1 :card "Brandy Hall" :id "[M] (RS)"}
    {:qty 1 :card "Bree" :id "[M] (LE)"}
    {:qty 1 :card "Buhr Thurasig" :id "[M] (GW)"}
@@ -1302,6 +1304,7 @@
    {:qty 1 :card "Beorn's House" :id "[M] (LE)"}
    {:qty 1 :card "Bernastath" :id "[M] (NW)"}
    {:qty 1 :card "Blue Mountain Dwarf-hold" :id "[M] (LE)"}
+   {:qty 1 :card "Bog Hills" :id "[M] (NW)"}
    {:qty 1 :card "Brandy Hall" :id "[M] (RS)"}
    {:qty 1 :card "Bree" :id "[M] (LE)"}
    {:qty 1 :card "Buhr Thurasig" :id "[M] (GW)"}
@@ -1490,7 +1493,7 @@
    {:qty 1 :card "Pelargir" :id "[M] (LE)"}
    {:qty 1 :card "Pelepelplû" :id "[M] (BO)"}
    {:qty 1 :card "Pelican Islands" :id "[M] (SL)"}
-   {:qty 1 :card "Pendrath na-Udûn" :id "[M] (NW)"}
+   {:qty 1 :card "Pendrath na-Udûn" :id "[M] (ML)"}
    {:qty 1 :card "Pharabâs" :id "[M] (CA)"}
    {:qty 1 :card "Pieni Satama" :id "[M] (NW)"}
    {:qty 1 :card "Poison Rock" :id "[M] (BO)"}
@@ -1696,7 +1699,7 @@
    {:qty 1 :card "Naerphys" :id "[H] (BO)"}
    {:qty 1 :card "Nûrniag Camp" :id "[H] (AS)"}
    {:qty 1 :card "Ny Chennacatt" :id "[H] (SL)"}
-   {:qty 1 :card "Pendrath na-Udûn" :id "[H] (NW)"}
+   {:qty 1 :card "Pendrath na-Udûn" :id "[H] (ML)"}
    {:qty 1 :card "Sarn Goriwing" :id "[H] (TW)"}
    {:qty 1 :card "Shelob's Lair" :id "[H] (TW)"}
    {:qty 1 :card "Sturlurtsa" :id "[H] (CP)"}
