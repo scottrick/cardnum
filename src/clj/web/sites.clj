@@ -1747,9 +1747,15 @@
    {:qty 1 :card "The Under-vaults" :id "[B] (BA)"}
    {:qty 1 :card "The Wind-deeps" :id "[B] (BA)"}])
 
-(def dreamcard-balrog-extras
+(def dreamcard-balrog-extras-wizard
   [{:qty 1 :card "Ancient Deep-hold" :id "[B] (BA)"}
    {:qty 1 :card "Remains of Thangorodrim" :id "(ML)"}
+   {:qty 1 :card "The Drowning-deeps" :id "[D] (DF)"}
+   {:qty 1 :card "The Rusted-deeps" :id "[D] (DF)"}
+   {:qty 1 :card "The Wind-deeps" :id "[D] (DF)"}])
+
+(def dreamcard-balrog-extras-minion
+  [{:qty 1 :card "Remains of Thangorodrim" :id "(ML)"}
    {:qty 1 :card "The Drowning-deeps" :id "[D] (DF)"}
    {:qty 1 :card "The Rusted-deeps" :id "[D] (DF)"}
    {:qty 1 :card "The Wind-deeps" :id "[D] (DF)"}])
@@ -1883,8 +1889,9 @@
 (def standard-balrog-sites
   (into standard-region
         (into standard-minion
-              standard-balrog)))
-
+              (into standard-minion-balrog
+                    (into standard-minion-havens
+                          standard-balrog)))))
 ;; DREAMCARDS
 (def dreamcard-wizard-sites
   (into dreamcard-region
@@ -1892,15 +1899,25 @@
               (into dreamcard-wizard-havens
                     (into dreamcard-lord-all
                           (into dreamcard-dual-sites
-                                dreamcard-balrog-extras))))))
+                                dreamcard-balrog-extras-wizard))))))
 (def dreamcard-minion-sites
   (into dreamcard-region
         (into dreamcard-minion
               (into dreamcard-minion-balrog
-                    (into dreamcard-minion-havens
-                          (into dreamcard-lord-all
-                                (into dreamcard-dual-sites
-                                      dreamcard-balrog)))))))
+                    (into dreamcard-balrog
+                          (into dreamcard-minion-havens
+                                (into dreamcard-lord-all
+                                      (into dreamcard-dual-sites
+                                            dreamcard-balrog-extras-minion))))))))
+(def dreamcard-balrog-sites
+  (into dreamcard-region
+        (into dreamcard-minion
+              (into dreamcard-minion-balrog
+                    (into dreamcard-balrog
+                          (into dreamcard-minion-havens
+                                (into dreamcard-lord-all
+                                      (into dreamcard-dual-sites
+                                            dreamcard-balrog-extras-minion))))))))
 (def dreamcard-fallen-sites
   (into dreamcard-region
         (into dreamcard-wizard
@@ -1912,7 +1929,7 @@
                                             (into dreamcard-lord-only
                                                   (into dreamcard-lord-all
                                                         (into dreamcard-dual-sites
-                                                              dreamcard-balrog-extras)))))))))))
+                                                              dreamcard-balrog-extras-wizard)))))))))))
 (def dreamcard-option-sites
   (into dreamcard-region
         (into dreamcard-wizard
@@ -1924,13 +1941,7 @@
                                             (into dreamcard-lord-only
                                                   (into dreamcard-lord-all
                                                         (into dreamcard-dual-sites
-                                                              dreamcard-balrog-extras)))))))))))
-(def dreamcard-balrog-sites
-  (into dreamcard-region
-        (into dreamcard-minion
-              (into dreamcard-balrog
-                    (into dreamcard-lord-all
-                          dreamcard-dual-sites)))))
+                                                              dreamcard-balrog-extras-wizard)))))))))))
 (def dreamcard-elf-sites
   (into dreamcard-region
         (into dreamcard-wizard
@@ -1940,7 +1951,7 @@
                                 (into dreamcard-lord-only
                                       (into dreamcard-lord-all
                                             (into dreamcard-dual-sites
-                                                  dreamcard-balrog-extras)))))))))
+                                                  dreamcard-balrog-extras-wizard)))))))))
 (def dreamcard-dwarf-sites
   (into dreamcard-region
         (into dreamcard-wizard
@@ -1950,7 +1961,7 @@
                                 (into dreamcard-lord-only
                                       (into dreamcard-lord-all
                                             (into dreamcard-dual-sites
-                                                  dreamcard-balrog-extras)))))))))
+                                                  dreamcard-balrog-extras-wizard)))))))))
 (def dreamcard-atani-sites
   (into dreamcard-region
         (into dreamcard-wizard
@@ -1959,7 +1970,7 @@
                           (into dreamcard-lord-only
                                 (into dreamcard-lord-all
                                       (into dreamcard-dual-sites
-                                            dreamcard-balrog-extras))))))))
+                                            dreamcard-balrog-extras-wizard))))))))
 (def dreamcard-dragon-sites
   (into dreamcard-region
         (into dreamcard-wizard-dragon
