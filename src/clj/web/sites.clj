@@ -64,6 +64,73 @@
    {:qty 1 :card "Beorn's House" :id "[H] (TW)"}
    {:qty 1 :card "Blue Mountain Dwarf-hold" :id "[H] (TW)"}
    {:qty 1 :card "Bree" :id "[H] (TW)"}
+   {:qty 1 :card "Cameth Brin" :id "[H] (TW)"}
+   {:qty 1 :card "Carn Dûm" :id "[H] (TW)"}
+   {:qty 1 :card "Caves of Ûlund" :id "[H] (TW)"}
+   {:qty 1 :card "Cirith Ungol" :id "[H] (TW)"}
+   {:qty 1 :card "Dancing Spire" :id "[H] (TW)"}
+   {:qty 1 :card "Dead Marshes" :id "[H] (TW)"}
+   {:qty 1 :card "Dimrill Dale" :id "[H] (TW)"}
+   {:qty 1 :card "Dol Amroth" :id "[H] (TW)"}
+   {:qty 1 :card "Dol Guldur" :id "[H] (TW)"}
+   {:qty 1 :card "Drúadan Forest" :id "[H] (TW)"}
+   {:qty 1 :card "Dunharrow" :id "[H] (TW)"}
+   {:qty 1 :card "Dunnish Clan-hold" :id "[H] (TW)"}
+   {:qty 1 :card "Eagles' Eyrie" :id "[H] (TW)"}
+   {:qty 1 :card "Easterling Camp" :id "[H] (TW)"}
+   {:qty 1 :card "Edoras" :id "[H] (TW)"}
+   {:qty 1 :card "Ettenmoors" :id "[H] (TW)"}
+   {:qty 1 :card "Gladden Fields" :id "[H] (TW)"}
+   {:qty 1 :card "Glittering Caves" :id "[H] (TW)"}
+   {:qty 1 :card "Goblin-gate" :id "[H] (TW)"}
+   {:qty 1 :card "Henneth Annûn" :id "[H] (TW)"}
+   {:qty 1 :card "Himring" :id "[H] (TW)"}
+   {:qty 1 :card "Irerock" :id "[H] (TW)"}
+   {:qty 1 :card "Iron Hill Dwarf-hold" :id "[H] (TW)"}
+   {:qty 1 :card "Isengard" :id "[H] (TW)"}
+   {:qty 1 :card "Isles of the Dead that Live" :id "[H] (TW)"}
+   {:qty 1 :card "Lake-town" :id "[H] (TW)"}
+   {:qty 1 :card "Lond Galen" :id "[H] (TW)"}
+   {:qty 1 :card "Lossadan Cairn" :id "[H] (TW)"}
+   {:qty 1 :card "Lossadan Camp" :id "[H] (TW)"}
+   {:qty 1 :card "Minas Morgul" :id "[H] (TW)"}
+   {:qty 1 :card "Minas Tirith" :id "[H] (TW)"}
+   {:qty 1 :card "Moria" :id "[H] (TW)"}
+   {:qty 1 :card "Mount Doom" :id "[H] (TW)"}
+   {:qty 1 :card "Mount Gram" :id "[H] (TW)"}
+   {:qty 1 :card "Mount Gundabad" :id "[H] (TW)"}
+   {:qty 1 :card "Old Forest" :id "[H] (TW)"}
+   {:qty 1 :card "Ost-in-Edhil" :id "[H] (TW)"}
+   {:qty 1 :card "Pelargir" :id "[H] (TW)"}
+   {:qty 1 :card "Rhosgobel" :id "[H] (TW)"}
+   {:qty 1 :card "Ruined Signal Tower" :id "[H] (TW)"}
+   {:qty 1 :card "Sarn Goriwing" :id "[H] (TW)"}
+   {:qty 1 :card "Shelob's Lair" :id "[H] (TW)"}
+   {:qty 1 :card "Shrel-Kain" :id "[H] (TW)"}
+   {:qty 1 :card "Southron Oasis" :id "[H] (TW)"}
+   {:qty 1 :card "Stone-circle" :id "[H] (TW)"}
+   {:qty 1 :card "The Lonely Mountain" :id "[H] (TW)"}
+   {:qty 1 :card "The Stones" :id "[H] (TW)"}
+   {:qty 1 :card "The White Towers" :id "[H] (TW)"}
+   {:qty 1 :card "The Wind Throne" :id "[H] (TW)"}
+   {:qty 1 :card "Thranduil's Halls" :id "[H] (TW)"}
+   {:qty 1 :card "Tolfalas" :id "[H] (TW)"}
+   {:qty 1 :card "Vale of Erech" :id "[H] (TW)"}
+   {:qty 1 :card "Variag Camp" :id "[H] (TW)"}
+   {:qty 1 :card "Weathertop" :id "[H] (TW)"}
+   {:qty 1 :card "Wellinghall" :id "[H] (TW)"}
+   {:qty 1 :card "Woodmen-town" :id "[H] (TW)"}
+   {:qty 1 :card "Wose Passage-hold" :id "[H] (TW)"}])
+
+(def standard-metd-sites
+  [{:qty 1 :card "Amon Hen" :id "[H] (TW)"}
+   {:qty 1 :card "Bag End" :id "[H] (TW)"}
+   {:qty 1 :card "Bandit Lair" :id "[H] (TW)"}
+   {:qty 1 :card "Barad-dûr" :id "[H] (TW)"}
+   {:qty 1 :card "Barrow-downs" :id "[H] (TW)"}
+   {:qty 1 :card "Beorn's House" :id "[H] (TW)"}
+   {:qty 1 :card "Blue Mountain Dwarf-hold" :id "[H] (TW)"}
+   {:qty 1 :card "Bree" :id "[H] (TW)"}
    {:qty 1 :card "Buhr Widu" :id "[H] (TD)"}
    {:qty 1 :card "Cameth Brin" :id "[H] (TW)"}
    {:qty 1 :card "Carn Dûm" :id "[H] (TW)"}
@@ -123,6 +190,95 @@
    {:qty 1 :card "The Wind Throne" :id "[H] (TW)"}
    {:qty 1 :card "Thranduil's Halls" :id "[H] (TW)"}
    {:qty 1 :card "Tolfalas" :id "[H] (TW)"}
+   {:qty 1 :card "Vale of Erech" :id "[H] (TW)"}
+   {:qty 1 :card "Variag Camp" :id "[H] (TW)"}
+   {:qty 1 :card "Weathertop" :id "[H] (TW)"}
+   {:qty 1 :card "Wellinghall" :id "[H] (TW)"}
+   {:qty 1 :card "Woodmen-town" :id "[H] (TW)"}
+   {:qty 1 :card "Wose Passage-hold" :id "[H] (TW)"}
+   {:qty 1 :card "Zarak Dûm" :id "[H] (TD)"}])
+
+(def standard-medm-sites
+  [{:qty 1 :card "Amon Hen" :id "[H] (TW)"}
+   {:qty 1 :card "Bag End" :id "[H] (TW)"}
+   {:qty 1 :card "Bandit Lair" :id "[H] (TW)"}
+   {:qty 1 :card "Barad-dûr" :id "[H] (TW)"}
+   {:qty 1 :card "Barrow-downs" :id "[H] (TW)"}
+   {:qty 1 :card "Beorn's House" :id "[H] (TW)"}
+   {:qty 1 :card "Blue Mountain Dwarf-hold" :id "[H] (TW)"}
+   {:qty 1 :card "Bree" :id "[H] (TW)"}
+   {:qty 1 :card "Buhr Widu" :id "[H] (TD)"}
+   {:qty 1 :card "Cameth Brin" :id "[H] (TW)"}
+   {:qty 1 :card "Carn Dûm" :id "[H] (TW)"}
+   {:qty 1 :card "Caves of Ûlund" :id "[H] (TW)"}
+   {:qty 1 :card "Cirith Ungol" :id "[H] (TW)"}
+   {:qty 1 :card "Dale" :id "[H] (TD)"}
+   {:qty 1 :card "Dancing Spire" :id "[H] (TW)"}
+   {:qty 1 :card "Dead Marshes" :id "[H] (TW)"}
+   {:qty 1 :card "Dimrill Dale" :id "[H] (TW)"}
+   {:qty 1 :card "Dol Amroth" :id "[H] (TW)"}
+   {:qty 1 :card "Dol Guldur" :id "[H] (TW)"}
+   {:qty 1 :card "Drúadan Forest" :id "[H] (TW)"}
+   {:qty 1 :card "Dunharrow" :id "[H] (TW)"}
+   {:qty 1 :card "Dunnish Clan-hold" :id "[H] (TW)"}
+   {:qty 1 :card "Eagles' Eyrie" :id "[H] (TW)"}
+   {:qty 1 :card "Easterling Camp" :id "[H] (TW)"}
+   {:qty 1 :card "Edoras" :id "[H] (TW)"}
+   {:qty 1 :card "Ettenmoors" :id "[H] (TW)"}
+   {:qty 1 :card "Framsburg" :id "[H] (TD)"}
+   {:qty 1 :card "Gladden Fields" :id "[H] (TW)"}
+   {:qty 1 :card "Glittering Caves" :id "[H] (TW)"}
+   {:qty 1 :card "Goblin-gate" :id "[H] (TW)"}
+   {:qty 1 :card "Gold Hill" :id "[H] (TD)"}
+   {:qty 1 :card "Gondmaeglom" :id "[H] (TD)"}
+   {:qty 1 :card "Haudh-in-Gwanûr" :id "[H] (DM)"}
+   {:qty 1 :card "Henneth Annûn" :id "[H] (TW)"}
+   {:qty 1 :card "Hermit's Hill" :id "[H] (DM)"}
+   {:qty 1 :card "Himring" :id "[H] (TW)"}
+   {:qty 1 :card "Irerock" :id "[H] (TW)"}
+   {:qty 1 :card "Iron Hill Dwarf-hold" :id "[H] (TW)"}
+   {:qty 1 :card "Isengard" :id "[H] (TW)"}
+   {:qty 1 :card "Isle of the Ulond" :id "[H] (TD)"}
+   {:qty 1 :card "Isles of the Dead that Live" :id "[H] (TW)"}
+   {:qty 1 :card "Lake-town" :id "[H] (TW)"}
+   {:qty 1 :card "Lond Galen" :id "[H] (TW)"}
+   {:qty 1 :card "Lossadan Cairn" :id "[H] (TW)"}
+   {:qty 1 :card "Lossadan Camp" :id "[H] (TW)"}
+   {:qty 1 :card "Minas Morgul" :id "[H] (TW)"}
+   {:qty 1 :card "Minas Tirith" :id "[H] (TW)"}
+   {:qty 1 :card "Moria" :id "[H] (TW)"}
+   {:qty 1 :card "Mount Doom" :id "[H] (TW)"}
+   {:qty 1 :card "Mount Gram" :id "[H] (TW)"}
+   {:qty 1 :card "Mount Gundabad" :id "[H] (TW)"}
+   {:qty 1 :card "Old Forest" :id "[H] (TW)"}
+   {:qty 1 :card "Ost-in-Edhil" :id "[H] (TW)"}
+   {:qty 1 :card "Ovir Hollow" :id "[H] (TD)"}
+   {:qty 1 :card "Pelargir" :id "[H] (TW)"}
+   {:qty 1 :card "Rhosgobel" :id "[H] (TW)"}
+   {:qty 1 :card "Ruined Signal Tower" :id "[H] (TW)"}
+   {:qty 1 :card "Sarn Goriwing" :id "[H] (TW)"}
+   {:qty 1 :card "Shelob's Lair" :id "[H] (TW)"}
+   {:qty 1 :card "Shrel-Kain" :id "[H] (TW)"}
+   {:qty 1 :card "Southron Oasis" :id "[H] (TW)"}
+   {:qty 1 :card "Stone-circle" :id "[H] (TW)"}
+   {:qty 1 :card "Tharbad" :id "[H] (TD)"}
+   {:qty 1 :card "The Gem-deeps" :id "[H] (DM)"}
+   {:qty 1 :card "The Iron-deeps" :id "[H] (DM)"}
+   {:qty 1 :card "The Lonely Mountain" :id "[H] (TW)"}
+   {:qty 1 :card "The Pûkel-deeps" :id "[H] (DM)"}
+   {:qty 1 :card "The Stones" :id "[H] (TW)"}
+   {:qty 1 :card "The Sulfur-deeps" :id "[H] (DM)"}
+   {:qty 1 :card "The Under-courts" :id "[H] (DM)"}
+   {:qty 1 :card "The Under-galleries" :id "[H] (DM)"}
+   {:qty 1 :card "The Under-gates" :id "[H] (DM)"}
+   {:qty 1 :card "The Under-grottos" :id "[H] (DM)"}
+   {:qty 1 :card "The Under-leas" :id "[H] (DM)"}
+   {:qty 1 :card "The Under-vaults" :id "[H] (DM)"}
+   {:qty 1 :card "The White Towers" :id "[H] (TW)"}
+   {:qty 1 :card "The Wind Throne" :id "[H] (TW)"}
+   {:qty 1 :card "Thranduil's Halls" :id "[H] (TW)"}
+   {:qty 1 :card "Tolfalas" :id "[H] (TW)"}
+   {:qty 1 :card "Urlurtsu Nurn" :id "[H] (DM)"}
    {:qty 1 :card "Vale of Erech" :id "[H] (TW)"}
    {:qty 1 :card "Variag Camp" :id "[H] (TW)"}
    {:qty 1 :card "Weathertop" :id "[H] (TW)"}
@@ -1856,6 +2012,18 @@
 (def standard-metw-sites-only
   (into standard-region
         (into standard-metw-sites
+              standard-wizard-havens)))
+(def standard-metd-sites-only
+  (into standard-region
+        (into standard-metd-sites
+              standard-wizard-havens)))
+(def standard-medm-sites-only
+  (into standard-region
+        (into standard-medm-sites
+              standard-wizard-havens)))
+(def standard-meas-sites-only
+  (into standard-region
+        (into standard-wizard
               standard-wizard-havens)))
 (def standard-wizard-sites
   (into standard-region
