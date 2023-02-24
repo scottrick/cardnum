@@ -696,7 +696,7 @@
    {:qty 3 :card "Tantûrak" :id "(CA)"}
    {:qty 3 :card "Taur Rómen" :id "(FB)"}
    {:qty 3 :card "The Shire" :id "(TW)"}
-   {:qty 3 :card "The Sundering Seas" :id "(ML)"}
+   {:qty 3 :card "The Sundering Sea" :id "(ML)"}
    {:qty 3 :card "Thorenaer" :id "(NW)"}
    {:qty 3 :card "Tuktan" :id "(CA)"}
    {:qty 3 :card "Tulwang" :id "(SL)"}
@@ -774,7 +774,7 @@
    {:qty 1 :card "Cairn of the Colruh Hazurbal" :id "[H] (SL)"}
    {:qty 1 :card "Calembel" :id "[H] (WR)"}
    {:qty 1 :card "Cameth Brin" :id "[H] (TW)"}
-   {:qty 1 :card "Canadras" :id "[H] (NW)"}
+   {:qty 1 :card "Kanatrass" :id "[H] (NW)"}
    {:qty 1 :card "Caras Amarth" :id "[H] (FB)"}
    {:qty 1 :card "Carn Dûm" :id "[H] (TW)"}
    {:qty 1 :card "Cave of the Urdharkonur" :id "[H] (GW)"}
@@ -1159,7 +1159,7 @@
    {:qty 1 :card "Cairn of the Colruh Hazurbal" :id "[M] (SL)"}
    {:qty 1 :card "Calembel" :id "[M] (WR)"}
    {:qty 1 :card "Cameth Brin" :id "[M] (LE)"}
-   {:qty 1 :card "Canadras" :id "[M] (NW)"}
+   {:qty 1 :card "Kanatrass" :id "[M] (NW)"}
    {:qty 1 :card "Caras Amarth" :id "[M] (FB)"}
    {:qty 1 :card "Cave of the Urdharkonur" :id "[M] (GW)"}
    {:qty 1 :card "Caves of Ûlund" :id "[M] (LE)"}
@@ -1472,7 +1472,7 @@
    {:qty 1 :card "Cairn of the Colruh Hazurbal" :id "[M] (SL)"}
    {:qty 1 :card "Calembel" :id "[M] (WR)"}
    {:qty 1 :card "Cameth Brin" :id "[M] (LE)"}
-   {:qty 1 :card "Canadras" :id "[M] (NW)"}
+   {:qty 1 :card "Kanatrass" :id "[M] (NW)"}
    {:qty 1 :card "Caras Amarth" :id "[M] (FB)"}
    {:qty 1 :card "Cave of the Urdharkonur" :id "[M] (GW)"}
    {:qty 1 :card "Caves of Ûlund" :id "[M] (LE)"}
